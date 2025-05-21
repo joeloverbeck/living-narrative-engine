@@ -1,4 +1,4 @@
-// src/core/gameEngine.js
+// src/engine/gameEngine.js
 
 import {tokens} from '../config/tokens.js';
 import {
@@ -24,6 +24,7 @@ import {
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
+/** @typedef {import('../interfaces/IGamePersistenceService.js').SaveResult} SaveResult */
 /** @typedef {import('../interfaces/IGamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult */
 /** @typedef {import('../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -170,7 +171,12 @@ class GameEngine {
         this.#isEngineInitialized = true;
         this.#isGameLoopRunning = true;
 
-        this.#playtimeTracker.startSession();
+        if (this.#playtimeTracker) { // Check if playtimeTracker is available
+            this.#playtimeTracker.startSession();
+        } else {
+            this.#logger.warn('GameEngine._finalizeNewGameSuccess: PlaytimeTracker not available, cannot start session.');
+        }
+
 
         await this.#safeEventDispatcher.dispatchSafely(NEW_GAME_STARTED_ID, {worldName});
 
@@ -181,7 +187,15 @@ class GameEngine {
         });
 
         this.#logger.info('GameEngine._finalizeNewGameSuccess: Starting TurnManager...');
-        await this.#turnManager.start();
+        if (this.#turnManager) { // Check if turnManager is available
+            await this.#turnManager.start();
+        } else {
+            this.#logger.error('GameEngine._finalizeNewGameSuccess: TurnManager not available. Game cannot start turns.');
+            // Depending on how critical TurnManager is, we might want to throw an error or handle this more gracefully.
+            // For now, logging an error. This could lead to a non-interactive game.
+            throw new Error('GameEngine critical error: TurnManager service is unavailable during game finalization.');
+        }
+
 
         this.#logger.info(`GameEngine._finalizeNewGameSuccess: New game started and ready (World: ${this.#activeWorld}).`);
     }
@@ -240,68 +254,92 @@ class GameEngine {
             if (initResult.success) {
                 await this._finalizeNewGameSuccess(worldName);
             } else {
-                // GE-REFAC-015: 2.d.ii.1
                 const initializationError = initResult.error || new Error('Unknown failure from InitializationService.');
-                specificInitializationError = initializationError; // Store this specific error instance
-
-                // GE-REFAC-015: 2.d.ii.2
+                specificInitializationError = initializationError;
                 this.#logger.warn(`GameEngine: InitializationService reported failure for "${worldName}".`);
-
-                // GE-REFAC-015: 2.d.ii.3
                 await this._handleNewGameFailure(initializationError, worldName);
-
-                // GE-REFAC-015: 2.d.ii.4
-                throw initializationError; // This will be caught by the outer catch
+                throw initializationError;
             }
         } catch (error) {
-            // GE-REFAC-015: 2.e.a
-            // Ensure error is an Error instance for consistent message property
             const caughtError = error instanceof Error ? error : new Error(String(error));
             this.#logger.error(`GameEngine: Overall catch in startNewGame for world "${worldName}". Error: ${caughtError.message || String(caughtError)}`, caughtError);
-
-            // GE-REFAC-015: 2.e.b (Critical Decision)
-            // If the caughtError is different from the specificInitializationError,
-            // it means _handleNewGameFailure was not called for this particular error context.
-            // This covers errors from _prepareForNewGameSession, _resetCoreGameState,
-            // _executeInitializationSequence (if it throws directly), or _finalizeNewGameSuccess.
             if (caughtError !== specificInitializationError) {
-                // Ensure worldName is sensible here. If _prepareForNewGameSession fails before #activeWorld is set,
-                // worldName parameter is still the best context we have.
                 await this._handleNewGameFailure(caughtError, worldName);
             }
-
-            // GE-REFAC-015: 2.e.c
-            throw caughtError; // Re-throw the original error (or its wrapped version)
+            throw caughtError;
         }
     }
 
+    /**
+     * Stops the game engine session gracefully.
+     * This method handles the shutdown of the game loop, ends the playtime tracking session,
+     * stops the turn manager, dispatches UI and system events indicating the engine has stopped,
+     * and resets the engine's initialization state and active world.
+     * Relies on established interface contracts for service interactions.
+     * Critical services like ILogger and ISafeEventDispatcher are assumed to be present.
+     *
+     * @async
+     * @returns {Promise<void>} A promise that resolves when the engine has fully stopped.
+     * @fires ENGINE_STOPPED_UI - Dispatched to inform the UI that the engine is inactive.
+     * @fires GAME_STOPPED_ID - Dispatched to inform other systems that the game has stopped.
+     * @memberof GameEngine
+     */
     async stop() {
         if (!this.#isEngineInitialized && !this.#isGameLoopRunning) {
-            this.#logger.info('GameEngine.stop: Engine not running or already stopped.');
+            this.#logger.info('GameEngine.stop: Engine not running or already stopped. No action taken.');
             return;
         }
-        this.#logger.info('GameEngine: Stopping...');
+
+        this.#logger.info('GameEngine.stop: Stopping game engine session...');
         this.#isGameLoopRunning = false;
 
-        if (this.#playtimeTracker && typeof this.#playtimeTracker.endSessionAndAccumulate === 'function') {
+        if (this.#playtimeTracker) {
             this.#playtimeTracker.endSessionAndAccumulate();
+            this.#logger.info('GameEngine.stop: Playtime session ended.');
         } else {
-            this.#logger.warn('GameEngine.stop: PlaytimeTracker not available or endSessionAndAccumulate not a function.');
+            this.#logger.warn('GameEngine.stop: PlaytimeTracker service not available, cannot end session.');
         }
 
-        await this.#safeEventDispatcher.dispatchSafely(ENGINE_STOPPED_UI, {inputDisabledMessage: 'Game stopped.'});
+        await this.#safeEventDispatcher.dispatchSafely(ENGINE_STOPPED_UI, {inputDisabledMessage: 'Game stopped. Engine is inactive.'});
+        this.#logger.info('GameEngine.stop: ENGINE_STOPPED_UI event dispatched.');
 
-        if (this.#turnManager && typeof this.#turnManager.stop === 'function') await this.#turnManager.stop();
+        if (this.#turnManager) {
+            await this.#turnManager.stop();
+            this.#logger.info('GameEngine.stop: TurnManager stopped.');
+        } else {
+            this.#logger.warn('GameEngine.stop: TurnManager service not available, cannot stop.');
+        }
 
-        if (this.#safeEventDispatcher) await this.#safeEventDispatcher.dispatchSafely(GAME_STOPPED_ID, {});
+        await this.#safeEventDispatcher.dispatchSafely(GAME_STOPPED_ID, {});
+        this.#logger.info('GameEngine.stop: GAME_STOPPED_ID event dispatched.');
 
-        this.#logger.info('GameEngine: Stopped.');
         this.#isEngineInitialized = false;
         this.#activeWorld = null;
+
+        this.#logger.info('GameEngine.stop: Engine fully stopped and state reset.');
     }
 
+    /**
+     * Triggers a manual save of the current game state with the given save name.
+     * It checks if the engine is initialized and if the persistence service is available.
+     * Dispatches UI events to inform the user about the progress and outcome of the save operation.
+     *
+     * Events dispatched:
+     * - `ENGINE_MESSAGE_DISPLAY_REQUESTED`: For pre-check failures (engine not initialized, persistence service unavailable),
+     * save success, or save failure (including unexpected errors).
+     * - `ENGINE_OPERATION_IN_PROGRESS_UI`: Before the save operation starts.
+     * - `GAME_SAVED_ID`: On successful save, containing save details.
+     * - `ENGINE_READY_UI`: After the save operation attempt (both success and failure), to revert UI state.
+     *
+     * @async
+     * @param {string} saveName - The name to use for the save file.
+     * @returns {Promise<SaveResult>} A promise that resolves to an object indicating the success or failure of the save operation.
+     * If successful, `filePath` may be included. If failed, `error` will contain a message.
+     * @memberof GameEngine
+     */
     async triggerManualSave(saveName) {
-        this.#logger.info(`GameEngine: Manual save process initiated with name: "${saveName}"`);
+        this.#logger.info(`GameEngine.triggerManualSave: Manual save process initiated with name: "${saveName}"`);
+
         if (!this.#isEngineInitialized) {
             const errorMsg = 'Game engine is not initialized. Cannot save game.';
             this.#logger.error(`GameEngine.triggerManualSave: ${errorMsg}`);
@@ -311,6 +349,7 @@ class GameEngine {
             });
             return {success: false, error: errorMsg};
         }
+
         if (!this.#gamePersistenceService) {
             const errorMsg = 'GamePersistenceService is not available. Cannot save game.';
             this.#logger.error(`GameEngine.triggerManualSave: ${errorMsg}`);
@@ -321,28 +360,63 @@ class GameEngine {
             return {success: false, error: errorMsg};
         }
 
-        const saveResult = await this.#gamePersistenceService.saveGame(saveName, this.#isEngineInitialized);
+        /** @type {SaveResult} */
+        let saveResult;
 
-        if (saveResult.success) {
-            const successMsg = `Game "${saveName}" saved successfully.`;
-            this.#logger.info(`GameEngine: Manual save successful. Name: "${saveName}", Path: ${saveResult.filePath || 'N/A'}`);
-            await this.#safeEventDispatcher.dispatchSafely(GAME_SAVED_ID, {
-                saveName: saveName,
-                path: saveResult.filePath,
-                type: 'manual'
+        try {
+            this.#logger.info(`GameEngine.triggerManualSave: Dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save: "${saveName}".`);
+            await this.#safeEventDispatcher.dispatchSafely(ENGINE_OPERATION_IN_PROGRESS_UI, {
+                titleMessage: 'Saving...',
+                inputDisabledMessage: `Saving game "${saveName}"...`
             });
+
+            saveResult = await this.#gamePersistenceService.saveGame(saveName, this.#isEngineInitialized);
+
+            if (saveResult.success) {
+                const successMsg = `Game "${saveName}" saved successfully.`;
+                this.#logger.info(`GameEngine.triggerManualSave: Save successful. Name: "${saveName}", Path: ${saveResult.filePath || 'N/A'}`);
+
+                await this.#safeEventDispatcher.dispatchSafely(GAME_SAVED_ID, {
+                    saveName: saveName,
+                    path: saveResult.filePath, // filePath might be undefined, consumer should handle
+                    type: 'manual'
+                });
+                this.#logger.info(`GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`);
+
+                await this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
+                    message: successMsg,
+                    type: 'info'
+                });
+                this.#logger.info(`GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (info) for "${saveName}".`);
+            } else {
+                // saveResult.error should be a string as per IGamePersistenceService.SaveResult contract
+                const errorMsg = `Manual save failed for "${saveName}". Error: ${saveResult.error || 'Unknown error'}`;
+                this.#logger.error(`GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${saveResult.error}`);
+                await this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
+                    message: errorMsg,
+                    type: 'error'
+                });
+                this.#logger.info(`GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (error) for "${saveName}".`);
+            }
+        } catch (error) {
+            const caughtErrorMsg = error instanceof Error ? error.message : String(error);
+            this.#logger.error(`GameEngine.triggerManualSave: Unexpected error during save operation for "${saveName}". Error: ${caughtErrorMsg}`, error);
+
+            saveResult = {success: false, error: `Unexpected error during save: ${caughtErrorMsg}`};
+
             await this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
-                message: successMsg,
-                type: 'info'
-            });
-        } else {
-            const errorMsg = `Manual save failed for "${saveName}". Error: ${saveResult.error || 'Unknown error'}`;
-            this.#logger.error(`GameEngine: Manual save failed. Name: "${saveName}". Error: ${saveResult.error}`);
-            await this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
-                message: errorMsg,
+                message: `Save operation encountered an unexpected error for "${saveName}": ${caughtErrorMsg}`,
                 type: 'error'
             });
+            this.#logger.info(`GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (critical error) for "${saveName}".`);
+        } finally {
+            this.#logger.info(`GameEngine.triggerManualSave: Dispatching ENGINE_READY_UI after save attempt for "${saveName}".`);
+            await this.#safeEventDispatcher.dispatchSafely(ENGINE_READY_UI, {
+                activeWorld: this.#activeWorld,
+                message: 'Save operation finished. Ready.' // Consistent with other ENGINE_READY_UI messages indicating interactive state.
+            });
         }
+        // Ensure saveResult is always of type SaveResult, even if initialized in catch.
         return saveResult;
     }
 
@@ -361,11 +435,9 @@ class GameEngine {
     async _prepareForLoadGameSession(saveIdentifier) {
         this.#logger.info(`GameEngine._prepareForLoadGameSession: Preparing to load game from identifier: ${saveIdentifier}`);
 
-        // Ensure any existing game is stopped and core state is reset
         if (this.#isEngineInitialized || this.#isGameLoopRunning) {
             await this.stop();
         }
-        // Reset core game state even if stop wasn't strictly needed, to ensure clean slate
         await this._resetCoreGameState();
 
 
@@ -388,7 +460,6 @@ class GameEngine {
      */
     async _executeLoadAndRestore(saveIdentifier) {
         this.#logger.info(`GameEngine._executeLoadAndRestore: Calling IGamePersistenceService.loadAndRestoreGame for "${saveIdentifier}"...`);
-        // this.#gamePersistenceService is already typed as IGamePersistenceService via constructor JSDoc.
         const restoreOutcome = await this.#gamePersistenceService.loadAndRestoreGame(saveIdentifier);
         this.#logger.info(`GameEngine._executeLoadAndRestore: Load and restore call completed for "${saveIdentifier}". Success: ${restoreOutcome.success}`);
         return restoreOutcome;
@@ -414,7 +485,12 @@ class GameEngine {
         this.#isEngineInitialized = true;
         this.#isGameLoopRunning = true;
 
-        this.#playtimeTracker.startSession();
+        if (this.#playtimeTracker) {
+            this.#playtimeTracker.startSession();
+        } else {
+            this.#logger.warn('GameEngine._finalizeLoadSuccess: PlaytimeTracker not available, cannot start session for loaded game.');
+        }
+
 
         await this.#safeEventDispatcher.dispatchSafely(GAME_LOADED_ID, {saveIdentifier});
         await this.#safeEventDispatcher.dispatchSafely(LOADED_GAME_STARTED_ID, {
@@ -429,7 +505,12 @@ class GameEngine {
         });
 
         this.#logger.info('GameEngine._finalizeLoadSuccess: Starting TurnManager for loaded game...');
-        await this.#turnManager.start();
+        if (this.#turnManager) {
+            await this.#turnManager.start();
+        } else {
+            this.#logger.error('GameEngine._finalizeLoadSuccess: TurnManager not available. Loaded game may not function correctly.');
+            throw new Error('GameEngine critical error: TurnManager service is unavailable during loaded game finalization.');
+        }
 
         this.#logger.info(`GameEngine._finalizeLoadSuccess: Game loaded from "${saveIdentifier}" (World: ${this.#activeWorld}) and resumed.`);
         return {success: true, data: loadedSaveData};
@@ -452,14 +533,13 @@ class GameEngine {
 
         this.#logger.error(
             `GameEngine._handleLoadFailure: Handling game load failure for identifier "${saveIdentifier}". Error: ${errorMessageString}`,
-            errorInfo instanceof Error ? errorInfo : undefined // Log the full error object if it's an Error instance
+            errorInfo instanceof Error ? errorInfo : undefined
         );
 
         this.#logger.info('GameEngine._handleLoadFailure: Dispatching UI event for operation failed (load).');
-        // Check if #safeEventDispatcher is available before dispatching
         if (this.#safeEventDispatcher) {
             await this.#safeEventDispatcher.dispatchSafely(ENGINE_OPERATION_FAILED_UI, {
-                errorMessage: `Failed to load game: ${errorMessageString}`, // Consistent with previous pattern
+                errorMessage: `Failed to load game: ${errorMessageString}`,
                 errorTitle: "Load Failed"
             });
         } else {
@@ -493,15 +573,10 @@ class GameEngine {
         if (!this.#gamePersistenceService) {
             const errorMsg = 'GamePersistenceService is not available. Cannot load game.';
             this.#logger.error(`GameEngine.loadGame: ${errorMsg}`);
-            // Dispatch UI event directly as this is a critical pre-check failure
-            // This check is before _prepareForLoadGameSession, so _handleLoadFailure might
-            // not be the most suitable if it assumes certain preparations were made.
-            // However, the ticket asks for _handleLoadFailure to be used for consistency.
             await this.#safeEventDispatcher.dispatchSafely(ENGINE_OPERATION_FAILED_UI, {
-                errorMessage: errorMsg, // Task requests `errorMsg` directly
+                errorMessage: errorMsg,
                 errorTitle: "Load Failed"
             });
-            // Manually set state as _handleLoadFailure would do, since we are returning early.
             this.#isEngineInitialized = false;
             this.#isGameLoopRunning = false;
             this.#activeWorld = null;
@@ -509,58 +584,75 @@ class GameEngine {
         }
 
         try {
-            await this._prepareForLoadGameSession(saveIdentifier); // GE-REFAC-020: 2.c.i.a
-            const restoreOutcome = await this._executeLoadAndRestore(saveIdentifier); // GE-REFAC-020: 2.c.i.b
+            await this._prepareForLoadGameSession(saveIdentifier);
+            const restoreOutcome = await this._executeLoadAndRestore(saveIdentifier);
 
-            if (restoreOutcome.success && restoreOutcome.data) { // GE-REFAC-020: 2.c.i.c
-                // Type assertion for clarity, assuming restoreOutcome.data is SaveGameStructure on success
+            if (restoreOutcome.success && restoreOutcome.data) {
                 const loadedSaveData = /** @type {SaveGameStructure} */ (restoreOutcome.data);
-                return await this._finalizeLoadSuccess(loadedSaveData, saveIdentifier); // GE-REFAC-020: 2.c.i.c.i
+                return await this._finalizeLoadSuccess(loadedSaveData, saveIdentifier);
             } else {
-                // GE-REFAC-020: 2.c.i.c.ii
                 const loadError = restoreOutcome.error || 'Restored data was missing or load operation failed.';
-                this.#logger.warn(`GameEngine: Load/restore operation reported failure for "${saveIdentifier}".`); // GE-REFAC-020: 2.c.i.c.ii.2
-                return await this._handleLoadFailure(loadError, saveIdentifier); // GE-REFAC-020: 2.c.i.c.ii.3
+                this.#logger.warn(`GameEngine: Load/restore operation reported failure for "${saveIdentifier}".`);
+                return await this._handleLoadFailure(loadError, saveIdentifier);
             }
-        } catch (error) { // GE-REFAC-020: 2.c.ii
-            // This catches unexpected errors from _prepareForLoadGameSession, _executeLoadAndRestore,
-            // or if _finalizeLoadSuccess itself throws.
-            const caughtError = error instanceof Error ? error : new Error(String(error)); // Ensure it's an Error object
-            this.#logger.error(`GameEngine: Overall catch in loadGame for identifier "${saveIdentifier}". Error: ${caughtError.message || String(caughtError)}`, caughtError); // GE-REFAC-020: 2.c.ii.a
-            return await this._handleLoadFailure(caughtError, saveIdentifier); // GE-REFAC-020: 2.c.ii.b
+        } catch (error) {
+            const caughtError = error instanceof Error ? error : new Error(String(error));
+            this.#logger.error(`GameEngine: Overall catch in loadGame for identifier "${saveIdentifier}". Error: ${caughtError.message || String(caughtError)}`, caughtError);
+            return await this._handleLoadFailure(caughtError, saveIdentifier);
         }
     }
 
-    async showSaveGameUI() {
+    /**
+     * Requests the display of the save game UI.
+     * This method is synchronous and dispatches events to request UI actions.
+     * It checks for the availability of the GamePersistenceService and whether saving is currently allowed.
+     *
+     * @memberof GameEngine
+     * @fires ENGINE_MESSAGE_DISPLAY_REQUESTED - If GamePersistenceService is unavailable.
+     * @fires REQUEST_SHOW_SAVE_GAME_UI - If saving is allowed.
+     * @fires CANNOT_SAVE_GAME_INFO - If saving is not currently allowed.
+     */
+    showSaveGameUI() {
         if (!this.#gamePersistenceService) {
-            this.#logger.error("GameEngine.showSaveGameUI: GamePersistenceService not available. Cannot determine if saving is allowed or show UI.");
-            await this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
-                message: "Cannot open save menu: persistence service error.",
+            this.#logger.error("GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.");
+            this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
+                message: "Cannot open save menu: GamePersistenceService is unavailable.",
                 type: 'error'
             });
             return;
         }
 
         if (this.#gamePersistenceService.isSavingAllowed(this.#isEngineInitialized)) {
-            this.#logger.info("GameEngine: Requesting to show Save Game UI.");
-            await this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_SAVE_GAME_UI);
+            this.#logger.info("GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.");
+            this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_SAVE_GAME_UI);
         } else {
             this.#logger.warn("GameEngine.showSaveGameUI: Saving is not currently allowed.");
-            await this.#safeEventDispatcher.dispatchSafely(CANNOT_SAVE_GAME_INFO);
+            // As per ticket: "Dispatch the CANNOT_SAVE_GAME_INFO event (or ENGINE_MESSAGE_DISPLAY_REQUESTED with the specific message: "Cannot save at this moment...")."
+            // Sticking with CANNOT_SAVE_GAME_INFO as it's more specific.
+            this.#safeEventDispatcher.dispatchSafely(CANNOT_SAVE_GAME_INFO);
         }
     }
 
-    async showLoadGameUI() {
+    /**
+     * Requests the display of the load game UI.
+     * This method is synchronous and dispatches an event to request the UI action.
+     * It also checks for the availability of the GamePersistenceService.
+     *
+     * @memberof GameEngine
+     * @fires ENGINE_MESSAGE_DISPLAY_REQUESTED - If GamePersistenceService is unavailable.
+     * @fires REQUEST_SHOW_LOAD_GAME_UI - To request the load game UI.
+     */
+    showLoadGameUI() {
         if (!this.#gamePersistenceService) {
-            this.#logger.error("GameEngine.showLoadGameUI: GamePersistenceService not available. Load Game UI might not function correctly.");
-            await this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
-                message: "Cannot open load menu: persistence service error.",
+            this.#logger.error("GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.");
+            this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
+                message: "Cannot open load menu: GamePersistenceService is unavailable.",
                 type: 'error'
             });
             return;
         }
-        this.#logger.info("GameEngine: Requesting to show Load Game UI.");
-        await this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_LOAD_GAME_UI);
+        this.#logger.info("GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.");
+        this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_LOAD_GAME_UI);
     }
 
     getEngineStatus() {
