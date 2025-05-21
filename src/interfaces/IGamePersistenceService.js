@@ -7,6 +7,7 @@
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
+/** @typedef {import('../../interfaces/ISaveLoadService.js').SaveResult} SaveResult */ // For return type clarity
 
 // --- Interface Specific Types ---
 
@@ -26,12 +27,13 @@ class IGamePersistenceService {
      * Saves the current game state.
      * @param {string} saveName - The desired name for the save file.
      * @param {boolean} isEngineInitialized - Indicates if the game engine is fully initialized.
-     * @returns {Promise<{success: boolean, message?: string, error?: string, filePath?: string}>}
+     * @param {string | null | undefined} [activeWorldName] - Optional: The name of the currently active world.
+     * @returns {Promise<SaveResult>}
      * A promise that resolves with the outcome of the save operation, including success status,
      * an optional message, an optional error, and an optional file path.
      * @abstract
      */
-    async saveGame(saveName, isEngineInitialized) {
+    async saveGame(saveName, isEngineInitialized, activeWorldName) { // Added activeWorldName
         throw new Error('IGamePersistenceService.saveGame not implemented');
     }
 
@@ -56,9 +58,4 @@ class IGamePersistenceService {
     }
 }
 
-// Export the type definitions and the interface itself if needed for runtime checks (though interfaces are typically design-time).
-// For JSDoc purposes, the definitions above are sufficient.
-// If this was TypeScript, we'd export the interface and type. For JSDoc, often just defining them is enough.
-// However, to allow GameEngine to import LoadAndRestoreResult:
-export {IGamePersistenceService}; // Exporting the class for type checking / @implements
-// LoadAndRestoreResult is a @typedef, it will be available for import in JSDoc.
+export {IGamePersistenceService};

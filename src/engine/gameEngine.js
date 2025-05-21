@@ -324,17 +324,9 @@ class GameEngine {
      * It checks if the engine is initialized and if the persistence service is available.
      * Dispatches UI events to inform the user about the progress and outcome of the save operation.
      *
-     * Events dispatched:
-     * - `ENGINE_MESSAGE_DISPLAY_REQUESTED`: For pre-check failures (engine not initialized, persistence service unavailable),
-     * save success, or save failure (including unexpected errors).
-     * - `ENGINE_OPERATION_IN_PROGRESS_UI`: Before the save operation starts.
-     * - `GAME_SAVED_ID`: On successful save, containing save details.
-     * - `ENGINE_READY_UI`: After the save operation attempt (both success and failure), to revert UI state.
-     *
      * @async
      * @param {string} saveName - The name to use for the save file.
      * @returns {Promise<SaveResult>} A promise that resolves to an object indicating the success or failure of the save operation.
-     * If successful, `filePath` may be included. If failed, `error` will contain a message.
      * @memberof GameEngine
      */
     async triggerManualSave(saveName) {
@@ -370,7 +362,8 @@ class GameEngine {
                 inputDisabledMessage: `Saving game "${saveName}"...`
             });
 
-            saveResult = await this.#gamePersistenceService.saveGame(saveName, this.#isEngineInitialized);
+            // Pass this.#activeWorld to gamePersistenceService.saveGame
+            saveResult = await this.#gamePersistenceService.saveGame(saveName, this.#isEngineInitialized, this.#activeWorld);
 
             if (saveResult.success) {
                 const successMsg = `Game "${saveName}" saved successfully.`;
@@ -378,7 +371,7 @@ class GameEngine {
 
                 await this.#safeEventDispatcher.dispatchSafely(GAME_SAVED_ID, {
                     saveName: saveName,
-                    path: saveResult.filePath, // filePath might be undefined, consumer should handle
+                    path: saveResult.filePath,
                     type: 'manual'
                 });
                 this.#logger.info(`GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`);
@@ -389,7 +382,6 @@ class GameEngine {
                 });
                 this.#logger.info(`GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (info) for "${saveName}".`);
             } else {
-                // saveResult.error should be a string as per IGamePersistenceService.SaveResult contract
                 const errorMsg = `Manual save failed for "${saveName}". Error: ${saveResult.error || 'Unknown error'}`;
                 this.#logger.error(`GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${saveResult.error}`);
                 await this.#safeEventDispatcher.dispatchSafely(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
@@ -413,10 +405,9 @@ class GameEngine {
             this.#logger.info(`GameEngine.triggerManualSave: Dispatching ENGINE_READY_UI after save attempt for "${saveName}".`);
             await this.#safeEventDispatcher.dispatchSafely(ENGINE_READY_UI, {
                 activeWorld: this.#activeWorld,
-                message: 'Save operation finished. Ready.' // Consistent with other ENGINE_READY_UI messages indicating interactive state.
+                message: 'Save operation finished. Ready.'
             });
         }
-        // Ensure saveResult is always of type SaveResult, even if initialized in catch.
         return saveResult;
     }
 

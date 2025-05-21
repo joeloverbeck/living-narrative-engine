@@ -11,19 +11,16 @@ import {IGamePersistenceService} from "../interfaces/IGamePersistenceService.js"
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('./playtimeTracker.js').default} PlaytimeTracker */
-/** @typedef {import('../core/config/appContainer.js').default} AppContainer */ // Assuming path
-/** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */ // Assuming path
-/** @typedef {import('../core/services/worldLoader.js').default} WorldLoader */ // Assuming path
+/** @typedef {import('../core/config/appContainer.js').default} AppContainer */
+/** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
+// WorldLoader import is no longer strictly needed here if activeWorldName is passed in
+/** @typedef {import('../core/services/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 
 
 // --- Import Tokens ---
-import {tokens} from '../config/tokens.js'; // Assuming path
+import {tokens} from '../config/tokens.js';
 
-/**
- * Service responsible for orchestrating the capture and restoration of game state,
- * as well as interacting with the ISaveLoadService for file operations.
- * @implements {IGamePersistenceService}
- */
 class GamePersistenceService extends IGamePersistenceService {
     /** @private @type {ILogger} */
     #logger;
@@ -87,7 +84,12 @@ class GamePersistenceService extends IGamePersistenceService {
         }
     }
 
-    captureCurrentGameState() {
+    /**
+     * Captures the current game state.
+     * @param {string | null | undefined} activeWorldName - The name of the currently active world, passed from GameEngine.
+     * @returns {SaveGameStructure} The captured game state object.
+     */
+    captureCurrentGameState(activeWorldName) {
         this.#logger.info('GamePersistenceService: Capturing current game state...');
 
         if (!this.#entityManager) throw new Error('EntityManager not available for capturing game state.');
@@ -102,24 +104,32 @@ class GamePersistenceService extends IGamePersistenceService {
                 components[componentTypeId] = this.#deepClone(componentData);
             }
             entitiesData.push({
-                instanceId: entity.id, // This is the unique instance UUID
-                definitionId: entity.definitionId, // This is the original definition ID (e.g., "isekai:hero")
+                instanceId: entity.id,
+                definitionId: entity.definitionId,
                 components: components,
             });
         }
         this.#logger.debug(`GamePersistenceService: Captured ${entitiesData.length} entities.`);
 
         let activeModsManifest = [];
-        if (typeof this.#dataRegistry.getLoadedModManifests === 'function') {
-            activeModsManifest = this.#dataRegistry.getLoadedModManifests().map(mod => ({
-                modId: mod.modId,
-                version: mod.version,
+        /** @type {ModManifest[]} */
+        const loadedManifestObjects = this.#dataRegistry.getAll('mod_manifests'); // Correctly use getAll
+
+        if (loadedManifestObjects && loadedManifestObjects.length > 0) {
+            activeModsManifest = loadedManifestObjects.map(manifest => ({
+                modId: manifest.id, // Assuming 'id' field in ModManifest stores the mod's ID
+                version: manifest.version,
             }));
-            this.#logger.debug(`GamePersistenceService: Captured ${activeModsManifest.length} active mods.`);
+            this.#logger.debug(`GamePersistenceService: Captured ${activeModsManifest.length} active mods from 'mod_manifests' type in registry.`);
         } else {
-            this.#logger.warn('GamePersistenceService: DataRegistry does not have getLoadedModManifests. Mod manifest may be incomplete.');
-            const coreModDef = this.#dataRegistry.getModDefinition?.('core'); // Optional chaining
-            activeModsManifest = [{modId: 'core', version: coreModDef?.version || 'unknown_fallback'}];
+            this.#logger.warn('GamePersistenceService: No mod manifests found in registry under "mod_manifests" type. Mod manifest may be incomplete. Using fallback.');
+            // Fallback: Try to find 'core' in the (empty or non-existent) list or just add a placeholder
+            const coreModManifest = loadedManifestObjects?.find(m => m.id === 'core');
+            if (coreModManifest) {
+                activeModsManifest = [{modId: 'core', version: coreModManifest.version}];
+            } else {
+                activeModsManifest = [{modId: 'core', version: 'unknown_fallback'}]; // Simplified fallback
+            }
             this.#logger.debug('GamePersistenceService: Used fallback for mod manifest.');
         }
 
@@ -131,44 +141,42 @@ class GamePersistenceService extends IGamePersistenceService {
             this.#logger.warn('GamePersistenceService.captureCurrentGameState: Failed to resolve ITurnManager. Current turn will be default (0).', error);
         }
 
-        let currentWorldName = 'Unknown Game';
-        try {
-            const worldLoader = /** @type {WorldLoader} */ (this.#container.resolve(tokens.WorldLoader));
-            currentWorldName = worldLoader?.getActiveWorldName() || 'Unknown Game';
-        } catch (error) {
-            this.#logger.warn(`GamePersistenceService.captureCurrentGameState: Failed to resolve WorldLoader or get active world name. Using default ('${currentWorldName}').`, error);
+        // Use the activeWorldName passed from GameEngine
+        const currentWorldNameForMeta = activeWorldName || 'Unknown Game';
+        if (!activeWorldName) {
+            this.#logger.warn(`GamePersistenceService.captureCurrentGameState: No activeWorldName was provided by the caller. Defaulting gameTitle to 'Unknown Game'.`);
         }
+
 
         const currentTotalPlaytime = this.#playtimeTracker.getTotalPlaytime();
         this.#logger.debug(`GamePersistenceService: Fetched total playtime: ${currentTotalPlaytime}s.`);
 
         const gameStateObject = {
             metadata: {
-                saveFormatVersion: '1.0.0', // Example version
-                engineVersion: '0.1.0-stub', // Example version
-                gameTitle: currentWorldName,
+                saveFormatVersion: '1.0.0',
+                engineVersion: '0.1.0-stub',
+                gameTitle: currentWorldNameForMeta, // Use the determined world name
                 timestamp: new Date().toISOString(),
                 playtimeSeconds: currentTotalPlaytime,
-                saveName: '', // This will be set by ISaveLoadService or the save UI flow
+                saveName: '',
             },
             modManifest: {
                 activeMods: activeModsManifest,
             },
             gameState: {
                 entities: entitiesData,
-                playerState: {}, // Placeholder for actual player state
-                worldState: {},  // Placeholder for actual world state
+                playerState: {},
+                worldState: {},
                 engineInternals: {
                     currentTurn: currentTurn,
-                    // Other engine-specific states can go here
                 },
             },
             integrityChecks: {
-                gameStateChecksum: 'PENDING_CALCULATION', // To be calculated by SaveLoadService
+                gameStateChecksum: 'PENDING_CALCULATION',
             },
         };
 
-        this.#logger.info(`GamePersistenceService: Game state capture complete. ${entitiesData.length} entities captured. Playtime: ${currentTotalPlaytime}s. Current turn: ${currentTurn}.`);
+        this.#logger.info(`GamePersistenceService: Game state capture complete. Game Title: ${currentWorldNameForMeta}, ${entitiesData.length} entities captured. Playtime: ${currentTotalPlaytime}s. Current turn: ${currentTurn}.`);
         return gameStateObject;
     }
 
@@ -177,13 +185,19 @@ class GamePersistenceService extends IGamePersistenceService {
             this.#logger.warn('GamePersistenceService.isSavingAllowed: Save attempt while engine not initialized.');
             return false;
         }
-        // TODO: Implement actual logic to check if game is in a "non-critical moment".
         this.#logger.debug('GamePersistenceService.isSavingAllowed: Check returned true (currently a basic stub).');
         return true;
     }
 
-    async saveGame(saveName, isEngineInitialized) {
-        this.#logger.info(`GamePersistenceService: Manual save triggered with name: "${saveName}".`);
+    /**
+     * Saves the current game state with the given name.
+     * @param {string} saveName - The name for the save file.
+     * @param {boolean} isEngineInitialized - Flag indicating if the engine is initialized.
+     * @param {string | null | undefined} activeWorldName - The name of the currently active world.
+     * @returns {Promise<import('../interfaces/ISaveLoadService.js').SaveResult>} Result of the save operation.
+     */
+    async saveGame(saveName, isEngineInitialized, activeWorldName) {
+        this.#logger.info(`GamePersistenceService: Manual save triggered with name: "${saveName}". Active world hint: "${activeWorldName || 'N/A'}".`);
 
         if (!this.#saveLoadService) {
             const errorMsg = 'SaveLoadService is not available. Cannot save game.';
@@ -199,8 +213,9 @@ class GamePersistenceService extends IGamePersistenceService {
 
         try {
             this.#logger.debug(`GamePersistenceService.saveGame: Capturing current game state for save "${saveName}".`);
-            const gameStateObject = this.captureCurrentGameState();
-            if (!gameStateObject.metadata) gameStateObject.metadata = {}; // Should be initialized by capture
+            // Pass activeWorldName to captureCurrentGameState
+            const gameStateObject = this.captureCurrentGameState(activeWorldName);
+            if (!gameStateObject.metadata) gameStateObject.metadata = {};
             gameStateObject.metadata.saveName = saveName;
             this.#logger.debug(`GamePersistenceService.saveGame: Set saveName "${saveName}" in gameStateObject.metadata.`);
 
@@ -224,7 +239,7 @@ class GamePersistenceService extends IGamePersistenceService {
     async restoreGameState(deserializedSaveData) {
         this.#logger.info('GamePersistenceService.restoreGameState: Starting game state restoration...');
 
-        if (!deserializedSaveData?.gameState) { // Simplified check
+        if (!deserializedSaveData?.gameState) {
             const errorMsg = "Invalid save data structure provided (missing gameState).";
             this.#logger.error(`GamePersistenceService.restoreGameState: ${errorMsg}`);
             return {success: false, error: errorMsg};
@@ -248,13 +263,11 @@ class GamePersistenceService extends IGamePersistenceService {
             this.#logger.warn('GamePersistenceService.restoreGameState: entitiesToRestore is not an array. No entities will be restored.');
         } else {
             for (const savedEntityData of entitiesToRestore) {
-                // EntityManager.reconstructEntity now expects definitionId to be present
                 if (!savedEntityData?.instanceId || !savedEntityData?.definitionId) {
                     this.#logger.warn(`GamePersistenceService.restoreGameState: Invalid entity data in save (missing instanceId or definitionId). Skipping. Data: ${JSON.stringify(savedEntityData)}`);
                     continue;
                 }
                 try {
-                    // reconstructEntity will handle new Entity(instanceId, definitionId)
                     const restoredEntity = this.#entityManager.reconstructEntity(savedEntityData);
                     if (!restoredEntity) {
                         this.#logger.warn(`GamePersistenceService.restoreGameState: Failed to restore entity with instanceId: ${savedEntityData.instanceId} (Def: ${savedEntityData.definitionId}). reconstructEntity indicated failure.`);
@@ -301,9 +314,7 @@ class GamePersistenceService extends IGamePersistenceService {
             this.#logger.info('GamePersistenceService.restoreGameState: Current turn data not found/invalid in save.');
         }
 
-        // TODO: Restore PlayerState, WorldState, etc.
         this.#logger.debug('GamePersistenceService.restoreGameState: Placeholder for PlayerState/WorldState restoration.');
-
         this.#logger.info('GamePersistenceService.restoreGameState: Game state restoration process complete.');
         return {success: true};
     }

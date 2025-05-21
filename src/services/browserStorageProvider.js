@@ -21,7 +21,7 @@ export class BrowserStorageProvider extends IStorageProvider {
             throw new Error(errorMsg);
         }
         this.#logger = logger;
-        this.#logger.debug('BrowserStorageProvider: Initialized.');
+        this.#logger.debug('BrowserStorageProvider: Initialized. Will use File System Access API with user prompts.');
     }
 
     /**
@@ -54,9 +54,7 @@ export class BrowserStorageProvider extends IStorageProvider {
             try {
                 this.#logger.info("Prompting user for root directory access (readwrite)...");
                 const handle = await window.showDirectoryPicker({mode: 'readwrite'});
-                // It's good practice to verify permission immediately after obtaining, though showDirectoryPicker usually implies it.
                 if (await handle.queryPermission({mode: 'readwrite'}) !== 'granted') {
-                    // This case should be rare if showDirectoryPicker succeeded without error
                     if (await handle.requestPermission({mode: 'readwrite'}) !== 'granted') {
                         this.#logger.error('Permission explicitly denied after selecting directory.');
                         throw new Error('Permission denied for the selected directory.');
@@ -71,33 +69,25 @@ export class BrowserStorageProvider extends IStorageProvider {
                 } else {
                     this.#logger.error('Error selecting root directory:', error);
                 }
-                throw new Error(`Failed to obtain root directory handle: ${error.message}`);
+                throw new Error(`Failed to obtain root directory handle: ${error.message || 'User action or unexpected error during directory selection.'}`);
             }
         }
         throw new Error("Root directory handle not available and prompting is disabled.");
     }
 
-    /**
-     * Gets a directory handle relative to the root, creating directories if specified.
-     * @private
-     * @param {string} directoryPath - The relative path to the directory (e.g., "manual_saves").
-     * @param {object} [options]
-     * @param {boolean} [options.create=false] - Whether to create the directory if it doesn't exist.
-     * @returns {Promise<FileSystemDirectoryHandle>} The directory handle.
-     */
     async #getRelativeDirectoryHandle(directoryPath, options = {create: false}) {
-        const root = await this.#getRootDirectoryHandle(options.create); // Prompt if we might need to create
-        if (!root) { // Should not happen if #getRootDirectoryHandle works as expected
+        const root = await this.#getRootDirectoryHandle(!!options.create);
+        if (!root) {
             throw new Error("Root directory handle is not available.");
         }
         if (!directoryPath || directoryPath === '.' || directoryPath === '/') {
-            return root; // Path refers to the root itself
+            return root;
         }
 
         const parts = directoryPath.replace(/^\/+|\/+$/g, '').split('/');
         let currentHandle = root;
         for (const part of parts) {
-            if (!part) continue; // Skip empty parts (e.g., from "folder//subfolder")
+            if (!part) continue;
             try {
                 currentHandle = await currentHandle.getDirectoryHandle(part, options);
             } catch (error) {
@@ -108,18 +98,9 @@ export class BrowserStorageProvider extends IStorageProvider {
         return currentHandle;
     }
 
-    /**
-     * Gets a file handle relative to the root, creating the file and any necessary directories if specified.
-     * @private
-     * @param {string} filePath - The relative path to the file (e.g., "manual_saves/my_file.sav").
-     * @param {object} [options]
-     * @param {boolean} [options.create=false] - Whether to create the file if it doesn't exist.
-     * @returns {Promise<FileSystemFileHandle>} The file handle.
-     */
     async #getRelativeFileHandle(filePath, options = {create: false}) {
-        // Prompt for root if we are in a create operation, otherwise don't force prompt
         const root = await this.#getRootDirectoryHandle(!!options.create);
-        if (!root) { // Should not happen if #getRootDirectoryHandle works as expected
+        if (!root) {
             throw new Error("Root directory handle is not available.");
         }
 
@@ -133,7 +114,6 @@ export class BrowserStorageProvider extends IStorageProvider {
         let directoryHandle = root;
         if (pathParts.length > 0) {
             const dirPath = pathParts.join('/');
-            // If creating file, also allow creating directories
             directoryHandle = await this.#getRelativeDirectoryHandle(dirPath, {create: !!options.create});
         }
 
@@ -145,18 +125,11 @@ export class BrowserStorageProvider extends IStorageProvider {
         }
     }
 
-    /**
-     * Writes data to a file atomically by overwriting.
-     * @param {string} filePath - The final path for the file.
-     * @param {Uint8Array} data - The data to write.
-     * @returns {Promise<{success: boolean, error?: string}>}
-     * @async
-     */
     async writeFileAtomically(filePath, data) {
         this.#logger.debug(`BrowserStorageProvider: Attempting to write file to ${filePath}`);
         try {
             const fileHandle = await this.#getRelativeFileHandle(filePath, {create: true});
-            const writable = await fileHandle.createWritable({keepExistingData: false}); // Overwrite ensures atomicity for this file
+            const writable = await fileHandle.createWritable({keepExistingData: false});
             await writable.write(data);
             await writable.close();
             this.#logger.info(`BrowserStorageProvider: Successfully wrote ${data.byteLength} bytes to file ${filePath}`);
@@ -167,19 +140,11 @@ export class BrowserStorageProvider extends IStorageProvider {
         }
     }
 
-    /**
-     * Lists files in a given directory matching a pattern.
-     * @param {string} directoryPath - The directory to scan (relative to root).
-     * @param {string} pattern - A glob-like pattern (e.g., "*.sav").
-     * @returns {Promise<Array<string>>} A list of file names.
-     * @async
-     */
     async listFiles(directoryPath, pattern) {
         this.#logger.debug(`BrowserStorageProvider: Listing files in "${directoryPath}" with pattern "${pattern}"`);
         try {
             const dirHandle = await this.#getRelativeDirectoryHandle(directoryPath, {create: false});
             const matchingFiles = [];
-            // Simple glob to regex: converts * to .* and . to \.
             const regexPatternText = '^' + pattern.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$';
             const regexPattern = new RegExp(regexPatternText);
 
@@ -193,21 +158,19 @@ export class BrowserStorageProvider extends IStorageProvider {
         } catch (error) {
             if (error.name === 'NotFoundError') {
                 this.#logger.warn(`BrowserStorageProvider: Directory not found for listing: "${directoryPath}". Returning empty list.`);
-                return []; // Directory doesn't exist, so no files to list
+                return [];
+            }
+            if (error.message === "Root directory handle not available and prompting is disabled." ||
+                error.message === "Root directory permission denied and no prompt allowed.") {
+                // CHANGED TO .info() and rephrased message slightly
+                this.#logger.info(`BrowserStorageProvider: Cannot list files from "${directoryPath}" because root directory is not yet selected/accessible for this read-only operation. A prompt to select the directory should occur on the first save attempt. Original error: ${error.message}`);
+                return [];
             }
             this.#logger.error(`BrowserStorageProvider: Error listing files in "${directoryPath}": ${error.message}`, error);
-            // Depending on strictness, could throw or return empty.
-            // For robustness, return empty on error other than not found.
             return [];
         }
     }
 
-    /**
-     * Reads data from a file.
-     * @param {string} filePath - The path to the file (relative to root).
-     * @returns {Promise<Uint8Array>} The file content.
-     * @async
-     */
     async readFile(filePath) {
         this.#logger.debug(`BrowserStorageProvider: Reading file ${filePath}`);
         try {
@@ -221,16 +184,14 @@ export class BrowserStorageProvider extends IStorageProvider {
             if (error.name === 'NotFoundError') {
                 throw new Error(`File not found: ${filePath}. Original error: ${error.message}`);
             }
-            throw error; // Re-throw other errors
+            if (error.message === "Root directory handle not available and prompting is disabled." ||
+                error.message === "Root directory permission denied and no prompt allowed.") {
+                throw new Error(`Cannot read file: Root directory not selected or accessible. Original error: ${error.message}`);
+            }
+            throw error;
         }
     }
 
-    /**
-     * Deletes a file.
-     * @param {string} filePath - The path to the file (relative to root).
-     * @returns {Promise<{success: boolean, error?: string}>}
-     * @async
-     */
     async deleteFile(filePath) {
         this.#logger.debug(`BrowserStorageProvider: Deleting file ${filePath}`);
         try {
@@ -246,8 +207,7 @@ export class BrowserStorageProvider extends IStorageProvider {
                 const dirPath = pathParts.join('/');
                 directoryHandle = await this.#getRelativeDirectoryHandle(dirPath, {create: false});
             } else {
-                // File is in the root directory
-                directoryHandle = await this.#getRootDirectoryHandle(false); // Don't prompt if root not set
+                directoryHandle = await this.#getRootDirectoryHandle(false);
             }
 
             await directoryHandle.removeEntry(fileName);
@@ -261,16 +221,17 @@ export class BrowserStorageProvider extends IStorageProvider {
                     error: `File not found for deletion: ${filePath}. Original error: ${error.message}`
                 };
             }
+            if (error.message === "Root directory handle not available and prompting is disabled." ||
+                error.message === "Root directory permission denied and no prompt allowed.") {
+                return {
+                    success: false,
+                    error: `Cannot delete file: Root directory not selected or accessible. Original error: ${error.message}`
+                };
+            }
             return {success: false, error: error.message};
         }
     }
 
-    /**
-     * Checks if a file exists.
-     * @param {string} filePath - The path to the file (relative to root).
-     * @returns {Promise<boolean>} True if the file exists, false otherwise.
-     * @async
-     */
     async fileExists(filePath) {
         this.#logger.debug(`BrowserStorageProvider: Checking if file exists: ${filePath}`);
         try {
@@ -282,8 +243,13 @@ export class BrowserStorageProvider extends IStorageProvider {
                 this.#logger.info(`BrowserStorageProvider: File does not exist: ${filePath}`);
                 return false;
             }
+            if (error.message === "Root directory handle not available and prompting is disabled." ||
+                error.message === "Root directory permission denied and no prompt allowed.") {
+                this.#logger.info(`BrowserStorageProvider: Cannot check file existence for ${filePath} as root directory is not set/accessible and prompting is disabled. Assuming false.`);
+                return false;
+            }
             this.#logger.warn(`BrowserStorageProvider: Error checking file existence for ${filePath}, assuming false. Error: ${error.message}`, error);
-            return false; // If error is not 'NotFoundError', it's ambiguous, but safer to return false.
+            return false;
         }
     }
 }

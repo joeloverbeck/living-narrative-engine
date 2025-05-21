@@ -388,21 +388,14 @@ describe('GameEngine', () => {
                 setupMockContainer(); // Fresh mocks for each test in this inner describe
                 gameEngine = new GameEngine({container: mockContainer});
                 mockInitializationService.runInitializationSequence.mockResolvedValue({success: true});
+                // This call sets this.#activeWorld to MOCK_ACTIVE_WORLD_FOR_SAVE in the gameEngine instance
                 await gameEngine.startNewGame(MOCK_ACTIVE_WORLD_FOR_SAVE);
 
-                // Clear all mock calls that might have happened during setup (startNewGame)
-                // jest.clearAllMocks(); // This is too broad and clears jest.fn() on mocks themselves.
-                // Clear specific mocks:
                 mockSafeEventDispatcher.dispatchSafely.mockClear();
                 mockLogger.info.mockClear();
                 mockLogger.error.mockClear();
                 mockLogger.warn.mockClear();
                 mockGamePersistenceService.saveGame.mockClear();
-
-                // Also, if startNewGame itself resolves IInitializationService and it's used later:
-                // mockContainer.resolve.mockClear() // This might be too much if constructor uses it.
-                // Better to reset specific service mocks if startNewGame causes them to be called.
-                // For this test, startNewGame calls are fine to be cleared before triggerManualSave is tested.
             });
 
             it('should dispatch error if GamePersistenceService is unavailable', async () => {
@@ -459,7 +452,8 @@ describe('GameEngine', () => {
                     inputDisabledMessage: `Saving game "${SAVE_NAME}"...`
                 });
 
-                expect(mockGamePersistenceService.saveGame).toHaveBeenCalledWith(SAVE_NAME, true);
+                // 👇 MODIFIED EXPECTATION HERE
+                expect(mockGamePersistenceService.saveGame).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
 
                 expect(dispatchCalls[1][0]).toBe(GAME_SAVED_ID);
                 expect(dispatchCalls[1][1]).toEqual({
@@ -498,7 +492,8 @@ describe('GameEngine', () => {
                     inputDisabledMessage: `Saving game "${SAVE_NAME}"...`
                 });
 
-                expect(mockGamePersistenceService.saveGame).toHaveBeenCalledWith(SAVE_NAME, true);
+                // 👇 MODIFIED EXPECTATION HERE
+                expect(mockGamePersistenceService.saveGame).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
 
                 expect(dispatchCalls[1][0]).toBe(ENGINE_MESSAGE_DISPLAY_REQUESTED);
                 expect(dispatchCalls[1][1]).toEqual({
@@ -531,7 +526,8 @@ describe('GameEngine', () => {
                     inputDisabledMessage: `Saving game "${SAVE_NAME}"...`
                 });
 
-                expect(mockGamePersistenceService.saveGame).toHaveBeenCalledWith(SAVE_NAME, true);
+                // 👇 MODIFIED EXPECTATION HERE
+                expect(mockGamePersistenceService.saveGame).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
 
                 expect(dispatchCalls[1][0]).toBe(ENGINE_MESSAGE_DISPLAY_REQUESTED);
                 expect(dispatchCalls[1][1]).toEqual({
