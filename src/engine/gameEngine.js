@@ -1,4 +1,4 @@
-// src/core/gameEngine.js
+// src/engine/gameEngine.js
 
 import {tokens} from '../config/tokens.js'; // Assuming tokens.IInitializationService exists and others are correct
 import {
@@ -92,6 +92,26 @@ class GameEngine {
     }
 
     /**
+     * @private
+     * Resets core game state components like the EntityManager and PlaytimeTracker.
+     * This method centralizes the reset logic used by startNewGame and loadGame.
+     * It includes checks for service existence and logs appropriate messages.
+     */
+    _resetCoreGameState() {
+        if (this.#entityManager) { // Assumes IEntityManager interface
+            this.#entityManager.clearAll();
+        } else {
+            this.#logger.warn('GameEngine._resetCoreGameState: EntityManager not available.');
+        }
+        if (this.#playtimeTracker) { // Assumes IPlaytimeTracker interface
+            this.#playtimeTracker.reset();
+        } else {
+            this.#logger.warn('GameEngine._resetCoreGameState: PlaytimeTracker not available.');
+        }
+        this.#logger.debug('GameEngine: Core game state (EntityManager, PlaytimeTracker) cleared/reset.');
+    }
+
+    /**
      * Initializes the game engine and loads the necessary world data by orchestrating
      * the InitializationService.
      * @async
@@ -111,9 +131,7 @@ class GameEngine {
             this.#domUiFacade.title.set(`Initializing ${worldName}...`);
             this.#domUiFacade.input.setEnabled(false, `Initializing ${worldName}...`);
 
-            this.#entityManager.clearAll();
-            this.#playtimeTracker.reset();
-            this.#logger.debug('GameEngine: EntityManager and PlaytimeTracker cleared/reset.');
+            this._resetCoreGameState(); // GE-REFAC-005: Consolidated call
 
             this.#logger.info('GameEngine: Resolving InitializationService...');
             // Using tokens.IInitializationService for resolution as per user's latest info
@@ -257,10 +275,11 @@ class GameEngine {
         }
 
         await this.stop();
-        this.#entityManager.clearAll();
-        this.#playtimeTracker.reset();
-        this.#logger.debug('GameEngine.loadGame: Existing game stopped, EntityManager and PlaytimeTracker cleared/reset.');
-
+        this._resetCoreGameState(); // GE-REFAC-005: Consolidated call
+        // The debug log from _resetCoreGameState will indicate "EntityManager and PlaytimeTracker cleared/reset."
+        // The specific log "GameEngine.loadGame: Existing game stopped, EntityManager and PlaytimeTracker cleared/reset." is now partially covered.
+        // If the exact log message is critical for tests, it might need adjustment or the test needs to be updated.
+        // For now, we'll rely on the debug log from the helper.
 
         const shortSaveName = saveIdentifier.split(/[/\\]/).pop() || saveIdentifier;
         this.#domUiFacade.title.set(`Loading ${shortSaveName}...`);
@@ -276,7 +295,7 @@ class GameEngine {
             this.#isEngineInitialized = true;
             this.#isGameLoopRunning = true;
 
-            this.#playtimeTracker.startSession();
+            this.#playtimeTracker.startSession(); // Start session after successful load & state restoration
 
             this.#domUiFacade.title.set(this.#activeWorld);
 

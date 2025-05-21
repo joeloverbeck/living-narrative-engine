@@ -1,4 +1,4 @@
-// src/core/config/tokens.js
+// src/config/tokens.js
 
 /**
  * @fileoverview Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -40,6 +40,7 @@
  * @property {DiToken} DomUiFacade - Token for the facade aggregating all UI components.
  * @property {DiToken} SaveGameUI - Token for the Save Game UI component.
  * @property {DiToken} LoadGameUI - Token for the Load Game UI component.
+ * @property {DiToken} EngineUIManager - Token for the service managing UI updates from GameEngine events. // <<< ADDED
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
  *
  * --- Loaders ---
@@ -150,9 +151,12 @@ export const tokens = Object.freeze({
     DomUiFacade: 'DomUiFacade',
     SaveGameUI: 'SaveGameUI',
     LoadGameUI: 'LoadGameUI',
+    EngineUIManager: 'EngineUIManager', // <<< ADDED TOKEN
+    // DomRenderer: 'DomRenderer', // Example if it was to be explicitly listed before removal or for deprecation
 
     // Loaders
     SchemaLoader: 'SchemaLoader',
+    // ManifestLoader: 'ManifestLoader', // Assuming deprecated as per comment in definition
     RuleLoader: 'RuleLoader',
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
     ActionLoader: 'ActionLoader',
@@ -171,6 +175,7 @@ export const tokens = Object.freeze({
     PrerequisiteEvaluationService: 'PrerequisiteEvaluationService',
     DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
     ActionValidationService: 'ActionValidationService',
+    // PayloadValueResolverService: 'PayloadValueResolverService', // Removed as per definition comment
     TurnHandlerResolver: 'TurnHandlerResolver',
     PlayerTurnHandler: 'PlayerTurnHandler',
     AITurnHandler: 'AITurnHandler',
@@ -180,8 +185,8 @@ export const tokens = Object.freeze({
     CommandOutcomeInterpreter: 'CommandOutcomeInterpreter', // Concrete class token
     SubscriptionLifecycleManager: 'SubscriptionLifecycleManager', // Concrete class token
     PerceptionUpdateService: 'PerceptionUpdateService',
-    PlaytimeTracker: 'PlaytimeTracker',
-    GamePersistenceService: 'GamePersistenceService',
+    PlaytimeTracker: 'PlaytimeTracker', // Concrete class token
+    GamePersistenceService: 'GamePersistenceService', // Concrete class token
 
     // Core Service Interfaces
     ISafeEventDispatcher: 'ISafeEventDispatcher',
@@ -194,7 +199,7 @@ export const tokens = Object.freeze({
     IInputHandler: 'IInputHandler', // May become obsolete
     ITurnOrderService: 'ITurnOrderService',
     ITurnManager: 'ITurnManager',
-    ITurnContext: 'ITurnContext',
+    ITurnContext: 'ITurnContext', // Removed as per definition comment
     ICommandInputPort: 'ICommandInputPort',
     IPromptOutputPort: 'IPromptOutputPort',
     ITurnEndPort: 'ITurnEndPort',
@@ -212,7 +217,6 @@ export const tokens = Object.freeze({
     ShutdownService: 'ShutdownService',
     GameLoop: 'GameLoop',
     InputSetupService: 'InputSetupService',
-
 
     // Logic/Interpretation Layer
     OperationRegistry: 'OperationRegistry',

@@ -26,17 +26,20 @@ import {
     DocumentContext
 } from '../../domUI/index.js';
 import SaveGameUI from "../../domUI/saveGameUI.js";
-import LoadGameUI from "../../domUI/loadGameUI.js"; // <<< ADDED
+import LoadGameUI from "../../domUI/loadGameUI.js";
+import {EngineUIManager} from '../../domUI/engineUIManager.js'; // <<< ADDED IMPORT for EngineUIManager
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */ // <<< ADDED for EngineUIManager
 /** @typedef {import('../../interfaces/IInputHandler.js').IInputHandler} IInputHandler */
 /** @typedef {import('../../domUI/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */ // <<< ADDED for LoadGameUI
+
+/** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 
 
 /**
@@ -44,6 +47,7 @@ import LoadGameUI from "../../domUI/loadGameUI.js"; // <<< ADDED
  * - Registers individual renderers/controllers.
  * - Registers the DomUiFacade under its own token.
  * - Registers the InputHandler with its updated dependency.
+ * - Registers the new EngineUIManager.
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -122,8 +126,8 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            entityManager: c.resolve(tokens.IEntityManager),
-            dataRegistry: c.resolve(tokens.IDataRegistry),
+            entityManager: c.resolve(tokens.IEntityManager), // Assuming IEntityManager is registered
+            dataRegistry: c.resolve(tokens.IDataRegistry),   // Assuming IDataRegistry is registered
             containerElement: locationContainer
         });
     });
@@ -152,7 +156,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         const docContext = c.resolve(tokens.IDocumentContext);
         const resolvedLogger = c.resolve(tokens.ILogger);
         const buttonsContainer = docContext.query('#action-buttons');
-        const sendButton = docContext.query('#player-confirm-turn-button');
+        const sendButton = docContext.query('#player-confirm-turn-button'); // May or may not exist
 
         if (!buttonsContainer) {
             resolvedLogger.warn(`UI Registrations: Could not find '#action-buttons' element for ActionButtonsRenderer. Buttons will not be rendered.`);
@@ -164,7 +168,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
             actionButtonsContainer: buttonsContainer,
-            sendButtonElement: sendButton
+            sendButtonElement: sendButton // Can be null
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
@@ -177,7 +181,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             documentContext: c.resolve(tokens.IDocumentContext),
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            entityManager: c.resolve(tokens.IEntityManager)
+            entityManager: c.resolve(tokens.IEntityManager) // Assuming IEntityManager is registered
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.PerceptionLogRenderer}.`);
@@ -187,16 +191,16 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-        saveLoadService: c.resolve(tokens.ISaveLoadService)
+        saveLoadService: c.resolve(tokens.ISaveLoadService) // Assuming ISaveLoadService is registered
     }));
     logger.debug(`UI Registrations: Registered ${tokens.SaveGameUI}.`);
 
-    // LoadGameUI <<< ADDED REGISTRATION
+    // LoadGameUI
     registrar.singletonFactory(tokens.LoadGameUI, c => new LoadGameUI({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-        saveLoadService: c.resolve(tokens.ISaveLoadService)
+        saveLoadService: c.resolve(tokens.ISaveLoadService) // Assuming ISaveLoadService is registered
     }));
     logger.debug(`UI Registrations: Registered ${tokens.LoadGameUI}.`);
 
@@ -210,16 +214,26 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         tokens.InputStateController,
         tokens.UiMessageRenderer,
         tokens.PerceptionLogRenderer,
-        tokens.SaveGameUI, // <<< ADDED to facade dependencies
-        tokens.LoadGameUI  // <<< ADDED to facade dependencies
+        tokens.SaveGameUI,
+        tokens.LoadGameUI
     ]);
     logger.info(`UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`);
 
-    // --- 4. Legacy Input Handler (Dependency Updated) ---
+    // --- 4. Register Engine UI Manager --- // <<< NEW SECTION
+    registrar.singletonFactory(tokens.EngineUIManager, c => new EngineUIManager({
+        eventDispatcher: c.resolve(tokens.ISafeEventDispatcher), // Assuming ISafeEventDispatcher is registered
+        domUiFacade: c.resolve(tokens.DomUiFacade),
+        logger: c.resolve(tokens.ILogger)
+    }));
+    logger.info(`UI Registrations: Registered ${tokens.EngineUIManager}.`);
+
+
+    // --- 5. Legacy Input Handler (Dependency Updated) ---
+    // Note: Numbering adjusted due to new section
     registrar.singletonFactory(tokens.IInputHandler, (c) => new InputHandler(
         c.resolve(tokens.inputElement),
-        undefined, // Command callback (can be set later)
-        c.resolve(tokens.IValidatedEventDispatcher)
+        undefined, // Command callback (can be set later or managed via events)
+        c.resolve(tokens.IValidatedEventDispatcher) // Using VED
     ));
     logger.debug(`UI Registrations: Registered ${tokens.IInputHandler} (legacy) with VED.`);
 
