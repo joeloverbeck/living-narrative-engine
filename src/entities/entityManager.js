@@ -1,15 +1,15 @@
 import Entity from './entity.js'; // Represents OriginalEntity as per ticket context
 import {POSITION_COMPONENT_ID} from "../constants/componentIds.js";
 // Corrected import path for IEntityManager
-import {IEntityManager} from "../core/interfaces/IEntityManager.js";
+import {IEntityManager} from "../interfaces/IEntityManager.js";
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../core/interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */
 
-/** @typedef {import('../core/interfaces/coreServices.js').ValidationResult} ValidationResult */
+/** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */
 
 /**
  * Manages the lifecycle and component data manipulation of Entity instances.

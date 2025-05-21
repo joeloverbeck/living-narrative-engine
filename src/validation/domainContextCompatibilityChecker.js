@@ -1,7 +1,7 @@
 // src/validation/domainContextCompatibilityChecker.js
 
 /**
- * @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition
  * @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext
  * @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain

@@ -3,7 +3,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 // +++ TICKET 6: Import ActionDefinition and ActionAttemptPseudoEvent types +++
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../actions/actionTypes.js').ActionAttemptPseudoEvent} ActionAttemptPseudoEvent */

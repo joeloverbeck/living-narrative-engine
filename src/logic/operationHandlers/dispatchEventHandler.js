@@ -1,9 +1,9 @@
 // src/logic/operationHandlers/dispatchEventHandler.js
 // --- JSDoc Imports ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */ // ** Corrected type for 2nd arg **
-/** @typedef {import('../../core/eventBus.js').default} EventBus */
-/** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../events/eventBus.js').default} EventBus */
+/** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 // --- Handler Implementation ---
 /**

@@ -2,10 +2,10 @@
 
 // --- JSDoc Imports (Ensure paths are correct for your project) ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // User confirmed preference
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // User confirmed preference
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../core/services/gameDataRepository.js').default} GameDataRepository */ // <<< CORRECTED PATH based on provided service implementation
+/** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */ // <<< CORRECTED PATH based on provided service implementation
 
 // --- Existing Type Definitions (Assuming these are up-to-date) ---
 /**
