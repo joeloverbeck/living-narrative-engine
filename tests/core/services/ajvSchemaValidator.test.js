@@ -1,7 +1,7 @@
 // src/tests/core/services/ajvSchemaValidator.test.js
 
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
-import AjvSchemaValidator from '../../../core/services/ajvSchemaValidator.js'; // Adjust path as needed
+import AjvSchemaValidator from '../../../src/services/ajvSchemaValidator.js'; // Adjust path as needed
 
 // --- Task 1: Prepare Test Assets ---
 

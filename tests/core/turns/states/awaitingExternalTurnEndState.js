@@ -13,13 +13,13 @@
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals';
 
 // Module to be tested
-import {AwaitingExternalTurnEndState} from '../../../../core/turns/states/awaitingExternalTurnEndState.js';
+import {AwaitingExternalTurnEndState} from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 
 // Dependencies to be mocked or spied upon
-import {TurnIdleState} from '../../../../core/turns/states/turnIdleState.js';
+import {TurnIdleState} from '../../../../src/turns/states/turnIdleState.js';
 import {AbstractTurnState}
-    from "../../../../core/turns/states/abstractTurnState.js"; // For spying on super methods
-import {TURN_ENDED_ID} from '../../../../core/constants/eventIds.js';
+    from "../../../../src/turns/states/abstractTurnState.js"; // For spying on super methods
+import {TURN_ENDED_ID} from '../../../../src/constants/eventIds.js';
 
 // --- Mocks & Test Utilities ---
 

@@ -1,7 +1,7 @@
 // Filename: src/tests/core/loaders/baseManifestItemLoader.loadItemsForMod.test.js
 
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import {BaseManifestItemLoader} from '../../../core/loaders/baseManifestItemLoader.js'; // Adjust path if necessary
+import {BaseManifestItemLoader} from '../../../src/loaders/baseManifestItemLoader.js'; // Adjust path if necessary
 
 // --- Mock Service Factories (Copied from actionLoader.test.js) ---
 

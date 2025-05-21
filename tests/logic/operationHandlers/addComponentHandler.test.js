@@ -4,13 +4,13 @@
  * @jest-environment node
  */
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
-import AddComponentHandler from '../../../logic/operationHandlers/addComponentHandler.js'; // Adjust path if needed
+import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js'; // Adjust path if needed
 
 // --- Type-hints (for editors only) ------------------------------------------
-/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../../logic/defs.js').ExecutionContext} ExecutionContext */
-/** @typedef {import('../../../logic/operationHandlers/addComponentHandler.js').AddComponentOperationParams} AddComponentOperationParams */
+/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../../src/logic/defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../../../src/logic/operationHandlers/addComponentHandler.js').AddComponentOperationParams} AddComponentOperationParams */
 
 // --- Mock services ---------------------------------------------------------
 const mockEntityManager = {

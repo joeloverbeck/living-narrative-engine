@@ -4,22 +4,22 @@
 /**
  * @jest-environment node
  */
-import {ActionValidationService} from '../../services/actionValidationService.js';
-import {ActionTargetContext} from '../../models/actionTargetContext.js';
+import {ActionValidationService} from '../../src/services/actionValidationService.js';
+import {ActionTargetContext} from '../../src/models/actionTargetContext.js';
 import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from '@jest/globals';
 
 // --- Removed import for RealJsonLogicEvaluationService as it's no longer directly mocked/used by AVS tests ---
 
 // --- Import the class AND mock its module ---
-import {DomainContextCompatibilityChecker} from '../../validation/domainContextCompatibilityChecker.js'; // Adjust path if necessary
-jest.mock('../../validation/domainContextCompatibilityChecker.js'); // <<< Keep this mock
+import {DomainContextCompatibilityChecker} from '../../src/validation/domainContextCompatibilityChecker.js'; // Adjust path if necessary
+jest.mock('../../src/validation/domainContextCompatibilityChecker.js'); // <<< Keep this mock
 
 // --- Removed createActionValidationContext import as it's no longer injected into AVS ---
 // import {createActionValidationContext} from '../../logic/createActionValidationContext.js';
 
 // +++ Import PrerequisiteEvaluationService and mock it +++
-import {PrerequisiteEvaluationService} from '../../services/prerequisiteEvaluationService.js'; // Adjust path if necessary
-jest.mock('../../services/prerequisiteEvaluationService.js'); // Mock the service AVS now delegates to
+import {PrerequisiteEvaluationService} from '../../src/services/prerequisiteEvaluationService.js'; // Adjust path if necessary
+jest.mock('../../src/services/prerequisiteEvaluationService.js'); // Mock the service AVS now delegates to
 
 
 // Assuming a simple mock logger, replace with your actual logger/mocking library if needed

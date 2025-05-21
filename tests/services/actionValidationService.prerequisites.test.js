@@ -5,11 +5,11 @@
 import {describe, expect, test, jest, beforeEach, afterEach} from '@jest/globals';
 
 // --- Function Under Test ---
-import {createActionValidationContext} from '../../logic/createActionValidationContext.js'; // Adjust path as needed
+import {createActionValidationContext} from '../../src/logic/createActionValidationContext.js'; // Adjust path as needed
 
 // --- Dependencies to Mock/Use ---
-import Entity from '../../entities/entity.js'; // Needed to create mock entity instances
-import {ActionTargetContext} from '../../models/actionTargetContext.js'; // Needed for test inputs
+import Entity from '../../src/entities/entity.js'; // Needed to create mock entity instances
+import {ActionTargetContext} from '../../src/models/actionTargetContext.js'; // Needed for test inputs
 // +++ Import ActionDefinition type if needed for strict typing of the mock +++
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
@@ -31,11 +31,11 @@ const mockLogger = {
 };
 
 // Mock createComponentAccessor (from contextAssembler.js)
-jest.mock('../../logic/contextAssembler.js', () => ({
+jest.mock('../../src/logic/contextAssembler.js', () => ({
   createComponentAccessor: jest.fn(),
 }));
 // Import the *mocked* version after jest.mock()
-import {createComponentAccessor} from '../../logic/contextAssembler.js';
+import {createComponentAccessor} from '../../src/logic/contextAssembler.js';
 
 // --- Test Suite ---
 

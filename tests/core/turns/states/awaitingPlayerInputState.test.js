@@ -14,12 +14,12 @@ import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals
 // Module to be tested
 import {
     AwaitingPlayerInputState
-} from '../../../../core/turns/states/awaitingPlayerInputState.js';
+} from '../../../../src/turns/states/awaitingPlayerInputState.js';
 
 // Dependencies to be mocked or spied upon
-import {ProcessingCommandState} from '../../../../core/turns/states/processingCommandState.js';
-import {TurnIdleState} from '../../../../core/turns/states/turnIdleState.js';
-import {AbstractTurnState} from '../../../../core/turns/states/abstractTurnState.js';
+import {ProcessingCommandState} from '../../../../src/turns/states/processingCommandState.js';
+import {TurnIdleState} from '../../../../src/turns/states/turnIdleState.js';
+import {AbstractTurnState} from '../../../../src/turns/states/abstractTurnState.js';
 // TurnDirectiveStrategyResolver is not directly used by AwaitingPlayerInputState,
 // so no need to import/mock it here unless testing that it's *not* resolved by this state.
 

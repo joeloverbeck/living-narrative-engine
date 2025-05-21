@@ -4,7 +4,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {import('../../../entities/entity.js').default} Entity
+ * @typedef {import('../../entities/entity.js').default} Entity
  */
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger

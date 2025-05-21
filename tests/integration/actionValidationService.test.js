@@ -6,23 +6,23 @@
 import {describe, expect, test, jest, beforeEach, afterEach} from '@jest/globals';
 
 // --- System Under Test (SUT) ---
-import {ActionValidationService} from '../../services/ActionValidationService.js'; // Adjust path if needed
+import {ActionValidationService} from '../../src/services/actionValidationService.js'; // Adjust path if needed
 
 // --- Mock Dependencies ---
-import {PrerequisiteEvaluationService} from '../../services/prerequisiteEvaluationService.js'; // Import PES
-import Entity from '../../entities/entity.js'; // Needed for test inputs
-import {ActionTargetContext} from '../../models/actionTargetContext.js';
-import {createMockPrerequisiteEvaluationService} from '../testUtils'; // Needed for test inputs
+import {PrerequisiteEvaluationService} from '../../src/services/prerequisiteEvaluationService.js'; // Import PES
+import Entity from '../../src/entities/entity.js'; // Needed for test inputs
+import {ActionTargetContext} from '../../src/models/actionTargetContext.js';
+import {createMockPrerequisiteEvaluationService} from '../testUtils.js'; // Needed for test inputs
 
 // --- Mock Modules ---
-jest.mock('../../services/prerequisiteEvaluationService.js'); // Mock PES module
+jest.mock('../../src/services/prerequisiteEvaluationService.js'); // Mock PES module
 
 // --- Type Imports ---
-/** @typedef {import('../../types/actionDefinition.js').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../src/types/actionDefinition.js').ActionDefinition} ActionDefinition */
 // REMOVED: JsonLogicEvaluationContext is no longer directly verified in these tests
 // /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */
 
 
 // --- Mock Instances ---
