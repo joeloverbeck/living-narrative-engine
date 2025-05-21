@@ -19,10 +19,10 @@ import PerceptionUpdateService from '../../../services/perceptionUpdateService.j
 // Import getEntityIdsForScopes directly
 import {getEntityIdsForScopes} from '../../../services/entityScopeService.js';
 
-// --- ADD IMPORT FOR PLAYTIMETRACKER (already present) ---
+// --- PlaytimeTracker Import ---
 import PlaytimeTracker from '../../../services/playtimeTracker.js';
 
-// --- ADDED IMPORT FOR GamePersistenceService ---
+// --- GamePersistenceService Import ---
 import GamePersistenceService from '../../../services/gamePersistenceService.js';
 
 
@@ -41,13 +41,16 @@ import GamePersistenceService from '../../../services/gamePersistenceService.js'
 /** @typedef {import('../../../services/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
 /** @typedef {import('../../turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
+/** @typedef {import('../../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */ // ADDED
 
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager_Type */
 /** @typedef {import('../../../services/perceptionUpdateService.js').default} PerceptionUpdateService_Type */
-/** @typedef {import('../../../services/playtimeTracker.js').default} PlaytimeTracker_Type */
-/** @typedef {import('../../../services/gamePersistenceService.js').default} GamePersistenceService_Type */ // <<< ADDED TYPEDEF
-/** @typedef {import('../../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface */ // For GamePersistenceService type hint
-/** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */ // For GamePersistenceService type hint
+// PlaytimeTracker_Type typedef is no longer strictly needed here if we use IPlaytimeTracker for GamePersistenceService dependency.
+// /** @typedef {import('../../../services/playtimeTracker.js').default} PlaytimeTracker_Type */
+/** @typedef {import('../../../services/gamePersistenceService.js').default} GamePersistenceService_Type */
+/** @typedef {import('../../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface */
+
+/** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */
 
 
 /**
@@ -206,11 +209,11 @@ export function registerDomainServices(container) {
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.PerceptionUpdateService)} factory.`);
 
-    // Registration for PlaytimeTracker (already present)
+    // Registration for PlaytimeTracker
     r.single(tokens.PlaytimeTracker, PlaytimeTracker, [tokens.ILogger]);
     log.debug(`Domain Services Registration: Registered ${String(tokens.PlaytimeTracker)}.`);
 
-    // --- ADDED REGISTRATION FOR GamePersistenceService ---
+    // Registration for GamePersistenceService
     r.singletonFactory(tokens.GamePersistenceService, (c) => {
         log.debug(`Domain-services Registration: Factory creating ${String(tokens.GamePersistenceService)}...`);
         const gpsDeps = {
@@ -218,7 +221,7 @@ export function registerDomainServices(container) {
             saveLoadService: /** @type {ISaveLoadService_Interface} */ (c.resolve(tokens.ISaveLoadService)),
             entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
             dataRegistry: /** @type {IDataRegistry_Interface} */ (c.resolve(tokens.IDataRegistry)),
-            playtimeTracker: /** @type {PlaytimeTracker_Type} */ (c.resolve(tokens.PlaytimeTracker)),
+            playtimeTracker: /** @type {IPlaytimeTracker} */ (c.resolve(tokens.PlaytimeTracker)), // MODIFIED
             container: /** @type {AppContainer} */ (c) // Pass the AppContainer instance directly
         };
 
@@ -234,9 +237,6 @@ export function registerDomainServices(container) {
         return new GamePersistenceService(gpsDeps);
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.GamePersistenceService)} (via factory).`);
-    // --- END ADDED REGISTRATION ---
 
     log.info('Domain-services Registration: complete.');
 }
-
-// --- FILE END ---

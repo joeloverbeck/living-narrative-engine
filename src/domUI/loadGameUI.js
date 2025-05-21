@@ -7,8 +7,7 @@
  * @typedef {import('../domUI/domElementFactory.js').default} DomElementFactory
  * @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService
  * @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata
- * @typedef {import('../interfaces/ISaveLoadService.js').DeleteResult} DeleteResult
- * @typedef {import('../services/gamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult
+ * @typedef {import('../services/gamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult // Assuming this structure from gamePersistenceService for gameEngine.loadGame
  */
 
 /**
@@ -43,8 +42,7 @@ class LoadGameUI {
     cancelLoadButtonEl = null;
     /** @private @type {HTMLElement | null} */
     statusMessageAreaEl = null;
-    /** @private @type {HTMLButtonElement | null} */
-    openLoadGameButtonEl = null;
+    // openLoadGameButtonEl is external, will be handled in main.js
 
     /** @private @type {LoadSlotDisplayData | null} */
     selectedSlotData = null;
@@ -72,8 +70,8 @@ class LoadGameUI {
         if (!domElementFactory || typeof domElementFactory.create !== 'function') {
             throw new Error(`${this._logPrefix} DomElementFactory dependency is missing or invalid.`);
         }
-        if (!saveLoadService || typeof saveLoadService.listManualSaveSlots !== 'function') {
-            throw new Error(`${this._logPrefix} ISaveLoadService dependency is missing or invalid.`);
+        if (!saveLoadService || typeof saveLoadService.listManualSaveSlots !== 'function') { // Check for methods used by this UI
+            throw new Error(`${this._logPrefix} ISaveLoadService dependency is missing or invalid (missing listManualSaveSlots or deleteManualSave).`);
         }
 
         this.logger = logger;
@@ -92,14 +90,11 @@ class LoadGameUI {
         this.deleteSaveButtonEl = /** @type {HTMLButtonElement | null} */ (this.documentContext.query('#delete-save-button'));
         this.cancelLoadButtonEl = /** @type {HTMLButtonElement | null} */ (this.documentContext.query('#cancel-load-button'));
         this.statusMessageAreaEl = this.documentContext.query('#load-game-status-message');
-        this.openLoadGameButtonEl = /** @type {HTMLButtonElement | null} */ (this.documentContext.query('#open-load-game-button'));
+        // this.openLoadGameButtonEl = this.documentContext.query('#open-load-game-button'); // This is external
 
         if (!this.loadGameScreenEl || !this.loadSlotsContainerEl || !this.confirmLoadButtonEl ||
             !this.deleteSaveButtonEl || !this.cancelLoadButtonEl || !this.statusMessageAreaEl) {
             this.logger.error(`${this._logPrefix} One or more critical modal UI elements not found. Load Game UI may not function correctly.`);
-        }
-        if (!this.openLoadGameButtonEl) {
-            this.logger.warn(`${this._logPrefix} #open-load-game-button not found. The Load Game UI cannot be opened via this button.`);
         }
     }
 
@@ -110,6 +105,8 @@ class LoadGameUI {
     init(gameEngineInstance) {
         if (!gameEngineInstance || typeof gameEngineInstance.loadGame !== 'function') {
             this.logger.error(`${this._logPrefix} Invalid GameEngine instance provided during init. Load functionality will be broken.`);
+            // Do not set this.gameEngine if it's invalid.
+            return;
         }
         this.gameEngine = gameEngineInstance;
 
@@ -122,20 +119,17 @@ class LoadGameUI {
     }
 
     _initEventListeners() {
-        if (this.openLoadGameButtonEl) {
-            this.openLoadGameButtonEl.addEventListener('click', () => this.show());
-        }
+        // The openLoadGameButtonEl listener is attached in main.js
         if (this.cancelLoadButtonEl) {
             this.cancelLoadButtonEl.addEventListener('click', () => this.hide());
         }
         if (this.confirmLoadButtonEl) {
-            this.confirmLoadButtonEl.addEventListener('click', this._handleLoad.bind(this));
+            this.confirmLoadButtonEl.addEventListener('click', this._handleLoad.bind(this)); //
         }
         if (this.deleteSaveButtonEl) {
-            this.deleteSaveButtonEl.addEventListener('click', this._handleDelete.bind(this));
+            this.deleteSaveButtonEl.addEventListener('click', this._handleDelete.bind(this)); //
         }
         if (this.loadGameScreenEl) {
-            // Prevent form submission if it's part of a form
             this.loadGameScreenEl.addEventListener('submit', (event) => event.preventDefault());
         }
         if (this.loadSlotsContainerEl) {
@@ -154,9 +148,9 @@ class LoadGameUI {
         }
         this.loadGameScreenEl.style.display = 'flex';
         this.loadGameScreenEl.setAttribute('aria-hidden', 'false');
-        this.selectedSlotData = null;
-        this.confirmLoadButtonEl.disabled = true;
-        this.deleteSaveButtonEl.disabled = true;
+        this.selectedSlotData = null; //
+        this.confirmLoadButtonEl.disabled = true; //
+        this.deleteSaveButtonEl.disabled = true; //
         this._clearStatusMessage();
         this._loadAndRenderSaveSlots(); // This is async
         if (this.cancelLoadButtonEl) {
@@ -167,24 +161,21 @@ class LoadGameUI {
 
     hide() {
         if (this.isOperationInProgress) {
-            this.logger.warn(`${this._logPrefix} Attempted to hide UI while an operation is in progress.`);
-            // Potentially allow hiding or return
+            this.logger.warn(`${this._logPrefix} Attempted to hide UI while an operation is in progress. Hiding is allowed.`);
         }
         if (!this.loadGameScreenEl) return;
         this.loadGameScreenEl.style.display = 'none';
         this.loadGameScreenEl.setAttribute('aria-hidden', 'true');
         this._clearStatusMessage();
         this.logger.debug(`${this._logPrefix} LoadGameUI hidden.`);
-        if (this.openLoadGameButtonEl) {
-            this.openLoadGameButtonEl.focus();
-        }
+        // Focus management should be handled by the caller, e.g., back to game menu button
     }
 
     /** @private */
     _clearStatusMessage() {
         if (this.statusMessageAreaEl) {
             this.statusMessageAreaEl.textContent = '';
-            this.statusMessageAreaEl.className = 'status-message-area'; // Reset class
+            this.statusMessageAreaEl.className = 'status-message-area';
         }
     }
 
@@ -195,8 +186,12 @@ class LoadGameUI {
      */
     _updateUIForInProgress(inProgress) {
         this.isOperationInProgress = inProgress;
-        if (this.confirmLoadButtonEl) this.confirmLoadButtonEl.disabled = inProgress || !this.selectedSlotData || this.selectedSlotData.isCorrupted;
-        if (this.deleteSaveButtonEl) this.deleteSaveButtonEl.disabled = inProgress || !this.selectedSlotData || this.selectedSlotData.isCorrupted; // Cannot delete corrupted for now, might change
+        // Disable/Enable buttons based on operation state AND selection state
+        const slotSelected = !!this.selectedSlotData;
+        const slotCanBeLoaded = slotSelected && !this.selectedSlotData?.isCorrupted;
+
+        if (this.confirmLoadButtonEl) this.confirmLoadButtonEl.disabled = inProgress || !slotCanBeLoaded;
+        if (this.deleteSaveButtonEl) this.deleteSaveButtonEl.disabled = inProgress || !slotSelected;
         if (this.cancelLoadButtonEl) this.cancelLoadButtonEl.disabled = inProgress;
 
         this.loadSlotsContainerEl?.querySelectorAll('.save-slot').forEach(slotElement => {
@@ -214,44 +209,62 @@ class LoadGameUI {
             this.logger.error(`${this._logPrefix} Load slots container or DOM factory not found.`);
             return;
         }
-        this.loadSlotsContainerEl.innerHTML = ''; // Clear previous slots
+        this.loadSlotsContainerEl.innerHTML = '';
         this._showLoadingMessage(true);
-        this.currentSlotsDisplayData = [];
+        this.currentSlotsDisplayData = []; // Reset internal tracking
 
         try {
-            const manualSaves = await this.saveLoadService.listManualSaveSlots(); // [cite: 467, 435]
+            const manualSaves = await this.saveLoadService.listManualSaveSlots(); // [cite: 905]
             this.logger.debug(`${this._logPrefix} Fetched ${manualSaves.length} manual save slots.`);
 
-            // Note: No auto-saves as per user instruction.
+            // As per SL-T3.2, this screen lists manual AND auto-save slots separately or with clear distinction.
+            // However, current ISaveLoadService only has listManualSaveSlots.
+            // For now, only manual saves will be listed. Auto-save listing would require ISaveLoadService extension.
+            // The ticket SL-T3.2 Acceptance Criteria also states "thumbnail screenshot" - this is not part of SaveFileMetadata current structure.
 
             if (manualSaves.length === 0) {
                 const pNoSaves = this.domElementFactory.p('empty-slot-message', 'No saved games found.');
                 if (pNoSaves) this.loadSlotsContainerEl.appendChild(pNoSaves);
             } else {
-                // Sort by timestamp descending (newest first)
+                // Sort by timestamp descending (newest first) for better UX
                 manualSaves.sort((a, b) => {
-                    if (a.isCorrupted && !b.isCorrupted) return 1;
+                    if (a.isCorrupted && !b.isCorrupted) return 1; // Corrupted at bottom
                     if (!a.isCorrupted && b.isCorrupted) return -1;
-                    if (a.isCorrupted && b.isCorrupted) return 0; // or sort by name/identifier
-                    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+                    if (a.isCorrupted && b.isCorrupted) { // Sort corrupted by name/identifier if both corrupted
+                        return (a.saveName || a.identifier).localeCompare(b.saveName || b.identifier);
+                    }
+                    // If both are not corrupted, sort by timestamp
+                    try {
+                        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+                    } catch (e) {
+                        return 0; // In case of invalid date strings in non-corrupted items
+                    }
                 });
 
                 manualSaves.forEach((slotData, index) => {
-                    this.currentSlotsDisplayData.push(slotData); // Add to internal tracking
+                    this.currentSlotsDisplayData.push(slotData); // Add to internal tracking for selection
                     this._renderSingleSlotDOM(slotData, index);
                 });
             }
         } catch (error) {
             this.logger.error(`${this._logPrefix} Error loading save slots:`, error);
-            this._displayStatusMessage('Error loading save slots.', 'error');
-            const pError = this.domElementFactory.p('error-message', 'Could not load saved games.');
+            this._displayStatusMessage('Error loading list of saved games.', 'error');
+            const pError = this.domElementFactory.p('error-message', 'Could not load saved games list.');
             if (pError) this.loadSlotsContainerEl.appendChild(pError);
         } finally {
             this._showLoadingMessage(false);
-            // Re-evaluate button states based on newly loaded (or lack of) slots
-            this._handleSlotSelection(null, null); // Resets selection and button states
+            // Ensure buttons are correctly disabled if no slots or no selection after load
+            this._handleSlotSelection(null, null);
         }
     }
+
+    /** @private */
+    _displayStatusMessage(message, type = 'info') {
+        if (!this.statusMessageAreaEl) return;
+        this.statusMessageAreaEl.textContent = message;
+        this.statusMessageAreaEl.className = `status-message-area ${type}`;
+    }
+
 
     /** @private */
     _showLoadingMessage(isLoading) {
@@ -260,7 +273,7 @@ class LoadGameUI {
         let loadingMsgElement = this.documentContext.query(`#${loadingMsgId}`);
 
         if (isLoading) {
-            this._updateUIForInProgress(true); // Disable UI during load
+            this._updateUIForInProgress(true);
             if (!loadingMsgElement) {
                 loadingMsgElement = this.domElementFactory.p(undefined, 'Loading saved games...');
                 if (loadingMsgElement) {
@@ -269,7 +282,7 @@ class LoadGameUI {
                 }
             }
         } else {
-            this._updateUIForInProgress(false); // Re-enable UI after load
+            this._updateUIForInProgress(false);
             if (loadingMsgElement) {
                 loadingMsgElement.remove();
             }
@@ -284,7 +297,7 @@ class LoadGameUI {
         }
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = Math.floor(totalSeconds % 60); // Ensure integer seconds
+        const seconds = Math.floor(totalSeconds % 60);
         return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
 
@@ -299,29 +312,29 @@ class LoadGameUI {
 
         const slotClasses = ['save-slot'];
         if (slotData.isCorrupted) slotClasses.push('corrupted');
-        // No 'empty' class needed here as we are only listing existing saves.
 
         const slotDiv = this.domElementFactory.div(slotClasses);
         if (!slotDiv) return;
 
-        slotDiv.setAttribute('role', 'radio'); // Part of a radiogroup
+        slotDiv.setAttribute('role', 'radio');
         slotDiv.setAttribute('aria-checked', 'false');
-        slotDiv.setAttribute('tabindex', index === 0 ? '0' : '-1'); // Only first is tabbable initially
-        slotDiv.dataset.slotIdentifier = slotData.identifier; // Store identifier for load/delete
+        slotDiv.setAttribute('tabindex', index === 0 ? '0' : '-1');
+        slotDiv.dataset.slotIdentifier = slotData.identifier; // Store unique identifier
 
         const slotInfoDiv = this.domElementFactory.div('slot-info');
         if (!slotInfoDiv) return;
 
-        let nameText = slotData.saveName || 'Unnamed Save';
+        let nameText = slotData.saveName || 'Unnamed Save'; // Default if saveName is missing
         if (slotData.isCorrupted) nameText += ' (Corrupted)';
         const slotNameEl = this.domElementFactory.span('slot-name', nameText);
 
         let timestampText = 'Timestamp: N/A';
         if (!slotData.isCorrupted && slotData.timestamp && slotData.timestamp !== 'N/A') {
             try {
-                timestampText = `Saved: ${new Date(slotData.timestamp).toLocaleString()}`;
+                timestampText = `Saved: ${new Date(slotData.timestamp).toLocaleString()}`; //
             } catch (e) {
-                this.logger.warn(`${this._logPrefix} Invalid timestamp format for slot ${slotData.identifier}: ${slotData.timestamp}`);
+                this.logger.warn(`${this._logPrefix} Invalid timestamp for slot ${slotData.identifier}: ${slotData.timestamp}`);
+                timestampText = 'Saved: Invalid Date';
             }
         }
         const slotTimestampEl = this.domElementFactory.span('slot-timestamp', timestampText);
@@ -331,11 +344,11 @@ class LoadGameUI {
         slotDiv.appendChild(slotInfoDiv);
 
         if (!slotData.isCorrupted) {
-            const playtimeText = `Playtime: ${this._formatPlaytime(slotData.playtimeSeconds)}`;
-            const slotPlaytimeEl = this.domElementFactory.span('slot-playtime', playtimeText); // [cite: 539]
+            const playtimeText = `Playtime: ${this._formatPlaytime(slotData.playtimeSeconds)}`; //
+            const slotPlaytimeEl = this.domElementFactory.span('slot-playtime', playtimeText);
             if (slotPlaytimeEl) slotDiv.appendChild(slotPlaytimeEl);
         }
-        // Thumbnails are explicitly excluded as per user instruction.
+        // Thumbnail requirement from SL-T3.2 is not implemented as SaveFileMetadata doesn't include it yet.
 
         slotDiv.addEventListener('click', () => {
             if (this.isOperationInProgress) return;
@@ -358,22 +371,19 @@ class LoadGameUI {
             const isSelected = slotEl === selectedSlotElement;
             slotEl.classList.toggle('selected', isSelected);
             slotEl.setAttribute('aria-checked', String(isSelected));
-            if (isSelected) {
-                slotEl.setAttribute('tabindex', '0'); // Make current selection focusable
-            } else {
-                slotEl.setAttribute('tabindex', '-1');
-            }
+            slotEl.setAttribute('tabindex', isSelected ? '0' : (this.loadSlotsContainerEl?.querySelector('.save-slot.selected') ? '-1' : '0')); // Ensure one is always focusable
         });
 
         if (selectedSlotElement && !(selectedSlotElement === this.documentContext.document?.activeElement)) {
             selectedSlotElement.focus();
         }
 
+
         const canLoad = !!(slotData && !slotData.isCorrupted);
-        const canDelete = !!(slotData); // Allow deleting corrupted saves
+        const canDelete = !!(slotData); // Allow deleting corrupted saves for cleanup
 
         if (this.confirmLoadButtonEl) this.confirmLoadButtonEl.disabled = !canLoad || this.isOperationInProgress;
-        if (this.deleteSaveButtonEl) this.deleteSaveButtonEl.disabled = !canDelete || this.isOperationInProgress;
+        if (this.deleteSaveButtonEl) this.deleteSaveButtonEl.disabled = !canDelete || this.isOperationInProgress; //
 
         if (slotData) {
             this.logger.debug(`${this._logPrefix} Slot selected: ID ${slotData.identifier}`, slotData);
@@ -396,7 +406,7 @@ class LoadGameUI {
         const target = /** @type {HTMLElement} */ (event.target);
 
         if (!target.classList.contains('save-slot')) {
-            return; // Event not from a slot
+            return;
         }
 
         const slots = Array.from(this.loadSlotsContainerEl.querySelectorAll('.save-slot[role="radio"]'));
@@ -425,28 +435,30 @@ class LoadGameUI {
                 nextIndex = slots.length - 1;
                 break;
             case 'Enter':
-            case ' ': // Spacebar to select
+            case ' ':
                 event.preventDefault();
                 const slotIdentifier = target.dataset.slotIdentifier;
                 const currentSlotData = this.currentSlotsDisplayData.find(s => s.identifier === slotIdentifier);
                 if (currentSlotData) {
                     this._handleSlotSelection(target, currentSlotData);
                 }
+                // If it's Enter, and a loadable slot is selected, maybe trigger load?
+                // For now, selection is enough. User then clicks "Load".
                 return;
             default:
-                return; // Other keys are ignored
+                return;
         }
 
         if (nextIndex !== -1 && nextIndex !== currentIndex) {
             const nextSlot = /** @type {HTMLElement | undefined} */ (slots[nextIndex]);
             if (nextSlot) {
-                target.setAttribute('tabindex', '-1'); // Old target no longer primary focus
-                nextSlot.setAttribute('tabindex', '0');  // New target is primary
+                target.setAttribute('tabindex', '-1');
+                nextSlot.setAttribute('tabindex', '0');
                 nextSlot.focus();
-                // Optional: Automatically select on focus via arrow keys.
-                // const nextSlotIdentifier = nextSlot.dataset.slotIdentifier;
-                // const nextSlotData = this.currentSlotsDisplayData.find(s => s.identifier === nextSlotIdentifier);
-                // if (nextSlotData) this._handleSlotSelection(nextSlot, nextSlotData);
+                // Also select the slot on navigation for clearer UX
+                const nextSlotIdentifier = nextSlot.dataset.slotIdentifier;
+                const nextSlotData = this.currentSlotsDisplayData.find(s => s.identifier === nextSlotIdentifier);
+                if (nextSlotData) this._handleSlotSelection(nextSlot, nextSlotData);
             }
         }
     }
@@ -456,11 +468,11 @@ class LoadGameUI {
      * @private
      * @async
      */
-    async _handleLoad() {
+    async _handleLoad() { //
         if (this.isOperationInProgress || !this.selectedSlotData || this.selectedSlotData.isCorrupted) {
             this.logger.warn(`${this._logPrefix} Load attempt ignored: operation in progress, no slot selected, or slot corrupted.`);
             if (this.selectedSlotData?.isCorrupted) {
-                this._displayStatusMessage('Cannot load a corrupted save file.', 'error');
+                this._displayStatusMessage('Cannot load a corrupted save file. Please delete it or choose another.', 'error');
             } else if (!this.selectedSlotData) {
                 this._displayStatusMessage('Please select a save slot to load.', 'error');
             }
@@ -468,30 +480,32 @@ class LoadGameUI {
         }
         if (!this.gameEngine) {
             this.logger.error(`${this._logPrefix} GameEngine not available. Cannot load game.`);
-            this._displayStatusMessage('Cannot load: Game engine error.', 'error');
+            this._displayStatusMessage('Cannot load: Game engine is not ready.', 'error');
             return;
         }
 
         const slotToLoad = this.selectedSlotData;
-        this.logger.info(`${this._logPrefix} Attempting to load game from: ${slotToLoad.identifier}`);
+        this.logger.info(`${this._logPrefix} User initiated load for: ${slotToLoad.identifier} ("${slotToLoad.saveName}")`);
         this._updateUIForInProgress(true);
-        this._displayStatusMessage(`Loading "${slotToLoad.saveName}"...`, 'info'); // [cite: 558]
+        this._displayStatusMessage(`Loading game "${slotToLoad.saveName}"...`, 'info'); // [cite: 996]
 
         try {
-            const result = await this.gameEngine.loadGame(slotToLoad.identifier); // [cite: 548]
-            if (result.success) {
-                this._displayStatusMessage(`Game "${slotToLoad.saveName}" loaded successfully.`, 'success'); // [cite: 559]
-                this.logger.info(`${this._logPrefix} Game loaded successfully: ${slotToLoad.identifier}`);
-                this.hide(); // Hide UI on successful load
+            const result = await this.gameEngine.loadGame(slotToLoad.identifier); // [cite: 986]
+            if (result && result.success) {
+                this._displayStatusMessage(`Game "${slotToLoad.saveName}" loaded successfully. Resuming...`, 'success'); // [cite: 997]
+                this.logger.info(`${this._logPrefix} Game loaded successfully from ${slotToLoad.identifier}`);
+                // GameEngine's loadGame should handle actual game state transition.
+                // The UI should hide itself after a short delay to show the success message.
+                setTimeout(() => this.hide(), 1500); // Hide UI on successful load
             } else {
-                const errorMsg = result.error || 'An unknown error occurred while loading.';
-                this._displayStatusMessage(`Load failed: ${errorMsg}`, 'error'); // [cite: 560]
-                this.logger.error(`${this._logPrefix} Failed to load game: ${errorMsg}`);
+                const errorMsg = result?.error || 'An unknown error occurred while loading the game.';
+                this._displayStatusMessage(`Load failed: ${errorMsg}`, 'error'); // [cite: 998]
+                this.logger.error(`${this._logPrefix} Failed to load game from ${slotToLoad.identifier}: ${errorMsg}`);
             }
         } catch (error) {
-            const errorMsg = error.message || 'An unexpected error occurred.';
+            const exceptionMsg = (error instanceof Error) ? error.message : String(error);
             this.logger.error(`${this._logPrefix} Exception during load operation for ${slotToLoad.identifier}:`, error);
-            this._displayStatusMessage(`Load failed: ${errorMsg}`, 'error'); // [cite: 560]
+            this._displayStatusMessage(`Load failed: ${exceptionMsg || 'An unexpected error occurred.'}`, 'error'); // [cite: 998]
         } finally {
             this._updateUIForInProgress(false);
         }
@@ -502,7 +516,7 @@ class LoadGameUI {
      * @private
      * @async
      */
-    async _handleDelete() {
+    async _handleDelete() { //
         if (this.isOperationInProgress || !this.selectedSlotData) {
             this.logger.warn(`${this._logPrefix} Delete attempt ignored: operation in progress or no slot selected.`);
             if (!this.selectedSlotData) {
@@ -510,51 +524,50 @@ class LoadGameUI {
             }
             return;
         }
-        // Autosaves are not part of this implementation.
-        // Only manual saves can be deleted.
 
         const slotToDelete = this.selectedSlotData;
-        const confirmDelete = window.confirm(
-            `Are you sure you want to delete the save "${slotToDelete.saveName}"? This action cannot be undone.`
-        ); // [cite: 541]
+        const confirmMsg = `Are you sure you want to delete the save "${slotToDelete.saveName}"? This action cannot be undone.`;
 
-        if (!confirmDelete) {
+        // Using window.confirm as per SL-T3.2 AC "option to "Delete" manual save slots (with confirmation)"
+        // In a real game, a custom modal confirmation would be better.
+        if (!window.confirm(confirmMsg)) {
             this.logger.info(`${this._logPrefix} Delete operation cancelled by user for: ${slotToDelete.identifier}`);
             return;
         }
 
-        this.logger.info(`${this._logPrefix} Attempting to delete save: ${slotToDelete.identifier}`);
+        this.logger.info(`${this._logPrefix} User initiated delete for: ${slotToDelete.identifier} ("${slotToDelete.saveName}")`);
         this._updateUIForInProgress(true);
-        this._displayStatusMessage(`Deleting "${slotToDelete.saveName}"...`, 'info');
+        this._displayStatusMessage(`Deleting save "${slotToDelete.saveName}"...`, 'info');
 
         try {
-            const result = await this.saveLoadService.deleteManualSave(slotToDelete.identifier);
-            if (result.success) {
-                this._displayStatusMessage(`Save "${slotToDelete.saveName}" deleted successfully.`, 'success');
+            const result = await this.saveLoadService.deleteManualSave(slotToDelete.identifier); // [cite: 987]
+            if (result && result.success) {
+                this._displayStatusMessage(`Save "${slotToDelete.saveName}" deleted successfully.`, 'success'); // [cite: 997]
                 this.logger.info(`${this._logPrefix} Save deleted successfully: ${slotToDelete.identifier}`);
                 this.selectedSlotData = null; // Clear selection
-                if (this.confirmLoadButtonEl) this.confirmLoadButtonEl.disabled = true;
-                if (this.deleteSaveButtonEl) this.deleteSaveButtonEl.disabled = true;
+                // Buttons will be updated by _loadAndRenderSaveSlots -> _handleSlotSelection(null,null)
                 await this._loadAndRenderSaveSlots(); // Refresh the list
             } else {
-                const errorMsg = result.error || 'An unknown error occurred while deleting.';
-                this._displayStatusMessage(`Delete failed: ${errorMsg}`, 'error');
-                this.logger.error(`${this._logPrefix} Failed to delete save: ${errorMsg}`);
+                const errorMsg = result?.error || 'An unknown error occurred while deleting the save.';
+                this._displayStatusMessage(`Delete failed: ${errorMsg}`, 'error'); // [cite: 998]
+                this.logger.error(`${this._logPrefix} Failed to delete save ${slotToDelete.identifier}: ${errorMsg}`);
             }
         } catch (error) {
-            const errorMsg = error.message || 'An unexpected error occurred.';
+            const exceptionMsg = (error instanceof Error) ? error.message : String(error);
             this.logger.error(`${this._logPrefix} Exception during delete operation for ${slotToDelete.identifier}:`, error);
-            this._displayStatusMessage(`Delete failed: ${errorMsg}`, 'error');
+            this._displayStatusMessage(`Delete failed: ${exceptionMsg || 'An unexpected error occurred.'}`, 'error'); // [cite: 998]
         } finally {
             this._updateUIForInProgress(false);
-            // After operation, re-evaluate buttons if a slot might still be implicitly selected
-            const currentFocusedSlotEl = this.documentContext.document?.activeElement;
-            if (currentFocusedSlotEl && currentFocusedSlotEl.classList.contains('save-slot')) {
-                const focusedIdentifier = /** @type {HTMLElement} */ (currentFocusedSlotEl).dataset.slotIdentifier;
-                const stillSelectedData = this.currentSlotsDisplayData.find(s => s.identifier === focusedIdentifier);
-                this._handleSlotSelection(stillSelectedData ? /** @type {HTMLElement} */ (currentFocusedSlotEl) : null, stillSelectedData || null);
+            // If a slot was focused, try to maintain focus or focus the container after list re-render
+            const firstSlot = this.loadSlotsContainerEl?.querySelector('.save-slot');
+            if (firstSlot) {
+                (/** @type {HTMLElement} */ (firstSlot)).focus();
+                const firstSlotIdentifier = (/** @type {HTMLElement} */ (firstSlot)).dataset.slotIdentifier;
+                const firstSlotData = this.currentSlotsDisplayData.find(s => s.identifier === firstSlotIdentifier);
+                if (firstSlotData) this._handleSlotSelection(/** @type {HTMLElement} */ (firstSlot), firstSlotData); else this._handleSlotSelection(null, null);
+
             } else {
-                this._handleSlotSelection(null, null); // Clear selection visually
+                this._handleSlotSelection(null, null); // Ensure buttons are correctly disabled if list is now empty
             }
         }
     }
@@ -564,13 +577,8 @@ class LoadGameUI {
      */
     dispose() {
         this.logger.debug(`${this._logPrefix} Disposing...`);
-        if (this.openLoadGameButtonEl) {
-            // Assuming the click listener lambda is `() => this.show()`
-            // Direct removal is tricky if not bound. Good practice is to bind and store.
-            // For now, if it's added as lambda, it might not be removable without more complex tracking.
-        }
-        // Similar for other listeners if they need explicit removal and elements persist.
-        // If modal is destroyed/recreated, listeners on its children are implicitly gone.
+        // Listeners on modal elements are handled if modal is removed from DOM or re-created.
+        // External button listeners (openLoadGameButtonEl) are managed in main.js.
         this.logger.info(`${this._logPrefix} Disposed.`);
     }
 }

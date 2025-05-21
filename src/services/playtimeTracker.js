@@ -1,14 +1,18 @@
 // src/services/playtimeTracker.js
 
+import IPlaytimeTracker from "../interfaces/IPlaytimeTracker.js";
+
 /**
  * @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker
  */
 
 /**
  * Manages and tracks player game time, including session start/end times
  * and accumulated playtime across sessions.
+ * @implements {IPlaytimeTracker}
  */
-class PlaytimeTracker {
+class PlaytimeTracker extends IPlaytimeTracker {
     /**
      * Stores the total playtime from previous sessions in seconds.
      * @private
@@ -38,6 +42,8 @@ class PlaytimeTracker {
      * @throws {Error} If the logger dependency is not provided.
      */
     constructor({logger}) {
+        super();
+
         if (!logger || typeof logger.info !== 'function') {
             console.error('PlaytimeTracker: Logger dependency is missing or invalid. Falling back to console.error.');
             // Fallback logger for environments where a full logger isn't available or during initial setup
@@ -59,6 +65,7 @@ class PlaytimeTracker {
      * Sets the session start time to the current time and logs the event.
      * If a session is already active (i.e., #sessionStartTime > 0), this method
      * will effectively restart the session timer from the current moment and log a warning.
+     * @returns {void}
      */
     startSession() {
         if (this.#sessionStartTime > 0) {
@@ -72,6 +79,7 @@ class PlaytimeTracker {
      * Ends the current play session, calculates its duration, adds it to the
      * accumulated playtime, and resets the session timer.
      * If no session is active, it logs this information and ensures the timer is reset.
+     * @returns {void}
      */
     endSessionAndAccumulate() {
         if (this.#sessionStartTime > 0) {
@@ -101,6 +109,7 @@ class PlaytimeTracker {
      * Sets the accumulated playtime, typically when loading a game.
      * This will also reset any currently active session timer before setting the new value.
      * @param {number} seconds - The total accumulated playtime in seconds from a saved game.
+     * @returns {void}
      * @throws {TypeError} If seconds is not a number.
      * @throws {RangeError} If seconds is negative.
      */
@@ -124,6 +133,7 @@ class PlaytimeTracker {
     /**
      * Resets the playtime tracker, clearing accumulated playtime and ending any active session.
      * Useful for starting a new game from scratch or if initialization fails.
+     * @returns {void}
      */
     reset() {
         this.#accumulatedPlaytimeSeconds = 0;

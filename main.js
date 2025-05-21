@@ -9,20 +9,17 @@ import {tokens} from './src/core/config/tokens.js';
 const ACTIVE_WORLD = 'demo'; // Specify the world to load
 
 // --- Bootstrap the Game Engine ---
-// Use an async IIFE (Immediately Invoked Function Expression) or top-level await
 (async () => {
     console.log('main.js: Bootstrapping application...');
 
-    // --- Get Root DOM Elements ---
     const outputDiv = document.getElementById('outputDiv');
-    const errorDiv = document.getElementById('error-output'); // For fallback errors
+    const errorDiv = document.getElementById('error-output');
     const inputElement = document.getElementById('speech-input');
-    const titleElement = document.querySelector('h1'); // For engine status and fallback errors
+    const titleElement = document.querySelector('h1');
 
-    // --- Basic check if essential elements exist ---
     if (!outputDiv || !inputElement || !errorDiv || !titleElement) {
         const missing = [
-            !outputDiv ? 'output' : null,
+            !outputDiv ? 'outputDiv' : null,
             !inputElement ? 'speech-input' : null,
             !errorDiv ? 'error-output' : null,
             !titleElement ? 'h1 title' : null
@@ -32,39 +29,38 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
         if (errorDiv) errorDiv.textContent = errorMsg; else alert(errorMsg);
         if (titleElement) titleElement.textContent = 'Fatal Error!';
         if (inputElement) inputElement.disabled = true;
-        return; // Stop execution
+        return;
     }
 
-    // --- Initialize Container ---
     const container = new AppContainer();
 
-    // --- Register Services ---
     try {
-        configureContainer(container, {outputDiv, inputElement, titleElement, document: document}); // Pass document
+        configureContainer(container, {outputDiv, inputElement, titleElement, document: document});
     } catch (registrationError) {
+        const errorMsgForAlert = `Fatal Error during service registration: ${registrationError.message}. Check console.`;
         console.error('Fatal Error: Failed to register core services:', registrationError);
-        const errorMsg = `Fatal Error during service registration: ${registrationError.message}. Check console.`;
-        alert(errorMsg);
+        alert(errorMsgForAlert);
         if (titleElement) titleElement.textContent = 'Fatal Registration Error!';
         if (inputElement) {
             inputElement.disabled = true;
             inputElement.placeholder = 'Registration Failed.';
         }
         try {
-            container.resolve('ILogger').error('Fatal Error: Failed to register core services:', registrationError);
-        } catch (_) {
-            // Ignore if logger itself failed or wasn't registered
+            // Attempt to use logger if it was registered before failing
+            const tempLogger = container.resolve(tokens.ILogger);
+            if (tempLogger && typeof tempLogger.error === 'function') {
+                tempLogger.error('Fatal Error: Failed to register core services:', registrationError);
+            }
+        } catch (_) { /* ignore if logger itself failed or wasn't part of successful registration */
         }
-        return; // Stop execution
+        return;
     }
 
     let gameEngine = null;
-    let saveGameUI = null;
-    let loadGameUI = null; // <<< ADDED
     let logger = null;
 
     try {
-        logger = container.resolve('ILogger');
+        logger = container.resolve(tokens.ILogger);
     } catch (resolveError) {
         console.error('Fatal Error: Could not resolve essential ILogger service:', resolveError);
         alert('Fatal Error resolving logger. Check console.');
@@ -73,11 +69,9 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
             inputElement.disabled = true;
             inputElement.placeholder = 'Logger Resolution Failed.';
         }
-        return; // Stop execution
+        return;
     }
 
-
-    // --- Create Game Engine with Container ---
     try {
         logger.info('main.js: Creating GameEngine instance...');
         gameEngine = new GameEngine({
@@ -85,55 +79,87 @@ const ACTIVE_WORLD = 'demo'; // Specify the world to load
         });
         logger.info('main.js: GameEngine instance created.');
 
-        // --- Initialize Save Game UI ---
-        saveGameUI = container.resolve(tokens.SaveGameUI);
-        if (saveGameUI && gameEngine) {
-            saveGameUI.init(gameEngine);
-            logger.info('main.js: SaveGameUI initialized with GameEngine.');
-        } else {
-            logger.error('main.js: Failed to obtain SaveGameUI or GameEngine for SaveGameUI initialization.');
+        // --- Initialize Save Game UI and Load Game UI ---
+        // These UI components need a reference to the gameEngine for their internal handlers.
+        try {
+            const saveGameUIInstance = container.resolve(tokens.SaveGameUI);
+            if (saveGameUIInstance) {
+                saveGameUIInstance.init(gameEngine);
+                logger.info('main.js: SaveGameUI initialized with GameEngine.');
+            } else {
+                logger.error('main.js: SaveGameUI instance could not be resolved from container for init.');
+            }
+        } catch (e) {
+            logger.error('main.js: Error resolving or initializing SaveGameUI.', e);
         }
 
-        // --- Initialize Load Game UI ---
-        loadGameUI = container.resolve(tokens.LoadGameUI);
-        if (loadGameUI && gameEngine) {
-            loadGameUI.init(gameEngine);
-            logger.info('main.js: LoadGameUI initialized with GameEngine.');
-        } else {
-            logger.error('main.js: Failed to obtain LoadGameUI or GameEngine for LoadGameUI initialization.');
+        try {
+            const loadGameUIInstance = container.resolve(tokens.LoadGameUI);
+            if (loadGameUIInstance) {
+                loadGameUIInstance.init(gameEngine);
+                logger.info('main.js: LoadGameUI initialized with GameEngine.');
+            } else {
+                logger.error('main.js: LoadGameUI instance could not be resolved from container for init.');
+            }
+        } catch (e) {
+            logger.error('main.js: Error resolving or initializing LoadGameUI.', e);
         }
 
+
+        // --- Hook up Menu Buttons to GameEngine methods ---
+        // GameEngine will use DomUiFacade internally to show these UIs.
+        const openSaveGameButton = document.getElementById('open-save-game-button');
+        const openLoadGameButton = document.getElementById('open-load-game-button');
+
+        if (openSaveGameButton && gameEngine) {
+            openSaveGameButton.addEventListener('click', () => {
+                logger.debug('main.js: "Open Save Game UI" button clicked.');
+                gameEngine.showSaveGameUI(); // GameEngine handles showing the UI
+            });
+            logger.info('main.js: Save Game UI button listener attached.');
+        } else {
+            logger.error('main.js: Could not find #open-save-game-button or gameEngine not available for listener.');
+        }
+
+        if (openLoadGameButton && gameEngine) {
+            openLoadGameButton.addEventListener('click', () => {
+                logger.debug('main.js: "Open Load Game UI" button clicked.');
+                gameEngine.showLoadGameUI(); // GameEngine handles showing the UI
+            });
+            logger.info('main.js: Load Game UI button listener attached.');
+        } else {
+            logger.error('main.js: Could not find #open-load-game-button or gameEngine not available for listener.');
+        }
 
         // --- Start the Game ---
-        // TODO: Modify this to show a main menu first, then start new or load.
-        // For now, starts new game directly.
-        logger.info(`main.js: Starting game engine with world: ${ACTIVE_WORLD}...`);
-        gameEngine.startNewGame(ACTIVE_WORLD).catch(startError => { // Changed from start() to startNewGame()
-            logger.error('Fatal Error: Unhandled error during game engine start:', startError);
-            const errorMsg = `Fatal Error during game start: ${startError.message}. Check console for details.`;
-            alert(errorMsg);
-            if (titleElement) titleElement.textContent = 'Fatal Start Error!';
-            if (inputElement) {
-                inputElement.disabled = true;
-                inputElement.placeholder = 'Game Failed to Start';
-            }
-        });
+        // TODO: Future: Implement a main menu screen here. Options: "New Game", "Load Game".
+        // "New Game" would call gameEngine.startNewGame(ACTIVE_WORLD).
+        // "Load Game" would call gameEngine.showLoadGameUI() (allowing player to pick a save, then GameEngine.loadGame is called by LoadGameUI).
+        // For now, it starts a new game directly as per previous behavior.
+
+        logger.info(`main.js: Starting new game with world: ${ACTIVE_WORLD}...`);
+        await gameEngine.startNewGame(ACTIVE_WORLD);
+        // Errors from startNewGame are re-thrown and will be caught by the outer try-catch.
 
         window.addEventListener('beforeunload', () => {
-            if (gameEngine) {
-                logger.info("main.js: 'beforeunload' event triggered. Stopping game engine.");
-                gameEngine.stop();
+            // beforeunload is synchronous, so async operations might not complete.
+            // This is a best-effort attempt to stop the engine.
+            if (gameEngine && gameEngine.getEngineStatus().isLoopRunning) {
+                logger.info("main.js: 'beforeunload' event triggered. Attempting to stop game engine.");
+                gameEngine.stop().catch(stopError => { // Call stop, but don't await; catch potential errors
+                    logger.error("main.js: Error during gameEngine.stop() in beforeunload:", stopError);
+                });
             }
         });
 
-    } catch (engineCreationError) {
-        logger.error('Fatal Error: Failed to create GameEngine instance:', engineCreationError);
-        const errorMsg = `Fatal Error creating game engine: ${engineCreationError.message}. Check console.`;
-        alert(errorMsg);
-        if (titleElement) titleElement.textContent = 'Fatal Engine Error!';
+    } catch (engineError) {
+        const errorMsgForUser = (engineError instanceof Error) ? engineError.message : String(engineError);
+        logger.error('Fatal Error during GameEngine instantiation or start:', engineError);
+        alert(`Fatal Error during game setup: ${errorMsgForUser}. Check console.`);
+        if (titleElement) titleElement.textContent = 'Fatal Engine Setup Error!';
         if (inputElement) {
             inputElement.disabled = true;
-            inputElement.placeholder = 'Engine Creation Failed.';
+            inputElement.placeholder = 'Game Setup Failed.';
         }
     }
 })();

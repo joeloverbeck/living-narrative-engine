@@ -32,6 +32,8 @@
       "log_perceptible_events.rule.json"
     ],
     "events": [
+      "new_game_started.event.json",
+      "loaded_game_started.event.json",
       "turn_started.event.json",
       "player_turn_prompt.event.json",
       "ai_turn_processing_started.event.json",

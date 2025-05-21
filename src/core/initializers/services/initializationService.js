@@ -132,7 +132,7 @@ class InitializationService {
             this.#logger.debug('Resolving WorldInitializer...');
             const worldInitializer = /** @type {WorldInitializer} */ (this.#container.resolve('WorldInitializer'));
             this.#logger.info('WorldInitializer resolved. Initializing world entities...');
-            const worldInitSuccess = worldInitializer.initializeWorldEntities();
+            const worldInitSuccess = await worldInitializer.initializeWorldEntities();
             if (!worldInitSuccess) {
                 // Note: WorldInitializer now throws on critical failure, so this check might be redundant
                 // but kept for safety. It should be caught by the main try/catch block.

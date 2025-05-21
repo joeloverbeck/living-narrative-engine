@@ -1,0 +1,23 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:loaded_game_started",
+  "description": "Dispatched when a game has been successfully loaded from a save file, game state is restored, and the engine is ready to resume play. This event signals that the game is now actively running from a restored state.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "saveIdentifier": {
+        "type": "string",
+        "description": "The unique identifier of the save game slot/file that was loaded."
+      },
+      "worldName": {
+        "type": "string",
+        "description": "The name of the world or game environment as restored from the save file (often the original world name or a custom title from the save metadata)."
+      }
+    },
+    "required": [
+      "saveIdentifier",
+      "worldName"
+    ],
+    "additionalProperties": false
+  }
+}
