@@ -6,7 +6,7 @@ import pako from 'pako'; //
 // REMOVED: import {createHash} from 'crypto';
 
 // --- Type Imports ---
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata */
 /** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */

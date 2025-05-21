@@ -1,8 +1,8 @@
 // src/domUI/saveGameUI.js
 
 /**
- * @typedef {import('../core/gameEngine.js').default} GameEngine
- * @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../engine/gameEngine.js').default} GameEngine
+ * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../domUI/IDocumentContext').IDocumentContext} IDocumentContext
  * @typedef {import('../domUI/domElementFactory.js').default} DomElementFactory
  * @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService

@@ -1,7 +1,7 @@
 // src/logic/operationHandlers/setVariableHandler.js
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').JsonLogicEvaluationContext} BaseJsonLogicEvaluationContext */ // Renamed for clarity
 /** @typedef {import('../defs.js').ExecutionContext} OperationExecutionContext */ // The nested context passed to handlers
