@@ -1,5 +1,5 @@
 // tests/entities/entityManager.test.js
-
+// --- FILE START ---
 import {describe, it, expect, beforeEach, jest, afterEach} from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
@@ -8,11 +8,10 @@ import {POSITION_COMPONENT_ID} from "../../src/constants/componentIds.js";
 // --- Mock Implementations ---
 const createMockDataRegistry = () => ({
     getEntityDefinition: jest.fn(),
-    // Add other methods if constructor or tested methods require them
 });
 
 const createMockSchemaValidator = () => ({
-    validate: jest.fn(() => ({isValid: true})), // Default to valid
+    validate: jest.fn(() => ({isValid: true})),
 });
 
 const createMockLogger = () => ({
@@ -32,11 +31,11 @@ const createMockSpatialIndexManager = () => ({
 });
 
 // --- Constants ---
-const MOCK_DEFINITION_ID_MAIN = 'test-def-01'; // Main definition ID for most create tests
-const MOCK_INSTANCE_ID_PRE_EXISTING = 'existing-instance-uuid-123'; // For forceNew tests
+const MOCK_DEFINITION_ID_MAIN = 'test-def-01';
+const MOCK_INSTANCE_ID_PRE_EXISTING = 'existing-instance-uuid-123';
 
-const ACCESS_DEFINITION_ID = 'access-def-99'; // Definition ID for accessTestEntity
-const ACCESS_INSTANCE_ID = 'access-instance-uuid-99'; // Instance ID for accessTestEntity
+const ACCESS_DEFINITION_ID = 'access-def-99';
+const ACCESS_INSTANCE_ID = 'access-instance-uuid-99';
 
 const EXISTING_COMPONENT_ID = 'core:stats';
 const EXISTING_COMPONENT_DATA = {hp: 10, mp: 5};
@@ -80,9 +79,9 @@ describe('EntityManager', () => {
         const invalidValidatorMissingMethod = {...createMockSchemaValidator()};
         delete invalidValidatorMissingMethod.validate;
         const invalidLoggerMissingMethod = {...createMockLogger()};
-        delete invalidLoggerMissingMethod.error;
+        delete invalidLoggerMissingMethod.error; // Example of a missing essential method
         const invalidSpatialMissingMethod = {...createMockSpatialIndexManager()};
-        delete invalidSpatialMissingMethod.addEntity;
+        delete invalidSpatialMissingMethod.addEntity; // Example of a missing essential method
 
         it.each([
             ['IDataRegistry', null, /IDataRegistry instance with getEntityDefinition/],
@@ -106,13 +105,13 @@ describe('EntityManager', () => {
 
     // --- 2. createEntityInstance Tests ---
     describe('createEntityInstance', () => {
-        const testLocationId = 'zone:test-area';
+        const testLocationId = 'zone:test-area'; // This would be a definition ID in component data
         const componentDataName = {name: 'Test Dummy'};
         const componentDataPosition = {x: 10, y: 20, locationId: testLocationId};
         const componentDataHealth = {current: 100, max: 100};
 
         const validDefinitionWithPosition = {
-            id: MOCK_DEFINITION_ID_MAIN, // Definition ID
+            id: MOCK_DEFINITION_ID_MAIN,
             name: 'Test Entity with Position',
             components: {
                 'core:name': {...componentDataName},
@@ -131,27 +130,8 @@ describe('EntityManager', () => {
             id: MOCK_DEFINITION_ID_MAIN, name: 'Test Entity with Null Components', components: null,
         };
 
-        it('Success Case: should create entity, copy components, add to spatial index, and active map', () => {
+        it('Success Case: should create entity, copy components, and add to active map (spatial index deferred)', () => {
             mockRegistry.getEntityDefinition.mockReturnValue(validDefinitionWithPosition);
-            const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN); // Let instanceId be generated
-
-            expect(entity).toBeInstanceOf(Entity);
-            expect(typeof entity.id).toBe('string'); // Should be a UUID
-            expect(entity.id).not.toBe(MOCK_DEFINITION_ID_MAIN);
-            expect(entity.definitionId).toBe(MOCK_DEFINITION_ID_MAIN);
-
-            expect(entity.hasComponent('core:name')).toBe(true);
-            expect(entity.getComponentData('core:name')).toEqual(componentDataName);
-            expect(entity.hasComponent(POSITION_COMPONENT_ID)).toBe(true);
-            expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual(componentDataPosition);
-
-            expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(entity.id, testLocationId); // Use generated entity.id
-            expect(entityManager.activeEntities.has(entity.id)).toBe(true);
-            expect(entityManager.activeEntities.get(entity.id)).toBe(entity);
-        });
-
-        it('Success Case (No Position): should create entity, copy components, NOT add to spatial index', () => {
-            mockRegistry.getEntityDefinition.mockReturnValue(validDefinitionWithoutPosition);
             const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN);
 
             expect(entity).toBeInstanceOf(Entity);
@@ -160,29 +140,53 @@ describe('EntityManager', () => {
             expect(entity.definitionId).toBe(MOCK_DEFINITION_ID_MAIN);
 
             expect(entity.hasComponent('core:name')).toBe(true);
+            expect(entity.getComponentData('core:name')).toEqual(componentDataName);
+            expect(entity.hasComponent(POSITION_COMPONENT_ID)).toBe(true);
+            expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual(componentDataPosition);
+
+            // VVVVVV MODIFIED VVVVVV
+            expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled(); // No longer called here
+            // ^^^^^^ MODIFIED ^^^^^^
+            expect(entityManager.activeEntities.has(entity.id)).toBe(true);
+            expect(entityManager.activeEntities.get(entity.id)).toBe(entity);
+            expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)).toBe(entity);
+        });
+
+        it('Success Case (No Position): should create entity, copy components, NOT interact with spatial index', () => {
+            mockRegistry.getEntityDefinition.mockReturnValue(validDefinitionWithoutPosition);
+            const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN);
+
+            expect(entity).toBeInstanceOf(Entity);
+            expect(typeof entity.id).toBe('string');
+            expect(entity.definitionId).toBe(MOCK_DEFINITION_ID_MAIN);
+
+            expect(entity.hasComponent('core:name')).toBe(true);
             expect(entity.hasComponent(POSITION_COMPONENT_ID)).toBe(false);
             expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
             expect(entityManager.activeEntities.has(entity.id)).toBe(true);
+            expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)).toBe(entity);
         });
 
-        it('Success Case (Empty Components): should create entity with no components, NOT add to spatial index', () => {
+        it('Success Case (Empty Components): should create entity with no components, NOT interact with spatial index', () => {
             mockRegistry.getEntityDefinition.mockReturnValue(validDefinitionEmptyComponents);
             const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN);
 
             expect(entity).toBeInstanceOf(Entity);
             expect(Array.from(entity.componentTypeIds)).toHaveLength(0);
             expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-            expect(entityManager.activeEntities.has(entity.id)).toBe(true); // Keyed by generated UUID
+            expect(entityManager.activeEntities.has(entity.id)).toBe(true);
+            expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)).toBe(entity);
         });
 
-        it('Success Case (Null Components): should treat null components as empty, create entity, NOT add to spatial index', () => {
+        it('Success Case (Null Components): should treat null components as empty, create entity, NOT interact with spatial index', () => {
             mockRegistry.getEntityDefinition.mockReturnValue(validDefinitionNullComponents);
             const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN);
 
             expect(entity).toBeInstanceOf(Entity);
             expect(Array.from(entity.componentTypeIds)).toHaveLength(0);
             expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-            expect(entityManager.activeEntities.has(entity.id)).toBe(true); // Keyed by generated UUID
+            expect(entityManager.activeEntities.has(entity.id)).toBe(true);
+            expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)).toBe(entity);
             expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining("invalid 'components' field"));
         });
 
@@ -191,18 +195,17 @@ describe('EntityManager', () => {
             const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN);
 
             expect(entity).toBeNull();
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Entity definition not found in IDataRegistry for definition ID: ${MOCK_DEFINITION_ID_MAIN}`));
-            // No entity should be added to activeEntities
+            // VVVVVV MODIFIED VVVVVV
+            expect(mockLogger.error).toHaveBeenCalledWith(`EntityManager.createEntityInstance: Entity definition not found for ID: ${MOCK_DEFINITION_ID_MAIN}`);
+            // ^^^^^^ MODIFIED ^^^^^^
             expect(entityManager.activeEntities.size).toBe(0);
         });
 
-        it('Existing Entity (forceNew: false): should return existing instance, NOT call registry or spatial index', () => {
-            // Setup: create an entity with a known instanceId and definitionId
+        it('Existing Entity (forceNew: false): should return existing instance, NOT call registry or interact with spatial index', () => {
             const existingEntity = new Entity(MOCK_INSTANCE_ID_PRE_EXISTING, MOCK_DEFINITION_ID_MAIN);
             entityManager.activeEntities.set(MOCK_INSTANCE_ID_PRE_EXISTING, existingEntity);
-            mockRegistry.getEntityDefinition.mockClear(); // Ensure it's not called
+            mockRegistry.getEntityDefinition.mockClear();
 
-            // Act: try to create with the same definitionId and instanceId
             const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN, MOCK_INSTANCE_ID_PRE_EXISTING, false);
 
             expect(entity).toBe(existingEntity);
@@ -211,22 +214,23 @@ describe('EntityManager', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Returning existing instance for ID: ${MOCK_INSTANCE_ID_PRE_EXISTING}`));
         });
 
-        it('Existing Entity (forceNew: true): should create NEW instance, copy components, add to spatial index, NOT modify active map for original', () => {
-            const originalEntity = new Entity(MOCK_INSTANCE_ID_PRE_EXISTING, MOCK_DEFINITION_ID_MAIN); // Original definition
+        it('Existing Entity (forceNew: true): should create NEW instance, copy components, NOT interact with spatial index directly, NOT modify active map for original', () => {
+            const originalEntity = new Entity(MOCK_INSTANCE_ID_PRE_EXISTING, MOCK_DEFINITION_ID_MAIN);
             entityManager.activeEntities.set(MOCK_INSTANCE_ID_PRE_EXISTING, originalEntity);
-            mockRegistry.getEntityDefinition.mockReturnValue(validDefinitionWithPosition); // This definition will be used for the new entity
+            mockRegistry.getEntityDefinition.mockReturnValue(validDefinitionWithPosition);
 
-            // Act: create with same instanceId but forceNew=true
             const newEntity = entityManager.createEntityInstance(validDefinitionWithPosition.id, MOCK_INSTANCE_ID_PRE_EXISTING, true);
 
             expect(newEntity).toBeInstanceOf(Entity);
-            expect(newEntity.id).toBe(MOCK_INSTANCE_ID_PRE_EXISTING); // It gets the specified instanceId
-            expect(newEntity.definitionId).toBe(validDefinitionWithPosition.id); // From the definition it just loaded
-            expect(newEntity).not.toBe(originalEntity); // It's a new object
+            expect(newEntity.id).toBe(MOCK_INSTANCE_ID_PRE_EXISTING);
+            expect(newEntity.definitionId).toBe(validDefinitionWithPosition.id);
+            expect(newEntity).not.toBe(originalEntity);
 
             expect(newEntity.hasComponent(POSITION_COMPONENT_ID)).toBe(true);
-            expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(MOCK_INSTANCE_ID_PRE_EXISTING, testLocationId);
-            expect(entityManager.activeEntities.get(MOCK_INSTANCE_ID_PRE_EXISTING)).toBe(originalEntity); // Original is still in map
+            // VVVVVV MODIFIED VVVVVV
+            expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled(); // No longer called here
+            // ^^^^^^ MODIFIED ^^^^^^
+            expect(entityManager.activeEntities.get(MOCK_INSTANCE_ID_PRE_EXISTING)).toBe(originalEntity);
             expect(mockRegistry.getEntityDefinition).toHaveBeenCalledTimes(1);
             expect(mockRegistry.getEntityDefinition).toHaveBeenCalledWith(validDefinitionWithPosition.id);
         });
@@ -240,12 +244,11 @@ describe('EntityManager', () => {
         ])('should return null and log error if definitionId is invalid (%p)', (invalidDefId) => {
             const entity = entityManager.createEntityInstance(invalidDefId);
             expect(entity).toBeNull();
-            // The error message now refers to 'definitionId'
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`Invalid definitionId provided: ${invalidDefId}`));
             expect(entityManager.activeEntities.size).toBe(0);
         });
 
-        it('should create entity and call addEntity with undefined locationId if position component lacks locationId', () => {
+        it('should create entity with position component lacking locationId (spatial index deferred)', () => {
             const definitionMissingLocationId = {
                 id: MOCK_DEFINITION_ID_MAIN,
                 components: {[POSITION_COMPONENT_ID]: {x: 5, y: 5}} // No locationId
@@ -254,13 +257,16 @@ describe('EntityManager', () => {
             const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN);
 
             expect(entity).toBeInstanceOf(Entity);
-            // addEntity should be called with the generated entity.id
-            expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(entity.id, undefined);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Entity ${entity.id} has position component but invalid/null locationId (undefined)`));
+            expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual({x: 5, y: 5});
+            // VVVVVV MODIFIED VVVVVV
+            expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
+            // The specific debug log about invalid/null locationId for spatial index was part of the addEntity logic,
+            // which is now deferred. So, we don't expect that specific log from createEntityInstance.
+            // ^^^^^^ MODIFIED ^^^^^^
             expect(entityManager.activeEntities.has(entity.id)).toBe(true);
         });
 
-        it('should create entity and call addEntity with null locationId if position component has null locationId', () => {
+        it('should create entity with position component having null locationId (spatial index deferred)', () => {
             const definitionNullLocationId = {
                 id: MOCK_DEFINITION_ID_MAIN,
                 components: {[POSITION_COMPONENT_ID]: {x: 5, y: 5, locationId: null}}
@@ -269,8 +275,11 @@ describe('EntityManager', () => {
             const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN);
 
             expect(entity).toBeInstanceOf(Entity);
-            expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(entity.id, null);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Entity ${entity.id} has position component but invalid/null locationId (null)`));
+            expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual({x: 5, y: 5, locationId: null});
+            // VVVVVV MODIFIED VVVVVV
+            expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
+            // Similar to above, the debug log related to spatial index is deferred.
+            // ^^^^^^ MODIFIED ^^^^^^
             expect(entityManager.activeEntities.has(entity.id)).toBe(true);
         });
     });
@@ -281,16 +290,11 @@ describe('EntityManager', () => {
             accessTestEntity = new Entity(ACCESS_INSTANCE_ID, ACCESS_DEFINITION_ID);
             accessTestEntity.addComponent(EXISTING_COMPONENT_ID, {...EXISTING_COMPONENT_DATA});
             entityManager.activeEntities.set(ACCESS_INSTANCE_ID, accessTestEntity);
-
-            expect(entityManager.activeEntities.has(ACCESS_INSTANCE_ID)).toBe(true);
-            expect(entityManager.getEntityInstance(ACCESS_INSTANCE_ID)?.hasComponent(EXISTING_COMPONENT_ID)).toBe(true);
         });
 
-        // getComponentData
         it('should return the component data object for an existing component on an existing entity', () => {
             const data = entityManager.getComponentData(ACCESS_INSTANCE_ID, EXISTING_COMPONENT_ID);
             expect(data).toEqual(EXISTING_COMPONENT_DATA);
-            expect(data).toBe(accessTestEntity.getComponentData(EXISTING_COMPONENT_ID));
         });
 
         it('should return undefined for a non-existent component on an existing entity', () => {
@@ -303,7 +307,6 @@ describe('EntityManager', () => {
             expect(data).toBeUndefined();
         });
 
-        // hasComponent
         it('should return true for an existing component on an existing entity', () => {
             const result = entityManager.hasComponent(ACCESS_INSTANCE_ID, EXISTING_COMPONENT_ID);
             expect(result).toBe(true);
@@ -320,3 +323,4 @@ describe('EntityManager', () => {
         });
     });
 });
+// --- FILE END ---

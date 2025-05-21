@@ -1,5 +1,5 @@
 // src/core/config/registrations/initializerRegistrations.js
-// ****** MODIFIED FILE ******
+// --- FILE START ---
 
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
@@ -19,20 +19,19 @@ export function registerInitializers(container) {
         tokens.WorldInitializer,
         (c) => {
             const dependencies = {
-                // VVVVVV MODIFIED LINE VVVVVV
                 entityManager: c.resolve(tokens.IEntityManager), // Use interface token
-                // ^^^^^^ MODIFIED LINE ^^^^^^
                 worldContext: c.resolve(tokens.IWorldContext),
-                // VVVVVV MODIFIED LINE VVVVVV
                 gameDataRepository: c.resolve(tokens.IGameDataRepository), // Use interface token
-                // ^^^^^^ MODIFIED LINE ^^^^^^
                 validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-                logger: c.resolve(tokens.ILogger)
+                logger: c.resolve(tokens.ILogger),
+                // VVVVVV ADDED LINE VVVVVV
+                spatialIndexManager: c.resolve(tokens.ISpatialIndexManager) // Add the missing dependency
+                // ^^^^^^ ADDED LINE ^^^^^^
             };
             return new WorldInitializer(dependencies);
         }
     );
-    log.debug(`Initializer Registration: Registered ${tokens.WorldInitializer} (with VED dependency).`);
+    log.debug(`Initializer Registration: Registered ${tokens.WorldInitializer} (with VED and ISpatialIndexManager dependencies).`);
 
 
     // --- SystemInitializer (Ticket 15) ---
@@ -56,3 +55,5 @@ export function registerInitializers(container) {
 
     log.info('Initializer Registration: complete.');
 }
+
+// --- FILE END ---

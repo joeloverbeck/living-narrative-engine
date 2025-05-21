@@ -1,4 +1,5 @@
 // src/domUI/locationRenderer.js
+// --- FILE START ---
 import {RendererBase} from './rendererBase.js';
 import {
     POSITION_COMPONENT_ID,
@@ -15,7 +16,7 @@ import {
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').UnsubscribeFn} UnsubscribeFn
  * @typedef {import('./domElementFactory').default} DomElementFactory
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
- * @typedef {import('../core/interfaces/IDataRegistry').IDataRegistry} IDataRegistry
+ * @typedef {import('../core/interfaces/IDataRegistry').IDataRegistry} IDataRegistry // Keep for potential future use if needed, but not for direct location data here
  */
 
 /**
@@ -54,7 +55,7 @@ export class LocationRenderer extends RendererBase {
     #domElementFactory;
     /** @private @type {IEntityManager} */
     #entityManager;
-    /** @private @type {IDataRegistry} */
+    /** @private @type {IDataRegistry} */ // No longer directly used for fetching primary location data
     #dataRegistry;
     /** @private @type {Array<UnsubscribeFn|undefined>} */
     #subscriptions = [];
@@ -72,7 +73,7 @@ export class LocationRenderer extends RendererBase {
                     validatedEventDispatcher,
                     domElementFactory,
                     entityManager,
-                    dataRegistry,
+                    dataRegistry, // Keep for constructor signature consistency if other parts use it
                     containerElement
                 }) {
         super({logger, documentContext, validatedEventDispatcher});
@@ -94,12 +95,12 @@ export class LocationRenderer extends RendererBase {
         }
         this.#entityManager = entityManager;
 
-        if (!dataRegistry || typeof dataRegistry.getEntityDefinition !== 'function') {
-            const errMsg = `${this._logPrefix} 'dataRegistry' dependency is missing or invalid (must have getEntityDefinition).`;
-            this.logger.error(errMsg, {receivedRegistry: dataRegistry});
-            throw new Error(errMsg);
+        // dataRegistry is no longer the primary source for location display data, but keep if other methods use it
+        if (!dataRegistry) { // Simplified check as its direct critical use here is removed
+            this.logger.warn(`${this._logPrefix} 'dataRegistry' dependency is missing. Certain fallback or definitional lookups might fail if ever needed.`);
         }
         this.#dataRegistry = dataRegistry;
+
 
         if (!containerElement || containerElement.nodeType !== 1) {
             const errMsg = `${this._logPrefix} 'containerElement' (expected '#location-info-container') dependency is missing or not a valid DOM element.`;
@@ -163,18 +164,22 @@ export class LocationRenderer extends RendererBase {
                 return;
             }
 
-            const currentLocationId = positionComponent.locationId;
-            const locationEntityDefinition = this.#dataRegistry.getEntityDefinition(currentLocationId);
+            const currentLocationInstanceId = positionComponent.locationId; // This is an INSTANCE ID
 
-            if (!locationEntityDefinition) {
-                this.logger.error(`${this._logPrefix} Location entity definition for ID '${currentLocationId}' not found.`);
-                this.#clearAllDisplaysOnErrorWithMessage(`Location data for '${currentLocationId}' missing.`);
+            // Fetch the location ENTITY INSTANCE from EntityManager
+            const locationEntityInstance = this.#entityManager.getEntityInstance(currentLocationInstanceId);
+
+            if (!locationEntityInstance) {
+                // This is the error you were seeing, but now checking against EntityManager
+                this.logger.error(`${this._logPrefix} Location entity INSTANCE for ID '${currentLocationInstanceId}' not found in EntityManager.`);
+                this.#clearAllDisplaysOnErrorWithMessage(`Location data for '${currentLocationInstanceId}' missing (instance not found).`);
                 return;
             }
 
-            const nameComponentData = locationEntityDefinition.components?.[NAME_COMPONENT_ID];
-            const descriptionComponentData = locationEntityDefinition.components?.[DESCRIPTION_COMPONENT_ID];
-            const exitsComponentRawData = locationEntityDefinition.components?.[EXITS_COMPONENT_ID];
+            // Get component data directly from the location's INSTANCE
+            const nameComponentData = locationEntityInstance.getComponentData(NAME_COMPONENT_ID);
+            const descriptionComponentData = locationEntityInstance.getComponentData(DESCRIPTION_COMPONENT_ID);
+            const exitsComponentRawData = locationEntityInstance.getComponentData(EXITS_COMPONENT_ID);
 
             const locationName = nameComponentData?.text || 'Unnamed Location';
             const locationDescription = descriptionComponentData?.text || 'No description available.';
@@ -183,17 +188,21 @@ export class LocationRenderer extends RendererBase {
             if (exitsComponentRawData && Array.isArray(exitsComponentRawData)) {
                 exits = exitsComponentRawData.map(exit => ({
                     description: exit.direction || 'Unmarked Exit',
+                    // exit.target should ideally be an instanceId of the target location
+                    // after the linking pass. If it's still a definitionId, that's a separate issue
+                    // in how exits are defined/resolved. For rendering, we just display it.
                     id: exit.target
                 })).filter(exit => exit.description && exit.description !== 'Unmarked Exit');
             } else if (exitsComponentRawData) {
-                this.logger.warn(`${this._logPrefix} Exits data for location '${currentLocationId}' is present but not an array:`, exitsComponentRawData);
+                this.logger.warn(`${this._logPrefix} Exits data for location '${currentLocationInstanceId}' is present but not an array:`, exitsComponentRawData);
             }
 
             const charactersInLocation = [];
-            const entityIdsInLocation = this.#entityManager.getEntitiesInLocation(currentLocationId);
+            // GetEntitiesInLocation correctly uses the location's INSTANCE ID
+            const entityIdsInLocation = this.#entityManager.getEntitiesInLocation(currentLocationInstanceId);
 
             for (const entityIdInLoc of entityIdsInLocation) {
-                if (entityIdInLoc === currentActorEntityId) {
+                if (entityIdInLoc === currentActorEntityId) { // Don't list the current actor
                     continue;
                 }
 
@@ -205,15 +214,15 @@ export class LocationRenderer extends RendererBase {
 
                 if (entity.hasComponent(ACTOR_COMPONENT_ID)) {
                     const entityNameData = entity.getComponentData(NAME_COMPONENT_ID);
-                    const entityDescriptionData = entity.getComponentData(DESCRIPTION_COMPONENT_ID); // Get description
+                    const entityDescriptionData = entity.getComponentData(DESCRIPTION_COMPONENT_ID);
                     charactersInLocation.push({
                         id: entity.id,
                         name: entityNameData?.text || 'Unnamed Character',
-                        description: entityDescriptionData?.text // Add description to the object
+                        description: entityDescriptionData?.text
                     });
                 }
             }
-            this.logger.debug(`${this._logPrefix} Found ${charactersInLocation.length} other characters in location '${currentLocationId}'.`, charactersInLocation);
+            this.logger.debug(`${this._logPrefix} Found ${charactersInLocation.length} other characters in location '${currentLocationInstanceId}'.`);
 
             const displayPayload = {
                 name: locationName,
@@ -253,7 +262,7 @@ export class LocationRenderer extends RendererBase {
                     }
                 } else if (!errorLogged) {
                     this.logger.warn(`${this._logPrefix} Could not find element #${id} to clear/update on error.`);
-                    errorLogged = true;
+                    errorLogged = true; // Log only once per clear operation
                 }
             } catch (e) {
                 this.logger.error(`${this._logPrefix} Error while clearing/updating element #${id} on error:`, e);
@@ -305,7 +314,6 @@ export class LocationRenderer extends RendererBase {
             if (!ul) {
                 this.logger.error(`${this._logPrefix} Failed to create UL element for ${title}. Rendering as paragraphs.`);
                 dataArray.forEach(item => {
-                    // Simplified fallback for this error case
                     const primaryText = item && typeof item === 'object' && itemTextProperty in item ? String(item[itemTextProperty]) : `(Invalid item data for ${title})`;
                     const pItem = this.#domElementFactory.p(itemClassName, primaryText);
                     if (pItem) targetElement.appendChild(pItem); else targetElement.appendChild(this.documentContext.document.createTextNode(primaryText));
@@ -320,27 +328,23 @@ export class LocationRenderer extends RendererBase {
                 const li = this.#domElementFactory.li(itemClassName);
                 if (!li) {
                     this.logger.warn(`${this._logPrefix} Failed to create LI element for item in ${title}.`);
-                    ul.appendChild(this.documentContext.document.createTextNode(primaryText)); // Fallback
-                    return; // Continue to next item
+                    ul.appendChild(this.documentContext.document.createTextNode(primaryText));
+                    return;
                 }
 
-                // Set the primary text (e.g., character name)
                 const nameSpan = this.#domElementFactory.create('span');
                 if (nameSpan) {
                     nameSpan.textContent = primaryText;
                     li.appendChild(nameSpan);
                 } else {
-                    li.appendChild(this.documentContext.document.createTextNode(primaryText)); // Fallback if span creation fails
+                    li.appendChild(this.documentContext.document.createTextNode(primaryText));
                 }
 
-
-                // If rendering characters and a description exists, add it
                 if (title === 'Characters' && item && typeof item === 'object' && typeof item.description === 'string' && item.description.trim() !== '') {
                     const descP = this.#domElementFactory.p('character-description', item.description);
                     if (descP) {
                         li.appendChild(descP);
                     } else {
-                        // Fallback: append description in a less formatted way
                         const descTextNode = this.documentContext.document.createTextNode(` - ${item.description}`);
                         li.appendChild(descTextNode);
                     }
@@ -395,7 +399,6 @@ export class LocationRenderer extends RendererBase {
         }
 
         if (charactersDisplay) {
-            // For characters, itemTextProperty is 'name'. _renderList will handle description.
             this._renderList(locationDto.characters, charactersDisplay, 'Characters', 'name', '(None else here)');
         } else {
             this.logger.error(`${this._logPrefix} Element #${LocationRenderer.#CHARACTERS_DISPLAY_ID} not found.`);
@@ -416,3 +419,5 @@ export class LocationRenderer extends RendererBase {
         this.logger.info(`${this._logPrefix} LocationRenderer disposed.`);
     }
 }
+
+// --- FILE END ---

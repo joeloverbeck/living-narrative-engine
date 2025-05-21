@@ -10,7 +10,7 @@ import GamePersistenceService from '../../src/services/gamePersistenceService.js
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('./playtimeTracker.js').default} PlaytimeTracker */
-/** @typedef {import('../core/config/appContainer.js').default} AppContainer */
+/** @typedef {import('../config/appContainer.js').default} AppContainer */
 
 // --- Mock Dependencies ---
 

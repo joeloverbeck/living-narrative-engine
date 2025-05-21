@@ -149,7 +149,7 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
 
             it('should log debug and info messages about removal', () => {
                 entityManager.removeEntityInstance(INSTANCE_ID_2_POS);
-                expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Removed entity ${INSTANCE_ID_2_POS} from spatial index (location: ${TEST_LOCATION_ID}).`));
+                expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Removed entity ${INSTANCE_ID_2_POS} from spatial index (location instanceId: ${TEST_LOCATION_ID}).`));
                 expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Removed entity instance ${INSTANCE_ID_2_POS} from active map.`));
             });
         });
@@ -225,18 +225,6 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
         });
     });
 
-    describe('buildInitialSpatialIndex', () => {
-        it('should call ISpatialIndexManager.buildIndex, passing the EntityManager instance itself', () => {
-            entityManager.buildInitialSpatialIndex();
-            expect(mockSpatialIndex.buildIndex).toHaveBeenCalledWith(entityManager);
-        });
-
-        it('should log an info message indicating delegation', () => {
-            entityManager.buildInitialSpatialIndex();
-            expect(mockLogger.info).toHaveBeenCalledWith('EntityManager: Delegating initial spatial index build...');
-        });
-    });
-
     describe('clearAll', () => {
         beforeEach(() => {
             entityManager.activeEntities.set(entity1.id, entity1);
@@ -256,7 +244,7 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
 
         it('should log an info message about clearing', () => {
             entityManager.clearAll();
-            expect(mockLogger.info).toHaveBeenCalledWith('EntityManager: Cleared all active entities and delegated spatial index clearing.');
+            expect(mockLogger.info).toHaveBeenCalledWith('EntityManager: Cleared all active entities, definition map, and delegated spatial index clearing.');
         });
     });
 });

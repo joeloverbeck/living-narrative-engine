@@ -38,10 +38,11 @@ class WorldContext extends IWorldContext {
      */
     constructor(entityManager, logger) {
         super();
-        if (!entityManager || typeof entityManager.getEntitiesWithComponent !== 'function' || typeof entityManager.getEntityInstance !== 'function') {
-            throw new Error('WorldContext requires a valid EntityManager instance.');
+        // Ensure EntityManager has the new getPrimaryInstanceByDefinitionId method
+        if (!entityManager || typeof entityManager.getEntitiesWithComponent !== 'function' || typeof entityManager.getEntityInstance !== 'function' || typeof entityManager.getPrimaryInstanceByDefinitionId !== 'function') {
+            throw new Error('WorldContext requires a valid EntityManager instance with getEntitiesWithComponent, getEntityInstance, and getPrimaryInstanceByDefinitionId methods.');
         }
-        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function' || typeof logger.warn !== 'function') { // Added warn check
+        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function' || typeof logger.warn !== 'function') {
             throw new Error('WorldContext requires a valid ILogger instance with info, error, debug and warn methods.');
         }
         this.#entityManager = entityManager;
@@ -91,6 +92,7 @@ class WorldContext extends IWorldContext {
 
     /**
      * Retrieves the entity representing the current location of the primary actor.
+     * The locationId in the actor's position component should be an instance ID.
      * @returns {Entity | null} The entity instance representing the current location, or null if it cannot be determined.
      * @implements {IWorldContext.getCurrentLocation}
      */
@@ -107,11 +109,12 @@ class WorldContext extends IWorldContext {
             return null;
         }
 
-        const locationId = positionData.locationId;
+        const locationId = positionData.locationId; // This should be an INSTANCE ID
         const locationEntity = this.#entityManager.getEntityInstance(locationId);
 
         if (!locationEntity) {
-            this.#logger.warn(`WorldContext.getCurrentLocation: Could not find location entity with ID '${locationId}' referenced by actor '${actor.id}'.`);
+            // This warning means the actor's position.locationId (an instanceId) doesn't point to a valid entity instance.
+            this.#logger.warn(`WorldContext.getCurrentLocation: Could not find location entity INSTANCE with ID '${locationId}' referenced by actor '${actor.id}'.`);
             return null;
         }
         return locationEntity;
@@ -119,6 +122,7 @@ class WorldContext extends IWorldContext {
 
     /**
      * Retrieves the location entity containing a specific entity instance, based on its position component.
+     * The locationId in the entity's position component should be an instance ID.
      * @param {string} entityId - The unique ID of the entity whose location is requested.
      * @returns {Entity | null} The location entity instance where the specified entity resides.
      * @implements {IWorldContext.getLocationOfEntity}
@@ -129,10 +133,17 @@ class WorldContext extends IWorldContext {
             return null;
         }
 
-        const positionData = this.#entityManager.getComponentData(entityId, POSITION_COMPONENT_ID);
+        const entity = this.#entityManager.getEntityInstance(entityId);
+        if (!entity) {
+            this.#logger.warn(`WorldContext.getLocationOfEntity: Entity with ID '${entityId}' not found.`);
+            return null; // Entity itself doesn't exist
+        }
+
+        const positionData = entity.getComponentData(POSITION_COMPONENT_ID);
 
         if (!positionData) {
-            return null; // Entity might not have a position, or doesn't exist.
+            this.#logger.debug(`WorldContext.getLocationOfEntity: Entity '${entityId}' has no position component.`);
+            return null;
         }
 
         if (typeof positionData.locationId !== 'string' || !positionData.locationId) {
@@ -140,27 +151,28 @@ class WorldContext extends IWorldContext {
             return null;
         }
 
-        const locationId = positionData.locationId;
+        const locationId = positionData.locationId; // This should be an INSTANCE ID
         const locationEntity = this.#entityManager.getEntityInstance(locationId);
 
         if (!locationEntity) {
-            this.#logger.warn(`WorldContext.getLocationOfEntity: Could not find location entity with ID '${locationId}' referenced by entity '${entityId}'.`);
+            // This warning means the entity's position.locationId (an instanceId) doesn't point to a valid entity instance.
+            this.#logger.warn(`WorldContext.getLocationOfEntity: Could not find location entity INSTANCE with ID '${locationId}' referenced by entity '${entityId}'.`);
             return null;
         }
         return locationEntity;
     }
 
     /**
-     * Resolves a direction taken from a current location to a target location ID.
+     * Resolves a direction taken from a current location to a target location's INSTANCE ID.
      * This method is intended to be called via SystemDataRegistry for rules.
      * @param {object} queryParams - Parameters for the query.
-     * @param {string} queryParams.current_location_id - The ID of the current location entity.
+     * @param {string} queryParams.current_location_id - The INSTANCE ID of the current location entity.
      * @param {string} queryParams.direction_taken - The direction string (e.g., "out to town").
-     * @returns {string | null} The ID of the target location, or null if invalid.
+     * @returns {string | null} The INSTANCE ID of the target location, or null if invalid or target not found.
      */
-    getTargetLocationForDirection({current_location_id, direction_taken}) { // Destructures from the passed object
+    getTargetLocationForDirection({current_location_id, direction_taken}) {
         if (!current_location_id || typeof current_location_id !== 'string') {
-            this.#logger.warn('WorldContext.getTargetLocationForDirection: Missing or invalid current_location_id.', {
+            this.#logger.warn('WorldContext.getTargetLocationForDirection: Missing or invalid current_location_id (must be an instance ID).', {
                 current_location_id,
                 direction_taken
             });
@@ -174,17 +186,18 @@ class WorldContext extends IWorldContext {
             return null;
         }
 
-        this.#logger.debug(`WorldContext: Attempting to resolve direction '${direction_taken}' from location '${current_location_id}'.`);
+        this.#logger.debug(`WorldContext: Attempting to resolve direction '${direction_taken}' from location INSTANCE '${current_location_id}'.`);
 
+        // current_location_id is an instance ID, so getComponentData is correct here.
         const exitsComponentData = this.#entityManager.getComponentData(current_location_id, 'core:exits');
 
         if (!exitsComponentData) {
-            this.#logger.warn(`WorldContext: Location '${current_location_id}' has no 'core:exits' component.`);
+            this.#logger.warn(`WorldContext: Location instance '${current_location_id}' has no 'core:exits' component.`);
             return null;
         }
 
         if (!Array.isArray(exitsComponentData)) {
-            this.#logger.error(`WorldContext: 'core:exits' component data for location '${current_location_id}' is not an array.`, {data: exitsComponentData});
+            this.#logger.error(`WorldContext: 'core:exits' component data for location instance '${current_location_id}' is not an array.`, {data: exitsComponentData});
             return null;
         }
 
@@ -192,13 +205,28 @@ class WorldContext extends IWorldContext {
 
         if (foundExit) {
             if (foundExit.blocker) {
-                this.#logger.debug(`WorldContext: Exit from '${current_location_id}' via '${direction_taken}' to '${foundExit.target}' is blocked by '${foundExit.blocker}'.`);
+                this.#logger.debug(`WorldContext: Exit from '${current_location_id}' via '${direction_taken}' to definition '${foundExit.target}' is blocked by '${foundExit.blocker}'.`);
+                return null; // Blocked, so no target instance ID to return.
+            }
+
+            const targetDefinitionId = foundExit.target; // This is a definitionId, e.g., "isekai:town"
+            if (typeof targetDefinitionId !== 'string' || !targetDefinitionId) {
+                this.#logger.error(`WorldContext: Exit from '${current_location_id}' via '${direction_taken}' has an invalid target definitionId: '${targetDefinitionId}'.`);
                 return null;
             }
-            this.#logger.debug(`WorldContext: Successfully resolved direction. Target location: '${foundExit.target}'.`);
-            return foundExit.target;
+
+            // Resolve the targetDefinitionId to an instanceId
+            const targetLocationInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(targetDefinitionId);
+
+            if (targetLocationInstance) {
+                this.#logger.debug(`WorldContext: Successfully resolved direction. Target definition: '${targetDefinitionId}', Target INSTANCE: '${targetLocationInstance.id}'.`);
+                return targetLocationInstance.id; // Return the INSTANCE ID
+            } else {
+                this.#logger.warn(`WorldContext: No instance found for target location definitionId '${targetDefinitionId}' (from exit '${direction_taken}' in location '${current_location_id}').`);
+                return null;
+            }
         } else {
-            this.#logger.warn(`WorldContext: No exit found for direction '${direction_taken}' from location '${current_location_id}'.`);
+            this.#logger.warn(`WorldContext: No exit found for direction '${direction_taken}' from location instance '${current_location_id}'.`);
             return null;
         }
     }
@@ -229,14 +257,11 @@ class WorldContext extends IWorldContext {
         if (typeof queryDetails === 'string') {
             actionToPerform = queryDetails;
         } else if (typeof queryDetails === 'object' && queryDetails !== null) {
-            // Prefer 'action' field for rule-based queries as per typical rule engine parameter naming
             if (typeof queryDetails.action === 'string' && queryDetails.action.trim() !== '') {
                 actionToPerform = queryDetails.action;
                 const {action, ...rest} = queryDetails;
                 queryParams = rest;
-            }
-            // Support 'query_type' for backward compatibility or internal system use
-            else if (typeof queryDetails.query_type === 'string' && queryDetails.query_type.trim() !== '') {
+            } else if (typeof queryDetails.query_type === 'string' && queryDetails.query_type.trim() !== '') {
                 actionToPerform = queryDetails.query_type;
                 const {query_type, ...rest} = queryDetails;
                 queryParams = rest;
@@ -250,7 +275,6 @@ class WorldContext extends IWorldContext {
 
         switch (actionToPerform) {
             case 'getTargetLocationForDirection':
-                // queryParams should contain current_location_id and direction_taken
                 if (queryParams.current_location_id && queryParams.direction_taken) {
                     return this.getTargetLocationForDirection(queryParams);
                 } else {
@@ -263,8 +287,6 @@ class WorldContext extends IWorldContext {
             case 'getCurrentISOTimestamp':
                 return this.getCurrentISOTimestamp();
             // Add other case statements for other actions/query_types WorldContext might support
-            // case 'getSomeOtherData':
-            //     return this.handleSomeOtherData(queryParams);
             default:
                 this.#logger.warn(`WorldContext: Unsupported action/query_type: '${actionToPerform}'`, {queryDetails});
                 return undefined;
