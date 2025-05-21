@@ -1,6 +1,6 @@
 // src/services/targetResolutionService.js
 
-import {ITargetResolutionService} from "../core/interfaces/ITargetResolutionService.js";
+import {ITargetResolutionService} from "../interfaces/ITargetResolutionService.js";
 import {ResolutionStatus} from "../types/resolutionStatus.js";
 import {
     EQUIPMENT_COMPONENT_ID,
@@ -11,9 +11,9 @@ import { matchNames } from '../utils/nameMatcher.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 // import { getEntityIdsForScopes } from './entityScopeService.js'; // Import if not injected
 
-/** @typedef {import('../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../core/interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
-/** @typedef {import('../core/interfaces/IWorldContext.js').IWorldContext} IWorldContext */
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
+/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../core/interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('./entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
 

@@ -3,9 +3,9 @@
 import {createJsonLogicContext} from './contextAssembler.js';
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../core/eventBus.js').default} EventBus */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../events/eventBus.js').default} EventBus */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./operationInterpreter.js').default} OperationInterpreter */
