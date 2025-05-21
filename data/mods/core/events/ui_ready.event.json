@@ -1,0 +1,31 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:ui_ready",
+  "description": "Signals the engine has initialized (or loaded) and is ready for user input. The UI can use this to update its state, set the game title, and enable input.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "activeWorld": {
+        "description": "The name of the currently active world, or null if none. This is typically the game world's display name or title.",
+        "oneOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "message": {
+        "description": "A message to display to the user, often intended for an input prompt or status line.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "activeWorld",
+      "message"
+    ],
+    "additionalProperties": false
+  }
+}
