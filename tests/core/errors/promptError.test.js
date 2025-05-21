@@ -1,7 +1,7 @@
 // src/core/errors/promptError.test.js
 // --- FILE START ---
 
-import { PromptError } from '../../../core/errors/promptError.js';
+import { PromptError } from '../../../src/errors/promptError.js';
 import {describe, expect, test} from "@jest/globals"; // Adjust path as needed
 
 describe('PromptError', () => {

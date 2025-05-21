@@ -1,11 +1,11 @@
 // src/tests/core/services/playerPromptService.test.js
 // --- FILE START ---
 
-import PlayerPromptService from '../../../core/turns/services/playerPromptService.js'; // Adjusted path to match project structure
+import PlayerPromptService from '../../../src/turns/services/playerPromptService.js'; // Adjusted path to match project structure
 import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals";
-import Entity from "../../../entities/entity.js";
-import {PromptError} from '../../../core/errors/promptError.js';
-import {PLAYER_TURN_SUBMITTED_ID} from "../../../core/constants/eventIds.js";
+import Entity from "../../../src/entities/entity.js";
+import {PromptError} from '../../../src/errors/promptError.js';
+import {PLAYER_TURN_SUBMITTED_ID} from "../../../src/constants/eventIds.js";
 
 const createMockLogger = () => ({
     info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),

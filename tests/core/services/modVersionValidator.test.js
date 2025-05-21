@@ -5,9 +5,9 @@
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import {cloneDeep} from 'lodash'; // Using lodash cloneDeep as requested
 
-import validateModEngineVersions from '../../../core/modding/modVersionValidator.js';
-import ModDependencyError from '../../../core/errors/modDependencyError.js';
-import {ENGINE_VERSION} from '../../../core/engineVersion.js'; // Use the actual engine version
+import validateModEngineVersions from '../../../src/modding/modVersionValidator.js';
+import ModDependencyError from '../../../src/errors/modDependencyError.js';
+import {ENGINE_VERSION} from '../../../src/engine/engineVersion.js'; // Use the actual engine version
 
 // Mock Logger Factory
 const createMockLogger = () => ({

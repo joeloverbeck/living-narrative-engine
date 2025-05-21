@@ -2,7 +2,7 @@
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('./defs.js').OperationHandler} OperationHandler */
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */ // Optional: If injecting logger
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */ // Optional: If injecting logger
 
 /**
  * @class OperationRegistry

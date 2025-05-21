@@ -5,16 +5,16 @@
 import {describe, expect, test, jest, beforeEach, afterEach} from '@jest/globals';
 
 // --- Function Under Test ---
-import PerceptionUpdateService from '../../services/perceptionUpdateService.js';
-import {PERCEPTION_LOG_COMPONENT_ID} from "../../constants/componentIds.js"; // Adjust path as needed
+import PerceptionUpdateService from '../../src/services/perceptionUpdateService.js';
+import {PERCEPTION_LOG_COMPONENT_ID} from "../../src/constants/componentIds.js"; // Adjust path as needed
 
 // --- JSDoc Imports for Type Hinting (optional, but good practice) ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../services/perceptionUpdateService.js').LogEntry} LogEntry */
-/** @typedef {import('../../services/perceptionUpdateService.js').AddEntryParams} AddEntryParams */
-/** @typedef {import('../../services/perceptionUpdateService.js').PerceptionUpdateResult} PerceptionUpdateResult */
-/** @typedef {import('../../services/perceptionUpdateService.js').QueryDetailsForPerceptionUpdate} QueryDetailsForPerceptionUpdate */
+/** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../src/services/perceptionUpdateService.js').LogEntry} LogEntry */
+/** @typedef {import('../../src/services/perceptionUpdateService.js').AddEntryParams} AddEntryParams */
+/** @typedef {import('../../src/services/perceptionUpdateService.js').PerceptionUpdateResult} PerceptionUpdateResult */
+/** @typedef {import('../../src/services/perceptionUpdateService.js').QueryDetailsForPerceptionUpdate} QueryDetailsForPerceptionUpdate */
 
 // --- Constants ---
 const DEFAULT_MAX_LOG_ENTRIES = 50;

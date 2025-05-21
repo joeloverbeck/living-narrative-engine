@@ -6,15 +6,15 @@
  */
 
 import {beforeEach, afterEach, describe, expect, it, jest} from '@jest/globals';
-import {RendererBase} from '../../domUI/index.js'; // Assumes index exports RendererBase
-import DocumentContext from '../../domUI/documentContext.js';
+import {RendererBase} from '../../src/domUI/index.js'; // Assumes index exports RendererBase
+import DocumentContext from '../../src/domUI/documentContext.js';
 
 // --- Mock Dependencies ---
 
 // Define Interfaces using JSDoc for clarity in mocks (optional but good practice)
 /** @typedef {import('../../core/interfaces/ILogger').ILogger} ILogger */
-/** @typedef {import('../../domUI/IDocumentContext').IDocumentContext} IDocumentContext */
-/** @typedef {import('../../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../src/domUI/IDocumentContext.js').IDocumentContext} IDocumentContext */
+/** @typedef {import('../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 
 /** @returns {ILogger} */
 const createMockLogger = () => ({

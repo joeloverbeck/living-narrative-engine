@@ -1,13 +1,13 @@
 // src/tests/core/turns/states/processingCommandState.enterState.test.js
 
 import {describe, test, expect, jest, beforeEach, it, afterEach} from '@jest/globals';
-import {ProcessingCommandState} from '../../../../core/turns/states/processingCommandState.js';
-import {TurnIdleState} from '../../../../core/turns/states/turnIdleState.js';
-import TurnDirectiveStrategyResolver from '../../../../core/turns/strategies/turnDirectiveStrategyResolver.js';
-import {SYSTEM_ERROR_OCCURRED_ID} from '../../../../core/constants/eventIds.js';
-import TurnDirective from "../../../../core/turns/constants/turnDirectives.js";
-import {AwaitingPlayerInputState} from '../../../../core/turns/states/awaitingPlayerInputState.js';
-import {AwaitingExternalTurnEndState} from '../../../../core/turns/states/awaitingExternalTurnEndState.js';
+import {ProcessingCommandState} from '../../../../src/turns/states/processingCommandState.js';
+import {TurnIdleState} from '../../../../src/turns/states/turnIdleState.js';
+import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import {SYSTEM_ERROR_OCCURRED_ID} from '../../../../src/constants/eventIds.js';
+import TurnDirective from "../../../../src/turns/constants/turnDirectives.js";
+import {AwaitingPlayerInputState} from '../../../../src/turns/states/awaitingPlayerInputState.js';
+import {AwaitingExternalTurnEndState} from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 
 // Mock Actor class (simplified)
 class MockActor {
@@ -53,7 +53,7 @@ const mockTurnDirectiveStrategy = {
 let mockTurnContext;
 let mockHandler;
 
-jest.mock('../../../../core/turns/strategies/turnDirectiveStrategyResolver.js', () => ({
+jest.mock('../../../../src/turns/strategies/turnDirectiveStrategyResolver.js', () => ({
     __esModule: true,
     default: {
         resolveStrategy: jest.fn(),
@@ -89,7 +89,7 @@ describe('ProcessingCommandState', () => {
             endTurn: jest.fn().mockImplementation((_err) => {
                 if (mockHandler._currentState === processingState ||
                     mockHandler._currentState?.constructor?.name === 'ProcessingCommandState') {
-                    const TurnEndingStateActual = jest.requireActual('../../../../core/turns/states/turnEndingState.js').TurnEndingState;
+                    const TurnEndingStateActual = jest.requireActual('../../../../src/turns/states/turnEndingState.js').TurnEndingState;
                     const currentActorForEndTurn = mockTurnContext.getActor ? (mockTurnContext.getActor()?.id || 'unknownFromEndTurn') : 'unknownNoGetActor';
                     const turnEndingState = new TurnEndingStateActual(mockHandler, currentActorForEndTurn, _err);
 

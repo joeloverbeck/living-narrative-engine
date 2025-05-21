@@ -8,10 +8,10 @@ import {PERCEPTION_LOG_COMPONENT_ID} from "../constants/componentIds.js";
 /**
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
- * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/IValidatedEventDispatcher').UnsubscribeFn} UnsubscribeFn
+ * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('../interfaces/IValidatedEventDispatcher.js').UnsubscribeFn} UnsubscribeFn
  * @typedef {import('./domElementFactory').default} DomElementFactory
- * @typedef {import('../core/interfaces/IEntityManager').IEntityManager} IEntityManager
+ * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../entities/entity').default} Entity
  */
 

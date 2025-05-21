@@ -6,7 +6,7 @@ import {ActionValidationContextBuilder} from './actionValidationContextBuilder.j
 // --- END: Refactor-AVS-3.3.1 ---
 
 /* type-only imports */
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../entities/entity.js').default} Entity */

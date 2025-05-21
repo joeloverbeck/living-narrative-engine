@@ -14,10 +14,10 @@
  */
 /** @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../services/gameDataRepository.js').default} GameDataRepository */
-/** @typedef {import('../../../entities/entity.js').default} Entity */
-/** @typedef {import('../../../actions/actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 // Removed AvailableAction import as DiscoveredActionInfo is now the primary type
 

@@ -3,7 +3,7 @@
 import IPlaytimeTracker from "../interfaces/IPlaytimeTracker.js";
 
 /**
- * @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker
  */
 

@@ -3,17 +3,17 @@
 // --- Imports ---
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
 import path from 'path';
-import RuleLoader from '../../../core/loaders/ruleLoader.js';
+import RuleLoader from '../../../src/loaders/ruleLoader.js';
 
 // Import interfaces for JSDoc typing
 /**
- * @typedef {import('../../../core/interfaces/coreServices.js').IConfiguration} IConfiguration
- * @typedef {import('../../../core/interfaces/coreServices.js').IPathResolver} IPathResolver
- * @typedef {import('../../../core/interfaces/coreServices.js').IDataFetcher} IDataFetcher
- * @typedef {import('../../../core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
- * @typedef {import('../../../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry
- * @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../../core/interfaces/coreServices.js').ModManifest} ModManifest
+ * @typedef {import('../../../src/interfaces/coreServices.js').IConfiguration} IConfiguration
+ * @typedef {import('../../../src/interfaces/coreServices.js').IPathResolver} IPathResolver
+ * @typedef {import('../../../src/interfaces/coreServices.js').IDataFetcher} IDataFetcher
+ * @typedef {import('../../../src/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../../../src/interfaces/coreServices.js').IDataRegistry} IDataRegistry
+ * @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../../../src/interfaces/coreServices.js').ModManifest} ModManifest
  */
 
 // --- Mock Service Factories ---

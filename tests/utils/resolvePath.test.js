@@ -3,7 +3,7 @@
  * ------------------------------------------------------------------ */
 
 import {describe, it, expect} from '@jest/globals';
-import resolvePath from '../../utils/resolvePath.js'; // <— adjust only if you move files
+import resolvePath from '../../src/utils/resolvePath.js'; // <— adjust only if you move files
 
 describe('utils/resolvePath', () => {
     /* -------------------------------------------------

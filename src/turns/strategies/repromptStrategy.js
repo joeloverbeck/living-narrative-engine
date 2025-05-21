@@ -4,7 +4,7 @@
 // ────────────────────────────────────────────────────────────────
 
 /** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
-/** @typedef {import('../../../entities/entity.js').default}      Entity */
+/** @typedef {import('../../entities/entity.js').default}      Entity */
 /** @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum */
 /** @typedef {import('../../commands/commandProcessor.js').CommandResult}  CommandResult */
 

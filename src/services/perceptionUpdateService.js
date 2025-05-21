@@ -1,8 +1,8 @@
 // src/services/perceptionUpdateService.js
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../core/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../types/common.js').NamespacedId} NamespacedId */
 
 /**

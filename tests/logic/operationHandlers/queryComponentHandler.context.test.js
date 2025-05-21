@@ -1,6 +1,6 @@
 // src/tests/logic/operationHandlers/queryComponentHandler.context.test.js
 
-import QueryComponentHandler from '../../../logic/operationHandlers/queryComponentHandler';
+import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 
 const getLoggerMock = () => ({

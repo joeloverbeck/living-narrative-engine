@@ -3,7 +3,7 @@ import {resolvePlaceholders} from './contextUtils.js'; // Adjust path as needed
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').ExecutionContext} ExecutionContext */ // Placeholder
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./operationRegistry.js').default} OperationRegistry */
 
 class OperationInterpreter {

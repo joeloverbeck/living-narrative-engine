@@ -1,8 +1,8 @@
 // src/core/turns/strategies/repromptStrategy.test.js
 
-import RepromptStrategy from '../../../../core/turns/strategies/repromptStrategy.js';
-import TurnDirective from '../../../../core/turns/constants/turnDirectives.js';
-import {AwaitingPlayerInputState} from '../../../../core/turns/states/awaitingPlayerInputState.js';
+import RepromptStrategy from '../../../../src/turns/strategies/repromptStrategy.js';
+import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
+import {AwaitingPlayerInputState} from '../../../../src/turns/states/awaitingPlayerInputState.js';
 import {afterEach, beforeEach, describe, expect, jest, test} from "@jest/globals";
 
 // --- Mocks ---

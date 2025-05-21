@@ -4,11 +4,11 @@
  * @jest-environment node
  */
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
-import QuerySystemDataHandler from '../../../logic/operationHandlers/querySystemDataHandler.js';
+import QuerySystemDataHandler from '../../../src/logic/operationHandlers/querySystemDataHandler.js';
 
 // --- Type-hints ---
-/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../core/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 // This typedef now reflects the NESTED structure handlers receive
 /**
  * @typedef {object} NestedExecutionContextForTest
@@ -26,7 +26,7 @@ import QuerySystemDataHandler from '../../../logic/operationHandlers/querySystem
  * @property {object} context // The actual variable store
  * @property {ILogger} logger
  */
-/** @typedef {import('../../../logic/operationHandlers/querySystemDataHandler.js').QuerySystemDataParams} QuerySystemDataParams */
+/** @typedef {import('../../../src/logic/operationHandlers/querySystemDataHandler.js').QuerySystemDataParams} QuerySystemDataParams */
 
 const createMockLogger = () => ({
     info: jest.fn(),

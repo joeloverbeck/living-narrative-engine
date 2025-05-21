@@ -4,11 +4,11 @@
  * @jest-environment node
  */
 import { describe, expect, test, jest, beforeEach, afterEach } from '@jest/globals';
-import OperationRegistry from '../../logic/operationRegistry.js'; // Adjust path as needed
+import OperationRegistry from '../../src/logic/operationRegistry.js'; // Adjust path as needed
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */ // Adjusted path assumption
-/** @typedef {import('../../logic/defs.js').OperationHandler} OperationHandler */ // Adjusted path assumption
+/** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjusted path assumption
+/** @typedef {import('../../src/logic/defs.js').OperationHandler} OperationHandler */ // Adjusted path assumption
 
 // --- Mock Logger ---
 /** @type {jest.Mocked<ILogger>} */

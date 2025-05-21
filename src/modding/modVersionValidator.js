@@ -2,7 +2,7 @@
 
 import engineVersionSatisfies from '../utils/engineVersionSatisfies.js';
 import ModDependencyError from '../errors/modDependencyError.js';
-import {ENGINE_VERSION} from '../engineVersion.js'; // Import the actual engine version
+import {ENGINE_VERSION} from '../engine/engineVersion.js'; // Import the actual engine version
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger

@@ -4,12 +4,12 @@
  * @jest-environment node
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import QueryComponentHandler from '../../../logic/operationHandlers/QueryComponentHandler.js'; // Adjust path
+import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js'; // Adjust path
 
 // --- JSDoc Imports ---
-/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../../logic/defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../../src/logic/defs.js').ExecutionContext} ExecutionContext */
 
 // --- Mocks ---
 const mockEntityManager = {

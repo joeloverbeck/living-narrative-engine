@@ -7,7 +7,7 @@
 /** @typedef {import('../core/interfaces/ILogger').ILogger} ILogger */
 /** @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext */
 
-/** @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 
 /**
  * @abstract

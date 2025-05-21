@@ -1,8 +1,8 @@
 // src/utils/nameMatcher.test.js
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { matchNames } from '../../utils/nameMatcher.js'; // Corrected path assuming test file is in src/utils
-import { ResolutionStatus } from '../../types/resolutionStatus.js';
+import { matchNames } from '../../src/utils/nameMatcher.js'; // Corrected path assuming test file is in src/utils
+import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
 
 /** @typedef {import('./nameMatcher.js').NameMatchCandidate} NameMatchCandidate */
 

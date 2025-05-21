@@ -4,12 +4,12 @@
  * @jest-environment node
  */
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
-import OperationInterpreter from '../../logic/operationInterpreter.js'; // Adjust path if needed
+import OperationInterpreter from '../../src/logic/operationInterpreter.js'; // Adjust path if needed
 // We don't mock resolvePlaceholders itself here, we test that the interpreter USES it correctly.
 
 // --- JSDoc Imports ---
-/** @typedef {import('../../logic/defs.js').ExecutionContext} ExecutionContext */ // Assuming definition
-/** @typedef {import('../../../data/schemas/operation.schema.json').Operation} Operation */
+/** @typedef {import('../../src/logic/defs.js').ExecutionContext} ExecutionContext */ // Assuming definition
+/** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 
 // --- Mock Dependencies ---
 const mockRegistry = {

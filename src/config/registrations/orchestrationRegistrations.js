@@ -7,7 +7,7 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../appContainer.js').default} AppContainer */
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */ // Adjusted path assuming interfaces is sibling to core
-/** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Adjusted path assuming services is sibling to core
+/** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Adjusted path assuming services is sibling to core
 
 // --- Service Imports ---
 import InitializationService from '../../initializers/services/initializationService.js'; // Adjusted path
