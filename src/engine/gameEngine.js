@@ -643,7 +643,7 @@ class GameEngine {
             return;
         }
         this.#logger.info("GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.");
-        this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_LOAD_GAME_UI);
+        this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_LOAD_GAME_UI, {});
     }
 
     getEngineStatus() {

@@ -1,0 +1,16 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:ui_stopped",
+  "description": "Signals the engine has been stopped. UI should update status and disable input.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "inputDisabledMessage": {
+        "type": "string",
+        "description": "Message to show when disabling input."
+      }
+    },
+    "required": ["inputDisabledMessage"],
+    "additionalProperties": false
+  }
+}

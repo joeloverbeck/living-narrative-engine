@@ -791,7 +791,7 @@ describe('GameEngine', () => {
             gameEngine.showLoadGameUI(); // Method is now sync
 
             expect(mockLogger.info).toHaveBeenCalledWith("GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.");
-            expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(REQUEST_SHOW_LOAD_GAME_UI);
+            expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(REQUEST_SHOW_LOAD_GAME_UI, {});
             expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
         });
 

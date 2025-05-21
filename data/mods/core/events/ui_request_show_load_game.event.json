@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:ui_request_show_load_game",
+  "description": "Signals a request from the engine to show the load game interface. No payload is expected as it's a simple request trigger.",
+  "payloadSchema": {
+    "type": "object",
+    "title": "Payload for core:ui_request_show_load_game",
+    "description": "This event expects no payload (an empty object).",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  }
+}

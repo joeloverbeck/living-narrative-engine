@@ -1,4 +1,4 @@
-// src/tests/core/turns/states/awaitingPlayerInputState.test.js
+// tests/turns/states/awaitingPlayerInputState.test.js
 // --- FILE START ---
 
 /**
@@ -443,7 +443,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
             await awaitingPlayerInputState.destroy(mockHandler);
 
             const expectedErrorMessage = `Turn handler destroyed while actor ${testActor.id} was in AwaitingPlayerInputState.`;
-            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Handler destroyed while state was active for actor ${testActor.id}. Ending turn.`);
+            expect(mockLogger.info).toHaveBeenCalledWith(`AwaitingPlayerInputState: Handler destroyed while state was active for actor ${testActor.id}. Ending turn via turnContext.`);
             expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
             expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(expectedErrorMessage);
             expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);

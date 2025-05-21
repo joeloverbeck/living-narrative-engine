@@ -1,4 +1,4 @@
-// src/tests/core/turns/handlers/baseTurnHandler.test.js
+// tests/turns/handlers/baseTurnHandler.test.js
 // --- FILE START ---
 
 /**
@@ -473,15 +473,12 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             expect(handler._isDestroyed).toBe(true);
             expect(stateDestroySpy).toHaveBeenCalledTimes(1); // AwaitingPlayerInputState.destroy() should be called
 
-            // Corrected assertion for the log message from AwaitingPlayerInputState.destroy()
+            // Updated assertion for the log message from AwaitingPlayerInputState.destroy()
+            // to reflect that it now skips ending the turn if the handler is already being destroyed.
             expect(mockLogger.info).toHaveBeenCalledWith(
-                `AwaitingPlayerInputState: Handler destroyed while state was active for actor ${dummyActor.id}. Ending turn.`
+                `AwaitingPlayerInputState: Handler (actor ${dummyActor.id}) is already being destroyed. Skipping turnContext.endTurn().`
             );
 
-            const expectedDestroyErrorMsg = `Turn handler destroyed while actor ${dummyActor.id} was in AwaitingPlayerInputState.`;
-            expect(handler._handleTurnEnd).toHaveBeenCalledWith(dummyActor.id, expect.objectContaining({message: expectedDestroyErrorMsg}), true);
-
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`MinimalTestHandler: State Transition: AwaitingPlayerInputState \u2192 TurnEndingState`));
             expect(resetSpy).toHaveBeenCalledWith(expect.stringContaining(`destroy-MinimalTestHandler`));
             expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
             expect(mockLogger.error).not.toHaveBeenCalled(); // No unexpected errors

@@ -153,7 +153,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
         // Logger for this state's specific exit message.
         // Prioritize context's logger, then handler's, then console.
         const turnContext = this._getTurnContext();
-        const logger = turnContext?.getLogger() ?? this._handler?.getLogger() ?? console;
+        const logger = turnContext?.getLogger?.() ?? this._handler?.getLogger?.() ?? console;
 
         logger.debug(`${this.name}: ExitState cleanup (if any) complete.`);
     }
@@ -209,7 +209,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
         // Prefer this._handler for consistency if handlerInstance isn't strictly needed for a different context
         const currentHandler = handlerInstance || this._handler;
         const turnContext = this._getTurnContext(); // Relies on this._handler
-        const logger = turnContext?.getLogger() ?? currentHandler?.getLogger?.() ?? console;
+        const logger = turnContext?.getLogger?.() ?? currentHandler?.getLogger?.() ?? console;
 
         if (!turnContext) {
             logger.warn(`${this.name}: handleTurnEndedEvent received but no turn context. Payload: ${JSON.stringify(payload)}. Deferring to superclass.`);
@@ -235,26 +235,36 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
      * @override
      */
     async destroy(handlerInstance) {
-        // handlerInstance is typically this._handler when called by the handler itself.
         const currentHandler = handlerInstance || this._handler;
-        const turnContext = this._getTurnContext(); // Relies on this._handler
-        const logger = currentHandler?.getLogger?.() ?? turnContext?.getLogger() ?? console;
+        // Prioritize handler's logger for destruction sequence, as context might be compromised or null.
+        const logger = currentHandler?.getLogger?.() ?? console;
 
+        const turnContext = currentHandler?.getTurnContext?.(); // Get context via the handler
         const actorInContext = turnContext?.getActor();
 
         if (actorInContext) {
-            logger.info(`${this.name}: Handler destroyed while state was active for actor ${actorInContext.id}. Ending turn.`);
-            const destroyError = new Error(`Turn handler destroyed while actor ${actorInContext.id} was in ${this.name}.`);
-            turnContext.endTurn(destroyError);
-        } else {
-            // Determine actorId string for logging when context or actor in context might be missing
-            let actorIdLog = 'N/A_at_destroy'; // Default for test expectation if all else fails
-            if (turnContext) { // Context exists but actor might be missing from it
-                actorIdLog = actorInContext?.id ?? 'N/A_in_context';
-            } else { // No context at all
-                actorIdLog = 'N/A_no_context';
+            // This branch is for when an actor was active in the context.
+            if (currentHandler && currentHandler._isDestroyed) {
+                logger.info(`${this.name}: Handler (actor ${actorInContext.id}) is already being destroyed. Skipping turnContext.endTurn().`);
+            } else if (turnContext) { // Handler not destroyed yet, and turnContext exists
+                logger.info(`${this.name}: Handler destroyed while state was active for actor ${actorInContext.id}. Ending turn via turnContext.`);
+                const destroyError = new Error(`Turn handler destroyed while actor ${actorInContext.id} was in ${this.name}.`);
+                turnContext.endTurn(destroyError);
+            } else {
+                // This case (actorInContext true but turnContext false) should ideally not happen.
+                // If it does, it implies an inconsistent state.
+                logger.warn(`${this.name}: actorInContext (${actorInContext.id}) reported but turnContext is missing during state destroy. Cannot call endTurn.`);
             }
-            logger.warn(`${this.name}: Handler destroyed. Actor ID from context: ${actorIdLog}. No specific turn to end via context if actor is missing.`);
+        } else {
+            // This branch is for when no actor was active in the context,
+            // or the context itself was missing.
+            if (turnContext) {
+                // Context exists, but getActor() returned null/undefined.
+                logger.warn(`${this.name}: Handler destroyed. Actor ID from context: N/A_in_context. No specific turn to end via context if actor is missing.`);
+            } else {
+                // Context itself is null/undefined.
+                logger.warn(`${this.name}: Handler destroyed. Actor ID from context: N/A_no_context. No specific turn to end via context if actor is missing.`);
+            }
         }
         await super.destroy(currentHandler);
     }

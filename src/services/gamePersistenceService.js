@@ -33,7 +33,7 @@ class GamePersistenceService extends IGamePersistenceService {
     /** @private @type {PlaytimeTracker} */
     #playtimeTracker;
     /** @private @type {AppContainer} */
-    #container;
+    #container; // Still needed if other services are resolved for restoration/capture
 
     constructor({
                     logger,
@@ -50,7 +50,7 @@ class GamePersistenceService extends IGamePersistenceService {
         if (!entityManager) missingDependencies.push('entityManager');
         if (!dataRegistry) missingDependencies.push('dataRegistry');
         if (!playtimeTracker) missingDependencies.push('playtimeTracker');
-        if (!container) missingDependencies.push('container');
+        if (!container) missingDependencies.push('container'); // Keep if other resolutions are needed
 
         if (missingDependencies.length > 0) {
             const errorMessage = `GamePersistenceService: Fatal - Missing required dependencies: ${missingDependencies.join(', ')}.`;
@@ -95,7 +95,7 @@ class GamePersistenceService extends IGamePersistenceService {
         if (!this.#entityManager) throw new Error('EntityManager not available for capturing game state.');
         if (!this.#dataRegistry) throw new Error('DataRegistry not available for capturing mod manifest.');
         if (!this.#playtimeTracker) throw new Error('PlaytimeTracker not available for capturing game state.');
-        if (!this.#container) throw new Error('AppContainer not available for resolving dependencies.');
+        // AppContainer might still be needed if other parts of gameState.engineInternals are resolved.
 
         const entitiesData = [];
         for (const entity of this.#entityManager.activeEntities.values()) {
@@ -113,40 +113,32 @@ class GamePersistenceService extends IGamePersistenceService {
 
         let activeModsManifest = [];
         /** @type {ModManifest[]} */
-        const loadedManifestObjects = this.#dataRegistry.getAll('mod_manifests'); // Correctly use getAll
+        const loadedManifestObjects = this.#dataRegistry.getAll('mod_manifests');
 
         if (loadedManifestObjects && loadedManifestObjects.length > 0) {
             activeModsManifest = loadedManifestObjects.map(manifest => ({
-                modId: manifest.id, // Assuming 'id' field in ModManifest stores the mod's ID
+                modId: manifest.id,
                 version: manifest.version,
             }));
             this.#logger.debug(`GamePersistenceService: Captured ${activeModsManifest.length} active mods from 'mod_manifests' type in registry.`);
         } else {
             this.#logger.warn('GamePersistenceService: No mod manifests found in registry under "mod_manifests" type. Mod manifest may be incomplete. Using fallback.');
-            // Fallback: Try to find 'core' in the (empty or non-existent) list or just add a placeholder
             const coreModManifest = loadedManifestObjects?.find(m => m.id === 'core');
             if (coreModManifest) {
                 activeModsManifest = [{modId: 'core', version: coreModManifest.version}];
             } else {
-                activeModsManifest = [{modId: 'core', version: 'unknown_fallback'}]; // Simplified fallback
+                activeModsManifest = [{modId: 'core', version: 'unknown_fallback'}];
             }
             this.#logger.debug('GamePersistenceService: Used fallback for mod manifest.');
         }
 
-        let currentTurn = 0;
-        try {
-            const turnManager = /** @type {ITurnManager} */ (this.#container.resolve(tokens.ITurnManager));
-            currentTurn = turnManager?.currentTurn ?? 0;
-        } catch (error) {
-            this.#logger.warn('GamePersistenceService.captureCurrentGameState: Failed to resolve ITurnManager. Current turn will be default (0).', error);
-        }
+        // REMOVED: Attempt to get currentTurn from TurnManager as it's not restored.
+        // let currentTurn = 0; // Default if not saving turn state related to TurnManager
 
-        // Use the activeWorldName passed from GameEngine
         const currentWorldNameForMeta = activeWorldName || 'Unknown Game';
         if (!activeWorldName) {
             this.#logger.warn(`GamePersistenceService.captureCurrentGameState: No activeWorldName was provided by the caller. Defaulting gameTitle to 'Unknown Game'.`);
         }
-
 
         const currentTotalPlaytime = this.#playtimeTracker.getTotalPlaytime();
         this.#logger.debug(`GamePersistenceService: Fetched total playtime: ${currentTotalPlaytime}s.`);
@@ -155,7 +147,7 @@ class GamePersistenceService extends IGamePersistenceService {
             metadata: {
                 saveFormatVersion: '1.0.0',
                 engineVersion: '0.1.0-stub',
-                gameTitle: currentWorldNameForMeta, // Use the determined world name
+                gameTitle: currentWorldNameForMeta,
                 timestamp: new Date().toISOString(),
                 playtimeSeconds: currentTotalPlaytime,
                 saveName: '',
@@ -168,7 +160,9 @@ class GamePersistenceService extends IGamePersistenceService {
                 playerState: {},
                 worldState: {},
                 engineInternals: {
-                    currentTurn: currentTurn,
+                    // currentTurn: currentTurn, // Property removed
+                    // Other engine internals that *should* be persisted can go here.
+                    // If currentTurn was the only property, engineInternals can be an empty object.
                 },
             },
             integrityChecks: {
@@ -176,7 +170,7 @@ class GamePersistenceService extends IGamePersistenceService {
             },
         };
 
-        this.#logger.info(`GamePersistenceService: Game state capture complete. Game Title: ${currentWorldNameForMeta}, ${entitiesData.length} entities captured. Playtime: ${currentTotalPlaytime}s. Current turn: ${currentTurn}.`);
+        this.#logger.info(`GamePersistenceService: Game state capture complete. Game Title: ${currentWorldNameForMeta}, ${entitiesData.length} entities captured. Playtime: ${currentTotalPlaytime}s.`);
         return gameStateObject;
     }
 
@@ -189,13 +183,6 @@ class GamePersistenceService extends IGamePersistenceService {
         return true;
     }
 
-    /**
-     * Saves the current game state with the given name.
-     * @param {string} saveName - The name for the save file.
-     * @param {boolean} isEngineInitialized - Flag indicating if the engine is initialized.
-     * @param {string | null | undefined} activeWorldName - The name of the currently active world.
-     * @returns {Promise<import('../interfaces/ISaveLoadService.js').SaveResult>} Result of the save operation.
-     */
     async saveGame(saveName, isEngineInitialized, activeWorldName) {
         this.#logger.info(`GamePersistenceService: Manual save triggered with name: "${saveName}". Active world hint: "${activeWorldName || 'N/A'}".`);
 
@@ -213,7 +200,6 @@ class GamePersistenceService extends IGamePersistenceService {
 
         try {
             this.#logger.debug(`GamePersistenceService.saveGame: Capturing current game state for save "${saveName}".`);
-            // Pass activeWorldName to captureCurrentGameState
             const gameStateObject = this.captureCurrentGameState(activeWorldName);
             if (!gameStateObject.metadata) gameStateObject.metadata = {};
             gameStateObject.metadata.saveName = saveName;
@@ -292,27 +278,15 @@ class GamePersistenceService extends IGamePersistenceService {
             this.#playtimeTracker.setAccumulatedPlaytime(0);
         }
 
-        let turnManager = null;
-        try {
-            turnManager = /** @type {ITurnManager} */ (this.#container.resolve(tokens.ITurnManager));
-        } catch (resolveError) {
-            this.#logger.error(`GamePersistenceService.restoreGameState: Failed to resolve ITurnManager: ${resolveError.message}. Cannot restore turn count.`, resolveError);
-        }
-
-        if (turnManager && deserializedSaveData.gameState.engineInternals && typeof deserializedSaveData.gameState.engineInternals.currentTurn === 'number') {
-            if (typeof turnManager.setCurrentTurn === 'function') {
-                try {
-                    turnManager.setCurrentTurn(deserializedSaveData.gameState.engineInternals.currentTurn);
-                    this.#logger.info(`GamePersistenceService.restoreGameState: Restored current turn to ${deserializedSaveData.gameState.engineInternals.currentTurn}.`);
-                } catch (turnError) {
-                    this.#logger.error(`GamePersistenceService.restoreGameState: Error calling turnManager.setCurrentTurn: ${turnError.message}.`, turnError);
-                }
-            } else {
-                this.#logger.warn('GamePersistenceService.restoreGameState: TurnManager does not have setCurrentTurn method.');
-            }
-        } else if (turnManager) {
-            this.#logger.info('GamePersistenceService.restoreGameState: Current turn data not found/invalid in save.');
-        }
+        // --- MODIFICATION START ---
+        // Removed the entire block that attempted to resolve ITurnManager
+        // and call setCurrentTurn. This is because:
+        // 1. The user does not want to persist or restore turn count.
+        // 2. The GameEngine already stops and restarts the TurnManager during load,
+        //    effectively resetting its state.
+        // 3. The TurnManager did not have a setCurrentTurn method, causing the warning.
+        this.#logger.info('GamePersistenceService.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.');
+        // --- MODIFICATION END ---
 
         this.#logger.debug('GamePersistenceService.restoreGameState: Placeholder for PlayerState/WorldState restoration.');
         this.#logger.info('GamePersistenceService.restoreGameState: Game state restoration process complete.');
