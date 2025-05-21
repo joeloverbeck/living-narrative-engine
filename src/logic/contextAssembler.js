@@ -2,7 +2,7 @@
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./defs.js').GameEvent} GameEvent */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('./defs.js').JsonLogicEntityContext} JsonLogicEntityContext */

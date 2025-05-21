@@ -1,6 +1,6 @@
 // src/logic/contextUtils.js
 import resolvePath from '../utils/resolvePath.js'; // Adjust path as needed
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 // Regex to find placeholders like {path.to.value} within a string.
 // Group 1: Captures the brace style path (excluding braces).
