@@ -1,0 +1,30 @@
+/* css/components/_actions-widget.css */
+
+/* --- Actions Widget: Layout for Action Buttons --- */
+
+/*
+  Layout styles for the #actions-widget, specifically how buttons
+  are arranged within its #action-buttons child (e.g., flex properties).
+  The appearance of the buttons themselves is handled by _buttons.css.
+  Common widget container styles are from _widgets-base.css.
+*/
+
+#action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* Aligns buttons to the start of the container */
+}
+
+/* Context-specific button sizing/margin within the actions widget */
+#action-buttons button {
+    width: auto; /* Allow buttons to size based on their content */
+    margin: var(--spacing-xs); /* Consistent small margin around each button */
+}
+
+/* Note: Styles for specific button states within #action-buttons
+   (e.g., #action-buttons button.selected, #action-buttons button.selected:hover)
+   should remain in the main style.css or be moved to _buttons.css
+   if they are more about button appearance than action-widget layout.
+   For this refactor, only the direct layout of #action-buttons and
+   the base sizing/margin for buttons *within* it are moved here.
+*/

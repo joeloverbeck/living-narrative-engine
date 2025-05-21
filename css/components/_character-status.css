@@ -1,0 +1,40 @@
+/* css/components/_character-status.css */
+
+/*
+ * Styles specific to the Character Status widget (#character-status-widget)
+ * and its unique child elements.
+ *
+ * Common widget styles (overall box model, h3) are handled by _widgets-base.css.
+ * Paragraphs (p) within this widget generally inherit from .panel p or body defaults.
+ *
+ * This file is for styles that are *uniquely* applied to children of
+ * #character-status-widget beyond those common/inherited styles.
+ * For example, if #player-health span or p tags *specifically within*
+ * #character-status-widget required distinct styling (e.g., unique margins,
+ * colors, font-styles not covered by base widget or panel typography),
+ * those rules would be placed here.
+ *
+ * As of the last review (Ticket 29), no such overriding unique styles for
+ * #character-status-widget's immediate children were identified in the
+ * main style.css that weren't already covered by more general rules
+ * or _widgets-base.css.
+ *
+ * Future specific styles for elements within #character-status-widget
+ * (e.g., #player-health, #player-stamina, custom list items if any)
+ * should be added here.
+ */
+
+/* Example of how a specific style might look if needed in the future:
+#character-status-widget #player-health {
+    font-weight: bold;
+    color: var(--positive-feedback-color);
+    display: block;
+    margin-bottom: var(--spacing-xs);
+}
+
+#character-status-widget p.status-effect {
+    margin-left: var(--spacing-md);
+    font-style: italic;
+    color: var(--secondary-text-color);
+}
+*/

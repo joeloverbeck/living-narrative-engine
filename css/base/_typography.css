@@ -1,0 +1,75 @@
+/* css/base/_typography.css */
+
+/* Base Typography Styles */
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-ui);
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--primary-text-color);
+    font-weight: 600;
+}
+
+h1 {
+    font-size: var(--font-size-h1);
+}
+
+h2 {
+    font-size: var(--font-size-h2);
+}
+
+h3 {
+    font-size: var(--font-size-h3);
+}
+
+/* Links */
+a {
+    color: var(--accent-color-primary);
+    text-decoration: none;
+    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: var(--button-hover-bg-color); /* Darker blue on hover */
+}
+
+a:active {
+    color: var(--button-hover-bg-color);
+    opacity: 0.8;
+}
+
+/* Responsive Typography Adjustments */
+@media (max-width: 1024px) {
+    h1, #title-element {
+        font-size: var(--font-size-h1);
+    }
+
+    h2, #location-name-display {
+        font-size: var(--font-size-h2);
+    }
+
+    h3 {
+        font-size: var(--font-size-h3);
+    }
+}
+
+@media (max-width: 768px) {
+    h1, #title-element {
+        font-size: var(--font-size-h1);
+    }
+
+    h2, #location-name-display {
+        font-size: var(--font-size-h2);
+    }
+
+    h3 {
+        font-size: var(--font-size-h3);
+    }
+}
+
+@media (max-width: 480px) {
+    /* No specific h1, h2, h3 base font size overrides from original style.css for this breakpoint */
+    /* .modal-title rule remains in style.css as it's component-specific */
+}

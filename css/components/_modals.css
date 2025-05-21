@@ -1,0 +1,319 @@
+/* css/components/_modals.css */
+
+/* --- Save Game Screen & Load Game Screen Modals --- */
+
+/* Modal Structure & Backdrop */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent backdrop */
+    display: flex; /* Used to center modal-content */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it's above other content */
+    padding: var(--spacing-md); /* Add some padding for smaller screens */
+}
+
+.modal-content {
+    background-color: var(--panel-bg-color);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 600px; /* Max width of the modal */
+    max-height: 90vh; /* Max height */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* For internal scrolling of slot list */
+}
+
+.modal-title {
+    margin-top: 0;
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-h2); /* Consistent with other H2s */
+    color: var(--primary-text-color);
+    text-align: center;
+    border-bottom: var(--border-width) solid var(--border-color-subtle);
+    padding-bottom: var(--spacing-md);
+}
+
+/* Slot Containers & Individual Slots */
+#save-slots-container,
+#load-slots-container {
+    overflow-y: auto; /* Make slot list scrollable if it exceeds max height */
+    margin-bottom: var(--spacing-lg);
+    flex-grow: 1; /* Allow this area to take available space */
+    padding-right: var(--spacing-sm); /* For scrollbar spacing */
+    border: var(--border-width) solid var(--border-color-subtle);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--secondary-bg-color); /* Slightly different background for the list */
+}
+
+.save-slot { /* Reused for load slots */
+    padding: var(--spacing-md);
+    border-bottom: var(--border-width) solid var(--panel-border-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-left-color 0.2s ease-in-out;
+    background-color: var(--panel-bg-color); /* Default slot background */
+    display: flex; /* For better layout of content inside */
+    flex-direction: column; /* Stack info vertically */
+    gap: var(--spacing-xs); /* Space between metadata lines */
+}
+
+.save-slot:last-child {
+    border-bottom: none;
+}
+
+.save-slot:hover {
+    background-color: var(--accent-color-focus-ring); /* Use a light accent for hover */
+}
+
+.save-slot.selected {
+    background-color: var(--accent-color-primary);
+    color: var(--button-text-color); /* White text on blue background */
+    border-left: 4px solid var(--button-bg-color); /* Darker blue accent */
+    /* Adjust padding to account for border */
+    padding-left: calc(var(--spacing-md) - 4px);
+}
+
+.save-slot.selected .slot-name,
+.save-slot.selected .slot-timestamp,
+.save-slot.selected .slot-playtime,
+.save-slot.selected .slot-summary {
+    color: var(--button-text-color); /* Ensure text within selected slot is also white */
+}
+
+.save-slot.corrupted {
+    background-color: #fff3f3; /* Light red for corrupted */
+    border-left: 4px solid var(--error-text-color);
+    padding-left: calc(var(--spacing-md) - 4px);
+}
+
+.save-slot.corrupted .slot-name {
+    color: var(--error-text-color);
+    font-weight: bold;
+}
+
+.save-slot.corrupted:hover {
+    background-color: #ffeaea;
+}
+
+.save-slot:focus-visible { /* A11Y: Custom focus for slots */
+    /* outline: none; already handled by general selector */
+    box-shadow: inset 0 0 0 2px var(--panel-bg-color), inset 0 0 0 4px var(--accent-color-primary);
+    /* Similar to button focus but adapted for list items */
+}
+
+/* Slot Content Details */
+.slot-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slot-name {
+    font-weight: 600;
+    font-size: var(--font-size-large);
+    color: var(--primary-text-color);
+    flex-grow: 1; /* Allow name to take space */
+}
+
+.save-slot.empty .slot-name { /* Style for empty save slots (SaveGameUI) */
+    font-style: italic;
+    color: var(--secondary-text-color);
+}
+
+.slot-timestamp {
+    font-size: var(--font-size-small);
+    color: var(--secondary-text-color);
+    white-space: nowrap; /* Prevent timestamp from wrapping too easily */
+    margin-left: var(--spacing-md); /* Space between name and timestamp */
+}
+
+.slot-playtime { /* New style for playtime */
+    font-size: var(--font-size-small);
+    color: var(--secondary-text-color);
+    margin-top: var(--spacing-xs); /* Add some space if it's on a new line */
+}
+
+.slot-summary { /* For potential future short description in save slots */
+    font-size: var(--font-size-small);
+    color: var(--secondary-text-color);
+    font-style: italic;
+    display: block; /* Ensure it takes its own line if needed */
+}
+
+/* Save Name Input Section (within Save Modal) */
+.save-details-section { /* Used in SaveGameUI for name input */
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    flex-direction: column; /* Stack label and input */
+}
+
+.save-details-section label {
+    margin-bottom: var(--spacing-xs);
+    font-weight: 600;
+}
+
+#save-name-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    border: var(--border-width) solid var(--input-border-color);
+    border-radius: var(--border-radius-md);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+#save-name-input:disabled {
+    background-color: var(--secondary-bg-color);
+    cursor: not-allowed;
+}
+
+#save-name-input:focus-visible { /* Ensure custom focus styles apply */
+    border-color: var(--accent-color-primary);
+    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
+    outline: none;
+}
+
+/* Status Messages within Modals */
+.status-message-area { /* Generic for save-game-status-message & load-game-status-message */
+    min-height: calc(var(--font-size-base) * 1.6); /* Reserve space for one line of text */
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-xs);
+    text-align: center;
+    font-weight: 600;
+}
+
+.status-message-area.error {
+    color: var(--error-text-color);
+    background-color: var(--error-bg-color);
+    border: 1px solid var(--error-text-color);
+}
+
+.status-message-area.success {
+    color: var(--success-text-color);
+    background-color: #d4edda; /* Corresponding success background if not in :root */
+    border: 1px solid var(--success-text-color);
+}
+
+.status-message-area.info {
+    color: var(--info-text-color);
+    background-color: #cce5ff; /* Corresponding info background if not in :root */
+    border: 1px solid var(--info-text-color);
+}
+
+/* Modal Action Buttons Area & Specific Button Styles */
+.modal-actions { /* Generic for .save-actions & .load-actions */
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: var(--spacing-md); /* Space between buttons */
+    padding-top: var(--spacing-md);
+    border-top: var(--border-width) solid var(--border-color-subtle);
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller modal */
+}
+
+#confirm-save-button,
+#cancel-save-button,
+#confirm-load-button,
+#delete-save-button,
+#cancel-load-button {
+    /* Uses default button styling */
+    min-width: 100px; /* Give some min width */
+    margin: var(--spacing-xs) 0; /* Remove side margins if gap is used by parent */
+}
+
+#confirm-save-button:disabled,
+#confirm-load-button:disabled,
+#delete-save-button:disabled {
+    /* Uses default button:disabled styling */
+}
+
+/* Style for Delete button */
+#delete-save-button {
+    background-color: var(--button-danger-bg-color);
+    color: var(--button-danger-text-color);
+    border-color: var(--button-danger-border-color); /* If using borders */
+}
+
+#delete-save-button:hover {
+    background-color: var(--button-danger-hover-bg-color);
+}
+
+#delete-save-button:active {
+    background-color: var(--button-danger-hover-bg-color);
+}
+
+#delete-save-button:disabled {
+    background-color: #f5c6cb; /* Lighter red for disabled danger button */
+    color: #a57378;
+    border-color: #f1b0b7;
+}
+
+/* Loading/Disabled States for Slots */
+#save-slots-container .loading-message,
+#load-slots-container .loading-message {
+    padding: var(--spacing-lg);
+    text-align: center;
+    font-style: italic;
+    color: var(--secondary-text-color);
+}
+
+.save-slot.disabled-interaction {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none; /* Prevent clicks */
+}
+
+
+/* --- Responsive Adjustments for Modals --- */
+
+@media (max-width: 1024px) {
+    .modal-title { /* Ensure modal title also scales */
+        font-size: var(--font-size-h2);
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-title {
+        font-size: var(--font-size-h2);
+    }
+
+    .modal-content {
+        padding: var(--spacing-md);
+    }
+
+    .modal-actions {
+        justify-content: space-around; /* Better for narrow screens */
+    }
+
+    #confirm-save-button,
+    #cancel-save-button,
+    #confirm-load-button,
+    #delete-save-button,
+    #cancel-load-button {
+        flex-grow: 1; /* Allow buttons to grow */
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-title {
+        font-size: 1.4rem; /* Slightly larger than H2 for modals */
+        margin-bottom: var(--spacing-md);
+    }
+
+    .slot-name {
+        font-size: var(--font-size-base); /* Adjust slot name size */
+    }
+
+    .slot-timestamp, .slot-playtime {
+        font-size: 0.8rem; /* Adjust metadata font size */
+    }
+}

@@ -1,0 +1,131 @@
+/* css/themes/_default-theme.css */
+
+:root {
+    /* "Clean Modern Codex" Theme */
+
+    /* Colors */
+    --primary-text-color: #343a40; /* Dark Grey (WCAG AA on light BGs: 10.68:1) */
+    --secondary-text-color: #6c757d; /* Medium Grey (WCAG AA on light BGs: 4.56:1) */
+    --primary-bg-color: #f8f9fa; /* Very Light Grey / Off-white (Page background) */
+    --secondary-bg-color: #e9ecef; /* Light Grey (Headers, footers, UI chrome) */
+
+    --accent-color-primary: #007bff; /* Clear Blue - general accent */
+    --accent-color-focus-ring: rgba(0, 123, 255, 0.35); /* For focus box-shadow */
+    --accent-color-secondary: #adb5bd; /* Lighter Grey (Subtle accents, borders) */
+
+    --panel-bg-color: #FFFFFF; /* White (For content panels) */
+    --panel-border-color: #dee2e6; /* Light Grey (Subtle panel borders) */
+
+    --input-bg-color: #FFFFFF;
+    --input-text-color: var(--primary-text-color);
+    --input-border-color: #ced4da; /* Standard input border */
+    --input-placeholder-color: var(--secondary-text-color); /* Contrast: 4.56:1 on #FFF - OK */
+
+    /* A11Y: Adjusted button colors for contrast */
+    --button-bg-color: #005cbf; /* Darker Blue for 4.5:1 contrast with white text */
+    --button-text-color: #FFFFFF;
+    --button-hover-bg-color: #004c9e; /* Even Darker Blue for hover, white text contrast: 5.79:1 */
+    --button-disabled-bg-color: #cce5ff;
+    --button-disabled-text-color: #86b7fe; /* Contrast on disabled bg: 1.57:1. WCAG doesn't strictly require for disabled, but noted. */
+
+    /* NEW: Variables for selected action button for enhanced visual clarity */
+    --button-selected-bg-color: var(--accent-color-primary); /* #007bff - Brighter blue for selected */
+    --button-selected-text-color: #FFFFFF; /* White text */
+    --button-selected-border-color: var(--button-bg-color); /* #005cbf - Darker blue border, contrasts with selected bg */
+    --button-selected-glow-color: rgba(0, 123, 255, 0.45); /* Glow for emphasis, similar to focus ring but distinct */
+
+    /* Button Danger (for Delete) */
+    --button-danger-bg-color: #dc3545; /* Bootstrap Danger Red */
+    --button-danger-text-color: #FFFFFF;
+    --button-danger-hover-bg-color: #c82333; /* Darker Red */
+    --button-danger-border-color: #bd2130;
+
+
+    /* A11Y: Adjusted messaging colors for contrast on typical panel background (#FFFFFF) */
+    --error-text-color: #721c24; /* Dark Red (Bootstrap alert style, 4.58:1 on #f8d7da, >7:1 on #FFF) */
+    --error-bg-color: #f8d7da; /* Light Red background for error messages/areas */
+    --success-text-color: #155724; /* Dark Green (Bootstrap alert style, 6.95:1 on #FFF) */
+    --info-text-color: #0c5460; /* Dark Teal/Blue (Bootstrap alert style, 6.85:1 on #FFF) */
+    --echo-text-color: var(--secondary-text-color); /* Muted grey for command echoes (4.56:1 on #FFF) - OK */
+
+    /* --- ADDED: Variables for speech messages --- */
+    --speech-text-color: #5e35b1; /* Deep Purple (Material Purple 700) - conspicuous and thematic */
+    --speech-bg-color: #f3e5f5; /* Light Purple tint (Material Purple 50) for background */
+    --speech-border-color: var(--speech-text-color); /* Border matches text color for emphasis */
+    /* --- END ADDED --- */
+
+    /* Fonts */
+    --font-narrative: 'Merriweather', serif;
+    --font-ui: 'Open Sans', sans-serif;
+    --font-monospace: 'Roboto Mono', monospace; /* For code or fixed-width needs */
+
+    --font-size-base: 16px;
+    --font-size-small: 0.875rem; /* 14px */
+    --font-size-large: 1.125rem; /* 18px */
+    --font-size-h1: 2rem; /* 32px */
+    --font-size-h2: 1.75rem; /* 28px */
+    --font-size-h3: 1.5rem; /* 24px */
+
+    /* Spacing */
+    --spacing-unit: 8px;
+    --spacing-xs: calc(0.5 * var(--spacing-unit)); /* 4px */
+    --spacing-sm: var(--spacing-unit); /* 8px */
+    --spacing-md: calc(1.5 * var(--spacing-unit)); /* 12px */
+    --spacing-lg: calc(2 * var(--spacing-unit)); /* 16px */
+    --spacing-xl: calc(3 * var(--spacing-unit)); /* 24px */
+
+    /* Borders */
+    --border-radius-xs: 2px; /* NEW */
+    --border-radius-sm: 4px;
+    --border-radius-md: 6px;
+    --border-width: 1px;
+    --border-color-subtle: var(--panel-border-color); /* Alias for clarity */
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 1024px) {
+    :root {
+        --font-size-base: 15px;
+        --font-size-h1: 1.9rem;
+        --font-size-h2: 1.65rem;
+        --font-size-h3: 1.4rem;
+        --spacing-lg: 14px;
+        --spacing-md: 10px;
+        --spacing-sm: 7px;
+    }
+
+    /* Other non-:root rules from this media query will be moved in later tickets */
+}
+
+@media (max-width: 768px) {
+    :root {
+        --font-size-base: 14px;
+        --font-size-h1: 1.7rem;
+        --font-size-h2: 1.5rem;
+        --font-size-h3: 1.25rem;
+        --spacing-lg: 12px;
+        --spacing-md: 8px;
+        --spacing-sm: 6px;
+        --spacing-xs: 4px;
+    }
+
+    /* Other non-:root rules from this media query will be moved in later tickets */
+}
+
+@media (max-width: 480px) {
+    :root {
+        --font-size-base: 13px;
+        --font-size-small: 0.85rem;
+        --font-size-h1: 1.5rem;
+        --font-size-h2: 1.3rem;
+        --font-size-h3: 1.15rem;
+        --spacing-sm: 5px;
+        --spacing-xs: 3px;
+    }
+
+    /* Other non-:root rules from this media query will be moved in later tickets */
+}

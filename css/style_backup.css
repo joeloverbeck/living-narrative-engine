@@ -1,0 +1,54 @@
+/* css/style.css */
+
+/* --- Game Menu Widget (in right-pane) --- */
+#game-actions-widget {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    border: var(--border-width) solid var(--border-color-subtle);
+    border-radius: var(--border-radius-md);
+    background-color: var(--panel-bg-color);
+    flex-shrink: 0;
+}
+
+
+/* --- Save Game Screen & Load Game Screen Modals --- */
+/* MOVED to css/components/_modals.css */
+
+
+@media (max-width: 1024px) {
+
+
+    /* .modal-title responsive styles MOVED to css/components/_modals.css */
+    /* #speech-input responsive styles MOVED to css/components/_forms.css */
+    /* #left-pane styles MOVED to css/layout/_panes.css */
+    /* #center-pane styles MOVED to css/layout/_panes.css */
+    /* #right-pane styles MOVED to css/layout/_panes.css */
+}
+
+@media (max-width: 768px) {
+
+
+    /* .modal-title responsive styles MOVED to css/components/_modals.css */
+    /* Grouped rule for panes split; #left-pane specific styles MOVED to css/layout/_panes.css */
+    /* #center-pane styles MOVED to css/layout/_panes.css */
+    /* #right-pane styles MOVED to css/layout/_panes.css */
+    /* #left-pane order rule MOVED to css/layout/_panes.css */
+    /* Responsive styles for #perception-log-list MOVED to css/components/_perception-log.css */
+    /* Styles for #center-pane #message-list li and #center-pane #message-list li.message-speech MOVED to css/components/_messages.css */
+    /* #speech-input responsive styles MOVED to css/components/_forms.css */
+    /* .modal-content responsive styles MOVED to css/components/_modals.css */
+    /* .modal-actions responsive styles MOVED to css/components/_modals.css */
+    /* Modal button responsive styles (#confirm-save-button, etc.) MOVED to css/components/_modals.css */
+    /* Styles for #quick-status-display in this media query removed */
+}
+
+@media (max-width: 480px) {
+    /* .modal-title responsive styles MOVED to css/components/_modals.css */
+    /* Styles for #center-pane #message-list li MOVED to css/components/_messages.css */
+    /* Responsive styles for #perception-log-list MOVED to css/components/_perception-log.css */
+    /* Styles for #center-pane #message-list li.message-speech MOVED to css/components/_messages.css */
+    /* #speech-input responsive styles MOVED to css/components/_forms.css */
+    /* .slot-name responsive styles MOVED to css/components/_modals.css */
+    /* .slot-timestamp, .slot-playtime responsive styles MOVED to css/components/_modals.css */
+    /* Styles for #quick-status-display in this media query removed */
+}

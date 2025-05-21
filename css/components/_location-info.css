@@ -1,0 +1,47 @@
+/* css/components/_location-info.css */
+
+/* Styles specific to the Location Info widget content */
+
+#location-name-display {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-h2);
+    color: var(--primary-text-color);
+    border-bottom: none; /* Overrides potential generic h2 styling if needed */
+    padding-bottom: 0; /* Overrides potential generic h2 styling if needed */
+    margin-bottom: var(--spacing-md);
+}
+
+#location-description-display {
+    font-family: var(--font-narrative);
+    color: var(--primary-text-color);
+    line-height: 1.7;
+    margin-bottom: var(--spacing-md);
+}
+
+#location-exits-display ul,
+#location-characters-display ul {
+    list-style-type: none;
+    padding-left: 0; /* Resets browser default padding */
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+#location-exits-display li,
+#location-characters-display li {
+    font-family: var(--font-narrative);
+    color: var(--secondary-text-color); /* This will apply to the name part of character, and exit */
+    line-height: 1.7; /* Applied to the whole li for consistent spacing */
+    margin-bottom: var(--spacing-xs);
+    padding: var(--spacing-xs) 0; /* Vertical padding, no horizontal by default */
+}
+
+/* Styling for character descriptions within the character list */
+#location-characters-display li .character-description {
+    font-size: 0.9em; /* Slightly smaller than the character's name */
+    /* color: var(--secondary-text-color); */ /* Typically inherited, can be overridden if a more distinct color is needed */
+    margin-left: 1em; /* Indent description under the character's name */
+    font-style: italic;
+    display: block; /* Ensures it takes its own line if the description is long */
+    margin-top: var(--spacing-xs); /* Small space between the character's name and their description */
+    line-height: 1.5; /* Adjust line height specifically for the description if needed */
+}

@@ -1,0 +1,39 @@
+/* css/utilities/_accessibility.css */
+
+.visually-hidden {
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap; /* Prevent line breaks */
+}
+
+/* General Focus Styles using :focus-visible */
+:focus-visible {
+    outline: 2px solid var(--accent-color-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--accent-color-focus-ring);
+}
+
+/* Remove outline if a custom box-shadow is the primary indicator, but ensure it's clear */
+#speech-input:focus-visible,
+button:focus-visible,
+.button-like:focus-visible,
+a:focus-visible,
+.clickable-list-item:focus-visible,
+.save-slot:focus-visible { /* ADDED .save-slot */
+    outline: none; /* Rely on box-shadow defined below or specific styles */
+}
+
+/* Specific Focus for Links (REFINED) */
+a:focus-visible {
+    /* outline: none; is applied from the group selector */
+    background-color: rgba(0, 123, 255, 0.15); /* Increased alpha for visibility */
+    color: var(--button-hover-bg-color); /* Consistent with hover for focused interactive links */
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    border-radius: var(--border-radius-xs);
+    padding: 1px 3px; /* Minimal padding for inline elements */
+    margin: -1px -3px; /* Counteract padding */
+}

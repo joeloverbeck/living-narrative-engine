@@ -1,0 +1,81 @@
+/* css/components/_forms.css */
+
+/* Styles for Speech Input / Command Input */
+#speech-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    border: var(--border-width) solid var(--input-border-color);
+    border-radius: var(--border-radius-md);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+#speech-input::placeholder {
+    color: var(--input-placeholder-color);
+    opacity: 0.8;
+}
+
+/* Specific Focus for Command Input (uses :focus-visible) */
+#speech-input:focus-visible {
+    border-color: var(--accent-color-primary);
+    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
+}
+
+/* Fallback focus style if :focus-visible is not supported */
+#speech-input:focus {
+    border-color: var(--accent-color-primary);
+    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
+}
+
+/* Responsive padding adjustments for #speech-input */
+@media (max-width: 1024px) {
+    #speech-input {
+        padding: var(--spacing-sm) var(--spacing-md); /* Note: same as base, potential redundancy */
+    }
+}
+
+@media (max-width: 768px) {
+    #speech-input {
+        padding: var(--spacing-sm) var(--spacing-md); /* Note: same as base */
+    }
+}
+
+@media (max-width: 480px) {
+    #speech-input {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* Styles for Save Name Input (from save game modal) */
+/* Note: This was not part of the original ticket for #speech-input, but it's a form element.
+   Keeping it separate for now unless requested to merge or if it shares identical base styles.
+   For the purpose of this ticket, only #speech-input styles are included above.
+   If #save-name-input needs to be here, its specific styles are:
+*/
+/*
+#save-name-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    border: var(--border-width) solid var(--input-border-color);
+    border-radius: var(--border-radius-md);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+#save-name-input:disabled {
+    background-color: var(--secondary-bg-color);
+    cursor: not-allowed;
+}
+
+#save-name-input:focus-visible {
+    border-color: var(--accent-color-primary);
+    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring);
+    outline: none;
+}
+*/

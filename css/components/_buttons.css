@@ -1,0 +1,131 @@
+/* css/components/_buttons.css */
+
+/* --- General Button Styles --- */
+
+button, .button-like {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    display: inline-block;
+    margin: var(--spacing-xs);
+}
+
+button:hover, .button-like:hover {
+    background-color: var(--button-hover-bg-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+button:active, .button-like:active {
+    transform: translateY(0px);
+    background-color: var(--button-hover-bg-color);
+    box-shadow: var(--shadow-sm);
+}
+
+button:disabled, .button-like:disabled {
+    background-color: var(--button-disabled-bg-color);
+    color: var(--button-disabled-text-color);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    border: none;
+}
+
+/* Specific Focus for Buttons */
+button:focus-visible, .button-like:focus-visible {
+    /* outline: none; is already set from utilities/_accessibility.css */
+    box-shadow: 0 0 0 0.2rem var(--accent-color-focus-ring),
+    0 0 0 0.30rem var(--panel-bg-color); /* Inner contrast ring */
+}
+
+/* --- Selected Action Button Styles --- */
+/* These styles apply to buttons with the .selected class within the #action-buttons container. */
+/* They represent a specific state for action buttons. */
+
+#action-buttons button.selected {
+    background-color: var(--button-selected-bg-color);
+    color: var(--button-selected-text-color);
+    border: 2px solid var(--button-selected-border-color);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15),
+    0 0 8px 2px var(--button-selected-glow-color);
+    transform: translateY(0px); /* Override general button active/hover transform */
+    font-weight: 700;
+}
+
+#action-buttons button.selected:hover {
+    background-color: var(--button-selected-bg-color); /* Maintain selected background on hover */
+    border-color: var(--button-selected-border-color); /* Maintain selected border color */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2), /* Slightly enhance inset shadow */ 0 0 10px 3px var(--button-selected-glow-color); /* Enhance glow */
+    transform: translateY(0px); /* Keep y-position static, selected state is primary */
+}
+
+#action-buttons button.selected:active {
+    background-color: var(--button-hover-bg-color); /* Can use a slightly different bg for active press */
+    color: var(--button-selected-text-color);
+    border-color: var(--button-bg-color); /* Or another distinct active border */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), /* Deeper inset shadow for active press */ 0 0 6px 1px var(--button-selected-glow-color); /* Slightly reduce glow for active press */
+    transform: translateY(0px); /* Keep y-position static */
+}
+
+/* --- Player Confirm Turn Button Styles --- */
+#player-confirm-turn-button {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease-in-out;
+    display: inline-block;
+    margin: var(--spacing-xs);
+    font-weight: 700; /* Key distinction from general button */
+}
+
+#player-confirm-turn-button:not(:disabled):hover {
+    background-color: var(--button-hover-bg-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+#player-confirm-turn-button:not(:disabled):active {
+    background-color: var(--button-hover-bg-color);
+    transform: translateY(0px);
+    box-shadow: var(--shadow-sm);
+}
+
+#player-confirm-turn-button:disabled {
+    background-color: var(--button-disabled-bg-color);
+    color: var(--button-disabled-text-color);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    border: none;
+}
+
+/* Responsive adjustments for #player-confirm-turn-button */
+@media (max-width: 768px) {
+    #player-confirm-turn-button {
+        margin-top: var(--spacing-sm);
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    #player-confirm-turn-button {
+        margin-top: var(--spacing-xs);
+        padding: var(--spacing-sm);
+    }
+}
