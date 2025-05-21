@@ -1,11 +1,11 @@
 // src/tests/services/targetResolutionService.matchingLogic.test.js
 
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import {describe, test, expect, beforeEach, jest} from '@jest/globals';
 // Assuming the test file is actually located at src/tests/services/ as per jest output
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js';
-import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
+import {TargetResolutionService} from '../../src/services/targetResolutionService.js';
+import {ResolutionStatus} from '../../src/types/resolutionStatus.js';
 import Entity from '../../src/entities/entity.js';
-import { INVENTORY_COMPONENT_ID, NAME_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import {INVENTORY_COMPONENT_ID, NAME_COMPONENT_ID} from '../../src/constants/componentIds.js';
 import {getEntityIdsForScopes} from "../../src/services/entityScopeService.js";
 
 // --- Mocks for Dependencies ---
@@ -18,12 +18,12 @@ let mockLogger;
 describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory Domain)', () => {
     let service;
     let mockActorEntity;
-    const actionDefinition = { id: 'test:get-action', target_domain: 'inventory' };
+    const actionDefinition = {id: 'test:get-action', target_domain: 'inventory'};
 
     const createMockItem = (id, name) => {
-        const item = new Entity(id);
+        const item = new Entity(id, 'dummy');
         if (name !== undefined && name !== null) {
-            item.addComponent(NAME_COMPONENT_ID, { text: name });
+            item.addComponent(NAME_COMPONENT_ID, {text: name});
         }
         return item;
     };
@@ -46,7 +46,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
             worldContext: mockWorldContext,
             gameDataRepository: mockGameDataRepository,
             logger: mockLogger,
-            currentLocation: { id: 'mockRoomForContext' } // Provide a mock location
+            currentLocation: {id: 'mockRoomForContext'} // Provide a mock location
         };
     };
 
@@ -59,7 +59,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
             getEntitiesInLocation: jest.fn(),
         };
         mockWorldContext = {
-            getLocationOfEntity: jest.fn().mockReturnValue({ id: 'mockRoomForContext' }), // For _buildMinimalContextForScopes
+            getLocationOfEntity: jest.fn().mockReturnValue({id: 'mockRoomForContext'}), // For _buildMinimalContextForScopes
             getCurrentActor: jest.fn(),
             getCurrentLocation: jest.fn(),
         };
@@ -83,8 +83,8 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
         };
         service = new TargetResolutionService(options);
 
-        mockActorEntity = new Entity('actor1');
-        mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: [] });
+        mockActorEntity = new Entity('actor1', 'dummy');
+        mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: []});
 
         // Default mock for actor itself by entity manager
         mockEntityManager.getEntityInstance.mockImplementation(id => {
@@ -95,7 +95,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
 
     const setupInventoryAndEntityManager = (inventoryItems) => {
         const itemEntityIds = inventoryItems.map(item => item.id);
-        mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: itemEntityIds });
+        mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: itemEntityIds});
 
         mockEntityManager.getEntityInstance.mockImplementation(requestedId => {
             if (requestedId === mockActorEntity.id) {
@@ -218,10 +218,10 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
     describe('8.9: Candidates with Invalid/Empty Names', () => {
         test('should skip candidates with missing name components and log a warning', async () => {
             const validItem = createMockItem('validItem', 'apple');
-            const itemActuallyNoNameComp = new Entity('noNameComp');
+            const itemActuallyNoNameComp = new Entity('noNameComp', 'dummy');
             itemActuallyNoNameComp.name = undefined; // Ensure no fallback name either
 
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: ['noNameComp', 'validItem'] });
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: ['noNameComp', 'validItem']});
 
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'validItem') return validItem;
@@ -256,8 +256,8 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
 
         test('should correctly handle items with non-string names (logged by earlier stages) and find valid items', async () => {
             const item1 = createMockItem('item1', 'normal apple');
-            const item2Entity = new Entity('item2');
-            item2Entity.addComponent(NAME_COMPONENT_ID, { text: 123 }); // Non-string name
+            const item2Entity = new Entity('item2', 'dummy');
+            item2Entity.addComponent(NAME_COMPONENT_ID, {text: 123}); // Non-string name
             item2Entity.name = undefined; // No fallback entity.name
 
             setupInventoryAndEntityManager([item1, item2Entity]);
@@ -279,7 +279,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
     // 8.10: Matching - No Candidates Provided to #_matchByName (now NameMatcher)
     describe('8.10: No Candidates Provided to #_matchByName', () => {
         test('should return NOT_FOUND from inventory resolver if inventory is empty', async () => {
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: [] });
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: []});
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'actor1') return mockActorEntity;
                 return undefined;
@@ -295,7 +295,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
         });
 
         test('should return specific error if inventory items exist but none have names', async () => {
-            const itemNoName = new Entity('itemNoName');
+            const itemNoName = new Entity('itemNoName', 'dummy');
             itemNoName.name = undefined; // Ensure no fallback
             setupInventoryAndEntityManager([itemNoName]);
 

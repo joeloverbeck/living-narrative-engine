@@ -1,8 +1,8 @@
 // src/tests/services/targetResolutionService.domain-equipment.test.js
 
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js';
-import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
+import {describe, test, expect, beforeEach, jest} from '@jest/globals';
+import {TargetResolutionService} from '../../src/services/targetResolutionService.js';
+import {ResolutionStatus} from '../../src/types/resolutionStatus.js';
 import {getEntityIdsForScopes} from "../../src/services/entityScopeService.js";
 import Entity from '../../src/entities/entity.js'; // Import Entity if creating instances
 
@@ -21,13 +21,13 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
     let service;
     let mockActorEntity; // To be instantiated as an Entity
 
-    const actionDefinition = { id: 'test:equip-action', target_domain: 'equipment' };
+    const actionDefinition = {id: 'test:equip-action', target_domain: 'equipment'};
 
     // Helper to create mock item Entity instances
     const createMockItemEntity = (id, name) => {
-        const item = new Entity(id);
+        const item = new Entity(id, 'dummy');
         if (name !== undefined && name !== null) {
-            item.addComponent(NAME_COMPONENT_ID, { text: name });
+            item.addComponent(NAME_COMPONENT_ID, {text: name});
         }
         // For fallback tests, ensure .name property is set if component is missing
         if (name !== undefined && name !== null && !item.hasComponent(NAME_COMPONENT_ID)) {
@@ -52,7 +52,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
             worldContext: mockWorldContext,
             gameDataRepository: mockGameDataRepository,
             logger: mockLogger,
-            currentLocation: { id: 'mockRoomForEquipContext' } // For _buildMinimalContextForScopes
+            currentLocation: {id: 'mockRoomForEquipContext'} // For _buildMinimalContextForScopes
         };
     };
 
@@ -64,7 +64,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
             getEntitiesInLocation: jest.fn(),
         };
         mockWorldContext = {
-            getLocationOfEntity: jest.fn().mockReturnValue({ id: 'mockRoomForEquipContext' }), // For _buildMinimalContextForScopes
+            getLocationOfEntity: jest.fn().mockReturnValue({id: 'mockRoomForEquipContext'}), // For _buildMinimalContextForScopes
             getCurrentActor: jest.fn(),
             getCurrentLocation: jest.fn(),
         };
@@ -88,9 +88,9 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
         };
         service = new TargetResolutionService(options);
 
-        mockActorEntity = new Entity('actor1'); // Create a new Entity instance for actor
+        mockActorEntity = new Entity('actor1', 'dummy'); // Create a new Entity instance for actor
         // Ensure actor has the equipment component for most tests. Specific tests can override.
-        mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, { slots: {} });
+        mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {slots: {}});
 
 
         mockEntityManager.getEntityInstance.mockImplementation(id => {
@@ -108,7 +108,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
     // 5.1: No Equipment Component
     describe('5.1: No Equipment Component', () => {
         test('should return NOT_FOUND if actor has no equipment component', async () => {
-            const actorWithoutEquip = new Entity('actorNoEquip');
+            const actorWithoutEquip = new Entity('actorNoEquip', 'dummy');
             // actorWithoutEquip deliberately does not have EQUIPMENT_COMPONENT_ID
             const actionContext = createActionContext('sword', actorWithoutEquip);
 
@@ -142,7 +142,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
         });
 
         test('should return NOT_FOUND if equipment component has null slots', async () => {
-            mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, { slots: null });
+            mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {slots: null});
             const actionContext = createActionContext('helm');
 
             const result = await service.resolveActionTarget(actionDefinition, actionContext);
@@ -153,7 +153,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
         });
 
         test('should return NOT_FOUND if equipment component has an empty slots object', async () => {
-            mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, { slots: {} });
+            mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {slots: {}});
             const actionContext = createActionContext('helm');
 
             const result = await service.resolveActionTarget(actionDefinition, actionContext);
@@ -203,7 +203,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
     describe('5.4: Equipped Item Entity Not Found by EntityManager', () => {
         test('should skip item if entityManager does not find it and log warning', async () => {
             mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {
-                slots: { head: 'ghostHelmet' }
+                slots: {head: 'ghostHelmet'}
             });
             // Ensure getEntityInstance returns undefined for 'ghostHelmet'
             mockEntityManager.getEntityInstance.mockImplementation(id => {
@@ -231,7 +231,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
             namelessItem.name = undefined; // Ensure no fallback via .name property
 
             mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {
-                slots: { head: 'namelessHelm' }
+                slots: {head: 'namelessHelm'}
             });
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'namelessHelm') return namelessItem;
@@ -259,7 +259,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
         test('should return NONE status if no noun phrase is provided and items are equipped', async () => {
             const helmEntity = createMockItemEntity('ironHelm', 'Iron Helm');
             mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {
-                slots: { head: 'ironHelm' }
+                slots: {head: 'ironHelm'}
             });
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'ironHelm') return helmEntity;
@@ -283,7 +283,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
             const helmEntity = createMockItemEntity('ironHelm', 'Iron Helm');
             const swordEntity = createMockItemEntity('steelSword', 'Steel Sword');
             mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {
-                slots: { head: 'ironHelm', mainHand: 'steelSword' }
+                slots: {head: 'ironHelm', mainHand: 'steelSword'}
             });
             mockEntityManager.getEntityInstance.mockImplementation(itemId => {
                 if (itemId === 'ironHelm') return helmEntity;
@@ -308,7 +308,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
             const goldRing = createMockItemEntity('goldRing', 'Gold Ring');
             const silverRing = createMockItemEntity('silverRing', 'Silver Ring');
             mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {
-                slots: { finger1: 'goldRing', finger2: 'silverRing' }
+                slots: {finger1: 'goldRing', finger2: 'silverRing'}
             });
             mockEntityManager.getEntityInstance.mockImplementation(itemId => {
                 if (itemId === 'goldRing') return goldRing;
@@ -334,7 +334,7 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
         test('should return NOT_FOUND if noun phrase does not match any equipped item', async () => {
             const helmEntity = createMockItemEntity('ironHelm', 'Iron Helm');
             mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {
-                slots: { head: 'ironHelm' }
+                slots: {head: 'ironHelm'}
             });
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'ironHelm') return helmEntity;
@@ -396,11 +396,11 @@ describe('TargetResolutionService - Domain \'equipment\'', () => {
 
     describe('Fallback to entity.name for equipped item', () => {
         test('should use entity.name if NAME_COMPONENT_ID is missing for an equipped item', async () => {
-            const helmWithFallbackName = new Entity('fallbackHelm');
+            const helmWithFallbackName = new Entity('fallbackHelm', 'dummy');
             helmWithFallbackName.name = 'Fallback Helm Name'; // No core:name component, will use entity.name
 
             mockActorEntity.addComponent(EQUIPMENT_COMPONENT_ID, {
-                slots: { head: 'fallbackHelm' }
+                slots: {head: 'fallbackHelm'}
             });
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'fallbackHelm') return helmWithFallbackName;

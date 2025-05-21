@@ -55,7 +55,7 @@ const mockEntityManager = {
 };
 
 // Helper to create a simple mock entity instance for testing
-const createMockEntity = (id) => new Entity(id);
+const createMockEntity = (id) => new Entity(id, 'dummy');
 
 // Define a base event structure for context creation
 /** @type {GameEvent} */

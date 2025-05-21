@@ -334,7 +334,7 @@ describe('TargetResolutionService', () => {
         // Sub-Ticket/Test Case 1.9: resolveActionTarget - Unknown target_domain
         test('should return NOT_FOUND for an unknown target_domain', async () => {
             const actionDefinition = {id: 'test:unknown', target_domain: 'fictional_domain'};
-            const mockActorEntity = new Entity('actor1'); // Simple mock entity
+            const mockActorEntity = new Entity('actor1', 'dummy'); // Simple mock entity
             const actionContext = {actingEntity: mockActorEntity, nounPhrase: ''};
             const expectedErrorMsg = "Action 'test:unknown' has an unsupported target domain: fictional_domain.";
             const expectedLoggerMsg = "TargetResolutionService.resolveActionTarget: Unknown target domain 'fictional_domain' for action 'test:unknown'.";

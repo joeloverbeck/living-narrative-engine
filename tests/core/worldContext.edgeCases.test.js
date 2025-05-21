@@ -84,8 +84,8 @@ describe('WorldContext Edge Cases', () => {
 
     test('getCurrentLocation() returns null and logs error when two current actors found', () => {
         // Arrange: Mock EntityManager to return two actors
-        const actor1 = new Entity('actor1');
-        const actor2 = new Entity('actor2');
+        const actor1 = new Entity('actor1', 'dummy');
+        const actor2 = new Entity('actor2', 'dummy');
         mockEntityManagerInstance.getEntitiesWithComponent.mockReturnValue([actor1, actor2]);
 
         // Act
@@ -105,7 +105,7 @@ describe('WorldContext Edge Cases', () => {
 
     test('getCurrentLocation() returns null when the current actor has no position component', () => {
         // Arrange
-        const actor1 = new Entity('player1');
+        const actor1 = new Entity('player1', 'dummy');
         mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation((componentTypeId) => {
             return componentTypeId === CURRENT_ACTOR_COMPONENT_ID ? [actor1] : [];
         });
@@ -127,7 +127,7 @@ describe('WorldContext Edge Cases', () => {
 
     test('getCurrentLocation() returns null when the current actor has position component but invalid locationId', () => {
         // Arrange
-        const actor1 = new Entity('player1');
+        const actor1 = new Entity('player1', 'dummy');
         mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation((componentTypeId) => {
             return componentTypeId === CURRENT_ACTOR_COMPONENT_ID ? [actor1] : [];
         });
@@ -149,8 +149,8 @@ describe('WorldContext Edge Cases', () => {
 
     test('getCurrentLocation() returns location entity when actor and position are valid', () => {
         // Arrange
-        const actor1 = new Entity('player1');
-        const locationEntity = new Entity('loc1');
+        const actor1 = new Entity('player1', 'dummy');
+        const locationEntity = new Entity('loc1', 'dummy');
         const positionData = {locationId: 'loc1', x: 0, y: 0};
 
         mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation((componentTypeId) => {
@@ -177,7 +177,7 @@ describe('WorldContext Edge Cases', () => {
 
     test('getCurrentLocation() returns null and warns when location entity referenced by position does not exist', () => {
         // Arrange
-        const actor1 = new Entity('player1');
+        const actor1 = new Entity('player1', 'dummy');
         const positionData = {locationId: 'nonexistent_loc', x: 0, y: 0};
 
         // Ensure only one actor is returned

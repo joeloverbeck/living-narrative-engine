@@ -46,7 +46,7 @@ const mockEntityManager = {
 
 // Helper to create mock entity instance for tests
 const createMockEntity = (id) => {
-  const entity = new Entity(id);
+  const entity = new Entity(id, 'dummy');
   return entity;
 };
 

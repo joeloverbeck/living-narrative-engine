@@ -46,7 +46,7 @@ beforeEach(() => {
     // Corrected path based on typical project structure for services.
     // If 'core/turns/services/' is indeed correct, this should be reverted.
     service = new PlayerPromptService(validDependencies);
-    mockActor = new Entity('player:test');
+    mockActor = new Entity('player:test', 'dummy');
 });
 
 afterEach(() => {
@@ -86,7 +86,7 @@ describe('PlayerPromptService Constructor', () => {
 
 describe('PlayerPromptService prompt Method', () => {
     it('should execute the happy path successfully, resolving with selected action and speech', async () => {
-        const mockLocation = new Entity('location:test');
+        const mockLocation = new Entity('location:test', 'dummy');
         const lookAction = {id: 'core:look', name: 'Look Around', command: 'Look Around'}; // Added name
         const speakAction = {id: 'core:speak', name: 'Speak Freely', command: 'Speak Freely'}; // Added name
 
@@ -121,7 +121,7 @@ describe('PlayerPromptService prompt Method', () => {
 
     describe('when action discovery fails', () => {
         const discoveryError = new Error('Discovery Boom!');
-        const mockLocation = new Entity('location:test');
+        const mockLocation = new Entity('location:test', 'dummy');
         beforeEach(() => {
             mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
             mockActionDiscoverySystem.getValidActions.mockRejectedValue(discoveryError);
@@ -155,7 +155,7 @@ describe('PlayerPromptService prompt Method', () => {
 
         beforeEach(() => {
             // REMOVED: jest.useFakeTimers() - no longer needed for timeout test
-            mockLocationInst = new Entity('location:test-loc-promise');
+            mockLocationInst = new Entity('location:test-loc-promise', 'dummy');
             mockDiscoveredActionsList = [
                 {id: 'action1', name: 'Action One', command: 'do one'}, // Added name
                 {id: 'action2', name: 'Action Two', command: 'do two'}  // Added name

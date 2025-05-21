@@ -58,11 +58,11 @@ describe('WorldContext (Stateless)', () => {
         worldContext = new WorldContext(mockEntityManager, mockLogger);
 
         // Create mock entity instances
-        playerEntity = new Entity(PLAYER_ID);
-        npcActorEntity = new Entity(NPC_ACTOR_ID);
-        location1Entity = new Entity(LOCATION_1_ID);
-        location2Entity = new Entity(LOCATION_2_ID);
-        itemEntity = new Entity(ITEM_ID); // Doesn't need components for these tests
+        playerEntity = new Entity(PLAYER_ID, 'dummy');
+        npcActorEntity = new Entity(NPC_ACTOR_ID, 'dummy');
+        location1Entity = new Entity(LOCATION_1_ID, 'dummy');
+        location2Entity = new Entity(LOCATION_2_ID, 'dummy');
+        itemEntity = new Entity(ITEM_ID, 'dummy'); // Doesn't need components for these tests
 
         // Reset mocks before each test
         jest.clearAllMocks();

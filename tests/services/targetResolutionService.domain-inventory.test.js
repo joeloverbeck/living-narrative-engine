@@ -1,8 +1,8 @@
 // src/tests/services/targetResolutionService.domain-inventory.test.js
 
-import { describe, test, expect, beforeEach, jest, afterEach } from '@jest/globals';
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js';
-import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
+import {describe, test, expect, beforeEach, jest, afterEach} from '@jest/globals';
+import {TargetResolutionService} from '../../src/services/targetResolutionService.js';
+import {ResolutionStatus} from '../../src/types/resolutionStatus.js';
 import {getEntityIdsForScopes} from "../../src/services/entityScopeService.js";
 import Entity from '../../src/entities/entity.js'; // Using Entity for mocks
 
@@ -20,13 +20,13 @@ let mockLogger;
 describe('TargetResolutionService - Domain \'inventory\'', () => {
     let service;
     let consoleWarnSpy;
-    const actionDefinition = { id: 'test:inv-action', target_domain: 'inventory' }; // Define actionDefinition
+    const actionDefinition = {id: 'test:inv-action', target_domain: 'inventory'}; // Define actionDefinition
 
     // Helper to create mock item Entity instances
     const createMockItemEntity = (id, name) => {
-        const item = new Entity(id);
+        const item = new Entity(id, 'dummy');
         if (name !== undefined && name !== null) {
-            item.addComponent(NAME_COMPONENT_ID, { text: name });
+            item.addComponent(NAME_COMPONENT_ID, {text: name});
         }
         // Add .name property for fallback tests
         item.name = name;
@@ -49,7 +49,7 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
             worldContext: mockWorldContext,
             gameDataRepository: mockGameDataRepository,
             logger: mockLogger,
-            currentLocation: { id: 'mockRoomForInvContext' } // Mock location needed for _buildMinimalContextForScopes
+            currentLocation: {id: 'mockRoomForInvContext'} // Mock location needed for _buildMinimalContextForScopes
         };
     };
 
@@ -62,7 +62,7 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
             getEntitiesInLocation: jest.fn(),
         };
         mockWorldContext = {
-            getLocationOfEntity: jest.fn().mockReturnValue({ id: 'mockRoomForInvContext' }), // Needed for _buildMinimalContextForScopes
+            getLocationOfEntity: jest.fn().mockReturnValue({id: 'mockRoomForInvContext'}), // Needed for _buildMinimalContextForScopes
             getCurrentActor: jest.fn(),
             getCurrentLocation: jest.fn(),
         };
@@ -78,7 +78,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
         };
 
         // Suppress console.warn messages from entityScopeService for cleaner test output
-        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+        });
 
 
         const options = {
@@ -106,11 +107,11 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
     describe('Sub-Ticket/Test Case 4.1: Inventory - Actor has no Inventory Component', () => {
         test('Tests behavior when the actor lacks an inventory component.', async () => {
             // Setup
-            const mockActorEntity = new Entity('actor1'); // No inventory component added
+            const mockActorEntity = new Entity('actor1', 'dummy'); // No inventory component added
             // Ensure hasComponent returns false for inventory
             const originalHasComponent = mockActorEntity.hasComponent;
             mockActorEntity.hasComponent = jest.fn(compId => {
-                if(compId === INVENTORY_COMPONENT_ID) return false;
+                if (compId === INVENTORY_COMPONENT_ID) return false;
                 return originalHasComponent.call(mockActorEntity, compId);
             });
 
@@ -145,8 +146,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
     describe('Sub-Ticket/Test Case 4.2: Inventory - Empty', () => {
         test('Tests behavior with an empty inventory component ({ items: [] })', async () => {
             // Setup
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: [] }); // Empty inventory
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: []}); // Empty inventory
             const actionContext = createActionContext('sword', mockActorEntity); // Corrected context
 
             // Action
@@ -164,8 +165,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
 
         test('Tests behavior with an inventory component having items: null', async () => {
             // Setup
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: null }); // Invalid items property
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: null}); // Invalid items property
             const actionContext = createActionContext('sword', mockActorEntity); // Corrected context
 
             // Action
@@ -183,7 +184,7 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
 
         test('Tests behavior with an inventory component being an empty object {}', async () => {
             // Setup
-            const mockActorEntity = new Entity('actor1');
+            const mockActorEntity = new Entity('actor1', 'dummy');
             mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {}); // No items property
             const actionContext = createActionContext('sword', mockActorEntity); // Corrected context
 
@@ -206,8 +207,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
         test('Tests skipping of invalid item IDs in the inventory list.', async () => {
             // Setup
             const validItemEntity = createMockItemEntity('itemValid', 'Valid Item');
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: [null, 'itemValid', ''] }); // Invalid IDs mixed with valid
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: [null, 'itemValid', '']}); // Invalid IDs mixed with valid
 
             mockEntityManager.getEntityInstance.mockImplementation((itemId) => {
                 if (itemId === 'itemValid') return validItemEntity;
@@ -232,8 +233,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
     describe('Sub-Ticket/Test Case 4.4: Inventory - Item Entity Not Found by EntityManager', () => {
         test('Tests skipping an item if entityManager.getEntityInstance returns undefined.', async () => {
             // Setup
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: ['nonExistentItem'] });
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: ['nonExistentItem']});
             // EM will not find 'nonExistentItem'
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'actor1') return mockActorEntity;
@@ -258,11 +259,11 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
     describe('Sub-Ticket/Test Case 4.5: Inventory - Item Entity Has No Name', () => {
         test('Tests skipping an item if it has no name.', async () => {
             // Setup
-            const namelessItemEntity = new Entity('namelessItem'); // No name component added
+            const namelessItemEntity = new Entity('namelessItem', 'dummy'); // No name component added
             namelessItemEntity.name = undefined; // Ensure no fallback
 
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: ['namelessItem'] });
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: ['namelessItem']});
 
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'namelessItem') return namelessItemEntity;
@@ -292,8 +293,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
         test('Tests response when nounPhrase is empty but inventory has items.', async () => {
             // Setup
             const itemEntity1 = createMockItemEntity('sword', 'Steel Sword');
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: ['sword'] });
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: ['sword']});
 
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'sword') return itemEntity1;
@@ -319,8 +320,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
             // Setup
             const itemEntity1 = createMockItemEntity('sword', 'Steel Sword');
             const itemEntity2 = createMockItemEntity('potion', 'Healing Potion');
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: ['sword', 'potion'] });
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: ['sword', 'potion']});
 
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'sword') return itemEntity1;
@@ -350,8 +351,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
             // Setup
             const itemEntity1 = createMockItemEntity('long_sword', 'Long Sword');
             const itemEntity2 = createMockItemEntity('long_bow', 'Long Bow');
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: ['long_sword', 'long_bow'] });
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: ['long_sword', 'long_bow']});
 
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'long_sword') return itemEntity1;
@@ -385,8 +386,8 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
         test('Tests when nounPhrase matches no items in inventory.', async () => {
             // Setup
             const itemEntity1 = createMockItemEntity('sword', 'Steel Sword');
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: ['sword'] });
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: ['sword']});
 
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'sword') return itemEntity1;
@@ -410,12 +411,12 @@ describe('TargetResolutionService - Domain \'inventory\'', () => {
     describe('Sub-Ticket/Test Case 4.10: Inventory - Item name from entity.name fallback', () => {
         test('Tests #_getEntityName fallback to entity.name for an inventory item.', async () => {
             // Setup
-            const itemWithFallbackName = new Entity('fallback_item');
+            const itemWithFallbackName = new Entity('fallback_item', 'dummy');
             itemWithFallbackName.name = 'Fallback Item Name'; // Add .name directly
             // No core:name component added
 
-            const mockActorEntity = new Entity('actor1');
-            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: ['fallback_item'] });
+            const mockActorEntity = new Entity('actor1', 'dummy');
+            mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {items: ['fallback_item']});
 
             mockEntityManager.getEntityInstance.mockImplementation(id => {
                 if (id === 'fallback_item') return itemWithFallbackName;

@@ -48,7 +48,7 @@ const mockEntityManager = {
 // Helper to create mock entity instance for tests
 const createMockEntity = (id) => {
   // Use the actual Entity class constructor but methods might need mocking if used by dependencies
-  const entity = new Entity(id);
+  const entity = new Entity(id, 'dummy');
   // For these tests, we primarily rely on mocking EntityManager methods
   return entity;
 };

@@ -49,7 +49,7 @@ const mockEntityManager = {
 const createMockEntity = (id) => {
   // Using the actual Entity class, but interaction is mocked via EntityManager
   // Ensure the mock entity has an 'id' property accessible directly or via getter
-  const entity = new Entity(id);
+  const entity = new Entity(id, 'dummy');
   // We don't need to mock components directly here as the patterns only test ID and existence
   return entity;
 };

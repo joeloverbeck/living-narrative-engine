@@ -1,8 +1,8 @@
 // src/tests/services/targetResolutionService.domain-environment.test.js
 
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js';
-import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
+import {describe, test, expect, beforeEach, jest} from '@jest/globals';
+import {TargetResolutionService} from '../../src/services/targetResolutionService.js';
+import {ResolutionStatus} from '../../src/types/resolutionStatus.js';
 import {getEntityIdsForScopes} from "../../src/services/entityScopeService.js";
 import Entity from '../../src/entities/entity.js'; // Available if complex mocks are needed
 
@@ -21,13 +21,13 @@ describe('TargetResolutionService - Domain \'environment\'', () => {
     let mockActorEntity; // Will be an Entity instance
     let mockLocationEntity; // Will be an Entity instance
 
-    const actionDefinition = { id: 'test:look-action', target_domain: 'environment' };
+    const actionDefinition = {id: 'test:look-action', target_domain: 'environment'};
 
     // Helper to create mock Entity instances for items/NPCs
     const createMockEnvEntity = (id, name) => {
-        const entity = new Entity(id);
+        const entity = new Entity(id, 'dummy');
         if (name !== undefined && name !== null) {
-            entity.addComponent(NAME_COMPONENT_ID, { text: name });
+            entity.addComponent(NAME_COMPONENT_ID, {text: name});
         }
         // For fallback tests, ensure .name property is set if component is missing
         if (name !== undefined && name !== null && !entity.hasComponent(NAME_COMPONENT_ID)) {
@@ -89,10 +89,10 @@ describe('TargetResolutionService - Domain \'environment\'', () => {
         };
         service = new TargetResolutionService(options);
 
-        mockActorEntity = new Entity('actor1');
-        mockActorEntity.addComponent(NAME_COMPONENT_ID, { text: 'Actor Name' });
+        mockActorEntity = new Entity('actor1', 'dummy');
+        mockActorEntity.addComponent(NAME_COMPONENT_ID, {text: 'Actor Name'});
 
-        mockLocationEntity = new Entity('location1');
+        mockLocationEntity = new Entity('location1', 'dummy');
 
         mockWorldContext.getLocationOfEntity.mockReturnValue(mockLocationEntity);
         // Default: actor is in mockLocationEntity. entityManager should return it.
@@ -122,7 +122,7 @@ describe('TargetResolutionService - Domain \'environment\'', () => {
         });
 
         test('should return ERROR if actor location entity has no ID', async () => {
-            const locationWithoutId = { name: 'Some Location Without ID' }; // No .id property
+            const locationWithoutId = {name: 'Some Location Without ID'}; // No .id property
             mockWorldContext.getLocationOfEntity.mockReturnValue(locationWithoutId);
             const actionContext = createActionContext('something');
 
@@ -412,7 +412,7 @@ describe('TargetResolutionService - Domain \'environment\'', () => {
 
     describe('Entity name fallback in environment', () => {
         test('should use entity.name if NAME_COMPONENT_ID is missing for an environment entity', async () => {
-            const itemWithFallbackName = new Entity('fallbackItemEnv');
+            const itemWithFallbackName = new Entity('fallbackItemEnv', 'dummy');
             itemWithFallbackName.name = 'Fallback Item from Environment'; // This will be used
             // No core:name component added to itemWithFallbackName
 

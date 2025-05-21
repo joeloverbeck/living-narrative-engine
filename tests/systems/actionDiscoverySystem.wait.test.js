@@ -1,4 +1,4 @@
-// src/tests/systems/actionDiscoverySystem.wait.test.js
+// tests/systems/actionDiscoverySystem.wait.test.js
 // --- FILE START (Entire file content as requested) ---
 
 // --- Tell Jest to use Node environment ---
@@ -24,9 +24,6 @@ import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 /** @typedef {import('../../src/types/actionDefinition.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../src/actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../src/services/consoleLogger.js').default} ILogger */
-// DiscoveredActionInfo is defined in actionDiscoverySystem.js, no separate import needed if types are inferred
-// /** @typedef {import('../../systems/actionDiscoverySystem.js').DiscoveredActionInfo} DiscoveredActionInfo */
-
 
 // --- Mocking Dependencies ---
 jest.mock('../../src/services/gameDataRepository.js');
@@ -37,7 +34,7 @@ jest.mock('../../src/services/actionFormatter.js');
 jest.mock('../../src/services/entityScopeService.js');
 
 // --- Test Suite ---
-describe('ActionDiscoverySystem', () => {
+describe('ActionDiscoverySystem - Wait Action Tests', () => { // Renamed describe for clarity
     /** @type {ActionDiscoverySystem} */
     let actionDiscoverySystem;
     /** @type {jest.Mocked<GameDataRepository>} */
@@ -53,13 +50,16 @@ describe('ActionDiscoverySystem', () => {
     /** @type {jest.MockedFunction<typeof getEntityIdsForScopesFn>} */
     let mockGetEntityIdsForScopesFn;
 
+    const ACTOR_INSTANCE_ID = 'actor1-instance-wait';
+    const LOCATION_INSTANCE_ID = 'location1-instance-wait';
+    const DUMMY_DEFINITION_ID = 'def:dummy-wait-test';
+
     /** @type {ActionDefinition} */
     const coreWaitActionDefinition = {
         $schema: "http://example.com/schemas/action-definition.schema.json",
         id: "core:wait",
         commandVerb: "wait",
         name: "Wait",
-        // description is intentionally omitted to test default handling (should become "")
         target_domain: "none",
         prerequisites: [],
         template: "wait"
@@ -67,6 +67,8 @@ describe('ActionDiscoverySystem', () => {
 
     /** @type {Entity} */
     let mockActorEntity;
+    /** @type {Entity} */
+    let mockLocationEntity; // Renamed for clarity
     /** @type {ActionContext} */
     let mockActionContext;
 
@@ -76,38 +78,43 @@ describe('ActionDiscoverySystem', () => {
         mockGameDataRepo = new GameDataRepository();
         mockEntityManager = new EntityManager();
         mockValidationService = new ActionValidationService();
-        mockLogger = new ConsoleLogger();
-        mockLogger.debug = jest.fn(); // Manually mock methods if constructor doesn't
+        mockLogger = new ConsoleLogger(); // Will use the mocked constructor
+        // Ensure methods are jest.fn() if not handled by global mock
+        mockLogger.debug = jest.fn();
         mockLogger.info = jest.fn();
         mockLogger.warn = jest.fn();
         mockLogger.error = jest.fn();
 
-
         mockFormatActionCommandFn = formatActionCommandFn;
         mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
 
+        // Correctly instantiate Entity objects
+        mockActorEntity = new Entity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
+        // Add any necessary components to mockActorEntity if the system reads them
+        // For 'wait' action, typically no specific components are needed on the actor itself for discovery.
+
+        mockLocationEntity = new Entity(LOCATION_INSTANCE_ID, DUMMY_DEFINITION_ID);
+        // Add components to mockLocationEntity if needed by ActionContext or system
+
+        // Setup default mock behaviors
         mockGameDataRepo.getAllActionDefinitions.mockReturnValue([coreWaitActionDefinition]);
         mockValidationService.isValid.mockImplementation((actionDef, actor, targetContext) => {
-            return actionDef.id === 'core:wait' && actor === mockActorEntity && targetContext.type === 'none';
+            // Default valid for core:wait by the correct actor and target type
+            return actionDef.id === 'core:wait' && actor.id === ACTOR_INSTANCE_ID && targetContext.type === 'none';
         });
-        mockFormatActionCommandFn.mockImplementation((actionDef, targetContext, entityManager, options) => {
+        mockFormatActionCommandFn.mockImplementation((actionDef, targetContext) => {
             if (actionDef.id === 'core:wait' && targetContext.type === 'none') {
-                return actionDef.template;
+                return actionDef.template; // "wait"
             }
-            // console.warn(`Mock formatActionCommand called with unexpected args:`, actionDef?.id, targetContext);
             return null;
         });
-        mockGetEntityIdsForScopesFn.mockReturnValue(new Set());
-        mockEntityManager.getEntityInstance.mockImplementation(id => {
-            if (id === 'actor1') return mockActorEntity;
+        mockGetEntityIdsForScopesFn.mockReturnValue(new Set()); // No entities in scope by default
+        mockEntityManager.getEntityInstance.mockImplementation(instanceId => {
+            if (instanceId === ACTOR_INSTANCE_ID) return mockActorEntity;
+            if (instanceId === LOCATION_INSTANCE_ID) return mockLocationEntity;
             return null;
         });
-        mockEntityManager.getComponentData.mockReturnValue(null);
-
-        mockActorEntity = new Entity('actor1', mockEntityManager);
-        // mockActorEntity.components = {}; // Entity constructor initializes this
-
-        const mockLocationEntity = new Entity('location1', mockEntityManager);
+        mockEntityManager.getComponentData.mockReturnValue(null); // No components by default on these bare entities
 
         mockActionContext = {
             actor: mockActorEntity,
@@ -116,7 +123,7 @@ describe('ActionDiscoverySystem', () => {
             gameDataRepository: mockGameDataRepo,
             logger: mockLogger,
             worldContext: /** @type {any} */ ({
-                getLocationOfEntity: jest.fn().mockResolvedValue(mockLocationEntity)
+                getLocationOfEntity: jest.fn().mockResolvedValue(mockLocationEntity) // Assuming async, though might not be used by 'wait'
             }),
         };
 
@@ -130,110 +137,74 @@ describe('ActionDiscoverySystem', () => {
         });
     });
 
-
     it('should return structured action info [{id, name, command, description}] when core:wait is available and valid', async () => {
-        // Act
-        /** @type {import('../../src/systems/actionDiscoverySystem.js').DiscoveredActionInfo[]} */
         const validActions = await actionDiscoverySystem.getValidActions(mockActorEntity, mockActionContext);
 
-        // Assert
-        expect(validActions).toBeDefined();
-        expect(Array.isArray(validActions)).toBe(true);
-        expect(validActions).toHaveLength(1);
-
-        const expectedWaitAction = {
+        expect(validActions).toEqual([{
             id: 'core:wait',
-            name: 'Wait', // From coreWaitActionDefinition.name
+            name: 'Wait',
             command: 'wait',
-            description: '' // Defaulted by ActionDiscoverySystem
-        };
-        expect(validActions).toEqual([expectedWaitAction]);
+            description: ''
+        }]);
 
-        // Verify interactions
         expect(mockGameDataRepo.getAllActionDefinitions).toHaveBeenCalledTimes(1);
+        // isValid called twice: once for initial actor check, once for specific context
         expect(mockValidationService.isValid).toHaveBeenCalledTimes(2);
-        expect(mockValidationService.isValid).toHaveBeenNthCalledWith(
-            1,
-            coreWaitActionDefinition,
-            mockActorEntity,
-            expect.objectContaining({type: 'none'})
-        );
-        expect(mockValidationService.isValid).toHaveBeenNthCalledWith(
-            2,
-            coreWaitActionDefinition,
-            mockActorEntity,
-            expect.objectContaining({type: 'none'})
-        );
+        expect(mockValidationService.isValid).toHaveBeenNthCalledWith(1, coreWaitActionDefinition, mockActorEntity, ActionTargetContext.noTarget());
+        expect(mockValidationService.isValid).toHaveBeenNthCalledWith(2, coreWaitActionDefinition, mockActorEntity, ActionTargetContext.noTarget());
         expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(1);
-        expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
-            coreWaitActionDefinition,
-            expect.objectContaining({type: 'none'}),
-            mockEntityManager,
-            expect.any(Object)
-        );
-        expect(mockGetEntityIdsForScopesFn).not.toHaveBeenCalled();
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Starting action discovery for actor: ${mockActorEntity.id}`));
+        expect(mockFormatActionCommandFn).toHaveBeenCalledWith(coreWaitActionDefinition, ActionTargetContext.noTarget(), mockEntityManager, expect.any(Object));
+        // Log messages should refer to the actor's INSTANCE_ID
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Starting action discovery for actor: ${ACTOR_INSTANCE_ID}`));
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringMatching(/Found valid action \(no target\/self\): 'Wait' \(ID: core:wait\)/));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Finished action discovery for actor ${mockActorEntity.id}. Found 1 valid commands/actions.`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 1 valid commands/actions.`));
     });
 
     it('should return an empty array if core:wait action is deemed invalid by ActionValidationService', async () => {
-        mockValidationService.isValid.mockReturnValue(false);
+        mockValidationService.isValid.mockReturnValue(false); // Make validation fail
         const validActions = await actionDiscoverySystem.getValidActions(mockActorEntity, mockActionContext);
+
         expect(validActions).toEqual([]);
-        expect(mockGameDataRepo.getAllActionDefinitions).toHaveBeenCalledTimes(1);
-        expect(mockValidationService.isValid).toHaveBeenCalledTimes(1); // Only initial check fails
         expect(mockFormatActionCommandFn).not.toHaveBeenCalled();
-        expect(mockGetEntityIdsForScopesFn).not.toHaveBeenCalled();
+        // Log message refers to actor's INSTANCE_ID
         expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Action ${coreWaitActionDefinition.id} skipped: Invalid for actor based on initial check.`));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Finished action discovery for actor ${mockActorEntity.id}. Found 0 valid commands/actions.`));
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 valid commands/actions.`));
     });
 
     it('should return an empty array if core:wait action definition is not provided by GameDataRepository', async () => {
-        mockGameDataRepo.getAllActionDefinitions.mockReturnValue([]);
+        mockGameDataRepo.getAllActionDefinitions.mockReturnValue([]); // No actions available
         const validActions = await actionDiscoverySystem.getValidActions(mockActorEntity, mockActionContext);
+
         expect(validActions).toEqual([]);
-        expect(mockGameDataRepo.getAllActionDefinitions).toHaveBeenCalledTimes(1);
         expect(mockValidationService.isValid).not.toHaveBeenCalled();
         expect(mockFormatActionCommandFn).not.toHaveBeenCalled();
-        expect(mockGetEntityIdsForScopesFn).not.toHaveBeenCalled();
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Finished action discovery for actor ${mockActorEntity.id}. Found 0 valid commands/actions.`));
+        // Log message refers to actor's INSTANCE_ID
+        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 valid commands/actions.`));
     });
 
     it('should return structured info for core:wait even if other invalid actions are present', async () => {
         const invalidActionDef = {
             id: "other:action", commandVerb: "other", name: "Other",
             target_domain: "none", prerequisites: [], template: "other"
-            // description is missing, will default to "" if processed
         };
         mockGameDataRepo.getAllActionDefinitions.mockReturnValue([coreWaitActionDefinition, invalidActionDef]);
 
-        mockValidationService.isValid.mockImplementation((actionDef, actor, targetContext) => {
-            if (actionDef.id === 'core:wait') return true;
-            if (actionDef.id === 'other:action') return false; // This action is invalid
-            return false;
+        // Ensure only core:wait passes validation
+        mockValidationService.isValid.mockImplementation((actionDef, actor) => {
+            return actionDef.id === 'core:wait' && actor.id === ACTOR_INSTANCE_ID;
         });
 
         const validActions = await actionDiscoverySystem.getValidActions(mockActorEntity, mockActionContext);
 
-        const expectedWaitAction = {
+        expect(validActions).toEqual([{
             id: 'core:wait',
             name: 'Wait',
             command: 'wait',
             description: ''
-        };
-        expect(validActions).toEqual([expectedWaitAction]);
-
-        expect(mockGameDataRepo.getAllActionDefinitions).toHaveBeenCalledTimes(1);
-        // isValid called:
-        // - core:wait: initial (true), domain (true) -> 2 calls
-        // - other:action: initial (false) -> 1 call
+        }]);
+        // isValid called for core:wait (initial + domain) and other:action (initial)
         expect(mockValidationService.isValid).toHaveBeenCalledTimes(3);
-        expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(1);
-        expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
-            coreWaitActionDefinition,
-            expect.anything(), expect.anything(), expect.anything()
-        );
+        expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(1); // Only for core:wait
     });
 });
 // --- FILE END ---

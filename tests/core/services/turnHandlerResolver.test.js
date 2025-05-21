@@ -144,7 +144,7 @@ describe('TurnHandlerResolver', () => {
     // --- resolveHandler Tests ---
     describe('Player Actor Handling', () => {
         test('should resolve PlayerTurnHandler for an entity with PLAYER_COMPONENT_ID', async () => {
-            const playerEntity = new Entity('player1');
+            const playerEntity = new Entity('player1', 'dummy');
             playerEntity.hasComponent = jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID);
             playerEntity.addComponent(PLAYER_COMPONENT_ID, {});
 
@@ -167,7 +167,7 @@ describe('TurnHandlerResolver', () => {
 
     describe('AI Actor Handling', () => {
         test('should resolve AITurnHandler for an entity with ACTOR_COMPONENT_ID but not PLAYER_COMPONENT_ID', async () => {
-            const aiEntity = new Entity('ai1');
+            const aiEntity = new Entity('ai1', 'dummy');
             aiEntity.hasComponent = jest.fn((componentId) => {
                 if (componentId === ACTOR_COMPONENT_ID) return true;
                 if (componentId === PLAYER_COMPONENT_ID) return false;
@@ -192,7 +192,7 @@ describe('TurnHandlerResolver', () => {
         });
 
         test('should log info when resolving AITurnHandler', async () => {
-            const aiEntity = new Entity('ai2');
+            const aiEntity = new Entity('ai2', 'dummy');
             aiEntity.hasComponent = jest.fn((componentId) => {
                 if (componentId === ACTOR_COMPONENT_ID) return true;
                 if (componentId === PLAYER_COMPONENT_ID) return false;
@@ -212,7 +212,7 @@ describe('TurnHandlerResolver', () => {
 
     describe('Non-Actor / Other Entity Handling', () => {
         test('should return null for an entity without PLAYER_COMPONENT_ID or ACTOR_COMPONENT_ID', async () => {
-            const nonActorEntity = new Entity('item1');
+            const nonActorEntity = new Entity('item1', 'dummy');
             nonActorEntity.hasComponent = jest.fn().mockReturnValue(false);
 
             const handler = await resolver.resolveHandler(nonActorEntity);
@@ -233,7 +233,7 @@ describe('TurnHandlerResolver', () => {
 
         // Test that Player takes precedence
         test('should resolve PlayerTurnHandler for an entity with both PLAYER_COMPONENT_ID and ACTOR_COMPONENT_ID', async () => {
-            const playerActorEntity = new Entity('playerActor');
+            const playerActorEntity = new Entity('playerActor', 'dummy');
             playerActorEntity.hasComponent = jest.fn((componentId) => {
                 return componentId === ACTOR_COMPONENT_ID || componentId === PLAYER_COMPONENT_ID;
             });
@@ -260,7 +260,7 @@ describe('TurnHandlerResolver', () => {
         });
 
         test('should return null for an entity that only has unrelated components', async () => {
-            const sceneryEntity = new Entity('scenery1');
+            const sceneryEntity = new Entity('scenery1', 'dummy');
             sceneryEntity.addComponent('component:description', {text: 'A nice tree'});
             sceneryEntity.hasComponent = jest.fn((componentId) => {
                 if (componentId === 'component:description') return true;

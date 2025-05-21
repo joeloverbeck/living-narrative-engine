@@ -1,13 +1,13 @@
-// src/core/initializers/worldInitializer.js
+// src/initializers/worldInitializer.js
 // --- Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../interfaces/IWorldContext.js').default} IWorldContext */
-/** @typedef {import('./services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('./services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../data/schemas/entity.schema.json').EntityDefinition} EntityDefinition */ // Example path
-/** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Corrected path based on common project structure
+/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
+/** @typedef {import('../../data/schemas/entity.schema.json').EntityDefinition} EntityDefinition */
 
-// Removed import for PASSAGE_DETAILS_COMPONENT_TYPE_ID as it's no longer used here
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+
 
 /**
  * Service responsible for instantiating non-player/location entities defined
@@ -18,7 +18,7 @@ class WorldInitializer {
     /** @type {EntityManager} */
     #entityManager;
     /** @type {IWorldContext} */
-    #worldContext; // Still injected, might be used elsewhere or later
+    #worldContext;
     /** @type {GameDataRepository} */
     #repository;
     /** @type {ValidatedEventDispatcher} */
@@ -37,15 +37,14 @@ class WorldInitializer {
      * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor({entityManager, worldContext, gameDataRepository, validatedEventDispatcher, logger}) {
-        // Simplified validation for brevity, assume checks pass
         if (!entityManager) throw new Error('WorldInitializer requires an EntityManager.');
-        if (!worldContext) throw new Error('WorldInitializer requires a WorldContext.'); // Keep dependency injection
+        if (!worldContext) throw new Error('WorldInitializer requires a WorldContext.');
         if (!gameDataRepository) throw new Error('WorldInitializer requires a GameDataRepository.');
         if (!validatedEventDispatcher) throw new Error('WorldInitializer requires a ValidatedEventDispatcher.');
         if (!logger) throw new Error('WorldInitializer requires an ILogger.');
 
         this.#entityManager = entityManager;
-        this.#worldContext = worldContext; // Assign injected dependency
+        this.#worldContext = worldContext;
         this.#repository = gameDataRepository;
         this.#validatedEventDispatcher = validatedEventDispatcher;
         this.#logger = logger;
@@ -55,14 +54,15 @@ class WorldInitializer {
 
     /**
      * Instantiates initial world entities from all definitions and builds the spatial index.
+     * Each entity instance will receive a unique runtime UUID.
      * Dispatches 'initialization:world_initializer:started/completed/failed' events.
      * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
      * @returns {Promise<boolean>} Resolves with true if successful.
      * @throws {Error} If a critical error occurs during initialization (after logging and dispatching failure event).
      */
-    async initializeWorldEntities() { // <-- Make async
+    async initializeWorldEntities() {
         this.#logger.info('WorldInitializer: Instantiating initial world entities...');
-        let totalInstantiatedCount = 0; // Single counter for all entities
+        let totalInstantiatedCount = 0;
 
         try {
             const allEntityDefinitions = this.#repository.getAllEntityDefinitions?.() || [];
@@ -71,56 +71,47 @@ class WorldInitializer {
             }
 
             for (const entityDef of allEntityDefinitions) {
-                // Check for invalid definition
                 if (!entityDef || !entityDef.id) {
-                    this.#logger.warn('WorldInitializer: Skipping invalid entity definition:', entityDef);
+                    this.#logger.warn('WorldInitializer: Skipping invalid entity definition (missing or empty id):', entityDef);
                     continue;
                 }
-                const entityDefId = entityDef.id;
+                const definitionId = entityDef.id; // This is "isekai:hero", "isekai:adventurers_guild", etc.
 
-                // Check if entity already exists
-                if (this.#entityManager.activeEntities.has(entityDefId)) {
-                    this.#logger.warn(`Entity definition ${entityDefId} requested but entity already exists. Skipping.`);
-                    continue;
-                }
-
-                // Instantiate the entity directly
-                const instance = this.#entityManager.createEntityInstance(entityDefId);
+                // Create a new instance; EntityManager will generate a unique UUID for it.
+                // The definitionId is used to fetch the template data.
+                const instance = this.#entityManager.createEntityInstance(definitionId /*, instanceId = null */);
 
                 if (instance) {
-                    this.#logger.info(`Instantiated entity: ${instance.id} from definition: ${entityDefId}`);
+                    // instance.id is the new UUID, instance.definitionId is the original definitionId ("isekai:hero")
+                    this.#logger.info(`Instantiated entity: ${instance.id} (from definition: ${instance.definitionId})`);
                     totalInstantiatedCount++;
 
-                    // Dispatch finer-grained event (fire-and-forget okay for individual entities)
                     this.#validatedEventDispatcher.dispatchValidated(
                         'worldinit:entity_instantiated',
-                        {entityId: instance.id, definitionId: entityDefId, reason: 'Initial World Load'},
+                        {entityId: instance.id, definitionId: instance.definitionId, reason: 'Initial World Load'},
                         {allowSchemaNotFound: true}
-                    ).catch(e => this.#logger.error(`Failed dispatching entity_instantiated event for ${instance.id}`, e));
+                    ).catch(e => this.#logger.error(`Failed dispatching entity_instantiated event for ${instance.id} (Def: ${instance.definitionId})`, e));
 
                 } else {
-                    this.#logger.warn(`Failed to instantiate entity from definition: ${entityDefId}.`);
-                    // Dispatch entity failure event (fire-and-forget okay)
+                    this.#logger.warn(`Failed to instantiate entity from definition: ${definitionId}.`);
                     this.#validatedEventDispatcher.dispatchValidated('worldinit:entity_instantiation_failed', {
-                        definitionId: entityDefId,
+                        definitionId: definitionId, // Use the definitionId that failed
                         reason: 'Initial World Load'
-                    }, {allowSchemaNotFound: true}).catch(e => this.#logger.error("Failed dispatching entity_instantiation_failed event", e));
+                    }, {allowSchemaNotFound: true}).catch(e => this.#logger.error(`Failed dispatching entity_instantiation_failed event for definition ${definitionId}`, e));
                 }
-            } // End loop
+            }
 
             this.#logger.info(`Instantiated ${totalInstantiatedCount} total entities.`);
 
-            // Build Spatial Index
             this.#logger.info('Building initial spatial index...');
             this.#entityManager.buildInitialSpatialIndex();
             this.#logger.info('Initial spatial index build completed.');
 
-            return true; // Indicate success
+            return true;
 
         } catch (error) {
             this.#logger.error('WorldInitializer: CRITICAL ERROR during entity instantiation or index build:', error);
-
-            throw error; // Re-throw critical error after logging/dispatching
+            throw error;
         }
     }
 }
