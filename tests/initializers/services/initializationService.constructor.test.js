@@ -1,8 +1,8 @@
 // src/tests/core/initializers/services/initializationService.constructor.test.js
 
-import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import InitializationService from '../../../src/initializers/services/initializationService.js';
 import {afterEach, beforeEach, describe, expect, it, jest, test} from "@jest/globals";
-import {tokens} from '../../../../src/config/tokens.js'; // Import tokens for DomUiFacade
+import {tokens} from '../../../src/config/tokens.js'; // Import tokens for DomUiFacade
 
 // --- Mocks ---
 let mockContainer;

@@ -1,4 +1,4 @@
-// src/tests/core/gameEngine.test.js
+// tests/engine/gameEngine.test.js
 
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import GameEngine from '../../src/engine/gameEngine.js';
@@ -103,7 +103,7 @@ describe('GameEngine', () => {
                         return mockPlaytimeTracker;
                     case tokens.ISafeEventDispatcher:
                         return mockSafeEventDispatcher;
-                    case tokens.InitializationService:
+                    case tokens.IInitializationService:
                         return mockInitializationService;
                     default:
                         throw new Error(`GameEngine.test.js: Unmocked token: ${token?.toString()}`);
@@ -131,7 +131,6 @@ describe('GameEngine', () => {
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
             expect(mockLogger.info).toHaveBeenCalledWith('GameEngine: Constructor called.');
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomUiFacade);
-            expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.WorldLoader);
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
             expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.GamePersistenceService);
@@ -179,7 +178,7 @@ describe('GameEngine', () => {
             expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(false, `Initializing ${MOCK_WORLD_NAME}...`);
             expect(mockEntityManager.clearAll).toHaveBeenCalled();
             expect(mockPlaytimeTracker.reset).toHaveBeenCalled();
-            expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.InitializationService);
+            expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IInitializationService);
             expect(mockInitializationService.runInitializationSequence).toHaveBeenCalledWith(MOCK_WORLD_NAME);
             expect(mockPlaytimeTracker.startSession).toHaveBeenCalled();
             expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(NEW_GAME_STARTED_ID, {worldName: MOCK_WORLD_NAME});

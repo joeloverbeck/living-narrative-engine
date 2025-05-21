@@ -39,7 +39,7 @@
  * @property {DiToken} PerceptionLogRenderer - Token for the component rendering perception logs.
  * @property {DiToken} DomUiFacade - Token for the facade aggregating all UI components.
  * @property {DiToken} SaveGameUI - Token for the Save Game UI component.
- * @property {DiToken} LoadGameUI - Token for the Load Game UI component. // <<< ADDED
+ * @property {DiToken} LoadGameUI - Token for the Load Game UI component.
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
  *
  * --- Loaders ---
@@ -96,11 +96,10 @@
  * @property {DiToken} IGameDataRepository - Token for the game data repository interface.
  * @property {DiToken} ISaveLoadService - Token for the save/load service interface.
  * @property {DiToken} IStorageProvider - Token for the storage provider interface.
- *
+ * @property {DiToken} IInitializationService - Token for the game initialization service interface. *
  * --- Initialization & Orchestration ---
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
  * @property {DiToken} SystemInitializer - Token for initializing tagged systems.
- * @property {DiToken} InitializationService - Token for the main initialization orchestration service.
  * @property {DiToken} ShutdownService - Token for the main shutdown orchestration service.
  * @property {DiToken} GameLoop - Token for the main game loop.
  * @property {DiToken} InputSetupService - Token for setting up input handling.
@@ -150,7 +149,7 @@ export const tokens = Object.freeze({
     PerceptionLogRenderer: 'PerceptionLogRenderer',
     DomUiFacade: 'DomUiFacade',
     SaveGameUI: 'SaveGameUI',
-    LoadGameUI: 'LoadGameUI', // <<< ADDED
+    LoadGameUI: 'LoadGameUI',
 
     // Loaders
     SchemaLoader: 'SchemaLoader',
@@ -205,12 +204,11 @@ export const tokens = Object.freeze({
     IGameDataRepository: 'IGameDataRepository',             // Interface token
     ISaveLoadService: 'ISaveLoadService',
     IStorageProvider: 'IStorageProvider',
-
+    IInitializationService: 'IInitializationService',
 
     // Initialization & Orchestration
     WorldInitializer: 'WorldInitializer',
     SystemInitializer: 'SystemInitializer',
-    InitializationService: 'InitializationService',
     ShutdownService: 'ShutdownService',
     GameLoop: 'GameLoop',
     InputSetupService: 'InputSetupService',

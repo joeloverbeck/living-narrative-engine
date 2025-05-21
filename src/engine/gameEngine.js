@@ -1,6 +1,6 @@
-// src/engine/gameEngine.js
+// src/core/gameEngine.js
 
-import {tokens} from '../config/tokens.js';
+import {tokens} from '../config/tokens.js'; // Assuming tokens.IInitializationService exists and others are correct
 import {
     GAME_LOADED_ID,
     GAME_SAVED_ID,
@@ -10,24 +10,23 @@ import {
 } from "../constants/eventIds.js";
 
 // --- JSDoc Type Imports ---
-/** @typedef {import('./interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('./config/appContainer.js').default} AppContainer */
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('./turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-// Typedef for concrete GamePersistenceService might still be needed if resolved directly by its class token for other purposes,
-// but the field will use the interface.
-/** @typedef {import('../services/gamePersistenceService.js').default} GamePersistenceService_Concrete */ // Renamed for clarity, if needed elsewhere
-/** @typedef {import('./interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
-/** @typedef {import('./interfaces/IGamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult */
-/** @typedef {import('./interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
-/** @typedef {import('./interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../config/appContainer.js').default} AppContainer */
+// Assuming IEntityManager is the intended type for #entityManager
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
+/** @typedef {import('../interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
+/** @typedef {import('../interfaces/IGamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult */
+/** @typedef {import('../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../domUI/domUiFacade.js').DomUiFacade} DomUiFacade */
-/** @typedef {import('./initializers/services/initializationService.js').default} InitializationService */
-/** @typedef {import('./loaders/worldLoader.js').default} WorldLoader */
 
+// Corrected path based on user's GameEngine.js version used in tests
+/** @typedef {import('../interfaces/IInitializationService.js').IInitializationService} IInitializationService */
+/** @typedef {import('../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 
+// REMOVED: /** @typedef {import('../loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
-
 
 /**
  * @class GameEngine
@@ -40,13 +39,13 @@ class GameEngine {
     #logger;
     /** @type {DomUiFacade} */
     #domUiFacade;
-    /** @type {WorldLoader} */
-    #worldLoader; // Retained for now, in case other methods use it. Not used in startNewGame.
-    /** @type {EntityManager} */
+    // REMOVED: /** @type {WorldLoader} */
+    // REMOVED: #worldLoader;
+    /** @type {IEntityManager} */
     #entityManager;
     /** @type {ITurnManager} */
     #turnManager;
-    /** @type {IGamePersistenceService} */ // MODIFIED: Using interface type
+    /** @type {IGamePersistenceService} */
     #gamePersistenceService;
     /** @type {IPlaytimeTracker} */
     #playtimeTracker;
@@ -77,13 +76,13 @@ class GameEngine {
 
         try {
             this.#domUiFacade = container.resolve(tokens.DomUiFacade);
-            this.#worldLoader = container.resolve(tokens.WorldLoader); // Resolved, but startNewGame will defer to InitializationService
+            // REMOVED: this.#worldLoader = container.resolve(tokens.WorldLoader);
             this.#entityManager = container.resolve(tokens.IEntityManager);
             this.#turnManager = container.resolve(tokens.ITurnManager);
-            // GamePersistenceService is resolved using its concrete token, but the field is typed as the interface.
-            // This is valid as GamePersistenceService will implement IGamePersistenceService.
+            // Assuming GamePersistenceService (concrete) is registered with tokens.GamePersistenceService
+            // and IPlaytimeTracker (concrete) is registered with tokens.PlaytimeTracker
             this.#gamePersistenceService = /** @type {IGamePersistenceService} */ (container.resolve(tokens.GamePersistenceService));
-            this.#playtimeTracker = container.resolve(tokens.PlaytimeTracker); // Resolves concrete, but typed as interface
+            this.#playtimeTracker = /** @type {IPlaytimeTracker} */ (container.resolve(tokens.PlaytimeTracker));
             this.#safeEventDispatcher = container.resolve(tokens.ISafeEventDispatcher);
         } catch (e) {
             this.#logger.error(`GameEngine: CRITICAL - Failed to resolve one or more core services. Error: ${e.message}`, e);
@@ -97,30 +96,31 @@ class GameEngine {
      * the InitializationService.
      * @async
      * @param {string} worldName - The name of the world to load and initialize.
+     * @throws {Error} Propagates errors from the initialization process.
      */
     async startNewGame(worldName) {
         if (this.#isEngineInitialized) {
+            // CORRECTED LOG MESSAGE (typo: startNewNewGame -> startNewGame)
             this.#logger.warn('GameEngine.startNewGame: Engine already initialized. Stopping existing game before starting new.');
-            await this.stop(); // stop() should reset #isEngineInitialized and #isGameLoopRunning
+            await this.stop();
         }
-        this.#activeWorld = worldName; // Set active world early for logging and context
+        this.#activeWorld = worldName;
         this.#logger.info(`GameEngine: Starting new game with world "${worldName}"...`);
 
         try {
             this.#domUiFacade.title.set(`Initializing ${worldName}...`);
             this.#domUiFacade.input.setEnabled(false, `Initializing ${worldName}...`);
 
-            // Clear previous state before initialization
             this.#entityManager.clearAll();
-            this.#playtimeTracker.reset(); // Reset playtime for a new game
+            this.#playtimeTracker.reset();
             this.#logger.debug('GameEngine: EntityManager and PlaytimeTracker cleared/reset.');
 
-            // --- Use InitializationService for the full setup ---
             this.#logger.info('GameEngine: Resolving InitializationService...');
-            const initializationService = /** @type {InitializationService} */ (this.#container.resolve(tokens.InitializationService));
+            // Using tokens.IInitializationService for resolution as per user's latest info
+            const initializationService = /** @type {IInitializationService} */ (this.#container.resolve(tokens.IInitializationService));
 
             this.#logger.info(`GameEngine: Invoking InitializationService.runInitializationSequence for world "${worldName}"...`);
-            const initResult = await initializationService.runInitializationSequence(worldName);
+            const initResult = /** @type {InitializationResult} */ (await initializationService.runInitializationSequence(worldName));
 
             if (!initResult.success) {
                 const error = initResult.error || new Error('Unknown initialization failure from InitializationService.');
@@ -128,34 +128,30 @@ class GameEngine {
                 this.#domUiFacade.messages.render(`Initialization failed: ${error.message}`, 'fatal');
                 this.#domUiFacade.input.setEnabled(false, 'Error initializing game.');
                 this.#domUiFacade.title.set("Initialization Error");
-                // Ensure flags reflect failed state
                 this.#isEngineInitialized = false;
                 this.#isGameLoopRunning = false;
-                throw error; // Re-throw to be caught by the calling context (e.g., main.js)
+                throw error;
             }
-            this.#logger.info(`GameEngine: InitializationService completed successfully for world "${worldName}". Entities are now instantiated.`);
+            this.#logger.info(`GameEngine: InitializationService completed successfully for world "${worldName}". Game state initialized.`);
 
-            // --- Post-Initialization Steps ---
-            this.#isEngineInitialized = true; // Mark engine as initialized
-            this.#isGameLoopRunning = true;   // Mark game loop as running
-            this.#playtimeTracker.startSession(); // Start new playtime session
+            this.#isEngineInitialized = true;
+            this.#isGameLoopRunning = true;
+            this.#playtimeTracker.startSession();
 
-            // Dispatch event signifying that a new game has been fully initialized and started
             await this.#safeEventDispatcher.dispatchSafely(NEW_GAME_STARTED_ID, {worldName});
+            // REVERTED LOG MESSAGE to include "(post-InitializationService)" as expected by the test
             this.#logger.info('GameEngine: Engine initialized and new game started (post-InitializationService).');
 
             this.#domUiFacade.title.set(this.#activeWorld || "Game Ready");
             this.#domUiFacade.input.setEnabled(true, 'Enter command...');
 
             this.#logger.info('GameEngine: Starting TurnManager...');
-            await this.#turnManager.start(); // This should now find active entities
+            await this.#turnManager.start();
 
         } catch (error) {
-            // This catch block handles errors from the try block, including those re-thrown from InitializationService
-            const errorMessage = `GameEngine: Failed to start new game with world "${worldName}". Error: ${error.message || String(error)}`;
+            const errorMessage = `GameEngine: Failed to start new game with world "${worldName}". Error: ${error instanceof Error ? error.message : String(error)}`;
             this.#logger.error(errorMessage, error);
 
-            // Ensure UI reflects the error, even if some parts were set during the try block
             if (this.#domUiFacade && this.#domUiFacade.messages) {
                 this.#domUiFacade.messages.render(errorMessage, 'fatal');
                 this.#domUiFacade.input.setEnabled(false, 'Error starting game.');
@@ -164,7 +160,8 @@ class GameEngine {
 
             this.#isEngineInitialized = false;
             this.#isGameLoopRunning = false;
-            throw error; // Re-throw so the top-level caller (main.js) is aware
+            if (error instanceof Error) throw error;
+            throw new Error(errorMessage);
         }
     }
 
@@ -196,10 +193,6 @@ class GameEngine {
         if (this.#turnManager && typeof this.#turnManager.stop === 'function') {
             await this.#turnManager.stop();
         }
-
-        // Consider if entityManager.clearAll() should be here or only on startNewGame/loadGame.
-        // If stop is just for pausing or returning to a main menu without losing state, don't clear.
-        // If stop implies full teardown, then clear. For now, let's assume it does not clear all entities.
 
         if (this.#safeEventDispatcher) {
             await this.#safeEventDispatcher.dispatchSafely(GAME_STOPPED_ID, {});
@@ -258,15 +251,12 @@ class GameEngine {
         this.#logger.info(`GameEngine: Load game process initiated from identifier: ${saveIdentifier}`);
 
         if (!this.#gamePersistenceService) {
-            // Similar to save, this check is for robustness.
             const errorMsg = 'GamePersistenceService is not available. Cannot load game.';
             this.#logger.error(`GameEngine.loadGame: ${errorMsg}`);
             return {success: false, error: errorMsg, data: null}; // Ensure LoadAndRestoreResult structure
         }
 
-        // Stop any currently running game first
         await this.stop();
-        // Clear entities and playtime specifically for loading a new state
         this.#entityManager.clearAll();
         this.#playtimeTracker.reset();
         this.#logger.debug('GameEngine.loadGame: Existing game stopped, EntityManager and PlaytimeTracker cleared/reset.');
@@ -286,27 +276,22 @@ class GameEngine {
             this.#isEngineInitialized = true;
             this.#isGameLoopRunning = true;
 
-            // Playtime is set by GamePersistenceService.restoreGameState via setAccumulatedPlaytime,
-            // so we just need to start a new session timer.
             this.#playtimeTracker.startSession();
 
             this.#domUiFacade.title.set(this.#activeWorld);
 
-            // GAME_LOADED_ID is dispatched first (indicating data is loaded)
             await this.#safeEventDispatcher.dispatchSafely(GAME_LOADED_ID, {saveIdentifier});
-
-            // Then, LOADED_GAME_STARTED_ID is dispatched (indicating game logic is starting with the loaded data)
             await this.#safeEventDispatcher.dispatchSafely(LOADED_GAME_STARTED_ID, {
                 saveIdentifier,
                 worldName: this.#activeWorld
             });
 
             this.#logger.info(`GameEngine: Starting TurnManager for loaded game...`);
-            await this.#turnManager.start(); // Start turns for the loaded game
+            await this.#turnManager.start();
             this.#domUiFacade.input.setEnabled(true, 'Enter command...');
 
             this.#logger.info(`GameEngine: Game loaded from "${saveIdentifier}" (World: ${this.#activeWorld}) and resumed.`);
-            return {success: true, data: loadedSaveData}; // Pass data back if useful for caller
+            return {success: true, data: loadedSaveData};
         } else {
             const errorMsg = `GameEngine: Failed to load and restore game from ${saveIdentifier}. Error: ${restoreOutcome.error || 'Restored data was missing or load operation failed.'}`;
             this.#logger.error(errorMsg);
@@ -314,12 +299,12 @@ class GameEngine {
             this.#domUiFacade.input.setEnabled(false, 'Failed to load game.');
             this.#domUiFacade.title.set('Load Failed');
 
-            this.#isEngineInitialized = false; // Ensure flags are reset
+            this.#isEngineInitialized = false;
             this.#isGameLoopRunning = false;
             return {
                 success: false,
                 error: restoreOutcome.error || "Unknown error during load or missing data.",
-                data: null // Ensure LoadAndRestoreResult structure
+                data: null
             };
         }
     }

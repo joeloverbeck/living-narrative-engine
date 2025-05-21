@@ -1,9 +1,9 @@
 // src/tests/core/initializers/services/initializationService.integration.test.js
 
-import AppContainer from '../../../../src/config/appContainer.js';
-import InitializationService from '../../../../src/initializers/services/initializationService.js'; // Adjust path if needed
-import {registerOrchestration} from '../../../../src/config/registrations/orchestrationRegistrations.js'; // Function under test (partially)
-import {tokens} from '../../../../src/config/tokens.js';
+import AppContainer from '../../../src/config/appContainer.js';
+import InitializationService from '../../../src/initializers/services/initializationService.js'; // Adjust path if needed
+import {registerOrchestration} from '../../../src/config/registrations/orchestrationRegistrations.js'; // Function under test (partially)
+import {tokens} from '../../../src/config/tokens.js';
 import {beforeEach, describe, expect, it, jest, afterEach} from "@jest/globals"; // Added afterEach
 
 // --- Mocks ---
@@ -55,7 +55,7 @@ describe('InitializationService Integration with AppContainer', () => {
         // Attempt to resolve the service. THIS is the step that previously failed.
         let resolvedService = null;
         expect(() => {
-            resolvedService = container.resolve(tokens.InitializationService);
+            resolvedService = container.resolve(tokens.IInitializationService);
         }).not.toThrow(/AppContainer: No service registered for key "undefined"/); // Check it doesn't throw the SPECIFIC error
 
         // Further check: ensure we actually got an instance
@@ -78,7 +78,7 @@ describe('InitializationService Integration with AppContainer', () => {
 
         // --- Act ---
         // Resolve the service. This triggers the constructor, which should log.
-        const resolvedService = container.resolve(tokens.InitializationService);
+        const resolvedService = container.resolve(tokens.IInitializationService);
 
         // --- Assert ---
         // Verify the service is created

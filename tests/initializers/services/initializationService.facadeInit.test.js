@@ -1,11 +1,11 @@
-// src/tests/core/initializers/services/initializationService.facadeInit.test.js
+// tests/initializers/services/initializationService.facadeInit.test.js
 // ****** CORRECTED FILE ******
 
-import InitializationService from '../../../../src/initializers/services/initializationService.js';
-import {tokens} from '../../../../src/config/tokens.js'; // Correct import for tests
-import AppContainer from '../../../../src/config/appContainer.js';
-import ConsoleLogger from '../../../../src/services/consoleLogger.js';
-import ValidatedEventDispatcher from '../../../../src/events/validatedEventDispatcher.js';
+import InitializationService from '../../../src/initializers/services/initializationService.js';
+import {tokens} from '../../../src/config/tokens.js'; // Correct import for tests
+import AppContainer from '../../../src/config/appContainer.js';
+import ConsoleLogger from '../../../src/services/consoleLogger.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
 // --- Mocks ---
@@ -238,9 +238,8 @@ describe('InitializationService', () => {
 
             const result = await initializationService.runInitializationSequence(testWorldName);
 
-            // Check that the specific error was logged
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining('Failed to resolve DomUiFacade'),
+            expect(mockLogger.warn).toHaveBeenCalledWith( // <<< CORRECTED: Expects .warn
+                expect.stringContaining('Failed to resolve DomUiFacade. UI might not function correctly if it was expected.'), // Match the exact warning message
                 uiError
             );
 

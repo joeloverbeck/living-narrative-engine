@@ -31,8 +31,8 @@ export function registerOrchestration(container) {
 
     // --- Initialization Service ---
     // Singleton lifecycle is appropriate as it manages a global process.
-    registrar.singletonFactory(tokens.InitializationService, (c) => {
-        logger.debug(`Orchestration Registration: Factory creating ${tokens.InitializationService}...`);
+    registrar.singletonFactory(tokens.IInitializationService, (c) => {
+        logger.debug(`Orchestration Registration: Factory creating ${tokens.IInitializationService}...`);
         // Ensure all dependencies are resolved using the CORRECT tokens
         const initLogger = c.resolve(tokens.ILogger);
         const initDispatcher = c.resolve(tokens.IValidatedEventDispatcher); // <<< CORRECTED TOKEN HERE
@@ -47,7 +47,7 @@ export function registerOrchestration(container) {
             validatedEventDispatcher: initDispatcher
         });
     });
-    logger.info(`Orchestration Registration: Registered ${tokens.InitializationService} (Singleton).`);
+    logger.info(`Orchestration Registration: Registered ${tokens.IInitializationService} (Singleton).`);
 
     // --- Shutdown Service ---
     // Singleton lifecycle is appropriate.
