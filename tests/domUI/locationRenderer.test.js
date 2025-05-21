@@ -5,10 +5,10 @@
  */
 
 import {beforeEach, afterEach, describe, expect, it, jest} from '@jest/globals';
-import {LocationRenderer} from '../../domUI/index.js';
+import {LocationRenderer} from '../../src/domUI/index.js';
 
 // --- Mock Dependencies ---
-jest.mock('../../constants/componentIds.js', () => ({
+jest.mock('../../src/constants/componentIds.js', () => ({
     POSITION_COMPONENT_ID: 'test:position',
     NAME_COMPONENT_ID: 'test:name',
     DESCRIPTION_COMPONENT_ID: 'test:description',
@@ -22,7 +22,7 @@ import {
     DESCRIPTION_COMPONENT_ID,
     EXITS_COMPONENT_ID,
     ACTOR_COMPONENT_ID
-} from '../../constants/componentIds.js';
+} from '../../src/constants/componentIds.js';
 
 
 /** @returns {import('../../core/interfaces/ILogger').ILogger} */
@@ -33,7 +33,7 @@ const createMockLogger = () => ({
     debug: jest.fn(),
 });
 
-/** @returns {import('../../domUI/IDocumentContext').IDocumentContext} */
+/** @returns {import('../../src/domUI/IDocumentContext.js').IDocumentContext} */
 const createMockDocumentContext = () => {
     const mockDocument = {
         createElement: jest.fn(tagName => {
@@ -55,13 +55,13 @@ const createMockDocumentContext = () => {
     };
 };
 
-/** @returns {import('../../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} */
+/** @returns {import('../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} */
 const createMockVed = () => ({
     subscribe: jest.fn(() => jest.fn()),
     dispatchValidated: jest.fn(),
 });
 
-/** @returns {import('../../domUI/domElementFactory').default} */
+/** @returns {import('../../src/domUI/domElementFactory.js').default} */
 const createMockDomElementFactory = (mockDocumentContext) => ({
     create: jest.fn((tagName, className, textContent) => {
         const el = mockDocumentContext.document.createElement(tagName);
@@ -99,7 +99,7 @@ const createMockDomElementFactory = (mockDocumentContext) => ({
     }),
 });
 
-/** @returns {import('../../core/interfaces/IEntityManager').IEntityManager} */
+/** @returns {import('../../src/interfaces/IEntityManager.js').IEntityManager} */
 const createMockEntityManager = () => ({
     getEntityInstance: jest.fn(),
     getEntitiesInLocation: jest.fn(() => new Set()),

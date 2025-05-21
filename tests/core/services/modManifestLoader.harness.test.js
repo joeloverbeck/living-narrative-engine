@@ -9,8 +9,8 @@
 // -----------------------------------------------------------------------------
 
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ModManifestLoader from '../../../core/modding/modManifestLoader.js';
-import AjvSchemaValidator from '../../../core/services/ajvSchemaValidator.js';
+import ModManifestLoader from '../../../src/modding/modManifestLoader.js';
+import AjvSchemaValidator from '../../../src/services/ajvSchemaValidator.js';
 
 /* -------------------------------------------------------------------------- */
 /* Local helper factories (kept small to avoid cross‑test bleed)               */

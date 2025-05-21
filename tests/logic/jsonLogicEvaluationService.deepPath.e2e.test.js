@@ -4,16 +4,16 @@
  * @jest-environment node
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // Adjust path if needed
-import { createJsonLogicContext } from '../../logic/contextAssembler.js'; // Adjust path if needed
-import Entity from '../../entities/entity.js'; // Adjust path if needed
+import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path if needed
+import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path if needed
+import Entity from '../../src/entities/entity.js'; // Adjust path if needed
 // No longer need direct import of jsonLogic here if only using service.evaluate
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */ // Adjusted path assuming relative location
-/** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjusted path
-/** @typedef {import('../../logic/defs.js').GameEvent} GameEvent */ // Adjusted path
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Adjusted path
+/** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjusted path assuming relative location
+/** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjusted path
+/** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */ // Adjusted path
+/** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */ // Adjusted path
 /** @typedef {object} JSONLogicRule */
 
 // --- Mock Dependencies ---

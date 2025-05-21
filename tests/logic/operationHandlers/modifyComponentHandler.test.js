@@ -4,12 +4,12 @@
  * @jest-environment node
  */
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
-import ModifyComponentHandler from '../../../logic/operationHandlers/modifyComponentHandler.js';
+import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 
 // --- Type-hints (for editors only) ------------------------------------------
-/** @typedef {import('../../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../entities/entityManager.js').default} EntityManager */ // Assuming default export
-/** @typedef {import('../../../logic/defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */ // Assuming default export
+/** @typedef {import('../../../src/logic/defs.js').ExecutionContext} ExecutionContext */
 
 // -----------------------------------------------------------------------------
 //  Mock services

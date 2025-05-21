@@ -1,7 +1,7 @@
 // src/logic/operationHandlers/logHandler.js
 
 // --- JSDoc Imports ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */

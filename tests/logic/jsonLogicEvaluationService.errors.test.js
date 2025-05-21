@@ -14,11 +14,11 @@ import {describe, expect, test, jest, beforeEach, afterEach} from '@jest/globals
 import jsonLogic from 'json-logic-js'; // Import the actual library to spy on
 
 // --- Class Under Test ---
-import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // Adjust path as needed
+import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */ // Adjust path as needed
-/** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
+/** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjust path as needed
+/** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
 /** @typedef {object} JSONLogicRule */
 
 // --- Mock Dependencies ---

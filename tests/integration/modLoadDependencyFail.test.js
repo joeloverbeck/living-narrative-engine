@@ -3,10 +3,10 @@
 import {describe, it, expect, beforeEach, jest} from '@jest/globals';
 
 // Core services under test
-import WorldLoader from '../../core/loaders/worldLoader.js';
-import ModManifestLoader from '../../core/modding/modManifestLoader.js';
-import AjvSchemaValidator from '../../core/services/ajvSchemaValidator.js';
-import ModDependencyError from '../../core/errors/modDependencyError.js';
+import WorldLoader from '../../src/loaders/worldLoader.js';
+import ModManifestLoader from '../../src/modding/modManifestLoader.js';
+import AjvSchemaValidator from '../../src/services/ajvSchemaValidator.js';
+import ModDependencyError from '../../src/errors/modDependencyError.js';
 
 /* -------------------------------------------------------------------------- */
 /* Helper factories – duplicated from modManifestLoader.harness.test.js        */

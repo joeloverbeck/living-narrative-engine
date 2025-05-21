@@ -12,14 +12,14 @@
 import {describe, test, expect, beforeEach, jest} from '@jest/globals';
 
 // Class under test
-import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
+import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 
 // Context helper
-import {createJsonLogicContext} from '../../logic/contextAssembler.js';
+import {createJsonLogicContext} from '../../src/logic/contextAssembler.js';
 
 // --- Mocks -----------------------------------------------------------------
 
-/** @type {jest.Mocked<import('../../core/interfaces/coreServices.js').ILogger>} */
+/** @type {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>} */
 const mockLogger = {
   info: jest.fn(),
   warn: jest.fn(),
@@ -27,7 +27,7 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
-/** @type {jest.Mocked<import('../../entities/entityManager.js').default>} */
+/** @type {jest.Mocked<import('../../src/entities/entityManager.js').default>} */
 const mockEntityManager = {
   getEntityInstance: jest.fn(),
   getComponentData: jest.fn(),

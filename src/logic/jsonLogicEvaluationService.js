@@ -19,7 +19,7 @@ try {
 }
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 // Assuming JSONLogicRule is structurally compatible with the schema
 // We avoid a direct schema import in runtime code for cleaner separation

@@ -4,16 +4,16 @@
  * @jest-environment node
  */
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
-import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // Adjust path as needed
+import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 // --- Task 1: Import necessary modules (Ticket 2.6.3) ---
-import {createJsonLogicContext} from '../../logic/contextAssembler.js'; // Adjust path
-import Entity from '../../entities/entity.js'; // Adjust path
+import {createJsonLogicContext} from '../../src/logic/contextAssembler.js'; // Adjust path
+import Entity from '../../src/entities/entity.js'; // Adjust path
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
-/** @typedef {import('../../logic/defs.js').GameEvent} GameEvent */
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Import type for mocking
+/** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
+/** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */
+/** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */ // Import type for mocking
 /** @typedef {object} JSONLogicRule */
 
 // --- Adjust Mocking for Ticket 2.6.3 ---

@@ -11,7 +11,7 @@
 import resolvePath from '../../utils/resolvePath.js';
 
 // --- Type-hints --------------------------------------------------------------
-/** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */

@@ -1,8 +1,8 @@
 // tests/core/services/modDependencyValidator.test.js
 
 import {describe, it, expect, jest, beforeEach} from '@jest/globals';
-import ModDependencyValidator from '../../../core/modding/modDependencyValidator.js';
-import ModDependencyError from '../../../core/errors/modDependencyError.js';
+import ModDependencyValidator from '../../../src/modding/modDependencyValidator.js';
+import ModDependencyError from '../../../src/errors/modDependencyError.js';
 // No need to explicitly import semver, the service uses it internally
 
 /**

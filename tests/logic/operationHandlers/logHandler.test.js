@@ -6,7 +6,7 @@
 import {describe, expect, test, jest, beforeEach} from '@jest/globals';
 // Assuming INTERPOLATION_FALLBACK is exported for tests. If not, define it here.
 // import LogHandler, { INTERPOLATION_FALLBACK } from '../../../logic/operationHandlers/logHandler.js';
-import LogHandler from '../../../logic/operationHandlers/logHandler.js'; // Adjust path if needed
+import LogHandler from '../../../src/logic/operationHandlers/logHandler.js'; // Adjust path if needed
 const INTERPOLATION_FALLBACK = 'N/A'; // Define fallback if not exported from handler
 
 // --- JSDoc Imports ---
