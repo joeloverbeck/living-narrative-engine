@@ -3,7 +3,7 @@ import {RendererBase} from './rendererBase.js';
 import DomElementFactory from './domElementFactory.js';   // keep this import
 
 /**
- * @typedef {import('../core/interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
  * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription // Added for clarity
