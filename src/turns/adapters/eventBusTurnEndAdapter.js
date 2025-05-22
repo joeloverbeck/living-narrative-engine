@@ -30,7 +30,6 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
         } else if (validatedEventDispatcher?.dispatchValidated) {
             this.#dispatcher = validatedEventDispatcher;
             this.#isSafe = false;
-            // 👇 restore the warning the tests look for
             (logger || console).warn( // Use provided logger if available
                 'EventBusTurnEndAdapter: ISafeEventDispatcher not provided or invalid, ' +
                 'falling back to IValidatedEventDispatcher. Dispatch errors may not be caught gracefully by the adapter.'
@@ -47,7 +46,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
     /**
      * Canonical method used by PlayerTurnHandler / TurnManager.
      * The 'success' parameter is part of the ITurnEndPort interface contract
-     * but will not be included in the core:turn_ended event payload itself.
+     * and IS included in the core:turn_ended event payload.
      * @param {string} entityId
      * @param {boolean} success - Indicates the outcome of the turn from the notifier's perspective.
      */
@@ -58,11 +57,18 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
             throw new Error(errMsg);
         }
 
-        // Log the intended success status for debugging, even if not in the event.
-        this.#log.debug(`EventBusTurnEndAdapter: Received notifyTurnEnded for ${entityId} with success=${success}. Dispatching ${TURN_ENDED_ID} with entityId only.`);
+        // Ensure 'success' is a boolean, as required by the schema.
+        // Default to false if it's not explicitly provided or is not a boolean,
+        // though the calling code in TurnEndingState should provide a valid boolean.
+        const isTurnSuccessful = typeof success === 'boolean' ? success : false;
+        if (typeof success !== 'boolean') {
+            this.#log.warn(`EventBusTurnEndAdapter: 'success' parameter was not a boolean (received: ${success}). Defaulting to 'false'. EntityId: ${entityId}`);
+        }
 
-        // Payload for core:turn_ended only contains entityId as per clarification.
-        const payload = {entityId};
+        this.#log.debug(`EventBusTurnEndAdapter: Received notifyTurnEnded for ${entityId} with success=${isTurnSuccessful}. Dispatching ${TURN_ENDED_ID} with entityId and success status.`);
+
+        // Payload for core:turn_ended must include 'entityId' and 'success'.
+        const payload = {entityId, success: isTurnSuccessful};
 
         try {
             if (this.#isSafe) {
@@ -71,7 +77,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
                 // Type assertion for IValidatedDispatcher if #isSafe is false
                 await /** @type {IValidatedDispatcher} */ (this.#dispatcher).dispatchValidated(TURN_ENDED_ID, payload);
             }
-            this.#log.debug(`EventBusTurnEndAdapter: Successfully dispatched ${TURN_ENDED_ID} for ${entityId}.`);
+            this.#log.debug(`EventBusTurnEndAdapter: Successfully dispatched ${TURN_ENDED_ID} for ${entityId} with success=${isTurnSuccessful}.`);
         } catch (err) {
             this.#log.error(`EventBusTurnEndAdapter: Error dispatching ${TURN_ENDED_ID} for ${entityId}. Error: ${err.message}`, err);
             throw err; // Re-throw to allow caller to handle

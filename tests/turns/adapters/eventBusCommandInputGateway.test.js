@@ -1,7 +1,7 @@
 // src/tests/core/adapters/eventBusCommandInputGateway.test.js
 // --- FILE START (Entire file content as corrected) ---
 
-import { EventBusCommandInputGateway } from '../../src/turns/adapters/eventBusCommandInputGateway.js';
+import { EventBusCommandInputGateway } from '../../../src/turns/adapters/eventBusCommandInputGateway.js';
 import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals";
 
 // --- Mocks ---
