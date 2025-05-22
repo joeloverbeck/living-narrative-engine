@@ -66,13 +66,14 @@ export class AbstractTurnState extends ITurnState {
         if (!turnCtx) {
             // Use the handler's logger, which should always be available on BaseTurnHandler
             const handlerLogger = this._handler.getLogger();
-            handlerLogger.warn(`${this.getStateName()}: Attempted to access ITurnContext via _getTurnContext(), but none is currently active on the handler.`);
+            // ↓↓↓ CHANGED warn ➜ debug – this condition is expected during teardown and should not pollute logs.
+            handlerLogger.debug(`${this.getStateName()}: Attempted to access ITurnContext via _getTurnContext(), but none is currently active on the handler.`);
         }
         return turnCtx;
     }
 
 
-    // --- Interface Methods with Default Implementations ---
+// --- Interface Methods with Default Implementations ---
 
     /** @override */
     async enterState(handler, previousState) {
@@ -80,29 +81,24 @@ export class AbstractTurnState extends ITurnState {
 
         // Robust logger resolution (similar to the updated exitState)
         let resolvedLogger = turnCtx?.getLogger();
-
         if (!resolvedLogger && handler && typeof handler.getLogger === 'function') {
             try {
                 resolvedLogger = handler.getLogger();
-            } catch (e) { /* ignore */
+            } catch { /* ignore */
             }
         }
-
         if (!resolvedLogger && this._handler && typeof this._handler.getLogger === 'function') {
             try {
                 resolvedLogger = this._handler.getLogger();
-            } catch (e) { /* ignore */
+            } catch { /* ignore */
             }
         }
-
         const logger = resolvedLogger || console;
 
         let actorIdForLog = 'N/A';
         if (turnCtx && typeof turnCtx.getActor === 'function') {
             const actor = turnCtx.getActor();
-            if (actor && typeof actor.id !== 'undefined') {
-                actorIdForLog = actor.id;
-            }
+            if (actor && typeof actor.id !== 'undefined') actorIdForLog = actor.id;
         }
 
         if (logger && typeof logger.info === 'function') {
@@ -114,19 +110,18 @@ export class AbstractTurnState extends ITurnState {
 
     /** @override */
     async exitState(handler, nextState) {
-        // This method should already have the robust logger resolution from the previous step
         const turnCtx = this._getTurnContext();
         let resolvedLogger = turnCtx?.getLogger();
         if (!resolvedLogger && handler && typeof handler.getLogger === 'function') {
             try {
                 resolvedLogger = handler.getLogger();
-            } catch (e) { /* ignore */
+            } catch { /* ignore */
             }
         }
         if (!resolvedLogger && this._handler && typeof this._handler.getLogger === 'function') {
             try {
                 resolvedLogger = this._handler.getLogger();
-            } catch (e) { /* ignore */
+            } catch { /* ignore */
             }
         }
         const logger = resolvedLogger || console;
@@ -134,9 +129,7 @@ export class AbstractTurnState extends ITurnState {
         let actorIdForLog = 'N/A';
         if (turnCtx && typeof turnCtx.getActor === 'function') {
             const actor = turnCtx.getActor();
-            if (actor && typeof actor.id !== 'undefined') {
-                actorIdForLog = actor.id;
-            }
+            if (actor && typeof actor.id !== 'undefined') actorIdForLog = actor.id;
         }
 
         if (logger && typeof logger.info === 'function') {
