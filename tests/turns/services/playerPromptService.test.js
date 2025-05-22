@@ -23,10 +23,6 @@ let mockLogger, mockActionDiscoverySystem, mockPromptOutputPort, mockWorldContex
     mockEntityManager, mockGameDataRepository, mockValidatedEventDispatcher,
     validDependencies, service, mockActor;
 
-// REMOVED: PROMPT_TIMEOUT_DURATION constant as timeout is removed.
-// const PROMPT_TIMEOUT_DURATION = 60000;
-
-
 beforeEach(() => {
     mockLogger = createMockLogger();
     mockActionDiscoverySystem = createMockActionDiscoverySystem();
@@ -42,11 +38,6 @@ beforeEach(() => {
         entityManager: mockEntityManager, gameDataRepository: mockGameDataRepository,
         validatedEventDispatcher: mockValidatedEventDispatcher,
     };
-    // Assuming PlayerPromptService is in 'core/services/' not 'core/turns/services/'
-    // Corrected path based on typical project structure for services.
-    // If 'core/turns/services/' is indeed correct, this should be reverted.
-    // Based on the original ticket and error logs, 'src/turns/services/playerPromptService.js' seems to be the actual path.
-    // The error log was 'src/turns/services/playerPromptService.js:112:21'
     service = new PlayerPromptService(validDependencies);
     mockActor = new Entity('player:test', 'dummy');
 });
@@ -57,11 +48,11 @@ afterEach(() => {
 
 describe('PlayerPromptService Constructor', () => {
     it('should succeed when all valid dependencies are provided', () => {
-        mockLogger.info.mockClear(); // Clear info from the beforeEach instantiation
+        mockLogger.info.mockClear();
         const localService = new PlayerPromptService(validDependencies);
         expect(localService).toBeInstanceOf(PlayerPromptService);
         expect(mockLogger.info).toHaveBeenCalledWith('PlayerPromptService initialized successfully.');
-        expect(mockLogger.info).toHaveBeenCalledTimes(1); // This instance's call
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
     });
 
     describe('ValidatedEventDispatcher Dependency Validation', () => {
@@ -89,8 +80,8 @@ describe('PlayerPromptService Constructor', () => {
 describe('PlayerPromptService prompt Method', () => {
     it('should execute the happy path successfully, resolving with selected action and speech', async () => {
         const mockLocation = new Entity('location:test', 'dummy');
-        const lookAction = {id: 'core:look', name: 'Look Around', command: 'Look Around'}; // Added name
-        const speakAction = {id: 'core:speak', name: 'Speak Freely', command: 'Speak Freely'}; // Added name
+        const lookAction = {id: 'core:look', name: 'Look Around', command: 'Look Around'};
+        const speakAction = {id: 'core:speak', name: 'Speak Freely', command: 'Speak Freely'};
 
         const mockDiscoveredActions = [lookAction, speakAction];
         const chosenActionId = speakAction.id;
@@ -102,17 +93,14 @@ describe('PlayerPromptService prompt Method', () => {
         mockPromptOutputPort.prompt.mockResolvedValue(undefined);
 
         const mockUnsubscribeFn = jest.fn();
-        mockValidatedEventDispatcher.subscribe.mockReset(); // Reset from beforeEach call
-        // The service instance in `service` already has its dispatcher.subscribe set from its own constructor.
-        // We re-initialize a new service here or adjust the existing one for more granular control for specific tests if needed.
-        // For this happy path, the global `service` instance is fine, its subscribe mock will be called.
-        // Ensure the global mock returns the unsubscribe function for THIS call
+        mockValidatedEventDispatcher.subscribe.mockReset();
+
         mockValidatedEventDispatcher.subscribe.mockImplementation((eventName, eventHandlerCallback) => {
             if (eventName === PLAYER_TURN_SUBMITTED_ID) {
-                Promise.resolve().then(() => { // Simulate async event emission
+                Promise.resolve().then(() => {
                     eventHandlerCallback({
                         type: PLAYER_TURN_SUBMITTED_ID,
-                        payload: {actionId: chosenActionId, speech: chosenSpeech, submittedByActorId: mockActor.id} // Added submittedByActorId
+                        payload: {actionId: chosenActionId, speech: chosenSpeech, submittedByActorId: mockActor.id}
                     });
                 });
             }
@@ -132,21 +120,13 @@ describe('PlayerPromptService prompt Method', () => {
         beforeEach(() => {
             mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
             mockActionDiscoverySystem.getValidActions.mockRejectedValue(discoveryError);
-            // The mockPromptOutputPort.prompt.mockRejectedValue(portError) from the original test
-            // is not relevant here because if getValidActions fails, promptOutputPort.prompt
-            // for the main dispatch won't be called.
         });
 
-        // The test name "even if the error-path port call fails" is misleading for getValidActions failure.
-        // The service re-throws the discovery error; it doesn't make a subsequent "error-path port call".
-        // Renaming for clarity or adjusting if a different scenario was intended might be good,
-        // but here's the fix for the current structure based on service behavior:
         it('should reject with a PromptError wrapping the discovery error and log appropriately', async () => {
-            mockLogger.error.mockClear(); // Clear any logs from service instantiation in beforeEach
+            mockLogger.error.mockClear();
 
             const promptPromise = service.prompt(mockActor);
 
-            // Expect the promise to reject with a PromptError that wraps the original discoveryError
             await expect(promptPromise).rejects.toThrow(PromptError);
             await expect(promptPromise).rejects.toMatchObject({
                 message: `Action discovery failed for actor ${mockActor.id}. Details: ${discoveryError.message}`,
@@ -154,16 +134,13 @@ describe('PlayerPromptService prompt Method', () => {
                 code: "ACTION_DISCOVERY_FAILED"
             });
 
-            // 1. Check log from _fetchContextAndDiscoverActions
             expect(mockLogger.error).toHaveBeenCalledWith(
                 `PlayerPromptService._fetchContextAndDiscoverActions: Action discovery failed for actor ${mockActor.id}.`,
                 discoveryError
             );
 
-            // 2. Check log from the main prompt method's catch block
-            // This will be called with the PromptError instance created in _fetchContextAndDiscoverActions
             const promptCatchLogCall = mockLogger.error.mock.calls.find(
-                call => call[0] === `PlayerPromptService.prompt: Error during _fetchContextAndDiscoverActions for actor ${mockActor.id}. Propagating error.`
+                call => call[0] === `PlayerPromptService.prompt: Error during prompt setup for actor ${mockActor.id}.`
             );
             expect(promptCatchLogCall).toBeDefined();
             if (promptCatchLogCall) {
@@ -171,10 +148,12 @@ describe('PlayerPromptService prompt Method', () => {
                 expect(loggedError).toBeInstanceOf(PromptError);
                 expect(loggedError.cause).toBe(discoveryError);
                 expect(loggedError.message).toBe(`Action discovery failed for actor ${mockActor.id}. Details: ${discoveryError.message}`);
+                expect(loggedError.code).toBe("ACTION_DISCOVERY_FAILED");
             }
 
-            // Ensure the main prompt dispatch was not attempted
-            expect(mockPromptOutputPort.prompt).not.toHaveBeenCalled();
+            // When ACTION_DISCOVERY_FAILED occurs, the service attempts to dispatch this error via the output port.
+            const expectedErrorMessageForPort = `Action discovery failed for actor ${mockActor.id}. Details: ${discoveryError.message}`;
+            expect(mockPromptOutputPort.prompt).toHaveBeenCalledWith(mockActor.id, [], expectedErrorMessageForPort);
         });
     });
 
@@ -185,66 +164,50 @@ describe('PlayerPromptService prompt Method', () => {
         let mockUnsubscribeFnForSuite;
 
         beforeEach(() => {
-            // REMOVED: jest.useFakeTimers() - no longer needed for timeout test
             mockLocationInst = new Entity('location:test-loc-promise', 'dummy');
             mockDiscoveredActionsList = [
-                {id: 'action1', name: 'Action One', command: 'do one'}, // Added name
-                {id: 'action2', name: 'Action Two', command: 'do two'}  // Added name
+                {id: 'action1', name: 'Action One', command: 'do one'},
+                {id: 'action2', name: 'Action Two', command: 'do two'}
             ];
             mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocationInst);
             mockActionDiscoverySystem.getValidActions.mockResolvedValue(mockDiscoveredActionsList);
             mockPromptOutputPort.prompt.mockResolvedValue(undefined);
             mockUnsubscribeFnForSuite = jest.fn();
-            // mockValidatedEventDispatcher.subscribe.mockReset(); // Reset from global beforeEach
-            mockValidatedEventDispatcher.subscribe.mockReturnValue(mockUnsubscribeFnForSuite); // Ensure it returns the specific mock for this suite
+            mockValidatedEventDispatcher.subscribe.mockReturnValue(mockUnsubscribeFnForSuite);
         });
 
         afterEach(() => {
-            // REMOVED: jest.useRealTimers()
-            // mockValidatedEventDispatcher.subscribe.mockReset(); // Ensure clean state, already done by global afterEach
         });
-
-        // REMOVED: Test for 'should reject with PromptError on timeout'
-        // as the timeout functionality has been removed from PlayerPromptService.
 
         const getCallbackAndPromise = async (actorForPrompt) => {
             let capturedCbArg;
             const originalSubscribeMock = mockValidatedEventDispatcher.subscribe;
 
-            // This is the temporary mock that should be called by service.prompt()
             const temporaryCapturingMock = jest.fn((evtName, cb) => {
                 if (evtName === PLAYER_TURN_SUBMITTED_ID) {
                     capturedCbArg = cb;
                 }
-                return mockUnsubscribeFnForSuite; // From the enclosing suite's beforeEach
+                return mockUnsubscribeFnForSuite;
             });
             mockValidatedEventDispatcher.subscribe = temporaryCapturingMock;
 
             const promise = service.prompt(actorForPrompt);
 
-            // Allow microtasks and the current macrotask queue to flush.
-            // Use setTimeout with 0ms delay as a more portable way to yield.
             await new Promise(resolve => setTimeout(resolve, 0));
 
 
             if (!capturedCbArg) {
                 console.error("Debug: Callback not captured by temporary mock.");
-                // Log the calls made to the temporary mock specifically.
                 console.error("Calls on temporaryCapturingMock:", JSON.stringify(temporaryCapturingMock.mock.calls));
-                // Restore the original mock before potentially throwing or continuing, to ensure test isolation.
                 mockValidatedEventDispatcher.subscribe = originalSubscribeMock;
                 try {
-                    // Await the promise to see if it rejected, which might explain why subscribe wasn't called.
                     await promise;
-                    // If it resolved without capturing, that's also an issue.
                     throw new Error("getCallbackAndPromise: service.prompt resolved but callback was not captured.");
                 } catch (e) {
-                    // Re-throw with more context.
                     throw new Error(`getCallbackAndPromise: Callback not captured. service.prompt error or unexpected resolution: ${e.message}. Original error cause: ${e.cause ? e.cause : 'N/A'}`);
                 }
             }
 
-            // Restore the original mock if we successfully captured the callback and are proceeding.
             mockValidatedEventDispatcher.subscribe = originalSubscribeMock;
 
             expect(capturedCbArg).toBeInstanceOf(Function);
@@ -256,7 +219,7 @@ describe('PlayerPromptService prompt Method', () => {
             const {promptPromise, capturedCallback} = await getCallbackAndPromise(mockActor);
             capturedCallback({
                 type: PLAYER_TURN_SUBMITTED_ID,
-                payload: {actionId: 'invalid-action-id', speech: null, submittedByActorId: mockActor.id} // Added submittedByActorId
+                payload: {actionId: 'invalid-action-id', speech: null, submittedByActorId: mockActor.id}
             });
             await expect(promptPromise).rejects.toMatchObject({
                 name: 'PromptError',
@@ -272,7 +235,7 @@ describe('PlayerPromptService prompt Method', () => {
 
             capturedCallback({
                 type: PLAYER_TURN_SUBMITTED_ID,
-                payload: {actionId: validAction.id, speech: "test speech", submittedByActorId: mockActor.id} // Added submittedByActorId
+                payload: {actionId: validAction.id, speech: "test speech", submittedByActorId: mockActor.id}
             });
 
             await expect(promptPromise).resolves.toEqual({action: validAction, speech: "test speech"});
@@ -281,16 +244,16 @@ describe('PlayerPromptService prompt Method', () => {
 
         it('should reject with PromptError if event object itself is malformed (e.g. not an object, or missing type/payload)', async () => {
             const {promptPromise, capturedCallback} = await getCallbackAndPromise(mockActor);
-            capturedCallback({
+            capturedCallback({ // Malformed: no 'type' or 'payload' at the top level expected by the handler
                 someOtherData: "value",
                 speech: "only speech",
                 actionId: "some-action",
                 submittedByActorId: mockActor.id
-            }); // Added submittedByActorId
+            });
 
             await expect(promptPromise).rejects.toMatchObject({
                 name: 'PromptError',
-                message: `Malformed event object for ${PLAYER_TURN_SUBMITTED_ID} for actor ${mockActor.id}.`, // Corrected interpolation
+                message: `Malformed event object for ${PLAYER_TURN_SUBMITTED_ID} for actor ${mockActor.id}.`,
                 code: "INVALID_EVENT_STRUCTURE"
             });
             expect(mockUnsubscribeFnForSuite).toHaveBeenCalled();
@@ -300,7 +263,7 @@ describe('PlayerPromptService prompt Method', () => {
             const {promptPromise, capturedCallback} = await getCallbackAndPromise(mockActor);
             capturedCallback({
                 type: PLAYER_TURN_SUBMITTED_ID,
-                payload: {speech: "only speech, no actionId", submittedByActorId: mockActor.id} // Added submittedByActorId
+                payload: {speech: "only speech, no actionId", submittedByActorId: mockActor.id}
             });
 
             try {
@@ -310,7 +273,6 @@ describe('PlayerPromptService prompt Method', () => {
                 expect(error).toBeInstanceOf(PromptError);
                 expect(error.name).toBe('PromptError');
                 expect(error.code).toBe('INVALID_PAYLOAD_CONTENT');
-                // Corrected interpolation for PLAYER_TURN_SUBMITTED_ID
                 const expectedMessage = `Invalid actionId in payload for ${PLAYER_TURN_SUBMITTED_ID} for actor ${mockActor.id}.`;
                 expect(error.message).toBe(expectedMessage);
             }

@@ -122,25 +122,20 @@ describe('PlayerPromptService - Further Scenarios', () => {
             } catch (e) {
                 expect(e).toBeInstanceOf(DOMException);
                 expect(e.name).toBe('AbortError');
-                // This message comes from _fetchContextAndDiscoverActions
-                // expect(e.message).toBe('Prompt aborted by signal after action discovery.');
-                // If the abort happens and is caught by the check in prompt() itself, the message is:
                 expect(e.message).toMatch(/Prompt aborted by signal after (action discovery|context\/action fetch)\./);
-
-
             }
             expect(mockPromptOutputPort.prompt).not.toHaveBeenCalled();
         });
     });
 
     describe('actionDiscoverySystem.getValidActions Failures', () => {
-        const discoveryError = new Error('Discovery Failed');
+        const discoveryError = new Error('Discovery Failed'); // This is the 'error' for the 'Error' test case
         const discoveryPromptError = new PromptError('Discovery PromptError', discoveryError, 'DISCOVERY_SPECIFIC_ERROR');
         const discoveryAbortError = new DOMException('Discovery Aborted', 'AbortError');
 
         const testCases = [
             {
-                name: 'Error',
+                name: 'Error', // This case will use 'discoveryError'
                 error: discoveryError,
                 expectedCause: discoveryError,
                 rethrows: false,
@@ -163,22 +158,22 @@ describe('PlayerPromptService - Further Scenarios', () => {
 
                 if (rethrows) {
                     await expect(promptPromise).rejects.toThrow(error);
-                } else {
+                } else { // This is for the 'Error' case which gets wrapped
                     await expect(promptPromise).rejects.toThrow(PromptError);
                     await expect(promptPromise).rejects.toMatchObject({
-                        message: `Action discovery failed for actor ${validActor.id}. Details: ${error.message}`,
-                        cause: expectedCause,
-                        code: errorCode
+                        message: `Action discovery failed for actor ${validActor.id}. Details: ${error.message}`, // error.message is "Discovery Failed"
+                        cause: expectedCause, // expectedCause is discoveryError
+                        code: errorCode // ACTION_DISCOVERY_FAILED
                     });
                 }
 
                 expect(mockLogger.error).toHaveBeenCalledWith(
                     `PlayerPromptService._fetchContextAndDiscoverActions: Action discovery failed for actor ${validActor.id}.`,
-                    error
+                    error // For 'Error' case, this is discoveryError. For others, it's discoveryPromptError/discoveryAbortError.
                 );
 
                 const promptCatchLogCall = mockLogger.error.mock.calls.find(
-                    call => call[0] === `PlayerPromptService.prompt: Error during _fetchContextAndDiscoverActions for actor ${validActor.id}. Propagating error.`
+                    call => call[0] === `PlayerPromptService.prompt: Error during prompt setup for actor ${validActor.id}.`
                 );
                 expect(promptCatchLogCall).toBeDefined();
 
@@ -186,14 +181,23 @@ describe('PlayerPromptService - Further Scenarios', () => {
                     const loggedErrorInPromptCatch = promptCatchLogCall[1];
                     if (rethrows) {
                         expect(loggedErrorInPromptCatch).toBe(error);
-                    } else {
+                    } else { // 'Error' case, error was wrapped by _fetchContextAndDiscoverActions
                         expect(loggedErrorInPromptCatch).toBeInstanceOf(PromptError);
-                        expect(loggedErrorInPromptCatch.cause).toBe(error);
+                        expect(loggedErrorInPromptCatch.cause).toBe(error); // Original discoveryError
                         expect(loggedErrorInPromptCatch.message).toBe(`Action discovery failed for actor ${validActor.id}. Details: ${error.message}`);
-                        expect(loggedErrorInPromptCatch.code).toBe(errorCode);
+                        expect(loggedErrorInPromptCatch.code).toBe(errorCode); // ACTION_DISCOVERY_FAILED
                     }
                 }
-                expect(mockPromptOutputPort.prompt).not.toHaveBeenCalled();
+
+                // Service attempts to dispatch ACTION_DISCOVERY_FAILED to output port.
+                // Other errors (PromptError not ACTION_DISCOVERY_FAILED, AbortError) rethrown from _fetchContextAndDiscoverActions
+                // are caught by prompt()'s main catch, which then just rethrows them without trying to dispatch to output port.
+                if (name === 'Error') { // Results in ACTION_DISCOVERY_FAILED
+                    const expectedErrorMessageInPort = `Action discovery failed for actor ${validActor.id}. Details: ${error.message}`; // error is discoveryError
+                    expect(mockPromptOutputPort.prompt).toHaveBeenCalledWith(validActor.id, [], expectedErrorMessageInPort);
+                } else {
+                    expect(mockPromptOutputPort.prompt).not.toHaveBeenCalled();
+                }
             });
         });
     });
@@ -209,94 +213,85 @@ describe('PlayerPromptService - Further Scenarios', () => {
                 name: 'Generic Error',
                 error: portDispatchError,
                 expectedType: PromptError,
-                rethrows: false, // The helper wraps it
+                rethrows: false,
                 needsMessageCheck: true,
-                errorCode: "OUTPUT_PORT_DISPATCH_FAILED" // UPDATED errorCode for the wrapped error
+                errorCode: "OUTPUT_PORT_DISPATCH_FAILED"
             },
             {
                 name: 'PromptError',
                 error: portDispatchPromptError,
                 expectedType: PromptError,
-                rethrows: true, // The helper re-throws it
+                rethrows: true,
                 needsMessageCheck: false
             },
             {
                 name: 'AbortError',
                 error: portDispatchAbortError,
-                expectedType: DOMException, // AbortError is a DOMException
-                rethrows: true, // The helper re-throws it
+                expectedType: DOMException,
+                rethrows: true,
                 needsMessageCheck: false
             },
         ];
 
         errorDefinitions.forEach(({name, error, expectedType, rethrows, needsMessageCheck, errorCode}) => {
             it(`should handle ${name} from main promptOutputPort.prompt call`, async () => {
-                // Log message from the prompt() method's catch block
-                const logMessageFromPromptMethod = `PlayerPromptService.prompt: Error during prompt dispatch for actor ${validActor.id} (via _dispatchPromptToOutputPort). Propagating error.`;
-                // Log message from the _dispatchPromptToOutputPort() method's catch block
+                const logMessageFromPromptMethod = `PlayerPromptService.prompt: Error during prompt setup for actor ${validActor.id}.`;
                 const logMessageFromHelperMethod = `PlayerPromptService._dispatchPromptToOutputPort: Failed to dispatch prompt via output port for actor ${validActor.id}.`;
 
-                // Determine the error object that prompt() method's catch block will receive and log
                 let errorReceivedAndLoggedByPromptMethod;
-                let specificExpectedErrorMessageForMatcher; // For the .toMatchObject check
+                let specificExpectedErrorMessageForMatcher;
 
                 if (name === 'Generic Error') {
                     specificExpectedErrorMessageForMatcher = `Failed to dispatch prompt via output port for actor ${validActor.id}. Details: ${error.message}`;
                     errorReceivedAndLoggedByPromptMethod = expect.objectContaining({
                         message: specificExpectedErrorMessageForMatcher,
-                        cause: error, // The original error
-                        code: errorCode // This is "OUTPUT_PORT_DISPATCH_FAILED"
+                        cause: error,
+                        code: errorCode
                     });
-                } else { // PromptError or AbortError are re-thrown as is by the helper
+                } else {
                     errorReceivedAndLoggedByPromptMethod = error;
-                    specificExpectedErrorMessageForMatcher = error.message; // Not strictly needed for toThrow(error) but good for consistency
+                    specificExpectedErrorMessageForMatcher = error.message;
                 }
 
                 mockActionDiscoverySystem.getValidActions.mockResolvedValue(discoveredActions);
 
-                // Mock the call that happens INSIDE _dispatchPromptToOutputPort, called with (actorId, actions)
+                // This mock simulates promptOutputPort.prompt throwing an error when called to send actions.
+                // The service calls it as: this.#promptOutputPort.prompt(actorId, discoveredActions)
                 mockPromptOutputPort.prompt.mockImplementation(async (actorIdParam, actionsParam, errorMessageParam) => {
-                    // We are testing the case where actions are being sent, not an error message.
+                    // If errorMessageParam is undefined, it means it was called to send actions
                     if (actorIdParam === validActor.id && actionsParam === discoveredActions && errorMessageParam === undefined) {
-                        throw error; // Simulate the output port itself throwing the specified 'error'
+                        throw error; // This 'error' is from the test case definition (portDispatchError, etc.)
                     }
-                    // If it's called with (actorId, [], errorMsg), that's a different path for _dispatchPromptToOutputPort
-                    return undefined;
+                    return undefined; // For any other call pattern
                 });
 
                 const promptPromise = service.prompt(validActor);
 
-                // 1. Check overall promise rejection type
                 await expect(promptPromise).rejects.toThrow(expectedType);
 
-                // 2. Check specific error instance or properties
-                if (rethrows) { // For PromptError and AbortError, which are re-thrown as is by helper
+                if (rethrows) {
                     await expect(promptPromise).rejects.toThrow(error);
-                } else if (needsMessageCheck && name === 'Generic Error') { // For Generic Error that gets wrapped by helper
+                } else if (needsMessageCheck && name === 'Generic Error') {
                     await expect(promptPromise).rejects.toMatchObject({
                         message: specificExpectedErrorMessageForMatcher,
-                        cause: error, // Original error as cause
-                        code: errorCode // The code from the wrapper: OUTPUT_PORT_DISPATCH_FAILED
+                        cause: error,
+                        code: errorCode
                     });
                 }
 
-                // 3. Check logger calls
-                //    A. Log from _dispatchPromptToOutputPort (logs the original error from the port)
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    logMessageFromHelperMethod,
-                    error // The original error that mockPromptOutputPort.prompt threw
+                    logMessageFromHelperMethod, // Log from _dispatchPromptToOutputPort
+                    error // The original error thrown by the mockPromptOutputPort.prompt
                 );
 
-                //    B. Log from prompt() method's catch block (logs the error it received from the helper)
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    logMessageFromPromptMethod,
-                    errorReceivedAndLoggedByPromptMethod // This is what prompt()'s catch block receives and logs
+                    logMessageFromPromptMethod, // Log from prompt()'s main catch
+                    errorReceivedAndLoggedByPromptMethod // The error caught and logged by prompt()
                 );
 
-                // 4. Ensure promptOutputPort.prompt was called correctly before it threw
+                // Check that mockPromptOutputPort.prompt was called to send actions (2 args)
                 expect(mockPromptOutputPort.prompt).toHaveBeenCalledWith(validActor.id, discoveredActions);
 
-                // 5. If promptOutputPort.prompt fails, subscription should not happen
                 expect(mockValidatedEventDispatcher.subscribe).not.toHaveBeenCalled();
             });
         });
@@ -312,7 +307,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
             const promptPromise = service.prompt(validActor);
             await expect(promptPromise).rejects.toThrow(PromptError);
             await expect(promptPromise).rejects.toMatchObject({
-                message: `Failed to subscribe to player input event for actor ${validActor.id}.`,
+                message: `Failed to subscribe to player input event for actor ${validActor.id}. Details: ${subscriptionError.message}`,
                 code: "SUBSCRIPTION_ERROR",
                 cause: subscriptionError
             });
@@ -346,42 +341,40 @@ describe('PlayerPromptService - Further Scenarios', () => {
 
         it('should ignore event if submittedByActorId is for a different actor', async () => {
             const promptPromise = service.prompt(validActor);
-            await tick(); // Allow prompt setup and subscription
+            await tick();
 
             expect(capturedEventHandler).toBeDefined();
             capturedEventHandler({
                 type: PLAYER_TURN_SUBMITTED_ID,
                 payload: {submittedByActorId: 'actor:other', actionId: defaultAction.id, speech: null}
             });
-            await tick(); // Allow event handler to process
+            await tick();
 
             expect(mockLogger.debug).toHaveBeenCalledWith(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Received ${PLAYER_TURN_SUBMITTED_ID} for actor actor:other, but this prompt is for ${validActor.id}. Ignoring.`);
-            // The prompt should not resolve or reject based on this ignored event.
-            // To end the test, we cancel it.
             service.cancelCurrentPrompt();
-            await expect(promptPromise).rejects.toThrow(PromptError); // Expect cancellation
+            await expect(promptPromise).rejects.toThrow(PromptError);
         });
 
         it('should ignore event if prompt is already settled (e.g., by abort)', async () => {
             const abortController = new AbortController();
             const promptPromise = service.prompt(validActor, {cancellationSignal: abortController.signal});
-            await tick(); // Allow prompt setup and subscription
+            await tick();
             expect(capturedEventHandler).toBeDefined();
 
-            abortController.abort(); // Abort the prompt
+            abortController.abort();
             try {
-                await promptPromise; // Wait for the abort to propagate
+                await promptPromise;
             } catch (e) {
-                expect(e.name).toBe('AbortError'); // Verify it aborted
+                expect(e.name).toBe('AbortError');
             }
-            await tick(); // Ensure abort handling microtasks are done
+            await tick();
 
             const testEvent = {
                 type: PLAYER_TURN_SUBMITTED_ID,
                 payload: {submittedByActorId: validActor.id, actionId: defaultAction.id, speech: null}
             };
-            capturedEventHandler(testEvent); // Dispatch event after prompt is settled
-            await tick(); // Allow event handler to process
+            capturedEventHandler(testEvent);
+            await tick();
 
             expect(mockLogger.debug).toHaveBeenCalledWith(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Listener for ${validActor.id} (event ${testEvent.type}) received event but prompt already settled. Ignoring.`);
         });
@@ -402,7 +395,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
         });
 
         it('should log warning and proceed if discoveredActions contains malformed items (but submitted action is valid)', async () => {
-            const malformedAction = {name: "Malformed", command: "bad"}; // Missing ID
+            const malformedAction = {name: "Malformed", command: "bad"};
             const validDiscoveredAction = {id: 'validAction123', name: 'Valid Action', command: 'do valid'};
             mockActionDiscoverySystem.getValidActions.mockResolvedValue([malformedAction, validDiscoveredAction]);
 
@@ -424,7 +417,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
         });
 
         it('should reject if submitted actionId matches a malformed item (even if other items are valid)', async () => {
-            const discoverableButMalformed = {id: 123, name: "Numeric ID", command: "num"}; // ID is not a string
+            const discoverableButMalformed = {id: 123, name: "Numeric ID", command: "num"};
             const validDiscoveredAction = {id: 'validAction123', name: 'Valid Action', command: 'do valid'};
             mockActionDiscoverySystem.getValidActions.mockResolvedValue([discoverableButMalformed, validDiscoveredAction]);
 
@@ -432,18 +425,9 @@ describe('PlayerPromptService - Further Scenarios', () => {
             await tick();
             expect(capturedEventHandler).toBeDefined();
 
-            // Event submits '123' which is the ID of the malformed action.
-            // The code's .find(da => da.id === submittedActionId) will fail if da.id is not a string,
-            // or if the submittedActionId (string '123') doesn't match the numeric 123.
-            // The crucial part is that `selectedAction` will be falsy or point to the malformed action.
-            // If `da.id` is not a string, the `this.#logger.warn` for malformed item logs `da` itself.
-            // If `selectedAction` is not found because `da.id` (e.g. number) !== `submittedActionId` (string),
-            // it rejects with INVALID_ACTION_ID.
-            // The current code warns for any malformed item during the `find` iteration, then if selectedAction is not found, it rejects.
-
             capturedEventHandler({
                 type: PLAYER_TURN_SUBMITTED_ID,
-                payload: {actionId: '123', speech: null} // Submitted as string '123'
+                payload: {actionId: '123', speech: null}
             });
 
             await expect(promptPromise).rejects.toMatchObject({
@@ -451,16 +435,15 @@ describe('PlayerPromptService - Further Scenarios', () => {
                 code: 'INVALID_ACTION_ID',
                 message: `Invalid actionId '123' submitted by actor ${validActor.id}. Action not available.`
             });
-            // This warning is for the malformed item found during the iteration.
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 `PlayerPromptService._handlePlayerTurnSubmittedEvent: Malformed item in discoveredActions for prompt (actor ${validActor.id}). Item:`,
-                discoverableButMalformed // The da object itself
+                discoverableButMalformed
             );
             expect(mockUnsubscribeFn).toHaveBeenCalled();
         });
 
         it('should log warning but resolve if selected action is missing a name', async () => {
-            const actionWithoutName = {id: 'action:no-name', command: 'do no name'}; // Missing 'name'
+            const actionWithoutName = {id: 'action:no-name', command: 'do no name'};
             mockActionDiscoverySystem.getValidActions.mockResolvedValue([actionWithoutName]);
 
             const promptPromise = service.prompt(validActor);
@@ -490,7 +473,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
 
         it('should reject active prompt with PROMPT_CANCELLED if it has no signal', async () => {
             const promptPromise = service.prompt(validActor);
-            await tick(); // Ensure prompt is set up
+            await tick();
 
             service.cancelCurrentPrompt();
             await expect(promptPromise).rejects.toMatchObject({
@@ -504,7 +487,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
         it('should reject active prompt with PROMPT_CANCELLED if its signal is not aborted', async () => {
             const abortController = new AbortController();
             const promptPromise = service.prompt(validActor, {cancellationSignal: abortController.signal});
-            await tick(); // Ensure prompt is set up
+            await tick();
 
             service.cancelCurrentPrompt();
             await expect(promptPromise).rejects.toMatchObject({
@@ -517,30 +500,24 @@ describe('PlayerPromptService - Further Scenarios', () => {
         it('should reject active prompt with AbortError if its signal was already aborted, and log correctly', async () => {
             const abortController = new AbortController();
             const promptPromise = service.prompt(validActor, {cancellationSignal: abortController.signal});
-            await tick(); // Let prompt setup, including signal listener
+            await tick();
 
-            abortController.abort(); // Abort the signal
+            abortController.abort();
 
-            // Wait for the promise to settle due to the abort
             try {
                 await promptPromise;
             } catch (e) {
                 expect(e.name).toBe('AbortError');
-                // The message comes from the signal listener in the prompt method's Promise
                 expect(e.message).toBe('Prompt aborted by signal.');
             }
-            await tick(); // Allow microtasks related to promise rejection and cleanup to complete
+            await tick();
 
-            // Now, call cancelCurrentPrompt AFTER the prompt has already been aborted by its own signal
             service.cancelCurrentPrompt();
             await tick();
 
 
             expect(mockLogger.info).toHaveBeenCalledWith("PlayerPromptService: cancelCurrentPrompt called.");
 
-            // After the prompt's own abort handler (via signal listener) has run,
-            // it calls cleanupAndReject, which should nullify `this.#currentPromptContext`.
-            // Therefore, when `cancelCurrentPrompt` is called subsequently, it should find no active prompt.
             const debugCalls = mockLogger.debug.mock.calls;
             const lastCancelDebugLog = debugCalls.find(call => call[0].startsWith("PlayerPromptService: cancelCurrentPrompt called, but no active prompt"));
 
