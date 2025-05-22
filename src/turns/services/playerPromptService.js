@@ -13,8 +13,11 @@
  */
 /** @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../services/gameDataRepository.js').default} GameDataRepository */
+// UPDATED/ADDED Imports for EntityManager
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+// /** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Original, to be replaced by IEntityManager for the dependency
+// /** @typedef {import('../../services/gameDataRepository.js').default} GameDataRepository */ // Replaced by IGameDataRepository for dependency typing
+/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
@@ -30,8 +33,8 @@ import {PLAYER_TURN_SUBMITTED_ID} from "../../constants/eventIds.js";
  * @property {IActionDiscoverySystem} actionDiscoverySystem - Service to discover available actions.
  * @property {IPromptOutputPort} promptOutputPort - Port for sending prompts to the player.
  * @property {IWorldContext} worldContext - Service to access current world state (like entity locations).
- * @property {EntityManager} entityManager - Service to manage entity instances.
- * @property {GameDataRepository} gameDataRepository - Service to access game definition data.
+ * @property {IEntityManager} entityManager - Service to manage entity instances.
+ * @property {IGameDataRepository} gameDataRepository - Service to access game definition data.
  * @property {IValidatedEventDispatcher} validatedEventDispatcher - Dispatcher for subscribing to validated events.
  */
 
@@ -82,9 +85,9 @@ class PlayerPromptService extends IPlayerPromptService {
     #promptOutputPort;
     /** @type {IWorldContext} */
     #worldContext;
-    /** @type {EntityManager} */
+    /** @type {IEntityManager} */
     #entityManager;
-    /** @type {GameDataRepository} */
+    /** @type {IGameDataRepository} */
     #gameDataRepository;
     /** @type {IValidatedEventDispatcher} */
     #validatedEventDispatcher;
@@ -95,6 +98,32 @@ class PlayerPromptService extends IPlayerPromptService {
      */
     #currentPromptContext = null;
 
+    /**
+     * @private
+     * Validates a constructor dependency, checking for its presence and required methods.
+     * Uses console.error for logging as this runs before the class logger is fully confirmed.
+     * @param {any} dependency - The dependency instance to validate.
+     * @param {string} dependencyName - The name of the dependency (e.g., "ILogger", "IActionDiscoverySystem") for error messages.
+     * @param {string[]} [requiredMethods=[]] - An array of method names that must exist on the dependency.
+     * @throws {Error} If the dependency is null/undefined or a required method is missing.
+     */
+    _validateDependency(dependency, dependencyName, requiredMethods = []) {
+        if (!dependency) {
+            console.error(`PlayerPromptService Constructor: Missing ${dependencyName} dependency.`);
+            throw new Error(`PlayerPromptService: Missing ${dependencyName} dependency.`);
+        }
+        for (const methodName of requiredMethods) {
+            if (typeof dependency[methodName] !== 'function') {
+                console.error(`PlayerPromptService Constructor: Invalid ${dependencyName} dependency. Missing method: ${methodName}(). Provided:`, dependency);
+                throw new Error(`PlayerPromptService: Invalid ${dependencyName} dependency. Missing method: ${methodName}().`);
+            }
+        }
+    }
+
+    /**
+     * Constructor for PlayerPromptService.
+     * @param {PlayerPromptServiceDependencies} dependencies - The dependencies for the service.
+     */
     constructor({
                     logger,
                     actionDiscoverySystem,
@@ -106,46 +135,25 @@ class PlayerPromptService extends IPlayerPromptService {
                 }) {
         super();
 
-        if (!logger || typeof logger.error !== 'function' || typeof logger.info !== 'function' || typeof logger.debug !== 'function' || typeof logger.warn !== 'function') {
-            console.error('PlayerPromptService Constructor: Invalid or missing ILogger dependency.');
-            throw new Error('PlayerPromptService: Invalid or missing ILogger dependency.');
-        }
+        this._validateDependency(logger, 'ILogger', ['error', 'info', 'debug', 'warn']);
         this.#logger = logger;
 
-        if (!actionDiscoverySystem || typeof actionDiscoverySystem.getValidActions !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IActionDiscoverySystem dependency.');
-            throw new Error('PlayerPromptService: Invalid or missing IActionDiscoverySystem dependency.');
-        }
+        this._validateDependency(actionDiscoverySystem, 'IActionDiscoverySystem', ['getValidActions']);
         this.#actionDiscoverySystem = actionDiscoverySystem;
 
-        if (!promptOutputPort || typeof promptOutputPort.prompt !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IPromptOutputPort dependency.');
-            throw new Error('PlayerPromptService: Invalid or missing IPromptOutputPort dependency.');
-        }
+        this._validateDependency(promptOutputPort, 'IPromptOutputPort', ['prompt']);
         this.#promptOutputPort = promptOutputPort;
 
-        if (!worldContext || typeof worldContext.getLocationOfEntity !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IWorldContext dependency.');
-            throw new Error('PlayerPromptService: Invalid or missing IWorldContext dependency.');
-        }
+        this._validateDependency(worldContext, 'IWorldContext', ['getLocationOfEntity']);
         this.#worldContext = worldContext;
 
-        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing EntityManager dependency.');
-            throw new Error('PlayerPromptService: Invalid or missing EntityManager dependency.');
-        }
+        this._validateDependency(entityManager, 'IEntityManager', ['getEntityInstance']);
         this.#entityManager = entityManager;
 
-        if (!gameDataRepository || typeof gameDataRepository.getActionDefinition !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing GameDataRepository dependency.');
-            throw new Error('PlayerPromptService: Invalid or missing GameDataRepository dependency.');
-        }
+        this._validateDependency(gameDataRepository, 'IGameDataRepository', ['getActionDefinition']);
         this.#gameDataRepository = gameDataRepository;
 
-        if (!validatedEventDispatcher || typeof validatedEventDispatcher.subscribe !== 'function' || typeof validatedEventDispatcher.unsubscribe !== 'function') {
-            this.#logger.error('PlayerPromptService Constructor: Invalid or missing IValidatedEventDispatcher dependency (requires subscribe and unsubscribe methods).');
-            throw new Error('PlayerPromptService: Invalid or missing IValidatedEventDispatcher dependency.');
-        }
+        this._validateDependency(validatedEventDispatcher, 'IValidatedEventDispatcher', ['subscribe', 'unsubscribe']);
         this.#validatedEventDispatcher = validatedEventDispatcher;
 
         this.#logger.info('PlayerPromptService initialized successfully.');
@@ -272,7 +280,7 @@ class PlayerPromptService extends IPlayerPromptService {
             actor: actor,
             currentLocation: currentLocation,
             entityManager: this.#entityManager,
-            gameDataRepository: this.#gameDataRepository,
+            gameDataRepository: this.#gameDataRepository, // This usage is consistent with IGameDataRepository
             logger: this.#logger,
             worldContext: this.#worldContext,
         };

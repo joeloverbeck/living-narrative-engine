@@ -67,14 +67,17 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     describe('Logger Dependency Validation', () => {
         it('should throw if logger is missing', () => {
             const {logger, ...deps} = baseDependencies;
-            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing ILogger dependency.');
+            // Manually remove logger from deps if it's undefined, to simulate it not being passed
+            const testDeps = {...deps};
+            delete testDeps.logger;
+            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing ILogger dependency.');
         });
         const methods = ['error', 'info', 'debug', 'warn'];
         methods.forEach(method => {
             it(`should throw if logger is missing ${method} method`, () => {
                 const invalidLogger = {...createMockLogger(), [method]: undefined};
                 expect(() => new PlayerPromptService({...baseDependencies, logger: invalidLogger}))
-                    .toThrow('PlayerPromptService: Invalid or missing ILogger dependency.');
+                    .toThrow(`PlayerPromptService: Invalid ILogger dependency. Missing method: ${method}().`);
             });
         });
     });
@@ -82,60 +85,91 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     describe('ActionDiscoverySystem Dependency Validation', () => {
         it('should throw if actionDiscoverySystem is missing', () => {
             const {actionDiscoverySystem, ...deps} = baseDependencies;
-            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing IActionDiscoverySystem dependency.');
+            const testDeps = {...deps};
+            delete testDeps.actionDiscoverySystem;
+            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IActionDiscoverySystem dependency.');
         });
         it('should throw if actionDiscoverySystem lacks getValidActions method', () => {
             const invalidSystem = {...createMockActionDiscoverySystem(), getValidActions: undefined};
             expect(() => new PlayerPromptService({...baseDependencies, actionDiscoverySystem: invalidSystem}))
-                .toThrow('PlayerPromptService: Invalid or missing IActionDiscoverySystem dependency.');
+                .toThrow('PlayerPromptService: Invalid IActionDiscoverySystem dependency. Missing method: getValidActions().');
         });
     });
 
     describe('PromptOutputPort Dependency Validation', () => {
         it('should throw if promptOutputPort is missing', () => {
             const {promptOutputPort, ...deps} = baseDependencies;
-            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing IPromptOutputPort dependency.');
+            const testDeps = {...deps};
+            delete testDeps.promptOutputPort;
+            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IPromptOutputPort dependency.');
         });
         it('should throw if promptOutputPort lacks prompt method', () => {
             const invalidPort = {...createMockPromptOutputPort(), prompt: undefined};
             expect(() => new PlayerPromptService({...baseDependencies, promptOutputPort: invalidPort}))
-                .toThrow('PlayerPromptService: Invalid or missing IPromptOutputPort dependency.');
+                .toThrow('PlayerPromptService: Invalid IPromptOutputPort dependency. Missing method: prompt().');
         });
     });
 
     describe('WorldContext Dependency Validation', () => {
         it('should throw if worldContext is missing', () => {
             const {worldContext, ...deps} = baseDependencies;
-            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing IWorldContext dependency.');
+            const testDeps = {...deps};
+            delete testDeps.worldContext;
+            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IWorldContext dependency.');
         });
         it('should throw if worldContext lacks getLocationOfEntity method', () => {
             const invalidContext = {...createMockWorldContext(), getLocationOfEntity: undefined};
             expect(() => new PlayerPromptService({...baseDependencies, worldContext: invalidContext}))
-                .toThrow('PlayerPromptService: Invalid or missing IWorldContext dependency.');
+                .toThrow('PlayerPromptService: Invalid IWorldContext dependency. Missing method: getLocationOfEntity().');
         });
     });
 
     describe('EntityManager Dependency Validation', () => {
         it('should throw if entityManager is missing', () => {
             const {entityManager, ...deps} = baseDependencies;
-            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing EntityManager dependency.');
+            const testDeps = {...deps};
+            delete testDeps.entityManager;
+            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IEntityManager dependency.');
         });
         it('should throw if entityManager lacks getEntityInstance method', () => {
             const invalidManager = {...createMockEntityManager(), getEntityInstance: undefined};
             expect(() => new PlayerPromptService({...baseDependencies, entityManager: invalidManager}))
-                .toThrow('PlayerPromptService: Invalid or missing EntityManager dependency.');
+                .toThrow('PlayerPromptService: Invalid IEntityManager dependency. Missing method: getEntityInstance().');
         });
     });
 
     describe('GameDataRepository Dependency Validation', () => {
         it('should throw if gameDataRepository is missing', () => {
             const {gameDataRepository, ...deps} = baseDependencies;
-            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing GameDataRepository dependency.');
+            const testDeps = {...deps};
+            delete testDeps.gameDataRepository;
+            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IGameDataRepository dependency.');
         });
         it('should throw if gameDataRepository lacks getActionDefinition method', () => {
             const invalidRepo = {...createMockGameDataRepository(), getActionDefinition: undefined};
             expect(() => new PlayerPromptService({...baseDependencies, gameDataRepository: invalidRepo}))
-                .toThrow('PlayerPromptService: Invalid or missing GameDataRepository dependency.');
+                .toThrow('PlayerPromptService: Invalid IGameDataRepository dependency. Missing method: getActionDefinition().');
+        });
+    });
+
+    // ValidatedEventDispatcher tests (assuming they follow the same pattern)
+    describe('ValidatedEventDispatcher Dependency Validation', () => {
+        it('should throw if validatedEventDispatcher is missing', () => {
+            const {validatedEventDispatcher, ...deps} = baseDependencies;
+            const testDeps = {...deps};
+            delete testDeps.validatedEventDispatcher;
+            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IValidatedEventDispatcher dependency.');
+        });
+        const dispatcherMethods = ['subscribe', 'unsubscribe'];
+        dispatcherMethods.forEach(method => {
+            it(`should throw if validatedEventDispatcher lacks ${method} method`, () => {
+                const invalidDispatcher = {...createMockValidatedEventDispatcher(), [method]: undefined};
+                expect(() => new PlayerPromptService({
+                    ...baseDependencies,
+                    validatedEventDispatcher: invalidDispatcher
+                }))
+                    .toThrow(`PlayerPromptService: Invalid IValidatedEventDispatcher dependency. Missing method: ${method}().`);
+            });
         });
     });
 });
@@ -165,6 +199,11 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
         mockGameDataRepository = createMockGameDataRepository();
         mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
 
+        // Ensure all base dependencies are valid for successful instantiation in these tests
+        mockValidatedEventDispatcher.subscribe = jest.fn();
+        mockValidatedEventDispatcher.unsubscribe = jest.fn();
+
+
         service = new PlayerPromptService({
             logger: mockLogger,
             actionDiscoverySystem: mockActionDiscoverySystem,
@@ -181,7 +220,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
         mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
         mockActionDiscoverySystem.getValidActions.mockResolvedValue([...defaultDiscoveredActions]);
         mockPromptOutputPort.prompt.mockResolvedValue(undefined);
-        mockValidatedEventDispatcher.subscribe.mockReturnValue(jest.fn());
+        // mockValidatedEventDispatcher.subscribe.mockReturnValue(jest.fn()); // already set above
     });
 
     afterEach(() => {
@@ -246,11 +285,16 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
                 secondPromptEventHandler = cb;
                 return jest.fn();
             });
-            await tick();
-            if (secondPromptEventHandler) secondPromptEventHandler({
-                type: PLAYER_TURN_SUBMITTED_ID,
-                payload: {actionId: actionDefault.id, speech: null, submittedByActorId: secondActor.id}
-            });
+            await tick(); // Allow promise internal to service.prompt to advance
+            // Ensure that the event handler has been set up before trying to call it
+            await tick(); // Additional tick might be needed if event handler setup is also async or in a microtask
+
+            if (secondPromptEventHandler) {
+                secondPromptEventHandler({
+                    type: PLAYER_TURN_SUBMITTED_ID,
+                    payload: {actionId: actionDefault.id, speech: null, submittedByActorId: secondActor.id}
+                });
+            }
             await expect(secondPromptPromise).resolves.toBeDefined();
         });
 
@@ -277,11 +321,15 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
                 secondPromptEventHandler = cb;
                 return jest.fn();
             });
-            await tick();
-            if (secondPromptEventHandler) secondPromptEventHandler({
-                type: PLAYER_TURN_SUBMITTED_ID,
-                payload: {actionId: actionDefault.id, speech: null, submittedByActorId: actor.id}
-            });
+            await tick(); // Allow promise internal to service.prompt to advance
+            await tick(); // Ensure that the event handler has been set up
+
+            if (secondPromptEventHandler) {
+                secondPromptEventHandler({
+                    type: PLAYER_TURN_SUBMITTED_ID,
+                    payload: {actionId: actionDefault.id, speech: null, submittedByActorId: actor.id}
+                });
+            }
             await expect(secondPromptPromiseSameActor).resolves.toBeDefined();
         });
 
@@ -349,10 +397,14 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
                 return jest.fn();
             });
             await tick();
-            if (secondPromptEventHandler) secondPromptEventHandler({
-                type: PLAYER_TURN_SUBMITTED_ID,
-                payload: {actionId: actionDefault.id, speech: null, submittedByActorId: secondActor.id}
-            });
+            await tick(); // ensure event handler is set
+
+            if (secondPromptEventHandler) {
+                secondPromptEventHandler({
+                    type: PLAYER_TURN_SUBMITTED_ID,
+                    payload: {actionId: actionDefault.id, speech: null, submittedByActorId: secondActor.id}
+                });
+            }
             await expect(secondPromptPromise).resolves.toBeDefined();
         });
     });
