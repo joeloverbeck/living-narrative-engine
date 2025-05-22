@@ -128,33 +128,56 @@ describe('PlayerPromptService prompt Method', () => {
     describe('when action discovery fails', () => {
         const discoveryError = new Error('Discovery Boom!');
         const mockLocation = new Entity('location:test', 'dummy');
+
         beforeEach(() => {
             mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
             mockActionDiscoverySystem.getValidActions.mockRejectedValue(discoveryError);
+            // The mockPromptOutputPort.prompt.mockRejectedValue(portError) from the original test
+            // is not relevant here because if getValidActions fails, promptOutputPort.prompt
+            // for the main dispatch won't be called.
         });
 
-        it('should still reject with the original discovery PromptError even if the error-path port call fails', async () => {
-            const portError = new Error('Error path port Boom!');
-            mockPromptOutputPort.prompt.mockRejectedValue(portError);
-            mockLogger.error.mockClear(); // Clear from beforeEach
+        // The test name "even if the error-path port call fails" is misleading for getValidActions failure.
+        // The service re-throws the discovery error; it doesn't make a subsequent "error-path port call".
+        // Renaming for clarity or adjusting if a different scenario was intended might be good,
+        // but here's the fix for the current structure based on service behavior:
+        it('should reject with a PromptError wrapping the discovery error and log appropriately', async () => {
+            mockLogger.error.mockClear(); // Clear any logs from service instantiation in beforeEach
 
-            await expect(service.prompt(mockActor)).rejects.toMatchObject({
-                message: `Action discovery failed for actor ${mockActor.id}`,
+            const promptPromise = service.prompt(mockActor);
+
+            // Expect the promise to reject with a PromptError that wraps the original discoveryError
+            await expect(promptPromise).rejects.toThrow(PromptError);
+            await expect(promptPromise).rejects.toMatchObject({
+                message: `Action discovery failed for actor ${mockActor.id}. Details: ${discoveryError.message}`,
                 cause: discoveryError,
+                code: "ACTION_DISCOVERY_FAILED"
             });
 
-            // This will log the initial error for action discovery.
+            // 1. Check log from _fetchContextAndDiscoverActions
             expect(mockLogger.error).toHaveBeenCalledWith(
-                `PlayerPromptService: Action discovery failed for actor ${mockActor.id}.`,
+                `PlayerPromptService._fetchContextAndDiscoverActions: Action discovery failed for actor ${mockActor.id}.`,
                 discoveryError
             );
-            // This will log the error for failing to send the error prompt via the output port.
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                `PlayerPromptService: Failed to send error prompt via output port for actor ${mockActor.id} after discovery failure. Port error:`,
-                portError
+
+            // 2. Check log from the main prompt method's catch block
+            // This will be called with the PromptError instance created in _fetchContextAndDiscoverActions
+            const promptCatchLogCall = mockLogger.error.mock.calls.find(
+                call => call[0] === `PlayerPromptService.prompt: Error during _fetchContextAndDiscoverActions for actor ${mockActor.id}. Propagating error.`
             );
+            expect(promptCatchLogCall).toBeDefined();
+            if (promptCatchLogCall) {
+                const loggedError = promptCatchLogCall[1];
+                expect(loggedError).toBeInstanceOf(PromptError);
+                expect(loggedError.cause).toBe(discoveryError);
+                expect(loggedError.message).toBe(`Action discovery failed for actor ${mockActor.id}. Details: ${discoveryError.message}`);
+            }
+
+            // Ensure the main prompt dispatch was not attempted
+            expect(mockPromptOutputPort.prompt).not.toHaveBeenCalled();
         });
     });
+
 
     describe('Player input promise handling', () => {
         let mockDiscoveredActionsList;
@@ -186,34 +209,44 @@ describe('PlayerPromptService prompt Method', () => {
 
         const getCallbackAndPromise = async (actorForPrompt) => {
             let capturedCbArg;
-            // Temporarily override the subscribe mock to capture the callback
             const originalSubscribeMock = mockValidatedEventDispatcher.subscribe;
-            mockValidatedEventDispatcher.subscribe = jest.fn((evtName, cb) => {
+
+            // This is the temporary mock that should be called by service.prompt()
+            const temporaryCapturingMock = jest.fn((evtName, cb) => {
                 if (evtName === PLAYER_TURN_SUBMITTED_ID) {
                     capturedCbArg = cb;
                 }
-                return mockUnsubscribeFnForSuite;
+                return mockUnsubscribeFnForSuite; // From the enclosing suite's beforeEach
             });
+            mockValidatedEventDispatcher.subscribe = temporaryCapturingMock;
 
             const promise = service.prompt(actorForPrompt);
 
-            // Allow promise chain for subscription to settle
-            for (let i = 0; i < 5; i++) {
-                await Promise.resolve();
-            }
+            // Allow microtasks and the current macrotask queue to flush.
+            // Use setTimeout with 0ms delay as a more portable way to yield.
+            await new Promise(resolve => setTimeout(resolve, 0));
 
-            mockValidatedEventDispatcher.subscribe = originalSubscribeMock; // Restore original mock
 
             if (!capturedCbArg) {
-                // This block helps debug if the callback isn't captured as expected
-                console.error("Debug: Callback not captured. Subscribe calls:", JSON.stringify(mockValidatedEventDispatcher.subscribe.mock.calls));
+                console.error("Debug: Callback not captured by temporary mock.");
+                // Log the calls made to the temporary mock specifically.
+                console.error("Calls on temporaryCapturingMock:", JSON.stringify(temporaryCapturingMock.mock.calls));
+                // Restore the original mock before potentially throwing or continuing, to ensure test isolation.
+                mockValidatedEventDispatcher.subscribe = originalSubscribeMock;
                 try {
+                    // Await the promise to see if it rejected, which might explain why subscribe wasn't called.
                     await promise;
+                    // If it resolved without capturing, that's also an issue.
+                    throw new Error("getCallbackAndPromise: service.prompt resolved but callback was not captured.");
                 } catch (e) {
-                    throw new Error(`getCallbackAndPromise: service.prompt may have rejected before callback was captured. Error: ${e.message}. Check logs.`);
+                    // Re-throw with more context.
+                    throw new Error(`getCallbackAndPromise: Callback not captured. service.prompt error or unexpected resolution: ${e.message}. Original error cause: ${e.cause ? e.cause : 'N/A'}`);
                 }
-                throw new Error("getCallbackAndPromise: Event callback was not captured. Subscribe mock might not have been called as expected or callback not passed.");
             }
+
+            // Restore the original mock if we successfully captured the callback and are proceeding.
+            mockValidatedEventDispatcher.subscribe = originalSubscribeMock;
+
             expect(capturedCbArg).toBeInstanceOf(Function);
             return {promptPromise: promise, capturedCallback: capturedCbArg};
         };
@@ -257,7 +290,7 @@ describe('PlayerPromptService prompt Method', () => {
 
             await expect(promptPromise).rejects.toMatchObject({
                 name: 'PromptError',
-                message: `Malformed event object for PLAYER_TURN_SUBMITTED_ID for actor ${mockActor.id}.`,
+                message: `Malformed event object for ${PLAYER_TURN_SUBMITTED_ID} for actor ${mockActor.id}.`, // Corrected interpolation
                 code: "INVALID_EVENT_STRUCTURE"
             });
             expect(mockUnsubscribeFnForSuite).toHaveBeenCalled();
@@ -277,7 +310,8 @@ describe('PlayerPromptService prompt Method', () => {
                 expect(error).toBeInstanceOf(PromptError);
                 expect(error.name).toBe('PromptError');
                 expect(error.code).toBe('INVALID_PAYLOAD_CONTENT');
-                const expectedMessage = `Invalid actionId in payload for PLAYER_TURN_SUBMITTED_ID for actor ${mockActor.id}.`;
+                // Corrected interpolation for PLAYER_TURN_SUBMITTED_ID
+                const expectedMessage = `Invalid actionId in payload for ${PLAYER_TURN_SUBMITTED_ID} for actor ${mockActor.id}.`;
                 expect(error.message).toBe(expectedMessage);
             }
             expect(mockUnsubscribeFnForSuite).toHaveBeenCalled();

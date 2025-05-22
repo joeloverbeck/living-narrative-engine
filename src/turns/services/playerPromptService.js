@@ -1,4 +1,4 @@
-// src/core/services/playerPromptService.js
+// src/turns/services/playerPromptService.js
 // --- FILE START ---
 
 // --- Interface/Type Imports for JSDoc ---
@@ -172,7 +172,6 @@ class PlayerPromptService extends IPlayerPromptService {
 
             if (this.#currentPromptContext.isResolvedOrRejected) {
                 this.#logger.debug(`PlayerPromptService: Prompt for actor ${oldActorId} already settled. No further rejection needed.`);
-                // Cleanup listeners if somehow still present, though they should be gone.
                 if (this.#currentPromptContext.unsubscribe) {
                     try {
                         this.#currentPromptContext.unsubscribe();
@@ -209,7 +208,6 @@ class PlayerPromptService extends IPlayerPromptService {
                 }
             }
 
-            // Determine the error to reject with
             let errorToRejectWith;
             if (rejectionError) {
                 errorToRejectWith = rejectionError;
@@ -225,6 +223,220 @@ class PlayerPromptService extends IPlayerPromptService {
     }
 
     /**
+     * @private
+     * Validates the actor, checks for initial cancellation, and clears any existing prompt.
+     * This method is intended to be called at the beginning of the `prompt` orchestrator.
+     * @param {Entity} actor - The actor entity to prompt.
+     * @param {AbortSignal | undefined} cancellationSignal - An AbortSignal to cancel the prompt.
+     * @returns {Promise<string>} The validated actor ID.
+     * @throws {PromptError} If actor validation fails.
+     * @throws {DOMException} If the prompt is aborted by the signal before starting.
+     */
+    async _preparePromptSession(actor, cancellationSignal) {
+        if (cancellationSignal?.aborted) {
+            this.#logger.warn(`PlayerPromptService._preparePromptSession: Prompt initiation for actor ${actor?.id || 'UNKNOWN'} aborted as signal was already aborted.`);
+            throw new DOMException('Prompt aborted by signal before initiation.', 'AbortError');
+        }
+
+        if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
+            const errorMsg = `Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(actor)}`;
+            this.#logger.error('PlayerPromptService._preparePromptSession: Invalid actor provided.', {actor});
+            throw new PromptError(errorMsg, null, "INVALID_ACTOR");
+        }
+        const actorId = actor.id;
+
+        if (this.#currentPromptContext) {
+            const oldPromptActorId = this.#currentPromptContext.actorId;
+            this.#logger.warn(`PlayerPromptService._preparePromptSession: New prompt for ${actorId} is superseding an existing prompt for ${oldPromptActorId}.`);
+
+            let rejectionMsg = `New prompt initiated for actor ${actorId}, superseding previous prompt for ${oldPromptActorId}.`;
+            if (actorId === oldPromptActorId) {
+                rejectionMsg = `New prompt re-initiated for actor ${actorId}, superseding existing prompt.`;
+            }
+            this.#clearCurrentPrompt(new PromptError(rejectionMsg, null, "PROMPT_SUPERSEDED_BY_NEW_REQUEST"));
+        }
+        return actorId;
+    }
+
+    /**
+     * @private
+     * Fetches the actor's current location, creates the ActionContext, and discovers valid actions.
+     * @param {Entity} actor - The actor entity for whom to discover actions.
+     * @param {string} actorId - The validated ID of the actor.
+     * @param {AbortSignal | undefined} cancellationSignal - An AbortSignal for potential cancellation.
+     * @returns {Promise<{currentLocation: Entity, discoveredActions: DiscoveredActionInfo[], actionContext: ActionContext}>}
+     * An object containing the actor's current location, the list of discovered actions, and the ActionContext used for discovery.
+     * @throws {PromptError} If location fetching fails or action discovery fails.
+     * @throws {DOMException} If the operation is aborted by the signal.
+     */
+    async _fetchContextAndDiscoverActions(actor, actorId, cancellationSignal) {
+        let currentLocation;
+        try {
+            this.#logger.debug(`PlayerPromptService._fetchContextAndDiscoverActions: Fetching location for actor ${actorId}...`);
+            currentLocation = await this.#worldContext.getLocationOfEntity(actorId);
+            if (!currentLocation) {
+                this.#logger.error(`PlayerPromptService._fetchContextAndDiscoverActions: Failed to get location for actor ${actorId}. Location not found or undefined.`);
+                throw new PromptError(`Failed to determine actor location for ${actorId}: Location not found or undefined.`, null, "LOCATION_NOT_FOUND");
+            }
+            this.#logger.debug(`PlayerPromptService._fetchContextAndDiscoverActions: Found location ${currentLocation.id} for actor ${actorId}.`);
+        } catch (error) {
+            this.#logger.error(`PlayerPromptService._fetchContextAndDiscoverActions: Error fetching location for actor ${actorId}.`, error);
+            if (error instanceof PromptError || error.name === 'AbortError') throw error;
+            throw new PromptError(`Failed to determine actor location for ${actorId}. Details: ${error.message}`, error, "LOCATION_FETCH_FAILED");
+        }
+
+        if (cancellationSignal?.aborted) {
+            this.#logger.warn(`PlayerPromptService._fetchContextAndDiscoverActions: Aborted by signal after location fetch for actor ${actorId}.`);
+            throw new DOMException('Prompt aborted by signal during location fetch.', 'AbortError');
+        }
+
+        const actionContext = {
+            actor: actor,
+            currentLocation: currentLocation,
+            entityManager: this.#entityManager,
+            gameDataRepository: this.#gameDataRepository,
+            logger: this.#logger,
+            worldContext: this.#worldContext,
+        };
+        this.#logger.debug(`PlayerPromptService._fetchContextAndDiscoverActions: Created ActionContext for actor ${actorId}.`);
+
+        let discoveredActions;
+        try {
+            this.#logger.debug(`PlayerPromptService._fetchContextAndDiscoverActions: Discovering valid actions for actor ${actorId}...`);
+            discoveredActions = await this.#actionDiscoverySystem.getValidActions(actor, actionContext);
+            this.#logger.debug(`PlayerPromptService._fetchContextAndDiscoverActions: Discovered ${discoveredActions.length} actions for actor ${actorId}.`);
+        } catch (error) {
+            this.#logger.error(`PlayerPromptService._fetchContextAndDiscoverActions: Action discovery failed for actor ${actorId}.`, error);
+            if (error instanceof PromptError || error.name === 'AbortError') throw error;
+            throw new PromptError(`Action discovery failed for actor ${actorId}. Details: ${error.message}`, error, "ACTION_DISCOVERY_FAILED");
+        }
+
+        if (cancellationSignal?.aborted) {
+            this.#logger.warn(`PlayerPromptService._fetchContextAndDiscoverActions: Aborted by signal after action discovery for actor ${actorId}.`);
+            throw new DOMException('Prompt aborted by signal after action discovery.', 'AbortError');
+        }
+
+        return {currentLocation, discoveredActions, actionContext};
+    }
+
+    /**
+     * @private
+     * Sends the prompt data (discovered actions or an error message) to the player via the output port.
+     * @param {string} actorId - The ID of the actor being prompted.
+     * @param {DiscoveredActionInfo[] | null} discoveredActions - An array of discovered actions. Can be null if sending an error message.
+     * @param {AbortSignal | undefined} cancellationSignal - An AbortSignal for potential cancellation during the dispatch.
+     * @param {Error | null} [errorToShow=null] - If provided, its message will be sent as the prompt content instead of actions.
+     * @returns {Promise<void>} Resolves when the prompt has been successfully sent.
+     * @throws {PromptError} If dispatching via the output port fails.
+     * @throws {DOMException} If the operation is aborted by the signal.
+     */
+    async _dispatchPromptToOutputPort(actorId, discoveredActions, cancellationSignal, errorToShow = null) {
+        try {
+            if (errorToShow) {
+                const errorMessage = (errorToShow instanceof Error) ? errorToShow.message : String(errorToShow);
+                this.#logger.debug(`PlayerPromptService._dispatchPromptToOutputPort: Sending error prompt for actor ${actorId}. Error: "${errorMessage}"`);
+                await this.#promptOutputPort.prompt(actorId, [], errorMessage);
+            } else {
+                this.#logger.debug(`PlayerPromptService._dispatchPromptToOutputPort: Sending ${discoveredActions?.length || 0} discovered actions to actor ${actorId} via output port...`);
+                await this.#promptOutputPort.prompt(actorId, discoveredActions || []);
+            }
+            this.#logger.info(`PlayerPromptService._dispatchPromptToOutputPort: Successfully sent prompt data for actor ${actorId} via output port.`);
+        } catch (error) {
+            this.#logger.error(`PlayerPromptService._dispatchPromptToOutputPort: Failed to dispatch prompt via output port for actor ${actorId}.`, error);
+            if (error instanceof PromptError || error.name === 'AbortError') throw error;
+            throw new PromptError(`Failed to dispatch prompt via output port for actor ${actorId}. Details: ${error.message}`, error, "OUTPUT_PORT_DISPATCH_FAILED");
+        }
+
+        if (cancellationSignal?.aborted) {
+            this.#logger.warn(`PlayerPromptService._dispatchPromptToOutputPort: Aborted by signal after attempting to send prompt for actor ${actorId}.`);
+            throw new DOMException('Prompt dispatch aborted by signal after send attempt.', 'AbortError');
+        }
+    }
+
+    /**
+     * @private
+     * Handles the PLAYER_TURN_SUBMITTED_ID event, validating it and resolving/rejecting the prompt.
+     * This method is designed to be called as the handler for the event subscription.
+     * @param {CorePlayerTurnSubmittedEvent} eventObject - The event object received from the dispatcher.
+     * @param {CurrentPromptContext} localPromptContext - The context of the currently active prompt for which this event might be relevant.
+     * @param {(resolution: PlayerPromptResolution) => void} resolve - The resolve function of the active prompt's promise (from `localPromptContext.resolve`).
+     * @param {(reason?: any) => void} reject - The reject function of the active prompt's promise (from `localPromptContext.reject`).
+     */
+    _handlePlayerTurnSubmittedEvent(eventObject, localPromptContext, resolve, reject) {
+        if (localPromptContext.isResolvedOrRejected) {
+            this.#logger.debug(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Listener for ${localPromptContext.actorId} (event ${eventObject?.type}) received event but prompt already settled. Ignoring.`);
+            return;
+        }
+
+        // This check confirms the event is for the globally current prompt context,
+        // which should be the localPromptContext that this handler is associated with.
+        if (this.#currentPromptContext !== localPromptContext) {
+            this.#logger.warn(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Stale listener for actor ${localPromptContext.actorId} (event ${eventObject?.type}) received ${PLAYER_TURN_SUBMITTED_ID}, but current global prompt is for ${this.#currentPromptContext?.actorId}. This specific prompt instance will ignore.`);
+            return;
+        }
+
+        // Actor ID validation
+        if (eventObject && eventObject.payload && typeof eventObject.payload.submittedByActorId === 'string') {
+            const submittedByActorId = eventObject.payload.submittedByActorId;
+            if (submittedByActorId !== localPromptContext.actorId) {
+                this.#logger.debug(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Received ${PLAYER_TURN_SUBMITTED_ID} for actor ${submittedByActorId}, but this prompt is for ${localPromptContext.actorId}. Ignoring.`);
+                return;
+            }
+        } else {
+            this.#logger.debug(`PlayerPromptService._handlePlayerTurnSubmittedEvent: ${PLAYER_TURN_SUBMITTED_ID} event did not contain 'submittedByActorId'. Proceeding based on this prompt's actor: ${localPromptContext.actorId}.`);
+        }
+
+        this.#logger.debug(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Active listener for actor ${localPromptContext.actorId} received ${PLAYER_TURN_SUBMITTED_ID}. Full Event:`, eventObject);
+
+        // Event structure validation
+        if (!eventObject || eventObject.type !== PLAYER_TURN_SUBMITTED_ID || !eventObject.payload || typeof eventObject.payload !== 'object') {
+            this.#logger.error(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Invalid event object structure for prompt (actor ${localPromptContext.actorId}). Received:`, eventObject);
+            reject(new PromptError(`Malformed event object for ${PLAYER_TURN_SUBMITTED_ID} for actor ${localPromptContext.actorId}.`, null, "INVALID_EVENT_STRUCTURE"));
+            return;
+        }
+
+        const actualPayload = eventObject.payload;
+
+        // Payload content validation (actualPayload.actionId)
+        if (typeof actualPayload.actionId !== 'string' || actualPayload.actionId.trim() === '') {
+            this.#logger.error(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Invalid or missing actionId in payload for prompt (actor ${localPromptContext.actorId}). Payload:`, actualPayload);
+            reject(new PromptError(`Invalid actionId in payload for ${PLAYER_TURN_SUBMITTED_ID} for actor ${localPromptContext.actorId}.`, null, "INVALID_PAYLOAD_CONTENT"));
+            return;
+        }
+
+        const {actionId: submittedActionId, speech} = actualPayload;
+        const actionsForThisPrompt = localPromptContext.discoveredActions;
+
+        // Finding selectedAction from localPromptContext.discoveredActions
+        const selectedAction = actionsForThisPrompt.find(da => {
+            if (!da || typeof da.id !== 'string') {
+                this.#logger.warn(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Malformed item in discoveredActions for prompt (actor ${localPromptContext.actorId}). Item:`, da);
+                return false;
+            }
+            return da.id === submittedActionId;
+        });
+
+        // Validating selectedAction and resolving/rejecting
+        if (!selectedAction) {
+            this.#logger.error(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Invalid actionId '${submittedActionId}' for prompt (actor ${localPromptContext.actorId}). Not found.`, {
+                discoveredActionsPreview: actionsForThisPrompt.map(item => item ? {
+                    id: item.id,
+                    name: item.name,
+                    command: item.command
+                } : {error: "Null/undefined item"}),
+                receivedActionId: submittedActionId
+            });
+            reject(new PromptError(`Invalid actionId '${submittedActionId}' submitted by actor ${localPromptContext.actorId}. Action not available.`, null, "INVALID_ACTION_ID"));
+        } else {
+            if (typeof selectedAction.name !== 'string' || selectedAction.name.trim() === '') {
+                this.#logger.warn(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Action '${submittedActionId}' found for prompt (actor ${localPromptContext.actorId}), but missing 'name'. Action:`, selectedAction);
+            }
+            this.#logger.info(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Valid actionId '${submittedActionId}' (Name: '${selectedAction.name || "N/A"}') for prompt (actor ${localPromptContext.actorId}). Resolving.`);
+            resolve({action: selectedAction, speech: speech || null});
+        }
+    }
+
+    /**
      * Prompts the specified actor for an action.
      * @param {Entity} actor - The actor entity to prompt.
      * @param {object} [options={}] - Optional parameters.
@@ -233,108 +445,50 @@ class PlayerPromptService extends IPlayerPromptService {
      * @throws {PromptError|DOMException} If prompting fails, is superseded, or is aborted.
      */
     async prompt(actor, {cancellationSignal} = {}) {
-        this.#logger.debug(`PlayerPromptService: Initiating prompt for actor ${actor?.id ?? 'INVALID'}. Signal provided: ${!!cancellationSignal}`);
+        this.#logger.debug(`PlayerPromptService.prompt: Initiating prompt for actor ${actor?.id ?? 'INVALID'}. Signal provided: ${!!cancellationSignal}`);
 
-        if (cancellationSignal?.aborted) {
-            this.#logger.warn(`PlayerPromptService: Prompt initiation for actor ${actor?.id} aborted before starting as signal was already aborted.`);
-            throw new DOMException('Prompt aborted by signal before initiation.', 'AbortError');
-        }
-
-        if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
-            this.#logger.error('PlayerPromptService.prompt: Invalid actor provided.', {actor});
-            throw new PromptError(`Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(actor)}`);
-        }
-        const actorId = actor.id;
-
-        // If there's an existing prompt, clear it.
-        // The rejectionError here will be used if the signal hasn't already aborted the old prompt.
-        if (this.#currentPromptContext) {
-            const oldPromptActorId = this.#currentPromptContext.actorId;
-            let rejectionMsg = `New prompt initiated for actor ${actorId}, superseding previous prompt for ${oldPromptActorId}.`;
-            if (actorId === oldPromptActorId) {
-                rejectionMsg = `New prompt re-initiated for actor ${actorId}, superseding existing prompt.`;
-            }
-            this.#clearCurrentPrompt(new PromptError(rejectionMsg, null, "PROMPT_SUPERSEDED_BY_NEW_REQUEST"));
-        }
-
-        let currentLocation;
-        try {
-            this.#logger.debug(`PlayerPromptService: Fetching location for actor ${actorId}...`);
-            currentLocation = await this.#worldContext.getLocationOfEntity(actorId);
-            if (!currentLocation) {
-                this.#logger.error(`PlayerPromptService.prompt: Failed to get location for actor ${actorId}.`);
-                throw new PromptError(`Failed to determine actor location for ${actorId}: Location not found or undefined.`);
-            }
-            this.#logger.debug(`PlayerPromptService: Found location ${currentLocation.id} for actor ${actorId}.`);
-        } catch (error) {
-            this.#logger.error(`PlayerPromptService.prompt: Error fetching location for actor ${actorId}.`, error);
-            if (error instanceof PromptError || error.name === 'AbortError') throw error;
-            throw new PromptError(`Failed to determine actor location for ${actorId}`, error);
-        }
-
-        if (cancellationSignal?.aborted) { // Check again after async location fetch
-            throw new DOMException('Prompt aborted by signal during setup.', 'AbortError');
-        }
-
-        const context = {
-            actor: actor,
-            currentLocation: currentLocation,
-            entityManager: this.#entityManager,
-            gameDataRepository: this.#gameDataRepository, // This usage is consistent with IGameDataRepository
-            logger: this.#logger,
-            worldContext: this.#worldContext,
-        };
-        this.#logger.debug(`PlayerPromptService: Created ActionContext for actor ${actorId}.`);
+        const actorId = await this._preparePromptSession(actor, cancellationSignal);
 
         let discoveredActions;
         try {
-            this.#logger.debug(`PlayerPromptService: Discovering valid actions for actor ${actorId}...`);
-            discoveredActions = await this.#actionDiscoverySystem.getValidActions(actor, context);
-            this.#logger.debug(`PlayerPromptService: Discovered ${discoveredActions.length} actions for actor ${actorId}.`);
+            this.#logger.debug(`PlayerPromptService.prompt: Calling _fetchContextAndDiscoverActions for actor ${actorId}.`);
+            const contextData = await this._fetchContextAndDiscoverActions(actor, actorId, cancellationSignal);
+            discoveredActions = contextData.discoveredActions;
+            this.#logger.debug(`PlayerPromptService.prompt: Successfully fetched context and discovered ${discoveredActions.length} actions for actor ${actorId}.`);
         } catch (error) {
-            this.#logger.error(`PlayerPromptService: Action discovery failed for actor ${actorId}.`, error);
-            // Attempt to inform UI about the error before re-throwing
-            try {
-                await this.#promptOutputPort.prompt(actorId, [], error instanceof Error ? error.message : 'Action discovery error');
-            } catch (portError) {
-                this.#logger.error(`PlayerPromptService: Failed to send error prompt via output port for actor ${actorId} after discovery failure. Port error:`, portError);
-            }
-            if (error instanceof PromptError || error.name === 'AbortError') throw error;
-            throw new PromptError(`Action discovery failed for actor ${actorId}`, error);
+            this.#logger.error(`PlayerPromptService.prompt: Error during _fetchContextAndDiscoverActions for actor ${actorId}. Propagating error.`, error);
+            throw error;
         }
 
-        if (cancellationSignal?.aborted) { // Check again after async action discovery
-            throw new DOMException('Prompt aborted by signal after action discovery.', 'AbortError');
+        if (cancellationSignal?.aborted) {
+            this.#logger.warn(`PlayerPromptService.prompt: Prompt for actor ${actorId} aborted by signal after successful context/action fetch, before output port call.`);
+            throw new DOMException('Prompt aborted by signal after context/action fetch.', 'AbortError');
         }
 
         try {
-            this.#logger.debug(`PlayerPromptService: Calling promptOutputPort.prompt for actor ${actorId}...`);
-            await this.#promptOutputPort.prompt(actorId, discoveredActions);
-            this.#logger.info(`PlayerPromptService: Successfully sent prompt for actor ${actorId}.`);
+            this.#logger.debug(`PlayerPromptService.prompt: Calling _dispatchPromptToOutputPort for actor ${actorId} with ${discoveredActions?.length || 0} actions.`);
+            await this._dispatchPromptToOutputPort(actorId, discoveredActions, cancellationSignal, null);
         } catch (error) {
-            this.#logger.error(`PlayerPromptService: Failed to dispatch prompt via output port for actor ${actorId}.`, error);
-            if (error instanceof PromptError || error.name === 'AbortError') throw error;
-            throw new PromptError(`Failed to dispatch prompt via output port for actor ${actorId}`, error);
+            this.#logger.error(`PlayerPromptService.prompt: Error during prompt dispatch for actor ${actorId} (via _dispatchPromptToOutputPort). Propagating error.`, error);
+            throw error;
         }
 
         return new Promise((resolve, reject) => {
             let unsubscribeFromEvent = null;
             let abortListenerCleanup = null;
 
-            // Local context for this specific prompt attempt
             const localPromptContext = {
                 actorId: actorId,
-                resolve: resolve,
-                reject: reject,
-                unsubscribe: null, // Will be set later
+                resolve: resolve, // Original promise resolve
+                reject: reject,   // Original promise reject
+                unsubscribe: null, // Will be set after successful subscription
                 discoveredActions: discoveredActions,
                 cancellationSignal: cancellationSignal,
-                abortListenerCleanup: null, // Will be set later
+                abortListenerCleanup: null, // Will be set if signal is provided
                 isResolvedOrRejected: false,
             };
 
-            // Set the global context
-            this.#currentPromptContext = localPromptContext;
+            this.#currentPromptContext = localPromptContext; // Set as current globally
 
             const cleanupAndReject = (error) => {
                 if (localPromptContext.isResolvedOrRejected) return;
@@ -344,20 +498,18 @@ class PlayerPromptService extends IPlayerPromptService {
                     try {
                         unsubscribeFromEvent();
                     } catch (e) {
-                        this.#logger.warn('Error unsubscribing event on cleanupAndReject', e);
+                        this.#logger.warn('PlayerPromptService.prompt: Error unsubscribing event on cleanupAndReject', e);
                     }
                 }
                 if (abortListenerCleanup) {
                     try {
                         abortListenerCleanup();
                     } catch (e) {
-                        this.#logger.warn('Error cleaning abort listener on cleanupAndReject', e);
+                        this.#logger.warn('PlayerPromptService.prompt: Error cleaning abort listener on cleanupAndReject', e);
                     }
                 }
-
-                reject(error);
-
-                // If this specific prompt context is still the global one, clear it
+                // Use the original reject from the Promise constructor
+                localPromptContext.reject(error);
                 if (this.#currentPromptContext === localPromptContext) {
                     this.#currentPromptContext = null;
                 }
@@ -371,19 +523,18 @@ class PlayerPromptService extends IPlayerPromptService {
                     try {
                         unsubscribeFromEvent();
                     } catch (e) {
-                        this.#logger.warn('Error unsubscribing event on cleanupAndResolve', e);
+                        this.#logger.warn('PlayerPromptService.prompt: Error unsubscribing event on cleanupAndResolve', e);
                     }
                 }
                 if (abortListenerCleanup) {
                     try {
                         abortListenerCleanup();
                     } catch (e) {
-                        this.#logger.warn('Error cleaning abort listener on cleanupAndResolve', e);
+                        this.#logger.warn('PlayerPromptService.prompt: Error cleaning abort listener on cleanupAndResolve', e);
                     }
                 }
-
-                resolve(value);
-
+                // Use the original resolve from the Promise constructor
+                localPromptContext.resolve(value);
                 if (this.#currentPromptContext === localPromptContext) {
                     this.#currentPromptContext = null;
                 }
@@ -391,102 +542,41 @@ class PlayerPromptService extends IPlayerPromptService {
 
             if (cancellationSignal) {
                 const handleAbort = () => {
-                    this.#logger.info(`PlayerPromptService: Prompt for actor ${actorId} explicitly aborted by signal.`);
+                    this.#logger.info(`PlayerPromptService.prompt: Prompt for actor ${actorId} explicitly aborted by signal (Promise listener).`);
                     cleanupAndReject(new DOMException('Prompt aborted by signal.', 'AbortError'));
                 };
                 cancellationSignal.addEventListener('abort', handleAbort, {once: true});
                 abortListenerCleanup = () => {
                     cancellationSignal.removeEventListener('abort', handleAbort);
                 };
-                localPromptContext.abortListenerCleanup = abortListenerCleanup; // Store for #clearCurrentPrompt
+                localPromptContext.abortListenerCleanup = abortListenerCleanup;
             }
 
-            this.#logger.debug(`PlayerPromptService: Setting up listener for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`);
+            if (cancellationSignal?.aborted) { // Check again after setting up listener, just in case
+                this.#logger.warn(`PlayerPromptService.prompt: Prompt for actor ${actorId} aborted by signal just before event subscription.`);
+                cleanupAndReject(new DOMException('Prompt aborted by signal before subscription.', 'AbortError'));
+                return; // Exit Promise executor
+            }
+
+            this.#logger.debug(`PlayerPromptService.prompt: Setting up listener for ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId}.`);
 
             const handlePlayerTurnSubmitted = (eventObject) => {
-                if (localPromptContext.isResolvedOrRejected) { // Already handled (e.g., by abort)
-                    this.#logger.debug(`PlayerPromptService: Listener for ${actorId} received event but prompt already settled. Ignoring.`);
-                    return;
-                }
-
-                // Ensure this event is for the currently active prompt context.
-                // This check is vital if multiple prompts are somehow interleaved,
-                // though #clearCurrentPrompt should prevent most of this.
-                if (this.#currentPromptContext !== localPromptContext) {
-                    this.#logger.warn(`PlayerPromptService: Stale listener for actor ${actorId} received PLAYER_TURN_SUBMITTED_ID, but current global prompt is for ${this.#currentPromptContext?.actorId}. This specific prompt instance will ignore.`);
-                    // This specific listener might self-unsubscribe if it can, but the main cleanup paths are in cleanupAndReject/Resolve
-                    return;
-                }
-
-
-                if (eventObject && eventObject.payload && typeof eventObject.payload.submittedByActorId === 'string') {
-                    const submittedByActorId = eventObject.payload.submittedByActorId;
-                    if (submittedByActorId !== actorId) { // Check against this prompt's actorId
-                        this.#logger.debug(`PlayerPromptService: Received PLAYER_TURN_SUBMITTED_ID for actor ${submittedByActorId}, but this prompt is for ${actorId}. Ignoring.`);
-                        return;
-                    }
-                } else {
-                    this.#logger.debug(`PlayerPromptService: PLAYER_TURN_SUBMITTED_ID event did not contain 'submittedByActorId'. Proceeding based on this prompt's actor: ${actorId}.`);
-                }
-
-                this.#logger.debug(`PlayerPromptService: Active listener for actor ${actorId} received PLAYER_TURN_SUBMITTED_ID. Full Event:`, eventObject);
-
-                if (!eventObject || eventObject.type !== PLAYER_TURN_SUBMITTED_ID || !eventObject.payload || typeof eventObject.payload !== 'object') {
-                    this.#logger.error(`PlayerPromptService: Invalid event object structure for current prompt (actor ${actorId}). Received:`, eventObject);
-                    cleanupAndReject(new PromptError(`Malformed event object for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, null, "INVALID_EVENT_STRUCTURE"));
-                    return;
-                }
-
-                const actualPayload = eventObject.payload;
-
-                if (typeof actualPayload.actionId !== 'string' || actualPayload.actionId.trim() === '') {
-                    this.#logger.error(`PlayerPromptService: Invalid or missing actionId in payload for current prompt (actor ${actorId}). Payload:`, actualPayload);
-                    cleanupAndReject(new PromptError(`Invalid actionId in payload for PLAYER_TURN_SUBMITTED_ID for actor ${actorId}.`, null, "INVALID_PAYLOAD_CONTENT"));
-                    return;
-                }
-
-                const {actionId: submittedActionId, speech} = actualPayload;
-                const actionsForThisPrompt = localPromptContext.discoveredActions;
-
-                const selectedAction = actionsForThisPrompt.find(da => {
-                    if (!da || typeof da.id !== 'string') {
-                        this.#logger.warn(`PlayerPromptService: Malformed item in discoveredActions for current prompt (actor ${actorId}). Item:`, da);
-                        return false;
-                    }
-                    return da.id === submittedActionId;
-                });
-
-                if (!selectedAction) {
-                    this.#logger.error(`PlayerPromptService: Invalid actionId '${submittedActionId}' for current prompt (actor ${actorId}). Not found.`, {
-                        discoveredActionsPreview: actionsForThisPrompt.map(item => item ? {
-                            id: item.id,
-                            name: item.name,
-                            command: item.command
-                        } : {error: "Null/undefined item"}),
-                        receivedActionId: submittedActionId
-                    });
-                    cleanupAndReject(new PromptError(`Invalid actionId '${submittedActionId}' submitted by actor ${actorId}. Action not available.`, null, "INVALID_ACTION_ID"));
-                } else {
-                    if (typeof selectedAction.name !== 'string' || selectedAction.name.trim() === '') {
-                        this.#logger.warn(`PlayerPromptService: Action '${submittedActionId}' found for current prompt (actor ${actorId}), but missing 'name'. Action:`, selectedAction);
-                    }
-                    this.#logger.info(`PlayerPromptService: Valid actionId '${submittedActionId}' (Name: '${selectedAction.name || "N/A"}') for current prompt (actor ${actorId}). Resolving.`);
-                    cleanupAndResolve({action: selectedAction, speech: speech || null});
-                }
+                // Delegate all logic to the new private method
+                this._handlePlayerTurnSubmittedEvent(eventObject, localPromptContext, cleanupAndResolve, cleanupAndReject);
             };
 
             try {
                 unsubscribeFromEvent = this.#validatedEventDispatcher.subscribe(PLAYER_TURN_SUBMITTED_ID, handlePlayerTurnSubmitted);
                 if (typeof unsubscribeFromEvent !== 'function') {
-                    this.#logger.error(`PlayerPromptService: Subscription for actor ${actorId} did not return unsubscribe function.`);
+                    this.#logger.error(`PlayerPromptService.prompt: Subscription for actor ${actorId} did not return unsubscribe function.`);
                     cleanupAndReject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}: No unsubscribe function returned.`, null, "SUBSCRIPTION_FAILED"));
-                    return;
+                    return; // Exit Promise executor
                 }
-                localPromptContext.unsubscribe = unsubscribeFromEvent; // Store for #clearCurrentPrompt
-                this.#logger.debug(`PlayerPromptService: Successfully subscribed and set current prompt context for actor ${actorId}.`);
+                localPromptContext.unsubscribe = unsubscribeFromEvent; // Store for cleanup
+                this.#logger.debug(`PlayerPromptService.prompt: Successfully subscribed and set current prompt context for actor ${actorId}.`);
 
             } catch (error) {
-                this.#logger.error(`PlayerPromptService: Error subscribing for actor ${actorId}.`, error);
+                this.#logger.error(`PlayerPromptService.prompt: Error subscribing for actor ${actorId}.`, error);
                 cleanupAndReject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}.`, error, "SUBSCRIPTION_ERROR"));
             }
         });
@@ -503,9 +593,9 @@ class PlayerPromptService extends IPlayerPromptService {
         this.#logger.info("PlayerPromptService: cancelCurrentPrompt called.");
         if (this.#currentPromptContext) {
             if (this.#currentPromptContext.cancellationSignal?.aborted) {
-                // If the signal is already aborted, #clearCurrentPrompt will use AbortError or the signal's reason.
-                // Or, the abort listener might have already cleared it.
                 this.#logger.debug("PlayerPromptService: Current prompt's signal already aborted or prompt may have self-cleaned.");
+                // Use the same error #clearCurrentPrompt would use if it found an aborted signal
+                // and no other error was provided.
                 this.#clearCurrentPrompt(new DOMException("Prompt already aborted by its signal, cancelCurrentPrompt called.", "AbortError"));
             } else {
                 this.#clearCurrentPrompt(new PromptError("Current player prompt was explicitly cancelled by external request.", null, "PROMPT_CANCELLED"));

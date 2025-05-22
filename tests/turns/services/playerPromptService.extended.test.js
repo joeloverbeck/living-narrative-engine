@@ -435,8 +435,10 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
             const promptPromise = service.prompt(validActor);
             await expect(promptPromise).rejects.toThrow(PromptError);
             await expect(promptPromise).rejects.toMatchObject({
-                message: `Failed to determine actor location for ${validActor.id}`,
-                cause: genericError
+                // Corrected message to include the details part
+                message: `Failed to determine actor location for ${validActor.id}. Details: ${genericError.message}`,
+                cause: genericError,
+                code: "LOCATION_FETCH_FAILED" // Assuming this code is also set by the service
             });
         });
 
@@ -468,7 +470,8 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
             } catch (e) {
                 expect(e.name).toBe('AbortError');
                 // Message can vary slightly depending on exact timing of abort check vs. internal handler
-                expect(e.message).toMatch(/Prompt aborted by signal during setup|Prompt aborted by signal\.$/);
+                // Corrected regex to include "Prompt aborted by signal during location fetch."
+                expect(e.message).toMatch(/Prompt aborted by signal during setup|Prompt aborted by signal during location fetch\.|Prompt aborted by signal\.$/);
             }
         });
     });
