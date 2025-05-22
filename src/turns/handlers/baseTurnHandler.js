@@ -1,27 +1,23 @@
 // src/core/turns/handlers/baseTurnHandler.js
-// --- FILE START ---
+// ──────────────────────────────────────────────────────────────────────────────
 
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
- */
-/**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
- */
-/**
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
- */
-/**
  * @typedef {import('../states/ITurnState.js').ITurnState} ITurnState
  */
 
-import {TurnIdleState as ConcreteTurnIdleState} from '../states/turnIdleState.js';
-import {TurnEndingState as ConcreteTurnEndingState} from '../states/turnEndingState.js';
-
+import {
+    TurnIdleState as ConcreteTurnIdleState
+} from '../states/turnIdleState.js';
+import {
+    TurnEndingState as ConcreteTurnEndingState
+} from '../states/turnEndingState.js';
 
 /**
  * @abstract
  * @class BaseTurnHandler
- * @description
  * Abstract base class for all turn handlers (e.g., PlayerTurnHandler, AITurnHandler).
  * It provides the core machinery for managing turn lifecycles, state transitions,
  * and common resources like the ITurnContext. Subclasses are responsible for
@@ -29,64 +25,77 @@ import {TurnEndingState as ConcreteTurnEndingState} from '../states/turnEndingSt
  * the initial concrete state.
  */
 export class BaseTurnHandler {
+    /* ──────────────────────────────── FIELDS ─────────────────────────────── */
+
     /**
      * Logger instance for this handler.
-     * @protected
-     * @readonly
-     * @type {ILogger}
+     * @protected @readonly @type {ILogger}
      */
     _logger;
 
     /**
      * The current active state of the turn handler.
-     * @protected
-     * @type {ITurnState}
+     * @protected @type {ITurnState}
      */
     _currentState;
 
     /**
      * The current turn-specific context.
-     * @protected
-     * @type {ITurnContext | null}
+     * @protected @type {ITurnContext|null}
      */
     _currentTurnContext = null;
 
     /**
-     * Flag indicating whether the handler has been destroyed.
-     * @protected
-     * @type {boolean}
+     * Flag indicating whether the handler has been completely destroyed.
+     * @protected @type {boolean}
      */
     _isDestroyed = false;
 
     /**
+     * Flag indicating destruction is currently in progress.
+     * (Set at the very start of destroy(), cleared at the very end.)
+     * @protected @type {boolean}
+     */
+    _isDestroying = false;
+
+    /**
      * The current actor whose turn is being processed.
-     * @protected
-     * @type {Entity | null}
+     * @protected @type {Entity|null}
      */
     _currentActor = null;
 
+    /* ──────────────────────────────── CTOR ──────────────────────────────── */
 
+    /**
+     * @param {object} deps
+     * @param {ILogger} deps.logger
+     */
     constructor({logger}) {
         if (!logger) {
-            console.error('BaseTurnHandler Constructor: logger is required.');
+            console.error('BaseTurnHandler: logger is required.');
             throw new Error('BaseTurnHandler: logger is required.');
         }
+
         this._logger = logger;
-        this._currentTurnContext = null;
-        this._isDestroyed = false;
-        this._currentActor = null;
         this._currentState = null;
+        // other fields already initialized at declaration
     }
 
+    /* ─────────────────────────── ACCESSORS / HELPERS ────────────────────── */
+
+    /**
+     * Returns the most context-appropriate logger.
+     * Falls back to the handler-level logger if the context logger is unavailable.
+     */
     getLogger() {
         if (this._currentTurnContext) {
             try {
-                const contextLogger = this._currentTurnContext.getLogger();
-                if (contextLogger && typeof contextLogger.info === 'function') {
-                    return contextLogger;
-                }
+                const ctxLogger = this._currentTurnContext.getLogger();
+                if (ctxLogger && typeof ctxLogger.info === 'function') return ctxLogger;
             } catch (e) {
-                this._logger.warn(`Error accessing logger from TurnContext: ${e.message}. Falling back to base logger.`);
+                this._logger.warn(
+                    `Error accessing logger from TurnContext: ${e.message}. Falling back to base logger.`
+                );
             }
         }
         return this._logger;
@@ -101,54 +110,91 @@ export class BaseTurnHandler {
             try {
                 return this._currentTurnContext.getActor();
             } catch (e) {
-                this.getLogger().warn(`Error accessing actor from TurnContext: ${e.message}. Falling back to _currentActor field.`);
+                this.getLogger().warn(
+                    `Error accessing actor from TurnContext: ${e.message}. Falling back to _currentActor field.`
+                );
             }
         }
         return this._currentActor;
     }
 
+    /* ───────────────────────────── INTERNAL SETTERS ─────────────────────── */
+
     _setCurrentActorInternal(actor) {
-        this.getLogger().debug(`${this.constructor.name}._setCurrentActorInternal: Setting current actor to ${actor?.id ?? 'null'}.`);
+        this.getLogger().debug(
+            `${this.constructor.name}._setCurrentActorInternal: Setting current actor to ${actor?.id ?? 'null'}.`
+        );
         this._currentActor = actor;
-        if (this._currentTurnContext && this._currentTurnContext.getActor()?.id !== actor?.id) {
-            this.getLogger().warn(`${this.constructor.name}._setCurrentActorInternal: Handler's actor set to '${actor?.id ?? 'null'}' while an active TurnContext exists for '${this._currentTurnContext.getActor()?.id}'. Context not updated by this method.`);
+        if (
+            this._currentTurnContext &&
+            this._currentTurnContext.getActor()?.id !== actor?.id
+        ) {
+            this.getLogger().warn(
+                `${this.constructor.name}._setCurrentActorInternal: Handler's actor set to '${actor?.id ??
+                'null'}' while an active TurnContext exists for '${this._currentTurnContext
+                    .getActor()
+                    ?.id}'. Context not updated by this method.`
+            );
         }
     }
 
     _setCurrentTurnContextInternal(turnContext) {
-        this.getLogger().debug(`${this.constructor.name}._setCurrentTurnContextInternal: Setting turn context to ${turnContext ? `object for actor ${turnContext.getActor()?.id}` : 'null'}.`);
+        this.getLogger().debug(
+            `${this.constructor.name}._setCurrentTurnContextInternal: Setting turn context to ${
+                turnContext ? `object for actor ${turnContext.getActor()?.id}` : 'null'
+            }.`
+        );
         this._currentTurnContext = turnContext;
         if (turnContext) {
             if (this._currentActor?.id !== turnContext.getActor()?.id) {
-                this.getLogger().debug(`${this.constructor.name}._setCurrentTurnContextInternal: Aligning _currentActor ('${this._currentActor?.id}') with new TurnContext actor ('${turnContext.getActor()?.id}').`);
+                this.getLogger().debug(
+                    `${this.constructor.name}._setCurrentTurnContextInternal: Aligning _currentActor ('${this._currentActor?.id}') with new TurnContext actor ('${turnContext
+                        .getActor()
+                        ?.id}').`
+                );
                 this._currentActor = turnContext.getActor();
             }
         }
     }
 
+    /* ────────────────────────── STATE TRANSITION CORE ───────────────────── */
+
     async _transitionToState(newState) {
         const logger = this.getLogger();
-        if (!newState || typeof newState.enterState !== 'function' || typeof newState.exitState !== 'function') {
-            const errorMsg = `${this.constructor.name}._transitionToState: newState must implement ITurnState. Received: ${newState}`;
-            logger.error(errorMsg);
-            throw new Error(errorMsg);
+        if (
+            !newState ||
+            typeof newState.enterState !== 'function' ||
+            typeof newState.exitState !== 'function'
+        ) {
+            const msg = `${this.constructor.name}._transitionToState: newState must implement ITurnState. Received: ${newState}`;
+            logger.error(msg);
+            throw new Error(msg);
         }
 
         const prevState = this._currentState;
         if (prevState === newState && !(newState instanceof ConcreteTurnIdleState)) {
-            logger.debug(`${this.constructor.name}: Attempted to transition to the same state ${prevState?.getStateName() ?? 'N/A'}. Skipping.`);
+            logger.debug(
+                `${this.constructor.name}: Attempted to transition to the same state ${
+                    prevState?.getStateName() ?? 'N/A'
+                }. Skipping.`
+            );
             return;
         }
 
         const prevStateName = prevState ? prevState.getStateName() : 'None (Initial)';
-        logger.debug(`${this.constructor.name}: State Transition: ${prevStateName} \u2192 ${newState.getStateName()}`);
+        logger.debug(
+            `${this.constructor.name}: State Transition: ${prevStateName} → ${newState.getStateName()}`
+        );
 
         if (prevState) {
             try {
                 await this.onExitState(prevState, newState);
                 await prevState.exitState(this, newState);
             } catch (exitErr) {
-                logger.error(`${this.constructor.name}: Error during ${prevStateName}.exitState or onExitState hook \u2013 ${exitErr.message}`, exitErr);
+                logger.error(
+                    `${this.constructor.name}: Error during ${prevStateName}.exitState or onExitState hook – ${exitErr.message}`,
+                    exitErr
+                );
             }
         }
 
@@ -158,105 +204,178 @@ export class BaseTurnHandler {
             await this.onEnterState(newState, prevState);
             await newState.enterState(this, prevState);
         } catch (enterErr) {
-            logger.error(`${this.constructor.name}: Error during ${newState.getStateName()}.enterState or onEnterState hook \u2013 ${enterErr.message}`, enterErr);
+            logger.error(
+                `${this.constructor.name}: Error during ${newState.getStateName()}.enterState or onEnterState hook – ${enterErr.message}`,
+                enterErr
+            );
             if (!(this._currentState instanceof ConcreteTurnIdleState)) {
-                logger.warn(`${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`);
-                const currentContextActorIdForError = this._currentTurnContext?.getActor()?.id ?? this._currentActor?.id ?? 'N/A';
-                this._resetTurnStateAndResources(`error-entering-${newState.getStateName()}-for-${currentContextActorIdForError}`);
+                logger.warn(
+                    `${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`
+                );
+                const actorIdForErr =
+                    this._currentTurnContext?.getActor()?.id ?? this._currentActor?.id ?? 'N/A';
+                this._resetTurnStateAndResources(
+                    `error-entering-${newState.getStateName()}-for-${actorIdForErr}`
+                );
                 try {
                     await this._transitionToState(new ConcreteTurnIdleState(this));
-                } catch (idleTransitionError) {
-                    logger.error(`${this.constructor.name}: CRITICAL - Failed to transition to TurnIdleState even after an error entering ${newState.getStateName()}. Handler might be unstable. Error: ${idleTransitionError.message}`, idleTransitionError);
+                } catch (idleErr) {
+                    logger.error(
+                        `${this.constructor.name}: CRITICAL - Failed to transition to TurnIdleState after error entering ${newState.getStateName()}. Error: ${idleErr.message}`,
+                        idleErr
+                    );
                     this._currentState = new ConcreteTurnIdleState(this);
                 }
             } else {
-                logger.error(`${this.constructor.name}: CRITICAL - Failed to enter TurnIdleState even after an error. Handler might be unstable.`);
+                logger.error(
+                    `${this.constructor.name}: CRITICAL - Failed to enter TurnIdleState even after an error.`
+                );
             }
         }
     }
 
+    /* ───────────────────────────── LIVENESS CHECKS ──────────────────────── */
+
+    /**
+     * Throws if the handler has *finished* being destroyed.
+     * Calls made while destruction is *in progress* are tolerated.
+     */
     _assertHandlerActive() {
-        if (this._isDestroyed) {
-            throw new Error(`${this.constructor.name}: Operation invoked after handler was destroyed.`);
+        if (this._isDestroyed && !this._isDestroying) {
+            throw new Error(
+                `${this.constructor.name}: Operation invoked after handler was destroyed.`
+            );
         }
     }
 
+    _assertHandlerActiveUnlessDestroying(fromDestroy) {
+        if (!fromDestroy && !this._isDestroying) {
+            this._assertHandlerActive();
+        }
+    }
+
+    /* ─────────────────────────── TURN-END HANDLING ─────────────────────── */
+
     async _handleTurnEnd(actorIdToEnd, turnError = null, fromDestroy = false) {
-        // < NEW > short-circuit: handler already destroyed & not called from destroy()
+        // Short-circuit if we've already been destroyed (and this isn't part of destroy()).
         if (this._isDestroyed && !fromDestroy) {
             this.getLogger().warn(
-                `${this.constructor.name}._handleTurnEnd ignored for actor ` +
-                `${actorIdToEnd ?? 'UNKNOWN'} – handler already destroyed.`
+                `${this.constructor.name}._handleTurnEnd ignored for actor ${
+                    actorIdToEnd ?? 'UNKNOWN'
+                } – handler already destroyed.`
             );
             return;
         }
 
-        // original safety check (now after the early-out)
         this._assertHandlerActiveUnlessDestroying(fromDestroy);
         const logger = this.getLogger();
 
         const contextActorId = this._currentTurnContext?.getActor()?.id;
-        const handlerCurrentActorId = this._currentActor?.id;
-        const effectiveActorIdForLog = actorIdToEnd || contextActorId || handlerCurrentActorId || 'UNKNOWN_ACTOR_AT_END';
+        const handlerActorId = this._currentActor?.id;
+        const effectiveActor =
+            actorIdToEnd || contextActorId || handlerActorId || 'UNKNOWN_ACTOR_AT_END';
 
         if (actorIdToEnd && contextActorId && actorIdToEnd !== contextActorId) {
-            logger.warn(`${this.constructor.name}._handleTurnEnd called for actor '${actorIdToEnd}', but TurnContext is for '${contextActorId}'. Effective actor: '${effectiveActorIdForLog}'.`);
-        } else if (actorIdToEnd && !contextActorId && handlerCurrentActorId && actorIdToEnd !== handlerCurrentActorId) {
-            logger.warn(`${this.constructor.name}._handleTurnEnd called for actor '${actorIdToEnd}', no active TurnContext, but handler's _currentActor is '${handlerCurrentActorId}'. Effective actor: '${effectiveActorIdForLog}'.`);
+            logger.warn(
+                `${this.constructor.name}._handleTurnEnd called for actor '${actorIdToEnd}', but TurnContext is for '${contextActorId}'. Effective actor: '${effectiveActor}'.`
+            );
+        } else if (
+            actorIdToEnd &&
+            !contextActorId &&
+            handlerActorId &&
+            actorIdToEnd !== handlerActorId
+        ) {
+            logger.warn(
+                `${this.constructor.name}._handleTurnEnd called for actor '${actorIdToEnd}', no active TurnContext, but handler's _currentActor is '${handlerActorId}'. Effective actor: '${effectiveActor}'.`
+            );
         }
 
         if (this._isDestroyed && !fromDestroy) {
-            logger.warn(`${this.constructor.name}._handleTurnEnd ignored for actor ${effectiveActorIdForLog} \u2013 handler is already destroyed and call is not from destroy process.`);
+            logger.warn(
+                `${this.constructor.name}._handleTurnEnd ignored for actor ${effectiveActor} – handler is already destroyed and call is not from destroy process.`
+            );
             return;
         }
 
-        if (!fromDestroy && (this._currentState instanceof ConcreteTurnEndingState || this._currentState instanceof ConcreteTurnIdleState)) {
+        if (
+            !fromDestroy &&
+            (this._currentState instanceof ConcreteTurnEndingState ||
+                this._currentState instanceof ConcreteTurnIdleState)
+        ) {
             if (turnError) {
-                logger.warn(`${this.constructor.name}._handleTurnEnd called for ${effectiveActorIdForLog} with error '${turnError.message}', but already in ${this._currentState.getStateName()}. Error will be logged but no new transition initiated.`);
+                logger.warn(
+                    `${this.constructor.name}._handleTurnEnd called for ${effectiveActor} with error '${turnError.message}', but already in ${this._currentState.getStateName()}. Error will be logged but no new transition initiated.`
+                );
             } else {
-                logger.debug(`${this.constructor.name}._handleTurnEnd called for ${effectiveActorIdForLog}, but already in ${this._currentState.getStateName()}. Ignoring.`);
+                logger.debug(
+                    `${this.constructor.name}._handleTurnEnd called for ${effectiveActor}, but already in ${this._currentState.getStateName()}. Ignoring.`
+                );
             }
             return;
         }
 
-        logger.debug(`${this.constructor.name}._handleTurnEnd initiated for actor ${effectiveActorIdForLog}. Error: ${turnError ? turnError.message : 'null'}. Called from destroy: ${fromDestroy}`);
+        logger.debug(
+            `${this.constructor.name}._handleTurnEnd initiated for actor ${effectiveActor}. Error: ${
+                turnError ? turnError.message : 'null'
+            }. Called from destroy: ${fromDestroy}`
+        );
 
-        const effectiveActorIdForState = actorIdToEnd || contextActorId || this._currentActor?.id;
-        if (!effectiveActorIdForState) {
-            logger.warn(`${this.constructor.name}._handleTurnEnd: Could not determine actor ID for TurnEndingState. Using 'UNKNOWN_ACTOR_FOR_STATE'.`);
+        const actorIdForState =
+            actorIdToEnd || contextActorId || this._currentActor?.id;
+        if (!actorIdForState) {
+            logger.warn(
+                `${this.constructor.name}._handleTurnEnd: Could not determine actor ID for TurnEndingState. Using 'UNKNOWN_ACTOR_FOR_STATE'.`
+            );
         }
-        await this._transitionToState(new ConcreteTurnEndingState(this, effectiveActorIdForState || 'UNKNOWN_ACTOR_FOR_STATE', turnError));
+
+        await this._transitionToState(
+            new ConcreteTurnEndingState(
+                this,
+                actorIdForState || 'UNKNOWN_ACTOR_FOR_STATE',
+                turnError
+            )
+        );
     }
+
+    /* ──────────────────────── RESOURCE RESETTER ────────────────────────── */
 
     _resetTurnStateAndResources(logContext = 'N/A') {
         const logger = this.getLogger();
         const contextActorId = this._currentTurnContext?.getActor()?.id;
-        const currentHandlerActorId = this._currentActor?.id;
+        const handlerActorId = this._currentActor?.id;
 
         logger.debug(
-            `${this.constructor.name}._resetTurnStateAndResources (context: '${logContext}'). Context actor: ${contextActorId ?? 'None'}. Handler actor: ${currentHandlerActorId ?? 'None'}.`
+            `${this.constructor.name}._resetTurnStateAndResources (context: '${logContext}'). Context actor: ${contextActorId ??
+            'None'}. Handler actor: ${handlerActorId ?? 'None'}.`
         );
 
         if (this._currentTurnContext) {
-            // --- MODIFICATION: Ensure prompt is cancelled if context is being cleared here ---
-            // Although destroy() now handles this proactively, if _resetTurnStateAndResources
-            // is called from other paths (e.g., error recovery in _transitionToState),
-            // it's good to ensure cancellation.
             if (typeof this._currentTurnContext.cancelActivePrompt === 'function') {
-                logger.debug(`${this.constructor.name}._resetTurnStateAndResources: Cancelling active prompt in current TurnContext before clearing it.`);
+                logger.debug(
+                    `${this.constructor.name}._resetTurnStateAndResources: Cancelling active prompt in current TurnContext before clearing it.`
+                );
                 try {
                     this._currentTurnContext.cancelActivePrompt();
-                } catch (cancelError) {
-                    logger.warn(`${this.constructor.name}._resetTurnStateAndResources: Error during cancelActivePrompt: ${cancelError.message}`, cancelError);
+                } catch (err) {
+                    logger.warn(
+                        `${this.constructor.name}._resetTurnStateAndResources: Error during cancelActivePrompt: ${err.message}`,
+                        err
+                    );
                 }
             }
-            // --- END MODIFICATION ---
-            logger.debug(`${this.constructor.name}: Clearing current TurnContext (was for actor ${contextActorId ?? 'N/A'}).`);
+
+            logger.debug(
+                `${this.constructor.name}: Clearing current TurnContext (was for actor ${contextActorId ??
+                'N/A'}).`
+            );
             this._setCurrentTurnContextInternal(null);
         }
 
         if (this._currentActor) {
-            logger.debug(`${this.constructor.name}: Clearing current handler actor (was ${currentHandlerActorId ?? 'N/A'}).`);
+            logger.debug(
+                `${this.constructor.name}: Clearing current handler actor (was ${handlerActorId ??
+                'N/A'}).`
+            );
             this._setCurrentActorInternal(null);
         }
 
@@ -265,83 +384,104 @@ export class BaseTurnHandler {
         );
     }
 
-    _assertHandlerActiveUnlessDestroying(fromDestroy) {
-        if (!fromDestroy) {
-            this._assertHandlerActive();
-        }
-    }
-
-    async onEnterState(currentState, previousState) {
-        this.getLogger().debug(`${this.constructor.name}.onEnterState hook: Entering ${currentState.getStateName()} from ${previousState?.getStateName() ?? 'None'}`);
-    }
-
-    async onExitState(currentState, nextState) {
-        this.getLogger().debug(`${this.constructor.name}.onExitState hook: Exiting ${currentState.getStateName()} to ${nextState?.getStateName() ?? 'None'}`);
-    }
+    /* ───────────────────────────── PUBLIC API ──────────────────────────── */
 
     async startTurn(actor) {
         this._assertHandlerActive();
-        this.getLogger().error("Method 'startTurn(actor)' must be implemented by concrete subclasses of BaseTurnHandler.");
-        throw new Error("Method 'startTurn(actor)' must be implemented by concrete subclasses of BaseTurnHandler.");
+        this.getLogger().error(
+            "Method 'startTurn(actor)' must be implemented by concrete subclasses of BaseTurnHandler."
+        );
+        throw new Error(
+            "Method 'startTurn(actor)' must be implemented by concrete subclasses of BaseTurnHandler."
+        );
     }
 
+    /**
+     * Fully tear down the handler.
+     * Safe to call multiple times.
+     */
     async destroy() {
         const logger = this.getLogger();
-        const handlerName = this.constructor.name;
+        const name = this.constructor.name;
 
         if (this._isDestroyed) {
-            logger.debug(`${handlerName}.destroy() called but already destroyed.`);
+            logger.debug(`${name}.destroy() called but already destroyed.`);
             return;
         }
-        this._isDestroyed = true;
-        logger.info(`${handlerName}.destroy() invoked. Current state: ${this._currentState?.getStateName() ?? 'N/A'}`);
 
-        // --- MODIFICATION: Cancel active prompt in TurnContext ---
-        // This should happen BEFORE the current state's destroy is called,
-        // as the state's destroy might also call endTurn() which also cancels.
-        // This ensures the signal is sent early.
-        if (this._currentTurnContext && typeof this._currentTurnContext.cancelActivePrompt === 'function') {
-            logger.debug(`${handlerName}.destroy: Attempting to cancel active prompt in TurnContext for actor ${this._currentTurnContext.getActor()?.id ?? 'N/A'}.`);
+        /* Begin orderly teardown */
+        this._isDestroying = true;
+        logger.info(
+            `${name}.destroy() invoked. Current state: ${this._currentState?.getStateName() ??
+            'N/A'}`
+        );
+
+        /* Cancel any active prompt early */
+        if (this._currentTurnContext?.cancelActivePrompt) {
+            logger.debug(
+                `${name}.destroy: Attempting to cancel active prompt in TurnContext for actor ${this._currentTurnContext
+                    .getActor()
+                    ?.id ?? 'N/A'}.`
+            );
             try {
-                this._currentTurnContext.cancelActivePrompt(); // Abort the signal
-            } catch (cancelError) {
-                logger.warn(`${handlerName}.destroy: Error during _currentTurnContext.cancelActivePrompt(): ${cancelError.message}`, cancelError);
+                this._currentTurnContext.cancelActivePrompt();
+            } catch (err) {
+                logger.warn(
+                    `${name}.destroy: Error during cancelActivePrompt: ${err.message}`,
+                    err
+                );
             }
-        } else {
-            logger.debug(`${handlerName}.destroy: No active TurnContext or cancelActivePrompt method to call.`);
         }
-        // --- END MODIFICATION ---
 
-        if (this._currentState && typeof this._currentState.destroy === 'function') {
+        /* Let current state clean up */
+        if (this._currentState?.destroy) {
             try {
-                logger.debug(`${handlerName}.destroy: Calling destroy on current state ${this._currentState.getStateName()}.`);
+                logger.debug(
+                    `${name}.destroy: Calling destroy() on current state ${this._currentState.getStateName()}.`
+                );
                 await this._currentState.destroy(this);
-            } catch (stateDestroyError) {
-                logger.error(`${handlerName}.destroy: Error during ${this._currentState.getStateName()}.destroy() \u2013 ${stateDestroyError.message}`, stateDestroyError);
+            } catch (stateErr) {
+                logger.error(
+                    `${name}.destroy: Error during ${this._currentState.getStateName()}.destroy(): ${stateErr.message}`,
+                    stateErr
+                );
             }
         }
 
+        /* Ensure we finish in TurnIdleState */
         if (!(this._currentState instanceof ConcreteTurnIdleState)) {
-            logger.debug(`${handlerName}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ?? 'N/A'}).`);
+            logger.debug(
+                `${name}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ??
+                'N/A'}).`
+            );
             try {
                 await this._transitionToState(new ConcreteTurnIdleState(this));
             } catch (e) {
-                logger.error(`${handlerName}.destroy: Error while transitioning to TurnIdleState during destroy: ${e.message}`, e);
+                logger.error(
+                    `${name}.destroy: Error while transitioning to TurnIdleState during destroy: ${e.message}`,
+                    e
+                );
                 this._currentState = new ConcreteTurnIdleState(this);
-                logger.warn(`${handlerName}.destroy: Forcibly set state to TurnIdleState due to transition error.`);
+                logger.warn(
+                    `${name}.destroy: Forcibly set state to TurnIdleState due to transition error.`
+                );
             }
-        } else {
-            logger.debug(`${handlerName}.destroy: Already in TurnIdleState or no current state defined. Current state: ${this._currentState?.getStateName()}`);
         }
 
-        logger.debug(`${handlerName}.destroy: Calling _resetTurnStateAndResources.`);
-        // Note: _resetTurnStateAndResources now ALSO calls cancelActivePrompt if context still exists,
-        // providing a fallback if destroy wasn't called from the top handler.
-        // However, the explicit call earlier in this destroy method is more direct for this path.
-        this._resetTurnStateAndResources(`destroy-${handlerName}`);
+        /* Drop remaining resources */
+        logger.debug(`${name}.destroy: Calling _resetTurnStateAndResources.`);
+        this._resetTurnStateAndResources(`destroy-${name}`);
 
-        logger.info(`${handlerName}.destroy() complete. Final state: ${this._currentState?.getStateName() ?? 'N/A'}`);
+        /* Finish */
+        this._isDestroyed = true;
+        this._isDestroying = false;
+        logger.info(
+            `${name}.destroy() complete. Final state: ${this._currentState?.getStateName() ??
+            'N/A'}`
+        );
     }
+
+    /* ──────────────────────────── INITIAL STATE ────────────────────────── */
 
     _setInitialState(initialState) {
         if (!initialState || typeof initialState.enterState !== 'function') {
@@ -355,8 +495,26 @@ export class BaseTurnHandler {
             throw new Error(msg);
         }
         this._currentState = initialState;
-        this._logger.debug(`${this.constructor.name} initial state set to: ${this._currentState.getStateName()}. EnterState will be called on first transition or explicit start.`);
+        this._logger.debug(
+            `${this.constructor.name} initial state set to: ${this._currentState.getStateName()}. EnterState will be called on first transition or explicit start.`
+        );
+    }
+
+    /* ───────────────────────────── HOOKS ───────────────────────────────── */
+
+    async onEnterState(currentState, previousState) {
+        this.getLogger().debug(
+            `${this.constructor.name}.onEnterState hook: Entering ${currentState.getStateName()} from ${previousState?.getStateName() ??
+            'None'}`
+        );
+    }
+
+    async onExitState(currentState, nextState) {
+        this.getLogger().debug(
+            `${this.constructor.name}.onExitState hook: Exiting ${currentState.getStateName()} to ${nextState?.getStateName() ??
+            'None'}`
+        );
     }
 }
 
-// --- FILE END ---
+// ──────────────────────────────────────────────────────────────────────────────
