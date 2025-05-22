@@ -16,6 +16,8 @@
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
  * @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices
+ * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
+ * @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem
  */
 
 import {BaseTurnHandler} from './baseTurnHandler.js';
@@ -23,6 +25,11 @@ import {TurnIdleState as ConcreteTurnIdleState} from '../states/turnIdleState.js
 // Import AIPlayerStrategy for instantiation
 import {AIPlayerStrategy} from '../strategies/aiPlayerStrategy.js';
 import {TurnContext} from '../context/turnContext.js'; // Concrete TurnContext for instantiation
+
+// --- NEW IMPORTS ---
+import {AIGameStateProvider} from '../services/AIGameStateProvider.js';
+import {AIPromptFormatter} from '../services/AIPromptFormatter.js';
+import {LLMResponseProcessor} from '../services/LLMResponseProcessor.js';
 
 
 /**
@@ -75,6 +82,8 @@ export class AITurnHandler extends BaseTurnHandler {
      * @param {ICommandOutcomeInterpreter} dependencies.commandOutcomeInterpreter - Service to interpret command outcomes.
      * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Service for dispatching events safely.
      * @param {SubscriptionLifecycleManager} dependencies.subscriptionManager - Service to manage subscriptions.
+     * @param {IEntityManager} dependencies.entityManager - Service for managing entities.
+     * @param {IActionDiscoverySystem} dependencies.actionDiscoverySystem - Service for discovering available actions.
      * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor({
@@ -133,6 +142,12 @@ export class AITurnHandler extends BaseTurnHandler {
             this._logger.error(errorMsg, {entityManager});
             throw new Error(errorMsg);
         }
+        if (!actionDiscoverySystem || typeof actionDiscoverySystem.getValidActions !== 'function') {
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing IActionDiscoverySystem dependency.`;
+            this._logger.error(errorMsg, {actionDiscoverySystem});
+            throw new Error(errorMsg);
+        }
+
 
         // 3. Assign derived dependencies to private fields
         this.#turnEndPort = turnEndPort;
@@ -231,11 +246,25 @@ export class AITurnHandler extends BaseTurnHandler {
         this._setCurrentActorInternal(actor);
         this._logger.debug(`${this.constructor.name}.startTurn: Current actor set to ${actor.id}.`);
 
-        // 3. Instantiate AIPlayerStrategy
-        const aiStrategy = new AIPlayerStrategy({llmAdapter: this.#illmAdapter});
-        this._logger.debug(`${this.constructor.name}.startTurn: AIPlayerStrategy instantiated for actor ${actor.id}.`);
+        // 3. Instantiate new AI services
+        // Note: Consider lifecycle. For now, new instances per turn/strategy.
+        // If these become stateful or expensive, AITurnHandler might receive them via its own constructor.
+        const gameStateProvider = new AIGameStateProvider();
+        const promptFormatter = new AIPromptFormatter();
+        const llmResponseProcessor = new LLMResponseProcessor();
+        this._logger.debug(`${this.constructor.name}.startTurn: Instantiated AIGameStateProvider, AIPromptFormatter, LLMResponseProcessor for actor ${actor.id}.`);
 
-        // 4. Prepare a TurnContextServices bag
+
+        // 4. Instantiate AIPlayerStrategy with all dependencies
+        const aiStrategy = new AIPlayerStrategy({
+            llmAdapter: this.#illmAdapter, // Existing dependency from AITurnHandler's constructor
+            gameStateProvider: gameStateProvider,
+            promptFormatter: promptFormatter,
+            llmResponseProcessor: llmResponseProcessor,
+        });
+        this._logger.debug(`${this.constructor.name}.startTurn: AIPlayerStrategy (with new dependencies) instantiated for actor ${actor.id}.`);
+
+        // 5. Prepare a TurnContextServices bag
         /** @type {TurnContextServices} */
         const servicesForContext = {
             game: this.#gameWorldAccess,
@@ -247,30 +276,27 @@ export class AITurnHandler extends BaseTurnHandler {
             entityManager: this.#entityManager,
             actionDiscoverySystem: this.#actionDiscoverySystem,
             // Note: playerPromptService is omitted as it's not typically used by AIs directly.
-            // If AI needs to 'prompt' something, it would be through a different mechanism or service.
         };
         this._logger.debug(`${this.constructor.name}.startTurn: TurnContextServices bag prepared for actor ${actor.id}.`);
 
-        // 5. Create a new TurnContext instance
+        // 6. Create a new TurnContext instance
         const newTurnContext = new TurnContext({
             actor: actor,
             logger: this._logger,
             services: servicesForContext,
-            strategy: aiStrategy,
+            strategy: aiStrategy, // Pass the newly created strategy
             onEndTurnCallback: (errorOrNull) => this._handleTurnEnd(actor.id, errorOrNull),
-            // --- NEW: Pass the AI-specific flag provider and setter ---
             isAwaitingExternalEventProvider: this._getAIIsAwaitingExternalEventFlag.bind(this),
             onSetAwaitingExternalEventCallback: this._setAIIsAwaitingExternalEventFlag.bind(this),
-            // --- END NEW ---
             handlerInstance: this,
         });
         this._logger.debug(`${this.constructor.name}.startTurn: TurnContext created for AI actor ${actor.id}.`);
 
-        // 6. Set this new context as the current turn context
+        // 7. Set this new context as the current turn context
         this._setCurrentTurnContextInternal(newTurnContext);
         this._logger.debug(`${this.constructor.name}.startTurn: New TurnContext set as current for actor ${actor.id}.`);
 
-        // 7. Delegate to the current state's (initially TurnIdleState) startTurn(this, actor) method
+        // 8. Delegate to the current state's (initially TurnIdleState) startTurn(this, actor) method
         if (!this._currentState) {
             this._logger.error(`${this.constructor.name}.startTurn: Critical - _currentState is null before calling startTurn on it for actor ${actor.id}.`);
             throw new Error("AITurnHandler: _currentState is null, cannot start turn.");
