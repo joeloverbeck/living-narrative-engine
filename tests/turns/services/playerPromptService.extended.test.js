@@ -1,0 +1,426 @@
+// tests/turns/services/playerPromptService.extended.test.js
+// --- FILE START ---
+import PlayerPromptService from '../../../src/turns/services/playerPromptService.js';
+import {PromptError} from '../../../src/errors/promptError.js';
+import {PLAYER_TURN_SUBMITTED_ID} from '../../../src/constants/eventIds.js';
+import Entity from '../../../src/entities/entity.js';
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals';
+
+// Mock factory functions
+const createMockLogger = () => ({
+    info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
+});
+const createMockActionDiscoverySystem = () => ({getValidActions: jest.fn()});
+const createMockPromptOutputPort = () => ({prompt: jest.fn()});
+const createMockWorldContext = () => ({getLocationOfEntity: jest.fn()});
+const createMockEntityManager = () => ({getEntityInstance: jest.fn()});
+const createMockGameDataRepository = () => ({getActionDefinition: jest.fn()});
+const createMockValidatedEventDispatcher = () => ({
+    subscribe: jest.fn(), unsubscribe: jest.fn(), dispatchValidated: jest.fn(),
+});
+
+// Helper to allow microtasks to process
+const tick = (count = 1) => {
+    let p = Promise.resolve();
+    for (let i = 0; i < count; i++) {
+        p = p.then(() => new Promise(resolve => setTimeout(resolve, 0)));
+    }
+    return p;
+};
+
+describe('PlayerPromptService Constructor - Extended Validation', () => {
+    let mockLogger;
+    // ... (rest of constructor validation setup - assumed unchanged) ...
+    let mockActionDiscoverySystem;
+    let mockPromptOutputPort;
+    let mockWorldContext;
+    let mockEntityManager;
+    let mockGameDataRepository;
+    let mockValidatedEventDispatcher;
+    let baseDependencies;
+
+    beforeEach(() => {
+        mockLogger = createMockLogger();
+        mockActionDiscoverySystem = createMockActionDiscoverySystem();
+        mockPromptOutputPort = createMockPromptOutputPort();
+        mockWorldContext = createMockWorldContext();
+        mockEntityManager = createMockEntityManager();
+        mockGameDataRepository = createMockGameDataRepository();
+        mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
+
+        baseDependencies = {
+            logger: mockLogger,
+            actionDiscoverySystem: mockActionDiscoverySystem,
+            promptOutputPort: mockPromptOutputPort,
+            worldContext: mockWorldContext,
+            entityManager: mockEntityManager,
+            gameDataRepository: mockGameDataRepository,
+            validatedEventDispatcher: mockValidatedEventDispatcher,
+        };
+    });
+
+    it('should initialize successfully with all valid dependencies', () => {
+        expect(() => new PlayerPromptService(baseDependencies)).not.toThrow();
+        expect(mockLogger.info).toHaveBeenCalledWith('PlayerPromptService initialized successfully.');
+    });
+
+    describe('Logger Dependency Validation', () => {
+        it('should throw if logger is missing', () => {
+            const {logger, ...deps} = baseDependencies;
+            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing ILogger dependency.');
+        });
+        const methods = ['error', 'info', 'debug', 'warn'];
+        methods.forEach(method => {
+            it(`should throw if logger is missing ${method} method`, () => {
+                const invalidLogger = {...createMockLogger(), [method]: undefined};
+                expect(() => new PlayerPromptService({...baseDependencies, logger: invalidLogger}))
+                    .toThrow('PlayerPromptService: Invalid or missing ILogger dependency.');
+            });
+        });
+    });
+
+    describe('ActionDiscoverySystem Dependency Validation', () => {
+        it('should throw if actionDiscoverySystem is missing', () => {
+            const {actionDiscoverySystem, ...deps} = baseDependencies;
+            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing IActionDiscoverySystem dependency.');
+        });
+        it('should throw if actionDiscoverySystem lacks getValidActions method', () => {
+            const invalidSystem = {...createMockActionDiscoverySystem(), getValidActions: undefined};
+            expect(() => new PlayerPromptService({...baseDependencies, actionDiscoverySystem: invalidSystem}))
+                .toThrow('PlayerPromptService: Invalid or missing IActionDiscoverySystem dependency.');
+        });
+    });
+
+    describe('PromptOutputPort Dependency Validation', () => {
+        it('should throw if promptOutputPort is missing', () => {
+            const {promptOutputPort, ...deps} = baseDependencies;
+            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing IPromptOutputPort dependency.');
+        });
+        it('should throw if promptOutputPort lacks prompt method', () => {
+            const invalidPort = {...createMockPromptOutputPort(), prompt: undefined};
+            expect(() => new PlayerPromptService({...baseDependencies, promptOutputPort: invalidPort}))
+                .toThrow('PlayerPromptService: Invalid or missing IPromptOutputPort dependency.');
+        });
+    });
+
+    describe('WorldContext Dependency Validation', () => {
+        it('should throw if worldContext is missing', () => {
+            const {worldContext, ...deps} = baseDependencies;
+            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing IWorldContext dependency.');
+        });
+        it('should throw if worldContext lacks getLocationOfEntity method', () => {
+            const invalidContext = {...createMockWorldContext(), getLocationOfEntity: undefined};
+            expect(() => new PlayerPromptService({...baseDependencies, worldContext: invalidContext}))
+                .toThrow('PlayerPromptService: Invalid or missing IWorldContext dependency.');
+        });
+    });
+
+    describe('EntityManager Dependency Validation', () => {
+        it('should throw if entityManager is missing', () => {
+            const {entityManager, ...deps} = baseDependencies;
+            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing EntityManager dependency.');
+        });
+        it('should throw if entityManager lacks getEntityInstance method', () => {
+            const invalidManager = {...createMockEntityManager(), getEntityInstance: undefined};
+            expect(() => new PlayerPromptService({...baseDependencies, entityManager: invalidManager}))
+                .toThrow('PlayerPromptService: Invalid or missing EntityManager dependency.');
+        });
+    });
+
+    describe('GameDataRepository Dependency Validation', () => {
+        it('should throw if gameDataRepository is missing', () => {
+            const {gameDataRepository, ...deps} = baseDependencies;
+            expect(() => new PlayerPromptService(deps)).toThrow('PlayerPromptService: Invalid or missing GameDataRepository dependency.');
+        });
+        it('should throw if gameDataRepository lacks getActionDefinition method', () => {
+            const invalidRepo = {...createMockGameDataRepository(), getActionDefinition: undefined};
+            expect(() => new PlayerPromptService({...baseDependencies, gameDataRepository: invalidRepo}))
+                .toThrow('PlayerPromptService: Invalid or missing GameDataRepository dependency.');
+        });
+    });
+});
+
+
+describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
+    let service;
+    let mockLogger;
+    let mockActionDiscoverySystem;
+    let mockPromptOutputPort;
+    let mockWorldContext;
+    let mockEntityManager;
+    let mockGameDataRepository;
+    let mockValidatedEventDispatcher;
+    let validActor;
+    let mockLocation;
+
+    const defaultDiscoveredActions = [{id: 'action1', name: 'Action 1', command: 'do it'}];
+    const actionDefault = {id: 'actionDefault', name: 'Default', command: 'default'};
+
+    beforeEach(() => {
+        mockLogger = createMockLogger();
+        mockActionDiscoverySystem = createMockActionDiscoverySystem();
+        mockPromptOutputPort = createMockPromptOutputPort();
+        mockWorldContext = createMockWorldContext();
+        mockEntityManager = createMockEntityManager();
+        mockGameDataRepository = createMockGameDataRepository();
+        mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
+
+        service = new PlayerPromptService({
+            logger: mockLogger,
+            actionDiscoverySystem: mockActionDiscoverySystem,
+            promptOutputPort: mockPromptOutputPort,
+            worldContext: mockWorldContext,
+            entityManager: mockEntityManager,
+            gameDataRepository: mockGameDataRepository,
+            validatedEventDispatcher: mockValidatedEventDispatcher,
+        });
+
+        validActor = new Entity('player:valid', 'player-template');
+        mockLocation = new Entity('location:test', 'location-template');
+
+        mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
+        mockActionDiscoverySystem.getValidActions.mockResolvedValue([...defaultDiscoveredActions]);
+        mockPromptOutputPort.prompt.mockResolvedValue(undefined);
+        mockValidatedEventDispatcher.subscribe.mockReturnValue(jest.fn());
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    describe('Initial Validations and Setup', () => {
+        it('should throw PromptError if actor is null', async () => {
+            await expect(service.prompt(null)).rejects.toThrow(new PromptError('Invalid actor provided to PlayerPromptService.prompt: null'));
+        });
+
+        it('should throw PromptError if actor.id is missing', async () => {
+            const invalidActor = {name: 'No ID Actor'};
+            await expect(service.prompt(invalidActor)).rejects.toThrow(new PromptError(`Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(invalidActor)}`));
+        });
+
+        it('should throw PromptError if actor.id is an empty string', async () => {
+            const invalidActor = {id: ''};
+            await expect(service.prompt(invalidActor)).rejects.toThrow(new PromptError(`Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(invalidActor)}`));
+        });
+
+        it('should throw DOMException with AbortError if cancellationSignal is already aborted before initiation', async () => {
+            const abortController = new AbortController();
+            abortController.abort();
+            const options = {cancellationSignal: abortController.signal};
+            try {
+                await service.prompt(validActor, options);
+                throw new Error('Prompt should have been aborted');
+            } catch (e) {
+                expect(e).toBeInstanceOf(DOMException);
+                expect(e.name).toBe('AbortError');
+                expect(e.message).toBe('Prompt aborted by signal before initiation.');
+            }
+        });
+    });
+
+    describe('Superseding Prompts (Behavior of #clearCurrentPrompt)', () => {
+
+        it('should reject the superseded prompt with PROMPT_SUPERSEDED_BY_NEW_REQUEST for a different actor', async () => {
+            const firstActor = new Entity('player:first', 'player-template');
+            const firstPromptUnsubscribeFn = jest.fn();
+            mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([...defaultDiscoveredActions]);
+            mockValidatedEventDispatcher.subscribe.mockImplementationOnce(() => firstPromptUnsubscribeFn);
+            const firstPromptPromise = service.prompt(firstActor);
+            await tick();
+
+            const secondActor = new Entity('player:other', 'player-template');
+            mockWorldContext.getLocationOfEntity.mockResolvedValueOnce(new Entity('location:other', 'loc-template'));
+            mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([actionDefault]);
+            const secondPromptPromise = service.prompt(secondActor);
+
+            await expect(firstPromptPromise).rejects.toMatchObject({
+                name: 'PromptError',
+                message: `New prompt initiated for actor ${secondActor.id}, superseding previous prompt for ${firstActor.id}.`,
+                code: "PROMPT_SUPERSEDED_BY_NEW_REQUEST"
+            });
+            expect(firstPromptUnsubscribeFn).toHaveBeenCalledTimes(1);
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Clearing active prompt for actor ${firstActor.id}`));
+
+            let secondPromptEventHandler;
+            mockValidatedEventDispatcher.subscribe.mockImplementationOnce((_, cb) => {
+                secondPromptEventHandler = cb;
+                return jest.fn();
+            });
+            await tick();
+            if (secondPromptEventHandler) secondPromptEventHandler({
+                type: PLAYER_TURN_SUBMITTED_ID,
+                payload: {actionId: actionDefault.id, speech: null, submittedByActorId: secondActor.id}
+            });
+            await expect(secondPromptPromise).resolves.toBeDefined();
+        });
+
+        it('should reject the superseded prompt with a specific message when re-prompting the same actor', async () => {
+            const actor = new Entity('player:same', 'player-template');
+            const firstPromptUnsubscribeFn = jest.fn();
+            mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([...defaultDiscoveredActions]);
+            mockValidatedEventDispatcher.subscribe.mockImplementationOnce(() => firstPromptUnsubscribeFn);
+            const firstPromptPromise = service.prompt(actor);
+            await tick();
+
+            mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([actionDefault]);
+            const secondPromptPromiseSameActor = service.prompt(actor);
+
+            await expect(firstPromptPromise).rejects.toMatchObject({
+                name: 'PromptError',
+                message: `New prompt re-initiated for actor ${actor.id}, superseding existing prompt.`,
+                code: "PROMPT_SUPERSEDED_BY_NEW_REQUEST"
+            });
+            expect(firstPromptUnsubscribeFn).toHaveBeenCalledTimes(1);
+
+            let secondPromptEventHandler;
+            mockValidatedEventDispatcher.subscribe.mockImplementationOnce((_, cb) => {
+                secondPromptEventHandler = cb;
+                return jest.fn();
+            });
+            await tick();
+            if (secondPromptEventHandler) secondPromptEventHandler({
+                type: PLAYER_TURN_SUBMITTED_ID,
+                payload: {actionId: actionDefault.id, speech: null, submittedByActorId: actor.id}
+            });
+            await expect(secondPromptPromiseSameActor).resolves.toBeDefined();
+        });
+
+        it('cancelCurrentPrompt logs "no active prompt" if called after a prompt self-aborted (and nulled current context)', async () => {
+            const actorToAbort = new Entity('player:abort-then-cancel', 't');
+            const unsubscribeFn = jest.fn();
+            const abortController = new AbortController();
+            const signal = abortController.signal;
+            const removeEventListenerSpy = jest.spyOn(signal, 'removeEventListener');
+
+            mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([actionDefault]);
+            mockValidatedEventDispatcher.subscribe.mockImplementationOnce(() => unsubscribeFn);
+
+            const promptPromise = service.prompt(actorToAbort, {cancellationSignal: signal});
+            await tick();
+
+            abortController.abort();
+            try {
+                await promptPromise; // Wait for the abort to process
+            } catch (e) {
+                expect(e.name).toBe('AbortError');
+            }
+            await tick(); // Ensure all cleanup from abort (like nulling #currentPromptContext) is done
+
+            service.cancelCurrentPrompt(); // #currentPromptContext should be null here
+            await tick();
+
+            expect(mockLogger.info).toHaveBeenCalledWith("PlayerPromptService: cancelCurrentPrompt called.");
+            expect(mockLogger.debug).toHaveBeenCalledWith("PlayerPromptService: cancelCurrentPrompt called, but no active prompt to cancel.");
+
+            // Verify original prompt's cleanup happened once due to its own abort
+            expect(unsubscribeFn).toHaveBeenCalledTimes(1);
+            expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
+
+            removeEventListenerSpy.mockRestore();
+        });
+
+
+        it('#clearCurrentPrompt should log errors from its own calls to unsubscribe but still reject the old prompt', async () => {
+            const actorToSupersede = new Entity('player:badunsubscribe', 't');
+            const erroringUnsubscribeFn = jest.fn(() => {
+                throw new Error("Unsubscribe failed!");
+            });
+            mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([...defaultDiscoveredActions]);
+            mockValidatedEventDispatcher.subscribe.mockImplementationOnce(() => erroringUnsubscribeFn);
+            const firstPromptWithBadUnsubscribe = service.prompt(actorToSupersede);
+            await tick();
+
+            const secondActor = new Entity('player:other2', 'player-template');
+            mockWorldContext.getLocationOfEntity.mockResolvedValueOnce(new Entity('location:other2', 'loc-template'));
+            mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([actionDefault]);
+            const secondPromptPromise = service.prompt(secondActor);
+
+            await expect(firstPromptWithBadUnsubscribe).rejects.toMatchObject({
+                name: 'PromptError', code: "PROMPT_SUPERSEDED_BY_NEW_REQUEST"
+            });
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                expect.stringContaining(`PlayerPromptService: Error unsubscribing listener for previous prompt (actor ${actorToSupersede.id}).`),
+                expect.objectContaining({message: "Unsubscribe failed!"})
+            );
+
+            let secondPromptEventHandler;
+            mockValidatedEventDispatcher.subscribe.mockImplementationOnce((_, cb) => {
+                secondPromptEventHandler = cb;
+                return jest.fn();
+            });
+            await tick();
+            if (secondPromptEventHandler) secondPromptEventHandler({
+                type: PLAYER_TURN_SUBMITTED_ID,
+                payload: {actionId: actionDefault.id, speech: null, submittedByActorId: secondActor.id}
+            });
+            await expect(secondPromptPromise).resolves.toBeDefined();
+        });
+    });
+
+    // --- Start of new tests for worldContext failures ---
+    describe('worldContext.getLocationOfEntity Failures', () => {
+        it('should throw PromptError if getLocationOfEntity returns null', async () => {
+            mockWorldContext.getLocationOfEntity.mockResolvedValue(null);
+            const promptPromise = service.prompt(validActor);
+            await expect(promptPromise).rejects.toThrow(PromptError);
+            await expect(promptPromise).rejects.toMatchObject({
+                message: `Failed to determine actor location for ${validActor.id}: Location not found or undefined.`
+            });
+        });
+
+        it('should throw PromptError if getLocationOfEntity returns undefined', async () => {
+            mockWorldContext.getLocationOfEntity.mockResolvedValue(undefined);
+            const promptPromise = service.prompt(validActor);
+            await expect(promptPromise).rejects.toThrow(PromptError);
+            await expect(promptPromise).rejects.toMatchObject({
+                message: `Failed to determine actor location for ${validActor.id}: Location not found or undefined.`
+            });
+        });
+
+        it('should wrap and throw PromptError if getLocationOfEntity throws a generic error', async () => {
+            const genericError = new Error("Generic location error");
+            mockWorldContext.getLocationOfEntity.mockRejectedValue(genericError);
+            const promptPromise = service.prompt(validActor);
+            await expect(promptPromise).rejects.toThrow(PromptError);
+            await expect(promptPromise).rejects.toMatchObject({
+                message: `Failed to determine actor location for ${validActor.id}`,
+                cause: genericError
+            });
+        });
+
+        it('should re-throw PromptError if getLocationOfEntity throws a PromptError', async () => {
+            const specificPromptError = new PromptError("Specific location PromptError");
+            mockWorldContext.getLocationOfEntity.mockRejectedValue(specificPromptError);
+            await expect(service.prompt(validActor)).rejects.toThrow(specificPromptError);
+        });
+
+        it('should re-throw AbortError if getLocationOfEntity throws an AbortError', async () => {
+            const abortError = new DOMException("Location fetch aborted", "AbortError");
+            mockWorldContext.getLocationOfEntity.mockRejectedValue(abortError);
+            await expect(service.prompt(validActor)).rejects.toThrow(abortError);
+        });
+
+        it('should throw AbortError if cancellationSignal aborts during getLocationOfEntity', async () => {
+            const abortController = new AbortController();
+            const options = {cancellationSignal: abortController.signal};
+            mockWorldContext.getLocationOfEntity.mockImplementation(async () => {
+                abortController.abort(); // Abort while the async function is "in progress"
+                await tick(); // Allow abort to propagate
+                return mockLocation; // This won't be used if abort is effective
+            });
+
+            const promptPromise = service.prompt(validActor, options);
+            await expect(promptPromise).rejects.toThrow(DOMException);
+            try {
+                await promptPromise;
+            } catch (e) {
+                expect(e.name).toBe('AbortError');
+                // Message can vary slightly depending on exact timing of abort check vs. internal handler
+                expect(e.message).toMatch(/Prompt aborted by signal during setup|Prompt aborted by signal\.$/);
+            }
+        });
+    });
+    // --- End of new tests for worldContext failures ---
+
+});
+// --- FILE END ---
