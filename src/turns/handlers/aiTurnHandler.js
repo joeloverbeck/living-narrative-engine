@@ -1,232 +1,348 @@
 // src/core/turns/handlers/aiTurnHandler.js
 // ──────────────────────────────────────────────────────────────────────────────
-//  AITurnHandler Class - Updated to use ITurnContext
+//  AITurnHandler Class
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
- */
-/**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
+ * @typedef {import('../interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter
+ * @typedef {import('../strategies/aiPlayerStrategy.js').AIPlayerStrategy} AIPlayerStrategy_Instance // Renamed for clarity
+ * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
+ * @typedef {import('../states/turnIdleState.js').TurnIdleState} TurnIdleState // For type hinting initial state
+ * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
+ * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
+ * @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
+ * @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices
  */
-/** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
-/** @typedef {import('../states/ITurnState.js').ITurnState} ITurnState */
-/** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
-/** @typedef {import('../context/turnContext.js').TurnContext} ConcreteTurnContext */ // Alias for clarity
-/** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
-// TODO: Add typedef for AIPlayerStrategy if/when defined
-// /** @typedef {import('../strategies/aiPlayerStrategy.js').AIPlayerStrategy} AIPlayerStrategy */
-
 
 import {BaseTurnHandler} from './baseTurnHandler.js';
-import {TurnIdleState} from '../states/turnIdleState.js';
-import {TurnContext} from '../context/turnContext.js'; // Using ConcreteTurnContext for instantiation
+import {TurnIdleState as ConcreteTurnIdleState} from '../states/turnIdleState.js';
+// Import AIPlayerStrategy for instantiation
+import {AIPlayerStrategy} from '../strategies/aiPlayerStrategy.js';
+import {TurnContext} from '../context/turnContext.js'; // Concrete TurnContext for instantiation
 
-// TODO: Import AI-specific services (e.g., AIService, LLMConnector) when needed.
-// Example: import {AIService} from '../../services/aiService.js';
 
 /**
  * @class AITurnHandler
  * @extends BaseTurnHandler
  * @description
- * Handles turns for AI-controlled actors. Extends BaseTurnHandler and uses ITurnContext.
- * Future implementations will include logic for AI decision-making.
+ * Handles turns for AI-controlled actors. It initializes with necessary dependencies
+ * for AI decision-making and turn management, extending BaseTurnHandler for core
+ * state machine functionality.
  */
 export class AITurnHandler extends BaseTurnHandler {
-
-    // AI-specific dependencies would go here, e.g.:
-    // /** @type {AIService} */
-    // #aiService;
-    /** @type {object} */ // Placeholder for game world access
-    #gameWorldAccess;
     /** @type {ITurnEndPort} */
     #turnEndPort;
-    // TODO: Add other AI-specific services, e.g., CommandProcessor if AI generates commands
-    // /** @type {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} */
-    // #commandProcessor;
+    /** @type {object} */ // Placeholder for more specific game world access type
+    #gameWorldAccess;
+    /** @type {ILLMAdapter} */
+    #illmAdapter;
+    /** @type {ICommandProcessor} */
+    #commandProcessor;
+    /** @type {ICommandOutcomeInterpreter} */
+    #commandOutcomeInterpreter;
+    /** @type {ISafeEventDispatcher} */
+    #safeEventDispatcher;
+    /** @type {SubscriptionLifecycleManager} */
+    #subscriptionManager;
+
+    // --- NEW: Flags for managing external AI response waiting ---
+    /** @private @type {boolean} */
+    #aiIsAwaitingExternalEvent = false;
+    /** @private @type {string|null} */
+    #aiAwaitingExternalEventForActorId = null;
+
+    // --- END NEW ---
 
 
     /**
      * Creates an instance of AITurnHandler.
-     * @param {object} deps
-     * @param {ILogger} deps.logger - The logger service.
-     * @param {object} [deps.gameWorldAccess={}] - Access to the game world.
-     * @param {ITurnEndPort} deps.turnEndPort - Port to notify on turn end.
-     * // TODO: Add other AI-specific dependencies:
-     * // @param {AIService} deps.aiService
-     * // @param {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} [deps.commandProcessor]
+     * @param {object} dependencies - The dependencies required by the handler.
+     * @param {ILogger} dependencies.logger - The logging service.
+     * @param {ITurnEndPort} dependencies.turnEndPort - Port for notifying when a turn ends.
+     * @param {object} dependencies.gameWorldAccess - Service or object providing access to game world data.
+     * @param {ILLMAdapter} dependencies.illmAdapter - Adapter for communicating with the Large Language Model for AI decisions.
+     * @param {ICommandProcessor} dependencies.commandProcessor - Service to process commands.
+     * @param {ICommandOutcomeInterpreter} dependencies.commandOutcomeInterpreter - Service to interpret command outcomes.
+     * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Service for dispatching events safely.
+     * @param {SubscriptionLifecycleManager} dependencies.subscriptionManager - Service to manage subscriptions.
+     * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor({
                     logger,
-                    gameWorldAccess = {},
                     turnEndPort,
-                    // aiService, // Example
-                    // commandProcessor // Example
+                    gameWorldAccess,
+                    illmAdapter,
+                    commandProcessor,
+                    commandOutcomeInterpreter,
+                    safeEventDispatcher,
+                    subscriptionManager
                 }) {
-        // 1. Call super() first
+        // 1. Call super() first with base dependencies
         super({logger});
 
-        // 2. 'this' is now available. Validate derived dependencies
-        if (!gameWorldAccess) throw new Error('AITurnHandler: gameWorldAccess is required.');
-        if (!turnEndPort) throw new Error('AITurnHandler: turnEndPort is required.');
-        // if (!aiService) throw new Error('AITurnHandler: aiService is required.');
+        // 2. 'this' is now available. Validate derived dependencies.
+        if (!turnEndPort || typeof turnEndPort.notifyTurnEnded !== 'function') {
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing ITurnEndPort dependency.`;
+            this._logger.error(errorMsg, {turnEndPort});
+            throw new Error(errorMsg);
+        }
+        if (!gameWorldAccess) { // Basic check, can be refined if gameWorldAccess has a specific interface
+            const errorMsg = `${this.constructor.name} Constructor: Missing gameWorldAccess dependency.`;
+            this._logger.error(errorMsg, {gameWorldAccess});
+            throw new Error(errorMsg);
+        }
+        if (!illmAdapter || typeof illmAdapter.generateAction !== 'function') {
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing ILLMAdapter dependency.`;
+            this._logger.error(errorMsg, {illmAdapter});
+            throw new Error(errorMsg);
+        }
+        if (!commandProcessor || typeof commandProcessor.processCommand !== 'function') {
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing ICommandProcessor dependency.`;
+            this._logger.error(errorMsg, {commandProcessor});
+            throw new Error(errorMsg);
+        }
+        if (!commandOutcomeInterpreter || typeof commandOutcomeInterpreter.interpret !== 'function') {
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing ICommandOutcomeInterpreter dependency.`;
+            this._logger.error(errorMsg, {commandOutcomeInterpreter});
+            throw new Error(errorMsg);
+        }
+        if (!safeEventDispatcher || typeof safeEventDispatcher.dispatchSafely !== 'function') {
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing ISafeEventDispatcher dependency.`;
+            this._logger.error(errorMsg, {safeEventDispatcher});
+            throw new Error(errorMsg);
+        }
+        if (!subscriptionManager || typeof subscriptionManager.subscribeToTurnEnded !== 'function') { // Example check
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing SubscriptionLifecycleManager dependency.`;
+            this._logger.error(errorMsg, {subscriptionManager});
+            throw new Error(errorMsg);
+        }
 
-        // 3. Assign derived dependencies
-        this.#gameWorldAccess = gameWorldAccess;
+        // 3. Assign derived dependencies to private fields
         this.#turnEndPort = turnEndPort;
-        // this.#aiService = aiService;
-        // this.#commandProcessor = commandProcessor;
+        this.#gameWorldAccess = gameWorldAccess;
+        this.#illmAdapter = illmAdapter;
+        this.#commandProcessor = commandProcessor;
+        this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
+        this.#safeEventDispatcher = safeEventDispatcher;
+        this.#subscriptionManager = subscriptionManager;
 
-        // 4. Create the initial state, passing 'this'
-        const initialState = new TurnIdleState(this);
+        // --- NEW: Initialize AI waiting flags ---
+        this.#aiIsAwaitingExternalEvent = false;
+        this.#aiAwaitingExternalEventForActorId = null;
+        // --- END NEW ---
 
-        // 5. Set the initial state
+        // 4. Create the initial state, passing 'this' (the handler instance)
+        const initialState = new ConcreteTurnIdleState(this);
+
+        // 5. Set the initial state using the protected method from BaseTurnHandler
         this._setInitialState(initialState);
 
-        this._logger.debug(`${this.constructor.name} initialised. Dependencies assigned. Initial state set.`);
+        this._logger.debug(`${this.constructor.name} initialized successfully. Dependencies assigned. Initial state set to ${initialState.getStateName()}.`);
+    }
+
+    // --- NEW: Methods for ITurnContext callbacks regarding external event waiting ---
+    /**
+     * Provider function for ITurnContext to check if the AI handler is awaiting an external event.
+     * @returns {boolean} True if awaiting, false otherwise.
+     * @private
+     */
+    _getAIIsAwaitingExternalEventFlag() {
+        const currentActorInContext = this.getTurnContext()?.getActor();
+        // Only return true if the flag is set AND it's for the actor of the current context
+        if (this.#aiIsAwaitingExternalEvent && this.#aiAwaitingExternalEventForActorId === currentActorInContext?.id) {
+            return true;
+        }
+        // If the flag is set but for a different actor (e.g., stale context), log a warning but return false for this context.
+        if (this.#aiIsAwaitingExternalEvent && this.#aiAwaitingExternalEventForActorId !== currentActorInContext?.id) {
+            this._logger.warn(`${this.constructor.name}._getAIIsAwaitingExternalEventFlag: Flag is true for ${this.#aiAwaitingExternalEventForActorId}, but current context actor is ${currentActorInContext?.id}. Returning false for this context.`);
+        }
+        return false;
     }
 
     /**
+     * Callback function for ITurnContext to set the AI handler's awaiting state.
+     * @param {boolean} isAwaiting - True if the handler should mark itself as waiting.
+     * @param {string} actorId - The ID of the actor for whom the wait is being set.
+     * @private
+     */
+    _setAIIsAwaitingExternalEventFlag(isAwaiting, actorId) {
+        const currentActorInContext = this.getTurnContext()?.getActor();
+        if (actorId !== currentActorInContext?.id) {
+            this._logger.error(
+                `${this.constructor.name}._setAIIsAwaitingExternalEventFlag: Attempt to set flag for actor ${actorId} ` +
+                `but current context actor is ${currentActorInContext?.id}. This indicates a potential logic error. Flag state not changed for ${actorId}.`
+            );
+            return; // Do not change state if actor mismatch
+        }
+
+        const oldFlag = this.#aiIsAwaitingExternalEvent;
+        const oldActorId = this.#aiAwaitingExternalEventForActorId;
+
+        this.#aiIsAwaitingExternalEvent = !!isAwaiting; // Ensure boolean
+        this.#aiAwaitingExternalEventForActorId = this.#aiIsAwaitingExternalEvent ? actorId : null;
+
+        if (oldFlag !== this.#aiIsAwaitingExternalEvent || oldActorId !== this.#aiAwaitingExternalEventForActorId) {
+            this._logger.debug(
+                `${this.constructor.name}._setAIIsAwaitingExternalEventFlag: ` +
+                `AI waiting flag for actor ${actorId} changed from ${oldFlag} (for ${oldActorId}) to ${this.#aiIsAwaitingExternalEvent}.`
+            );
+        }
+    }
+
+    // --- END NEW ---
+
+
+    /**
      * @override
-     * Initiates a turn for the AI-controlled actor. Creates and sets ITurnContext.
+     * Initiates an AI actor's turn.
      * @param {Entity} actor - The AI entity whose turn is to be started.
      * @returns {Promise<void>}
      */
     async startTurn(actor) {
-        super._assertHandlerActive();
+        this._logger.debug(`${this.constructor.name}.startTurn called for AI actor ${actor?.id}.`);
+        super._assertHandlerActive(); // 1. Perform assertions to ensure the handler is active
 
-        if (!actor) {
-            this._logger.error(`${this.constructor.name}.startTurn: actor is required.`);
-            throw new Error(`${this.constructor.name}.startTurn: actor is required.`);
+        if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') { // 1. ...and the actor parameter is valid.
+            this._logger.error(`${this.constructor.name}.startTurn: actor is required and must have a valid id.`);
+            throw new Error(`${this.constructor.name}.startTurn: actor is required and must have a valid id.`);
         }
+        this._logger.debug(`${this.constructor.name}.startTurn: Actor ${actor.id} validated.`);
 
+        // 2. Set the current actor internally
         this._setCurrentActorInternal(actor);
-        this._logger.info(`${this.constructor.name}.startTurn for AI actor ${actor.id}.`);
+        this._logger.debug(`${this.constructor.name}.startTurn: Current actor set to ${actor.id}.`);
 
-        // TODO: AI will need its own strategy for decision making.
-        // This strategy would be part of the services or constructed here.
-        // Example: const aiStrategy = new AIPlayerStrategy({ aiService: this.#aiService, actor });
+        // 3. Instantiate AIPlayerStrategy
+        const aiStrategy = new AIPlayerStrategy({llmAdapter: this.#illmAdapter});
+        this._logger.debug(`${this.constructor.name}.startTurn: AIPlayerStrategy instantiated for actor ${actor.id}.`);
 
+        // 4. Prepare a TurnContextServices bag
         /** @type {TurnContextServices} */
         const servicesForContext = {
-            // PlayerPromptService is typically not for AI.
-            // AI might need a different way to "output" its decisions or actions if logging isn't enough.
             game: this.#gameWorldAccess,
-            // commandProcessor: this.#commandProcessor, // If AI generates commands string/objects
-            // commandOutcomeInterpreter: this.#commandOutcomeInterpreter, // If AI uses same command flow
-            // safeEventDispatcher: this.#safeEventDispatcher, // If AI needs to dispatch events
-            // subscriptionManager: this.#subscriptionManager, // If AI needs to subscribe to events
             turnEndPort: this.#turnEndPort,
-            // AI specific services could be added here, or accessed by an AIStrategy from its own dependencies.
-            // For example, an `aiService` could be passed if the AI states/strategies need it directly from context.
-            // However, it's often cleaner for the AIPlayerStrategy to encapsulate AI service interaction.
+            commandProcessor: this.#commandProcessor,
+            commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
+            safeEventDispatcher: this.#safeEventDispatcher,
+            subscriptionManager: this.#subscriptionManager,
+            // Note: playerPromptService is omitted as it's not typically used by AIs directly.
+            // If AI needs to 'prompt' something, it would be through a different mechanism or service.
         };
+        this._logger.debug(`${this.constructor.name}.startTurn: TurnContextServices bag prepared for actor ${actor.id}.`);
 
-        const newTurnContext = new TurnContext({ // Using the concrete TurnContext class
+        // 5. Create a new TurnContext instance
+        const newTurnContext = new TurnContext({
             actor: actor,
-            logger: this._logger, // Or a child logger: this._logger.createChildLogger(...)
+            logger: this._logger,
             services: servicesForContext,
+            strategy: aiStrategy,
             onEndTurnCallback: (errorOrNull) => this._handleTurnEnd(actor.id, errorOrNull),
-            // AI might not use the same external event provider as Player, or might have its own.
-            // For a simple AI, it might always be false (it decides and acts within its turn).
-            // If AI calls an async service (e.g., LLM API), this might become true.
-            isAwaitingExternalEventProvider: () => false, // Placeholder, AI might have its own logic
-            // AI might not use this specific flag marking. Provide a no-op or AI-specific logic.
-            onSetAwaitingExternalEventCallback: (isAwaiting, anActorId) => {
-                this._logger.debug(`AITurnHandler: setAwaitingExternalEvent called for ${anActorId} with ${isAwaiting}. AI handling TBD.`);
-            },
-            handlerInstance: this // Pass the handler instance itself
+            // --- NEW: Pass the AI-specific flag provider and setter ---
+            isAwaitingExternalEventProvider: this._getAIIsAwaitingExternalEventFlag.bind(this),
+            onSetAwaitingExternalEventCallback: this._setAIIsAwaitingExternalEventFlag.bind(this),
+            // --- END NEW ---
+            handlerInstance: this,
         });
+        this._logger.debug(`${this.constructor.name}.startTurn: TurnContext created for AI actor ${actor.id}.`);
+
+        // 6. Set this new context as the current turn context
         this._setCurrentTurnContextInternal(newTurnContext);
+        this._logger.debug(`${this.constructor.name}.startTurn: New TurnContext set as current for actor ${actor.id}.`);
 
-        this._logger.debug(`${this.constructor.name}: TurnContext created for AI actor ${actor.id}.`);
-
-        // Delegate to current state (TurnIdleState initially).
-        // The state receives 'this' (AITurnHandler instance) as its handler context.
-        // States will then use handler.getTurnContext() to get the ITurnContext.
-        // An AI-specific state (e.g., AIThinkingState) might be transitioned to by TurnIdleState
-        // or a subsequent state, using the ITurnContext to interact with AI decision logic.
-        try {
-            await this._currentState.startTurn(this, actor);
-            // For a stub, we might want to immediately log that the turn is not fully implemented
-            // or even end the turn if no AI states are ready.
-            this._logger.warn(`${this.constructor.name}: AI turn processing logic is a STUB for actor ${actor.id}. Turn may not proceed meaningfully without AI-specific states/strategies.`);
-            // Example: If AI has no actions, it might immediately end its turn.
-            // This would typically be handled by an AI's "decide action" state/strategy.
-            // For this refactor, ensuring context is provided is key.
-            // if (this.getTurnContext()) { // Check if context is still valid
-            //    this.getTurnContext().endTurn(new Error("AI turn not fully implemented."));
-            // }
-        } catch (error) {
-            this._logger.error(`${this.constructor.name}: Error during AI startTurn for actor ${actor.id}: ${error.message}`, error);
-            if (this.getTurnContext()) {
-                this.getTurnContext().endTurn(error);
-            } else {
-                this._handleTurnEnd(actor.id, error); // Fallback if context was lost
-            }
+        // 7. Delegate to the current state's (initially TurnIdleState) startTurn(this, actor) method
+        if (!this._currentState) {
+            this._logger.error(`${this.constructor.name}.startTurn: Critical - _currentState is null before calling startTurn on it for actor ${actor.id}.`);
+            throw new Error("AITurnHandler: _currentState is null, cannot start turn.");
         }
+        this._logger.debug(`${this.constructor.name}.startTurn: Delegating to ${this._currentState.getStateName()}.startTurn for actor ${actor.id}.`);
+        await this._currentState.startTurn(this, actor);
+        this._logger.info(`${this.constructor.name}.startTurn: Turn initiation for AI actor ${actor.id} successfully delegated to current state.`);
     }
 
     /**
      * @override
-     * Handles cleanup if the AITurnHandler is destroyed.
+     * AI-specific resource reset. Calls super and resets AI waiting flags.
+     * @param {string} [logContext='N/A'] - Context for logging.
+     */
+    _resetTurnStateAndResources(logContext = 'N/A') {
+        const currentActorIdForLog = this.getCurrentActor()?.id || 'UnknownActor';
+        const effectiveLogContext = `${logContext}-AITurnHandler-${currentActorIdForLog}`;
+        this._logger.debug(`${this.constructor.name}._resetTurnStateAndResources called for context: '${effectiveLogContext}'.`);
+
+        // 1. Call base class reset first (clears _currentTurnContext and _currentActor on BaseTurnHandler)
+        super._resetTurnStateAndResources(effectiveLogContext);
+
+        // 2. Perform AI-specific resets
+        const oldIsAwaiting = this.#aiIsAwaitingExternalEvent;
+        const oldAwaitingActorId = this.#aiAwaitingExternalEventForActorId;
+
+        this.#aiIsAwaitingExternalEvent = false;
+        this.#aiAwaitingExternalEventForActorId = null;
+
+        if (oldIsAwaiting || oldAwaitingActorId) { // Log only if there was something to reset
+            this._logger.debug(
+                `${this.constructor.name}: AI 'isAwaitingExternalEvent' flags reset. Was: ${oldIsAwaiting} for actor ${oldAwaitingActorId ?? 'N/A'}. Context: '${effectiveLogContext}'.`
+            );
+        }
+
+        this._logger.debug(`${this.constructor.name}: AI-specific resource reset complete for context: '${effectiveLogContext}'.`);
+    }
+
+
+    /**
+     * @override
+     * Destroys the AITurnHandler, performing AI-specific cleanup before calling super.destroy().
      * @returns {Promise<void>}
      */
     async destroy() {
+        // 1. Check if already destroyed
         if (this._isDestroyed) {
             this._logger.debug(`${this.constructor.name}.destroy() called but already destroyed.`);
             return;
         }
-        this._logger.info(`${this.constructor.name}.destroy() invoked (AI specific part).`);
+        // Log destruction attempt (BaseTurnHandler.destroy() will also log)
+        this._logger.info(`${this.constructor.name}.destroy() invoked. Current state: ${this._currentState?.getStateName() ?? 'N/A'}.`);
 
-        // TODO: Add any AI-specific cleanup here (e.g., aborting ongoing LLM calls, releasing AI resources)
-        // For example:
-        // if (this.#aiService && typeof this.#aiService.shutdown === 'function') {
-        //     await this.#aiService.shutdown();
-        //     this._logger.debug(`${this.constructor.name}: AI service shut down.`);
-        // }
+        // 2. AI-specific cleanup (before super.destroy())
+        // This is where you'd abort ongoing AI computations or release AI service handles, if any.
+        // For example, if ILLMAdapter had a method to cancel requests:
+        if (this.#illmAdapter && typeof this.#illmAdapter.cancelOngoingOperations === 'function') {
+            this._logger.debug(`${this.constructor.name}: Attempting to cancel ILLMAdapter ongoing operations.`);
+            try {
+                // Assuming cancelOngoingOperations might be async or sync
+                await Promise.resolve(this.#illmAdapter.cancelOngoingOperations());
+                this._logger.debug(`${this.constructor.name}: ILLMAdapter ongoing operations cancelled.`);
+            } catch (e) {
+                this._logger.warn(`${this.constructor.name}: Error cancelling ILLMAdapter operations during destroy: ${e.message}`, e);
+            }
+        } else if (this.#illmAdapter) {
+            this._logger.debug(`${this.constructor.name}: ILLMAdapter does not have a 'cancelOngoingOperations' method or it's not a function.`);
+        }
 
-        // BaseTurnHandler.destroy() will handle current state's destroy, reset resources, and transition to Idle.
+        // Reset AI-specific flags as part of pre-super cleanup.
+        // Although _resetTurnStateAndResources (called by super.destroy) would also clear them,
+        // clearing them here ensures they are reset even if super.destroy() had an issue before calling it.
+        const oldIsAwaiting = this.#aiIsAwaitingExternalEvent;
+        const oldAwaitingActorId = this.#aiAwaitingExternalEventForActorId;
+        this.#aiIsAwaitingExternalEvent = false;
+        this.#aiAwaitingExternalEventForActorId = null;
+        if (oldIsAwaiting || oldAwaitingActorId) {
+            this._logger.debug(`${this.constructor.name} (destroy): AI waiting flags forcibly reset. Was: ${oldIsAwaiting} for actor ${oldAwaitingActorId ?? 'N/A'}.`);
+        }
+
+
+        // 3. Call super.destroy()
+        // This handles the core cleanup: destroying current state, resetting base resources,
+        // and ensuring transition to TurnIdleState.
         await super.destroy();
-        this._logger.debug(`${this.constructor.name}.destroy() AI-specific handling complete.`);
+
+        // 4. Log completion of AI-specific destruction
+        this._logger.debug(`${this.constructor.name}.destroy() AI-specific handling and super.destroy() call complete.`);
     }
-
-
-    /**
-     * @override
-     * AI-specific resource reset, if any, beyond what BaseTurnHandler does.
-     * Called by BaseTurnHandler._resetTurnStateAndResources.
-     * @param {string} [actorIdContextForLog='N/A']
-     */
-    _resetTurnStateAndResources(actorIdContextForLog = 'N/A') {
-        super._resetTurnStateAndResources(actorIdContextForLog); // Calls base class method first
-        this._logger.debug(`${this.constructor.name}: AI-specific resources reset for '${actorIdContextForLog}'. (Currently a stub - no additional AI specific resources to reset here).`);
-        // TODO: Reset any AI-specific flags or states here if they live directly on AITurnHandler
-        // and are not part of the ITurnContext or managed by BaseTurnHandler.
-    }
-
-    // --- AI-Specific Lifecycle Hooks (Optional Overrides from BaseTurnHandler) ---
-    // /**
-    //  * @override
-    //  * @param {ITurnState} currentState
-    //  * @param {ITurnState | undefined} [previousState]
-    //  */
-    // async onEnterState(currentState, previousState) {
-    //     await super.onEnterState(currentState, previousState); // Call base behavior
-    //     this._logger.debug(`${this.constructor.name} specific onEnterState for AI: ${currentState.getStateName()}`);
-    //     // AI-specific logic on entering a state, if any.
-    // }
-
-    // /**
-    //  * @override
-    //  * @param {ITurnState} currentState
-    //  * @param {ITurnState | undefined} [nextState]
-    //  */
-    // async onExitState(currentState, nextState) {
-    //     await super.onExitState(currentState, nextState); // Call base behavior
-    //     this._logger.debug(`${this.constructor.name} specific onExitState for AI: ${currentState.getStateName()}`);
-    //     // AI-specific logic on exiting a state, if any.
-    // }
 }
 
 export default AITurnHandler;

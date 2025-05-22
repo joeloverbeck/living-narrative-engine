@@ -4,7 +4,7 @@
 //  ITurnDirectiveStrategy  – PTH-STRAT-001
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
+/** @typedef {import('./ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum */
 /** @typedef {import('../../commands/commandProcessor.js').CommandResult} CommandResult */
 // Removed: /** @typedef {import('../../../entities/entity.js').default} Entity */

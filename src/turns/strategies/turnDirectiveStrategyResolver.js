@@ -22,7 +22,7 @@
 /** @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler */
 /** @typedef {import('../../entities/entity.js').default}        Entity */
 /** @typedef {import('../constants/turnDirectives.js').default}    TurnDirective */
-/** @typedef {import('./ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy */
+/** @typedef {import('../interfaces/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy */
 
 // Enum & concrete strategy imports -------------------------------------------------------
 import TurnDirective from '../constants/turnDirectives.js';

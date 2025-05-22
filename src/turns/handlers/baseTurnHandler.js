@@ -5,7 +5,7 @@
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
- * @typedef {import('../states/ITurnState.js').ITurnState} ITurnState
+ * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
  */
 
 import {

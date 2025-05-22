@@ -1,5 +1,4 @@
 // src/core/config/registrations/adapterRegistrations.js
-// ****** NEW FILE ******
 
 /**
  * @fileoverview Registers port adapter implementations with the DI container.
@@ -13,11 +12,13 @@
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
+/** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
 // --- Adapter Imports ---
 import {EventBusCommandInputGateway} from '../../turns/adapters/eventBusCommandInputGateway.js';
 import {EventBusPromptAdapter} from '../../turns/adapters/eventBusPromptAdapter.js';
 import EventBusTurnEndAdapter from '../../turns/adapters/eventBusTurnEndAdapter.js'; // Corrected filename case
+import {StubLLMAdapter} from '../../turns/adapters/stubLLMAdapter.js'; // <<< ADDED IMPORT
 
 // --- DI & Helper Imports ---
 import {tokens} from '../tokens.js';
@@ -86,10 +87,24 @@ export function registerAdapters(container) {
         // Pass both to the constructor.
         return new EventBusTurnEndAdapter({
             safeEventDispatcher: safeDispatcher,
-            validatedEventDispatcher: validatedDispatcher
+            validatedEventDispatcher: validatedDispatcher,
+            logger: logger // <<< Pass logger to EventBusTurnEndAdapter
         });
     });
     logger.debug(`Adapter Registration: Registered EventBusTurnEndAdapter as ${tokens.ITurnEndPort}.`);
+
+    // --- Register StubLLMAdapter --- // <<< NEW REGISTRATION
+    // Implements ILLMAdapter, depends on ILogger.
+    registrar.singletonFactory(tokens.ILLMAdapter, (c) => {
+        const adapterLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        if (!adapterLogger) {
+            // Fallback if logger isn't available, though it should be.
+            console.error(`Adapter Registration: Failed to resolve ${tokens.ILogger} for ${tokens.ILLMAdapter}. StubLLMAdapter will use console.`);
+            return new StubLLMAdapter({});
+        }
+        return new StubLLMAdapter({logger: adapterLogger});
+    });
+    logger.debug(`Adapter Registration: Registered StubLLMAdapter as ${tokens.ILLMAdapter}.`);
 
 
     logger.info('Adapter Registrations: Complete.');

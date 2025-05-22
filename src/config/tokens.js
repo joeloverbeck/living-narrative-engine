@@ -97,7 +97,8 @@
  * @property {DiToken} IGameDataRepository - Token for the game data repository interface.
  * @property {DiToken} ISaveLoadService - Token for the save/load service interface.
  * @property {DiToken} IStorageProvider - Token for the storage provider interface.
- * @property {DiToken} IInitializationService - Token for the game initialization service interface. *
+ * @property {DiToken} IInitializationService - Token for the game initialization service interface.
+ * @property {DiToken} ILLMAdapter - Token for the LLM adapter service interface. *
  * --- Initialization & Orchestration ---
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
  * @property {DiToken} SystemInitializer - Token for initializing tagged systems.
@@ -210,6 +211,7 @@ export const tokens = Object.freeze({
     ISaveLoadService: 'ISaveLoadService',
     IStorageProvider: 'IStorageProvider',
     IInitializationService: 'IInitializationService',
+    ILLMAdapter: 'ILLMAdapter', // <<< ADDED TOKEN
 
     // Initialization & Orchestration
     WorldInitializer: 'WorldInitializer',

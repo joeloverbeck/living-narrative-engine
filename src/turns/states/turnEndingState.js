@@ -6,7 +6,7 @@
 /**
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../../entities/entity.js').default} Entity
- * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
+ * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface
  * @typedef {import('./abstractTurnState.js').AbstractTurnState} AbstractTurnState_Base
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  */

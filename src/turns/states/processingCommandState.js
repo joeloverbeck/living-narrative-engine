@@ -7,8 +7,8 @@
  * @typedef {import('../../commands/commandProcessor.js').CommandResult} CommandResult
  * @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
- * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
- * @typedef {import('../strategies/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy
+ * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface
+ * @typedef {import('../interfaces/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher // For type hint
  */
 

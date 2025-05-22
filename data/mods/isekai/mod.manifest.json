@@ -10,7 +10,8 @@
     ],
     "characters": [
       "hero.character.json",
-      "sidekick.character.json"
+      "sidekick.character.json",
+      "receptionist.character.json"
     ],
     "items": [
     ],

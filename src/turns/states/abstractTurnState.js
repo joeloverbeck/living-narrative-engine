@@ -9,10 +9,10 @@
  * @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum
  * @typedef {import('../../constants/eventIds.js').SystemEventPayloads} SystemEventPayloads
  * @typedef {import('../../constants/eventIds.js').TURN_ENDED_ID} TURN_ENDED_ID_TYPE
- * @typedef {import('./ITurnState.js').ITurnState} ITurnState_Interface
+ * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface
  */
 
-import {ITurnState} from './ITurnState.js';
+import {ITurnState} from '../interfaces/ITurnState.js';
 
 /**
  * @class AbstractTurnState

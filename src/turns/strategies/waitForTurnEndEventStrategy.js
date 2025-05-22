@@ -8,7 +8,7 @@
 /** @typedef {import('../constants/turnDirectives.js').default}   TurnDirectiveEnum */
 /** @typedef {import('../../commands/commandProcessor.js').CommandResult}   CommandResult */
 
-import {ITurnDirectiveStrategy} from './ITurnDirectiveStrategy.js';
+import {ITurnDirectiveStrategy} from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import {AwaitingExternalTurnEndState} from '../states/awaitingExternalTurnEndState.js';
 // Corrected import path for TURN_ENDED_ID as per the ticket description (assuming it's in a top-level constants)

@@ -35,7 +35,7 @@ import {TurnIdleState} from '../states/turnIdleState.js'; // Used for initial st
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy */
 
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
-/** @typedef {import('../states/ITurnState.js').ITurnState} ITurnState */
+/** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -277,49 +277,6 @@ class PlayerTurnHandler extends BaseTurnHandler {
         this._logger.debug(`${this.constructor.name}: Normal apparent termination signaled.`);
     }
 
-
-    // --- Public Getters for Player-Specific Services ---
-    // These might be deprecated if no external system (other than states) uses them.
-    // States should now primarily use ITurnContext to get services.
-    // For now, keeping them as they are used by the original code structure which the states hook into.
-    // These are no longer directly used by PlayerTurnHandler for core prompting.
-
-    /** @returns {IPlayerPromptService} */
-    get playerPromptService() {
-        this._assertHandlerActive();
-        return this.#playerPromptService; // Still returned, but PTH doesn't call prompt() on it.
-    }
-
-    /** @returns {ICommandProcessor} */
-    get commandProcessor() {
-        this._assertHandlerActive();
-        return this.#commandProcessor;
-    }
-
-    /** @returns {ICommandOutcomeInterpreter} */
-    get commandOutcomeInterpreter() {
-        this._assertHandlerActive();
-        return this.#commandOutcomeInterpreter;
-    }
-
-    /** @returns {ITurnEndPort} */
-    get turnEndPort() {
-        this._assertHandlerActive();
-        return this.#turnEndPort;
-    }
-
-    /** @returns {ISafeEventDispatcher} */
-    get safeEventDispatcher() {
-        this._assertHandlerActive();
-        return this.#safeEventDispatcher;
-    }
-
-    /** @returns {SubscriptionLifecycleManager} */
-    get subscriptionManager() {
-        this._assertHandlerActive();
-        return this.#subscriptionManager;
-    }
-
     // --- Overridable Hooks from BaseTurnHandler (Implement if PTH has specific logic) ---
     /**
      * @override
@@ -414,18 +371,6 @@ class PlayerTurnHandler extends BaseTurnHandler {
         }
         // Delegate to the current state.
         await this._currentState.handleTurnEndedEvent(this, payload);
-    }
-
-
-    // --- Test-only hooks ---
-    /* istanbul ignore next */
-    _TEST_GET_INTERNAL_CURRENT_STATE() {
-        return this._currentState;
-    }
-
-    /* istanbul ignore next */
-    _TEST_GET_INTERNAL_TURN_CONTEXT() {
-        return this.getTurnContext();
     }
 }
 

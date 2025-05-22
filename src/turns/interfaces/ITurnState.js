@@ -4,7 +4,7 @@
 /**
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * // ^ States still need BaseTurnHandler for _transitionToState, passed via constructor.
- * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
+ * @typedef {import('./ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../../commands/commandProcessor.js').CommandResult} CommandResult
  * @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum

@@ -38,7 +38,7 @@
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 /**
- * @typedef {import('../states/ITurnState.js').ITurnState} ITurnState
+ * @typedef {import('./ITurnState.js').ITurnState} ITurnState
  */
 
 /**
