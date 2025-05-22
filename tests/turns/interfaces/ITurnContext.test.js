@@ -111,17 +111,6 @@ describe('ITurnContext Interface Structure', () => {
         });
     });
 
-    // Test for getGame method
-    describe('getGame()', () => {
-        test('should exist on MockTurnContext instance', () => {
-            expect(typeof mockContext.getGame).toBe('function');
-        });
-
-        test('should be callable without throwing an unexpected error', () => {
-            expect(() => mockContext.getGame()).not.toThrow();
-        });
-    });
-
     // Test for endTurn method
     describe('endTurn()', () => {
         test('should exist on MockTurnContext instance', () => {

@@ -50,6 +50,10 @@
  */
 
 /**
+ * @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem
+ */
+
+/**
  * @interface ITurnContext
  * @description
  * Defines the contract for turn-specific data and services. This interface's
@@ -88,15 +92,6 @@ export class ITurnContext {
     }
 
     /**
-     * Retrieves a reference to the game world or a minimal interface to it.
-     * @returns {GameWorld | object} The game world instance or a relevant game controller.
-     * @throws {Error} If the service is not available in the current context.
-     */
-    getGame() {
-        throw new Error("Method 'getGame()' must be implemented.");
-    }
-
-    /**
      * Retrieves the CommandProcessor service.
      * @returns {ICommandProcessor} The command processor instance.
      * @throws {Error} If the service is not available in the current context.
@@ -130,6 +125,25 @@ export class ITurnContext {
      */
     getSubscriptionManager() {
         throw new Error("Method 'getSubscriptionManager()' must be implemented.");
+    }
+
+    /**
+     * Retrieves the EntityManager service.
+     * @returns {IEntityManager} The entity manager instance.
+     * @throws {Error} If the service is not available in the current context.
+     */
+    getEntityManager() { // <<< ADD THIS METHOD
+        throw new Error("Method 'getEntityManager()' must be implemented.");
+    }
+
+    /**
+     * Retrieves the global Action-Discovery System so callers can ask
+     * "what can this actor do **right now**".
+     * @returns {IActionDiscoverySystem}
+     * @throws {Error} if it is missing from the context.
+     */
+    getActionDiscoverySystem() {          //  <<< NEW
+        throw new Error("Method 'getActionDiscoverySystem()' must be implemented.");
     }
 
     /**

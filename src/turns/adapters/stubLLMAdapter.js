@@ -1,14 +1,13 @@
 // src/turns/adapters/stubLLMAdapter.js
 // --- FILE START ---
 
-import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
+import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
 
 /**
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
-/**
- * @typedef {import('../interfaces/ILLMAdapter.js').ActorContext} ActorContext
- */
+
+// ActorContext typedef import removed as it's no longer used
 
 /**
  * @class StubLLMAdapter
@@ -23,7 +22,7 @@ export class StubLLMAdapter extends ILLMAdapter {
      * @param {object} [dependencies={}] - Optional dependencies.
      * @param {object} [dependencies.logger] - Optional logger instance.
      */
-    constructor({ logger } = {}) {
+    constructor({logger} = {}) {
         super();
         this.logger = logger || console; // Basic fallback logger
         this.logger.info('StubLLMAdapter initialized.');
@@ -31,18 +30,18 @@ export class StubLLMAdapter extends ILLMAdapter {
 
     /**
      * Generates a stubbed "core:wait" action.
-     * The gameSummary and actorContext parameters are ignored in this stub.
+     * The gameSummary parameter is ignored in this stub.
      *
      * @async
      * @param {string} gameSummary - A string providing a summarized representation of the game state. (Ignored)
-     * @param {ActorContext} actorContext - An object containing specific contextual information about the AI actor. (Ignored)
      * @returns {Promise<string>} A Promise that resolves to a JSON string representing
      * the "core:wait" action with "I am a robot." as speech.
      * @throws {Error} This stub implementation does not throw errors unless JSON.stringify fails.
      */
-    async generateAction(gameSummary, actorContext) {
-        const actorId = actorContext?.actorId || 'UnknownActor';
-        this.logger.debug(`StubLLMAdapter.generateAction called for actor ${actorId}. gameSummary and actorContext are ignored by this stub.`);
+    async generateAction(gameSummary) {
+        // actorContext parameter removed
+        const actorId = 'StubActor'; // Actor ID is not directly available from parameters anymore in this stub
+        this.logger.debug(`StubLLMAdapter.generateAction called. gameSummary is ignored by this stub for actor: ${actorId}.`);
 
         /** @type {ITurnAction} */
         const stubbedAction = {
@@ -55,10 +54,10 @@ export class StubLLMAdapter extends ILLMAdapter {
 
         try {
             const jsonOutput = JSON.stringify(stubbedAction);
-            this.logger.debug(`StubLLMAdapter: Returning JSON for actor ${actorId}: ${jsonOutput}`);
+            this.logger.debug(`StubLLMAdapter: Returning JSON for ${actorId}: ${jsonOutput}`);
             return Promise.resolve(jsonOutput);
         } catch (error) {
-            this.logger.error(`StubLLMAdapter: Failed to stringify stubbed action for actor ${actorId}. Error: ${error.message}`, error);
+            this.logger.error(`StubLLMAdapter: Failed to stringify stubbed action for ${actorId}. Error: ${error.message}`, error);
             // Re-throw the error as failing to stringify is a critical issue for the adapter's contract.
             throw new Error(`StubLLMAdapter: JSON.stringify failed. Details: ${error.message}`);
         }

@@ -5,7 +5,7 @@
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy_Interface */
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
+/** @typedef {import('../interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
 
 // JSDoc type definitions for structures expected from PlayerPromptService.prompt()
 /**

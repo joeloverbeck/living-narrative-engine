@@ -52,6 +52,7 @@
 /**
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**
  * @typedef {object} TurnContextServices
@@ -62,6 +63,8 @@
  * @property {ISafeEventDispatcher} [safeEventDispatcher]
  * @property {SubscriptionLifecycleManager} [subscriptionManager]
  * @property {ITurnEndPort} [turnEndPort]
+ * @property {IEntityManager} [entityManager]
+ * @property {IActionDiscoverySystem}    [actionDiscoverySystem]
  * // Add other services as needed by ITurnContext methods
  */
 
@@ -197,15 +200,6 @@ export class TurnContext extends ITurnContext {
     }
 
     /** @override */
-    getGame() {
-        if (!this.#services.game) {
-            this.#logger.error("TurnContext: Game service/world not available in services bag.");
-            throw new Error("TurnContext: Game service/world not available in services bag.");
-        }
-        return this.#services.game;
-    }
-
-    /** @override */
     getCommandProcessor() {
         if (!this.#services.commandProcessor) {
             this.#logger.error("TurnContext: CommandProcessor not available in services bag.");
@@ -239,6 +233,24 @@ export class TurnContext extends ITurnContext {
             throw new Error("TurnContext: SubscriptionManager not available in services bag.");
         }
         return this.#services.subscriptionManager;
+    }
+
+    /** @override */
+    getEntityManager() { // <<< ADD THIS METHOD
+        if (!this.#services.entityManager) {
+            this.#logger.error("TurnContext: EntityManager not available in services bag.");
+            throw new Error("TurnContext: EntityManager not available in services bag.");
+        }
+        return this.#services.entityManager;
+    }
+
+    /** @override */
+    getActionDiscoverySystem() {
+        if (!this.#services.actionDiscoverySystem) {
+            this.#logger.error("TurnContext: ActionDiscoverySystem not available in services bag.");
+            throw new Error("TurnContext: ActionDiscoverySystem not available in services bag.");
+        }
+        return this.#services.actionDiscoverySystem;
     }
 
     /** @override */

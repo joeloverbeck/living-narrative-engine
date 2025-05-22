@@ -7,15 +7,23 @@
 /** @typedef {import('../interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
+
 import {IActorTurnStrategy} from '../interfaces/IActorTurnStrategy.js';
+import {
+    DESCRIPTION_COMPONENT_ID,
+    EXITS_COMPONENT_ID,
+    NAME_COMPONENT_ID,
+    PERCEPTION_LOG_COMPONENT_ID,
+    POSITION_COMPONENT_ID
+} from "../../constants/componentIds.js";
 
 /**
  * Default/Fallback ITurnAction to be used when the strategy cannot produce a valid action due to an internal error.
  * @type {Readonly<ITurnAction>}
  */
 const FALLBACK_AI_ACTION = Object.freeze({
-    actionDefinitionId: 'core:ai_error_fallback_wait', // Or a more specific "AI error" action
-    commandString: 'AI Error: Fallback action (wait)',
+    actionDefinitionId: 'core:wait', // Or a more specific "AI error" action
+    commandString: 'wait',
     resolvedParameters: {errorContext: 'unknown_error'},
 });
 
@@ -157,12 +165,11 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         let actorId = 'UnknownActor';
 
         try {
-            // 1. ITurnContext Issues: Actor and Logger
             if (!context) {
                 logger.error("AIPlayerStrategy: Critical - ITurnContext is null or undefined.");
                 return this._createFallbackAction('null_turn_context');
             }
-            actor = context.getActor(); // Attempt to get actor
+            actor = context.getActor();
             if (!actor || !actor.id) {
                 logger.error("AIPlayerStrategy: Critical - Actor not available or ID missing in ITurnContext.");
                 return this._createFallbackAction('missing_actor_in_context');
@@ -170,103 +177,209 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
             actorId = actor.id;
             logger.info(`AIPlayerStrategy: decideAction called for actor ${actorId}.`);
 
-            // --- Game Summary Generation ---
-            /** @typedef {object} ActorSummary */
-            /** @typedef {object} VisibleEntitySummary */
-            /** @typedef {object} LocationSummary */
-            /** @typedef {object} MinimalGameSummary */
-            /** @type {MinimalGameSummary} */
-            const gameSummary = {
-                actor: {id: actorId, name: actor.name || 'N/A'},
-                visibleEntities: [],
-                location: {},
-                objectives: [],
-                errors: [], // To collect errors during summary generation
-            };
-            const addSummaryError = (message) => {
-                logger.warn(`AIPlayerStrategy: Error generating game summary for ${actorId}: ${message}`);
-                if (gameSummary.errors) gameSummary.errors.push(message);
-            };
+            // --- Location Summary Generation ---
+            let locationSummary = null;
+            const positionComponent = actor.getComponentData(POSITION_COMPONENT_ID);
 
             try {
-                // Actor details
-                if (typeof actor.getHealth === 'function') gameSummary.actor.health = actor.getHealth();
-                else logger.debug(`AIPlayerStrategy: Actor ${actorId} does not have a getHealth method.`);
-                if (typeof actor.getStatusEffects === 'function') gameSummary.actor.statusEffects = actor.getStatusEffects();
-                else logger.debug(`AIPlayerStrategy: Actor ${actorId} does not have getStatusEffects method.`);
+                const entityManager = context.getEntityManager();
+                const currentLocationInstanceId = positionComponent?.locationId;
 
-                // Game service interactions
-                const gameService = context.getGame(); // May throw if context.getGame() fails
-                if (typeof gameService.getVisibleEntities === 'function') {
-                    const visible = gameService.getVisibleEntities(actorId);
-                    gameSummary.visibleEntities = visible.map(entity => ({
-                        id: entity.id,
-                        type: entity.type || 'unknown',
-                    }));
-                } else addSummaryError("gameService.getVisibleEntities is not a function.");
+                if (currentLocationInstanceId && entityManager) {
+                    const locationEntity = entityManager.getEntityInstance(currentLocationInstanceId);
+                    if (locationEntity) {
+                        const name = locationEntity.getComponentData(NAME_COMPONENT_ID)?.text || 'Unknown Location';
+                        const description = locationEntity.getComponentData(DESCRIPTION_COMPONENT_ID)?.text || 'No description available.';
 
-                if (typeof gameService.getLocationInfo === 'function' && typeof actor.getCurrentLocationId === 'function') {
-                    const locationId = actor.getCurrentLocationId();
-                    if (locationId) {
-                        const locInfo = gameService.getLocationInfo(locationId);
-                        gameSummary.location = {
-                            name: locInfo.name || 'Unknown Location',
-                            description: locInfo.description || 'No description.'
+                        const exitsComponentData = locationEntity.getComponentData(EXITS_COMPONENT_ID);
+                        let exits = [];
+                        if (exitsComponentData && Array.isArray(exitsComponentData)) {
+                            exits = exitsComponentData.map(exit => ({
+                                direction: exit.direction || 'Unmarked Exit',
+                                targetLocationId: exit.target, // Use exit.target as per JSON data
+                            })).filter(e => e.direction && e.direction !== 'Unmarked Exit' && e.targetLocationId);
+                        }
+
+                        let charactersInLocation = [];
+                        const entityIdsInLoc = entityManager.getEntitiesInLocation(currentLocationInstanceId);
+                        if (entityIdsInLoc) {
+                            for (const entityIdInLoc of entityIdsInLoc) {
+                                if (entityIdInLoc === actorId) continue;
+
+                                const otherEntity = entityManager.getEntityInstance(entityIdInLoc);
+                                if (otherEntity) {
+                                    charactersInLocation.push({
+                                        id: otherEntity.id,
+                                        name: otherEntity.getComponentData(NAME_COMPONENT_ID)?.text || 'Unnamed Character',
+                                        description: otherEntity.getComponentData(DESCRIPTION_COMPONENT_ID)?.text || 'No description available.'
+                                    });
+                                }
+                            }
+                        }
+
+                        locationSummary = {
+                            name: name,
+                            description: description,
+                            exits: exits,
+                            characters: charactersInLocation,
                         };
-                    } else addSummaryError("Actor's current location ID is unknown.");
-                } else addSummaryError("gameService.getLocationInfo or actor.getCurrentLocationId is not available.");
-
-                // Objectives
-                if (typeof actor.getObjectives === 'function') gameSummary.objectives = actor.getObjectives();
-                else logger.debug(`AIPlayerStrategy: Actor ${actorId} does not have getObjectives method.`);
-
-            } catch (summaryGenError) {
-                addSummaryError(`Failed during game summary data retrieval: ${summaryGenError.message}`);
-                logger.error(`AIPlayerStrategy: Exception during game summary generation for ${actorId}. Summary may be incomplete. Error: ${summaryGenError.message}`, summaryGenError);
-                // Continue with potentially incomplete summary, or return fallback if gameService itself failed.
-                // If context.getGame() threw, gameService would be undefined, caught by general try-catch.
+                        logger.debug(`AIPlayerStrategy: Generated location summary for actor ${actorId} in location ${currentLocationInstanceId}:`, locationSummary);
+                    } else {
+                        logger.warn(`AIPlayerStrategy: Location entity for ID '${currentLocationInstanceId}' not found via EntityManager for actor ${actorId}.`);
+                    }
+                } else if (!entityManager) {
+                    logger.warn(`AIPlayerStrategy: EntityManager not available through context for actor ${actorId}. Cannot fetch location details.`);
+                } else {
+                    logger.info(`AIPlayerStrategy: Actor ${actorId} has no position component or locationId. Cannot generate location summary.`);
+                }
+            } catch (locError) {
+                logger.error(`AIPlayerStrategy: Error generating location summary for actor ${actorId}: ${locError.message}`, locError);
             }
 
-            logger.info(`AIPlayerStrategy: Generated game summary for actor ${actorId}:`, gameSummary);
-            const gameSummaryString = JSON.stringify(gameSummary); // This could throw if summary has circular refs, though unlikely here
-            logger.debug(`AIPlayerStrategy: Stringified game summary for actor ${actorId}: ${gameSummaryString}`);
+            // ── Available-Actions Discovery ─────────────────────────────
+            let availableActions = [];
+            try {
+                if (typeof context.getActionDiscoverySystem === 'function') {
+                    const ads = context.getActionDiscoverySystem();
+                    const entityManager = context.getEntityManager();
+                    const actionCtx = {
+                        currentLocation: locationSummary ? {id: positionComponent?.locationId} : null,
+                        entityManager,
+                        worldContext: context?.game ?? {},
+                        logger,
+                        gameDataRepository: {},
+                    };
+                    availableActions =
+                        await ads.getValidActions(actor, actionCtx);
+                } else {
+                    logger.warn(`AIPlayerStrategy: ITurnContext has no getActionDiscoverySystem() – skipping action discovery for actor ${actorId}.`);
+                }
+            } catch (adsErr) {
+                logger.error(`AIPlayerStrategy: Error while discovering actions for actor ${actorId}: ${adsErr.message}`, adsErr);
+            }
+
+            // --- Perception Log Retrieval ---
+            /** @type {Array<{description: string, timestamp: number, type: string}>} */
+            let perceptionLogEntries = [];
+            try {
+                if (actor.hasComponent(PERCEPTION_LOG_COMPONENT_ID)) {
+                    /** @type {PerceptionLogComponentData | undefined} */
+                    const perceptionData = actor.getComponentData(PERCEPTION_LOG_COMPONENT_ID);
+                    if (perceptionData && Array.isArray(perceptionData.logEntries)) {
+                        perceptionLogEntries = perceptionData.logEntries.map(entry => ({
+                            description: entry.descriptionText,
+                            timestamp: entry.timestamp,
+                            type: entry.perceptionType,
+                        }));
+                        logger.debug(`AIPlayerStrategy: Retrieved ${perceptionLogEntries.length} perception log entries for actor ${actorId}.`);
+                    } else {
+                        logger.info(`AIPlayerStrategy: Actor ${actorId} has '${PERCEPTION_LOG_COMPONENT_ID}' but 'logEntries' are missing or malformed.`);
+                    }
+                } else {
+                    logger.info(`AIPlayerStrategy: Actor ${actorId} does not have a '${PERCEPTION_LOG_COMPONENT_ID}' component. No perception log included.`);
+                }
+            } catch (perceptionError) {
+                logger.error(`AIPlayerStrategy: Error retrieving perception log for actor ${actorId}: ${perceptionError.message}`, perceptionError);
+            }
+
+
+            // ── Game Summary Object (still useful for structured logging if needed) ────
+            const gameSummary = {
+                actor: {
+                    id: actor.id,
+                    name: actor.getComponentData(NAME_COMPONENT_ID)?.text || 'Unknown Name',
+                    description: actor.getComponentData(DESCRIPTION_COMPONENT_ID)?.text || 'No description available.',
+                },
+                currentLocation: locationSummary,
+                perceptionLog: perceptionLogEntries,
+                availableActions: availableActions.map(a => ({
+                    id: a.id,
+                    command: a.command,
+                    name: a.name,
+                    description: a.description
+                })),
+            };
+
+            // ── Construct LLM Prompt String ───────────────────────────────────
+            const promptSegments = [];
+
+            // Segment 1: Character
+            promptSegments.push(`You're ${gameSummary.actor.name}. Description: ${gameSummary.actor.description}.`);
+
+            // Segment 2: Location
+            let locationSegmentLines = [];
+            if (gameSummary.currentLocation) {
+                locationSegmentLines.push(`You're in the location ${gameSummary.currentLocation.name}. Description: ${gameSummary.currentLocation.description}.`);
+
+                if (gameSummary.currentLocation.exits && gameSummary.currentLocation.exits.length > 0) {
+                    const exitStrings = gameSummary.currentLocation.exits.map(exit =>
+                        `${exit.direction} to ${exit.targetLocationId}`
+                    );
+                    locationSegmentLines.push(`Exits: ${exitStrings.join(', ')}.`);
+                } else {
+                    locationSegmentLines.push("There are no obvious exits.");
+                }
+
+                if (gameSummary.currentLocation.characters && gameSummary.currentLocation.characters.length > 0) {
+                    const characterStrings = gameSummary.currentLocation.characters.map(char =>
+                        `${char.name} (${char.description || 'No description'})`
+                    );
+                    locationSegmentLines.push(`Characters here: ${characterStrings.join(', ')}.`);
+                } else {
+                    locationSegmentLines.push("You are alone here.");
+                }
+                promptSegments.push(locationSegmentLines.join('\n'));
+            } else {
+                promptSegments.push("Your current location is unknown.");
+            }
+
+            // Segment 3: Recent Events
+            let eventsSegmentLines = ["Recent events:"];
+            if (gameSummary.perceptionLog && gameSummary.perceptionLog.length > 0) {
+                gameSummary.perceptionLog.forEach(entry => {
+                    eventsSegmentLines.push(`- ${entry.description}`);
+                });
+            } else {
+                eventsSegmentLines.push("None.");
+            }
+            promptSegments.push(eventsSegmentLines.join('\n'));
+
+            // Segment 4: Available Actions
+            let actionsSegmentLines = ["Your available actions are:"];
+            if (gameSummary.availableActions && gameSummary.availableActions.length > 0) {
+                gameSummary.availableActions.forEach(action => {
+                    const detail = action.description || action.name || 'Perform action';
+                    actionsSegmentLines.push(`- ${action.command} (${detail})`);
+                });
+            } else {
+                actionsSegmentLines.push("You have no specific actions available right now.");
+            }
+            promptSegments.push(actionsSegmentLines.join('\n'));
+
+            // Segment 5: Fixed Concluding Instruction
+            promptSegments.push("Apart from picking one among the available actions, you have the opportunity to speak. It's not obligatory. Use your reasoning to determine if you should talk in this context.");
+
+            const llmPromptString = promptSegments.join('\n\n');
+
+            logger.info(`AIPlayerStrategy: Generated LLM prompt for actor ${actorId}. Length: ${llmPromptString.length}`);
+            logger.debug(`AIPlayerStrategy: LLM Prompt for ${actorId}:\n${llmPromptString}`);
 
 
             // --- Call ILLMAdapter.generateAction ---
-            /** @type {LLMActorContext} */
-            const actorSpecificContext = {
-                actorId: actorId,
-                name: actor.name || undefined,
-            };
-            logger.debug(`AIPlayerStrategy: Constructed actorSpecificContext for LLM for actor ${actorId}:`, actorSpecificContext);
+            const llmJsonResponse = await this.#llmAdapter.generateAction(llmPromptString);
+            logger.debug(`AIPlayerStrategy: Received LLM JSON response for actor ${actorId}: ${llmJsonResponse}`);
 
-            let llmJsonOutput;
+            let parsedLlmOutput;
             try {
-                logger.info(`AIPlayerStrategy: Calling llmAdapter.generateAction for actor ${actorId}.`);
-                llmJsonOutput = await this.#llmAdapter.generateAction(gameSummaryString, actorSpecificContext);
-                logger.info(`AIPlayerStrategy: Received JSON response from LLM for actor ${actorId}: ${llmJsonOutput}`);
-            } catch (llmError) {
-                logger.error(`AIPlayerStrategy: Error calling llmAdapter.generateAction for actor ${actorId}: ${llmError.message}`, llmError);
-                return this._createFallbackAction(`llm_adapter_failure: ${llmError.message}`, actorId);
-            }
-
-            // --- JSON Parsing ---
-            let parsedJson;
-            try {
-                parsedJson = JSON.parse(llmJsonOutput);
-                logger.debug(`AIPlayerStrategy: Successfully parsed LLM JSON for actor ${actorId}.`);
+                parsedLlmOutput = JSON.parse(llmJsonResponse);
             } catch (parseError) {
-                logger.error(`AIPlayerStrategy: Failed to parse JSON from LLM for actor ${actorId}. JSON: "${llmJsonOutput}". Error: ${parseError.message}`, parseError);
-                return this._createFallbackAction(`llm_json_parse_failure: ${parseError.message}`, actorId);
+                logger.error(`AIPlayerStrategy: Failed to parse LLM JSON response for actor ${actorId}. Error: ${parseError.message}. Response: ${llmJsonResponse}`, parseError);
+                return this._createFallbackAction('llm_response_parse_error', actorId);
             }
 
-            // --- Transformation and Validation ---
-            // _transformAndValidateLLMOutput now handles its own logging and returns a fallback if needed.
-            return this._transformAndValidateLLMOutput(parsedJson, actorId, logger);
+            return this._transformAndValidateLLMOutput(parsedLlmOutput, actorId, logger);
 
         } catch (error) {
-            // Catch-all for unexpected errors not caught by specific try-catch blocks above
-            // (e.g., context.getGame() fails, JSON.stringify fails)
             const mainErrorMsg = `AIPlayerStrategy: Unhandled error during decideAction for actor ${actorId}: ${error.message}`;
             logger.error(mainErrorMsg, error);
             return this._createFallbackAction(`unhandled_decide_action_error: ${error.message}`, actorId);

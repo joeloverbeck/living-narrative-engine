@@ -49,11 +49,17 @@ export class AITurnHandler extends BaseTurnHandler {
     /** @type {SubscriptionLifecycleManager} */
     #subscriptionManager;
 
+    /** @type {IActionDiscoverySystem} */
+    #actionDiscoverySystem;
+
     // --- NEW: Flags for managing external AI response waiting ---
     /** @private @type {boolean} */
     #aiIsAwaitingExternalEvent = false;
     /** @private @type {string|null} */
     #aiAwaitingExternalEventForActorId = null;
+
+    /** @type {IEntityManager} */
+    #entityManager;
 
     // --- END NEW ---
 
@@ -79,7 +85,9 @@ export class AITurnHandler extends BaseTurnHandler {
                     commandProcessor,
                     commandOutcomeInterpreter,
                     safeEventDispatcher,
-                    subscriptionManager
+                    subscriptionManager,
+                    entityManager,
+                    actionDiscoverySystem,
                 }) {
         // 1. Call super() first with base dependencies
         super({logger});
@@ -120,6 +128,11 @@ export class AITurnHandler extends BaseTurnHandler {
             this._logger.error(errorMsg, {subscriptionManager});
             throw new Error(errorMsg);
         }
+        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') { // <<< ADD VALIDATION
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing IEntityManager dependency.`;
+            this._logger.error(errorMsg, {entityManager});
+            throw new Error(errorMsg);
+        }
 
         // 3. Assign derived dependencies to private fields
         this.#turnEndPort = turnEndPort;
@@ -129,6 +142,8 @@ export class AITurnHandler extends BaseTurnHandler {
         this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
         this.#safeEventDispatcher = safeEventDispatcher;
         this.#subscriptionManager = subscriptionManager;
+        this.#entityManager = entityManager;
+        this.#actionDiscoverySystem = actionDiscoverySystem;
 
         // --- NEW: Initialize AI waiting flags ---
         this.#aiIsAwaitingExternalEvent = false;
@@ -229,6 +244,8 @@ export class AITurnHandler extends BaseTurnHandler {
             commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
             safeEventDispatcher: this.#safeEventDispatcher,
             subscriptionManager: this.#subscriptionManager,
+            entityManager: this.#entityManager,
+            actionDiscoverySystem: this.#actionDiscoverySystem,
             // Note: playerPromptService is omitted as it's not typically used by AIs directly.
             // If AI needs to 'prompt' something, it would be through a different mechanism or service.
         };

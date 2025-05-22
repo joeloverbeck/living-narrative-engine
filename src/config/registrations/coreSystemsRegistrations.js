@@ -1,4 +1,5 @@
 // src/core/config/registrations/coreSystemsRegistrations.js
+// --- FILE START ---
 
 /**
  * @fileoverview Registers core game logic systems, particularly those needing initialization or shutdown.
@@ -16,14 +17,14 @@
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../services/actionValidationService.js').ActionValidationService} ActionValidationService */
-/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem_Interface */ // MODIFIED: Changed name for clarity
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../../turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler_Concrete */ // Renamed for clarity
 /** @typedef {import('../../turns/handlers/aiTurnHandler.js').default} AITurnHandler_Concrete */       // Renamed for clarity
 /** @typedef {import('../../turns/services/turnHandlerResolver.js').default} TurnHandlerResolver_Concrete */ // Renamed for clarity
-/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager_Interface */ // MODIFIED: Changed name for clarity
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
@@ -31,7 +32,7 @@
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
 /** @typedef {import('../../turns/interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
-/** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter_Interface */ // <<< ADDED IMPORT FOR TYPE HINTING
+/** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter_Interface */
 
 // --- System Imports ---
 import {ActionDiscoverySystem} from '../../systems/actionDiscoverySystem.js';
@@ -67,7 +68,7 @@ export function registerCoreSystems(container) {
     // --- Register ActionDiscoverySystem against its Interface Token using singletonFactory ---
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.IActionDiscoverySystem, (c) => new ActionDiscoverySystem({
         gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.IGameDataRepository)),
-        entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
+        entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)),
         actionValidationService: c.resolve(tokens.ActionValidationService),
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
@@ -99,11 +100,13 @@ export function registerCoreSystems(container) {
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
         gameWorldAccess: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
         turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
-        illmAdapter: /** @type {ILLMAdapter_Interface} */ (c.resolve(tokens.ILLMAdapter)), // <<< AITurnHandler might need this if constructed directly
+        illmAdapter: /** @type {ILLMAdapter_Interface} */ (c.resolve(tokens.ILLMAdapter)),
         commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
         commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
         safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
         subscriptionManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
+        entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)), // <<< Ensure IEntityManager is resolved
+        actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (c.resolve(tokens.IActionDiscoverySystem)), // <<< Ensure IActionDiscoverySystem is resolved
     }));
     logger.debug(`Core Systems Registration: Registered ${tokens.AITurnHandler}.`);
     registrationCount++;
@@ -124,20 +127,32 @@ export function registerCoreSystems(container) {
         const createAiHandlerFactory = () => {
             const resolvedLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
             const resolvedIllmAdapter = /** @type {ILLMAdapter_Interface} */ (c.resolve(tokens.ILLMAdapter));
+            const resolvedEntityManager = /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager));
+            const resolvedActionDiscoverySystem = /** @type {IActionDiscoverySystem_Interface} */ (c.resolve(tokens.IActionDiscoverySystem)); // <<< ADD THIS
 
             if (!resolvedIllmAdapter) {
-                resolvedLogger.error(`CoreSystemsRegistration: Failed to resolve ${tokens.ILLMAdapter} for AITurnHandler factory.`);
-                throw new Error(`Missing dependency ${tokens.ILLMAdapter} for AITurnHandler factory`);
+                resolvedLogger.error(`CoreSystemsRegistration: Failed to resolve ${String(tokens.ILLMAdapter)} for AITurnHandler factory.`);
+                throw new Error(`Missing dependency ${String(tokens.ILLMAdapter)} for AITurnHandler factory`);
+            }
+            if (!resolvedEntityManager) {
+                resolvedLogger.error(`CoreSystemsRegistration: Failed to resolve ${String(tokens.IEntityManager)} for AITurnHandler factory.`);
+                throw new Error(`Missing dependency ${String(tokens.IEntityManager)} for AITurnHandler factory`);
+            }
+            if (!resolvedActionDiscoverySystem) { // <<< ADD THIS CHECK
+                resolvedLogger.error(`CoreSystemsRegistration: Failed to resolve ${String(tokens.IActionDiscoverySystem)} for AITurnHandler factory.`);
+                throw new Error(`Missing dependency ${String(tokens.IActionDiscoverySystem)} for AITurnHandler factory`);
             }
             return new AITurnHandler({
                 logger: resolvedLogger,
                 gameWorldAccess: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
                 turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
-                illmAdapter: resolvedIllmAdapter, // <<< INJECTED HERE
+                illmAdapter: resolvedIllmAdapter,
                 commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
                 commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
                 safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
                 subscriptionManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
+                entityManager: resolvedEntityManager,
+                actionDiscoverySystem: resolvedActionDiscoverySystem, // <<< PASS THIS
             });
         };
 
@@ -153,7 +168,7 @@ export function registerCoreSystems(container) {
 
     registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ITurnManager, (c) => new TurnManager({
         turnOrderService: /** @type {ITurnOrderService} */ (c.resolve(tokens.ITurnOrderService)),
-        entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
+        entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)),
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
         dispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
         turnHandlerResolver: /** @type {TurnHandlerResolver_Concrete} */ (c.resolve(tokens.TurnHandlerResolver))
@@ -168,7 +183,7 @@ export function registerCoreSystems(container) {
             const turnManager = /** @type {ITurnManager | null} */ (c.resolve(tokens.ITurnManager));
 
             if (!turnManager) {
-                localLogger.warn(`ITurnContext Factory: ${tokens.ITurnManager} could not be resolved. Returning null.`);
+                localLogger.warn(`ITurnContext Factory: ${String(tokens.ITurnManager)} could not be resolved. Returning null.`);
                 return null;
             }
 
@@ -183,7 +198,7 @@ export function registerCoreSystems(container) {
         },
         {lifecycle: 'transient'}
     );
-    logger.debug(`Core Systems Registration: Registered transient factory for ${tokens.ITurnContext}.`);
+    logger.debug(`Core Systems Registration: Registered transient factory for ${String(tokens.ITurnContext)}.`);
     registrationCount++;
 
 

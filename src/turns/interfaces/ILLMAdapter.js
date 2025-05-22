@@ -18,10 +18,13 @@
 export class ILLMAdapter {
     /**
      * Sends a request to the LLM service to generate an action based on the
-     * provided game summary and actor-specific context.
+     * provided game summary.
      *
      * The method is expected to handle communication with the LLM, including
      * formatting the request according to the LLM's API and parsing the response.
+     * The gameSummary itself is expected to contain all necessary dynamic
+     * information for the LLM to make a decision, including any relevant
+     * actor-specific details.
      *
      * Error Handling:
      * Implementations should be robust to errors from the LLM service (e.g., network
@@ -35,26 +38,9 @@ export class ILLMAdapter {
      *
      * @async
      * @param {string} gameSummary - A string providing a summarized representation
-     * of the current game state relevant to the AI actor's decision-making.
-     * This could include information about the environment, nearby entities,
-     * ongoing events, etc. The specific content and format of this summary
-     * would be determined by the AIPlayerStrategy or a dedicated summarization service.
-     * @param {object} actorContext - An object containing specific contextual
-     * information about the AI actor whose turn it is. This context helps the
-     * LLM tailor its response to the actor's persona, goals, and capabilities.
-     *
-     * @typedef {object} ActorContext
-     * @property {string} actorId - The unique identifier of the AI actor.
-     * @property {string} [name] - The name of the AI actor.
-     * @property {string} [personalityTraits] - A brief description of the actor's
-     * personality (e.g., "cautious, prefers ranged combat", "aggressive, charges head-on").
-     * @property {string[]} [currentGoals] - A list of current objectives or goals
-     * for the actor (e.g., ["find the hidden artifact", "protect the convoy"]).
-     * @property {object} [inventorySummary] - A summary of relevant items in the
-     * actor's inventory (e.g., { "health_potion": 2, "short_sword": 1 }).
-     * @property {object} [currentStatus] - Key status indicators (e.g., { "health": "low", "mana": "high" }).
-     * @property {string[]} [recentEvents] - A list of significant recent events involving or observed by the actor.
-     * @property {object} [knowledge] - Key pieces of information the actor knows (e.g., {"weakness_of_troll": "fire"}).
+     * of the current game state and relevant actor information, structured
+     * as a prompt or query for the LLM. This summary is expected to be
+     * self-contained and sufficient for the LLM to generate an action.
      *
      * @returns {Promise<string>} A Promise that resolves to a JSON string.
      * This JSON string represents the LLM's suggested action and must conform to
@@ -145,7 +131,7 @@ export class ILLMAdapter {
      * "commandString": "Wait"
      * }
      */
-    async generateAction(gameSummary, actorContext) {
+    async generateAction(gameSummary) {
         throw new Error("ILLMAdapter.generateAction method not implemented.");
     }
 }
