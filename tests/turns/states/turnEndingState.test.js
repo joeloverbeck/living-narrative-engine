@@ -1,4 +1,4 @@
-// src/tests/core/turns/states/turnEndingState.test.js
+// tests/turns/states/turnEndingState.test.js
 // --- FILE START ---
 
 /**
@@ -139,9 +139,6 @@ describe('TurnEndingState', () => {
         mockHandler._TEST_setCurrentActor(testActor); // Should align with context
 
         // Spy on AbstractTurnState methods
-        // These spies replace the original implementation. If the original's logging is needed,
-        // use .mockImplementation(() => AbstractTurnState.prototype.methodName.call(this, ...args))
-        // or don't spy if only testing side effects of the spy being called.
         superEnterSpy = jest.spyOn(AbstractTurnState.prototype, 'enterState').mockResolvedValue(undefined);
         superExitSpy = jest.spyOn(AbstractTurnState.prototype, 'exitState').mockResolvedValue(undefined);
         superDestroySpy = jest.spyOn(AbstractTurnState.prototype, 'destroy').mockResolvedValue(undefined);
@@ -158,8 +155,6 @@ describe('TurnEndingState', () => {
     describe('Constructor', () => {
         it('should correctly store actorToEndId and turnError (null for success) via logging', () => {
             createTestState(actorId, null);
-            // Private fields #actorToEndId and #turnError are not directly accessible from tests.
-            // Their correct setting is inferred from the constructor's debug log.
             expect(mockSystemLogger.debug).toHaveBeenCalledWith(
                 `TurnEndingState constructed for target actor ${actorId}. Error: null.`
             );
@@ -175,11 +170,10 @@ describe('TurnEndingState', () => {
 
         it('should use handler.getCurrentActor().id if actorToEndId is null, log error and warning', () => {
             mockHandler.getCurrentActor.mockReturnValueOnce({id: 'handlerFallbackId'});
-            new TurnEndingState(mockHandler, null, null); // assign to turnEndingState if its methods are tested later
+            new TurnEndingState(mockHandler, null, null);
 
             expect(mockSystemLogger.error).toHaveBeenCalledWith("TurnEndingState Constructor: actorToEndId must be provided.");
             expect(mockSystemLogger.warn).toHaveBeenCalledWith(expect.stringContaining("TurnEndingState Constructor: actorToEndId was missing, fell back to 'handlerFallbackId'."));
-            // Check the constructor's debug log for the fallback ID
             expect(mockSystemLogger.debug).toHaveBeenCalledWith(
                 expect.stringContaining(`TurnEndingState constructed for target actor handlerFallbackId. Error: null.`)
             );
@@ -191,7 +185,6 @@ describe('TurnEndingState', () => {
 
             expect(mockSystemLogger.error).toHaveBeenCalledWith("TurnEndingState Constructor: actorToEndId must be provided.");
             expect(mockSystemLogger.warn).toHaveBeenCalledWith(expect.stringContaining("TurnEndingState Constructor: actorToEndId was missing, fell back to 'UNKNOWN_ACTOR_CONSTRUCTOR_FALLBACK'."));
-            // Check the constructor's debug log for the fallback ID
             expect(mockSystemLogger.debug).toHaveBeenCalledWith(
                 expect.stringContaining(`TurnEndingState constructed for target actor UNKNOWN_ACTOR_CONSTRUCTOR_FALLBACK. Error: null.`)
             );
@@ -201,11 +194,10 @@ describe('TurnEndingState', () => {
     describe('enterState()', () => {
         describe('Successful Turn End (Context Valid, Actor Match, No Error)', () => {
             beforeEach(async () => {
-                // Ensure handler's context is set for this actor
                 mockHandler._TEST_setCurrentTurnContext(testTurnContext);
-                mockHandler._TEST_setCurrentActor(testActor); // Ensure currentActor matches context
+                mockHandler._TEST_setCurrentActor(testActor);
 
-                turnEndingState = createTestState(actorId, null);
+                turnEndingState = createTestState(actorId, null); // turnError is null
                 await turnEndingState.enterState(mockHandler, null);
             });
 
@@ -221,7 +213,8 @@ describe('TurnEndingState', () => {
 
             it('should call ITurnEndPort.notifyTurnEnded with correct parameters via ITurnContext', () => {
                 expect(testTurnContext.getTurnEndPort).toHaveBeenCalled();
-                expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(actorId, null);
+                // Corrected expectation: second argument should be true (isSuccess)
+                expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(actorId, true);
             });
 
             it('should call handler.signalNormalApparentTermination if function exists and context actor matches', () => {
@@ -245,12 +238,12 @@ describe('TurnEndingState', () => {
                 mockHandler._TEST_setCurrentTurnContext(testTurnContext);
                 mockHandler._TEST_setCurrentActor(testActor);
 
-                turnEndingState = createTestState(actorId, error);
+                turnEndingState = createTestState(actorId, error); // turnError is an Error object
                 await turnEndingState.enterState(mockHandler, null);
             });
 
-            it('should call ITurnEndPort.notifyTurnEnded with the error via ITurnContext', () => {
-                expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(actorId, error);
+            it('should call ITurnEndPort.notifyTurnEnded with the error status (false) via ITurnContext', () => {
+                expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(actorId, false); // isSuccess will be false
             });
 
             it('should still call handler.signalNormalApparentTermination', () => {
@@ -279,12 +272,9 @@ describe('TurnEndingState', () => {
             });
 
             it('should use handler logger for logging (TurnEndingState specific logs)', () => {
-                // super.enterState is mocked by superEnterSpy, so its logging does not occur with mockSystemLogger here.
-                // We verify that TurnEndingState's own main log uses the handler's logger.
                 expect(mockSystemLogger.info).toHaveBeenCalledWith(
                     `TurnEndingState: Entered for target actor ${actorId} (turn result: SUCCESS). Context actor: None. Error: null.`
                 );
-                // Also check the subsequent log from TurnEndingState
                 expect(mockSystemLogger.info).toHaveBeenCalledWith(
                     `TurnEndingState: Processing for actor ${actorId} complete. Handler now in Idle state.`
                 );
@@ -299,7 +289,6 @@ describe('TurnEndingState', () => {
 
             it('should NOT call handler.signalNormalApparentTermination (as context actor cannot be confirmed)', () => {
                 expect(mockHandler.signalNormalApparentTermination).not.toHaveBeenCalled();
-                // The log message for this case will be corrected in TurnEndingState.js to use 'None'
                 expect(mockSystemLogger.debug).toHaveBeenCalledWith(
                     `TurnEndingState: Normal apparent termination not signaled. Context actor ('None') vs target actor ('${actorId}') mismatch or no context actor.`
                 );
@@ -361,7 +350,7 @@ describe('TurnEndingState', () => {
                 `TurnEndingState: CRITICAL - TurnEndPort.notifyTurnEnded failed for actor ${actorId}: ${notifyError.message}`,
                 notifyError
             );
-            expect(mockHandler.signalNormalApparentTermination).toHaveBeenCalled();
+            expect(mockHandler.signalNormalApparentTermination).toHaveBeenCalled(); // Should still be called
             expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
             expect(mockHandler._transitionToState).toHaveBeenCalledWith(expect.any(TurnIdleState));
         });
@@ -370,15 +359,13 @@ describe('TurnEndingState', () => {
             mockHandler._TEST_setCurrentTurnContext(testTurnContext);
             delete mockHandler.signalNormalApparentTermination; // Method does not exist
 
-            turnEndingState = createTestState(actorId, null);
+            turnEndingState = createTestState(actorId, null); // turnError is null
             await turnEndingState.enterState(mockHandler, null);
 
-            expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(actorId, null);
+            // Corrected expectation: second argument should be true (isSuccess)
+            expect(mockTurnEndPortInstance.notifyTurnEnded).toHaveBeenCalledWith(actorId, true);
             expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
             expect(mockHandler._transitionToState).toHaveBeenCalledWith(expect.any(TurnIdleState));
-            // Check it didn't try to call the undefined method or log about signaling.
-            // The debug log for *not* signaling due to mismatch/no context actor IS different.
-            // Here, the method simply doesn't exist, so no specific log about not signaling is made.
             const signalLogFound = mockContextSpecificLogger.debug.mock.calls.some(call =>
                 call[0].includes('Signaling normal apparent termination') || call[0].includes('Normal apparent termination not signaled')
             );
@@ -388,7 +375,6 @@ describe('TurnEndingState', () => {
 
     describe('destroy()', () => {
         beforeEach(() => {
-            // For destroy tests, simulate TurnEndingState being the current state
             turnEndingState = createTestState(actorId, null);
             mockHandler._currentState = turnEndingState;
         });
@@ -402,26 +388,17 @@ describe('TurnEndingState', () => {
 
         it('should attempt to transition to TurnIdleState if handler._currentState is not TurnIdleState and not itself', async () => {
             const someOtherState = {getStateName: () => 'SomeOtherState', constructor: {name: 'SomeOtherState'}};
-            mockHandler._currentState = someOtherState; // Simulate handler is in a different state
+            mockHandler._currentState = someOtherState;
 
-            await turnEndingState.destroy(mockHandler); // Call destroy on our TurnEndingState instance
+            await turnEndingState.destroy(mockHandler);
             expect(mockHandler._transitionToState).toHaveBeenCalledWith(expect.any(TurnIdleState));
         });
 
         it('should NOT attempt self-transition if handler._currentState is itself during destroy', async () => {
-            // Set current state to the instance being destroyed
             mockHandler._currentState = turnEndingState;
-            mockHandler._transitionToState.mockClear(); // Clear before call
+            mockHandler._transitionToState.mockClear();
 
             await turnEndingState.destroy(mockHandler);
-
-            // BaseTurnHandler.destroy might still transition, but TurnEndingState's own safeguard shouldn't.
-            // Check if _transitionToState was NOT called by TurnEndingState's specific logic here
-            // This is hard to test in isolation perfectly without knowing exact BaseTurnHandler.destroy flow
-            // But the logic `handler._currentState !== this` should prevent self-initated transition.
-            // We assume BaseTurnHandler.destroy will eventually transition to Idle.
-            // Let's check that it does not call `_transitionToState` MORE than expected if it was BaseHandler.destroy() only.
-            // For now, simply ensure it runs without error. The important part is that `_resetTurnStateAndResources` runs.
             expect(mockSystemLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Handler destroyed while in TurnEndingState'));
         });
 
@@ -435,7 +412,7 @@ describe('TurnEndingState', () => {
         });
 
         it('should handle forced transition failure during destroy by logging an error', async () => {
-            mockHandler._currentState = {getStateName: () => 'AnotherState'}; // Not Idle or itself
+            mockHandler._currentState = {getStateName: () => 'AnotherState'};
             const transitionError = new Error("Forced transition failed");
             mockHandler._transitionToState.mockRejectedValueOnce(transitionError);
 
@@ -450,41 +427,21 @@ describe('TurnEndingState', () => {
 
     describe('exitState()', () => {
         it('should log using handler logger as context is expected to be cleared (TurnEndingState specific log)', async () => {
-            mockHandler._TEST_setCurrentTurnContext(null); // Simulate context cleared
+            mockHandler._TEST_setCurrentTurnContext(null);
             turnEndingState = createTestState(actorId, null);
             const nextState = new TurnIdleState(mockHandler);
             await turnEndingState.exitState(mockHandler, nextState);
 
-            // This is TurnEndingState's own log message from its exitState method
             expect(mockSystemLogger.debug).toHaveBeenCalledWith(
                 `TurnEndingState: Exiting for (intended) actor ${actorId}. Transitioning to TurnIdleState. ITurnContext should be null.`
             );
-
-            // Verifies that super.exitState was called.
-            // Note: The logging from the *original* super.exitState (e.g., "TurnEndingState: Exiting. Actor: N/A...")
-            // will not occur here because superExitSpy replaces its implementation.
             expect(superExitSpy).toHaveBeenCalledWith(mockHandler, nextState);
         });
     });
 
     test('No direct PlayerTurnHandler private member access in source code', () => {
         const sourceCode = TurnEndingState.toString();
-        // Regex for direct private access like "this._handler.#privateField" or "this._handler._privateMethod()" (if not protected)
-        // This is a simplistic check; actual private fields are usually not accessible this way.
-        // The main concern is avoiding type-casting to PlayerTurnHandler and then accessing its specific fields.
-        const pthSpecificPrivateAccessRegex = /_handler\.(#|_[a-zA-Z0-9]+)\w*(?!\s*=\s*jest\.fn\(\))/;
-        // Check for the string "PlayerTurnHandler" not in comments, allowing for its name in type defs or logs if necessary.
-        // If the following regex flags a legitimate comment, the comment might need rephrasing or the regex adjusted.
         const pthClassNameRegex = /(?<!\/\/\s*|\*\s*)\bPlayerTurnHandler\b/;
-
-
-        // The ticket allows _resetTurnStateAndResources, _transitionToState, getLogger, getCurrentActor
-        // and public signalNormalApparentTermination.
-        // We are looking for direct access to *PlayerTurnHandler-specific private members*.
-        // The code uses `typeof handler.signalNormalApparentTermination === 'function'`, which is fine.
-        // The regex for pthSpecificPrivateAccessRegex is too broad and might give false positives for allowed protected members.
-        // A manual review confirmed no direct PlayerTurnHandler private member access.
-        // This automated check mostly ensures the class name "PlayerTurnHandler" isn't directly invoked for instantiation or static access.
         expect(sourceCode).not.toMatch(pthClassNameRegex);
     });
 });

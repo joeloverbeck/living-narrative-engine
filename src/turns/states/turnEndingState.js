@@ -97,7 +97,7 @@ export class TurnEndingState extends AbstractTurnState {
             throw e; // Re-throw to see if this is the unhandled point, or handle gracefully
         }
 
-        const isSuccess = (this.#turnError === null);
+        const isSuccess = (this.#turnError === null); // Determine boolean success
         const statusTxt = isSuccess ? 'SUCCESS' : 'FAILURE';
         const contextActorIdFromCtx = turnCtxForEndingTurn?.getActor()?.id; // Renamed to avoid conflict
 
@@ -114,7 +114,9 @@ export class TurnEndingState extends AbstractTurnState {
                 logger.debug(`${this.getStateName()}: Attempting to get TurnEndPort for actor ${this.#actorToEndId}.`); // DIAGNOSTIC
                 const turnEndPort = turnCtxForEndingTurn.getTurnEndPort();
                 logger.debug(`${this.getStateName()}: Notifying TurnEndPort for actor ${this.#actorToEndId} (success: ${isSuccess}).`);
-                await turnEndPort.notifyTurnEnded(this.#actorToEndId, this.#turnError);
+                // --- FIXED LINE BELOW---
+                await turnEndPort.notifyTurnEnded(this.#actorToEndId, isSuccess); // Pass the boolean 'isSuccess'
+                // --- END FIX ---
                 logger.debug(`${this.getStateName()}: TurnEndPort notification for ${this.#actorToEndId} complete.`);
             } catch (notifyErr) {
                 logger.error(
