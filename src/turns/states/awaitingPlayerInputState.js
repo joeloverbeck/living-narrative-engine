@@ -35,7 +35,19 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
     }
 
     /* --------------------------------------------------------------------- */
-    async enterState() {
+    /**
+     * @override
+     * @param {import('../handlers/baseTurnHandler.js').BaseTurnHandler} handler - The handler managing states.
+     * @param {AbstractTurnState | null} previousState - The state being exited.
+     */
+    async enterState(handler, previousState) { // <-- Signature updated
+        // Call super.enterState first, passing along the received handler and previousState
+        // This allows the abstract class to perform its entry logging correctly.
+        // Note: The 'handler' parameter here is the one passed by the state machine.
+        // this._handler is the one stored during construction. They are typically the same.
+        // For consistency with how AbstractTurnState is designed, we pass the 'handler' parameter.
+        await super.enterState(handler, previousState);
+
         const turnContext = this._getTurnContext();
         if (!turnContext) {
             const logger = this._handler?.getLogger?.() ?? console;
@@ -47,7 +59,9 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
             return;
         }
 
-        await super.enterState(this._handler, null);               // logging hook
+        // The original call was: await super.enterState(this._handler, null);
+        // Now the super call is at the top with actual parameters.
+
         const logger = turnContext.getLogger();
         const actor = turnContext.getActor();
 
@@ -57,7 +71,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
             return;
         }
 
-        logger.info(`${this.name}: Actor ${actor.id}. Attempting to retrieve turn strategy.`);
+        logger.info(`${this.name}: Actor ${actor.id}. Attempting to retrieve turn strategy.`); // This log might be redundant if super.enterState logs similar info
 
         /* ---------- obtain strategy ------------------------------------------------ */
         let strategy;
@@ -126,12 +140,25 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
     }
 
     /* --------------------------------------------------------------------- */
-    async exitState() {
-        await super.exitState(this._handler, null);
+    /**
+     * @override
+     * @param {import('../handlers/baseTurnHandler.js').BaseTurnHandler} handler - The handler managing states.
+     * @param {AbstractTurnState | null} nextState - The state being transitioned to.
+     */
+    async exitState(handler, nextState) { // <-- Signature updated
+        // Call super.exitState, passing along the received handler and nextState
+        // This allows the abstract class to perform its exit logging correctly.
+        await super.exitState(handler, nextState);
+
+        // The original call was: await super.exitState(this._handler, null);
+        // Now the super call uses the actual parameters.
+
+        // The following specific logging might be redundant if super.exitState covers it,
+        // but can be kept if more detail is needed from this specific state.
         const l = (this._getTurnContext()?.getLogger?.() ??
             this._handler?.getLogger?.() ??
             console);
-        l.debug(`${this.name}: ExitState cleanup (if any) complete.`);
+        l.debug(`${this.name}: ExitState cleanup (if any) specific to AwaitingPlayerInputState complete.`);
     }
 
     /* --------------------------------------------------------------------- */
@@ -165,12 +192,13 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
 
     /* --------------------------------------------------------------------- */
     async handleTurnEndedEvent(handlerInstance, payload) {
-        const handler = handlerInstance || this._handler;
+        const handler = handlerInstance || this._handler; // Use passed handlerInstance if available
         const turnContext = this._getTurnContext();
         const logger = turnContext?.getLogger?.() ?? handler?.getLogger?.() ?? console;
 
         if (!turnContext) {
             logger.warn(`${this.name}: handleTurnEndedEvent received but no turn context. Payload: ${JSON.stringify(payload)}. Deferring to superclass.`);
+            // Pass the handlerInstance (or this._handler) to the super call
             return super.handleTurnEndedEvent(handler, payload);
         }
 
@@ -182,15 +210,15 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
             turnContext.endTurn(payload.error || null);
         } else {
             logger.debug(`${this.name}: core:turn_ended event for actor ${evtId} is not for current context actor ${ctxActor?.id}. Deferring to superclass.`);
-            await super.handleTurnEndedEvent(handler, payload);
+            await super.handleTurnEndedEvent(handler, payload); // Pass the handler
         }
     }
 
     /* --------------------------------------------------------------------- */
     async destroy(handlerInstance) {
-        const handler = handlerInstance || this._handler;
+        const handler = handlerInstance || this._handler; // Use passed handlerInstance if available
         const logger = handler?.getLogger?.() ?? console;
-        const turnContext = handler?.getTurnContext?.();
+        const turnContext = handler?.getTurnContext?.(); // Use the potentially passed handler
         const actorInCtx = turnContext?.getActor();
 
         if (turnContext) {
@@ -206,7 +234,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
             logger.warn(`${this.name}: Handler destroyed. Actor ID from context: N/A_no_context. No specific turn to end via context if actor is missing.`);
         }
 
-        await super.destroy(handler);
+        await super.destroy(handler); // Pass the handler
     }
 }
 
