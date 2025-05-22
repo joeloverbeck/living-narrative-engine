@@ -158,64 +158,87 @@ class PlayerPromptService extends IPlayerPromptService {
 
     /**
      * @private
-     * Clears the currently active prompt, unsubscribing its listener and rejecting its promise.
+     * Clears the currently active prompt by rejecting its promise.
+     * The rejection handler of the prompt context is responsible for actual resource cleanup.
      * @param {PromptError | DOMException | null} [rejectionError=null] - The error to reject the current prompt's promise with.
-     * If null, a default "superseded" error is used.
+     * If null, a default "superseded/cancelled" error is used.
      */
     #clearCurrentPrompt(rejectionError = null) {
         if (!this.#currentPromptContext) {
-            this.#logger.debug("PlayerPromptService.#clearCurrentPrompt: No current prompt context to clear or already cleared by its own resolution/rejection.");
+            this.#logger.debug("PlayerPromptService.#clearCurrentPrompt: No active prompt to clear.");
             return;
         }
 
-        const contextToClear = this.#currentPromptContext;
-        this.#currentPromptContext = null; // Clear global reference immediately
+        const contextToClear = this.#currentPromptContext; // Hold reference
+
+        if (contextToClear.isResolvedOrRejected) {
+            this.#logger.debug(`PlayerPromptService.#clearCurrentPrompt: Prompt for actor ${contextToClear.actorId} already settled. Ensuring global context matches.`);
+            // If the global context somehow still points to this already-settled context,
+            // nullify it. The original settlement should have done this, but this is a safeguard.
+            if (this.#currentPromptContext === contextToClear) {
+                this.#currentPromptContext = null;
+            }
+            return;
+        }
 
         const oldActorId = contextToClear.actorId;
-        this.#logger.warn(`PlayerPromptService.#clearCurrentPrompt: Clearing active prompt for actor ${oldActorId}.`);
+        this.#logger.warn(`PlayerPromptService.#clearCurrentPrompt: Actively clearing prompt for actor ${oldActorId}.`);
 
-        // If the context was already settled, its own resolve/reject should have handled cleanup.
-        if (contextToClear.isResolvedOrRejected) {
-            this.#logger.debug(`PlayerPromptService.#clearCurrentPrompt: Prompt for actor ${oldActorId} was already settled. Associated cleanup should have occurred via its resolve/reject.`);
-            contextToClear.unsubscribe = null;
-            contextToClear.abortListenerCleanup = null;
+        let errorToRejectWith;
+        if (rejectionError) {
+            errorToRejectWith = rejectionError;
+        } else if (contextToClear.cancellationSignal?.aborted) {
+            // This case implies the AbortSignal's own listener might not have fired yet,
+            // or #clearCurrentPrompt is called concurrently.
+            this.#logger.warn(`PlayerPromptService.#clearCurrentPrompt: Prompt for ${oldActorId} was aborted by its signal.`);
+            errorToRejectWith = new DOMException('Prompt aborted by signal, then cleared.', 'AbortError');
+        } else {
+            this.#logger.warn(`PlayerPromptService.#clearCurrentPrompt: Prompt for ${oldActorId} superseded or cancelled without explicit error/signal.`);
+            errorToRejectWith = new PromptError(`Prompt for actor ${oldActorId} was superseded or cancelled by system.`, null, "PROMPT_SYSTEM_CLEARED");
+        }
+
+        // Call the context's own reject method. This will set its 'isResolvedOrRejected' flag,
+        // call _performPromptResourceCleanup, and nullify 'this.#currentPromptContext' if it matches.
+        contextToClear.reject(errorToRejectWith);
+    }
+
+    /**
+     * @private
+     * Performs resource cleanup for a given prompt context (event unsubscribe, abort listener removal).
+     * This method is called when a prompt is settled (resolved, rejected, or cancelled).
+     * @param {CurrentPromptContext} promptContext - The prompt context whose resources need cleaning.
+     */
+    _performPromptResourceCleanup(promptContext) {
+        if (!promptContext) {
+            this.#logger.warn('PlayerPromptService._performPromptResourceCleanup: Called with null or undefined promptContext. Aborting cleanup.');
             return;
         }
 
-        this.#logger.debug(`PlayerPromptService.#clearCurrentPrompt: Prompt for actor ${oldActorId} is being explicitly cleared and rejected.`);
-
-        if (typeof contextToClear.unsubscribe === 'function') {
+        if (typeof promptContext.unsubscribe === 'function') {
             try {
-                contextToClear.unsubscribe();
-                this.#logger.debug(`PlayerPromptService.#clearCurrentPrompt: Successfully unsubscribed event listener for previous prompt (actor ${oldActorId}).`);
+                this.#logger.debug(`PlayerPromptService._performPromptResourceCleanup: Unsubscribing event listener for prompt (actor ${promptContext.actorId}).`);
+                promptContext.unsubscribe();
+                this.#logger.debug(`PlayerPromptService._performPromptResourceCleanup: Successfully unsubscribed event listener for prompt (actor ${promptContext.actorId}).`);
             } catch (unsubError) {
-                this.#logger.error(`PlayerPromptService: Error unsubscribing listener for previous prompt (actor ${oldActorId}).`, unsubError);
+                this.#logger.error(`PlayerPromptService._performPromptResourceCleanup: Error unsubscribing event listener for prompt (actor ${promptContext.actorId}).`, unsubError);
             }
-            contextToClear.unsubscribe = null;
+            promptContext.unsubscribe = null;
+        } else if (promptContext.unsubscribe !== null) {
+            this.#logger.debug(`PlayerPromptService._performPromptResourceCleanup: No unsubscribe function to call for prompt (actor ${promptContext.actorId}). 'unsubscribe' is not a function or already null.`);
         }
 
-        if (typeof contextToClear.abortListenerCleanup === 'function') {
+        if (typeof promptContext.abortListenerCleanup === 'function') {
             try {
-                contextToClear.abortListenerCleanup();
-                this.#logger.debug(`PlayerPromptService.#clearCurrentPrompt: Cleaned up abort listener for actor ${oldActorId}.`);
+                this.#logger.debug(`PlayerPromptService._performPromptResourceCleanup: Cleaning up abort listener for prompt (actor ${promptContext.actorId}).`);
+                promptContext.abortListenerCleanup();
+                this.#logger.debug(`PlayerPromptService._performPromptResourceCleanup: Successfully cleaned up abort listener for prompt (actor ${promptContext.actorId}).`);
             } catch (cleanupError) {
-                this.#logger.error(`PlayerPromptService: Error cleaning up abort listener for actor ${oldActorId}.`, cleanupError);
+                this.#logger.error(`PlayerPromptService._performPromptResourceCleanup: Error cleaning up abort listener for prompt (actor ${promptContext.actorId}).`, cleanupError);
             }
-            contextToClear.abortListenerCleanup = null;
+            promptContext.abortListenerCleanup = null;
+        } else if (promptContext.abortListenerCleanup !== null) {
+            this.#logger.debug(`PlayerPromptService._performPromptResourceCleanup: No abortListenerCleanup function to call for prompt (actor ${promptContext.actorId}). 'abortListenerCleanup' is not a function or already null.`);
         }
-
-        let errorToRejectWith = rejectionError;
-        if (!errorToRejectWith) {
-            if (contextToClear.cancellationSignal?.aborted) {
-                errorToRejectWith = new DOMException('Prompt aborted by signal before being superseded by external clear.', 'AbortError');
-            } else {
-                if (!rejectionError) {
-                    errorToRejectWith = new PromptError(`Prompt for actor ${oldActorId} was superseded by an unspecified reason.`, null, "PROMPT_SUPERSEDED");
-                }
-            }
-        }
-
-        contextToClear.reject(errorToRejectWith);
     }
 
     /**
@@ -339,7 +362,6 @@ class PlayerPromptService extends IPlayerPromptService {
             return;
         }
         if (localPromptContext.isResolvedOrRejected) {
-            // Corrected log to match test expectation
             this.#logger.debug(`PlayerPromptService._handlePlayerTurnSubmittedEvent: Listener for ${localPromptContext.actorId} (event ${eventObject?.type}) received event but prompt already settled. Ignoring.`);
             return;
         }
@@ -435,101 +457,83 @@ class PlayerPromptService extends IPlayerPromptService {
         }
 
         return new Promise((originalPromiseResolve, originalPromiseReject) => {
-            const logger = this.#logger;
-
             const localPromptContext = {
                 actorId: actorId,
-                discoveredActions: discoveredActions,
-                cancellationSignal: cancellationSignal,
-                isResolvedOrRejected: false,
-                unsubscribe: null,
-                abortListenerCleanup: null,
-
                 resolve: (value) => {
                     if (localPromptContext.isResolvedOrRejected) {
-                        logger.warn(`PlayerPromptService.prompt.localPromptContext.resolve for actor ${localPromptContext.actorId} called, but prompt already settled.`);
+                        this.#logger.debug(`PlayerPromptService: Attempted to resolve already settled prompt for actor ${localPromptContext.actorId}. Ignoring.`);
                         return;
                     }
                     localPromptContext.isResolvedOrRejected = true;
-                    logger.debug(`PlayerPromptService.prompt.localPromptContext.resolve for actor ${localPromptContext.actorId} - resolving.`);
+                    this.#logger.debug(`PlayerPromptService: Resolving prompt for actor ${localPromptContext.actorId}.`);
 
-                    if (typeof localPromptContext.unsubscribe === 'function') {
-                        try {
-                            localPromptContext.unsubscribe();
-                        } catch (e) {
-                            logger.error(`Error during unsubscribe in resolve for ${localPromptContext.actorId}`, e);
-                        }
-                        localPromptContext.unsubscribe = null;
-                    }
-                    if (typeof localPromptContext.abortListenerCleanup === 'function') {
-                        try {
-                            localPromptContext.abortListenerCleanup();
-                        } catch (e) {
-                            logger.error(`Error during abortListenerCleanup in resolve for ${localPromptContext.actorId}`, e);
-                        }
-                        localPromptContext.abortListenerCleanup = null;
-                    }
+                    this._performPromptResourceCleanup(localPromptContext);
 
                     if (this.#currentPromptContext === localPromptContext) {
                         this.#currentPromptContext = null;
+                        this.#logger.debug(`PlayerPromptService: Cleared current prompt context for actor ${localPromptContext.actorId} on resolve.`);
                     }
                     originalPromiseResolve(value);
                 },
                 reject: (err) => {
                     if (localPromptContext.isResolvedOrRejected) {
-                        logger.warn(`PlayerPromptService.prompt.localPromptContext.reject for actor ${localPromptContext.actorId} called, but prompt already settled. Error: ${err?.message}`);
+                        this.#logger.debug(`PlayerPromptService: Attempted to reject already settled prompt for actor ${localPromptContext.actorId}. Error: ${err?.message}. Ignoring subsequent rejection.`);
                         return;
                     }
                     localPromptContext.isResolvedOrRejected = true;
-                    logger.debug(`PlayerPromptService.prompt.localPromptContext.reject for actor ${localPromptContext.actorId} - rejecting. Error: ${err?.message}`);
 
-                    if (typeof localPromptContext.unsubscribe === 'function') {
-                        try {
-                            localPromptContext.unsubscribe();
-                        } catch (e) {
-                            logger.error(`Error during unsubscribe in reject for ${localPromptContext.actorId}`, e);
-                        }
-                        localPromptContext.unsubscribe = null;
+                    // ── CHANGED LOGGING BEHAVIOUR ──────────────────────────────────────
+                    if (err instanceof DOMException && err.name === 'AbortError') {
+                        this.#logger.info(`PlayerPromptService: Prompt for actor ${localPromptContext.actorId} aborted. ${err.message}`);
+                    } else {
+                        this.#logger.warn(`PlayerPromptService: Rejecting prompt for actor ${localPromptContext.actorId}. Error: ${err?.message}`);
                     }
-                    if (typeof localPromptContext.abortListenerCleanup === 'function') {
-                        try {
-                            localPromptContext.abortListenerCleanup();
-                        } catch (e) {
-                            logger.error(`Error during abortListenerCleanup in reject for ${localPromptContext.actorId}`, e);
-                        }
-                        localPromptContext.abortListenerCleanup = null;
-                    }
+                    // ───────────────────────────────────────────────────────────────────
+
+                    this._performPromptResourceCleanup(localPromptContext);
 
                     if (this.#currentPromptContext === localPromptContext) {
                         this.#currentPromptContext = null;
+                        this.#logger.debug(`PlayerPromptService: Cleared current prompt context for actor ${localPromptContext.actorId} on reject.`);
                     }
                     originalPromiseReject(err);
                 },
+                unsubscribe: null,
+                discoveredActions: discoveredActions,
+                cancellationSignal: cancellationSignal,
+                abortListenerCleanup: null,
+                isResolvedOrRejected: false,
             };
 
             this.#currentPromptContext = localPromptContext;
-            logger.debug(`PlayerPromptService.prompt: Current prompt context set for actor ${actorId}.`);
+            this.#logger.debug(`PlayerPromptService.prompt: Current prompt context set globally for actor ${actorId}.`);
 
             if (cancellationSignal) {
                 const handleAbort = () => {
-                    logger.info(`PlayerPromptService.prompt: Abort signal received for actor ${localPromptContext.actorId}.`);
+                    this.#logger.info(`PlayerPromptService.prompt: Abort signal received for actor ${localPromptContext.actorId}. Rejecting prompt.`);
                     localPromptContext.reject(new DOMException('Prompt aborted by signal.', 'AbortError'));
                 };
                 cancellationSignal.addEventListener('abort', handleAbort, {once: true});
                 localPromptContext.abortListenerCleanup = () => {
                     cancellationSignal.removeEventListener('abort', handleAbort);
+                    this.#logger.debug(`PlayerPromptService.prompt: Removed abort signal listener for actor ${localPromptContext.actorId}.`);
                 };
-                logger.debug(`PlayerPromptService.prompt: Abort signal listener set up for actor ${actorId}.`);
+                this.#logger.debug(`PlayerPromptService.prompt: Abort signal listener set up for actor ${actorId}.`);
 
                 if (cancellationSignal.aborted && !localPromptContext.isResolvedOrRejected) {
-                    logger.warn(`PlayerPromptService.prompt: Actor ${actorId}'s prompt was already aborted by signal before subscription attempt.`);
-                    localPromptContext.reject(new DOMException('Prompt aborted by signal before event subscription.', 'AbortError'));
+                    this.#logger.warn(`PlayerPromptService.prompt: Actor ${actorId}'s prompt was aborted by signal just before event subscription could be fully set up or after context assignment. Triggering rejection.`);
+                    localPromptContext.reject(new DOMException('Prompt aborted by signal before event subscription was finalized or immediately after context set.', 'AbortError'));
                     return;
                 }
             }
 
+            if (localPromptContext.isResolvedOrRejected) {
+                this.#logger.debug(`PlayerPromptService.prompt: Prompt for actor ${actorId} already settled before event subscription. Not subscribing.`);
+                return;
+            }
+
             try {
-                logger.debug(`PlayerPromptService.prompt: Subscribing to ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId}.`);
+                this.#logger.debug(`PlayerPromptService.prompt: Subscribing to ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId}.`);
                 const unsubscribeFunc = this.#validatedEventDispatcher.subscribe(
                     PLAYER_TURN_SUBMITTED_ID,
                     (eventData) => {
@@ -543,15 +547,15 @@ class PlayerPromptService extends IPlayerPromptService {
                 );
 
                 if (typeof unsubscribeFunc !== 'function') {
-                    logger.error(`PlayerPromptService.prompt: Subscription to ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId} did not return an unsubscribe function.`);
+                    this.#logger.error(`PlayerPromptService.prompt: Subscription to ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId} did not return an unsubscribe function.`);
                     localPromptContext.reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}: No unsubscribe function returned.`, null, "SUBSCRIPTION_FAILED"));
                     return;
                 }
                 localPromptContext.unsubscribe = unsubscribeFunc;
-                logger.debug(`PlayerPromptService.prompt: Successfully subscribed to ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId}. Waiting for input.`);
+                this.#logger.info(`PlayerPromptService.prompt: Successfully subscribed to ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId}. Waiting for input.`);
 
             } catch (error) {
-                logger.error(`PlayerPromptService.prompt: Error subscribing to ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId}.`, error);
+                this.#logger.error(`PlayerPromptService.prompt: Error subscribing to ${PLAYER_TURN_SUBMITTED_ID} for actor ${actorId}.`, error);
                 localPromptContext.reject(new PromptError(`Failed to subscribe to player input event for actor ${actorId}. Details: ${error.message}`, error, "SUBSCRIPTION_ERROR"));
             }
         });
@@ -564,17 +568,21 @@ class PlayerPromptService extends IPlayerPromptService {
         this.#logger.info("PlayerPromptService: cancelCurrentPrompt called.");
         if (this.#currentPromptContext) {
             const contextToCancel = this.#currentPromptContext;
-            this.#logger.debug(`PlayerPromptService: Attempting to cancel prompt for actor ${contextToCancel.actorId}.`);
+            this.#logger.debug(`PlayerPromptService.cancelCurrentPrompt: Attempting to cancel active prompt for actor ${contextToCancel.actorId}.`);
 
             let cancellationError;
             if (contextToCancel.cancellationSignal?.aborted) {
-                cancellationError = new DOMException("Prompt already aborted by its signal, then cancelCurrentPrompt called.", "AbortError");
+                cancellationError = new DOMException("Prompt already aborted by its own signal; cancelCurrentPrompt called subsequently.", "AbortError");
+                this.#logger.warn(`PlayerPromptService.cancelCurrentPrompt: Prompt for ${contextToCancel.actorId} was already aborted by its signal.`);
             } else {
-                cancellationError = new PromptError("Current player prompt was explicitly cancelled by external request.", null, "PROMPT_CANCELLED");
+                cancellationError = new PromptError(
+                    "Current player prompt was explicitly cancelled by external request.",
+                    null,
+                    "PROMPT_CANCELLED"
+                );
             }
             this.#clearCurrentPrompt(cancellationError);
         } else {
-            // Corrected log to match test expectation
             this.#logger.debug("PlayerPromptService: cancelCurrentPrompt called, but no active prompt to cancel.");
         }
     }

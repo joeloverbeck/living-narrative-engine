@@ -252,15 +252,23 @@ export class TurnContext extends ITurnContext {
 
     /** @override */
     endTurn(errorOrNull = null) {
-        // --- MODIFICATION: Abort any pending prompt when turn ends ---
-        // This ensures that if endTurn is called (e.g., due to an error or normal completion *before* prompt resolves),
-        // the prompt associated with this turn is also signalled to abort.
-        // Check if signal is already aborted to avoid redundant logging or errors from aborting again.
+        // Abort the prompt if it’s still running
         if (!this.#promptAbortController.signal.aborted) {
-            this.#logger.debug(`TurnContext.endTurn: Turn ending for actor ${this.#actor.id}. Aborting associated prompt signal.`);
+            this.#logger.debug(
+                `TurnContext.endTurn: Aborting prompt for actor ${this.#actor.id}.`
+            );
             this.cancelActivePrompt();
         }
-        // --- END MODIFICATION ---
+
+        // NEW ➜ do nothing if the handler is already gone
+        if (this.#handlerInstance?._isDestroyed) {
+            this.#logger.debug(
+                `TurnContext.endTurn: Handler already destroyed – skipping onEndTurnCallback for actor ${this.#actor.id}.`
+            );
+            return;
+        }
+
+        // Notify the handler
         this.#onEndTurnCallback(errorOrNull);
     }
 

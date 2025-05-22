@@ -182,6 +182,16 @@ export class BaseTurnHandler {
     }
 
     async _handleTurnEnd(actorIdToEnd, turnError = null, fromDestroy = false) {
+        // < NEW > short-circuit: handler already destroyed & not called from destroy()
+        if (this._isDestroyed && !fromDestroy) {
+            this.getLogger().warn(
+                `${this.constructor.name}._handleTurnEnd ignored for actor ` +
+                `${actorIdToEnd ?? 'UNKNOWN'} – handler already destroyed.`
+            );
+            return;
+        }
+
+        // original safety check (now after the early-out)
         this._assertHandlerActiveUnlessDestroying(fromDestroy);
         const logger = this.getLogger();
 
