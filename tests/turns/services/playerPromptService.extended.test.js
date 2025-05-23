@@ -1,6 +1,6 @@
 // tests/turns/services/playerPromptService.extended.test.js
 // --- FILE START ---
-import PlayerPromptService from '../../../src/turns/services/playerPromptService.js';
+import HumanPlayerPromptService from '../../../src/turns/services/humanPlayerPromptService.js';
 import {PromptError} from '../../../src/errors/promptError.js';
 import {PLAYER_TURN_SUBMITTED_ID} from '../../../src/constants/eventIds.js';
 import Entity from '../../../src/entities/entity.js';
@@ -59,7 +59,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
 
     it('should initialize successfully with all valid dependencies', () => {
-        expect(() => new PlayerPromptService(baseDependencies)).not.toThrow();
+        expect(() => new HumanPlayerPromptService(baseDependencies)).not.toThrow();
         expect(mockLogger.info).toHaveBeenCalledWith('PlayerPromptService initialized successfully.');
     });
 
@@ -77,13 +77,13 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             const {logger, ...deps} = baseDependencies;
             const testDeps = {...deps};
             delete testDeps.logger;
-            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing ILogger dependency.');
+            expect(() => new HumanPlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing ILogger dependency.');
         });
         const methods = ['error', 'info', 'debug', 'warn'];
         methods.forEach(method => {
             it(`should throw if logger is missing ${method} method`, () => {
                 const invalidLogger = {...createMockLogger(), [method]: undefined};
-                expect(() => new PlayerPromptService({...baseDependencies, logger: invalidLogger}))
+                expect(() => new HumanPlayerPromptService({...baseDependencies, logger: invalidLogger}))
                     .toThrow(`PlayerPromptService: Invalid ILogger dependency. Missing method: ${method}().`);
             });
         });
@@ -103,11 +103,11 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             const {actionDiscoverySystem, ...deps} = baseDependencies;
             const testDeps = {...deps};
             delete testDeps.actionDiscoverySystem;
-            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IActionDiscoverySystem dependency.');
+            expect(() => new HumanPlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IActionDiscoverySystem dependency.');
         });
         it('should throw if actionDiscoverySystem lacks getValidActions method', () => {
             const invalidSystem = {...createMockActionDiscoverySystem(), getValidActions: undefined};
-            expect(() => new PlayerPromptService({...baseDependencies, actionDiscoverySystem: invalidSystem}))
+            expect(() => new HumanPlayerPromptService({...baseDependencies, actionDiscoverySystem: invalidSystem}))
                 .toThrow('PlayerPromptService: Invalid IActionDiscoverySystem dependency. Missing method: getValidActions().');
         });
     });
@@ -126,11 +126,11 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             const {promptOutputPort, ...deps} = baseDependencies;
             const testDeps = {...deps};
             delete testDeps.promptOutputPort;
-            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IPromptOutputPort dependency.');
+            expect(() => new HumanPlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IPromptOutputPort dependency.');
         });
         it('should throw if promptOutputPort lacks prompt method', () => {
             const invalidPort = {...createMockPromptOutputPort(), prompt: undefined};
-            expect(() => new PlayerPromptService({...baseDependencies, promptOutputPort: invalidPort}))
+            expect(() => new HumanPlayerPromptService({...baseDependencies, promptOutputPort: invalidPort}))
                 .toThrow('PlayerPromptService: Invalid IPromptOutputPort dependency. Missing method: prompt().');
         });
     });
@@ -149,11 +149,11 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             const {worldContext, ...deps} = baseDependencies;
             const testDeps = {...deps};
             delete testDeps.worldContext;
-            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IWorldContext dependency.');
+            expect(() => new HumanPlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IWorldContext dependency.');
         });
         it('should throw if worldContext lacks getLocationOfEntity method', () => {
             const invalidContext = {...createMockWorldContext(), getLocationOfEntity: undefined};
-            expect(() => new PlayerPromptService({...baseDependencies, worldContext: invalidContext}))
+            expect(() => new HumanPlayerPromptService({...baseDependencies, worldContext: invalidContext}))
                 .toThrow('PlayerPromptService: Invalid IWorldContext dependency. Missing method: getLocationOfEntity().');
         });
     });
@@ -172,11 +172,11 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             const {entityManager, ...deps} = baseDependencies;
             const testDeps = {...deps};
             delete testDeps.entityManager;
-            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IEntityManager dependency.');
+            expect(() => new HumanPlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IEntityManager dependency.');
         });
         it('should throw if entityManager lacks getEntityInstance method', () => {
             const invalidManager = {...createMockEntityManager(), getEntityInstance: undefined};
-            expect(() => new PlayerPromptService({...baseDependencies, entityManager: invalidManager}))
+            expect(() => new HumanPlayerPromptService({...baseDependencies, entityManager: invalidManager}))
                 .toThrow('PlayerPromptService: Invalid IEntityManager dependency. Missing method: getEntityInstance().');
         });
     });
@@ -195,11 +195,11 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             const {gameDataRepository, ...deps} = baseDependencies;
             const testDeps = {...deps};
             delete testDeps.gameDataRepository;
-            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IGameDataRepository dependency.');
+            expect(() => new HumanPlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IGameDataRepository dependency.');
         });
         it('should throw if gameDataRepository lacks getActionDefinition method', () => {
             const invalidRepo = {...createMockGameDataRepository(), getActionDefinition: undefined};
-            expect(() => new PlayerPromptService({...baseDependencies, gameDataRepository: invalidRepo}))
+            expect(() => new HumanPlayerPromptService({...baseDependencies, gameDataRepository: invalidRepo}))
                 .toThrow('PlayerPromptService: Invalid IGameDataRepository dependency. Missing method: getActionDefinition().');
         });
     });
@@ -218,13 +218,13 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             const {validatedEventDispatcher, ...deps} = baseDependencies;
             const testDeps = {...deps};
             delete testDeps.validatedEventDispatcher;
-            expect(() => new PlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IValidatedEventDispatcher dependency.');
+            expect(() => new HumanPlayerPromptService(testDeps)).toThrow('PlayerPromptService: Missing IValidatedEventDispatcher dependency.');
         });
         const dispatcherMethods = ['subscribe', 'unsubscribe'];
         dispatcherMethods.forEach(method => {
             it(`should throw if validatedEventDispatcher lacks ${method} method`, () => {
                 const invalidDispatcher = {...createMockValidatedEventDispatcher(), [method]: undefined};
-                expect(() => new PlayerPromptService({
+                expect(() => new HumanPlayerPromptService({
                     ...baseDependencies,
                     validatedEventDispatcher: invalidDispatcher
                 }))
@@ -259,7 +259,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
         mockGameDataRepository = createMockGameDataRepository();
         mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
 
-        service = new PlayerPromptService({
+        service = new HumanPlayerPromptService({
             logger: mockLogger,
             actionDiscoverySystem: mockActionDiscoverySystem,
             promptOutputPort: mockPromptOutputPort,

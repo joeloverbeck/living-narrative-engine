@@ -16,7 +16,7 @@
 /** @typedef {import('../../../src/interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../../src/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
-/** @typedef {import('../../../src/turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */ // Changed to interface
+/** @typedef {import('../../../src/turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */ // Changed to interface
 /** @typedef {import('../../../src/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../../src/turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {any} AppContainer */
@@ -94,7 +94,7 @@ jest.mock('../../../src/commands/commandProcessor.js', () => ({__esModule: true,
 jest.mock('../../../src/turns/order/turnOrderService.js', () => ({__esModule: true, TurnOrderService: jest.fn()}));
 // PlayerPromptService is now instantiated by its factory, so we mock its constructor.
 // The factory for IPlayerPromptService will `new PlayerPromptService(...)`.
-jest.mock('../../../src/turns/services/playerPromptService.js', () => ({
+jest.mock('../../../src/turns/services/humanPlayerPromptService.js', () => ({
     __esModule: true,
     default: jest.fn().mockImplementation(() => mockPlayerPromptServiceInstance)
 }));
@@ -113,7 +113,7 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
 import WorldContext from '../../../src/context/worldContext.js';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
 import {TurnOrderService} from '../../../src/turns/order/turnOrderService.js';
-import PlayerPromptService from '../../../src/turns/services/playerPromptService.js'; // This is the mocked constructor
+import HumanPlayerPromptService from '../../../src/turns/services/humanPlayerPromptService.js'; // This is the mocked constructor
 
 // --- Mock Implementations (Core & External Dependencies) ---
 const mockLogger = {info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()};
@@ -306,7 +306,7 @@ describe('registerDomainServices', () => {
         WorldContext.mockClear();
         CommandProcessor.mockClear();
         TurnOrderService.mockClear();
-        PlayerPromptService.mockClear(); // This is the mocked constructor for the concrete class
+        HumanPlayerPromptService.mockClear(); // This is the mocked constructor for the concrete class
 
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
         Object.values(mockEntityManager).forEach(fn => fn.mockClear?.());
@@ -408,8 +408,8 @@ describe('registerDomainServices', () => {
 
         expect(resolvedService).toBeDefined();
         // PlayerPromptService is the mocked constructor for the concrete class
-        expect(PlayerPromptService).toHaveBeenCalledTimes(1);
-        expect(PlayerPromptService).toHaveBeenCalledWith(expect.objectContaining({
+        expect(HumanPlayerPromptService).toHaveBeenCalledTimes(1);
+        expect(HumanPlayerPromptService).toHaveBeenCalledWith(expect.objectContaining({
             logger: mockLogger,
             actionDiscoverySystem: mockActionDiscoverySystemInstance,
             promptOutputPort: mockPromptOutputPortInstance,

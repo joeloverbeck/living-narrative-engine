@@ -26,7 +26,7 @@
 /** @typedef {import('../../turns/services/turnHandlerResolver.js').default} TurnHandlerResolver_Concrete */ // Renamed for clarity
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager_Interface */ // MODIFIED: Changed name for clarity
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
-/** @typedef {import('../../turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
+/** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
 /** @typedef {import('../../interfaces/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */

@@ -12,7 +12,7 @@ import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.j
 import WorldContext from '../../context/worldContext.js';
 import {TurnOrderService} from "../../turns/order/turnOrderService.js";
 import CommandProcessor from "../../commands/commandProcessor.js";
-import PlayerPromptService from '../../turns/services/playerPromptService.js'; // Concrete class
+import HumanPlayerPromptService from '../../turns/services/humanPlayerPromptService.js'; // Concrete class
 import SubscriptionLifecycleManager from '../../services/subscriptionLifecycleManager.js';
 import PerceptionUpdateService from '../../services/perceptionUpdateService.js';
 
@@ -39,7 +39,7 @@ import GamePersistenceService from '../../services/gamePersistenceService.js';
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../services/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
-/** @typedef {import('../../turns/interfaces/IPlayerPromptService.js').IPlayerPromptService} IPlayerPromptService */
+/** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */ // ADDED
 
@@ -170,7 +170,7 @@ export function registerDomainServices(container) {
             }
         }
         log.debug(`Domain-services Registration: Dependencies for ${String(tokens.IPlayerPromptService)} resolved, creating instance.`);
-        return new PlayerPromptService(playerPromptDeps);
+        return new HumanPlayerPromptService(playerPromptDeps);
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.IPlayerPromptService)} factory.`);
 

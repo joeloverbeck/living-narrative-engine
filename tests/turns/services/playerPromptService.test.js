@@ -1,7 +1,7 @@
 // tests/turns/services/playerPromptService.test.js
 // --- FILE START ---
 
-import PlayerPromptService from '../../../src/turns/services/playerPromptService.js'; // Adjusted path to match project structure
+import HumanPlayerPromptService from '../../../src/turns/services/humanPlayerPromptService.js'; // Adjusted path to match project structure
 import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals";
 import Entity from "../../../src/entities/entity.js";
 import {PromptError} from '../../../src/errors/promptError.js';
@@ -38,7 +38,7 @@ beforeEach(() => {
         entityManager: mockEntityManager, gameDataRepository: mockGameDataRepository,
         validatedEventDispatcher: mockValidatedEventDispatcher,
     };
-    service = new PlayerPromptService(validDependencies);
+    service = new HumanPlayerPromptService(validDependencies);
     mockActor = new Entity('player:test', 'dummy');
 });
 
@@ -49,8 +49,8 @@ afterEach(() => {
 describe('PlayerPromptService Constructor', () => {
     it('should succeed when all valid dependencies are provided', () => {
         mockLogger.info.mockClear();
-        const localService = new PlayerPromptService(validDependencies);
-        expect(localService).toBeInstanceOf(PlayerPromptService);
+        const localService = new HumanPlayerPromptService(validDependencies);
+        expect(localService).toBeInstanceOf(HumanPlayerPromptService);
         expect(mockLogger.info).toHaveBeenCalledWith('PlayerPromptService initialized successfully.');
         expect(mockLogger.info).toHaveBeenCalledTimes(1);
     });
@@ -58,18 +58,18 @@ describe('PlayerPromptService Constructor', () => {
     describe('ValidatedEventDispatcher Dependency Validation', () => {
         it('should throw if validatedEventDispatcher is missing', () => {
             const {validatedEventDispatcher: _, ...incompleteDeps} = validDependencies;
-            expect(() => new PlayerPromptService(incompleteDeps)).toThrow('PlayerPromptService: Missing IValidatedEventDispatcher dependency.');
+            expect(() => new HumanPlayerPromptService(incompleteDeps)).toThrow('PlayerPromptService: Missing IValidatedEventDispatcher dependency.');
         });
         it('should throw if validatedEventDispatcher lacks subscribe method', () => {
             const invalidDispatcher = {...mockValidatedEventDispatcher, subscribe: undefined};
-            expect(() => new PlayerPromptService({
+            expect(() => new HumanPlayerPromptService({
                 ...validDependencies,
                 validatedEventDispatcher: invalidDispatcher
             })).toThrow('PlayerPromptService: Invalid IValidatedEventDispatcher dependency. Missing method: subscribe().');
         });
         it('should throw if validatedEventDispatcher lacks unsubscribe method', () => {
             const invalidDispatcher = {...mockValidatedEventDispatcher, unsubscribe: undefined};
-            expect(() => new PlayerPromptService({
+            expect(() => new HumanPlayerPromptService({
                 ...validDependencies,
                 validatedEventDispatcher: invalidDispatcher
             })).toThrow('PlayerPromptService: Invalid IValidatedEventDispatcher dependency. Missing method: unsubscribe().');

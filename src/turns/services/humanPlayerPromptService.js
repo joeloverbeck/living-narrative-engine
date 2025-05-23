@@ -21,7 +21,7 @@
 
 // --- Import Custom Error ---
 import {PromptError} from '../../errors/promptError.js';
-import {IPlayerPromptService} from '../interfaces/IPlayerPromptService.js';
+import {IHumanPlayerPromptService} from '../interfaces/IHumanPlayerPromptService.js';
 import {PLAYER_TURN_SUBMITTED_ID} from "../../constants/eventIds.js";
 
 /**
@@ -68,12 +68,12 @@ import {PLAYER_TURN_SUBMITTED_ID} from "../../constants/eventIds.js";
  */
 
 /**
- * @class PlayerPromptService
- * @extends IPlayerPromptService
+ * @class HumanPlayerPromptService
+ * @extends IHumanPlayerPromptService
  * @description Service responsible for prompting the player for actions and awaiting their response asynchronously.
  * Implements the IPlayerPromptService interface. Ensures only one prompt is active globally at any time.
  */
-class PlayerPromptService extends IPlayerPromptService {
+class HumanPlayerPromptService extends IHumanPlayerPromptService {
     /** @type {ILogger} */
     #logger;
     /** @type {IActionDiscoverySystem} */
@@ -588,5 +588,5 @@ class PlayerPromptService extends IPlayerPromptService {
     }
 }
 
-export default PlayerPromptService;
+export default HumanPlayerPromptService;
 // --- FILE END ---

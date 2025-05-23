@@ -3,7 +3,7 @@
 /** @typedef {import('../../entities/entity.js').default} Entity */
 // Assuming AvailableAction might be defined elsewhere or is a more generic type.
 // If it's very specific, its definition or import might be needed here for JSDoc.
-/** @typedef {import('../services/playerPromptService.js').DiscoveredActionInfo} AvailableAction */ // Or appropriate path
+/** @typedef {import('../services/humanPlayerPromptService.js').DiscoveredActionInfo} AvailableAction */ // Or appropriate path
 
 
 /**
@@ -18,11 +18,11 @@
  */
 
 /**
- * @interface IPlayerPromptService
+ * @interface IHumanPlayerPromptService
  * @description Defines the contract for a service that prompts a player for their turn
  * and asynchronously returns their chosen action.
  */
-export class IPlayerPromptService {
+export class IHumanPlayerPromptService {
     /**
      * Prompts the specified actor for their next action and awaits their response.
      * @async

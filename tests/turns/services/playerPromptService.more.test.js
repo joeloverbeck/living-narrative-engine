@@ -1,6 +1,6 @@
 // tests/turns/services/playerPromptService.more.test.js
 // --- FILE START ---
-import PlayerPromptService from '../../../src/turns/services/playerPromptService.js';
+import HumanPlayerPromptService from '../../../src/turns/services/humanPlayerPromptService.js';
 import {PromptError} from '../../../src/errors/promptError.js';
 import {PLAYER_TURN_SUBMITTED_ID} from '../../../src/constants/eventIds.js';
 import Entity from '../../../src/entities/entity.js';
@@ -51,7 +51,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
         mockEntityManager = createMockEntityManager();
         mockGameDataRepository = createMockGameDataRepository();
 
-        service = new PlayerPromptService({
+        service = new HumanPlayerPromptService({
             logger: mockLogger,
             actionDiscoverySystem: mockActionDiscoverySystem,
             promptOutputPort: mockPromptOutputPort,
