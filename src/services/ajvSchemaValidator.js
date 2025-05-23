@@ -1,7 +1,12 @@
 // src/core/services/ajvSchemaValidator.js
+// --- FILE START ---
 
 import Ajv from 'ajv';
-import addFormats from 'ajv-formats'; // ADDED LINE: Import ajv-formats
+import addFormats from 'ajv-formats';
+
+// --- ADDED IMPORT FOR LLM SCHEMA ---
+import {LLM_TURN_ACTION_SCHEMA, LLM_TURN_ACTION_SCHEMA_ID} from '../turns/schemas/llmOutputSchemas.js';
+// --- END ADDED IMPORT ---
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
@@ -28,32 +33,51 @@ class AjvSchemaValidator {
      * @private
      * @type {import('../interfaces/coreServices.js').ILogger}
      */
-    #logger = null; // Added for logging within removeSchema
+    #logger = null;
 
     /**
-     * Initializes the Ajv instance.
+     * Initializes the Ajv instance and preloads core schemas.
      * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger instance.
      * @throws {Error} If Ajv instantiation fails or logger is invalid.
      */
-    constructor(logger) { // Added logger dependency
-        // Validate logger
+    constructor(logger) {
         if (!logger || typeof logger.info !== 'function' || typeof logger.warn !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') {
             throw new Error("AjvSchemaValidator: Missing or invalid 'logger' dependency (ILogger). Requires info, warn, error, and debug methods.");
         }
         this.#logger = logger;
 
         try {
-            // AC: AjvSchemaValidator constructor initializes an Ajv instance
             this.#ajv = new Ajv({
-                allErrors: true,    // Collect all errors
-                strictTypes: false, // Adjust based on schema strictness needs. Consider setting to true or 'log' for stricter validation.
-                // MODIFIED SECTION: Initialize ajv-formats
+                allErrors: true,
+                strictTypes: false,
             });
-            addFormats(this.#ajv); // ADDED LINE: Initialize formats support
-            // You can also be more specific if you only need certain formats, e.g.:
-            // addFormats(this.#ajv, ['date-time', 'email']); // Example for specific formats
-
+            addFormats(this.#ajv);
             this.#logger.debug("AjvSchemaValidator: Ajv instance created and formats added successfully.");
+
+            // --- ADDED: PRELOAD CORE LLM SCHEMA ---
+            try {
+                // The LLM_TURN_ACTION_SCHEMA object contains its own $id (LLM_TURN_ACTION_SCHEMA_ID),
+                // which Ajv will use as the key.
+                if (!this.#ajv.getSchema(LLM_TURN_ACTION_SCHEMA_ID)) {
+                    this.#ajv.addSchema(LLM_TURN_ACTION_SCHEMA);
+                    this.#logger.info(`AjvSchemaValidator: Successfully preloaded core schema '${LLM_TURN_ACTION_SCHEMA_ID}'.`);
+                } else {
+                    // This case implies the constructor might be called in a way that this schema
+                    // is already present, or schema with this ID was added by another mechanism.
+                    // For a singleton, this specific "else" block for preloading should not be hit frequently.
+                    this.#logger.debug(`AjvSchemaValidator: Core schema '${LLM_TURN_ACTION_SCHEMA_ID}' was already loaded. Skipping preload.`);
+                }
+            } catch (preloadError) {
+                this.#logger.error(`AjvSchemaValidator: CRITICAL - Failed to preload core schema '${LLM_TURN_ACTION_SCHEMA_ID}'. Error: ${preloadError.message}`, {
+                    schemaId: LLM_TURN_ACTION_SCHEMA_ID,
+                    error: preloadError
+                });
+                // Depending on the application's criticality for this schema,
+                // you might want to rethrow the error to halt initialization.
+                // throw new Error(`AjvSchemaValidator: Failed to preload critical core schema '${LLM_TURN_ACTION_SCHEMA_ID}'.`);
+            }
+            // --- END ADDED: PRELOAD CORE LLM SCHEMA ---
+
         } catch (error) {
             this.#logger.error('AjvSchemaValidator: CRITICAL - Failed to instantiate Ajv or add formats:', error);
             throw new Error('AjvSchemaValidator: Failed to initialize the Ajv validation library.');
@@ -63,131 +87,115 @@ class AjvSchemaValidator {
     /**
      * Adds a JSON schema object to the validator instance, associating it with the given schema ID.
      * The promise resolves when the schema is successfully added and potentially compiled/prepared for validation.
-     * Investigation Note: Ajv v8 does NOT silently overwrite existing schemas with the same key.
-     * Use removeSchema first if override behavior is intended.
      *
      * @param {object} schemaData - The JSON schema object. Must have a valid structure.
-     * @param {string} schemaId - The unique identifier for the schema (typically the '$id' property within the schemaData, but provided explicitly here for consistency).
-     * @returns {Promise<void>} Resolves on successful addition, rejects if Ajv encounters an error (e.g., invalid schema, duplicate ID).
+     * @param {string} schemaId - The unique identifier for the schema (typically the '$id' property within the schemaData).
+     * @returns {Promise<void>} Resolves on successful addition, rejects if Ajv encounters an error.
      */
     async addSchema(schemaData, schemaId) {
-        // AC: addSchema rejects if #ajv is null
         if (!this.#ajv) {
-            // Use logger for internal errors before rejecting
             this.#logger.error('AjvSchemaValidator.addSchema: Ajv instance not available.');
             return Promise.reject(new Error('AjvSchemaValidator: Ajv instance not available. Cannot add schema.'));
         }
-        // AC: addSchema rejects on invalid schemaData or schemaId.
         if (!schemaData || typeof schemaData !== 'object' || Object.keys(schemaData).length === 0) {
-            this.#logger.error(`AjvSchemaValidator.addSchema: Invalid or empty schemaData provided for ID '${schemaId}'.`);
-            return Promise.reject(new Error(`AjvSchemaValidator: Invalid or empty schemaData provided for ID '${schemaId}'. Expected a non-empty object.`));
+            const errMsg = `Invalid or empty schemaData provided for ID '${schemaId}'. Expected a non-empty object.`;
+            this.#logger.error(`AjvSchemaValidator.addSchema: ${errMsg}`);
+            return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
         }
         if (!schemaId || typeof schemaId !== 'string' || schemaId.trim() === '') {
-            this.#logger.error('AjvSchemaValidator.addSchema: Invalid or empty schemaId provided.');
-            return Promise.reject(new Error('AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.'));
+            const errMsg = 'Invalid or empty schemaId provided. Expected a non-empty string.';
+            this.#logger.error(`AjvSchemaValidator.addSchema: ${errMsg}`);
+            return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
         }
 
+        // Use the schema's internal $id if schemaId parameter is not the defining one,
+        // or ensure they match if both are present. Ajv uses schema.$id as a primary key.
+        // For simplicity, we assume schemaId is the intended key for registration.
+        const keyToRegister = schemaId.trim();
+
         try {
-            // Check if schema already exists - Ajv addSchema does not overwrite silently
-            if (this.#ajv.getSchema(schemaId)) {
-                const errorMsg = `AjvSchemaValidator: Schema with ID '${schemaId}' already exists. Ajv does not overwrite. Use removeSchema first if replacement is intended.`;
+            if (this.#ajv.getSchema(keyToRegister)) {
+                const errorMsg = `AjvSchemaValidator: Schema with ID '${keyToRegister}' already exists. Ajv does not overwrite. Use removeSchema first if replacement is intended.`;
                 this.#logger.error(errorMsg);
-                // Throw an error consistent with Ajv's likely behavior (preventing duplicate adds)
-                throw new Error(errorMsg);
+                throw new Error(errorMsg); // Throw to be caught and rejected as a promise
             }
 
-            // AC: addSchema calls ajv.addSchema with schemaData and schemaId.
-            // Ajv's addSchema compiles synchronously and throws on error.
-            this.#ajv.addSchema(schemaData, schemaId);
-            this.#logger.debug(`AjvSchemaValidator: Successfully added schema '${schemaId}'.`);
-            // AC: addSchema resolves a promise on successful addition.
-            return Promise.resolve(); // Indicate success
+            // If schemaData has an $id that differs from keyToRegister, Ajv might get confused or prioritize $id.
+            // It's best if keyToRegister and schemaData.$id (if present) are consistent.
+            // Or, remove schemaData.$id if keyToRegister is to be the sole identifier for this addition.
+            // For now, proceeding with keyToRegister. Ajv's addSchema(schema, key) uses 'key'.
+            this.#ajv.addSchema(schemaData, keyToRegister);
+            this.#logger.debug(`AjvSchemaValidator: Successfully added schema '${keyToRegister}'.`);
+            return Promise.resolve();
         } catch (error) {
-            // AC: addSchema rejects the promise if ajv.addSchema throws.
-            // Log the detailed error from Ajv
-            this.#logger.error(`AjvSchemaValidator: Error adding schema with ID '${schemaId}':`, error.message);
-            if (error.errors) { // Ajv often includes detailed errors here
+            this.#logger.error(`AjvSchemaValidator: Error adding schema with ID '${keyToRegister}': ${error.message}`, {
+                schemaId: keyToRegister,
+                error: error,
+                // schemaData: schemaData // Be cautious logging full schema data if it's very large
+            });
+            if (error.errors) {
                 this.#logger.error('Ajv Validation Errors (during addSchema):', JSON.stringify(error.errors, null, 2));
             }
-            // Ensure a proper Error object is rejected for consistent error handling
-            const rejectionError = error instanceof Error ? error : new Error(`Failed to add schema '${schemaId}': ${error}`);
-            return Promise.reject(rejectionError); // Indicate failure
+            const rejectionError = error instanceof Error ? error : new Error(`Failed to add schema '${keyToRegister}': ${String(error)}`);
+            return Promise.reject(rejectionError);
         }
     }
 
     /**
      * Removes a schema from the Ajv instance using its ID.
-     * Required for handling component schema overrides as addSchema doesn't overwrite.
-     * Investigation Note: Based on Ajv docs/issues, removeSchema is the standard way to handle updates/overrides.
      *
      * @param {string} schemaId - The unique identifier ($id) of the schema to remove.
-     * @returns {boolean} True if the schema was successfully removed, false otherwise (e.g., not found or error during removal).
+     * @returns {boolean} True if the schema was successfully removed, false otherwise.
      * @throws {Error} If the Ajv instance is not available.
      */
     removeSchema(schemaId) {
         if (!this.#ajv) {
-            // Use logger before throwing
             this.#logger.error('AjvSchemaValidator.removeSchema: Ajv instance not available.');
-            // Consistent error handling with other methods
             throw new Error('AjvSchemaValidator: Ajv instance not available. Cannot remove schema.');
         }
-        // Validate input schemaId
         if (!schemaId || typeof schemaId !== 'string' || schemaId.trim() === '') {
-            this.#logger.warn(`AjvSchemaValidator: removeSchema called with invalid schemaId: ${schemaId}`);
-            return false; // Or throw, but returning false is often acceptable for removal
+            this.#logger.warn(`AjvSchemaValidator: removeSchema called with invalid schemaId: '${schemaId}'`);
+            return false;
         }
 
-        const idToUse = schemaId.trim(); // Use trimmed version
+        const idToUse = schemaId.trim();
 
         try {
-            // Check if the schema actually exists before trying to remove
-            // This helps distinguish "not found" from actual removal errors.
             if (!this.#ajv.getSchema(idToUse)) {
                 this.#logger.warn(`AjvSchemaValidator: Schema '${idToUse}' not found. Cannot remove.`);
                 return false;
             }
 
-            // ajv.removeSchema might return the instance on success or throw/return false on failure.
-            // The API docs are sometimes unclear, GitHub issues suggest it might return the instance.
-            // Let's call it and then verify with getSchema afterwards for robustness.
-            this.#ajv.removeSchema(idToUse); // Attempt removal
-
-            // Verify removal - getSchema should now return undefined/null for the removed ID
+            this.#ajv.removeSchema(idToUse);
             const removedSuccessfully = !this.#ajv.getSchema(idToUse);
 
             if (removedSuccessfully) {
                 this.#logger.debug(`AjvSchemaValidator: Successfully removed schema '${idToUse}'.`);
                 return true;
             } else {
-                // This case might indicate an internal Ajv issue if removeSchema didn't throw but also didn't remove.
                 this.#logger.error(`AjvSchemaValidator: Called removeSchema for '${idToUse}', but it appears to still be present.`);
                 return false;
             }
         } catch (error) {
-            // Catch errors specifically from removeSchema or the verification getSchema call
-            this.#logger.error(`AjvSchemaValidator: Error removing schema '${idToUse}':`, error.message);
-            // Decide whether to re-throw or return false based on desired strictness
-            return false; // Treat errors during removal as 'not successful'
+            this.#logger.error(`AjvSchemaValidator: Error removing schema '${idToUse}': ${error.message}`, {
+                schemaId: idToUse,
+                error: error
+            });
+            return false;
         }
     }
 
-
     /**
      * Retrieves a validation function for the specified schema ID.
-     * The returned function takes data as input and returns a `ValidationResult`.
-     * Returns `undefined` if no schema with the given ID is loaded or compiled,
-     * or if accessing the schema via Ajv throws an error (indicating a failed compilation).
      *
      * @param {string} schemaId - The unique identifier for the schema.
-     * @returns {((data: any) => ValidationResult) | undefined} A function that performs validation, or undefined if the schema ID is not found or invalid.
+     * @returns {((data: any) => ValidationResult) | undefined} A validation function, or undefined if not found.
      */
     getValidator(schemaId) {
-        // AC: getValidator returns undefined if #ajv is null.
         if (!this.#ajv) {
             this.#logger.warn('AjvSchemaValidator: getValidator called but Ajv instance not available.');
             return undefined;
         }
-        // AC: getValidator returns undefined for invalid schemaId.
         if (!schemaId || typeof schemaId !== 'string') {
             this.#logger.warn(`AjvSchemaValidator: getValidator called with invalid schemaId: ${schemaId}`);
             return undefined;
@@ -195,53 +203,42 @@ class AjvSchemaValidator {
 
         let originalValidator;
         try {
-            // Wrap the potentially throwing call in try...catch
-            // AC: getValidator calls ajv.getSchema with schemaId.
             originalValidator = this.#ajv.getSchema(schemaId);
         } catch (error) {
-            // AC: getValidator returns undefined if ajv.getSchema throws.
-            this.#logger.warn(`AjvSchemaValidator: Error accessing schema '${schemaId}' via ajv.getSchema (likely due to prior compilation failure):`, error.message);
-            return undefined; // Treat schema access error as "not available"
-        }
-
-        // AC: getValidator returns undefined if ajv.getSchema returns falsy.
-        if (!originalValidator) {
-            this.#logger.debug(`AjvSchemaValidator: No validator found for schemaId '${schemaId}'.`);
-            // Schema ID not found or schema failed compilation during addSchema
+            this.#logger.warn(`AjvSchemaValidator: Error accessing schema '${schemaId}' via ajv.getSchema: ${error.message}`, {
+                schemaId: schemaId,
+                error: error
+            });
             return undefined;
         }
 
-        // AC: getValidator returns a function if ajv.getSchema succeeds.
-        // Return a new function adhering to the ISchemaValidator interface.
+        if (!originalValidator) {
+            // This is a common case (schema not found), so debug level might be more appropriate
+            // if it's not necessarily an error condition for the caller.
+            // this.#logger.debug(`AjvSchemaValidator: No validator found for schemaId '${schemaId}'.`);
+            return undefined;
+        }
+
         return (data) => {
             try {
-                // Ensure you have the original Ajv validator function correctly available here
-                // (Assuming it's captured in the closure as originalValidator)
                 const isValid = originalValidator(data);
-
-                // --- CORRECTED ERROR HANDLING ---
-                // Ajv attaches the 'errors' property to the compiled validator function itself.
-                // Accessing originalValidator.errors is the correct way to get errors
-                // specific to this validation call, avoiding issues with the shared
-                // instance state (this.#ajv.errors).
-                const validationErrors = originalValidator.errors;
+                const validationErrors = originalValidator.errors; // Access errors from the validator instance
 
                 return {
                     isValid: isValid,
-                    // Use the errors from the specific validator function if validation failed
-                    errors: isValid ? null : (validationErrors || []) // <-- Use validationErrors from the compiled function
+                    errors: isValid ? null : (validationErrors || [])
                 };
-                // --- END CORRECTION ---
-
             } catch (validationError) {
-                // AC: The returned function catches runtime errors... returns ValidationResult.
-                this.#logger.error(`AjvSchemaValidator: Runtime error during validation with schema '${schemaId}':`, validationError);
+                this.#logger.error(`AjvSchemaValidator: Runtime error during validation with schema '${schemaId}': ${validationError.message}`, {
+                    schemaId: schemaId,
+                    error: validationError,
+                    // data: data // Be cautious logging potentially sensitive data
+                });
                 return {
                     isValid: false,
                     errors: [{
-                        // Structure matching AjvErrorObject roughly
-                        instancePath: '', // May not be available in runtime errors
-                        schemaPath: '',   // May not be available in runtime errors
+                        instancePath: '',
+                        schemaPath: '',
                         keyword: 'runtimeError',
                         params: {},
                         message: `Runtime validation error: ${validationError.message}`
@@ -253,75 +250,60 @@ class AjvSchemaValidator {
 
     /**
      * Checks if a schema with the specified ID has been successfully loaded and is ready for use.
-     * Returns false if accessing the schema via Ajv throws an error (indicating a failed compilation).
      *
      * @param {string} schemaId - The unique identifier for the schema.
      * @returns {boolean} True if the schema is loaded and compiled, false otherwise.
      */
     isSchemaLoaded(schemaId) {
-        // AC: isSchemaLoaded returns false if #ajv is null.
         if (!this.#ajv) {
-            this.#logger.warn('AjvSchemaValidator: isSchemaLoaded called but Ajv instance not available.');
+            // Reduced log level as this might be called frequently during setup
+            // this.#logger.debug('AjvSchemaValidator: isSchemaLoaded called but Ajv instance not available.');
             return false;
         }
-        // AC: isSchemaLoaded returns false for invalid schemaId.
         if (!schemaId || typeof schemaId !== 'string') {
-            // Log subtly for invalid ID checks
             // this.#logger.debug(`AjvSchemaValidator: isSchemaLoaded called with invalid schemaId type: ${typeof schemaId}`);
             return false;
         }
 
         try {
-            // AC: isSchemaLoaded calls ajv.getSchema with schemaId.
-            // Wrap the potentially throwing call in try...catch
-            // ajv.getSchema returns the compiled function if successful, undefined otherwise.
-            // It might THROW if the schema definition itself was fundamentally broken during addSchema.
             const validator = this.#ajv.getSchema(schemaId);
-            // AC: isSchemaLoaded returns true if ajv.getSchema returns truthy.
-            // AC: isSchemaLoaded returns false if ajv.getSchema returns falsy.
-            // Log the result of the check at debug level
             // this.#logger.debug(`AjvSchemaValidator: isSchemaLoaded check for '${schemaId}': ${!!validator}`);
             return !!validator;
         } catch (error) {
-            // AC: isSchemaLoaded returns false if ajv.getSchema throws.
-            this.#logger.warn(`AjvSchemaValidator: Error accessing schema '${schemaId}' via ajv.getSchema (likely due to prior compilation failure):`, error.message);
-            return false; // Treat schema access error as "not loaded"
+            this.#logger.warn(`AjvSchemaValidator: Error accessing schema '${schemaId}' during isSchemaLoaded check: ${error.message}`, {
+                schemaId: schemaId,
+                error: error
+            });
+            return false;
         }
     }
 
     /**
      * Directly validates data against the schema identified by schemaId.
-     * Returns a ValidationResult indicating success or failure.
-     * This combines getting the validator and executing it.
      *
      * @param {string} schemaId - The unique identifier for the schema.
      * @param {any} data - The data to validate.
      * @returns {ValidationResult} An object indicating if the data is valid and containing errors if not.
      */
     validate(schemaId, data) {
-        // Reuse getValidator logic to find the validation function
         const validatorFunction = this.getValidator(schemaId);
 
         if (!validatorFunction) {
-            // Schema not found or failed compilation previously
-            // Log a warning consistent with getValidator/isSchemaLoaded might be good
-            this.#logger.warn(`AjvSchemaValidator: validate called for schemaId '${schemaId}', but no validator function could be retrieved.`);
+            this.#logger.warn(`AjvSchemaValidator: validate called for schemaId '${schemaId}', but no validator function could be retrieved (schema might not be loaded or is invalid).`);
             return {
                 isValid: false,
-                errors: [{ // Provide a structured error indicating the schema wasn't found/valid
+                errors: [{
                     instancePath: '',
                     schemaPath: '',
                     keyword: 'schemaNotFound',
                     params: {schemaId: schemaId},
-                    message: `Schema with id '${schemaId}' not found or is invalid.`
+                    message: `Schema with id '${schemaId}' not found, is invalid, or validator could not be retrieved.`
                 }]
             };
         }
-
-        // If validator function exists, execute it (it already includes error handling)
         return validatorFunction(data);
     }
 }
 
-// AC: ajvSchemaValidator.js exists and exports the AjvSchemaValidator class.
 export default AjvSchemaValidator;
+// --- FILE END ---
