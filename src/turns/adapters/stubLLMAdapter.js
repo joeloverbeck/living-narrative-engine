@@ -13,8 +13,8 @@ import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
  * @class StubLLMAdapter
  * @implements {ILLMAdapter}
  * @description A stub implementation of ILLMAdapter that always returns a
- * "core:wait" action with predefined speech. This is useful for testing
- * AI turn flows before a real LLM integration is in place.
+ * "core:wait" action with predefined speech, conforming to the expected LLM output schema.
+ * This is useful for testing AI turn flows before a real LLM integration is in place.
  */
 export class StubLLMAdapter extends ILLMAdapter {
     /**
@@ -31,6 +31,7 @@ export class StubLLMAdapter extends ILLMAdapter {
     /**
      * Generates a stubbed "core:wait" action.
      * The gameSummary parameter is ignored in this stub.
+     * The output format matches the LLM_TURN_ACTION_SCHEMA.
      *
      * @async
      * @param {string} gameSummary - A string providing a summarized representation of the game state. (Ignored)
@@ -43,17 +44,22 @@ export class StubLLMAdapter extends ILLMAdapter {
         const actorId = 'StubActor'; // Actor ID is not directly available from parameters anymore in this stub
         this.logger.debug(`StubLLMAdapter.generateAction called. gameSummary is ignored by this stub for actor: ${actorId}.`);
 
-        /** @type {ITurnAction} */
-        const stubbedAction = {
+        // MODIFIED: Corrected structure for the stubbed action
+        // This now conforms to the LLM_TURN_ACTION_SCHEMA (actionDefinitionId, commandString, speech)
+        const correctedStubbedAction = {
             actionDefinitionId: 'core:wait',
-            resolvedParameters: {
-                speech: "I am a robot."
-            },
-            commandString: "wait"
+            commandString: "wait",
+            speech: "I am a robot." // speech is now a top-level property
+            // resolvedParameters field is removed
         };
 
         try {
-            const jsonOutput = JSON.stringify(stubbedAction);
+            // The type {ITurnAction} might not perfectly match this raw LLM output structure
+            // if ITurnAction is defined as the *processed* action. However, this object
+            // now matches the LLM_TURN_ACTION_SCHEMA which is what LLMResponseProcessor expects.
+            /** @type {object} */ // Using generic object type for the raw LLM-like output
+            const objectToSerialize = correctedStubbedAction;
+            const jsonOutput = JSON.stringify(objectToSerialize);
             this.logger.debug(`StubLLMAdapter: Returning JSON for ${actorId}: ${jsonOutput}`);
             return Promise.resolve(jsonOutput);
         } catch (error) {

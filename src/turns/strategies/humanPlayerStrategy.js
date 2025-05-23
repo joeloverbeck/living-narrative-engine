@@ -64,13 +64,12 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
             actor = this._getActorFromContext(context, logger);
             const playerPromptService = this._getPlayerPromptServiceFromContext(context, logger);
 
-            // --- MODIFICATION: Obtain cancellation signal from context ---
             let cancellationSignal;
             if (typeof context.getPromptSignal === 'function') {
                 cancellationSignal = context.getPromptSignal();
                 if (!(cancellationSignal instanceof AbortSignal)) {
                     logger.warn(`HumanPlayerStrategy: context.getPromptSignal() for actor ${actor.id} did not return an AbortSignal. Proceeding without cancellation support for this prompt.`);
-                    cancellationSignal = undefined; // Ensure it's undefined if not valid
+                    cancellationSignal = undefined;
                 } else {
                     logger.debug(`HumanPlayerStrategy: Obtained cancellation signal for actor ${actor.id}.`);
                 }
@@ -78,30 +77,23 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
                 logger.warn(`HumanPlayerStrategy: context.getPromptSignal is not a function for actor ${actor.id}. Proceeding without cancellation support for this prompt.`);
                 cancellationSignal = undefined;
             }
-            // --- END MODIFICATION ---
 
             logger.info(`HumanPlayerStrategy: Initiating decideAction for actor ${actor.id}.`);
 
             let playerData;
             try {
                 logger.debug(`HumanPlayerStrategy: Calling playerPromptService.prompt() for actor ${actor.id}${cancellationSignal ? ' with cancellation signal.' : '.'}`);
-                // --- MODIFICATION: Pass cancellationSignal to prompt ---
                 playerData = await playerPromptService.prompt(actor, {cancellationSignal});
-                // --- END MODIFICATION ---
                 logger.debug(`HumanPlayerStrategy: Received playerData for actor ${actor.id}. Details:`, playerData);
 
             } catch (promptError) {
-                // --- MODIFICATION: Differentiate AbortError ---
                 if (promptError && promptError.name === 'AbortError') {
-                    // This is an expected cancellation, log less severely.
                     logger.info(`HumanPlayerStrategy: Prompt for actor ${actor.id} was cancelled (aborted).`);
                 } else {
-                    // This is an unexpected error from PlayerPromptService (e.g., superseded, validation error)
                     const errorMessage = `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${actor.id}.`;
                     logger.error(errorMessage, promptError);
                 }
-                throw promptError; // Re-throw for AwaitingPlayerInputState to handle
-                // --- END MODIFICATION ---
+                throw promptError;
             }
 
             if (
@@ -116,14 +108,18 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
             }
             logger.debug(`HumanPlayerStrategy: playerData for actor ${actor.id} validated successfully. Action ID: "${playerData.action.id}".`);
 
+            // --- MODIFIED ITurnAction CONSTRUCTION ---
             /** @type {ITurnAction} */
             const turnAction = {
                 actionDefinitionId: playerData.action.id,
                 commandString: playerData.action.command,
-                resolvedParameters: {
-                    speech: playerData.speech,
-                },
+                // Speech is now a top-level property.
+                // Default to empty string if playerData.speech is null or undefined,
+                // as the schema expects a string.
+                speech: playerData.speech || ""
+                // resolvedParameters field is removed
             };
+            // --- END MODIFIED ITurnAction CONSTRUCTION ---
 
             logger.info(`HumanPlayerStrategy: Constructed ITurnAction for actor ${actor.id} with actionDefinitionId "${turnAction.actionDefinitionId}".`);
             logger.debug(`HumanPlayerStrategy: ITurnAction details for actor ${actor.id}:`, {turnActionDetails: turnAction});
@@ -149,17 +145,11 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
                 }
             }
 
-            // --- MODIFICATION: Differentiate AbortError in final catch as well ---
             if (error && error.name === 'AbortError') {
-                // If an AbortError reaches here, it means it wasn't handled more specifically above
-                // or originated from validation/construction logic after the prompt call.
-                // We still want to avoid logging it as a general failure.
                 logger.info(`HumanPlayerStrategy.decideAction: Operation for actor ${actorIdForLog} was cancelled (aborted). Error: ${error.message}`);
             } else {
-                // Log other errors as before
                 logger.error(`HumanPlayerStrategy.decideAction: Operation failed for actor ${actorIdForLog}. Error: ${error.message}`, error);
             }
-            // --- END MODIFICATION ---
 
             throw error;
         }
