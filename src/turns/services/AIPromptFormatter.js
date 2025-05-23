@@ -4,61 +4,35 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IAIPromptFormatter.js').IAIPromptFormatter} IAIPromptFormatter_Interface */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
-// Import DTOs that might be used by various itemFormatters in the future.
-// Specific itemFormatters might be defined in this class or passed in.
-// For now, these are placeholders for potential future use within this class,
-// even if _formatListSegment itself is generic.
 /** @typedef {import('../dtos/AIGameStateDTO.js').AILocationExitDTO} AILocationExitDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AICharacterInLocationDTO} AICharacterInLocationDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIPerceptionLogEntryDTO} AIPerceptionLogEntryDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIAvailableActionDTO} AIAvailableActionDTO */
 
 import {IAIPromptFormatter} from '../interfaces/IAIPromptFormatter.js';
+import {LLM_TURN_ACTION_SCHEMA} from '../schemas/llmOutputSchemas.js';
 
 /**
  * @class AIPromptFormatter
  * @implements {IAIPromptFormatter_Interface}
  * @description Responsible for transforming the structured AIGameStateDTO into a
- * textual prompt string suitable for an LLM.
+ * textual prompt string suitable for an LLM, instructing it to return JSON.
  */
 export class AIPromptFormatter extends IAIPromptFormatter {
-    /**
-     * Creates an instance of AIPromptFormatter.
-     * Future: Constructor could accept configuration for different prompt styles or templates.
-     */
     constructor() {
         super();
-        // Initialization logic for the formatter, if any, would go here.
-        // For example, loading prompt templates or configurations.
     }
 
-    /**
-     * @private
-     * Helper to format a list of items for the prompt.
-     * @template T
-     * @param {string} title - The title for this section (e.g., "Exits:").
-     * @param {Array<T> | undefined | null} items - The array of items to format.
-     * @param {(item: T) => string} itemFormatter - A function that takes an item and returns its string representation for the prompt.
-     * @param {string} emptyMessage - Message to display if items array is empty or not provided.
-     * @param {ILogger} [logger] - Optional logger instance for debugging.
-     * @returns {string} A formatted string segment.
-     */
     _formatListSegment(title, items, itemFormatter, emptyMessage, logger) {
-        const lines = [title]; // Title is the first line
-
+        const lines = [title];
         if (items && items.length > 0) {
             items.forEach(item => {
-                // itemFormatter is responsible for any prefix like "-"
                 lines.push(itemFormatter(item));
             });
             if (logger && typeof logger.debug === 'function') {
                 logger.debug(`AIPromptFormatter: Formatted ${items.length} items for section "${title.replace(/[:\n]*$/, '')}".`);
             }
         } else {
-            // If the title already ends with a colon or similar, we might just append.
-            // Or, ensure the empty message stands on its own line if it's substantial.
-            // Given the example: "Exits: None." vs "Exits:\nThere are no obvious exits."
-            // The provided example logic adds emptyMessage as a new line.
             lines.push(emptyMessage);
             if (logger && typeof logger.debug === 'function') {
                 logger.debug(`AIPromptFormatter: Section "${title.replace(/[:\n]*$/, '')}" is empty, using empty message.`);
@@ -67,13 +41,6 @@ export class AIPromptFormatter extends IAIPromptFormatter {
         return lines.join('\n');
     }
 
-    /**
-     * @private
-     * Formats the character segment of the prompt.
-     * @param {AIGameStateDTO} gameState - The game state DTO.
-     * @param {ILogger} logger - Logger instance.
-     * @returns {string} The formatted character segment.
-     */
     _formatCharacterSegment(gameState, logger) {
         logger.debug("AIPromptFormatter: Formatting character segment.");
         const {actorState} = gameState;
@@ -81,19 +48,16 @@ export class AIPromptFormatter extends IAIPromptFormatter {
             logger.warn("AIPromptFormatter: Character details (actorState) are unknown.");
             return "Your character details are unknown.";
         }
-        // Ensure name and description have fallbacks if they could be missing/undefined from DTO
         const name = actorState.name || "Unnamed Character";
-        const description = actorState.description || "No description available";
-        return `You're ${name}. Description: ${description}.`;
+        let description = actorState.description || "No description available";
+        // Ensure the description text ends with appropriate terminal punctuation
+        if (!/[.!?]$/.test(description.trim())) {
+            description += '.';
+        }
+        // Return without adding an extra period, as 'description' now handles its own punctuation.
+        return `You are ${name}. Your character description: ${description}`;
     }
 
-    /**
-     * @private
-     * Formats the location segment of the prompt.
-     * @param {AIGameStateDTO} gameState - The game state DTO.
-     * @param {ILogger} logger - Logger instance.
-     * @returns {string} The formatted location segment.
-     */
     _formatLocationSegment(gameState, logger) {
         logger.debug("AIPromptFormatter: Formatting location segment.");
         const {currentLocation} = gameState;
@@ -105,26 +69,36 @@ export class AIPromptFormatter extends IAIPromptFormatter {
 
         const locationDescriptionLines = [];
         const locationName = currentLocation.name || "Unnamed Location";
-        const locationDesc = currentLocation.description || "No description available";
-        locationDescriptionLines.push(`You're in the location ${locationName}. Description: ${locationDesc}.`);
+        let locationDesc = currentLocation.description || "No description available";
+        // Ensure the location description text ends with appropriate terminal punctuation
+        if (!/[.!?]$/.test(locationDesc.trim())) {
+            locationDesc += '.';
+        }
+        // Use the (now correctly punctuated) locationDesc without adding another period.
+        locationDescriptionLines.push(`You are currently in the location: ${locationName}. Location description: ${locationDesc}`);
 
         const segments = [locationDescriptionLines.join('\n')];
 
         const exitsSegment = this._formatListSegment(
-            "Exits:",
+            "Exits from your current location:",
             currentLocation.exits,
-            /** @type {(exit: AILocationExitDTO) => string} */
-            (exit) => `- ${exit.direction} to ${exit.targetLocationId}`,
+            (exit) => `- Towards ${exit.direction} leads to ${exit.targetLocationId}. (To go this way, choose an action like 'core:go' with appropriate parameters, resulting in a command string like 'go ${exit.direction}').`,
             "There are no obvious exits.",
             logger
         );
         segments.push(exitsSegment);
 
         const charactersSegment = this._formatListSegment(
-            "Characters here:",
+            "Other characters present in this location:",
             currentLocation.characters,
-            /** @type {(char: AICharacterInLocationDTO) => string} */
-            (char) => `- ${char.name} (${char.description || 'No description'})`,
+            (char) => {
+                const namePart = char.name || "Unnamed Character";
+                let descriptionText = char.description || 'No description';
+                if (!/[.!?]$/.test(descriptionText.trim())) {
+                    descriptionText += '.';
+                }
+                return `- ${namePart} - Description: ${descriptionText}`;
+            },
             "You are alone here.",
             logger
         );
@@ -133,123 +107,142 @@ export class AIPromptFormatter extends IAIPromptFormatter {
         return segments.join('\n');
     }
 
-    /**
-     * @private
-     * Formats the recent events (perception log) segment of the prompt.
-     * @param {AIGameStateDTO} gameState - The game state DTO.
-     * @param {ILogger} logger - Logger instance.
-     * @returns {string} The formatted events segment.
-     */
     _formatEventsSegment(gameState, logger) {
         logger.debug("AIPromptFormatter: Formatting events segment.");
-        // AIPerceptionLogEntryDTO is already globally typedef'd
         return this._formatListSegment(
-            "Recent events:",
+            "Recent events relevant to you (oldest first):",
             gameState.perceptionLog,
-            /** @type {(entry: AIPerceptionLogEntryDTO) => string} */
-            (entry) => {
-                // As per ticket: "- ${entry.description}."
-                // Consider if timestamp/type should be included based on LLM needs in the future.
-                // For now, sticking to description only.
-                return `- ${entry.description || 'Undescribed event.'}`;
-            },
-            "None.", // Empty message if no perception log entries
+            (entry) => `- ${entry.description || 'Undescribed event.'}`,
+            "Nothing noteworthy has happened recently.",
             logger
         );
     }
 
-    /**
-     * @private
-     * Formats the available actions segment of the prompt.
-     * @param {AIGameStateDTO} gameState - The game state DTO.
-     * @param {ILogger} logger - Logger instance.
-     * @returns {string} The formatted actions segment.
-     */
     _formatActionsSegment(gameState, logger) {
         logger.debug("AIPromptFormatter: Formatting actions segment.");
-        // AIAvailableActionDTO is already globally typedef'd
+        let noActionsMessage = "You have no specific actions available right now. If 'core:wait' (or similar) is an option, use its System ID for 'actionDefinitionId' and 'wait' (or similar) for 'commandString'. Otherwise, the game rules will dictate behavior.";
+        if (gameState.availableActions && gameState.availableActions.length > 0) {
+            if (gameState.availableActions.some(action => (action.id || "").toLowerCase().includes('wait'))) {
+                noActionsMessage = "If no other action is suitable, you can choose to wait (e.g., using 'core:wait' or similar System ID).";
+            }
+        } else {
+            logger.warn("AIPromptFormatter: No available actions provided. The LLM must still try to produce valid JSON, perhaps using a generic 'wait' if it intuits one, but this should be handled by game design.");
+        }
+
         return this._formatListSegment(
-            "Your available actions are:",
+            "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and 'Base Command' for 'commandString'):",
             gameState.availableActions,
-            /** @type {(action: AIAvailableActionDTO) => string} */
             (action) => {
-                // As per ticket: "- ${action.command} (${action.description || action.name || 'Perform action'})."
-                const details = action.description || action.name || 'Perform action';
-                return `- ${action.command} (${details})`;
+                const systemId = action.id || "unknown:id";
+                const baseCommand = action.command || "unknown_command";
+                const nameDisplay = action.name || baseCommand;
+                const description = action.description || 'No specific description.';
+                return `- Name: "${nameDisplay}", System ID: "${systemId}", Base Command: "${baseCommand}". Description: ${description}`;
             },
-            "You have no specific actions available right now.", // Empty message
+            noActionsMessage,
             logger
         );
     }
 
-    /**
-     * Formats the provided AIGameStateDTO into a string suitable for use as an LLM prompt.
-     * This method orchestrates calls to private helper methods to assemble the complete prompt.
-     *
-     * @param {AIGameStateDTO} gameState - The structured game state data for the AI actor.
-     * @param {ILogger} logger - An instance of the logger.
-     * @returns {string} The fully formatted LLM prompt string.
-     */
     formatPrompt(gameState, logger) {
-        // Task 1: Log the start of the overall prompt generation process
-        if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
-            console.error("AIPromptFormatter: Critical - Logger is missing or invalid in formatPrompt. Using console for this message.");
-            // Decide if we should throw or attempt to continue with console,
-            // but the ticket implies logger will be valid.
-            // For robustness, we could have a fallback logger here if allowed.
-            // However, strict adherence to ticket means it expects a valid logger.
-            // If logger is truly unusable, many subsequent steps will fail.
-            // Let's assume logger is valid for ticket scope, but log this specific issue.
-        }
+        const logInfo = (message, ...args) => (logger && logger.info) ? logger.info(message, ...args) : console.info(message, ...args);
+        const logError = (message, ...args) => (logger && logger.error) ? logger.error(message, ...args) : console.error(message, ...args);
+        const logDebug = (message, ...args) => (logger && logger.debug) ? logger.debug(message, ...args) : console.debug(message, ...args);
 
-        if (logger && typeof logger.info === 'function') {
-            logger.info("AIPromptFormatter: Starting LLM prompt generation.");
-        } else {
-            console.info("AIPromptFormatter: Starting LLM prompt generation (logger.info unavailable).");
-        }
+        logInfo("AIPromptFormatter: Starting LLM prompt generation.");
 
-        // Task 2: Input Validation for gameState
         if (!gameState) {
-            const errorMsg = "AIPromptFormatter: AIGameStateDTO is null or undefined. Cannot format prompt.";
-            if (logger && typeof logger.error === 'function') {
-                logger.error(errorMsg);
-            } else {
-                console.error(errorMsg + " (logger.error unavailable).");
-            }
-            return "Error: Critical game state information is missing to make a decision.";
+            logError("AIPromptFormatter: AIGameStateDTO is null or undefined. Cannot format prompt.");
+            return "Error: Critical game state information is missing. Cannot generate LLM prompt.";
+        }
+        if (!gameState.actorState) {
+            logError("AIPromptFormatter: AIGameStateDTO is missing 'actorState'. Cannot format prompt meaningfully.", {gameState});
+            return "Error: Actor state information is missing. Cannot generate LLM prompt.";
         }
 
-        // Task 3: Initialize an array promptSegments
         const promptSegments = [];
-
-        // Task 4: Call Private Segment Formatters
+        promptSegments.push(
+            "You are an AI character in a detailed, interactive text-based adventure game. " +
+            "Your primary task is to decide on one action to perform this turn and determine what, if anything, your character will say. " +
+            "Base your decision on your character's persona, the current situation, recent events, and the specific actions available to you. " +
+            "Act in a way that is believable and consistent with your character's motivations and understanding of the game world."
+        );
         promptSegments.push(this._formatCharacterSegment(gameState, logger));
         promptSegments.push(this._formatLocationSegment(gameState, logger));
         promptSegments.push(this._formatEventsSegment(gameState, logger));
         promptSegments.push(this._formatActionsSegment(gameState, logger));
-
-        // Task 5: Add Fixed Concluding Instruction
         promptSegments.push(
-            "Apart from picking one among the available actions, you have the opportunity to speak. " +
-            "It's not obligatory. Use your reasoning to determine if you should talk in this context."
+            "RESPONSE FORMATTING INSTRUCTIONS:\n" +
+            "You MUST respond with a single, valid JSON object. Do NOT include any text, explanations, or conversational pleasantries before or after this JSON object. " +
+            "Do not use markdown code blocks (e.g., ```json ... ```) or any other formatting around the final JSON output. Your entire response must be ONLY the JSON object itself."
+        );
+        promptSegments.push(
+            "The JSON object MUST conform to the following structure (described using JSON Schema conventions - note the '$id' property of the schema itself is for registration and not part of your response object):\n" +
+            JSON.stringify(LLM_TURN_ACTION_SCHEMA, null, 2)
+        );
+        promptSegments.push(
+            "GUIDANCE FOR FILLING THE JSON FIELDS:\n" +
+            "1. `actionDefinitionId`: Use the exact 'System ID' (e.g., 'core:wait', 'core:go') from the 'Your available actions are:' list for your chosen action. This field is MANDATORY.\n" +
+            "2. `commandString`: Use the 'Base Command' (e.g., 'wait', 'go north', 'take torch') associated with your chosen System ID. You might need to fill in details (like direction for 'go', or target for 'take') to make it a complete command the game can parse, e.g., 'go north' or 'take torch from table'. If your character is speaking, you might integrate this if your game parser handles commands like 'say Hello there' or 'shout Help!'. This field is MANDATORY.\n" +
+            "3. `resolvedParameters`: If the `commandString` doesn't capture all necessary specifics (like a target ID for an interaction if not part of the command string, or specific coordinates), provide them here. Example: for `actionDefinitionId: 'core:interact'`, `commandString: 'examine lever'`, `resolvedParameters: {'targetObjectId': 'lever_001'}`. If `commandString` is self-sufficient, use an empty object `{}`. This field is MANDATORY.\n" +
+            "4. `speech`: The exact words your character says. If not speaking, use an empty string `\"\"`. This field is MANDATORY."
+        );
+        promptSegments.push(
+            "EXAMPLE 1: Moving and speaking.\n" +
+            "Suppose available action is: Name: \"Go To Location\", System ID: \"core:go\", Base Command: \"go\".\n" +
+            "{\n" +
+            "  \"actionDefinitionId\": \"core:go\",\n" +
+            "  \"commandString\": \"go out to town\",\n" +
+            "  \"resolvedParameters\": { \"direction\": \"out to town\" },\n" +
+            "  \"speech\": \"I think I'll head to town now.\"\n" +
+            "}"
+        );
+        promptSegments.push(
+            "EXAMPLE 2: Taking an item without speech.\n" +
+            "Suppose available action is: Name: \"Take Item\", System ID: \"app:take_item\", Base Command: \"take\".\n" +
+            "{\n" +
+            "  \"actionDefinitionId\": \"app:take_item\",\n" +
+            "  \"commandString\": \"take the old map from the dusty table\",\n" +
+            "  \"resolvedParameters\": { \"itemId\": \"map_ancient_01\", \"sourceContainerId\": \"table_dusty_003\" },\n" +
+            "  \"speech\": \"\"\n" +
+            "}"
+        );
+        promptSegments.push(
+            "EXAMPLE 3: Waiting and not speaking.\n" +
+            "Suppose available action is: Name: \"Wait\", System ID: \"core:wait\", Base Command: \"wait\".\n" +
+            "{\n" +
+            "  \"actionDefinitionId\": \"core:wait\",\n" +
+            "  \"commandString\": \"wait\",\n" +
+            "  \"resolvedParameters\": {},\n" +
+            "  \"speech\": \"\"\n" +
+            "}"
+        );
+        promptSegments.push(
+            "EXAMPLE 4: Just speaking (using a 'say' action if available, or 'wait' and putting speech in `speech` and `commandString`).\n" +
+            "Suppose available action is: Name: \"Say something\", System ID: \"app:say\", Base Command: \"say\".\n" +
+            "{\n" +
+            "  \"actionDefinitionId\": \"app:say\",\n" +
+            "  \"commandString\": \"say Greetings, stranger!\",\n" +
+            "  \"resolvedParameters\": { \"message\": \"Greetings, stranger!\" },\n" +
+            "  \"speech\": \"Greetings, stranger!\"\n" +
+            "}\n" +
+            "Alternatively, if no specific 'say' action, using 'wait':\n" +
+            "{\n" +
+            "  \"actionDefinitionId\": \"core:wait\",\n" +
+            "  \"commandString\": \"say Greetings, stranger!\",\n" +
+            "  \"resolvedParameters\": {},\n" +
+            "  \"speech\": \"Greetings, stranger!\"\n" +
+            "}"
+        );
+        promptSegments.push(
+            "Now, based on all the information provided, make your decision and provide your response ONLY as a valid JSON object adhering to the schema."
         );
 
-        // Task 6: Join Segments
         const llmPromptString = promptSegments.join('\n\n');
 
-        // Task 7: Log the successful completion of prompt generation
-        if (logger && typeof logger.info === 'function') {
-            logger.info("AIPromptFormatter: LLM prompt generation complete.");
-        } else {
-            console.info("AIPromptFormatter: LLM prompt generation complete (logger.info unavailable).");
-        }
+        logInfo("AIPromptFormatter: LLM prompt generation complete.");
+        logDebug(`AIPromptFormatter: Generated Prompt (length ${llmPromptString.length}):\n${llmPromptString}`);
 
-        // Optional debug logging of the full prompt as mentioned in the ticket
-        if (logger && typeof logger.debug === 'function') {
-            logger.debug(`AIPromptFormatter: Generated Prompt (length ${llmPromptString.length}):\n${llmPromptString}`);
-        }
-
-        // Task 8: Return the final llmPromptString
         return llmPromptString;
     }
 }

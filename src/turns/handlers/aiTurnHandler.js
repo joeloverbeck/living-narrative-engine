@@ -18,6 +18,7 @@
  * @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem
+ * @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator // <<< ADDED THIS LINE
  */
 
 import {BaseTurnHandler} from './baseTurnHandler.js';
@@ -55,18 +56,18 @@ export class AITurnHandler extends BaseTurnHandler {
     #safeEventDispatcher;
     /** @type {SubscriptionLifecycleManager} */
     #subscriptionManager;
-
     /** @type {IActionDiscoverySystem} */
     #actionDiscoverySystem;
+    /** @type {IEntityManager} */
+    #entityManager;
+    /** @type {ISchemaValidator} */ // <<< ADDED THIS LINE
+    #schemaValidator;           // <<< ADDED THIS LINE
 
     // --- NEW: Flags for managing external AI response waiting ---
     /** @private @type {boolean} */
     #aiIsAwaitingExternalEvent = false;
     /** @private @type {string|null} */
     #aiAwaitingExternalEventForActorId = null;
-
-    /** @type {IEntityManager} */
-    #entityManager;
 
     // --- END NEW ---
 
@@ -84,6 +85,7 @@ export class AITurnHandler extends BaseTurnHandler {
      * @param {SubscriptionLifecycleManager} dependencies.subscriptionManager - Service to manage subscriptions.
      * @param {IEntityManager} dependencies.entityManager - Service for managing entities.
      * @param {IActionDiscoverySystem} dependencies.actionDiscoverySystem - Service for discovering available actions.
+     * @param {ISchemaValidator} dependencies.schemaValidator - Service for validating schemas. // <<< ADDED THIS LINE
      * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor({
@@ -97,6 +99,7 @@ export class AITurnHandler extends BaseTurnHandler {
                     subscriptionManager,
                     entityManager,
                     actionDiscoverySystem,
+                    schemaValidator, // <<< ADDED THIS LINE
                 }) {
         // 1. Call super() first with base dependencies
         super({logger});
@@ -137,7 +140,7 @@ export class AITurnHandler extends BaseTurnHandler {
             this._logger.error(errorMsg, {subscriptionManager});
             throw new Error(errorMsg);
         }
-        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') { // <<< ADD VALIDATION
+        if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
             const errorMsg = `${this.constructor.name} Constructor: Invalid or missing IEntityManager dependency.`;
             this._logger.error(errorMsg, {entityManager});
             throw new Error(errorMsg);
@@ -145,6 +148,11 @@ export class AITurnHandler extends BaseTurnHandler {
         if (!actionDiscoverySystem || typeof actionDiscoverySystem.getValidActions !== 'function') {
             const errorMsg = `${this.constructor.name} Constructor: Invalid or missing IActionDiscoverySystem dependency.`;
             this._logger.error(errorMsg, {actionDiscoverySystem});
+            throw new Error(errorMsg);
+        }
+        if (!schemaValidator || typeof schemaValidator.validate !== 'function' || typeof schemaValidator.isSchemaLoaded !== 'function') { // <<< ADDED THIS BLOCK
+            const errorMsg = `${this.constructor.name} Constructor: Invalid or missing ISchemaValidator dependency.`;
+            this._logger.error(errorMsg, {schemaValidator});
             throw new Error(errorMsg);
         }
 
@@ -159,6 +167,7 @@ export class AITurnHandler extends BaseTurnHandler {
         this.#subscriptionManager = subscriptionManager;
         this.#entityManager = entityManager;
         this.#actionDiscoverySystem = actionDiscoverySystem;
+        this.#schemaValidator = schemaValidator; // <<< ADDED THIS LINE
 
         // --- NEW: Initialize AI waiting flags ---
         this.#aiIsAwaitingExternalEvent = false;
@@ -174,7 +183,6 @@ export class AITurnHandler extends BaseTurnHandler {
         this._logger.debug(`${this.constructor.name} initialized successfully. Dependencies assigned. Initial state set to ${initialState.getStateName()}.`);
     }
 
-    // --- NEW: Methods for ITurnContext callbacks regarding external event waiting ---
     /**
      * Provider function for ITurnContext to check if the AI handler is awaiting an external event.
      * @returns {boolean} True if awaiting, false otherwise.
@@ -251,7 +259,7 @@ export class AITurnHandler extends BaseTurnHandler {
         // If these become stateful or expensive, AITurnHandler might receive them via its own constructor.
         const gameStateProvider = new AIGameStateProvider();
         const promptFormatter = new AIPromptFormatter();
-        const llmResponseProcessor = new LLMResponseProcessor();
+        const llmResponseProcessor = new LLMResponseProcessor({schemaValidator: this.#schemaValidator});
         this._logger.debug(`${this.constructor.name}.startTurn: Instantiated AIGameStateProvider, AIPromptFormatter, LLMResponseProcessor for actor ${actor.id}.`);
 
 
@@ -389,3 +397,5 @@ export class AITurnHandler extends BaseTurnHandler {
 }
 
 export default AITurnHandler;
+
+// --- FILE END ---

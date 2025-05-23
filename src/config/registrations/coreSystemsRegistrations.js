@@ -33,6 +33,7 @@
 /** @typedef {import('../../turns/interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter_Interface */
+/** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator_Interface */ // <<< ADDED THIS LINE
 
 // --- System Imports ---
 import {ActionDiscoverySystem} from '../../systems/actionDiscoverySystem.js';
@@ -105,8 +106,9 @@ export function registerCoreSystems(container) {
         commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
         safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
         subscriptionManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
-        entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)), // <<< Ensure IEntityManager is resolved
-        actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (c.resolve(tokens.IActionDiscoverySystem)), // <<< Ensure IActionDiscoverySystem is resolved
+        entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)),
+        actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (c.resolve(tokens.IActionDiscoverySystem)),
+        schemaValidator: /** @type {ISchemaValidator_Interface} */ (c.resolve(tokens.ISchemaValidator)), // <<< MODIFIED: Added ISchemaValidator
     }));
     logger.debug(`Core Systems Registration: Registered ${tokens.AITurnHandler}.`);
     registrationCount++;
@@ -128,7 +130,8 @@ export function registerCoreSystems(container) {
             const resolvedLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
             const resolvedIllmAdapter = /** @type {ILLMAdapter_Interface} */ (c.resolve(tokens.ILLMAdapter));
             const resolvedEntityManager = /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager));
-            const resolvedActionDiscoverySystem = /** @type {IActionDiscoverySystem_Interface} */ (c.resolve(tokens.IActionDiscoverySystem)); // <<< ADD THIS
+            const resolvedActionDiscoverySystem = /** @type {IActionDiscoverySystem_Interface} */ (c.resolve(tokens.IActionDiscoverySystem));
+            const resolvedSchemaValidator = /** @type {ISchemaValidator_Interface} */ (c.resolve(tokens.ISchemaValidator)); // <<< MODIFIED: Resolve ISchemaValidator
 
             if (!resolvedIllmAdapter) {
                 resolvedLogger.error(`CoreSystemsRegistration: Failed to resolve ${String(tokens.ILLMAdapter)} for AITurnHandler factory.`);
@@ -138,9 +141,13 @@ export function registerCoreSystems(container) {
                 resolvedLogger.error(`CoreSystemsRegistration: Failed to resolve ${String(tokens.IEntityManager)} for AITurnHandler factory.`);
                 throw new Error(`Missing dependency ${String(tokens.IEntityManager)} for AITurnHandler factory`);
             }
-            if (!resolvedActionDiscoverySystem) { // <<< ADD THIS CHECK
+            if (!resolvedActionDiscoverySystem) {
                 resolvedLogger.error(`CoreSystemsRegistration: Failed to resolve ${String(tokens.IActionDiscoverySystem)} for AITurnHandler factory.`);
                 throw new Error(`Missing dependency ${String(tokens.IActionDiscoverySystem)} for AITurnHandler factory`);
+            }
+            if (!resolvedSchemaValidator) { // <<< MODIFIED: Add check for ISchemaValidator
+                resolvedLogger.error(`CoreSystemsRegistration: Failed to resolve ${String(tokens.ISchemaValidator)} for AITurnHandler factory.`);
+                throw new Error(`Missing dependency ${String(tokens.ISchemaValidator)} for AITurnHandler factory`);
             }
             return new AITurnHandler({
                 logger: resolvedLogger,
@@ -152,7 +159,8 @@ export function registerCoreSystems(container) {
                 safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
                 subscriptionManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
                 entityManager: resolvedEntityManager,
-                actionDiscoverySystem: resolvedActionDiscoverySystem, // <<< PASS THIS
+                actionDiscoverySystem: resolvedActionDiscoverySystem,
+                schemaValidator: resolvedSchemaValidator, // <<< MODIFIED: Pass ISchemaValidator
             });
         };
 
