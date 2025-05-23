@@ -10,6 +10,7 @@
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIAvailableActionDTO} AIAvailableActionDTO */
 
 import {IAIPromptFormatter} from '../interfaces/IAIPromptFormatter.js';
+// MODIFICATION: LLM_TURN_ACTION_SCHEMA imported is now the modified one (without resolvedParameters)
 import {LLM_TURN_ACTION_SCHEMA} from '../schemas/llmOutputSchemas.js';
 
 /**
@@ -82,7 +83,8 @@ export class AIPromptFormatter extends IAIPromptFormatter {
         const exitsSegment = this._formatListSegment(
             "Exits from your current location:",
             currentLocation.exits,
-            (exit) => `- Towards ${exit.direction} leads to ${exit.targetLocationId}. (To go this way, choose an action like 'core:go' with appropriate parameters, resulting in a command string like 'go ${exit.direction}').`,
+            // MODIFICATION: Guidance for commandString for 'go' action updated slightly
+            (exit) => `- Towards ${exit.direction} leads to ${exit.targetLocationId}. (To go this way, choose an action like 'core:go', resulting in a command string like 'go ${exit.direction}').`,
             "There are no obvious exits.",
             logger
         );
@@ -120,17 +122,19 @@ export class AIPromptFormatter extends IAIPromptFormatter {
 
     _formatActionsSegment(gameState, logger) {
         logger.debug("AIPromptFormatter: Formatting actions segment.");
-        let noActionsMessage = "You have no specific actions available right now. If 'core:wait' (or similar) is an option, use its System ID for 'actionDefinitionId' and 'wait' (or similar) for 'commandString'. Otherwise, the game rules will dictate behavior.";
+        // MODIFICATION: Message adjusted slightly for clarity given resolvedParameters removal.
+        let noActionsMessage = "You have no specific actions available right now. If 'core:wait' (or similar) is an option, use its System ID for 'actionDefinitionId' and an appropriate 'commandString' (e.g., 'wait'). Otherwise, the game rules will dictate behavior.";
         if (gameState.availableActions && gameState.availableActions.length > 0) {
             if (gameState.availableActions.some(action => (action.id || "").toLowerCase().includes('wait'))) {
-                noActionsMessage = "If no other action is suitable, you can choose to wait (e.g., using 'core:wait' or similar System ID).";
+                noActionsMessage = "If no other action is suitable, you can choose to wait (e.g., using 'core:wait' or similar System ID and commandString 'wait').";
             }
         } else {
             logger.warn("AIPromptFormatter: No available actions provided. The LLM must still try to produce valid JSON, perhaps using a generic 'wait' if it intuits one, but this should be handled by game design.");
         }
 
         return this._formatListSegment(
-            "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and 'Base Command' for 'commandString'):",
+            // MODIFICATION: Guidance for commandString slightly rephrased.
+            "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):",
             gameState.availableActions,
             (action) => {
                 const systemId = action.id || "unknown:id";
@@ -177,33 +181,35 @@ export class AIPromptFormatter extends IAIPromptFormatter {
             "Do not use markdown code blocks (e.g., ```json ... ```) or any other formatting around the final JSON output. Your entire response must be ONLY the JSON object itself."
         );
         promptSegments.push(
+            // MODIFICATION: LLM_TURN_ACTION_SCHEMA is now the one without resolvedParameters.
+            // The $id property description clarifies it's for schema registration, not for the LLM to include.
             "The JSON object MUST conform to the following structure (described using JSON Schema conventions - note the '$id' property of the schema itself is for registration and not part of your response object):\n" +
             JSON.stringify(LLM_TURN_ACTION_SCHEMA, null, 2)
         );
         promptSegments.push(
+            // MODIFICATION: Guidance for resolvedParameters removed, commandString guidance updated, speech renumbered.
             "GUIDANCE FOR FILLING THE JSON FIELDS:\n" +
             "1. `actionDefinitionId`: Use the exact 'System ID' (e.g., 'core:wait', 'core:go') from the 'Your available actions are:' list for your chosen action. This field is MANDATORY.\n" +
-            "2. `commandString`: Use the 'Base Command' (e.g., 'wait', 'go north', 'take torch') associated with your chosen System ID. You might need to fill in details (like direction for 'go', or target for 'take') to make it a complete command the game can parse, e.g., 'go north' or 'take torch from table'. If your character is speaking, you might integrate this if your game parser handles commands like 'say Hello there' or 'shout Help!'. This field is MANDATORY.\n" +
-            "3. `resolvedParameters`: If the `commandString` doesn't capture all necessary specifics (like a target ID for an interaction if not part of the command string, or specific coordinates), provide them here. Example: for `actionDefinitionId: 'core:interact'`, `commandString: 'examine lever'`, `resolvedParameters: {'targetObjectId': 'lever_001'}`. If `commandString` is self-sufficient, use an empty object `{}`. This field is MANDATORY.\n" +
-            "4. `speech`: The exact words your character says. If not speaking, use an empty string `\"\"`. This field is MANDATORY."
+            "2. `commandString`: Use the 'Base Command' (e.g., 'wait', 'go north', 'take torch') associated with your chosen System ID. You MUST augment this base command with all necessary details (like specific direction for 'go', or target item and source for 'take') to make it a complete command the game can parse (e.g., 'go north', 'take a_torch from the old sconce'). If your character is speaking, you might integrate this if your game parser handles commands like 'say Hello there' or 'shout Help!'. This field is MANDATORY and must be self-sufficient.\n" +
+            "3. `speech`: The exact words your character says. If not speaking, use an empty string `\"\"`. This field is MANDATORY."
         );
         promptSegments.push(
+            // MODIFICATION: Examples updated to remove resolvedParameters and make commandString self-sufficient.
             "EXAMPLE 1: Moving and speaking.\n" +
-            "Suppose available action is: Name: \"Go To Location\", System ID: \"core:go\", Base Command: \"go\".\n" +
+            "Suppose available action is: Name: \"Go To Location\", System ID: \"core:go\", Base Command: \"go <direction>\".\n" +
             "{\n" +
             "  \"actionDefinitionId\": \"core:go\",\n" +
-            "  \"commandString\": \"go out to town\",\n" +
-            "  \"resolvedParameters\": { \"direction\": \"out to town\" },\n" +
+            "  \"commandString\": \"go out to town\",\n" + // Assumes "out to town" is a valid direction or target for 'go'
             "  \"speech\": \"I think I'll head to town now.\"\n" +
             "}"
         );
         promptSegments.push(
             "EXAMPLE 2: Taking an item without speech.\n" +
-            "Suppose available action is: Name: \"Take Item\", System ID: \"app:take_item\", Base Command: \"take\".\n" +
+            "Suppose available action is: Name: \"Take Item\", System ID: \"app:take_item\", Base Command: \"take <item> from <source>\".\n" +
             "{\n" +
             "  \"actionDefinitionId\": \"app:take_item\",\n" +
+            // commandString now includes the specifics previously in resolvedParameters
             "  \"commandString\": \"take the old map from the dusty table\",\n" +
-            "  \"resolvedParameters\": { \"itemId\": \"map_ancient_01\", \"sourceContainerId\": \"table_dusty_003\" },\n" +
             "  \"speech\": \"\"\n" +
             "}"
         );
@@ -213,24 +219,25 @@ export class AIPromptFormatter extends IAIPromptFormatter {
             "{\n" +
             "  \"actionDefinitionId\": \"core:wait\",\n" +
             "  \"commandString\": \"wait\",\n" +
-            "  \"resolvedParameters\": {},\n" +
             "  \"speech\": \"\"\n" +
             "}"
         );
         promptSegments.push(
             "EXAMPLE 4: Just speaking (using a 'say' action if available, or 'wait' and putting speech in `speech` and `commandString`).\n" +
-            "Suppose available action is: Name: \"Say something\", System ID: \"app:say\", Base Command: \"say\".\n" +
+            "Suppose available action is: Name: \"Say something\", System ID: \"app:say\", Base Command: \"say <message>\".\n" +
             "{\n" +
             "  \"actionDefinitionId\": \"app:say\",\n" +
+            // commandString now includes the message
             "  \"commandString\": \"say Greetings, stranger!\",\n" +
-            "  \"resolvedParameters\": { \"message\": \"Greetings, stranger!\" },\n" +
             "  \"speech\": \"Greetings, stranger!\"\n" +
             "}\n" +
             "Alternatively, if no specific 'say' action, using 'wait':\n" +
             "{\n" +
             "  \"actionDefinitionId\": \"core:wait\",\n" +
+            // commandString could be 'wait' or 'say ...' if parser handles it.
+            // Let's assume 'wait' for the action, and speech field for the words.
+            // Or if 'say' is a general command the parser understands even with 'core:wait'
             "  \"commandString\": \"say Greetings, stranger!\",\n" +
-            "  \"resolvedParameters\": {},\n" +
             "  \"speech\": \"Greetings, stranger!\"\n" +
             "}"
         );

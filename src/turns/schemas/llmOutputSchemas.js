@@ -17,8 +17,8 @@ export const LLM_TURN_ACTION_SCHEMA_ID = 'llmTurnActionResponseSchema/v1';
  * JSON Schema for the LLM's response.
  * This schema dictates the structure the LLM must follow.
  * - `actionDefinitionId`: The system identifier for the chosen action.
- * - `commandString`: The game-parsable command.
- * - `resolvedParameters`: Additional parameters for the action.
+ * - `commandString`: The game-parsable command. This string must be self-contained
+ * and include all necessary details previously handled by `resolvedParameters`.
  * - `speech`: The character's spoken dialogue.
  */
 export const LLM_TURN_ACTION_SCHEMA = {
@@ -32,21 +32,15 @@ export const LLM_TURN_ACTION_SCHEMA = {
         },
         commandString: {
             type: "string",
-            description: "The actual command string that will be processed by the game's command parser (e.g., 'wait', 'go north', 'take a_torch from sconce', 'say Hello there'). This should be based on the 'Base Command' from the available actions list, potentially augmented with details from resolvedParameters or to include speech naturally if the action implies it. It should be a complete, parsable command.",
+            description: "The actual command string that will be processed by the game's command parser (e.g., 'wait', 'go north', 'take a_torch from sconce', 'say Hello there'). This should be based on the 'Base Command' from the available actions list and MUST be augmented with all necessary details (e.g., specific targets, directions, items) to be a complete, parsable command. If the action implies speech, it might also be part of this string (e.g., 'say Hello'). This field is MANDATORY and must be self-sufficient.",
             minLength: 1 // Ensure not an empty string
-        },
-        resolvedParameters: {
-            type: "object",
-            description: "An object containing any specific parameters required by the chosen action if they are not already part of the base command string. Example: for 'core:interact', commandString: 'examine lever', resolvedParameters: {'targetObjectId': 'lever_001'}. If commandString is self-sufficient, use an empty object {}. This field is MANDATORY.",
-            // No specific properties defined here, allows for flexible parameters based on action
-            additionalProperties: true
         },
         speech: {
             type: "string", // Empty string "" is allowed for no speech
             description: "The exact words the character will say aloud. Provide an empty string (\"\") if the character chooses not to speak this turn. This speech might also be incorporated into the 'commandString' if appropriate for the game's parser (e.g., a 'say' command). This field is MANDATORY."
         }
     },
-    required: ["actionDefinitionId", "commandString", "resolvedParameters", "speech"],
+    required: ["actionDefinitionId", "commandString", "speech"],
     additionalProperties: false // Disallow any properties not explicitly defined at the top level
 };
 

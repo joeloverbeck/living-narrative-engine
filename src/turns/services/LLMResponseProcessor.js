@@ -7,7 +7,14 @@
 /** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor_Interface_Typedef */
 
 import {ILLMResponseProcessor} from '../interfaces/ILLMResponseProcessor.js';
-import {FALLBACK_AI_ACTION} from '../constants/aiConstants.js';
+// MODIFICATION: FALLBACK_AI_ACTION might need adjustment if ITurnAction no longer expects resolvedParameters at all.
+// Let's define a modified fallback that omits resolvedParameters.
+const BASE_FALLBACK_WAIT_ACTION = {
+    actionDefinitionId: 'core:wait', // Default to a safe 'wait' action
+    commandString: 'wait',           // Basic command for waiting
+    speech: '',                      // No speech by default for fallback
+};
+
 // MODIFICATION: Import the shared schema ID
 import {LLM_TURN_ACTION_SCHEMA_ID} from '../schemas/llmOutputSchemas.js';
 
@@ -33,21 +40,12 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     constructor({schemaValidator}) {
         super();
         if (!schemaValidator || typeof schemaValidator.validate !== 'function' || typeof schemaValidator.isSchemaLoaded !== 'function') {
-            // In a real app, you might throw a more specific error or log this with a dedicated logger for the constructor.
-            // For now, simple error suffices.
             throw new Error("LLMResponseProcessor: Constructor requires a valid ISchemaValidator instance with 'validate' and 'isSchemaLoaded' methods.");
         }
         this.#schemaValidator = schemaValidator;
 
-        // It's a good practice to ensure the schema is loaded into the validator during application setup.
-        // However, we can add a check here for robustness, though LLMResponseProcessor itself won't add it.
-        // This check is more for developer awareness during testing/debugging.
-        // A logger passed to constructor would be ideal for this message.
         if (!this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_SCHEMA_ID)) {
             console.warn(`LLMResponseProcessor: Schema with ID '${LLM_TURN_ACTION_SCHEMA_ID}' is not loaded in the provided schema validator. Validation will fail if this schema is required.`);
-            // Depending on strictness, you might throw an error here if the schema is absolutely critical
-            // and its absence indicates a setup problem.
-            // throw new Error(`LLMResponseProcessor: Critical schema '${LLM_TURN_ACTION_SCHEMA_ID}' not loaded.`);
         }
     }
 
@@ -56,26 +54,28 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
      * Generates a fallback ITurnAction specific to LLM processing errors.
      * @param {string} errorContext - A string describing the error (e.g., 'json_parse_error', 'json_schema_validation_error').
      * @param {string} actorId - The ID of the actor.
-     * @param {any} [problematicOutput=null] - The problematic LLM output, parsed JSON, or validation errors.
+     * @param {ILogger} logger - Logger instance for detailed logging.
+     * @param {any} [problematicOutput=null] - The problematic LLM output, parsed JSON, or validation errors for logging.
      * @returns {ITurnAction} The fallback ITurnAction.
      */
-    _createProcessingFallbackAction(errorContext, actorId, problematicOutput = null) {
-        const baseFallback = {...FALLBACK_AI_ACTION}; // Shallow copy
-        // Ensure resolvedParameters is also copied if it's an object
-        const resolvedParameters = {
-            ...(baseFallback.resolvedParameters || {}),
-            errorContext: `llm_processing:${errorContext}`,
-            actorId: actorId,
-        };
-        // Only add problematicOutput if it's not null/undefined to avoid clutter
-        if (problematicOutput !== null && typeof problematicOutput !== 'undefined') {
-            resolvedParameters.problematicOutput = problematicOutput;
-        }
+    _createProcessingFallbackAction(errorContext, actorId, logger, problematicOutput = null) {
+        const fallbackCommandString = `AI LLM Processing Error for ${actorId}: ${errorContext}. Executing fallback: wait.`;
+
+        // Log the detailed error context
+        logger.error(`LLMResponseProcessor: Creating fallback action for actor ${actorId} due to ${errorContext}.`, {
+            actorId,
+            errorContext,
+            problematicOutput, // Log the problematic output for debugging
+            fallbackAction: { // Log what action is being taken
+                ...BASE_FALLBACK_WAIT_ACTION,
+                commandString: fallbackCommandString,
+            }
+        });
 
         return {
-            ...baseFallback,
-            commandString: `AI LLM Processing Error for ${actorId}: ${errorContext}. Waiting.`,
-            resolvedParameters,
+            ...BASE_FALLBACK_WAIT_ACTION, // Uses the modified fallback without resolvedParameters
+            commandString: fallbackCommandString,
+            // No resolvedParameters here
         };
     }
 
@@ -92,68 +92,57 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         // 1. JSON Parsing
         try {
             if (llmJsonResponse === null || typeof llmJsonResponse === 'undefined' || llmJsonResponse.trim() === '') {
-                // Handle cases where the response might be an empty string or just whitespace
                 throw new Error("LLM JSON response is null, undefined, or empty.");
             }
             parsedJson = JSON.parse(llmJsonResponse);
         } catch (parseError) {
             logger.error(`LLMResponseProcessor: Failed to parse LLM JSON response for actor ${actorId}. Error: ${parseError.message}. Response:`, {
-                rawResponse: llmJsonResponse, // Log raw response for debugging
+                rawResponse: llmJsonResponse,
                 actorId,
                 error: parseError
             });
-            return this._createProcessingFallbackAction('json_parse_error', actorId, llmJsonResponse);
+            return this._createProcessingFallbackAction('json_parse_error', actorId, logger, llmJsonResponse);
         }
 
         // 2. Schema Validation
-        // Ensure the schema validator and the specific schema ID are available
         if (!this.#schemaValidator || !LLM_TURN_ACTION_SCHEMA_ID) {
             logger.error(`LLMResponseProcessor: Schema validator or schema ID '${LLM_TURN_ACTION_SCHEMA_ID}' not available for actor ${actorId}. Cannot validate.`, {actorId});
-            return this._createProcessingFallbackAction('schema_validator_unavailable', actorId, parsedJson);
+            // Pass logger to fallback action
+            return this._createProcessingFallbackAction('schema_validator_unavailable', actorId, logger, parsedJson);
         }
 
         const validationResult = this.#schemaValidator.validate(LLM_TURN_ACTION_SCHEMA_ID, parsedJson);
 
         if (!validationResult.isValid) {
             logger.error(`LLMResponseProcessor: LLM response JSON schema validation failed for actor ${actorId}. Errors:`, {
-                validationErrors: validationResult.errors, // Ajv errors
-                parsedJson, // Log the parsed JSON that failed validation
+                validationErrors: validationResult.errors,
+                parsedJson,
                 actorId
             });
-            // Include validation errors in the fallback action for better diagnostics
-            return this._createProcessingFallbackAction('json_schema_validation_error', actorId, {
-                parsedJsonAttempt: parsedJson, // What was parsed
-                validationErrors: validationResult.errors // What Ajv reported
+            return this._createProcessingFallbackAction('json_schema_validation_error', actorId, logger, {
+                parsedJsonAttempt: parsedJson,
+                validationErrors: validationResult.errors
             });
         }
 
-        // 3. Destructure and Basic Type Checks (Post-Schema Validation)
-        // At this point, schema validation has confirmed presence and basic types of required fields.
-        // We can be more confident in destructuring.
-        const {actionDefinitionId, resolvedParameters, commandString, speech} = parsedJson;
+        // 3. Destructure (Post-Schema Validation)
+        // Schema validation confirmed presence and basic types of required fields.
+        // resolvedParameters is no longer expected.
+        const {actionDefinitionId, commandString, speech} = parsedJson;
 
-        // The schema already enforces 'actionDefinitionId' and 'commandString' are non-empty strings
-        // and 'resolvedParameters' is an object, and 'speech' is a string.
-        // Further specific business logic checks can still be here if needed,
-        // but basic structure and type are covered by the schema.
-
-        // Construct finalAction
+        // Construct finalAction without resolvedParameters
         const finalAction = {
-            actionDefinitionId: actionDefinitionId.trim(), // Schema ensures it's a string
-            resolvedParameters: resolvedParameters,       // Schema ensures it's an object
-            commandString: commandString.trim(),         // Schema ensures it's a string
-            // Potentially include speech directly in the turn action if your ITurnAction supports it,
-            // or if it's handled via commandString or resolvedParameters (e.g., for a 'say' action).
-            // For now, assuming ITurnAction primarily uses actionDefinitionId, resolvedParameters, commandString.
-            // If ITurnAction needs a dedicated 'speech' field, add it here.
-            // Example: speech: speech, (if ITurnAction has a speech property)
+            actionDefinitionId: actionDefinitionId.trim(),
+            commandString: commandString.trim(),
+            speech: speech, // speech is already a string as per schema, "" is valid.
+            // No resolvedParameters property
         };
 
         logger.info(`LLMResponseProcessor: Successfully validated and transformed LLM output to ITurnAction for actor ${actorId}. Action: ${finalAction.actionDefinitionId}`);
         logger.debug(`LLMResponseProcessor: Transformed ITurnAction details for ${actorId}:`, {
             actorId,
-            action: finalAction,
-            speechOutput: speech // Log the speech separately if not directly part of ITurnAction
+            action: finalAction, // This now correctly lacks resolvedParameters
+            // speechOutput is already part of finalAction.speech
         });
 
         return finalAction;
