@@ -12,10 +12,8 @@ import cors from 'cors';
 // MODIFICATION: Import the new proxy LLM config loader
 import {loadProxyLlmConfigs} from './proxyLlmConfigLoader.js';
 // MODIFICATION: Import the API key file retriever utility (adjust path as necessary)
-import {getApiKeyFromFile} from '../src/utils/apiKeyFileRetriever.js';
-// MODIFICATION: Import Workspace_retry for making API calls to the actual LLM provider
-import {Workspace_retry} from '../src/utils/apiUtils.js';
-
+import {getApiKeyFromFile} from './utils/proxyApiKeyFileRetriever.js';
+import {Workspace_retry} from './utils/proxyApiUtils.js';
 
 // Load environment variables from .env file
 dotenv.config();
