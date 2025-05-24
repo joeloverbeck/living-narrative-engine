@@ -1,6 +1,8 @@
 // src/llms/retryHttpClient.js
 // --- NEW FILE START ---
 
+import {IHttpClient} from './interfaces/IHttpClient.js';
+
 /**
  * @typedef {import('../../llms/interfaces/ILogger.js').ILogger} ILogger
  * @typedef {import('../../interfaces/IHttpClient.js').IHttpClient} IHttpClient
