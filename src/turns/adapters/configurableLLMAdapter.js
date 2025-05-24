@@ -2,9 +2,7 @@
 // --- FILE START ---
 
 import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
-// MODIFICATION: Import ApiKeyFileRetriever
 import {getApiKeyFromFile as getApiKeyFromFileSystem} from '../../utils/apiKeyFileRetriever.js';
-// MODIFICATION: Import Workspace_retry for making API calls
 import {Workspace_retry} from '../../utils/apiUtils.js';
 
 
@@ -26,6 +24,14 @@ const DEFAULT_FALLBACK_ACTION = {
 const DEFAULT_FALLBACK_ACTION_JSON_STRING = JSON.stringify(DEFAULT_FALLBACK_ACTION);
 
 // MODIFICATION END (Sub-Ticket 1.4.4.8)
+
+// MODIFICATION START (Ticket 1.5.12)
+const DEFAULT_PROXY_SERVER_URL = 'http://localhost:3001/api/llm-request'; // Default proxy URL for local development
+// MODIFICATION END (Ticket 1.5.12)
+
+// Define API types considered as cloud services that require key handling via proxy or direct server access
+const CLOUD_API_TYPES = ['openrouter', 'openai', 'anthropic']; // Add other cloud types as needed
+
 
 /**
  * Custom error class for configuration-related issues within the ConfigurableLLMAdapter.
@@ -122,6 +128,16 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      */
     #projectRootPath = null;
 
+    // MODIFICATION START (Ticket 1.5.12)
+    /**
+     * @private
+     * @type {string}
+     * @description The URL of the backend proxy server for routing cloud LLM calls.
+     */
+    #proxyServerUrl;
+
+    // MODIFICATION END (Ticket 1.5.12)
+
 
     /**
      * Creates an instance of ConfigurableLLMAdapter.
@@ -133,9 +149,12 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      * @param {string} [dependencies.projectRootPath] - The absolute root path of the project.
      * Required if `executionEnvironment` is 'server' and file-based API key retrieval might be used.
      * This path must be securely determined and provided.
+     * @param {string} [dependencies.proxyServerUrl] - The URL for the backend proxy server.
+     * Required if `executionEnvironment` is 'client' and cloud LLMs are used.
+     * If not provided for 'client' mode, a default URL (e.g., for local development) will be used.
      * @throws {Error} If a valid logger is not provided, or if projectRootPath is missing for server environment.
      */
-    constructor({logger, executionEnvironment = 'unknown', projectRootPath = null}) {
+    constructor({logger, executionEnvironment = 'unknown', projectRootPath = null, proxyServerUrl = null}) { // MODIFICATION (Ticket 1.5.12)
         super();
         if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function') {
             const errorMsg = 'ConfigurableLLMAdapter: Constructor requires a valid logger instance.';
@@ -162,6 +181,35 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         } else if (projectRootPath) {
             this.#logger.warn(`ConfigurableLLMAdapter: 'projectRootPath' was provided but executionEnvironment is not 'server'. It will be ignored. Environment: ${this.#executionEnvironment}`);
         }
+
+        // MODIFICATION START (Ticket 1.5.12)
+        if (this.#executionEnvironment === 'client') {
+            if (proxyServerUrl && typeof proxyServerUrl === 'string' && proxyServerUrl.trim() !== '') {
+                try {
+                    new URL(proxyServerUrl); // Validate if it's a valid URL structure
+                    this.#proxyServerUrl = proxyServerUrl.trim();
+                    this.#logger.info(`ConfigurableLLMAdapter: Client-side proxy URL configured to: '${this.#proxyServerUrl}'.`);
+                } catch (e) {
+                    this.#logger.warn(`ConfigurableLLMAdapter: Provided proxyServerUrl '${proxyServerUrl}' is not a valid URL. Falling back to default: '${DEFAULT_PROXY_SERVER_URL}'. Error: ${e.message}`);
+                    this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
+                }
+            } else {
+                this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
+                if (proxyServerUrl === null || proxyServerUrl === undefined) {
+                    this.#logger.info(`ConfigurableLLMAdapter: Client-side proxyServerUrl not provided. Using default: '${this.#proxyServerUrl}'.`);
+                } else {
+                    this.#logger.warn(`ConfigurableLLMAdapter: Client-side proxyServerUrl provided but was empty or invalid ('${proxyServerUrl}'). Using default: '${this.#proxyServerUrl}'.`);
+                }
+            }
+        } else { // server or unknown environment
+            this.#proxyServerUrl = proxyServerUrl || DEFAULT_PROXY_SERVER_URL; // Store it anyway, might be useful for hybrid or testing.
+            if (proxyServerUrl) {
+                this.#logger.debug(`ConfigurableLLMAdapter: executionEnvironment is '${this.#executionEnvironment}'. proxyServerUrl ('${proxyServerUrl}') was provided but primarily used for 'client' mode.`);
+            } else {
+                this.#logger.debug(`ConfigurableLLMAdapter: executionEnvironment is '${this.#executionEnvironment}'. proxyServerUrl not provided; default set internally but unlikely to be used in this mode.`);
+            }
+        }
+        // MODIFICATION END (Ticket 1.5.12)
 
 
         this.#logger.info(`ConfigurableLLMAdapter: Instance created. Execution environment: ${this.#executionEnvironment}. Ready for initialization.`);
@@ -351,12 +399,12 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     /**
      * Constructs the prompt-related part of the payload for an LLM API request.
      * This method uses the `promptFrame` from the LLM configuration to structure
-     * the `gameSummary` appropriately for the target LLM's API. [cite: 1119, 778]
+     * the `gameSummary` appropriately for the target LLM's API. [cite: 778, 1119]
      *
      * @private
      * @param {string} gameSummary - The detailed textual representation of the game state.
-     * @param {object | string | undefined} promptFrame - The promptFrame object from the LLM configuration. [cite: 1119, 778]
-     * @param {string} apiType - The apiType string from the LLM configuration. [cite: 1118, 745]
+     * @param {object | string | undefined} promptFrame - The promptFrame object from the LLM configuration. [cite: 778, 1119]
+     * @param {string} apiType - The apiType string from the LLM configuration. [cite: 745, 1118]
      * @returns {object} An object containing either a `messages` array or a `prompt` string,
      * suitable for inclusion in the LLM API request payload.
      * Example: `{ messages: [...] }` or `{ prompt: "..." }`.
@@ -369,7 +417,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
         const hasActualPromptFrameObject = promptFrame && typeof promptFrame === 'object' && Object.keys(promptFrame).length > 0;
         const isNonEmptyStringPromptFrame = typeof promptFrame === 'string' && promptFrame.trim() !== '';
-        const localApiTypes = ['ollama', 'llama_cpp_server_openai_compatible', 'tgi_openai_compatible']; // For logging warning
+        const localApiTypesForLogging = ['ollama', 'llama_cpp_server_openai_compatible', 'tgi_openai_compatible']; // For logging warning
 
         if (isNonEmptyStringPromptFrame) {
             // If promptFrame is a non-empty string, it's treated as a system message for chat APIs,
@@ -392,7 +440,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         } else { // promptFrame is missing, an empty object, or an empty string (AC2.5)
             if (apiType === 'openai' || apiType === 'openrouter' || apiType === 'anthropic') {
                 this.#logger.warn(`ConfigurableLLMAdapter._constructPromptPayload: promptFrame is missing or effectively empty for chat-like apiType '${apiType}'. Applying default user message structure. Consider defining a promptFrame for optimal results.`);
-            } else if (apiType && !localApiTypes.includes(apiType) && !['openai', 'openrouter', 'anthropic'].includes(apiType)) { // Non-local, non-chat, and no promptFrame but might benefit
+            } else if (apiType && !localApiTypesForLogging.includes(apiType) && !['openai', 'openrouter', 'anthropic'].includes(apiType)) { // Non-local, non-chat, and no promptFrame but might benefit
                 this.#logger.warn(`ConfigurableLLMAdapter._constructPromptPayload: promptFrame is missing or effectively empty for apiType '${apiType}' which might benefit from it. Applying default prompt string structure.`);
             }
         }
@@ -441,7 +489,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      * essential configuration is missing/invalid, or if the method is not yet implemented or an API call fails critically.
      */
     async getAIDecision(gameSummary) {
-        this.#logger.debug('ConfigurableLLMAdapter.generateAction called.', {
+        this.#logger.debug('ConfigurableLLMAdapter.getAIDecision called.', { // Renamed from generateAction to getAIDecision
             isOperational: this.#isOperational,
             activeLlmId: this.#currentActiveLlmId,
             gameSummaryLength: gameSummary ? gameSummary.length : 0
@@ -462,7 +510,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
         const {
             id: configId,
-            endpointUrl,
+            endpointUrl: llmProviderEndpointUrl, // Renamed to avoid clash with call target
             modelIdentifier,
             defaultParameters,
             providerSpecificHeaders,
@@ -470,15 +518,15 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             apiType,
             jsonOutputStrategy,
             apiKeyEnvVar,
-            apiKeyFileName
+            apiKeyFileName // Added from research doc's config structure
         } = activeConfig;
 
         const validationErrors = [];
 
-        if (!endpointUrl || typeof endpointUrl !== 'string' || endpointUrl.trim() === '') {
+        if (!llmProviderEndpointUrl || typeof llmProviderEndpointUrl !== 'string' || llmProviderEndpointUrl.trim() === '') {
             validationErrors.push({
                 field: 'endpointUrl',
-                value: endpointUrl,
+                value: llmProviderEndpointUrl,
                 reason: 'Missing or invalid (must be a non-empty string)'
             });
         }
@@ -524,39 +572,38 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         }
 
         this.#logger.info(
-            `ConfigurableLLMAdapter: Preparing API call for LLM ID: '${configId}' (${activeConfig.displayName || 'N/A'}). Endpoint: '${endpointUrl}', Model: '${modelIdentifier}', API Type: '${apiType}', JSON Strategy: '${jsonOutputStrategy?.method || 'N/A'}'.`
+            `ConfigurableLLMAdapter: Preparing API call for LLM ID: '${configId}' (${activeConfig.displayName || 'N/A'}). API Type: '${apiType}', JSON Strategy: '${jsonOutputStrategy?.method || 'N/A'}'.`
         );
 
         let currentStrategyMethod = jsonOutputStrategy.method.trim();
+        let actualApiKeyForServer = null; // Used if server-side and cloud
 
-        let apiKeyIdentifierForProxy = null;
-        let apiKeyIdentifierType = null;
-        let actualApiKeyForServer = null;
+        const isCloudService = CLOUD_API_TYPES.includes(apiType);
+        let callGoesToProxy = false;
+        // MODIFICATION START (Ticket 1.5.12)
+        let finalEndpointForRetry = llmProviderEndpointUrl; // Default to direct call (provider's endpoint)
+        // MODIFICATION END (Ticket 1.5.12)
+        let finalPayloadForRetry; // Will be set below
+        let finalHeadersForRetry; // Will be set below
 
-        const localApiTypes = ['ollama', 'llama_cpp_server_openai_compatible', 'tgi_openai_compatible'];
-        const isCloudService = !localApiTypes.includes(apiType);
 
         if (isCloudService) {
             if (this.#executionEnvironment === 'client') {
-                this.#logger.debug(`Adapter running in client-side mode for cloud service LLM '${configId}'.`);
+                this.#logger.debug(`Adapter running in client-side mode for cloud service LLM '${configId}'. Call will be proxied via '${this.#proxyServerUrl}'.`);
                 if ((!apiKeyEnvVar || apiKeyEnvVar.trim() === '') && (!apiKeyFileName || apiKeyFileName.trim() === '')) {
                     return this._getFallbackActionPromise(
-                        `Client-side - API key identifier (apiKeyEnvVar or apiKeyFileName) missing in config for cloud LLM '${configId}'. Cannot proceed with proxy call.`,
+                        `Client-side - API key identifier (apiKeyEnvVar or apiKeyFileName) missing in config for cloud LLM '${configId}'. Proxy would not be ableto retrieve key.`,
                         {llmId: configId}
                     );
                 }
-                if (apiKeyEnvVar && apiKeyEnvVar.trim() !== '') {
-                    apiKeyIdentifierForProxy = apiKeyEnvVar.trim();
-                    apiKeyIdentifierType = 'env';
-                    this.#logger.info(`ConfigurableLLMAdapter: Client-side mode - API key identifier (env var: '${apiKeyIdentifierForProxy}') will be sent to proxy for LLM '${configId}'.`);
-                } else if (apiKeyFileName && apiKeyFileName.trim() !== '') {
-                    apiKeyIdentifierForProxy = apiKeyFileName.trim();
-                    apiKeyIdentifierType = 'file';
-                    this.#logger.info(`ConfigurableLLMAdapter: Client-side mode - API key identifier (file: '${apiKeyIdentifierForProxy}') will be sent to proxy for LLM '${configId}'.`);
-                }
+                callGoesToProxy = true; // Mark that this call needs to go through the proxy
+                // MODIFICATION START (Ticket 1.5.12)
+                finalEndpointForRetry = this.#proxyServerUrl; // Use configured or default proxy URL
+                // MODIFICATION END (Ticket 1.5.12)
+
             } else if (this.#executionEnvironment === 'server') {
-                this.#logger.debug(`Adapter running in server-side mode for cloud service LLM '${configId}'.`);
-                let serverKeyRetrievalFailed = false; // Local flag for this block
+                this.#logger.debug(`Adapter running in server-side mode for cloud service LLM '${configId}'. Key will be retrieved directly.`);
+                let serverKeyRetrievalFailed = false;
 
                 if (apiKeyEnvVar && typeof apiKeyEnvVar === 'string' && apiKeyEnvVar.trim() !== '') {
                     this.#logger.debug(`ConfigurableLLMAdapter: Server-side - Attempting API key retrieval from env var: '${apiKeyEnvVar}' for LLM '${configId}'.`);
@@ -615,95 +662,98 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                     {llmId: configId}
                 );
             }
-        } else {
-            this.#logger.debug(`ConfigurableLLMAdapter: Active LLM '${configId}' is local. Direct API key handling is bypassed.`);
+        } else { // Not a cloud service (i.e., local)
+            this.#logger.debug(`ConfigurableLLMAdapter: Active LLM '${configId}' (apiType: ${apiType}) is local. Direct API key handling is bypassed. Direct call will be made.`);
+            // finalEndpointForRetry remains llmProviderEndpointUrl (set by default)
         }
 
 
         const promptPayloadContent = this._constructPromptPayload(gameSummary, promptFrame, apiType);
 
-        let finalPayload = {
+        // This is the payload intended for the actual LLM provider
+        const payloadForLLMProvider = {
             ...(defaultParameters && typeof defaultParameters === 'object' ? defaultParameters : {}),
             model: modelIdentifier,
             ...promptPayloadContent
         };
 
-        this.#logger.info(`ConfigurableLLMAdapter.generateAction: LLM '${configId}': Using JSON output strategy - ${currentStrategyMethod}.`);
+        this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: LLM '${configId}': Using JSON output strategy - ${currentStrategyMethod}.`);
 
+        // TODO: Implement strategy-specific payload modifications for payloadForLLMProvider
+        // The existing switch statement for currentStrategyMethod should modify payloadForLLMProvider
+        // This part is from the original code and needs to be filled in based on other tickets.
+        // For Ticket 1.5.11/1.5.12, we assume payloadForLLMProvider is correctly formed for the target LLM.
         switch (currentStrategyMethod) {
             case 'openrouter_json_schema':
-                this.#logger.debug(`ConfigurableLLMAdapter.generateAction: Preparing for 'openrouter_json_schema' strategy for LLM '${configId}'.`);
+                this.#logger.debug(`ConfigurableLLMAdapter.getAIDecision: Preparing for 'openrouter_json_schema' strategy for LLM '${configId}'.`);
                 if (apiType === 'openrouter') {
-                    this.#logger.info(`ConfigurableLLMAdapter.generateAction: TODO - Implement payload modification for 'openrouter_json_schema' strategy. Current payload:`, finalPayload);
+                    // Example: payloadForLLMProvider.response_format = { type: 'json_schema', json_schema: {...} };
+                    this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: TODO - Implement payload modification for 'openrouter_json_schema' strategy. Current payload:`, payloadForLLMProvider);
                 } else {
-                    this.#logger.warn(`ConfigurableLLMAdapter.generateAction: 'openrouter_json_schema' strategy selected for non-OpenRouter apiType '${apiType}' for LLM '${configId}'. This strategy might not apply. Proceeding as if 'prompt_engineering'.`);
+                    this.#logger.warn(`ConfigurableLLMAdapter.getAIDecision: 'openrouter_json_schema' strategy selected for non-OpenRouter apiType '${apiType}' for LLM '${configId}'. This strategy might not apply. Proceeding as if 'prompt_engineering'.`);
                 }
                 break;
-
+            // ... other cases for tool_calling, gbnf_grammar, native_json_mode ...
             case 'tool_calling':
-                this.#logger.debug(`ConfigurableLLMAdapter.generateAction: Preparing for 'tool_calling' strategy for LLM '${configId}'.`);
-                const toolName = jsonOutputStrategy?.toolName;
-                this.#logger.debug(`ConfigurableLLMAdapter.generateAction: Tool name from config for '${configId}': '${toolName}'.`);
-                this.#logger.info(`ConfigurableLLMAdapter.generateAction: TODO - Implement payload modification for 'tool_calling' strategy using toolName: '${toolName}' and apiType: '${apiType}'. Current payload:`, finalPayload);
-                break;
-
             case 'gbnf_grammar':
-                this.#logger.debug(`ConfigurableLLMAdapter.generateAction: Preparing for 'gbnf_grammar' strategy for LLM '${configId}'.`);
-                const grammar = jsonOutputStrategy?.grammar;
-                this.#logger.debug(`ConfigurableLLMAdapter.generateAction: Grammar from config for '${configId}': '${grammar}'.`);
-                this.#logger.info(`ConfigurableLLMAdapter.generateAction: TODO - Implement payload modification for 'gbnf_grammar' strategy using grammar (path/string): '${grammar}' and apiType: '${apiType}'. Current payload:`, finalPayload);
-                break;
-
             case 'native_json_mode':
-                this.#logger.debug(`ConfigurableLLMAdapter.generateAction: Preparing for 'native_json_mode' strategy for LLM '${configId}'.`);
-                this.#logger.info(`ConfigurableLLMAdapter.generateAction: TODO - Implement payload modification for 'native_json_mode' strategy based on apiType: '${apiType}'. Current payload:`, finalPayload);
-                break;
-
             case 'prompt_engineering':
             default:
-                this.#logger.debug(`ConfigurableLLMAdapter.generateAction: Using 'prompt_engineering' strategy for LLM '${configId}'. Payload constructed from promptFrame will be used mostly as-is.`);
+                this.#logger.debug(`ConfigurableLLMAdapter.getAIDecision: Strategy '${currentStrategyMethod}' for LLM '${configId}'. Payload constructed from promptFrame used. TODO: Implement specific logic if needed.`);
                 break;
         }
 
-        this.#logger.debug(`ConfigurableLLMAdapter: Constructed final payload for '${configId}' after strategy consideration:`, {
-            model: finalPayload.model,
-            defaultParameters: (defaultParameters && typeof defaultParameters === 'object' ? defaultParameters : {}),
-            promptContentPreview: finalPayload.messages ?
-                finalPayload.messages.map(m => ({
-                    role: m.role,
-                    content: typeof m.content === 'string' ? m.content.substring(0, 100) + (m.content.length > 100 ? '...' : '') : '[Non-string content]'
-                })) :
-                (finalPayload.prompt && typeof finalPayload.prompt === 'string' ? finalPayload.prompt.substring(0, 100) + (finalPayload.prompt.length > 100 ? '...' : '') : "N/A"),
-            response_format: finalPayload.response_format,
-            tools: finalPayload.tools,
-            tool_choice: finalPayload.tool_choice,
-            grammar: finalPayload.grammar
+        this.#logger.debug(`ConfigurableLLMAdapter: Constructed payload for LLM provider '${configId}' (before proxy consideration):`, {
+            payloadPreview: JSON.stringify(payloadForLLMProvider).substring(0, 200) + '...'
         });
 
 
-        const baseHeaders = {
-            'Content-Type': 'application/json'
-        };
+        if (callGoesToProxy) {
+            // finalEndpointForRetry is already set to this.#proxyServerUrl
+            const targetHeadersForProxyPayload = (providerSpecificHeaders && typeof providerSpecificHeaders === 'object' ? providerSpecificHeaders : {});
 
-        let finalHeaders = {
-            ...(providerSpecificHeaders && typeof providerSpecificHeaders === 'object' ? providerSpecificHeaders : {}),
-            ...baseHeaders
-        };
+            finalPayloadForRetry = {
+                llmId: configId,
+                targetPayload: payloadForLLMProvider,
+                targetHeaders: targetHeadersForProxyPayload
+            };
+            finalHeadersForRetry = {
+                'Content-Type': 'application/json'
+                // Authorization is NOT included in the request to the proxy by the client adapter
+            };
+            this.#logger.info(`ConfigurableLLMAdapter: Client-side call to cloud LLM '${configId}' will be routed through proxy: ${finalEndpointForRetry}.`);
+            this.#logger.debug("Proxy request payload:", {
+                llmId: finalPayloadForRetry.llmId,
+                targetPayloadKeys: Object.keys(finalPayloadForRetry.targetPayload),
+                targetHeaderKeys: Object.keys(finalPayloadForRetry.targetHeaders),
+            });
 
-        if (providerSpecificHeaders && typeof providerSpecificHeaders === 'object' && Object.keys(providerSpecificHeaders).length > 0) {
-            this.#logger.debug(`ConfigurableLLMAdapter: Applying providerSpecificHeaders for LLM '${configId}':`, providerSpecificHeaders);
-        } else {
-            this.#logger.debug(`ConfigurableLLMAdapter: No providerSpecificHeaders found or applicable for LLM '${configId}'.`);
+        } else { // Direct call (server-side or local LLM)
+            // finalEndpointForRetry remains llmProviderEndpointUrl
+            finalPayloadForRetry = payloadForLLMProvider;
+            const baseHeadersDirect = {'Content-Type': 'application/json'};
+            finalHeadersForRetry = {
+                ...(providerSpecificHeaders && typeof providerSpecificHeaders === 'object' ? providerSpecificHeaders : {}),
+                ...baseHeadersDirect
+            };
+
+            if (this.#executionEnvironment === 'server' && actualApiKeyForServer && isCloudService) {
+                finalHeadersForRetry['Authorization'] = `Bearer ${actualApiKeyForServer}`;
+                this.#logger.debug(`ConfigurableLLMAdapter: Server-side direct call to cloud LLM '${configId}'. Authorization header added.`);
+            } else if (isCloudService) { // Client-side trying direct call to cloud (should not happen if proxy logic is correct) or unknown env
+                this.#logger.warn(`ConfigurableLLMAdapter: Direct call to cloud service '${configId}' but API key handling might be misconfigured for current environment ('${this.#executionEnvironment}'). Authorization might be missing.`);
+            } else { // Local LLM
+                this.#logger.debug(`ConfigurableLLMAdapter: Direct call to local LLM '${configId}'. No Authorization header typically needed from adapter.`);
+            }
         }
 
-        if (this.#executionEnvironment === 'server' && actualApiKeyForServer) {
-            finalHeaders['Authorization'] = `Bearer ${actualApiKeyForServer}`;
-        } else if (this.#executionEnvironment === 'client' && isCloudService && apiKeyIdentifierForProxy) {
-            this.#logger.debug(`ConfigurableLLMAdapter: Client-side call to cloud service '${configId}'. Proxy will handle Authorization based on identifier type '${apiKeyIdentifierType}' and name '${apiKeyIdentifierForProxy}'.`);
-        } else if (isCloudService && this.#executionEnvironment !== 'server') { // Client or unknown, no server key
-            this.#logger.warn(`ConfigurableLLMAdapter: Making call to cloud service '${configId}' potentially without Authorization header. ExecutionEnv: ${this.#executionEnvironment}, ApiKeyIdentifierForProxy: ${apiKeyIdentifierForProxy}`);
-        }
-        this.#logger.debug(`ConfigurableLLMAdapter: Constructed final headers for '${configId}':`, finalHeaders);
+
+        this.#logger.debug(`ConfigurableLLMAdapter: Final parameters for Workspace_retry for '${configId}':`, {
+            endpoint: finalEndpointForRetry,
+            payloadKeys: finalPayloadForRetry ? Object.keys(finalPayloadForRetry) : 'N/A',
+            headerKeys: finalHeadersForRetry ? Object.keys(finalHeadersForRetry) : 'N/A',
+            isProxied: callGoesToProxy
+        });
 
 
         let rawLlmResponse;
@@ -713,13 +763,13 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
 
         try {
-            this.#logger.info(`ConfigurableLLMAdapter: Attempting API call to ${endpointUrl} for LLM '${configId}' using strategy '${currentStrategyMethod}'...`);
+            this.#logger.info(`ConfigurableLLMAdapter: Attempting API call to ${finalEndpointForRetry} for LLM '${configId}' (Strategy: '${currentStrategyMethod}', Proxied: ${callGoesToProxy})...`);
             rawLlmResponse = await Workspace_retry(
-                endpointUrl,
+                finalEndpointForRetry,
                 {
                     method: 'POST',
-                    headers: finalHeaders,
-                    body: JSON.stringify(finalPayload)
+                    headers: finalHeadersForRetry,
+                    body: JSON.stringify(finalPayloadForRetry)
                 },
                 retryMaxRetries,
                 retryBaseDelayMs,
@@ -727,24 +777,32 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             );
 
             const responsePreview = JSON.stringify(rawLlmResponse)?.substring(0, 200) + (JSON.stringify(rawLlmResponse)?.length > 200 ? '...' : '');
-            this.#logger.debug(`ConfigurableLLMAdapter: LLM API call successful for ${configId}. Response preview: ${responsePreview}`);
+            this.#logger.debug(`ConfigurableLLMAdapter: API call successful for ${configId}. Response preview: ${responsePreview}`);
 
-            return JSON.stringify(rawLlmResponse);
+            // Workspace_retry returns parsed JSON. The contract is to return a JSON string.
+            // This part might need review based on ILLMResponseProcessor expectations.
+            // For now, assuming it needs to be re-stringified if Workspace_retry already parsed.
+            // If Workspace_retry returns string, then no change needed.
+            // Based on apiUtils.js, Workspace_retry returns response.json(), so it's an object.
+            if (typeof rawLlmResponse === 'object') {
+                return JSON.stringify(rawLlmResponse);
+            }
+            return String(rawLlmResponse); // Fallback if not object, though not expected from Workspace_retry
+
 
         } catch (error) {
-            this.#logger.error(`ConfigurableLLMAdapter: LLM API call failed for ${configId} using strategy '${currentStrategyMethod}'. Endpoint: ${endpointUrl}. Error: ${error.message}`, {
+            this.#logger.error(`ConfigurableLLMAdapter: API call failed for ${configId} (Endpoint: ${finalEndpointForRetry}, Strategy: '${currentStrategyMethod}', Proxied: ${callGoesToProxy}). Error: ${error.message}`, {
                 llmId: configId,
-                endpoint: endpointUrl,
+                endpoint: finalEndpointForRetry,
                 strategy: currentStrategyMethod,
-                originalError: error
+                isProxied: callGoesToProxy,
+                originalError: error // Log the full error object for details from Workspace_retry
             });
-            // For API call failures after retries, the ticket mentions this is broader and handled by Workspace_retry throwing.
-            // However, if the goal is ultimate resilience *at this layer* for *any* failure to get a valid response before returning,
-            // one might consider also returning the stub here. But based on "More nuanced error propagation for API call attempts...
-            // will be handled by Workspace_retry logic", it seems throwing here is the intended behavior if the API call itself fails.
-            // The current ticket's scope is for *pre-call* critical failures.
-            // Therefore, if Workspace_retry throws, that error should propagate up.
-            throw error; // Re-throw error from Workspace_retry
+            // The error from Workspace_retry should be propagated up.
+            // If a fallback is desired here for API call failures, it would be:
+            // return this._getFallbackActionPromise(`API call failed for ${configId}: ${error.message}`, { originalError: error });
+            // However, current structure implies Workspace_retry errors propagate.
+            throw error;
         }
     }
 
@@ -799,6 +857,18 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     getProjectRootPath_FOR_TESTING_ONLY() {
         return this.#projectRootPath;
     }
+
+    // MODIFICATION START (Ticket 1.5.12)
+    /**
+     * Retrieves the configured proxy server URL.
+     * Primarily for testing or debugging purposes.
+     * @returns {string} The proxy server URL.
+     */
+    getProxyServerUrl_FOR_TESTING_ONLY() {
+        return this.#proxyServerUrl;
+    }
+
+    // MODIFICATION END (Ticket 1.5.12)
 }
 
 // --- FILE END ---
