@@ -175,3 +175,6 @@ cython_debug/
 
 # API Key Files for LLM Configurations
 *_api_key.txt
+
+# Private mods
+data/mods/onee

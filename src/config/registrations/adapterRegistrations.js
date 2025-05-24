@@ -1,4 +1,5 @@
 // src/core/config/registrations/adapterRegistrations.js
+// --- FILE START ---
 
 /**
  * @fileoverview Registers port adapter implementations with the DI container,
@@ -88,7 +89,9 @@ export function registerAdapters(container) { // Reverted to synchronous
             throw new Error(`Missing dispatcher dependency for EventBusTurnEndAdapter`);
         }
         return new EventBusTurnEndAdapter({
-            safeDispatcher: safeDispatcher,
+            // MODIFICATION START: Corrected property name from safeDispatcher to safeEventDispatcher
+            safeEventDispatcher: safeDispatcher,
+            // MODIFICATION END
             validatedEventDispatcher: validatedDispatcher,
             logger: logger
         });
@@ -197,3 +200,5 @@ export function registerAdapters(container) { // Reverted to synchronous
     logger.info('Adapter Registrations: LLM Adapter setup complete.');
     logger.info('Adapter Registrations: All registrations complete.');
 }
+
+// --- FILE END ---

@@ -17,7 +17,6 @@
     "actions": [
     ],
     "rules": [
-      "turn_started.rule.json",
       "player_turn_prompt.rule.json",
       "submit_command.rule.json",
       "command_parse_failed.rule.json",

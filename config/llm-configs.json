@@ -68,6 +68,50 @@
         "temperature": 1.0
       }
     },
+    "openrouter-anubis-pro-105b-v1": {
+      "id": "openrouter-anubis-pro-105b-v1",
+      "displayName": "Anubis Pro 105b-v1 (OpenRouter)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "thedrummer/anubis-pro-105b-v1",
+      "apiType": "openrouter",
+      "promptFrame": {
+        "system": "Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "My Text Adventure Game"
+      },
+      "jsonOutputStrategy": {
+        "method": "openrouter_json_schema"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      }
+    },
+    "openrouter-claude-sonnet-4": {
+      "id": "openrouter-claude-sonnet-4",
+      "displayName": "Claude Sonnet 4 (OpenRouter)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "anthropic/claude-sonnet-4",
+      "apiType": "openrouter",
+      "promptFrame": {
+        "system": "Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "My Text Adventure Game"
+      },
+      "jsonOutputStrategy": {
+        "method": "openrouter_json_schema"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      }
+    },
     "local-ollama-mistral": {
       "id": "local-ollama-mistral",
       "displayName": "Local Mistral (Ollama)",
