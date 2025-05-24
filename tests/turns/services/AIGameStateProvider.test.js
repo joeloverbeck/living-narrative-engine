@@ -8,7 +8,14 @@ import {
     DESCRIPTION_COMPONENT_ID,
     POSITION_COMPONENT_ID,
     EXITS_COMPONENT_ID,
-    PERCEPTION_LOG_COMPONENT_ID
+    PERCEPTION_LOG_COMPONENT_ID,
+    // Import other component IDs if tests for them are added to actorState
+    PERSONALITY_COMPONENT_ID,
+    PROFILE_COMPONENT_ID,
+    LIKES_COMPONENT_ID,
+    DISLIKES_COMPONENT_ID,
+    SECRETS_COMPONENT_ID,
+    SPEECH_PATTERNS_COMPONENT_ID
 } from '../../../src/constants/componentIds.js';
 
 // --- Mock Implementations ---
@@ -124,17 +131,10 @@ describe('AIGameStateProvider', () => {
             if (id === 'loc1') return minimalLocationEntity;
             return null;
         });
-        // Default to returning an empty Set
         entityManager.getEntitiesInLocation.mockResolvedValue(new Set());
         actionDiscoverySystem.getValidActions.mockResolvedValue([]);
 
         jest.spyOn(Date, 'now').mockReturnValue(1678886400000);
-
-        // Mock console methods only if truly necessary and if they are directly called by the tested code
-        // jest.spyOn(console, 'error').mockImplementation(() => {});
-        // jest.spyOn(console, 'warn').mockImplementation(() => {});
-        // jest.spyOn(console, 'info').mockImplementation(() => {});
-        // jest.spyOn(console, 'debug').mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -159,7 +159,7 @@ describe('AIGameStateProvider', () => {
 
             test('should throw error and log if actor has no ID', async () => {
                 const actorWithoutId = new MockEntity(null);
-                actorWithoutId.id = null;
+                actorWithoutId.id = null; // Explicitly set id to null
                 const expectedErrorMsg = "AIGameStateProvider: Actor is invalid or missing ID. Cannot build game state.";
                 await expect(provider.buildGameState(actorWithoutId, turnContext, logger))
                     .rejects
@@ -187,20 +187,21 @@ describe('AIGameStateProvider', () => {
                 const gameState = await provider.buildGameState(actor, turnContext, logger);
                 expect(gameState.actorState).toEqual({
                     id: 'actorTest',
-                    name: 'Test Actor Name',
-                    description: 'A brave test actor.',
+                    [NAME_COMPONENT_ID]: {text: 'Test Actor Name'},
+                    [DESCRIPTION_COMPONENT_ID]: {text: 'A brave test actor.'},
                 });
             });
 
             test('should use default name and description if components are missing data', async () => {
                 const actor = new MockEntity('actorNoName');
                 actor.setComponentData(POSITION_COMPONENT_ID, {locationId: 'loc1'});
+                // NAME_COMPONENT_ID and DESCRIPTION_COMPONENT_ID are missing
 
                 const gameState = await provider.buildGameState(actor, turnContext, logger);
                 expect(gameState.actorState).toEqual({
                     id: 'actorNoName',
-                    name: 'Unknown Name',
-                    description: 'No description available.',
+                    [NAME_COMPONENT_ID]: {text: 'Unknown Name'},
+                    [DESCRIPTION_COMPONENT_ID]: {text: 'No description available.'},
                 });
             });
 
@@ -213,8 +214,8 @@ describe('AIGameStateProvider', () => {
                 const gameState = await provider.buildGameState(actor, turnContext, logger);
                 expect(gameState.actorState).toEqual({
                     id: 'actorBadData',
-                    name: 'Unknown Name',
-                    description: 'No description available.',
+                    [NAME_COMPONENT_ID]: {text: 'Unknown Name'},
+                    [DESCRIPTION_COMPONENT_ID]: {text: 'No description available.'},
                 });
             });
 
@@ -227,8 +228,8 @@ describe('AIGameStateProvider', () => {
                 const gameState = await provider.buildGameState(actor, turnContext, logger);
                 expect(gameState.actorState).toEqual({
                     id: 'actorEmptyData',
-                    name: 'Unknown Name',
-                    description: 'No description available.',
+                    [NAME_COMPONENT_ID]: {text: 'Unknown Name'}, // Because '  ' trims to empty, then defaults
+                    [DESCRIPTION_COMPONENT_ID]: {text: 'No description available.'}, // Because '' is empty, then defaults
                 });
             });
 
@@ -241,8 +242,8 @@ describe('AIGameStateProvider', () => {
                 const gameState = await provider.buildGameState(actor, turnContext, logger);
                 expect(gameState.actorState).toEqual({
                     id: 'actorSpacedData',
-                    name: 'Spaced Name',
-                    description: 'Spaced Description',
+                    [NAME_COMPONENT_ID]: {text: 'Spaced Name'},
+                    [DESCRIPTION_COMPONENT_ID]: {text: 'Spaced Description'},
                 });
             });
 
@@ -252,7 +253,7 @@ describe('AIGameStateProvider', () => {
             });
 
             test('_getComponentText: should return default if getComponentData is not a function', () => {
-                const faultyEntity = {id: 'faulty'};
+                const faultyEntity = {id: 'faulty'}; // No getComponentData method
                 const result = provider._getComponentText(faultyEntity, NAME_COMPONENT_ID, 'Default Value');
                 expect(result).toBe('Default Value');
             });
@@ -282,7 +283,6 @@ describe('AIGameStateProvider', () => {
                     if (id === 'char1') return otherChar1;
                     return null;
                 });
-                // **FIX 1: Ensure mockResolvedValue returns a Set**
                 entityManager.getEntitiesInLocation.mockResolvedValue(new Set(['actor1', 'char1']));
             });
 
@@ -323,7 +323,7 @@ describe('AIGameStateProvider', () => {
             });
 
             test('EntityManager Unavailable: turnContext.getEntityManager is not a function', async () => {
-                turnContext.getEntityManager = undefined;
+                turnContext.getEntityManager = undefined; // or some non-function value
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.currentLocation).toBeNull();
                 expect(logger.warn).toHaveBeenCalledWith(`AIGameStateProvider: turnContext.getEntityManager is not a function for actor ${mockActor.id}. EntityManager not available.`);
@@ -339,15 +339,13 @@ describe('AIGameStateProvider', () => {
                 expect(logger.warn).toHaveBeenCalledWith(`AIGameStateProvider: Error accessing EntityManager for actor ${mockActor.id}: ${error.message}`);
             });
 
+
             test('Location Entity Not Found: entityManager.getEntityInstance(locationId) returns null', async () => {
                 entityManager.getEntityInstance.mockImplementation(async (id) => {
-                    if (id === 'loc1') return null; // Location not found
-                    if (id === 'char1') return otherChar1; // Character still found for other tests if needed
+                    if (id === 'loc1') return null;
+                    if (id === 'char1') return otherChar1;
                     return null;
                 });
-                // Ensure getEntitiesInLocation still returns something for the loop to run,
-                // even if the location entity itself isn't found later by getEntityInstance.
-                // This setup might be slightly artificial but tests the specific path.
                 entityManager.getEntitiesInLocation.mockResolvedValue(new Set(['actor1']));
 
 
@@ -359,7 +357,7 @@ describe('AIGameStateProvider', () => {
             test('Location Missing Components: Name and Description use defaults', async () => {
                 locationEntity.removeComponent(NAME_COMPONENT_ID);
                 locationEntity.removeComponent(DESCRIPTION_COMPONENT_ID);
-                entityManager.getEntitiesInLocation.mockResolvedValue(new Set(['actor1'])); // No other chars for simplicity
+                entityManager.getEntitiesInLocation.mockResolvedValue(new Set(['actor1']));
 
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.currentLocation).toEqual(expect.objectContaining({
@@ -378,8 +376,8 @@ describe('AIGameStateProvider', () => {
                 test('Malformed exit entries are filtered out', async () => {
                     locationEntity.setComponentData(EXITS_COMPONENT_ID, [
                         {direction: 'north', target: 'locN'},
-                        {target: 'locE_no_dir'}, // Malformed: no direction
-                        {direction: 'south'},      // Malformed: no target
+                        {target: 'locE_no_dir'},
+                        {direction: 'south'},
                         {direction: 'west', target: 'locW'}
                     ]);
                     const gameState = await provider.buildGameState(mockActor, turnContext, logger);
@@ -392,7 +390,7 @@ describe('AIGameStateProvider', () => {
 
             describe('Characters Handling', () => {
                 test('No other characters in location', async () => {
-                    entityManager.getEntitiesInLocation.mockResolvedValue(new Set(['actor1'])); // Only self
+                    entityManager.getEntitiesInLocation.mockResolvedValue(new Set(['actor1']));
                     const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                     expect(gameState.currentLocation.characters).toEqual([]);
                 });
@@ -401,12 +399,11 @@ describe('AIGameStateProvider', () => {
                     entityManager.getEntitiesInLocation.mockResolvedValue(new Set(['actor1', 'charNonExistent']));
                     entityManager.getEntityInstance.mockImplementation(async (id) => {
                         if (id === 'loc1') return locationEntity;
-                        if (id === 'charNonExistent') return null; // This char cannot be retrieved
+                        if (id === 'charNonExistent') return null;
                         return null;
                     });
                     const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                     expect(gameState.currentLocation.characters).toEqual([]);
-                    // **FIX 2: Expect logger.warn instead of logger.debug**
                     expect(logger.warn).toHaveBeenCalledWith("AIGameStateProvider: Could not retrieve entity instance for ID 'charNonExistent' in location 'loc1'. This entity will NOT be listed.");
                 });
             });
@@ -443,7 +440,7 @@ describe('AIGameStateProvider', () => {
             test('should populate actions with defaults for missing optional fields', async () => {
                 const rawActions = [
                     {id: 'action1', command: 'cmd1', name: 'Action One', description: 'Desc One'},
-                    {id: 'action2', command: 'cmd2'}, // Missing name and description
+                    {id: 'action2', command: 'cmd2'},
                 ];
                 actionDiscoverySystem.getValidActions.mockResolvedValue(rawActions);
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
@@ -467,8 +464,12 @@ describe('AIGameStateProvider', () => {
             test('should call ADS.getValidActions with correctly structured actionCtx', async () => {
                 mockActor.setComponentData(POSITION_COMPONENT_ID, {locationId: 'actorCurrentLoc'});
                 const currentLocEntity = new MockEntity('actorCurrentLoc', {[NAME_COMPONENT_ID]: {text: 'Current Place'}});
-                entityManager.getEntityInstance.mockImplementation(async (id) => (id === 'actorCurrentLoc' ? currentLocEntity : null));
-                entityManager.getEntitiesInLocation.mockResolvedValue(new Set()); // Ensure it's a set
+                // Ensure this mock handles the specific ID 'actorCurrentLoc'
+                entityManager.getEntityInstance.mockImplementation(async (id) => {
+                    if (id === 'actorCurrentLoc') return currentLocEntity;
+                    return null; // Default for other IDs
+                });
+                entityManager.getEntitiesInLocation.mockResolvedValue(new Set());
                 actionDiscoverySystem.getValidActions.mockResolvedValue([]);
 
                 await provider.buildGameState(mockActor, turnContext, logger);
@@ -493,25 +494,29 @@ describe('AIGameStateProvider', () => {
             });
 
             test('should return empty perceptionLog if actor has no PERCEPTION_LOG_COMPONENT_ID', async () => {
-                mockActor.hasComponent.mockImplementation(id => id !== PERCEPTION_LOG_COMPONENT_ID && mockActor._presentComponents.has(id));
+                // Modify the mockActor's hasComponent directly for this test
+                const originalHasComponent = mockActor.hasComponent;
+                mockActor.hasComponent = jest.fn(id => id !== PERCEPTION_LOG_COMPONENT_ID && originalHasComponent.call(mockActor, id));
+
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.perceptionLog).toEqual([]);
                 expect(logger.info).toHaveBeenCalledWith(`AIGameStateProvider: Actor ${mockActor.id} does not have a '${PERCEPTION_LOG_COMPONENT_ID}' component. No perception log included.`);
+                mockActor.hasComponent = originalHasComponent; // Restore original
             });
 
             test('should return empty perceptionLog if logEntries are missing from component data', async () => {
-                const perceptionData = {};
+                const perceptionData = {}; // No logEntries array
                 mockActor.setComponentData(PERCEPTION_LOG_COMPONENT_ID, perceptionData);
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.perceptionLog).toEqual([]);
             });
 
             test('should populate perceptionLog with defaults for missing fields in entries', async () => {
-                const frozenTime = Date.now(); // Will be 1678886400000 due to mock
+                const frozenTime = Date.now();
                 const perceptionData = {
                     logEntries: [
                         {descriptionText: 'Heard a noise.', timestamp: 12345, perceptionType: 'sound'},
-                        {descriptionText: 'Saw something.'}, // Missing timestamp and type
+                        {descriptionText: 'Saw something.'},
                     ]
                 };
                 mockActor.setComponentData(PERCEPTION_LOG_COMPONENT_ID, perceptionData);
@@ -524,12 +529,14 @@ describe('AIGameStateProvider', () => {
 
             test('should return empty perceptionLog and log error if actor.getComponentData throws for perception log', async () => {
                 const error = new Error("Perception data read error");
-                mockActor.setComponentData(PERCEPTION_LOG_COMPONENT_ID, {});
-                mockActor.getComponentData.mockImplementation((componentId) => {
-                    if (componentId === POSITION_COMPONENT_ID) return {locationId: 'loc1'};
+                // Ensure hasComponent returns true for PERCEPTION_LOG_COMPONENT_ID
+                mockActor.setComponentData(PERCEPTION_LOG_COMPONENT_ID, {}); // Add the component so hasComponent is true
+                const originalGetComponentData = mockActor.getComponentData;
+                mockActor.getComponentData = jest.fn((componentId) => {
                     if (componentId === PERCEPTION_LOG_COMPONENT_ID) throw error;
-                    return undefined;
+                    return originalGetComponentData.call(mockActor, componentId); // Call original for other components
                 });
+
 
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.perceptionLog).toEqual([]);
@@ -537,6 +544,7 @@ describe('AIGameStateProvider', () => {
                     `AIGameStateProvider: Error retrieving perception log for actor ${mockActor.id}: ${error.message}`,
                     {error}
                 );
+                mockActor.getComponentData = originalGetComponentData; // Restore
             });
         });
 
@@ -544,7 +552,12 @@ describe('AIGameStateProvider', () => {
             let mockActorStateDTO, mockLocationSummaryDTO, mockAvailableActionsDTO, mockPerceptionLogDTO;
 
             beforeEach(() => {
-                mockActorStateDTO = {id: mockActor.id, name: 'Mock Actor', description: 'A mock actor.'};
+                // This mock DTO should reflect the *new* structure for actorState
+                mockActorStateDTO = {
+                    id: mockActor.id,
+                    [NAME_COMPONENT_ID]: {text: 'Mock Actor'},
+                    [DESCRIPTION_COMPONENT_ID]: {text: 'A mock actor.'}
+                };
                 mockLocationSummaryDTO = {
                     name: 'Mock Location',
                     description: 'A mock place.',
@@ -583,7 +596,7 @@ describe('AIGameStateProvider', () => {
                 provider._buildLocationSummary.mockResolvedValue(null);
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.currentLocation).toBeNull();
-                expect(provider._getAvailableActions).toHaveBeenCalledWith(mockActor, turnContext, null, logger);
+                expect(provider._getAvailableActions).toHaveBeenCalledWith(mockActor, turnContext, null, logger); // Check that null is passed
                 expect(gameState.actorState).toEqual(mockActorStateDTO);
                 expect(gameState.availableActions).toEqual(mockAvailableActionsDTO);
                 expect(gameState.perceptionLog).toEqual(mockPerceptionLogDTO);
@@ -593,20 +606,35 @@ describe('AIGameStateProvider', () => {
                 provider._getAvailableActions.mockResolvedValue([]);
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.availableActions).toEqual([]);
+                // Ensure other parts are still populated
+                expect(gameState.actorState).toEqual(mockActorStateDTO);
+                expect(gameState.currentLocation).toEqual(mockLocationSummaryDTO);
+                expect(gameState.perceptionLog).toEqual(mockPerceptionLogDTO);
             });
 
             test('should populate other DTO parts if _getPerceptionLog returns an empty array', async () => {
                 provider._getPerceptionLog.mockResolvedValue([]);
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.perceptionLog).toEqual([]);
+                // Ensure other parts are still populated
+                expect(gameState.actorState).toEqual(mockActorStateDTO);
+                expect(gameState.currentLocation).toEqual(mockLocationSummaryDTO);
+                expect(gameState.availableActions).toEqual(mockAvailableActionsDTO);
             });
 
             test('should still call other helpers even if _buildActorState had an issue (though current _buildActorState doesnt throw)', async () => {
-                const partialActorState = {id: mockActor.id, name: "Default Name", description: "Default Desc"};
+                // Reflect new structure for a potentially "partially" built state
+                const partialActorState = {
+                    id: mockActor.id,
+                    [NAME_COMPONENT_ID]: {text: "Default Name"},
+                    [DESCRIPTION_COMPONENT_ID]: {text: "Default Desc"}
+                };
                 provider._buildActorState.mockReturnValue(partialActorState);
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.actorState).toEqual(partialActorState);
                 expect(gameState.currentLocation).toEqual(mockLocationSummaryDTO);
+                expect(gameState.availableActions).toEqual(mockAvailableActionsDTO);
+                expect(gameState.perceptionLog).toEqual(mockPerceptionLogDTO);
             });
         });
     });

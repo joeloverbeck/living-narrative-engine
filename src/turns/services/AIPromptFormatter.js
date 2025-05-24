@@ -13,6 +13,18 @@ import {IAIPromptFormatter} from '../interfaces/IAIPromptFormatter.js';
 // MODIFICATION: LLM_TURN_ACTION_SCHEMA imported is now the modified one (without resolvedParameters)
 import {LLM_TURN_ACTION_SCHEMA} from '../schemas/llmOutputSchemas.js';
 
+// Import component IDs
+import {
+    NAME_COMPONENT_ID,
+    DESCRIPTION_COMPONENT_ID,
+    PERSONALITY_COMPONENT_ID,
+    PROFILE_COMPONENT_ID,
+    LIKES_COMPONENT_ID,
+    DISLIKES_COMPONENT_ID,
+    SECRETS_COMPONENT_ID,
+    SPEECH_PATTERNS_COMPONENT_ID
+} from '../../constants/componentIds.js'; // Assuming path to componentIds.js
+
 /**
  * @class AIPromptFormatter
  * @implements {IAIPromptFormatter_Interface}
@@ -45,18 +57,72 @@ export class AIPromptFormatter extends IAIPromptFormatter {
     _formatCharacterSegment(gameState, logger) {
         logger.debug("AIPromptFormatter: Formatting character segment.");
         const {actorState} = gameState;
+
         if (!actorState) {
             logger.warn("AIPromptFormatter: Character details (actorState) are unknown.");
             return "Your character details are unknown.";
         }
-        const name = actorState.name || "Unnamed Character";
-        let description = actorState.description || "No description available";
-        // Ensure the description text ends with appropriate terminal punctuation
+
+        const characterInfo = [];
+
+        // Name (from core:name component)
+        const nameComponent = actorState[NAME_COMPONENT_ID];
+        const name = (nameComponent && nameComponent.text) ? nameComponent.text : "Unnamed Character";
+        characterInfo.push(`You are ${name}.`);
+
+        // Description (from core:description component)
+        const descriptionComponent = actorState[DESCRIPTION_COMPONENT_ID];
+        let description = (descriptionComponent && descriptionComponent.text) ? descriptionComponent.text : "No description available.";
         if (!/[.!?]$/.test(description.trim())) {
             description += '.';
         }
-        // Return without adding an extra period, as 'description' now handles its own punctuation.
-        return `You are ${name}. Your character description: ${description}`;
+        characterInfo.push(`Description: ${description}`);
+
+        // Personality (from core:personality component)
+        const personalityComponent = actorState[PERSONALITY_COMPONENT_ID];
+        if (personalityComponent && typeof personalityComponent.text === 'string' && personalityComponent.text.trim() !== '') {
+            characterInfo.push(`Personality: ${personalityComponent.text.trim()}`);
+        }
+
+        // Profile (from core:profile component)
+        const profileComponent = actorState[PROFILE_COMPONENT_ID];
+        if (profileComponent && typeof profileComponent.text === 'string' && profileComponent.text.trim() !== '') {
+            characterInfo.push(`Profile: ${profileComponent.text.trim()}`);
+        }
+
+        // Likes (from core:likes component)
+        const likesComponent = actorState[LIKES_COMPONENT_ID];
+        if (likesComponent && typeof likesComponent.text === 'string' && likesComponent.text.trim() !== '') {
+            characterInfo.push(`Likes: ${likesComponent.text.trim()}`);
+        }
+
+        // Dislikes (from core:dislikes component)
+        const dislikesComponent = actorState[DISLIKES_COMPONENT_ID];
+        if (dislikesComponent && typeof dislikesComponent.text === 'string' && dislikesComponent.text.trim() !== '') {
+            characterInfo.push(`Dislikes: ${dislikesComponent.text.trim()}`);
+        }
+
+        // Secrets (from core:secrets component)
+        const secretsComponent = actorState[SECRETS_COMPONENT_ID];
+        if (secretsComponent && typeof secretsComponent.text === 'string' && secretsComponent.text.trim() !== '') {
+            characterInfo.push(`Secrets: ${secretsComponent.text.trim()}`);
+        }
+
+        // Speech Patterns (from core:speech_patterns component)
+        const speechPatternsComponent = actorState[SPEECH_PATTERNS_COMPONENT_ID];
+        if (speechPatternsComponent && Array.isArray(speechPatternsComponent.patterns) && speechPatternsComponent.patterns.length > 0) {
+            const validPatterns = speechPatternsComponent.patterns.filter(p => typeof p === 'string' && p.trim() !== '');
+            if (validPatterns.length > 0) {
+                characterInfo.push(`Speech Patterns:\n- ${validPatterns.join('\n- ')}`);
+            }
+        }
+
+        if (characterInfo.length === 0) { // Should not happen if name is always present
+            logger.warn("AIPromptFormatter: No character information could be formatted.");
+            return "Your character details are minimal or unknown.";
+        }
+
+        return characterInfo.join('\n');
     }
 
     _formatLocationSegment(gameState, logger) {

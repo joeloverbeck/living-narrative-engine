@@ -14,7 +14,13 @@
       "name.component.json",
       "description.component.json",
       "exits.component.json",
-      "perception_log.component.json"
+      "perception_log.component.json",
+      "personality.component.json",
+      "profile.component.json",
+      "likes.component.json",
+      "dislikes.component.json",
+      "secrets.component.json",
+      "speech_patterns.component.json"
     ],
     "characters": [
     ],

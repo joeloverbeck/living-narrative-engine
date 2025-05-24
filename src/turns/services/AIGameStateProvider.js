@@ -19,7 +19,13 @@ import {
     DESCRIPTION_COMPONENT_ID,
     POSITION_COMPONENT_ID,
     EXITS_COMPONENT_ID,
-    PERCEPTION_LOG_COMPONENT_ID
+    PERCEPTION_LOG_COMPONENT_ID,
+    PERSONALITY_COMPONENT_ID,
+    PROFILE_COMPONENT_ID,
+    LIKES_COMPONENT_ID,
+    DISLIKES_COMPONENT_ID,
+    SECRETS_COMPONENT_ID,
+    SPEECH_PATTERNS_COMPONENT_ID
 } from "../../constants/componentIds.js";
 
 /**
@@ -37,6 +43,8 @@ export class AIGameStateProvider extends IAIGameStateProvider {
             return defaultValue;
         }
         const componentData = entity.getComponentData(componentId);
+        // Safely access propertyPath, assuming it's simple like 'text'
+        // For deeply nested paths, a more robust getter would be needed.
         const value = componentData?.[propertyPath];
         if (typeof value === 'string' && value.trim() !== '') {
             return value.trim();
@@ -46,11 +54,58 @@ export class AIGameStateProvider extends IAIGameStateProvider {
 
     _buildActorState(actor, logger) {
         logger.debug(`AIGameStateProvider: Building actor state for ${actor.id}`);
-        return {
+        const actorState = {
             id: actor.id,
-            name: this._getComponentText(actor, NAME_COMPONENT_ID, 'Unknown Name'),
-            description: this._getComponentText(actor, DESCRIPTION_COMPONENT_ID, 'No description available.'),
         };
+
+        // Mandatory: Name and Description
+        // Stored as { text: "value" } under their component ID, used by AIPromptFormatter
+        actorState[NAME_COMPONENT_ID] = {
+            text: this._getComponentText(actor, NAME_COMPONENT_ID, 'Unknown Name')
+        };
+        actorState[DESCRIPTION_COMPONENT_ID] = {
+            text: this._getComponentText(actor, DESCRIPTION_COMPONENT_ID, 'No description available.')
+        };
+
+        // Conditional text-based components
+        const conditionalTextComponents = [
+            PERSONALITY_COMPONENT_ID,
+            PROFILE_COMPONENT_ID,
+            LIKES_COMPONENT_ID,
+            DISLIKES_COMPONENT_ID,
+            SECRETS_COMPONENT_ID,
+        ];
+
+        for (const componentId of conditionalTextComponents) {
+            const textValue = this._getComponentText(actor, componentId, null); // Use null to check for existence
+            if (textValue !== null) {
+                actorState[componentId] = {text: textValue};
+                logger.debug(`AIGameStateProvider: Added component '${componentId}' to actor state for ${actor.id}.`);
+            } else {
+                logger.debug(`AIGameStateProvider: Component '${componentId}' not found or has no text for actor ${actor.id}. Not adding to actor state.`);
+            }
+        }
+
+        // Conditional SPEECH_PATTERNS_COMPONENT_ID (expects a different structure)
+        if (actor.hasComponent(SPEECH_PATTERNS_COMPONENT_ID)) {
+            const speechData = actor.getComponentData(SPEECH_PATTERNS_COMPONENT_ID);
+            if (speechData && Array.isArray(speechData.patterns) && speechData.patterns.length > 0) {
+                // Filter out any non-string or empty patterns, as AIPromptFormatter expects valid strings
+                const validPatterns = speechData.patterns.filter(p => typeof p === 'string' && p.trim() !== '');
+                if (validPatterns.length > 0) {
+                    actorState[SPEECH_PATTERNS_COMPONENT_ID] = {...speechData, patterns: validPatterns};
+                    logger.debug(`AIGameStateProvider: Added component '${SPEECH_PATTERNS_COMPONENT_ID}' with ${validPatterns.length} valid patterns to actor state for ${actor.id}.`);
+                } else {
+                    logger.debug(`AIGameStateProvider: Component '${SPEECH_PATTERNS_COMPONENT_ID}' found for actor ${actor.id}, but it has no valid, non-empty string patterns. Not adding to actor state.`);
+                }
+            } else {
+                logger.debug(`AIGameStateProvider: Component '${SPEECH_PATTERNS_COMPONENT_ID}' data for actor ${actor.id} is missing 'patterns' array or it's empty. Not adding to actor state.`);
+            }
+        } else {
+            logger.debug(`AIGameStateProvider: Component '${SPEECH_PATTERNS_COMPONENT_ID}' not found for actor ${actor.id}. Not adding to actor state.`);
+        }
+
+        return actorState;
     }
 
     async _buildLocationSummary(actor, turnContext, logger) {

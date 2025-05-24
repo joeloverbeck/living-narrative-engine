@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:personality",
+  "description": "Stores the character's personality traits, typically as a delimited string.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "text"
+    ],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "A string listing personality traits (e.g., 'intelligent + witty + candid')."
+      }
+    }
+  }
+}

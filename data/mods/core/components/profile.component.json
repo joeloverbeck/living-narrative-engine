@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:profile",
+  "description": "Stores a detailed textual profile or background of the character.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "text"
+    ],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "A comprehensive textual profile of the character."
+      }
+    }
+  }
+}
