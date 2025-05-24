@@ -1,6 +1,6 @@
 // src/llms/strategies/OpenRouterJsonSchemaStrategy.js
 // --- UPDATED FILE START ---
-import {BaseChatLLMStrategy} from './base/BaseChatLLMStrategy.js';
+import {BaseChatLLMStrategy} from './base/baseChatLLMStrategy.js';
 import {ILLMStrategy} from '../interfaces/ILLMStrategy.js'; // Assuming ILLMStrategy is a class for type checking
 import {LLMStrategyError} from '../errors/LLMStrategyError.js';
 import {ConfigurationError} from '../../turns/adapters/configurableLLMAdapter.js'; // Adjust path if ConfigurationError is moved
@@ -75,16 +75,13 @@ export class OpenRouterJsonSchemaStrategy extends BaseChatLLMStrategy {
 
         // 3. JSON Schema Definition
         const responseFormat = {
-            type: "json_schema",
-            json_schema: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA // Constant from llmConstants.js
+            type: "json_schema", json_schema: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA // Constant from llmConstants.js
         };
         this.logger.debug(`OpenRouterJsonSchemaStrategy (${llmId}): Using response_format with schema: ${OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name}`); //
 
         // 4. Request Payload Construction
         const providerRequestPayload = {
-            ...(llmConfig.defaultParameters || {}),
-            model: llmConfig.modelIdentifier,
-            ...baseMessagesPayload, // Contains { messages: [...] }
+            ...(llmConfig.defaultParameters || {}), model: llmConfig.modelIdentifier, ...baseMessagesPayload, // Contains { messages: [...] }
             response_format: responseFormat
         };
         this.logger.debug(`OpenRouterJsonSchemaStrategy (${llmId}): Assembled provider request payload.`);
@@ -93,28 +90,19 @@ export class OpenRouterJsonSchemaStrategy extends BaseChatLLMStrategy {
         let targetUrl = llmConfig.endpointUrl;
         let finalPayload = providerRequestPayload;
         const headers = {
-            'Content-Type': 'application/json',
-            ...(llmConfig.providerSpecificHeaders || {})
+            'Content-Type': 'application/json', ...(llmConfig.providerSpecificHeaders || {})
         };
 
         // 6. Proxy Handling
-        if (environmentContext.isClient()) { //
-            targetUrl = environmentContext.getProxyServerUrl(); //
-            // Construct proxy payload. Structure assumed based on typical proxy needs.
-            // Ticket 11 would define this structure more concretely.
+        if (environmentContext.isClient()) {
+            targetUrl = environmentContext.getProxyServerUrl(); // http://localhost:3001/api/llm-request
+            // Construct proxy payload ACCORDING TO THE API CONTRACT:
             finalPayload = {
-                targetLlmConfig: { // Configuration details the proxy might need
-                    endpointUrl: llmConfig.endpointUrl,
-                    modelIdentifier: llmConfig.modelIdentifier,
-                    apiType: llmConfig.apiType,
-                    apiKeyEnvVar: llmConfig.apiKeyEnvVar, // For proxy to fetch key
-                    apiKeyFileName: llmConfig.apiKeyFileName, // For proxy to fetch key
-                    providerSpecificHeaders: llmConfig.providerSpecificHeaders // Proxy might need to pass these on
-                },
-                llmRequestPayload: providerRequestPayload // The original payload for the LLM
+                llmId: llmConfig.id,                         // The ID of the LLM configuration
+                targetPayload: providerRequestPayload,       // The payload for the downstream LLM
+                targetHeaders: llmConfig.providerSpecificHeaders || {} // Headers for the downstream LLM
             };
-            this.logger.info(`OpenRouterJsonSchemaStrategy (${llmId}): Client-side execution. Using proxy URL: ${targetUrl}`);
-            // Authorization header is NOT set by client strategy; proxy handles it.
+            this.logger.info(`OpenRouterJsonSchemaStrategy (${llmId}): Client-side execution. Using proxy URL: ${targetUrl}. Payload prepared according to API contract.`);
         } else { // Server-side or other non-client environments
             if (apiKey) {
                 headers['Authorization'] = `Bearer ${apiKey}`;
@@ -133,9 +121,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseChatLLMStrategy {
             // 7. API Call
             this.logger.debug(`OpenRouterJsonSchemaStrategy (${llmId}): Making API call to '${targetUrl}'. Payload length: ${JSON.stringify(finalPayload)?.length}`);
             responseData = await this.#httpClient.request(targetUrl, { //
-                method: 'POST',
-                headers,
-                body: JSON.stringify(finalPayload)
+                method: 'POST', headers, body: JSON.stringify(finalPayload)
             });
             this.logger.debug(`OpenRouterJsonSchemaStrategy (${llmId}): Raw API response received. Preview: ${JSON.stringify(responseData)?.substring(0, 250)}...`);
 
@@ -165,13 +151,8 @@ export class OpenRouterJsonSchemaStrategy extends BaseChatLLMStrategy {
                 if (extractedJsonString === null && message.tool_calls && Array.isArray(message.tool_calls) && message.tool_calls.length > 0) {
                     this.logger.info(`OpenRouterJsonSchemaStrategy (${llmId}): message.content not usable, attempting tool_calls fallback.`);
                     const toolCall = message.tool_calls[0];
-                    if (
-                        toolCall?.type === "function" &&
-                        toolCall.function?.name === OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name && //
-                        toolCall.function?.arguments &&
-                        typeof toolCall.function.arguments === 'string' &&
-                        toolCall.function.arguments.trim() !== ''
-                    ) {
+                    if (toolCall?.type === "function" && toolCall.function?.name === OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name && //
+                        toolCall.function?.arguments && typeof toolCall.function.arguments === 'string' && toolCall.function.arguments.trim() !== '') {
                         extractedJsonString = toolCall.function.arguments.trim();
                         this.logger.info(`OpenRouterJsonSchemaStrategy (${llmId}): Extracted JSON string from tool_calls fallback (function: ${toolCall.function.name}).`);
                     } else {
@@ -211,8 +192,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseChatLLMStrategy {
                 const errorMsg = `OpenRouterJsonSchemaStrategy (${llmId}): An unexpected error occurred during API call or response processing for endpoint '${targetUrl}'. Message: ${error.message}`;
                 this.logger.error(errorMsg, {originalError: error});
                 finalError = new LLMStrategyError(errorMsg, llmId, error, {
-                    requestUrl: targetUrl,
-                    payloadPreview: JSON.stringify(providerRequestPayload)?.substring(0, 200)
+                    requestUrl: targetUrl, payloadPreview: JSON.stringify(providerRequestPayload)?.substring(0, 200)
                 }); //
             }
             throw finalError;

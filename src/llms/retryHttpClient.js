@@ -251,7 +251,7 @@ export class RetryHttpClient extends IHttpClient {
 
             try {
                 this.#logger.debug(`RetryHttpClient.request: Attempt ${currentAttempt} of ${this.#defaultMaxRetries + 1} to ${url}.`);
-                const response = await Workspace(url, options); // Global Workspace call
+                const response = await fetch(url, options);
 
                 if (response.ok) {
                     this.#logger.info(`RetryHttpClient.request: Successful response (status ${response.status}) from ${url} on attempt ${currentAttempt}.`);

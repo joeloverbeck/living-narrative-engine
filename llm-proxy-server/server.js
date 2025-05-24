@@ -6,14 +6,14 @@ import express from 'express';
 import dotenv from 'dotenv';
 import * as path from 'node:path'; // For resolving config path
 import {fileURLToPath} from 'node:url'; // For __dirname in ES modules
-// MODIFICATION: Import cors middleware (Ticket 1.5.8)
 import cors from 'cors';
 
-// MODIFICATION: Import the new proxy LLM config loader
 import {loadProxyLlmConfigs} from './proxyLlmConfigLoader.js';
-// MODIFICATION: Import the API key file retriever utility (adjust path as necessary)
 import {getApiKeyFromFile} from './utils/proxyApiKeyFileRetriever.js';
 import {Workspace_retry} from './utils/proxyApiUtils.js';
+
+// MODIFICATION: Import NodeFileSystemReader
+import {NodeFileSystemReader} from './NodeFileSystemReader.js'; // Adjust path if necessary
 
 // Load environment variables from .env file
 dotenv.config();
@@ -28,20 +28,11 @@ const proxyLogger = console; // Using console as a simple logger for the proxy
 if (PROXY_ALLOWED_ORIGIN) {
     proxyLogger.info(`LLM Proxy Server: CORS will be enabled for origin: ${PROXY_ALLOWED_ORIGIN}`);
     const corsOptions = {
-        origin: PROXY_ALLOWED_ORIGIN.split(','), // Allow multiple origins if comma-separated
-        methods: ['POST', 'OPTIONS'], // Allow POST and OPTIONS for preflight
-        allowedHeaders: ['Content-Type'], // Allow Content-Type header
-        // Add any other custom headers your client might send to the proxy here.
-        // credentials: true, // If you need to handle cookies or authorization headers from the client
+        origin: PROXY_ALLOWED_ORIGIN.split(','),
+        methods: ['POST', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'X-Title', 'HTTP-Referer'],
     };
     app.use(cors(corsOptions));
-    // The cors middleware by default handles OPTIONS requests implicitly.
-    // Logging for actual CORS preflight can be verbose; specific logging if issues arise can be added.
-    // For now, the setup log is the primary CORS logging.
-    // Example: app.options('/api/llm-request', (req, res, next) => {
-    // proxyLogger.debug("LLM Proxy Server: Received OPTIONS preflight request for /api/llm-request");
-    // next();
-    // }, cors(corsOptions));
 } else {
     proxyLogger.warn('LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set. CORS will not be specifically configured, and requests from different origins might be blocked by default browser policies.');
 }
@@ -52,22 +43,21 @@ if (PROXY_ALLOWED_ORIGIN) {
 app.use(express.json());
 
 // Define the port for the server
-// Use the port from environment variables, or default to 3001
 const PORT = process.env.PROXY_PORT || 3001;
 
 // MODIFICATION START: Configuration Loading
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Path to llm-configs.json, relative to the proxy server's execution directory (server.js)
-const LLM_CONFIG_FILE_PATH = process.env.LLM_CONFIG_PATH || path.join(__dirname, 'llm-configs.json');
+const LLM_CONFIG_FILE_PATH = process.env.LLM_CONFIG_PATH || path.join(__dirname, '../config/llm-configs.json');
 
 let loadedLlmConfigs = null;
 let isProxyOperational = false;
-// const proxyLogger = console; // Already defined above
 
-// Task 1: Determine projectRootPath for Proxy (for apiKeyFileName)
-const PROXY_PROJECT_ROOT_PATH = process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES; // Corrected to match .env.example
+// MODIFICATION: Instantiate NodeFileSystemReader
+const fileSystemReader = new NodeFileSystemReader();
+
+const PROXY_PROJECT_ROOT_PATH = process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES;
 if (PROXY_PROJECT_ROOT_PATH) {
     proxyLogger.info(`LLM Proxy Server: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is set to '${PROXY_PROJECT_ROOT_PATH}'. This will be used for API key file retrieval.`);
 } else {
@@ -76,15 +66,25 @@ if (PROXY_PROJECT_ROOT_PATH) {
 
 
 (async () => {
-    proxyLogger.info('LLM Proxy Server: Initializing and loading configurations...'); // [cite: 1211] (Covers "Configuration Loading" point from ticket indirectly at startup)
-    const configResult = await loadProxyLlmConfigs(LLM_CONFIG_FILE_PATH, proxyLogger);
+    proxyLogger.info('LLM Proxy Server: Initializing and loading configurations...');
+    // MODIFICATION: Pass fileSystemReader to loadProxyLlmConfigs (will be shown in next step)
+    // For now, assuming loadProxyLlmConfigs will also be updated.
+    // If we only focus on getApiKeyFromFile for this step, this call remains unchanged until proxyLlmConfigLoader is updated.
+    // const configResult = await loadProxyLlmConfigs(LLM_CONFIG_FILE_PATH, proxyLogger);
+    // For this chunk, we'll assume loadProxyLlmConfigs is updated in the next step.
+    // The instantiation of fileSystemReader is relevant for getApiKeyFromFile.
+
+    // Placeholder for config loading logic that will also use fileSystemReader
+    // This will be detailed when we modify proxyLlmConfigLoader.js
+    const configResult = await loadProxyLlmConfigs(LLM_CONFIG_FILE_PATH, proxyLogger, fileSystemReader);
+
 
     if (!configResult.error) {
         loadedLlmConfigs = configResult.llmConfigs;
         isProxyOperational = true;
-        proxyLogger.info(`LLM Proxy Server: Configurations loaded successfully. Proxy is operational. Default LLM ID (if any): ${loadedLlmConfigs?.defaultLlmId || 'Not set'}`); // [cite: 1211]
+        proxyLogger.info(`LLM Proxy Server: Configurations loaded successfully. Proxy is operational. Default LLM ID (if any): ${loadedLlmConfigs?.defaultLlmId || 'Not set'}`);
     } else {
-        proxyLogger.error('LLM Proxy Server: CRITICAL ERROR - Failed to load LLM configurations.', { // [cite: 1211, 1212]
+        proxyLogger.error('LLM Proxy Server: CRITICAL ERROR - Failed to load LLM configurations.', {
             message: configResult.message,
             stage: configResult.stage,
             path: configResult.pathAttempted,
@@ -97,37 +97,24 @@ if (PROXY_PROJECT_ROOT_PATH) {
 
 // MODIFICATION END: Configuration Loading
 
-/**
- * Helper function to send standardized error responses from the proxy.
- * @param {import('express').Response} res - The Express response object.
- * @param {number} httpStatusCode - The HTTP status code to send to the client.
- * @param {string} stage - The stage where the error occurred (enum from API contract).
- * @param {string} errorMessage - The human-readable error message.
- * @param {object} [details={}] - Additional structured details about the error.
- * @param {string} [llmIdForLog='N/A'] - The llmId involved, for logging context.
- */
 function sendProxyError(res, httpStatusCode, stage, errorMessage, details = {}, llmIdForLog = 'N/A') {
     const errorResponse = {
         error: true,
         message: errorMessage,
         stage: stage,
         details: details,
-        originalStatusCode: httpStatusCode // This is the code the proxy sends
+        originalStatusCode: httpStatusCode
     };
-    // Log the error with context before sending the response [cite: 1212]
     proxyLogger.error(`LLM Proxy Server: Sending error to client. LLM ID: ${llmIdForLog}, Status: ${httpStatusCode}, Stage: ${stage}, Message: ${errorMessage}`, details);
     res.status(httpStatusCode).json(errorResponse);
 }
 
 
-// Basic root route for testing if the server is running
 app.get('/', (req, res) => {
     res.status(200).send('LLM Proxy Server is running!');
 });
 
-// MODIFICATION START: Main proxy route from Ticket 1.5.3, with API key retrieval (Ticket 1.5.5), and now request forwarding (Ticket 1.5.6) and response relaying (Ticket 1.5.7)
-app.post('/api/llm-request', async (req, res) => { // Made async for file operations and Workspace_retry
-    // Incoming Request Logging [cite: 1210]
+app.post('/api/llm-request', async (req, res) => {
     const clientPayloadSummary = {
         llmId: req.body?.llmId,
         hasTargetPayload: !!req.body?.targetPayload,
@@ -145,7 +132,6 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
 
     const {llmId, targetPayload, targetHeaders} = req.body;
 
-    // --- Request Validation (as per LLM_PROXY_API_CONTRACT.md) ---
     if (!llmId || typeof llmId !== 'string') {
         sendProxyError(res, 400, 'request_validation', 'Client request validation failed: llmId is required and must be a string.', {receivedLlmId: llmId});
         return;
@@ -154,32 +140,27 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
         sendProxyError(res, 400, 'request_validation', `Client request validation failed for llmId '${llmId}': targetPayload is required and must be an object.`, {receivedTargetPayloadType: typeof targetPayload}, llmId);
         return;
     }
-    // --- End Request Validation ---
 
-
-    // --- LLM Detail Retrieval ---
     const llmModelConfig = loadedLlmConfigs?.llms?.[llmId];
 
     if (!llmModelConfig) {
-        proxyLogger.warn(`LLM Proxy Server: LLM configuration lookup failed for llmId '${llmId}'.`); // Part of LLM Detail Retrieval logging
+        proxyLogger.warn(`LLM Proxy Server: LLM configuration lookup failed for llmId '${llmId}'.`);
         sendProxyError(res, 400, 'llm_config_lookup_error', `LLM configuration not found for the provided llmId '${llmId}'.`, {requestedLlmId: llmId}, llmId);
         return;
     }
 
-    // LLM Detail Retrieval Logging (Success)
     proxyLogger.info(`LLM Proxy Server: Retrieved LLMModelConfig for llmId '${llmId}': DisplayName: ${llmModelConfig.displayName}`);
     proxyLogger.debug(`LLM Proxy Server: Config details for '${llmId}':`, {
         endpointUrl: llmModelConfig.endpointUrl,
         modelIdentifier: llmModelConfig.modelIdentifier,
-        apiKeyEnvVar: llmModelConfig.apiKeyEnvVar ? 'Present' : 'Not Present', // Don't log the var name if it could be sensitive due to naming conventions
-        apiKeyFileName: llmModelConfig.apiKeyFileName ? 'Present' : 'Not Present', // Don't log the file name directly if it could be sensitive
+        apiKeyEnvVar: llmModelConfig.apiKeyEnvVar ? 'Present' : 'Not Present',
+        apiKeyFileName: llmModelConfig.apiKeyFileName ? 'Present' : 'Not Present',
         apiType: llmModelConfig.apiType,
     });
 
-    // --- API Key Retrieval Logic (Ticket 1.5.5) ---
     let actualApiKey = null;
     let apiKeyRetrievalErrorDetails = null;
-    let apiKeySourceForLog = "N/A"; // For logging the source of the key
+    let apiKeySourceForLog = "N/A";
 
     const localApiTypes = ['ollama', 'llama_cpp_server_openai_compatible', 'tgi_openai_compatible'];
     const isCloudServiceRequiringKey = !localApiTypes.includes(llmModelConfig.apiType);
@@ -191,23 +172,23 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
         if (apiKeyEnvVar && typeof apiKeyEnvVar === 'string' && apiKeyEnvVar.trim() !== '') {
             const envVarName = apiKeyEnvVar.trim();
             apiKeySourceForLog = `environment variable '${envVarName}'`;
-            proxyLogger.debug(`LLM Proxy Server: Attempting to retrieve key from ${apiKeySourceForLog} for llmId '${llmId}'.`); // API Key Retrieval attempt
+            proxyLogger.debug(`LLM Proxy Server: Attempting to retrieve key from ${apiKeySourceForLog} for llmId '${llmId}'.`);
             const envValue = process.env[envVarName];
             if (envValue && typeof envValue === 'string' && envValue.trim() !== '') {
                 actualApiKey = envValue.trim();
-                proxyLogger.info(`LLM Proxy Server: Successfully retrieved API key for llmId '${llmId}' via ${apiKeySourceForLog}.`); // API Key Retrieval success
+                proxyLogger.info(`LLM Proxy Server: Successfully retrieved API key for llmId '${llmId}' via ${apiKeySourceForLog}.`);
             } else {
-                proxyLogger.warn(`LLM Proxy Server: Environment variable '${envVarName}' for llmId '${llmId}' not found or is empty.`); // API Key Retrieval failure (specific)
+                proxyLogger.warn(`LLM Proxy Server: Environment variable '${envVarName}' for llmId '${llmId}' not found or is empty.`);
             }
         }
 
         if (!actualApiKey && apiKeyFileName && typeof apiKeyFileName === 'string' && apiKeyFileName.trim() !== '') {
             const fileName = apiKeyFileName.trim();
             apiKeySourceForLog = `file '${fileName}'`;
-            proxyLogger.debug(`LLM Proxy Server: Attempting to retrieve key from ${apiKeySourceForLog} for llmId '${llmId}'.`); // API Key Retrieval attempt
+            proxyLogger.debug(`LLM Proxy Server: Attempting to retrieve key from ${apiKeySourceForLog} for llmId '${llmId}'.`);
 
             if (!PROXY_PROJECT_ROOT_PATH) {
-                proxyLogger.error(`LLM Proxy Server: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES environment variable is not set for the proxy. Cannot retrieve API key from file '${fileName}' for llmId '${llmId}'.`); // API Key Retrieval failure
+                proxyLogger.error(`LLM Proxy Server: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES environment variable is not set for the proxy. Cannot retrieve API key from file '${fileName}' for llmId '${llmId}'.`);
                 apiKeyRetrievalErrorDetails = {
                     message: `Proxy server configuration error: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES not set, cannot access API key file '${fileName}'.`,
                     stage: 'api_key_retrieval_error',
@@ -219,13 +200,14 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
                 };
             } else {
                 try {
-                    const keyFromFile = await getApiKeyFromFile(fileName, PROXY_PROJECT_ROOT_PATH, proxyLogger);
+                    // MODIFICATION: Pass the fileSystemReader instance to getApiKeyFromFile
+                    const keyFromFile = await getApiKeyFromFile(fileName, PROXY_PROJECT_ROOT_PATH, proxyLogger, fileSystemReader);
                     if (keyFromFile && typeof keyFromFile === 'string' && keyFromFile.trim() !== '') {
                         actualApiKey = keyFromFile.trim();
-                        proxyLogger.info(`LLM Proxy Server: Successfully retrieved API key for llmId '${llmId}' via ${apiKeySourceForLog}.`); // API Key Retrieval success
+                        proxyLogger.info(`LLM Proxy Server: Successfully retrieved API key for llmId '${llmId}' via ${apiKeySourceForLog}.`);
                     } else {
-                        proxyLogger.warn(`LLM Proxy Server: API key file '${fileName}' for llmId '${llmId}' not found, unreadable, or empty.`); // API Key Retrieval failure (specific)
-                        if (!apiKeyEnvVar || apiKeyEnvVar.trim() === '') { // Only file was specified
+                        proxyLogger.warn(`LLM Proxy Server: API key file '${fileName}' for llmId '${llmId}' not found, unreadable, or empty.`);
+                        if (!apiKeyEnvVar || apiKeyEnvVar.trim() === '') {
                             apiKeyRetrievalErrorDetails = {
                                 message: `Failed to retrieve API key from file '${fileName}' for cloud LLM '${llmId}'. File not found or empty.`,
                                 stage: 'api_key_retrieval_error',
@@ -235,7 +217,7 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
                                     reason: "File not found, unreadable, or empty"
                                 }
                             };
-                        } else { // Both env var and file were tried, and env var failed first
+                        } else {
                             apiKeyRetrievalErrorDetails = {
                                 message: `Failed to retrieve API key for cloud LLM '${llmId}' from env var '${apiKeyEnvVar.trim()}' and file '${fileName}'. Both methods failed.`,
                                 stage: 'api_key_retrieval_error',
@@ -254,7 +236,7 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
                             message: fileReadError.message,
                             stack: fileReadError.stack
                         }
-                    }); // API Key Retrieval failure [cite: 1212, 1213]
+                    });
                     apiKeyRetrievalErrorDetails = {
                         message: `Error reading API key file '${fileName}'.`,
                         stage: 'api_key_retrieval_error',
@@ -263,21 +245,19 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
                 }
             }
         }
-        // Final check if key was retrieved if it was supposed to be
         if (!actualApiKey && !apiKeyRetrievalErrorDetails) {
             const attemptedSources = [];
             if (apiKeyEnvVar && apiKeyEnvVar.trim() !== '') attemptedSources.push(`environment variable '${apiKeyEnvVar.trim()}'`);
             if (apiKeyFileName && apiKeyFileName.trim() !== '') attemptedSources.push(`file '${apiKeyFileName.trim()}'`);
 
             if (attemptedSources.length === 0) {
-                proxyLogger.error(`LLM Proxy Server: No API key source (apiKeyEnvVar or apiKeyFileName) specified in configuration for cloud LLM '${llmId}'.`); // API Key Retrieval failure
+                proxyLogger.error(`LLM Proxy Server: No API key source (apiKeyEnvVar or apiKeyFileName) specified in configuration for cloud LLM '${llmId}'.`);
                 apiKeyRetrievalErrorDetails = {
                     message: `API key source not configured for cloud LLM '${llmId}'. Proxy cannot authenticate.`,
                     stage: 'api_key_retrieval_error',
                     details: {llmId, reason: "No apiKeyEnvVar or apiKeyFileName defined in LLM configuration."}
                 };
             } else if (apiKeyEnvVar && apiKeyEnvVar.trim() !== '' && (!apiKeyFileName || apiKeyFileName.trim() === '')) {
-                // This means only env var was specified and it failed (was empty or not found)
                 apiKeyRetrievalErrorDetails = {
                     message: `Failed to retrieve API key for cloud LLM '${llmId}' from environment variable '${apiKeyEnvVar.trim()}'. Env var not found or empty.`,
                     stage: 'api_key_retrieval_error',
@@ -296,7 +276,7 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
     }
 
     if (isCloudServiceRequiringKey && !actualApiKey) {
-        const errorResponseBase = apiKeyRetrievalErrorDetails || { // Default if somehow not set
+        const errorResponseBase = apiKeyRetrievalErrorDetails || {
             message: `Critical error: API key for cloud service LLM '${llmId}' could not be obtained.`,
             stage: 'api_key_retrieval_error',
             details: {llmId, reason: "Unknown key retrieval failure."}
@@ -304,9 +284,7 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
         sendProxyError(res, 500, errorResponseBase.stage, errorResponseBase.message, errorResponseBase.details, llmId);
         return;
     }
-    // --- End API Key Retrieval Logic ---
 
-    // --- Ticket 1.5.6 & 1.5.7: Forward Request and Relay Response ---
     const actualLlmEndpointUrl = llmModelConfig.endpointUrl;
     if (!actualLlmEndpointUrl || typeof actualLlmEndpointUrl !== 'string' || actualLlmEndpointUrl.trim() === '') {
         sendProxyError(res, 500, 'llm_endpoint_resolution_error', `Proxy server configuration error: LLM endpoint URL is missing or invalid for llmId '${llmId}'.`, {
@@ -317,7 +295,7 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
     }
 
     const finalHeadersForLLM = {};
-    finalHeadersForLLM['Content-Type'] = 'application/json'; // Default
+    finalHeadersForLLM['Content-Type'] = 'application/json';
 
     if (targetHeaders && typeof targetHeaders === 'object') {
         for (const key in targetHeaders) {
@@ -336,7 +314,7 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
     }
 
     if (isCloudServiceRequiringKey && actualApiKey) {
-        finalHeadersForLLM['Authorization'] = `Bearer ${actualApiKey}`; // DO NOT LOG actualApiKey
+        finalHeadersForLLM['Authorization'] = `Bearer ${actualApiKey}`;
     }
 
     const retryParams = llmModelConfig.defaultParameters || {};
@@ -344,7 +322,6 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
     const baseDelayMs = typeof retryParams.baseDelayMs === 'number' ? retryParams.baseDelayMs : 1000;
     const maxDelayMs = typeof retryParams.maxDelayMs === 'number' ? retryParams.maxDelayMs : 10000;
 
-    // Outbound Request Construction Logging [cite: 1211]
     const sanitizedTargetPayloadForLog = {...targetPayload};
     if (sanitizedTargetPayloadForLog.messages && Array.isArray(sanitizedTargetPayloadForLog.messages)) {
         sanitizedTargetPayloadForLog.messages = sanitizedTargetPayloadForLog.messages.map(m => ({
@@ -354,7 +331,6 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
     } else if (typeof sanitizedTargetPayloadForLog.prompt === 'string') {
         sanitizedTargetPayloadForLog.prompt = sanitizedTargetPayloadForLog.prompt.substring(0, 70) + (sanitizedTargetPayloadForLog.prompt.length > 70 ? '...' : '');
     }
-    // Further sanitization for other potentially sensitive fields if necessary
 
     proxyLogger.info(`LLM Proxy Server: Preparing to forward request to LLM provider for llmId '${llmId}'.`);
     proxyLogger.debug(`   Target URL: ${actualLlmEndpointUrl}`);
@@ -364,7 +340,6 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
 
 
     try {
-        // Outbound Request Attempt Logging [cite: 1213]
         proxyLogger.info(`LLM Proxy Server: Initiating call via Workspace_retry to ${actualLlmEndpointUrl} for llmId '${llmId}'. Retries: ${maxRetries}, BaseDelay: ${baseDelayMs}ms, MaxDelay: ${maxDelayMs}ms.`);
 
         const llmProviderParsedResponse = await Workspace_retry(
@@ -372,39 +347,32 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
             {
                 method: 'POST',
                 headers: finalHeadersForLLM,
-                body: JSON.stringify(targetPayload) // Send the original full targetPayload
+                body: JSON.stringify(targetPayload)
             },
             maxRetries,
             baseDelayMs,
             maxDelayMs
         );
 
-        // Successful LLM Response Relaying (AC 1)
-        // Workspace_retry currently only returns the parsed body, so we assume 200 OK.
-        const relayedStatusCode = 200; // Assumption due to Workspace_retry behavior
-
-        // Outbound Response Received & Response Relayed to Client Logging
+        const relayedStatusCode = 200;
         const responseBodyPreview = JSON.stringify(llmProviderParsedResponse)?.substring(0, 100) + (JSON.stringify(llmProviderParsedResponse)?.length > 100 ? "..." : "");
-        proxyLogger.info(`LLM Proxy Server: Successfully received response from LLM provider for llmId '${llmId}'. Relaying to client with status ${relayedStatusCode}.`); // [cite: 1211]
+        proxyLogger.info(`LLM Proxy Server: Successfully received response from LLM provider for llmId '${llmId}'. Relaying to client with status ${relayedStatusCode}.`);
         proxyLogger.debug(`   LLM Provider Response Body (Preview): ${responseBodyPreview}`);
 
-
         res.status(relayedStatusCode)
-            .set('Content-Type', 'application/json') // Assuming LLM response is JSON
+            .set('Content-Type', 'application/json')
             .json(llmProviderParsedResponse);
 
     } catch (error) {
-        // LLM Provider Error Relaying (AC 2) or Network Error from Workspace_retry
-        // This also covers "Outbound Response Received" (as an error)
-        proxyLogger.error(`LLM Proxy Server: Error during/after forwarding request to LLM provider for llmId '${llmId}'. Error: ${error.message}`); // [cite: 1211, 1212]
+        proxyLogger.error(`LLM Proxy Server: Error during/after forwarding request to LLM provider for llmId '${llmId}'. Error: ${error.message}`);
         proxyLogger.debug(`   Target URL was: ${actualLlmEndpointUrl}`);
-        proxyLogger.debug(`   Error Details:`, {name: error.name, message: error.message, stack: error.stack}); // [cite: 1212]
+        proxyLogger.debug(`   Error Details:`, {name: error.name, message: error.message, stack: error.stack});
 
-        let relayedStatusCode = 500; // Default for unexpected errors from Workspace_retry
-        let relayedBody = { // Default error body if we can't parse from Workspace_retry's error
+        let relayedStatusCode = 500;
+        let relayedBody = {
             error: true,
             message: `Proxy failed to get response from LLM provider: ${error.message}`,
-            stage: 'llm_forwarding_error_network', // Default, can be updated
+            stage: 'llm_forwarding_error_network',
             details: {
                 llmId,
                 targetUrl: actualLlmEndpointUrl,
@@ -414,28 +382,24 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
         let errorStage = 'llm_forwarding_error_network';
 
         if (error.message && typeof error.message === 'string') {
-            // Attempt to parse status and body from Workspace_retry's error message format:
-            // "API request to ${url} failed ... with status ${response.status}: ${errorBodyText}"
             const match = error.message.match(/status (\d{3}):\s*(.*)/s);
             if (match && match[1] && match[2]) {
                 const llmApiStatus = parseInt(match[1], 10);
                 const llmErrorBodyString = match[2];
 
-                relayedStatusCode = llmApiStatus; // Relay exact status from LLM
+                relayedStatusCode = llmApiStatus;
                 try {
-                    relayedBody = JSON.parse(llmErrorBodyString); // Try to parse if LLM error body was JSON
+                    relayedBody = JSON.parse(llmErrorBodyString);
                 } catch (parseErr) {
-                    relayedBody = llmErrorBodyString; // Send as plain text if not JSON
+                    relayedBody = llmErrorBodyString;
                     proxyLogger.warn(`LLM Proxy Server: LLM error body for status ${llmApiStatus} was not JSON. Relaying as text. Body preview: ${llmErrorBodyString.substring(0, 100)}...`);
                 }
 
                 if (llmApiStatus >= 400 && llmApiStatus < 500) {
                     errorStage = 'llm_forwarding_error_http_client';
                 } else if (llmApiStatus >= 500 && llmApiStatus < 600) {
-                    // For 5xx from LLM, proxy might return 502 Bad Gateway.
-                    relayedStatusCode = 502; // Override status for client
+                    relayedStatusCode = 502;
                     errorStage = 'llm_forwarding_error_http_server';
-                    // Re-wrap the body in the standard proxy error format if we are changing the status code
                     const relayedBodyPreview = typeof relayedBody === 'string' ? relayedBody.substring(0, 100) + "..." : JSON.stringify(relayedBody)?.substring(0, 100) + "...";
                     relayedBody = {
                         error: true,
@@ -451,23 +415,18 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
                 }
                 proxyLogger.info(`LLM Proxy Server: Relaying error from LLM provider. Original LLM Status: ${llmApiStatus}. Proxy sending status: ${relayedStatusCode}.`);
             } else {
-                // If message doesn't match the expected format, it's likely a network error from Workspace_retry
                 proxyLogger.warn(`LLM Proxy Server: Error message from Workspace_retry did not match expected LLM HTTP error format. Treating as network/generic forwarding error. Message: ${error.message}`);
             }
         }
-        // Logging for the final decision on what to send to client
-        // This also covers "Response Relayed to Client" (as an error)
         const bodyPreviewForLog = typeof relayedBody === 'string' ? relayedBody.substring(0, 100) + "..." : JSON.stringify(relayedBody)?.substring(0, 100) + "...";
         proxyLogger.error(`LLM Proxy Server: Relaying error to client for llmId '${llmId}'. Status: ${relayedStatusCode}, Stage: ${errorStage}, Body Preview: ${bodyPreviewForLog}`);
 
-
-        // Determine Content-Type for error response
         let contentType = 'application/json';
         if (typeof relayedBody === 'string') {
             try {
-                JSON.parse(relayedBody); // Check if it's a JSON string
+                JSON.parse(relayedBody);
             } catch (e) {
-                contentType = 'text/plain'; // If not a JSON string, send as plain text
+                contentType = 'text/plain';
             }
         }
 
@@ -475,16 +434,12 @@ app.post('/api/llm-request', async (req, res) => { // Made async for file operat
             .set('Content-Type', contentType)
             .send(relayedBody);
     }
-    // --- End Ticket 1.5.6 & 1.5.7 ---
 });
-// MODIFICATION END: Main proxy route
 
-
-// Start the server
 app.listen(PORT, () => {
     proxyLogger.info(`LLM Proxy Server listening on port ${PORT}`);
-    proxyLogger.info(`LLM Proxy Server: Expecting LLM configurations at: ${LLM_CONFIG_FILE_PATH}`);
-    if (PROXY_ALLOWED_ORIGIN) { // MODIFICATION (Ticket 1.5.8)
+    proxyLogger.info(`LLM Proxy Server: Expecting LLM configurations at: ${path.resolve(__dirname, LLM_CONFIG_FILE_PATH)} (can be overridden by LLM_CONFIG_PATH env var)`);
+    if (PROXY_ALLOWED_ORIGIN) {
         proxyLogger.info(`LLM Proxy Server: CORS enabled for origin(s): ${PROXY_ALLOWED_ORIGIN}`);
     } else {
         proxyLogger.warn('LLM Proxy Server: PROXY_ALLOWED_ORIGIN not set, CORS is not specifically configured.');
@@ -511,9 +466,7 @@ app.listen(PORT, () => {
     }
 });
 
-// Global Error Handler (Refinement for AC 3.4 and Task 2.3)
 app.use((err, req, res, next) => {
-    // Log the unhandled error with stack trace [cite: 1212]
     proxyLogger.error('LLM Proxy Server: Unhandled error caught by generic middleware:', {
         message: err.message,
         stack: err.stack,
@@ -523,7 +476,6 @@ app.use((err, req, res, next) => {
     if (res.headersSent) {
         return next(err);
     }
-    // Use the sendProxyError helper to ensure schema adherence
     sendProxyError(res, 500, 'internal_proxy_error', 'An unexpected internal server error occurred in the proxy.', {originalErrorMessage: err.message});
 });
 

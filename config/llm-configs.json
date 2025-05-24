@@ -1,35 +1,92 @@
 {
-  "defaultLlmId": "openrouter-claude3-haiku",
+  "defaultLlmId": "openrouter-qwen3-235b-a22b",
   "llms": {
     "openrouter-claude3-haiku": {
       "id": "openrouter-claude3-haiku",
       "displayName": "Claude 3 Haiku (OpenRouter)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
       "apiKeyFileName": "openrouter_api_key.txt",
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "anthropic/claude-3-haiku-20240307",
-      "apiType": "openrouter"
+      "apiType": "openrouter",
+      "promptFrame": {
+        "system": "You are a helpful AI assistant for a text adventure game. Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "My Text Adventure Game"
+      },
+      "jsonOutputStrategy": {
+        "method": "openrouter_json_schema"
+      },
+      "defaultParameters": {
+        "temperature": 0.7,
+        "max_tokens": 250
+      }
+    },
+    "openrouter-qwen3-235b-a22b": {
+      "id": "openrouter-qwen3-235b-a22b",
+      "displayName": "Qwen3-235b-a22b (OpenRouter)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "qwen/qwen3-235b-a22b",
+      "apiType": "openrouter",
+      "promptFrame": {
+        "system": "You are a helpful AI assistant for a text adventure game. Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "My Text Adventure Game"
+      },
+      "jsonOutputStrategy": {
+        "method": "openrouter_json_schema"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      }
     },
     "local-ollama-mistral": {
       "id": "local-ollama-mistral",
       "displayName": "Local Mistral (Ollama)",
       "endpointUrl": "http://localhost:11434/api/chat",
       "modelIdentifier": "mistral",
-      "apiType": "ollama"
+      "apiType": "ollama",
+      "jsonOutputStrategy": {
+        "method": "native_json_mode"
+      },
+      "defaultParameters": {
+        "temperature": 0.5
+      }
     },
     "openai-gpt-4o": {
       "id": "openai-gpt-4o",
       "displayName": "OpenAI GPT-4o",
-      "apiKeyFileName": "openai_api_key.txt",
+      "apiKeyEnvVar": "OPENAI_API_KEY_PROXY_ENV",
       "endpointUrl": "https://api.openai.com/v1/chat/completions",
       "modelIdentifier": "gpt-4o",
-      "apiType": "openai"
+      "apiType": "openai",
+      "promptFrame": {
+        "system": "You are a helpful AI assistant for a text adventure game. Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema, using the specified tool if available."
+      },
+      "jsonOutputStrategy": {
+        "method": "tool_calling",
+        "toolName": "get_game_character_action_speech"
+      },
+      "defaultParameters": {
+        "temperature": 0.6
+      }
     },
     "local-llama-cpp-server": {
       "id": "local-llama-cpp-server",
       "displayName": "Local Llama.cpp Server (OpenAI Compatible)",
       "endpointUrl": "http://localhost:8080/v1/chat/completions",
       "modelIdentifier": "local-model-gguf-name",
-      "apiType": "llama_cpp_server_openai_compatible"
+      "apiType": "llama_cpp_server_openai_compatible",
+      "jsonOutputStrategy": {
+        "method": "gbnf_grammar",
+        "grammar": "./grammars/action_speech.gbnf"
+      }
     }
   }
 }

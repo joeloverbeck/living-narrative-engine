@@ -1,7 +1,7 @@
 // tests/llms/strategies/base/BaseChatLLMStrategy.test.js
 // --- UPDATED FILE START ---
 
-import {BaseChatLLMStrategy} from '../../../../src/llms/strategies/base/BaseChatLLMStrategy.js'; // Adjusted path to match your provided test file
+import {BaseChatLLMStrategy} from '../../../../src/llms/strategies/base/baseChatLLMStrategy.js'; // Adjusted path to match your provided test file
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 
 // Mock Logger

@@ -5,7 +5,7 @@ import {ILLMStrategy} from '../interfaces/ILLMStrategy.js';
 import {LLMStrategyError} from '../errors/LLMStrategyError.js'; // Assuming this custom error exists
 // Assuming constants are moved to a shared file as per Ticket 18
 import {OPENAI_TOOL_NAME, GAME_AI_ACTION_SPEECH_TOOL_PARAMETERS_SCHEMA} from '../constants/llmConstants.js'; // Adjust path as needed
-import {BaseChatLLMStrategy} from './base/BaseChatLLMStrategy.js'; // For prompt construction logic
+import {BaseChatLLMStrategy} from './base/baseChatLLMStrategy.js'; // For prompt construction logic
 
 /**
  * @typedef {import('../interfaces/IHttpClient.js').IHttpClient} IHttpClient

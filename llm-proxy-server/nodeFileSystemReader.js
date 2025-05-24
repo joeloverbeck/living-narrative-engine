@@ -1,8 +1,8 @@
-// src/utils/NodeFileSystemReader.js
+// llm-proxy-server/NodeFileSystemReader.js
 // --- NEW FILE START ---
 
 import * as fs from 'node:fs/promises';
-import {IFileSystemReader} from '../interfaces/IServerUtils.js'; // Adjust path as needed
+import {IFileSystemReader} from './interfaces/IServerUtils.js'; // Adjust path as needed
 
 /**
  * @class NodeFileSystemReader

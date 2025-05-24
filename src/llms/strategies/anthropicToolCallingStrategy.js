@@ -8,7 +8,7 @@ import {
     GAME_AI_ACTION_SPEECH_TOOL_PARAMETERS_SCHEMA,
     DEFAULT_ANTHROPIC_VERSION
 } from '../constants/llmConstants.js';
-import {BaseChatLLMStrategy} from './base/BaseChatLLMStrategy.js';
+import {BaseChatLLMStrategy} from './base/baseChatLLMStrategy.js';
 
 /**
  * @typedef {import('../interfaces/IHttpClient.js').IHttpClient} IHttpClient

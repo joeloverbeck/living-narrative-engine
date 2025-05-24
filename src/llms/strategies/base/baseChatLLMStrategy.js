@@ -1,7 +1,7 @@
 // src/llms/strategies/base/BaseChatLLMStrategy.js
 // --- FILE START ---
 
-import {BaseLLMStrategy} from './BaseLLMStrategy.js'; // Assuming PascalCase for BaseLLMStrategy.js
+import {BaseLLMStrategy} from './baseLLMStrategy.js'; // Assuming PascalCase for BaseLLMStrategy.js
 
 /**
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger

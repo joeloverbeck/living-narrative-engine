@@ -1,11 +1,11 @@
 // src/llms/strategies/defaultPromptEngineeringStrategy.js
 // --- FILE START ---
 
-import {BaseLLMStrategy} from './base/BaseLLMStrategy.js';
+import {BaseLLMStrategy} from './base/baseLLMStrategy.js';
 import {LLMStrategyError} from '../errors/LLMStrategyError.js';
 import {ConfigurationError} from '../../turns/adapters/configurableLLMAdapter.js'; // Assuming this is the correct path
-import {BaseChatLLMStrategy} from './base/BaseChatLLMStrategy.js';
-import {BaseCompletionLLMStrategy} from './base/BaseCompletionLLMStrategy.js';
+import {BaseChatLLMStrategy} from './base/baseChatLLMStrategy.js';
+import {BaseCompletionLLMStrategy} from './base/baseCompletionLLMStrategy.js';
 import {CLOUD_API_TYPES} from '../constants/llmConstants.js';
 
 /**

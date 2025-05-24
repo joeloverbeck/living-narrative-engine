@@ -5,31 +5,29 @@ import {OpenRouterJsonSchemaStrategy} from '../../../src/llms/strategies/openRou
 import {LLMStrategyError} from '../../../src/llms/errors/LLMStrategyError.js';
 import {ConfigurationError} from '../../../src/turns/adapters/configurableLLMAdapter.js'; // Path based on SUT
 import {OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA} from '../../../src/llms/constants/llmConstants.js';
-import {BaseChatLLMStrategy} from '../../../src/llms/strategies/base/baseChatLLMStrategy.js'; // Import the actual class
+import {BaseChatLLMStrategy} from '../../../src/llms/strategies/base/baseChatLLMStrategy.js';
 import {afterEach, beforeEach, describe, expect, it, jest} from "@jest/globals";
-
-// DO NOT mock BaseChatLLMStrategy here: jest.mock('../../../src/llms/strategies/base/baseChatLLMStrategy.js');
 
 describe('OpenRouterJsonSchemaStrategy', () => {
     let mockHttpClient;
     let mockLogger;
     let mockEnvironmentContext;
     let strategy;
-    let constructPromptPayloadSpy; // To hold the spy
+    let constructPromptPayloadSpy;
 
     const mockGameSummary = "Current game state for OpenRouter.";
     const mockApiKey = "test-openrouter-api-key";
 
     const baseLlmConfig = {
         id: 'openrouter-test-llm',
-        endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+        endpointUrl: 'https://openrouter.ai/api/v1/chat/completions', // Used for direct calls, not sent in proxy payload
         modelIdentifier: 'google/gemma-7b-it',
-        apiType: 'openrouter', // Crucial for this strategy
+        apiType: 'openrouter',
         promptFrame: {system: "System prompt for OpenRouter", user_prefix: "User prefix: "},
         defaultParameters: {temperature: 0.5, top_p: 0.9},
         providerSpecificHeaders: {'HTTP-Referer': 'http://localhost', 'X-Title': 'Test App'},
-        apiKeyEnvVar: 'OPENROUTER_API_KEY',
-        apiKeyFileName: 'openrouter_key.txt',
+        apiKeyEnvVar: 'OPENROUTER_API_KEY', // Info for server to find key, not sent directly
+        apiKeyFileName: 'openrouter_key.txt', // Info for server
     };
 
     const mockConstructedMessages = [
@@ -45,7 +43,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         mockHttpClient = {request: jest.fn()};
         mockLogger = {debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn()};
         mockEnvironmentContext = {
-            isClient: jest.fn().mockReturnValue(false), // Default to server-side
+            isClient: jest.fn().mockReturnValue(false),
             getProxyServerUrl: jest.fn().mockReturnValue('http://localhost:3001/proxy')
         };
 
@@ -188,6 +186,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 mockEnvironmentContext.isClient.mockReturnValue(true);
                 mockEnvironmentContext.getProxyServerUrl.mockReturnValue(proxyUrl);
                 mockHttpClient.request.mockResolvedValue({
+                    // Assuming the proxy unwraps the actual LLM response
                     choices: [{message: {content: expectedOutputJsonString}}]
                 });
             });
@@ -196,7 +195,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 const params = {
                     gameSummary: mockGameSummary,
                     llmConfig: baseLlmConfig,
-                    apiKey: mockApiKey,
+                    apiKey: mockApiKey, // API key is available but should not be used directly by strategy for proxy
                     environmentContext: mockEnvironmentContext
                 };
                 const result = await strategy.execute(params);
@@ -206,36 +205,44 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 const requestArgs = mockHttpClient.request.mock.calls[0];
                 const targetUrl = requestArgs[0];
                 const requestOptions = requestArgs[1];
-                const finalPayloadToProxy = JSON.parse(requestOptions.body);
+                const finalPayloadSentToProxy = JSON.parse(requestOptions.body);
 
                 expect(targetUrl).toBe(proxyUrl);
+                expect(requestOptions.method).toBe('POST');
+                expect(requestOptions.headers['Content-Type']).toBe('application/json');
+                // Authorization header should NOT be set by the strategy when calling the proxy
                 expect(requestOptions.headers['Authorization']).toBeUndefined();
+                // Other providerSpecificHeaders (like HTTP-Referer) should be passed to the proxy endpoint itself
                 expect(requestOptions.headers['HTTP-Referer']).toBe(baseLlmConfig.providerSpecificHeaders['HTTP-Referer']);
+                expect(requestOptions.headers['X-Title']).toBe(baseLlmConfig.providerSpecificHeaders['X-Title']);
 
-                expect(finalPayloadToProxy.targetLlmConfig.endpointUrl).toBe(baseLlmConfig.endpointUrl);
-                expect(finalPayloadToProxy.targetLlmConfig.modelIdentifier).toBe(baseLlmConfig.modelIdentifier);
-                expect(finalPayloadToProxy.targetLlmConfig.apiType).toBe(baseLlmConfig.apiType);
-                expect(finalPayloadToProxy.targetLlmConfig.apiKeyEnvVar).toBe(baseLlmConfig.apiKeyEnvVar);
-                expect(finalPayloadToProxy.targetLlmConfig.apiKeyFileName).toBe(baseLlmConfig.apiKeyFileName);
-                expect(finalPayloadToProxy.targetLlmConfig.providerSpecificHeaders).toEqual(baseLlmConfig.providerSpecificHeaders);
 
-                const originalPayload = finalPayloadToProxy.llmRequestPayload;
-                expect(originalPayload.model).toBe(baseLlmConfig.modelIdentifier);
-                expect(originalPayload.messages).toEqual(mockConstructedMessages);
-                expect(originalPayload.response_format.json_schema).toEqual(OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA);
+                // Verify the structure of the payload sent TO THE PROXY
+                expect(finalPayloadSentToProxy.llmId).toBe(baseLlmConfig.id);
+                expect(finalPayloadSentToProxy.targetHeaders).toEqual(baseLlmConfig.providerSpecificHeaders);
+
+                const actualTargetPayload = finalPayloadSentToProxy.targetPayload;
+                expect(actualTargetPayload.model).toBe(baseLlmConfig.modelIdentifier);
+                expect(actualTargetPayload.messages).toEqual(mockConstructedMessages);
+                expect(actualTargetPayload.temperature).toBe(baseLlmConfig.defaultParameters.temperature);
+                expect(actualTargetPayload.response_format.type).toBe("json_schema");
+                expect(actualTargetPayload.response_format.json_schema).toEqual(OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA);
+
+                // Ensure llmConfig details like endpointUrl are NOT in the proxied payload
+                expect(finalPayloadSentToProxy.targetLlmConfig).toBeUndefined();
+                expect(finalPayloadSentToProxy.llmRequestPayload).toBeUndefined(); // Old name for targetPayload
             });
         });
 
         describe('Response Extraction - Fallback to tool_calls', () => {
             beforeEach(() => {
-                mockEnvironmentContext.isClient.mockReturnValue(false); // Server-side
+                mockEnvironmentContext.isClient.mockReturnValue(false);
             });
 
-            // Test 1: Corrected mock response and assertion
             it('should extract from tool_calls if message.content is missing', async () => {
                 mockHttpClient.request.mockResolvedValueOnce({
                     choices: [{
-                        message: { // No 'content' property at all
+                        message: {
                             tool_calls: [{
                                 type: "function",
                                 function: {
@@ -254,7 +261,6 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 };
                 const result = await strategy.execute(params);
                 expect(result).toBe(expectedOutputJsonString);
-                // Check for the specific log when content property is missing
                 expect(mockLogger.info).toHaveBeenCalledWith(
                     expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content is missing. Will check tool_calls fallback.`)
                 );
@@ -270,7 +276,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 mockHttpClient.request.mockResolvedValueOnce({
                     choices: [{
                         message: {
-                            content: "", // Content is an empty string
+                            content: "",
                             tool_calls: [{
                                 type: "function",
                                 function: {
@@ -294,12 +300,11 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 );
             });
 
-            // Test 2: Corrected assertion
             it('should ignore tool_calls if function name does not match schema name', async () => {
                 mockHttpClient.request.mockResolvedValueOnce({
                     choices: [{
                         message: {
-                            content: null, // content is null, will trigger a warn then attempt tool_calls
+                            content: null,
                             tool_calls: [{
                                 type: "function",
                                 function: {name: "wrong_tool_name", arguments: expectedOutputJsonString}
@@ -316,7 +321,6 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 await expect(strategy.execute(params))
                     .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Failed to extract JSON content from OpenRouter response. Neither message.content nor a valid tool_call fallback was usable.`, baseLlmConfig.id, null, expect.anything()));
 
-                // Check for the specific warning about tool_calls structure, accounting for the second argument
                 expect(mockLogger.warn).toHaveBeenCalledWith(
                     expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): tool_calls structure did not match expected schema or arguments were empty. Expected function name '${OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name}'.`),
                     expect.objectContaining({
@@ -334,7 +338,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             });
 
             it('should throw LLMStrategyError if choices array is missing', async () => {
-                mockHttpClient.request.mockResolvedValueOnce({}); // No choices
+                mockHttpClient.request.mockResolvedValueOnce({});
                 const params = {
                     gameSummary: mockGameSummary,
                     llmConfig: baseLlmConfig,
@@ -346,7 +350,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             });
 
             it('should throw LLMStrategyError if message is missing in choices[0]', async () => {
-                mockHttpClient.request.mockResolvedValueOnce({choices: [{}]}); // No message
+                mockHttpClient.request.mockResolvedValueOnce({choices: [{}]});
                 const params = {
                     gameSummary: mockGameSummary,
                     llmConfig: baseLlmConfig,
@@ -359,7 +363,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
 
             it('should throw LLMStrategyError if message.content and tool_calls are unusable', async () => {
                 mockHttpClient.request.mockResolvedValueOnce({
-                    choices: [{message: {content: null, tool_calls: []}}] // No usable content
+                    choices: [{message: {content: null, tool_calls: []}}]
                 });
                 const params = {
                     gameSummary: mockGameSummary,
@@ -375,7 +379,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 mockHttpClient.request.mockResolvedValueOnce({
                     choices: [{
                         message: {
-                            content: 123, // Unexpected type
+                            content: 123,
                             tool_calls: [{type: "function", function: {name: "wrong_name", arguments: "{}"}}]
                         }
                     }]

@@ -1,7 +1,8 @@
-// utils/proxyApiKeyFileRetriever.js
+// llm-proxy-server/utils/proxyApiKeyFileRetriever.js
 
-import * as fs from 'node:fs/promises'; // Keep ESM imports
 import * as path from 'node:path';   // Keep ESM imports
+// MODIFICATION: Removed direct import of 'node:fs/promises' as it's no longer directly used.
+// import * as fs from 'node:fs/promises';
 
 /**
  * @file apiKeyFileRetriever.js
@@ -20,6 +21,10 @@ import * as path from 'node:path';   // Keep ESM imports
  */
 
 /**
+ * @typedef {import('../interfaces/IServerUtils.js').IFileSystemReader} IFileSystemReader
+ */
+
+/**
  * Retrieves an API key from a specified text file within a given project root directory.
  * This function is intended for server-side use ONLY, typically by a backend proxy,
  * where file system access is secure and appropriate.
@@ -34,12 +39,13 @@ import * as path from 'node:path';   // Keep ESM imports
  * @param {string} projectRootPath - An absolute path to the project's root directory
  * or a designated secure directory on the server where API key files are located.
  * @param {ILogger} logger - A logger instance for warnings and errors.
+ * @param {IFileSystemReader} fileSystemReader - An instance of IFileSystemReader to read files.
  * @returns {Promise<string|null>} A promise that resolves with the API key as a string
  * if successful, or `null` if the file is not found, not readable, or empty.
  * @throws {Error} If an unexpected error occurs during file operations (other than
- * file not found/unreadable or empty key, which return `null`).
+ * file not found/unreadable or empty key, which return `null`), or if parameters are invalid.
  */
-export async function getApiKeyFromFile(fileName, projectRootPath, logger) {
+export async function getApiKeyFromFile(fileName, projectRootPath, logger, fileSystemReader) {
     if (!fileName || typeof fileName !== 'string' || fileName.trim() === '') {
         if (logger && typeof logger.error === 'function') {
             logger.error("ApiKeyFileRetriever: 'fileName' parameter must be a non-empty string.", {fileName});
@@ -53,11 +59,20 @@ export async function getApiKeyFromFile(fileName, projectRootPath, logger) {
         throw new Error("'projectRootPath' parameter must be a non-empty string.");
     }
     if (!logger || typeof logger.warn !== 'function' || typeof logger.error !== 'function') {
-        console.warn("ApiKeyFileRetriever: A valid logger instance was not provided. Using console for critical messages.");
-        logger = console; // Fallback to console if logger is insufficient
+        // Fallback to console if logger is insufficient, but still log the warning about it.
+        const initialWarn = (logger && typeof logger.warn === 'function') ? logger.warn : console.warn;
+        initialWarn("ApiKeyFileRetriever: A valid logger instance was not provided. Using console for critical messages.");
+        logger = console;
+    }
+    // MODIFICATION: Added validation for fileSystemReader
+    if (!fileSystemReader || typeof fileSystemReader.readFile !== 'function') {
+        if (logger && typeof logger.error === 'function') {
+            logger.error("ApiKeyFileRetriever: 'fileSystemReader' parameter must be provided and implement readFile.", {fileSystemReader});
+        }
+        throw new Error("'fileSystemReader' parameter must be an object with a 'readFile' method.");
     }
 
-    const safeFileName = path.basename(fileName); // Mitigate basic path traversal if caller isn't careful
+    const safeFileName = path.basename(fileName);
     if (safeFileName !== fileName) {
         logger.warn(`ApiKeyFileRetriever: Original fileName '${fileName}' was normalized to '${safeFileName}' to prevent path traversal. Ensure the provided fileName is just the file's name.`);
     }
@@ -65,7 +80,8 @@ export async function getApiKeyFromFile(fileName, projectRootPath, logger) {
     const fullPath = path.join(projectRootPath, safeFileName);
 
     try {
-        const apiKey = await fs.readFile(fullPath, 'utf-8');
+        // MODIFICATION: Use fileSystemReader.readFile instead of fs.readFile
+        const apiKey = await fileSystemReader.readFile(fullPath, 'utf-8');
         const trimmedKey = apiKey.trim();
 
         if (trimmedKey === '') {
@@ -73,7 +89,6 @@ export async function getApiKeyFromFile(fileName, projectRootPath, logger) {
             return null;
         }
 
-        // For security, avoid logging the key itself, even at debug. Log its presence and length.
         if (logger && typeof logger.debug === 'function') {
             logger.debug(`ApiKeyFileRetriever: Successfully retrieved API key from '${fullPath}'. Key length: ${trimmedKey.length}`);
         }
@@ -88,6 +103,8 @@ export async function getApiKeyFromFile(fileName, projectRootPath, logger) {
                 errorCode: error.code,
                 errorDetails: error
             });
+            // Propagate the error as per IFileSystemReader's contract (if it's from readFile)
+            // or if it's a different unexpected error.
             throw new Error(`Failed to read API key file '${fullPath}': ${error.message}`);
         }
     }

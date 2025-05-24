@@ -12,7 +12,9 @@ Its primary purposes are:
   directly. The proxy acts as a trusted intermediary, preventing API key exposure to end-users.
 * **Centralized Request Handling**: Provides a single endpoint for the client to send LLM requests, which the proxy then
   forwards to the appropriate LLM provider based on configuration.
-* **Configuration Abstraction**: It can use its own version of `llm-configs.json` to determine target LLM endpoints and
+* **Configuration Abstraction**: It uses its `llm-configs.json` file (now defaulting to a path outside its own
+  directory,
+  typically `../config/llm-configs.json` relative to the proxy server's location) to determine target LLM endpoints and
   specific headers, abstracting these details from the client if necessary.
 
 This server is essential when the `ILLMAdapter` operates in a client-side environment, ensuring that sensitive
@@ -62,9 +64,14 @@ Then, edit the `.env` file with your specific configurations:
     * If not set, CORS will not be specifically configured, potentially blocking cross-origin requests.
 
 * **`LLM_CONFIG_PATH`**: The path to the `llm-configs.json` file that the proxy server will use. This path can be
-  absolute or relative to the `server.js` file.
-    * Example: `LLM_CONFIG_PATH=./llm-configs.json`
-    * Defaults to `llm-proxy-server/llm-configs.json` if not set in `server.js`.
+  absolute or relative.
+    * **New Default**: If this environment variable is not set, the proxy server will now attempt to load the
+      configuration from `../config/llm-configs.json` (relative to the `llm-proxy-server/server.js` file). This means it
+      expects the `llm-configs.json` to be in a `config` directory located one level above the `llm-proxy-server`
+      directory.
+    * Example to override the default: `LLM_CONFIG_PATH=/path/to/your/custom/llm-configs.json`
+    * Example to use a file named `proxy-specific-configs.json` inside the `llm-proxy-server` directory itself:
+      `LLM_CONFIG_PATH=./proxy-specific-configs.json`
 
 * **`PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES`**: The absolute path on the proxy server's filesystem where API key
   *files* are stored. This is used if an LLM configuration in `llm-configs.json` specifies an `apiKeyFileName`.
@@ -90,9 +97,13 @@ Then, edit the `.env` file with your specific configurations:
 
 ### 3.2. `llm-configs.json` Usage by the Proxy
 
-The proxy server loads its own `llm-configs.json` file (the path to this file is determined by the `LLM_CONFIG_PATH`
-environment variable, defaulting to `llm-proxy-server/llm-configs.json`) at startup. This file informs the proxy about
-the LLM configurations it needs to handle. When the proxy receives a request from a client with a specific `llmId`:
+The proxy server loads its `llm-configs.json` file at startup. The path to this file is determined by the
+`LLM_CONFIG_PATH` environment variable.
+**By default, it now attempts to load this file from `../config/llm-configs.json` (relative
+to `llm-proxy-server/server.js`), aiming to use a shared configuration file from the parent project's `config`
+directory.**
+This file informs the proxy about the LLM configurations it needs to handle. When the proxy receives a request from a
+client with a specific `llmId`:
 
 1. The proxy looks up the configuration for that `llmId` in its loaded `llmConfigs.llms` object.
 2. It primarily uses the following fields from the matched LLM configuration:
@@ -110,8 +121,8 @@ the LLM configurations it needs to handle. When the proxy receives a request fro
     * `apiType`: Used by the proxy to determine if the LLM is a cloud service requiring an API key or a local service
       that might not need one handled by the proxy.
 
-Ensure the `llm-configs.json` file used by the proxy accurately reflects the details necessary for the proxy to connect
-to and authenticate with the downstream LLM services.
+Ensure the `llm-configs.json` file used by the proxy (whether the shared default or a custom one via `LLM_CONFIG_PATH`)
+accurately reflects the details necessary for the proxy to connect to and authenticate with the downstream LLM services.
 
 ## 4. Running the Proxy
 
@@ -131,8 +142,8 @@ directory:
   This script executes `node --watch server.js`, which will automatically restart the server when relevant project files
   are changed. This feature is built into recent versions of Node.js.
 
-Upon successful startup, the console will display messages indicating the port the server is listening on, the path to
-the `llm-configs.json` it's attempting to use, and the status of its CORS configuration.
+Upon successful startup, the console will display messages indicating the port the server is listening on, the resolved
+absolute path to the `llm-configs.json` it's attempting to use, and the status of its CORS configuration.
 
 ## 5. API Endpoint
 
@@ -185,8 +196,9 @@ The `llm-proxy-server/` directory contains the following key files and directori
 * `.env`: (This file is created by you, typically by copying `.env.example`) Stores environment-specific configurations
   such as the port number, allowed CORS origins, and actual API key values or paths to key files.
 * `.env.example`: A template file providing a reference for the structure and variables needed in the `.env` file.
-* `llm-configs.json`: (Or the file specified by the `LLM_CONFIG_PATH` environment variable) The configuration file that
-  details the LLM providers, their endpoints, and how the proxy should retrieve API keys for them.
+* `llm-configs.json`: **Note:** The proxy server now defaults to loading this configuration from
+  `../config/llm-configs.json` (relative to `llm-proxy-server/server.js`). If the `LLM_CONFIG_PATH` environment variable
+  is set, it will use that path instead. This file details LLM providers, endpoints, and API key retrieval methods.
 * `LLM_PROXY_API_CONTRACT.md`: A document that defines the API contract for communication between the client-side
   `ILLMAdapter` and this proxy server, including request and error response schemas.
 * `README.md`: This documentation file.
@@ -197,7 +209,8 @@ The `llm-proxy-server/` directory contains the following key files and directori
 
 The proxy server uses the native `console` object for logging its operations. Logged information includes:
 
-* Server startup messages, including the port it's listening on, the path to the LLM configuration file being used, and
+* Server startup messages, including the port it's listening on, the resolved path to the LLM configuration file being
+  used, and
   CORS status.
 * Confirmation of successful LLM configuration loading, or critical error messages if loading fails.
 * Details of incoming requests to the `/api/llm-request` endpoint, including a summary of the client's payload.

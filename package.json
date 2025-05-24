@@ -37,7 +37,7 @@
     "coverage": "jest --coverage --env=jsdom",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
-    "build": "esbuild main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html dist && cpy css dist && cpy data dist && cpy favicon.ico dist",
+    "build": "esbuild main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html dist && cpy css dist && cpy data dist && cpy config dist && cpy favicon.ico dist",
     "start": "npm run build && http-server dist -o"
   }
 }

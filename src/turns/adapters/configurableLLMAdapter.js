@@ -58,74 +58,38 @@ export class ConfigurationError extends Error {
  * @implements {ILLMAdapter}
  * @description An adapter for interacting with Large Language Models based on
  * external configurations. It loads configurations via LlmConfigLoader and
- * manages the active LLM configuration.
+ * manages the active LLM configuration. It ensures its own initialization is complete
+ * before executing core logic.
  */
 export class ConfigurableLLMAdapter extends ILLMAdapter {
-    /**
-     * @private
-     * @type {ILogger}
-     */
+    // --- Private Fields ---
+    /** @private @type {ILogger} */
     #logger;
-
-    /**
-     * @private
-     * @type {EnvironmentContext}
-     */
+    /** @private @type {EnvironmentContext} */
     #environmentContext;
-
-    /**
-     * @private
-     * @type {IApiKeyProvider}
-     */
+    /** @private @type {IApiKeyProvider} */
     #apiKeyProvider;
-
-    /**
-     * @private
-     * @type {LLMStrategyFactory}
-     */
+    /** @private @type {LLMStrategyFactory} */
     #llmStrategyFactory;
-
-    /**
-     * @private
-     * @type {LlmConfigLoader | null}
-     */
+    /** @private @type {LlmConfigLoader | null} */
     #configLoader = null;
-
-    /**
-     * @private
-     * @type {LLMConfigurationFile | null}
-     */
+    /** @private @type {LLMConfigurationFile | null} */
     #llmConfigs = null;
-
-    /**
-     * @private
-     * @type {boolean}
-     * @description Indicates if the adapter has been successfully initialized.
-     */
-    #isInitialized = false;
-
-    /**
-     * @private
-     * @type {boolean}
-     * @description Indicates if the adapter is in an operational state.
-     * Set to false if critical initialization (like config loading) fails.
-     */
+    /** @private @type {boolean} */
+    #isInitialized = false; // Tracks if init attempt has been made and core logic run
+    /** @private @type {boolean} */
     #isOperational = false;
-
-    /**
-     * @private
-     * @type {string | null}
-     * @description The ID of the currently active LLM configuration.
-     */
+    /** @private @type {string | null} */
     #currentActiveLlmId = null;
-
-    /**
-     * @private
-     * @type {LLMModelConfig | null}
-     * @description The currently active LLM configuration object.
-     */
+    /** @private @type {LLMModelConfig | null} */
     #currentActiveLlmConfig = null;
 
+    /**
+     * @private
+     * @type {Promise<void> | null}
+     * @description Stores the promise returned by the actual initialization logic.
+     */
+    #initPromise = null;
 
     /**
      * Creates an instance of ConfigurableLLMAdapter.
@@ -160,7 +124,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         }
         this.#apiKeyProvider = apiKeyProvider;
 
-        // Corrected method check from createStrategy to getStrategy as per Ticket 21 usage
         if (!llmStrategyFactory || typeof llmStrategyFactory.getStrategy !== 'function') {
             const errorMsg = 'ConfigurableLLMAdapter: Constructor requires a valid LLMStrategyFactory instance.';
             this.#logger.error(errorMsg);
@@ -168,7 +131,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         }
         this.#llmStrategyFactory = llmStrategyFactory;
 
-        this.#logger.info(`ConfigurableLLMAdapter: Instance created. Execution environment: ${this.#environmentContext.getExecutionEnvironment()}. Ready for initialization.`);
+        this.#logger.info(`ConfigurableLLMAdapter: Instance created. Execution environment: ${this.#environmentContext.getExecutionEnvironment()}. Ready for initialization call.`);
     }
 
     /**
@@ -210,86 +173,144 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
 
     /**
-     * Asynchronously initializes the ConfigurableLLMAdapter.
-     * This method loads LLM configurations using the provided LlmConfigLoader
+     * Asynchronously initializes the ConfigurableLLMAdapter if not already initiated.
+     * This method is idempotent and manages an internal promise for the async initialization process.
+     * It loads LLM configurations using the provided LlmConfigLoader
      * and sets the default active LLM if specified.
-     * It must be called and awaited before the adapter can be used.
      *
-     * @async
      * @param {object} initParams - Parameters for initialization.
      * @param {LlmConfigLoader} initParams.llmConfigLoader - An instance of LlmConfigLoader.
-     * @returns {Promise<void>} A promise that resolves when initialization is complete.
-     * @throws {Error} If llmConfigLoader is invalid or if a previous initialization attempt failed critically.
+     * @returns {Promise<void>} A promise that resolves when initialization is complete,
+     * or rejects if it fails. This promise is shared across calls to init.
+     * @throws {Error} (Synchronously) If llmConfigLoader is invalid when init is first called seriously.
      */
-    async init({llmConfigLoader}) {
-        if (this.#isInitialized && !this.#isOperational) {
-            const errorMsg = 'ConfigurableLLMAdapter: Cannot re-initialize after a critical configuration loading failure.';
-            this.#logger.error(errorMsg);
-            throw new Error(errorMsg);
-        }
-
+    init({llmConfigLoader}) {
+        // Path 1: Already successfully initialized AND operational from a completed previous call.
         if (this.#isInitialized && this.#isOperational) {
-            this.#logger.info('ConfigurableLLMAdapter: Already initialized and operational. Skipping re-initialization.');
-            return;
+            this.#logger.info('ConfigurableLLMAdapter: Already initialized and operational from a previous successful call. Skipping re-initialization logic.');
+            // this.#initPromise should be the promise from that successful run.
+            return this.#initPromise;
         }
 
+        // Path 2: Previously initialized (i.e., an init cycle completed) but NOT operational.
+        // This is a critical failure state that prevents re-initialization.
+        if (this.#isInitialized && !this.#isOperational) {
+            const errorMsg = 'ConfigurableLLMAdapter: Cannot re-initialize after a critical configuration loading failure from a previous attempt.';
+            this.#logger.error(errorMsg);
+            // For this specific re-attempt, return a new rejected promise.
+            // The original #initPromise might have resolved if the async IIFE didn't throw.
+            return Promise.reject(new Error(errorMsg));
+        }
+
+        // Path 3: Initialization is already in progress (this.#initPromise exists but conditions for Path 1 & 2 weren't met).
+        // This means #isInitialized is still false.
+        if (this.#initPromise) {
+            this.#logger.info('ConfigurableLLMAdapter: Initialization is already in progress. Returning existing promise.');
+            return this.#initPromise;
+        }
+
+        // Path 4: This is the first actual call to init that will proceed to the async part,
+        // or a call after a synchronous throw in a previous init attempt (where #initPromise would be null).
+        // Perform synchronous validation for llmConfigLoader.
         if (!llmConfigLoader || typeof llmConfigLoader.loadConfigs !== 'function') {
             const errorMsg = 'ConfigurableLLMAdapter: Initialization requires a valid LlmConfigLoader instance.';
             this.#logger.error(errorMsg, {providedLoader: llmConfigLoader});
-            this.#isInitialized = true; // Mark as initialized even if failing
+            // Mark this synchronous failure as an init attempt that concluded without starting async part.
+            this.#isInitialized = true;
             this.#isOperational = false;
-            this.#currentActiveLlmId = null;
-            this.#currentActiveLlmConfig = null;
-            throw new Error(errorMsg);
+            // #initPromise remains null.
+            throw new Error(errorMsg); // Synchronous throw.
         }
 
-        this.#configLoader = llmConfigLoader;
-        this.#logger.info('ConfigurableLLMAdapter: Initialization started with LlmConfigLoader.');
-        this.#currentActiveLlmId = null;
-        this.#currentActiveLlmConfig = null;
+        // Path 5: Create and return the promise for the main asynchronous initialization process.
+        // This part is reached only if it's a genuine first attempt to run the async logic.
+        this.#initPromise = (async () => {
+            this.#configLoader = llmConfigLoader;
+            this.#logger.info('ConfigurableLLMAdapter: Actual asynchronous initialization started with LlmConfigLoader.');
+            this.#currentActiveLlmId = null;
+            this.#currentActiveLlmConfig = null;
+            this.#isOperational = false; // Reset before trying
 
-        try {
-            const configResult = await this.#configLoader.loadConfigs();
+            try {
+                const configResult = await this.#configLoader.loadConfigs();
 
-            if (configResult && 'error' in configResult && configResult.error === true) {
-                const loadError = /** @type {LoadConfigsErrorResult} */ (configResult);
-                this.#logger.error('ConfigurableLLMAdapter: Critical error loading LLM configurations.', {
-                    message: loadError.message,
-                    stage: loadError.stage,
-                    path: loadError.path,
-                    originalErrorMessage: loadError.originalError ? loadError.originalError.message : 'N/A'
+                if (configResult && 'error' in configResult && configResult.error === true) {
+                    const loadError = /** @type {LoadConfigsErrorResult} */ (configResult);
+                    this.#logger.error('ConfigurableLLMAdapter: Critical error loading LLM configurations.', {
+                        message: loadError.message, stage: loadError.stage, path: loadError.path,
+                        originalErrorMessage: loadError.originalError ? loadError.originalError.message : 'N/A'
+                    });
+                    this.#llmConfigs = null;
+                    // #isOperational remains false
+                } else if (configResult && typeof configResult.llms === 'object' && configResult.llms !== null) {
+                    this.#llmConfigs = /** @type {LLMConfigurationFile} */ (configResult);
+                    this.#logger.info('ConfigurableLLMAdapter: LLM configurations loaded successfully.', {
+                        numberOfConfigs: Object.keys(this.#llmConfigs.llms).length,
+                        defaultLlmId: this.#llmConfigs.defaultLlmId || 'Not set'
+                    });
+                    this.#isOperational = true;
+                    this.#setDefaultActiveLlm();
+                } else {
+                    this.#logger.error('ConfigurableLLMAdapter: LLM configuration loading returned an unexpected structure.', {configResult});
+                    this.#llmConfigs = null;
+                    // #isOperational remains false
+                }
+            } catch (error) {
+                this.#logger.error('ConfigurableLLMAdapter: Unexpected exception during LLM configuration loading.', {
+                    errorMessage: error.message, errorStack: error.stack
                 });
                 this.#llmConfigs = null;
-                this.#isOperational = false;
-            } else if (configResult && typeof configResult.llms === 'object' && configResult.llms !== null) {
-                this.#llmConfigs = /** @type {LLMConfigurationFile} */ (configResult);
-                this.#logger.info('ConfigurableLLMAdapter: LLM configurations loaded successfully.', {
-                    numberOfConfigs: Object.keys(this.#llmConfigs.llms).length,
-                    defaultLlmId: this.#llmConfigs.defaultLlmId || 'Not set'
-                });
-                this.#isOperational = true;
-                this.#setDefaultActiveLlm();
-            } else {
-                this.#logger.error('ConfigurableLLMAdapter: LLM configuration loading returned an unexpected structure.', {configResult});
-                this.#llmConfigs = null;
-                this.#isOperational = false;
+                this.#isOperational = false; // Ensure isOperational is false on error
+                this.#isInitialized = true; // Mark that an attempt was made (async part ran)
+                throw error; // Re-throw to reject the #initPromise itself
             }
-        } catch (error) {
-            this.#logger.error('ConfigurableLLMAdapter: Unexpected exception during LLM configuration loading.', {
-                errorMessage: error.message,
-                errorStack: error.stack
-            });
-            this.#llmConfigs = null;
-            this.#isOperational = false;
+
+            this.#isInitialized = true; // Mark that this async process completed.
+            if (!this.#isOperational) {
+                this.#logger.warn('ConfigurableLLMAdapter: Initialization attempt complete, but the adapter is NON-OPERATIONAL due to configuration loading issues.');
+                // DO NOT throw an error here like "Adapter initialized but not operational".
+                // The fact that the promise resolves but #isOperational is false is the state
+                // that Path 2 (re-init check) will use on a subsequent call.
+            } else {
+                this.#logger.info('ConfigurableLLMAdapter: Initialization attempt complete and adapter is operational.');
+            }
+        })();
+        return this.#initPromise;
+    }
+
+    /**
+     * @private
+     * @async
+     * @description Ensures that the adapter's asynchronous initialization has completed.
+     * Throws an error if initialization was never started, or if it completed but the adapter is not operational.
+     */
+    async #ensureInitialized() {
+        if (!this.#initPromise) {
+            // This would mean init() was never called, which is a programming error
+            // if the adapter is being used.
+            const msg = "ConfigurableLLMAdapter: Initialization was never started. Call init() before using the adapter.";
+            this.#logger.error(`ConfigurableLLMAdapter.#ensureInitialized: ${msg}`);
+            throw new Error(msg);
         }
 
-        this.#isInitialized = true;
+        await this.#initPromise; // Wait for the stored initialization promise to settle
+
+        // After awaiting, check the final state.
+        // #isInitialized should be true if #initPromise resolved (even if operational is false).
+        // If #initPromise rejected, await would have thrown, and we wouldn't reach here.
+        if (!this.#isInitialized) {
+            // This state should ideally not be reached if #initPromise resolves correctly
+            // and sets #isInitialized = true.
+            const msg = "ConfigurableLLMAdapter: Initialization promise resolved, but adapter is not marked as initialized. Internal logic error.";
+            this.#logger.error(`ConfigurableLLMAdapter.#ensureInitialized: ${msg}`);
+            throw new Error(msg);
+        }
+
         if (!this.#isOperational) {
-            this.#logger.warn('ConfigurableLLMAdapter: Initialization complete, but the adapter is NON-OPERATIONAL due to configuration loading issues.');
-            this.#currentActiveLlmId = null;
-            this.#currentActiveLlmConfig = null;
-        } else {
-            this.#logger.info('ConfigurableLLMAdapter: Initialization complete and adapter is operational.');
+            const msg = "ConfigurableLLMAdapter: Adapter initialized but is not operational. Check configuration and logs.";
+            this.#logger.error(`ConfigurableLLMAdapter.#ensureInitialized: ${msg}`);
+            // Depending on how strictly you want to enforce operational status:
+            throw new Error(msg); // Or just log a warning and proceed if some methods can work non-operationally
         }
     }
 
@@ -298,17 +319,21 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      *
      * @param {string} llmId - The ID of the LLM configuration to set as active.
      * @returns {boolean} True if the LLM configuration was successfully set as active, false otherwise.
-     * Returns false if the adapter is not operational, if the llmId is invalid,
-     * or if no configuration with the given llmId exists.
+     * Returns false if the adapter is not operational (checked after ensuring initialization),
+     * if the llmId is invalid, or if no configuration with the given llmId exists.
      */
-    setActiveLlm(llmId) {
+    async setActiveLlm(llmId) { // Made async due to #ensureInitialized
+        await this.#ensureInitialized(); // Ensure operational status is confirmed
+
+        // The #isOperational check here is somewhat redundant if #ensureInitialized throws on non-operational,
+        // but kept for clarity or if #ensureInitialized is changed to not throw.
         if (!this.#isOperational) {
             this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: Adapter is not operational. Cannot set LLM ID '${llmId}'.`);
             return false;
         }
         if (!this.#llmConfigs || !this.#llmConfigs.llms) {
             this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: LLM configurations are not loaded. Cannot set LLM ID '${llmId}'.`);
-            return false;
+            return false; // Should be caught by #isOperational if loading failed
         }
         if (!llmId || typeof llmId !== 'string' || llmId.trim() === '') {
             this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: Invalid llmId provided (must be a non-empty string). Received: '${llmId}'. Active LLM remains unchanged ('${this.#currentActiveLlmId || 'none'}').`);
@@ -332,10 +357,12 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      * Retrieves the full configuration object for the currently active LLM.
      *
      * @returns {LLMModelConfig | null} The active LLMModelConfig object, or null if no LLM is active or
-     * if the adapter is not operational.
+     * if the adapter is not operational (checked after ensuring initialization).
      */
-    getCurrentActiveLlmConfig() {
-        if (!this.#isOperational) {
+    async getCurrentActiveLlmConfig() { // Made async due to #ensureInitialized
+        await this.#ensureInitialized(); // Ensure operational status is confirmed
+
+        if (!this.#isOperational) { // Redundant if #ensureInitialized throws, but safe
             this.#logger.warn('ConfigurableLLMAdapter.getCurrentActiveLlmConfig: Adapter is not operational. Returning null.');
             return null;
         }
@@ -345,16 +372,10 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         return this.#currentActiveLlmConfig;
     }
 
-    // _getFallbackActionPromise is removed as it's no longer used by the refactored getAIDecision.
-    // _executeApiCallThroughHttpClient is removed as it's no longer used.
-    // All _handle* methods (_handleToolCalling, _handleOpenRouterJsonSchema, _handleNativeJsonMode, _handleGbnfGrammar, _handlePromptEngineering)
-    // are removed as their logic is now delegated to strategies obtained via LLMStrategyFactory.
-
-
     /**
      * Generates an action and speech based on the provided game summary using a configured LLM.
      * This method orchestrates fetching the configuration, API key, and appropriate LLM strategy,
-     * then executes the strategy.
+     * then executes the strategy. It ensures the adapter is initialized and operational first.
      *
      * @async
      * @param {string} gameSummary - A string providing a summarized representation
@@ -364,29 +385,21 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      * or if the LLM strategy execution fails.
      */
     async getAIDecision(gameSummary) {
-        this.#logger.debug('ConfigurableLLMAdapter.getAIDecision called.', {
-            isInitialized: this.#isInitialized,
-            isOperational: this.#isOperational,
+        // Step 0: Ensure the adapter is initialized and operational.
+        await this.#ensureInitialized();
+
+        this.#logger.debug('ConfigurableLLMAdapter.getAIDecision called (post-internal-initialization-check).', {
+            isInitialized: this.#isInitialized, // Should be true here
+            isOperational: this.#isOperational, // Should be true here
             activeLlmId: this.#currentActiveLlmId,
             gameSummaryLength: gameSummary ? gameSummary.length : 0
         });
 
-        // Step 1: Initial State Checks
-        if (!this.#isInitialized) {
-            const msg = "Adapter not initialized. Call init() first.";
-            this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
-            throw new Error(msg);
-        }
-
-        if (!this.#isOperational) {
-            const msg = "Adapter is not operational due to configuration loading issues.";
-            this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
-            throw new Error(msg);
-        }
-
-        const activeConfig = this.getCurrentActiveLlmConfig();
+        const activeConfig = this.#currentActiveLlmConfig; // #ensureInitialized + getCurrentActiveLlmConfig implies this is set if operational
         if (!activeConfig) {
-            const msg = "No active LLM configuration is set. Use setActiveLlm() or set a defaultLlmId.";
+            // This should ideally be caught by #ensureInitialized if no defaultLlmId leads to non-operational,
+            // or by getCurrentActiveLlmConfig if called directly. But as a final check if an LLM must be active:
+            const msg = "No active LLM configuration is set (activeConfig is null post-init). Use setActiveLlm() or set a defaultLlmId that successfully loads.";
             this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
             throw new ConfigurationError(msg);
         }
@@ -400,8 +413,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 validationErrors.push({field: 'id', reason: 'Missing or invalid'});
             }
             if (!activeConfig.endpointUrl || typeof activeConfig.endpointUrl !== 'string' || activeConfig.endpointUrl.trim() === '') {
-                // Endpoint URL might be optional for some apiTypes if fully managed by strategy/provider,
-                // but for now, let's consider it essential for most.
                 validationErrors.push({field: 'endpointUrl', reason: 'Missing or invalid'});
             }
             if (!activeConfig.modelIdentifier || typeof activeConfig.modelIdentifier !== 'string' || activeConfig.modelIdentifier.trim() === '') {
@@ -410,15 +421,10 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             if (!activeConfig.apiType || typeof activeConfig.apiType !== 'string' || activeConfig.apiType.trim() === '') {
                 validationErrors.push({field: 'apiType', reason: 'Missing or invalid'});
             }
-
-            // Validate jsonOutputStrategy structure (if present)
             if (activeConfig.jsonOutputStrategy) {
                 if (typeof activeConfig.jsonOutputStrategy !== 'object') {
                     validationErrors.push({field: 'jsonOutputStrategy', reason: 'Must be an object if provided'});
                 } else {
-                    // Method is a key part of the strategy object if the object itself exists.
-                    // If jsonOutputStrategy is present, its method should also be valid or let factory default.
-                    // For this basic check, if method is there, it should be a non-empty string.
                     if (activeConfig.jsonOutputStrategy.method &&
                         (typeof activeConfig.jsonOutputStrategy.method !== 'string' || activeConfig.jsonOutputStrategy.method.trim() === '')) {
                         validationErrors.push({
@@ -428,10 +434,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                     }
                 }
             }
-            // Depending on requirements, jsonOutputStrategy itself might be mandatory.
-            // The ticket says "Optional: if jsonOutputStrategy itself is mandatory",
-            // for now, we are not making it mandatory here, LLMStrategyFactory can default.
-
             if (validationErrors.length > 0) {
                 const errorDetailsMessage = validationErrors.map(err => `${err.field}: ${err.reason}`).join('; ');
                 const msg = `Active LLM config '${activeConfig.id}' is missing essential field(s) or has invalid structure: ${errorDetailsMessage}`;
@@ -442,10 +444,8 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             // Step 3: Retrieve API Key
             this.#logger.debug(`ConfigurableLLMAdapter.getAIDecision: Attempting to retrieve API key for LLM '${activeConfig.id}' using ApiKeyProvider.`);
             const apiKey = await this.#apiKeyProvider.getKey(activeConfig, this.#environmentContext);
-
-            // API Key Validation (Conditional)
             const isCloudApi = CLOUD_API_TYPES.includes(activeConfig.apiType);
-            const requiresApiKey = isCloudApi && this.#environmentContext.isServer(); // Example condition
+            const requiresApiKey = isCloudApi && this.#environmentContext.isServer();
 
             if (requiresApiKey && !apiKey) {
                 const msg = `API key retrieval failed or key is missing for LLM '${activeConfig.id}' which requires it in the current environment (server-side cloud API).`;
@@ -455,7 +455,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             if (apiKey) {
                 this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: API key retrieved successfully for LLM '${activeConfig.id}'.`);
             } else if (requiresApiKey) {
-                // This case should have been caught above, but as a safeguard:
                 const msg = `Critical: API key for LLM '${activeConfig.id}' is required but was not available.`;
                 this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
                 throw new ConfigurationError(msg, {llmId: activeConfig.id});
@@ -463,24 +462,18 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: API key not required or not found for LLM '${activeConfig.id}' in current context, proceeding without it.`);
             }
 
-
             // Step 4: Get LLM Strategy Instance
             this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: Working LLM strategy for config '${activeConfig.id}' (apiType: ${activeConfig.apiType}, strategyMethod: ${activeConfig.jsonOutputStrategy?.method || 'default'}).`);
-
             let strategy;
             try {
                 strategy = this.#llmStrategyFactory.getStrategy(activeConfig);
             } catch (factoryError) {
-                // If factory throws, catch it and re-throw as ConfigurationError or let it propagate
                 this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: LLMStrategyFactory failed to provide a strategy for LLM '${activeConfig.id}'. Error: ${factoryError.message}`, {
-                    llmId: activeConfig.id,
-                    originalError: factoryError
+                    llmId: activeConfig.id, originalError: factoryError
                 });
                 throw new ConfigurationError(`Failed to get strategy from factory for LLM '${activeConfig.id}': ${factoryError.message}`, {llmId: activeConfig.id});
             }
-
             if (!strategy) {
-                // This case should ideally be handled by the factory throwing an error.
                 const msg = `No suitable LLM strategy found for configuration '${activeConfig.id}'. LLMStrategyFactory returned null/undefined.`;
                 this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
                 throw new ConfigurationError(msg, {llmId: activeConfig.id});
@@ -491,7 +484,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             llmJsonOutput = await strategy.execute({
                 gameSummary,
                 llmConfig: activeConfig,
-                apiKey, // Will be null if not applicable/found and not strictly required
+                apiKey,
                 environmentContext: this.#environmentContext
             });
 
@@ -499,26 +492,27 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
         } catch (error) {
             // Step 6: Overall Error Handling
-            // Log and re-throw the error to allow higher-level components to handle it.
             this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: Error during decision processing for LLM '${activeConfig?.id || 'unknown'}'. Error: ${error.message}`, {
-                llmId: activeConfig?.id || 'unknown',
-                errorName: error.name,
-                // originalError: error // Avoid logging the full error object here if it might be too verbose or contain sensitive data from deeper down. error.message and error.name should suffice for this level.
+                llmId: activeConfig?.id || 'unknown', errorName: error.name,
             });
-            throw error; // Re-throw the original error
+            throw error;
         }
     }
 
     /**
-     * Checks if the adapter has been initialized.
-     * @returns {boolean} True if init() has been called, false otherwise.
+     * Checks if the adapter has made an initialization attempt and that attempt has concluded.
+     * Note: This does not guarantee the adapter is operational, only that the init()
+     * async logic has run to completion or failure. Use isOperational() for operational status.
+     * @returns {boolean} True if init() core logic has run, false otherwise.
      */
     isInitialized() {
         return this.#isInitialized;
     }
 
     /**
-     * Checks if the adapter is operational (i.e., initialized successfully with valid configurations).
+     * Checks if the adapter is operational (i.e., initialized successfully with valid configurations
+     * and is ready to process requests).
+     * Note: This requires that the init() process has completed.
      * @returns {boolean} True if operational, false otherwise.
      */
     isOperational() {
@@ -527,16 +521,17 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
     /**
      * Retrieves the loaded LLM configurations.
-     * Primarily for testing or debugging purposes.
+     * Primarily for testing or debugging purposes. Should be called after awaiting init().
      * @returns {LLMConfigurationFile | null} The loaded configurations or null if not loaded/failed.
      */
     getLoadedConfigs_FOR_TESTING_ONLY() {
+        // Could optionally add: if (!this.#isInitialized) this.#logger.warn("...")
         return this.#llmConfigs;
     }
 
     /**
      * Retrieves the ID of the currently active LLM configuration.
-     * Primarily for testing or debugging purposes.
+     * Primarily for testing or debugging purposes. Should be called after awaiting init().
      * @returns {string | null} The ID of the active LLM or null.
      */
     getActiveLlmId_FOR_TESTING_ONLY() {

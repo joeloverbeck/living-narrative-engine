@@ -3,7 +3,7 @@
 
 import {IApiKeyProvider} from './interfaces/IApiKeyProvider.js';
 import * as path from 'node:path'; // Corrected import style
-import {IFileSystemReader, IEnvironmentVariableReader} from '../interfaces/IServerUtils.js';
+import {IFileSystemReader, IEnvironmentVariableReader} from '../../llm-proxy-server/interfaces/IServerUtils.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
