@@ -131,7 +131,7 @@ export class ILLMAdapter {
      * "commandString": "Wait"
      * }
      */
-    async generateAction(gameSummary) {
+    async getAIDecision(gameSummary) {
         throw new Error("ILLMAdapter.generateAction method not implemented.");
     }
 }

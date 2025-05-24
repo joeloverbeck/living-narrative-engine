@@ -65,8 +65,8 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     constructor({llmAdapter, gameStateProvider, promptFormatter, llmResponseProcessor}) {
         super();
 
-        if (!llmAdapter || typeof llmAdapter.generateAction !== 'function') {
-            throw new Error("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a generateAction method.");
+        if (!llmAdapter || typeof llmAdapter.getAIDecision !== 'function') {
+            throw new Error("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a getAIDecision method.");
         }
         if (!gameStateProvider || typeof gameStateProvider.buildGameState !== 'function') {
             throw new Error("AIPlayerStrategy: Constructor requires a valid IAIGameStateProvider instance with a buildGameState method.");
@@ -180,7 +180,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
             logger.debug(`AIPlayerStrategy: LLM Prompt for ${actorId}:\n${llmPromptString}`);
 
             // 4. Call LLM Adapter
-            const llmJsonResponse = await this.#llmAdapter.generateAction(llmPromptString);
+            const llmJsonResponse = await this.#llmAdapter.getAIDecision(llmPromptString);
             logger.debug(`AIPlayerStrategy: Received LLM JSON response for actor ${actorId}: ${llmJsonResponse}`);
 
             // 5. Process LLM Response (and return its result)

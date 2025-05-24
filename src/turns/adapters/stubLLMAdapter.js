@@ -39,7 +39,7 @@ export class StubLLMAdapter extends ILLMAdapter {
      * the "core:wait" action with "I am a robot." as speech.
      * @throws {Error} This stub implementation does not throw errors unless JSON.stringify fails.
      */
-    async generateAction(gameSummary) {
+    async getAIDecision(gameSummary) {
         // actorContext parameter removed
         const actorId = 'StubActor'; // Actor ID is not directly available from parameters anymore in this stub
         this.logger.debug(`StubLLMAdapter.generateAction called. gameSummary is ignored by this stub for actor: ${actorId}.`);

@@ -440,14 +440,13 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      * @throws {Error | ConfigurationError} If the adapter is not operational, not initialized, no active LLM is set,
      * essential configuration is missing/invalid, or if the method is not yet implemented or an API call fails critically.
      */
-    async generateAction(gameSummary) {
+    async getAIDecision(gameSummary) {
         this.#logger.debug('ConfigurableLLMAdapter.generateAction called.', {
             isOperational: this.#isOperational,
             activeLlmId: this.#currentActiveLlmId,
             gameSummaryLength: gameSummary ? gameSummary.length : 0
         });
 
-        // MODIFICATION START (Sub-Ticket 1.4.4.8)
         if (!this.#isInitialized) {
             return this._getFallbackActionPromise("Adapter not initialized. Call init() first.");
         }
@@ -460,7 +459,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         if (!activeConfig) {
             return this._getFallbackActionPromise("No active LLM configuration is set. Use setActiveLlm() or set a defaultLlmId.");
         }
-        // MODIFICATION END (Sub-Ticket 1.4.4.8)
 
         const {
             id: configId,
@@ -514,7 +512,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             }
         }
 
-        // MODIFICATION START (Sub-Ticket 1.4.4.8)
         if (validationErrors.length > 0) {
             const errorDetailsMessage = validationErrors.map(err => `${err.field}: ${err.reason} (value: ${JSON.stringify(err.value)})`).join('; ');
             return this._getFallbackActionPromise(
@@ -525,7 +522,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 }
             );
         }
-        // MODIFICATION END (Sub-Ticket 1.4.4.8)
 
         this.#logger.info(
             `ConfigurableLLMAdapter: Preparing API call for LLM ID: '${configId}' (${activeConfig.displayName || 'N/A'}). Endpoint: '${endpointUrl}', Model: '${modelIdentifier}', API Type: '${apiType}', JSON Strategy: '${jsonOutputStrategy?.method || 'N/A'}'.`
@@ -536,8 +532,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         let apiKeyIdentifierForProxy = null;
         let apiKeyIdentifierType = null;
         let actualApiKeyForServer = null;
-        // MODIFICATION START (Sub-Ticket 1.4.4.8) - Removed keyRetrievalError flag, will directly call _getFallbackActionPromise
-        // MODIFICATION END (Sub-Ticket 1.4.4.8)
 
         const localApiTypes = ['ollama', 'llama_cpp_server_openai_compatible', 'tgi_openai_compatible'];
         const isCloudService = !localApiTypes.includes(apiType);
@@ -546,12 +540,10 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             if (this.#executionEnvironment === 'client') {
                 this.#logger.debug(`Adapter running in client-side mode for cloud service LLM '${configId}'.`);
                 if ((!apiKeyEnvVar || apiKeyEnvVar.trim() === '') && (!apiKeyFileName || apiKeyFileName.trim() === '')) {
-                    // MODIFICATION START (Sub-Ticket 1.4.4.8)
                     return this._getFallbackActionPromise(
                         `Client-side - API key identifier (apiKeyEnvVar or apiKeyFileName) missing in config for cloud LLM '${configId}'. Cannot proceed with proxy call.`,
                         {llmId: configId}
                     );
-                    // MODIFICATION END (Sub-Ticket 1.4.4.8)
                 }
                 if (apiKeyEnvVar && apiKeyEnvVar.trim() !== '') {
                     apiKeyIdentifierForProxy = apiKeyEnvVar.trim();
@@ -611,21 +603,17 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                     serverKeyRetrievalFailed = true;
                 }
 
-                // MODIFICATION START (Sub-Ticket 1.4.4.8)
                 if (serverKeyRetrievalFailed) {
                     return this._getFallbackActionPromise(
                         `Server-side - API key for cloud service LLM '${configId}' could not be retrieved. Source specified: ${apiKeyEnvVar ? `env var '${apiKeyEnvVar}'` : apiKeyFileName ? `file '${apiKeyFileName}'` : 'None'}.`,
                         {llmId: configId}
                     );
                 }
-                // MODIFICATION END (Sub-Ticket 1.4.4.8)
             } else { // 'unknown' environment
-                // MODIFICATION START (Sub-Ticket 1.4.4.8)
                 return this._getFallbackActionPromise(
                     `Execution environment is 'unknown' for cloud service LLM '${configId}'. API key cannot be securely handled or retrieved.`,
                     {llmId: configId}
                 );
-                // MODIFICATION END (Sub-Ticket 1.4.4.8)
             }
         } else {
             this.#logger.debug(`ConfigurableLLMAdapter: Active LLM '${configId}' is local. Direct API key handling is bypassed.`);
@@ -750,7 +738,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 strategy: currentStrategyMethod,
                 originalError: error
             });
-            // MODIFICATION START (Sub-Ticket 1.4.4.8)
             // For API call failures after retries, the ticket mentions this is broader and handled by Workspace_retry throwing.
             // However, if the goal is ultimate resilience *at this layer* for *any* failure to get a valid response before returning,
             // one might consider also returning the stub here. But based on "More nuanced error propagation for API call attempts...
@@ -758,7 +745,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             // The current ticket's scope is for *pre-call* critical failures.
             // Therefore, if Workspace_retry throws, that error should propagate up.
             throw error; // Re-throw error from Workspace_retry
-            // MODIFICATION END (Sub-Ticket 1.4.4.8)
         }
     }
 

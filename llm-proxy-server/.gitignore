@@ -1,0 +1,33 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Environment variables
+.env
+*.env.local
+*.env.*.local
+
+# Logs
+logs
+*.log
+lerna-debug.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor specific
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Optional: Build output directory if any for the proxy itself
+# dist/
+# build/

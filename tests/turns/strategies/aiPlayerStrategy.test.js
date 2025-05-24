@@ -11,7 +11,7 @@ import {jest, describe, beforeEach, test, expect, afterEach} from '@jest/globals
  * @returns {jest.Mocked<import('../../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter>}
  */
 const mockLlmAdapter = () => ({
-    generateAction: jest.fn(),
+    getAIDecision: jest.fn(),
 });
 
 /**
@@ -123,26 +123,26 @@ describe('AIPlayerStrategy', () => {
         test('should throw an error if llmAdapter is not provided', () => {
             expect(() => new AIPlayerStrategy({
                 gameStateProvider, promptFormatter, llmResponseProcessor
-            })).toThrow("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a generateAction method.");
+            })).toThrow("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a getAIDecision method.");
         });
 
         test('should throw an error if llmAdapter is null', () => {
             expect(() => new AIPlayerStrategy({
                 llmAdapter: null, gameStateProvider, promptFormatter, llmResponseProcessor
-            })).toThrow("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a generateAction method.");
+            })).toThrow("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a getAIDecision method.");
         });
 
-        test('should throw an error if llmAdapter does not have generateAction method', () => {
+        test('should throw an error if llmAdapter does not have getAIDecision method', () => {
             expect(() => new AIPlayerStrategy({
                 llmAdapter: {}, gameStateProvider, promptFormatter, llmResponseProcessor
-            })).toThrow("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a generateAction method.");
+            })).toThrow("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a getAIDecision method.");
         });
 
-        test('should throw an error if llmAdapter.generateAction is not a function', () => {
+        test('should throw an error if llmAdapter.getAIDecision is not a function', () => {
             expect(() => new AIPlayerStrategy({
-                llmAdapter: {generateAction: "not-a-function"},
+                llmAdapter: {getAIDecision: "not-a-function"},
                 gameStateProvider, promptFormatter, llmResponseProcessor
-            })).toThrow("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a generateAction method.");
+            })).toThrow("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a getAIDecision method.");
         });
 
 
@@ -408,7 +408,7 @@ describe('AIPlayerStrategy', () => {
             // Default happy path mocks
             da_gameStateProvider.buildGameState.mockResolvedValue(mockGameStateDto_da);
             da_promptFormatter.formatPrompt.mockReturnValue(mockLlmPromptString_da);
-            da_llmAdapter.generateAction.mockResolvedValue(mockLlmJsonResponse_da);
+            da_llmAdapter.getAIDecision.mockResolvedValue(mockLlmJsonResponse_da);
             da_llmResponseProcessor.processResponse.mockReturnValue(mockProcessedAction_da);
         });
 
@@ -448,7 +448,7 @@ describe('AIPlayerStrategy', () => {
 
             expect(da_gameStateProvider.buildGameState).toHaveBeenCalledWith(mockActor_da, context, capturedLogger_da);
             expect(da_promptFormatter.formatPrompt).toHaveBeenCalledWith(mockGameStateDto_da, capturedLogger_da);
-            expect(da_llmAdapter.generateAction).toHaveBeenCalledWith(mockLlmPromptString_da);
+            expect(da_llmAdapter.getAIDecision).toHaveBeenCalledWith(mockLlmPromptString_da);
             expect(da_llmResponseProcessor.processResponse).toHaveBeenCalledWith(mockLlmJsonResponse_da, mockActor_da.id, capturedLogger_da);
             expect(resultAction).toBe(mockProcessedAction_da);
 
@@ -505,10 +505,10 @@ describe('AIPlayerStrategy', () => {
         });
 
 
-        test('should return fallback if llmAdapter.generateAction throws', async () => {
+        test('should return fallback if llmAdapter.getAIDecision throws', async () => {
             const context = createLocalMockContext_da(mockActor_da);
             const error = new Error("LLM Communication Error");
-            da_llmAdapter.generateAction.mockRejectedValue(error);
+            da_llmAdapter.getAIDecision.mockRejectedValue(error);
 
             const result = await instance_da.decideAction(context);
             expect(result.actionDefinitionId).toBe(FALLBACK_AI_ACTION.actionDefinitionId);

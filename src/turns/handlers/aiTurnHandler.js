@@ -115,7 +115,7 @@ export class AITurnHandler extends BaseTurnHandler {
             this._logger.error(errorMsg, {gameWorldAccess});
             throw new Error(errorMsg);
         }
-        if (!illmAdapter || typeof illmAdapter.generateAction !== 'function') {
+        if (!illmAdapter || typeof illmAdapter.getAIDecision !== 'function') {
             const errorMsg = `${this.constructor.name} Constructor: Invalid or missing ILLMAdapter dependency.`;
             this._logger.error(errorMsg, {illmAdapter});
             throw new Error(errorMsg);

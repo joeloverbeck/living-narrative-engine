@@ -13,7 +13,7 @@ import {
     initializeAuxiliaryServicesStage,
     setupMenuButtonListenersStage,
     setupGlobalEventListenersStage,
-    startGameStage // <<< ADDED IMPORT FOR THE NEW STAGE
+    startGameStage
 } from './src/bootstrapper/stages.js';
 
 // --- Bootstrap the Application ---
