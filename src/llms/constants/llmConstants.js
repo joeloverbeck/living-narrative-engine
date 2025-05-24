@@ -8,8 +8,6 @@ export const DEFAULT_FALLBACK_ACTION = {
 };
 export const DEFAULT_FALLBACK_ACTION_JSON_STRING = JSON.stringify(DEFAULT_FALLBACK_ACTION);
 
-export const DEFAULT_PROXY_SERVER_URL = 'http://localhost:3001/api/llm-request';
-
 export const CLOUD_API_TYPES = ['openrouter', 'openai', 'anthropic'];
 
 // MODIFICATION START (Ticket 2.2)
@@ -20,16 +18,20 @@ export const DEFAULT_ANTHROPIC_VERSION = "2023-06-01";
 export const GAME_AI_ACTION_SPEECH_TOOL_PARAMETERS_SCHEMA = {
     type: "object",
     properties: {
-        action: {
+        actionDefinitionId: {
             type: "string",
-            description: "The specific game command or action to be performed by the character (e.g., 'MOVE_NORTH', 'PICKUP_ITEM lantern'). Must be a valid game command."
+            description: "The unique System ID of the action chosen by the character (e.g., 'core:go', 'app:take_item'). This corresponds to the 'System ID' from the list of available actions."
+        },
+        commandString: {
+            type: "string",
+            description: "The fully specified game command string that the game engine will parse (e.g., 'go north', 'take the rusty key from the old chest', 'wait'). This is based on the 'Base Command' and augmented with necessary details."
         },
         speech: {
             type: "string",
-            description: "The line of dialogue the character should speak. Can be an empty string if no speech is appropriate."
+            description: "The exact line of dialogue the character should speak. Can be an empty string if no speech is appropriate."
         }
     },
-    required: ["action", "speech"]
+    required: ["actionDefinitionId", "commandString", "speech"]
 };
 // MODIFICATION END (Ticket 2.2)
 
@@ -40,16 +42,20 @@ export const OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA = {
     schema: { // The JSON Schema object itself
         type: "object",
         properties: {
-            action: {
+            actionDefinitionId: {
                 type: "string",
-                description: "A concise game command string representing the character's action (e.g., 'USE_ITEM torch', 'LOOK_AROUND', 'SPEAK_TO goblin')." //
+                description: "The unique System ID of the action chosen by the character (e.g., 'core:go', 'app:take_item'). This corresponds to the 'System ID' from the list of available actions."
+            },
+            commandString: {
+                type: "string",
+                description: "The fully specified game command string that the game engine will parse (e.g., 'go north', 'take the rusty key from the old chest', 'wait'). This is based on the 'Base Command' and augmented with necessary details."
             },
             speech: {
                 type: "string",
-                description: "The exact line of dialogue the character should speak. Can be empty if no speech is appropriate." //
+                description: "The exact line of dialogue the character should speak. Can be an empty string if no speech is appropriate."
             }
         },
-        required: ["action", "speech"] //
+        required: ["actionDefinitionId", "commandString", "speech"]
     }
 };
 

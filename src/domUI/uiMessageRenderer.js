@@ -80,12 +80,6 @@ export class UiMessageRenderer extends RendererBase {
         );
         this.#subscriptions.push(
             this.validatedEventDispatcher.subscribe(
-                'core:action_executed',
-                this.#onCommandEcho.bind(this)
-            )
-        );
-        this.#subscriptions.push(
-            this.validatedEventDispatcher.subscribe(
                 'core:action_failed',
                 this.#onCommandEcho.bind(this)
             )

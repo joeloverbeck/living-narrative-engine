@@ -83,8 +83,9 @@ export class AIPromptFormatter extends IAIPromptFormatter {
         const exitsSegment = this._formatListSegment(
             "Exits from your current location:",
             currentLocation.exits,
-            // MODIFICATION: Guidance for commandString for 'go' action updated slightly
-            (exit) => `- Towards ${exit.direction} leads to ${exit.targetLocationId}. (To go this way, choose an action like 'core:go', resulting in a command string like 'go ${exit.direction}').`,
+            // MODIFICATION: Display target location name instead of ID, and remove instructional text.
+            // This assumes `exit.targetLocationName` is populated in AILocationExitDTO.
+            (exit) => `- Towards ${exit.direction} leads to ${exit.targetLocationName}.`,
             "There are no obvious exits.",
             logger
         );

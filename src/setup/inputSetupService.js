@@ -67,10 +67,6 @@ class InputSetupService {
 
             // --- Define the Command Processing Callback ---
             const processInputCommand = async (command) => {
-                // Echo command back to UI via VED (remains useful)
-                this.#validatedEventDispatcher.dispatchValidated('textUI:command_echo', {command})
-                    .catch(e => this.#logger.error("Failed dispatching textUI:command_echo", e));
-
                 // --- REFACTORED LOGIC ---
                 // Instead of checking GameLoop and calling its method,
                 // simply dispatch the command submission event.

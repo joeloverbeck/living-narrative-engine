@@ -112,8 +112,9 @@ describe('AIPromptFormatter', () => {
                         name: 'The Grand Hall',
                         description: 'A vast hall with high ceilings.',
                         exits: [
-                            {direction: 'north', targetLocationId: 'loc2'},
-                            {direction: 'east', targetLocationId: 'loc3'},
+                            // MODIFICATION: Added targetLocationName
+                            {direction: 'north', targetLocationId: 'loc2', targetLocationName: 'North Passage'},
+                            {direction: 'east', targetLocationId: 'loc3', targetLocationName: 'East Chamber'},
                         ],
                         characters: [
                             {id: 'char-guard-1', name: 'Guard', description: 'A stern-looking guard.'},
@@ -130,17 +131,16 @@ describe('AIPromptFormatter', () => {
                 };
 
                 const characterSegment = "You are Test Actor. Your character description: A brave adventurer.";
-                // MODIFICATION: Updated locationSegment to match new formatting
+                // MODIFICATION: Updated locationSegment to match new formatting (use targetLocationName, no instructional text)
                 const locationSegment = "You are currently in the location: The Grand Hall. Location description: A vast hall with high ceilings.\n" +
                     "Exits from your current location:\n" +
-                    "- Towards north leads to loc2. (To go this way, choose an action like 'core:go', resulting in a command string like 'go north').\n" +
-                    "- Towards east leads to loc3. (To go this way, choose an action like 'core:go', resulting in a command string like 'go east').\n" +
+                    "- Towards north leads to North Passage.\n" +
+                    "- Towards east leads to East Chamber.\n" +
                     "Other characters present in this location:\n" +
                     "- Guard - Description: A stern-looking guard.";
                 const eventsSegment = "Recent events relevant to you (oldest first):\n" +
                     "- You hear a distant roar.\n" +
                     "- A rat scurries past.";
-                // MODIFICATION: Updated actionsSegment title
                 const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
                     '- Name: "Move North", System ID: "core:move", Base Command: "go north". Description: Move to the north.\n' +
                     '- Name: "Speak", System ID: "core:speak", Base Command: "say Hello". Description: Talk to someone.';
@@ -166,7 +166,6 @@ describe('AIPromptFormatter', () => {
                 expect(logger.debug).toHaveBeenCalledWith("AIPromptFormatter: Formatting events segment.");
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Formatted 2 items for section "Recent events relevant to you (oldest first)".');
                 expect(logger.debug).toHaveBeenCalledWith("AIPromptFormatter: Formatting actions segment.");
-                // MODIFICATION: Updated section title for logger expectation
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Formatted 2 items for section "Your available actions are (for your JSON response, use \'System ID\' for \'actionDefinitionId\' and construct a complete \'commandString\' based on the \'Base Command\')".');
                 expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining("AIPromptFormatter: Generated Prompt"));
                 expect(logger.debug).toHaveBeenCalledTimes(9);
@@ -196,7 +195,7 @@ describe('AIPromptFormatter', () => {
             });
 
             test('should return error prompt and log error if actorState is missing', () => {
-                const gameState = {actorState: null};
+                const gameState = {actorState: null}; // actorState is null, not the whole gameState
                 const expectedErrorPrompt = "Error: Actor state information is missing. Cannot generate LLM prompt.";
                 const result = formatter.formatPrompt(gameState, logger);
                 expect(result).toBe(expectedErrorPrompt);
@@ -232,7 +231,6 @@ describe('AIPromptFormatter', () => {
                     "You are alone here.";
                 const eventsSegment = "Recent events relevant to you (oldest first):\n" +
                     "Nothing noteworthy has happened recently.";
-                // MODIFICATION: Updated actionsSegment title and noActionsMessage
                 const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
                     "You have no specific actions available right now. If 'core:wait' (or similar) is an option, use its System ID for 'actionDefinitionId' and an appropriate 'commandString' (e.g., 'wait'). Otherwise, the game rules will dictate behavior.";
 
@@ -252,7 +250,6 @@ describe('AIPromptFormatter', () => {
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Section "Exits from your current location" is empty, using empty message.');
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Section "Other characters present in this location" is empty, using empty message.');
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Section "Recent events relevant to you (oldest first)" is empty, using empty message.');
-                // MODIFICATION: Updated section title for logger expectation
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Section "Your available actions are (for your JSON response, use \'System ID\' for \'actionDefinitionId\' and construct a complete \'commandString\' based on the \'Base Command\')" is empty, using empty message.');
             });
 
@@ -272,7 +269,6 @@ describe('AIPromptFormatter', () => {
                 const locationSegment = "Your current location is unknown.";
                 const eventsSegment = "Recent events relevant to you (oldest first):\n" +
                     "Nothing noteworthy has happened recently.";
-                // MODIFICATION: Updated actionsSegment title and noActionsMessage
                 const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
                     "You have no specific actions available right now. If 'core:wait' (or similar) is an option, use its System ID for 'actionDefinitionId' and an appropriate 'commandString' (e.g., 'wait'). Otherwise, the game rules will dictate behavior.";
 
@@ -312,7 +308,6 @@ describe('AIPromptFormatter', () => {
                     "You are alone here.";
                 const eventsSegment = "Recent events relevant to you (oldest first):\n" +
                     "- It is quiet here.";
-                // MODIFICATION: Updated actionsSegment title
                 const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
                     '- Name: "Wait", System ID: "core:wait", Base Command: "wait". Description: Do nothing.';
 
@@ -338,7 +333,8 @@ describe('AIPromptFormatter', () => {
                     currentLocation: {
                         name: 'A Room',
                         description: 'Just a room.',
-                        exits: [{direction: 'out', targetLocationId: 'somewhere'}],
+                        // MODIFICATION: Added targetLocationName
+                        exits: [{direction: 'out', targetLocationId: 'somewhere', targetLocationName: 'The Void'}],
                         characters: [{id: 'char-nobody', name: 'Nobody', description: 'Barely visible.'}],
                     },
                     perceptionLog: [],
@@ -351,15 +347,14 @@ describe('AIPromptFormatter', () => {
                 };
 
                 const characterSegment = "You are Oblivious One. Your character description: Not very observant.";
-                // MODIFICATION: Updated locationSegment for exits
+                // MODIFICATION: Updated locationSegment for exits to use targetLocationName and remove instructional text
                 const locationSegment = "You are currently in the location: A Room. Location description: Just a room.\n" +
                     "Exits from your current location:\n" +
-                    "- Towards out leads to somewhere. (To go this way, choose an action like 'core:go', resulting in a command string like 'go out').\n" +
+                    "- Towards out leads to The Void.\n" +
                     "Other characters present in this location:\n" +
                     "- Nobody - Description: Barely visible.";
                 const eventsSegment = "Recent events relevant to you (oldest first):\n" +
                     "Nothing noteworthy has happened recently.";
-                // MODIFICATION: Updated actionsSegment title
                 const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
                     '- Name: "Ponder", System ID: "core:ponder", Base Command: "ponder". Description: Think deeply.';
 
@@ -398,7 +393,6 @@ describe('AIPromptFormatter', () => {
                     "You are alone here.";
                 const eventsSegment = "Recent events relevant to you (oldest first):\n" +
                     "- A sense of ennui.";
-                // MODIFICATION: Updated actionsSegment title and noActionsMessage
                 const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
                     "You have no specific actions available right now. If 'core:wait' (or similar) is an option, use its System ID for 'actionDefinitionId' and an appropriate 'commandString' (e.g., 'wait'). Otherwise, the game rules will dictate behavior.";
 
@@ -413,7 +407,6 @@ describe('AIPromptFormatter', () => {
                 const result = formatter.formatPrompt(gameState, logger);
                 expect(result).toBe(expectedPrompt);
                 expect(logger.debug).toHaveBeenCalledWith("AIPromptFormatter: Formatting actions segment.");
-                // MODIFICATION: Updated section title for logger expectation
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Section "Your available actions are (for your JSON response, use \'System ID\' for \'actionDefinitionId\' and construct a complete \'commandString\' based on the \'Base Command\')" is empty, using empty message.');
             });
         });

@@ -72,11 +72,15 @@
     padding-top: var(--spacing-sm);
     padding-bottom: var(--spacing-sm);
     padding-right: var(--spacing-md);
-    padding-left: calc(var(--spacing-md) - 3px);
+    padding-left: calc(var(--spacing-md) - 3px); /* Accommodates the border-left */
     border-left: 3px solid var(--speech-border-color);
-    border-radius: var(--border-radius-xs);
-    margin-top: var(--spacing-xs);
-    margin-bottom: var(--spacing-xs);
+
+    /* Speech Bubble Enhancements */
+    border-radius: var(--border-radius-lg, 12px); /* More rounded corners, fallback to 12px */
+    margin-top: var(--spacing-sm); /* Increased top margin */
+    margin-bottom: var(--spacing-sm); /* Increased bottom margin */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    position: relative; /* Good for potential future pseudo-elements like tails */
 }
 
 /* --- Responsive Adjustments for Message List (Moved from style.css) --- */
@@ -86,19 +90,25 @@
     }
 
     #message-list li.message-speech { /* Simplified from #center-pane #message-list li.message-speech */
-        padding-left: calc(var(--spacing-sm) - 3px);
+        /* Adjust padding to be consistent with other messages at this breakpoint */
+        padding-top: var(--spacing-xs);
+        padding-bottom: var(--spacing-xs);
         padding-right: var(--spacing-sm);
+        padding-left: calc(var(--spacing-sm) - 3px); /* Keep border accommodation */
+        /* Margins for speech can also be adjusted if needed */
+        margin-top: var(--spacing-xs);
+        margin-bottom: var(--spacing-xs);
     }
 }
 
 @media (max-width: 480px) {
     #message-list li { /* Simplified from #center-pane #message-list li */
-        padding: var(--spacing-xs) var(--spacing-sm);
+        /* Padding already var(--spacing-xs) var(--spacing-sm) from 768px breakpoint */
     }
 
     #message-list li.message-speech { /* Simplified from #center-pane #message-list li.message-speech */
-        padding-left: calc(var(--spacing-sm) - 3px);
-        padding-right: var(--spacing-sm);
+        /* Padding already adjusted from 768px breakpoint */
+        /* No additional changes needed here unless finer control is desired */
     }
 }
 

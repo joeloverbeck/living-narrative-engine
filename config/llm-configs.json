@@ -46,6 +46,28 @@
         "temperature": 1.0
       }
     },
+    "openrouter-valkyrie-49b-v1": {
+      "id": "openrouter-valkyrie-49b-v1",
+      "displayName": "Valkyrie-49-v1 (OpenRouter)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "thedrummer/valkyrie-49b-v1",
+      "apiType": "openrouter",
+      "promptFrame": {
+        "system": "You are a helpful AI assistant for a text adventure game. Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "My Text Adventure Game"
+      },
+      "jsonOutputStrategy": {
+        "method": "openrouter_json_schema"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      }
+    },
     "local-ollama-mistral": {
       "id": "local-ollama-mistral",
       "displayName": "Local Mistral (Ollama)",
@@ -71,7 +93,8 @@
       },
       "jsonOutputStrategy": {
         "method": "tool_calling",
-        "toolName": "get_game_character_action_speech"
+        "toolName": "game_ai_action_speech",
+        "toolDescription": "Extracts the character's next game action and speech based on the situation. Both action and speech are required."
       },
       "defaultParameters": {
         "temperature": 0.6

@@ -1,4 +1,4 @@
-// src/tests/domUI/uiMessageRenderer.test.js
+// tests/domUI/uiMessageRenderer.test.js
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
 import {UiMessageRenderer} from '../../src/domUI/index.js';
@@ -159,8 +159,9 @@ describe('UiMessageRenderer', () => {
             const renderer = createRenderer();
             const command = 'look around';
             const text = `> ${command}`;
+            // This test directly calls the method, which is still valid as #onCommandEcho is used by core:action_failed
             renderer["_UiMessageRenderer__onCommandEcho"]({
-                type: 'core:action_executed',
+                type: 'core:action_executed', // Simulating the payload structure
                 payload: {originalInput: command}
             });
             const messageElement = messageList.querySelector('li');
@@ -198,10 +199,10 @@ describe('UiMessageRenderer', () => {
     describe('Event Handling (VED Subscriptions)', () => {
         it('should subscribe to events on construction', () => {
             createRenderer();
-            expect(mockVed.subscribe).toHaveBeenCalledTimes(4);
+            expect(mockVed.subscribe).toHaveBeenCalledTimes(3); // CHANGED from 4
             expect(mockVed.subscribe).toHaveBeenCalledWith('textUI:display_message', expect.any(Function));
             expect(mockVed.subscribe).toHaveBeenCalledWith('core:system_error_occurred', expect.any(Function));
-            expect(mockVed.subscribe).toHaveBeenCalledWith('core:action_executed', expect.any(Function));
+            // REMOVED: expect(mockVed.subscribe).toHaveBeenCalledWith('core:action_executed', expect.any(Function));
             expect(mockVed.subscribe).toHaveBeenCalledWith('core:action_failed', expect.any(Function));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Subscribed to VED events.'));
         });
@@ -231,18 +232,8 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: fatal - ${payload.message.substring(0, 50)}`));
         });
 
-        it('should handle core:action_executed event (echo)', () => {
-            const renderer = createRenderer();
-            const command = 'do something';
-            const payload = {originalInput: command};
-            const echoHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:action_executed')[1];
-            echoHandler({type: 'core:action_executed', payload: payload});
-            const messageElement = messageList.querySelector('li');
-            expect(messageElement).not.toBeNull();
-            expect(messageElement.textContent).toBe(`> ${command}`);
-            expect(messageElement.classList.contains('message-echo')).toBe(true);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: echo - > ${command.substring(0, 50)}`));
-        });
+        // REMOVED 'should handle core:action_executed event (echo)' test block
+        // as the subscription to 'core:action_executed' is removed from the renderer.
 
         it('should handle core:action_failed event (echo)', () => {
             const renderer = createRenderer();
@@ -257,20 +248,10 @@ describe('UiMessageRenderer', () => {
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Rendered message: echo - > ${command.substring(0, 50)}`));
         });
 
-        it('should ignore echo events without valid originalInput', () => {
-            const renderer = createRenderer();
-            const echoHandler = mockVed.subscribe.mock.calls.find(call => call[0] === 'core:action_executed')[1];
-            echoHandler({type: 'core:action_executed', payload: {originalInput: null}});
-            echoHandler({type: 'core:action_executed', payload: {originalInput: ''}});
-            echoHandler({type: 'core:action_executed', payload: {}});
-            const messageElements = messageList.querySelectorAll('li');
-            expect(messageElements.length).toBe(0);
-            expect(mockLogger.warn).toHaveBeenCalledTimes(3);
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining('Received command echo event without valid originalInput or command.'),
-                expect.objectContaining({type: 'core:action_executed', payload: expect.anything()})
-            );
-        });
+        // REMOVED 'should ignore echo events without valid originalInput' test block
+        // as it relied on the 'core:action_executed' handler which is no longer subscribed.
+        // If similar logic is needed for 'core:action_failed', a new specific test should be written for it.
+        // For now, the original #onCommandEcho method (used by core:action_failed) already has logging for invalid input.
 
         it('should handle invalid display_message payload', () => {
             const renderer = createRenderer();
@@ -314,7 +295,7 @@ describe('UiMessageRenderer', () => {
             const renderer = createRenderer();
             renderer.dispose();
 
-            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(4);
+            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(3); // CHANGED from 4
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.'));
         });
     });
@@ -415,7 +396,7 @@ describe('UiMessageRenderer', () => {
             const renderer = createRenderer();
             renderer.dispose();
             renderer.dispose();
-            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(4);
+            expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(3); // CHANGED from 4
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[UiMessageRenderer] Disposing.'));
         });

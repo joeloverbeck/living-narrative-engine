@@ -1,4 +1,4 @@
-// src/tests/core/setup/inputSetupService.test.js
+// tests/setup/inputSetupService.test.js
 
 import InputSetupService from '../../src/setup/inputSetupService.js';
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
@@ -179,15 +179,12 @@ describe('InputSetupService', () => {
             if (!capturedCallback) {
                 throw new Error('Test setup failed: Callback was not captured.');
             }
+            // Clear mocks for VED dispatch calls specifically for this suite's tests
+            // to ensure counts are isolated to the callback execution.
+            mockvalidatedEventDispatcher.dispatchValidated.mockClear();
         });
 
-        it('should call validatedEventDispatcher.dispatchValidated with textUI:command_echo', async () => {
-            await capturedCallback(testCommand);
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
-                'textUI:command_echo',
-                {command: testCommand}
-            );
-        });
+        // REMOVED: Test for 'textUI:command_echo' as it's no longer dispatched by InputSetupService.
 
         // --- UPDATED: Check for 'core:submit_command' dispatch ---
         it('should call validatedEventDispatcher.dispatchValidated with core:submit_command', async () => {
@@ -196,15 +193,8 @@ describe('InputSetupService', () => {
                 'core:submit_command',
                 {command: testCommand}
             );
-            // Check it was called (at least) twice total: once for echo, once for submit
-            // (plus initialization events if configureInputHandler is called within test)
-            // We can be more specific checking the *last* relevant calls if needed.
-            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(
-                // If configureInputHandler was called in the main describe's beforeEach,
-                // it might be called more times across all tests.
-                // Focusing on the specific calls is better.
-                2 // Adjust if init events are not counted or configure is called elsewhere
-            );
+            // Check it was called exactly once during the callback execution.
+            expect(mockvalidatedEventDispatcher.dispatchValidated).toHaveBeenCalledTimes(1); // CHANGED from 2
         });
         // --- END UPDATED ---
 
@@ -212,30 +202,8 @@ describe('InputSetupService', () => {
 
         // Test for NOT calling textUI:disable_input removed (was specific to gameLoop running case)
 
-        // --- UPDATED: Check order of echo and submit dispatches ---
-        it('should call textUI:command_echo before core:submit_command', async () => {
-            await capturedCallback(testCommand);
-
-            // Find the specific calls *after* the callback invocation
-            const calls = mockvalidatedEventDispatcher.dispatchValidated.mock.calls;
-            const invocationOrder = mockvalidatedEventDispatcher.dispatchValidated.mock.invocationCallOrder;
-
-            // Filter calls made *during* the callback execution (simplest: check last 2 relevant calls)
-            const callbackCalls = calls.slice(-2); // Assuming echo and submit are the last 2 VED calls
-
-            const echoCall = callbackCalls.find(call => call && call[0] === 'textUI:command_echo');
-            const submitCall = callbackCalls.find(call => call && call[0] === 'core:submit_command');
-
-            expect(echoCall).toBeDefined();
-            expect(submitCall).toBeDefined();
-
-            // Find original indices to get invocation order
-            const echoCallIndex = calls.findIndex(call => call === echoCall);
-            const submitCallIndex = calls.findIndex(call => call === submitCall);
-
-            expect(invocationOrder[echoCallIndex]).toBeLessThan(invocationOrder[submitCallIndex]);
-        });
-        // --- END UPDATED ---
+        // REMOVED: Test for 'textUI:command_echo' before 'core:submit_command'
+        // as 'textUI:command_echo' is no longer dispatched by InputSetupService.
     });
 
     // Test Suite 4: Callback Logic (GameLoop Not Running) REMOVED entirely

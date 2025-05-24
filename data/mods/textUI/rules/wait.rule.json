@@ -23,17 +23,6 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Dispatch a message to the UI indicating that the entity has waited.",
-      "parameters": {
-        "eventType": "textUI:display_message",
-        "payload": {
-          "message": "{evaluationContext.context.actorNameComponent.text} waits.",
-          "type": "info"
-        }
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
       "comment": "Dispatch an event to indicate that the entity's turn has ended.",
       "parameters": {
         "eventType": "core:turn_ended",
