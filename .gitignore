@@ -173,5 +173,5 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# API keys
-openrouter_api_key.txt
+# API Key Files for LLM Configurations
+*_api_key.txt

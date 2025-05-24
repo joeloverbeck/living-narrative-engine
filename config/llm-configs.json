@@ -1,0 +1,35 @@
+{
+  "defaultLlmId": "openrouter-claude3-haiku",
+  "llms": {
+    "openrouter-claude3-haiku": {
+      "id": "openrouter-claude3-haiku",
+      "displayName": "Claude 3 Haiku (OpenRouter)",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "anthropic/claude-3-haiku-20240307",
+      "apiType": "openrouter"
+    },
+    "local-ollama-mistral": {
+      "id": "local-ollama-mistral",
+      "displayName": "Local Mistral (Ollama)",
+      "endpointUrl": "http://localhost:11434/api/chat",
+      "modelIdentifier": "mistral",
+      "apiType": "ollama"
+    },
+    "openai-gpt-4o": {
+      "id": "openai-gpt-4o",
+      "displayName": "OpenAI GPT-4o",
+      "apiKeyFileName": "openai_api_key.txt",
+      "endpointUrl": "https://api.openai.com/v1/chat/completions",
+      "modelIdentifier": "gpt-4o",
+      "apiType": "openai"
+    },
+    "local-llama-cpp-server": {
+      "id": "local-llama-cpp-server",
+      "displayName": "Local Llama.cpp Server (OpenAI Compatible)",
+      "endpointUrl": "http://localhost:8080/v1/chat/completions",
+      "modelIdentifier": "local-model-gguf-name",
+      "apiType": "llama_cpp_server_openai_compatible"
+    }
+  }
+}
