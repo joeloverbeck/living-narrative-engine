@@ -1,7 +1,7 @@
 // src/llms/strategies/base/BaseChatLLMStrategy.js
 // --- FILE START ---
 
-import {BaseLLMStrategy} from './baseLLMStrategy.js';
+import {BaseLLMStrategy} from './BaseLLMStrategy.js'; // Assuming PascalCase for BaseLLMStrategy.js
 
 /**
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
@@ -38,28 +38,33 @@ export class BaseChatLLMStrategy extends BaseLLMStrategy {
 
         const messages = [];
         let finalGameSummaryContent = gameSummary;
+        let systemMessageSuccessfullyAdded = false; // Flag to track if a system message was meaningfully added
 
         const hasActualPromptFrameObject = promptFrame && typeof promptFrame === 'object' && Object.keys(promptFrame).length > 0;
         const isNonEmptyStringPromptFrame = typeof promptFrame === 'string' && promptFrame.trim() !== '';
 
         if (isNonEmptyStringPromptFrame) {
             messages.push({role: "system", content: promptFrame.trim()});
+            systemMessageSuccessfullyAdded = true;
         } else if (hasActualPromptFrameObject) {
             if (typeof promptFrame.system === 'string' && promptFrame.system.trim() !== '') {
                 messages.push({role: "system", content: promptFrame.system.trim()});
+                systemMessageSuccessfullyAdded = true;
             }
+            // User prefix and suffix are applied regardless of whether a system message was added from the object
             if (typeof promptFrame.user_prefix === 'string' && promptFrame.user_prefix.trim() !== '') {
                 finalGameSummaryContent = `${promptFrame.user_prefix.trim()} ${finalGameSummaryContent}`;
             }
             if (typeof promptFrame.user_suffix === 'string' && promptFrame.user_suffix.trim() !== '') {
                 finalGameSummaryContent = `${finalGameSummaryContent} ${promptFrame.user_suffix.trim()}`;
             }
-        } else {
-            // This warning logic is specifically for chat-like APIs as per the original code.
-            // Typically, 'openai', 'openrouter', 'anthropic' are the main ones designated as chat-like in ConfigurableLLMAdapter.
-            if (['openai', 'openrouter', 'anthropic'].includes(llmConfig.apiType)) {
-                this.logger.warn(`BaseChatLLMStrategy._constructPromptPayload: promptFrame is missing or effectively empty for chat-like apiType '${llmConfig.apiType}'. Applying default user message structure. Consider defining a promptFrame for optimal results.`);
-            }
+        }
+
+        // Log a warning if no system message was derived from the promptFrame for relevant chat APIs
+        // This warning will now trigger if promptFrame was null/undefined, an empty string (after trim),
+        // an empty object, or an object that didn't yield a system message (e.g., only user_prefix/suffix, or system was an empty string after trim).
+        if (!systemMessageSuccessfullyAdded && ['openai', 'openrouter', 'anthropic'].includes(llmConfig.apiType)) {
+            this.logger.warn(`BaseChatLLMStrategy._constructPromptPayload: promptFrame is missing or effectively empty (did not yield a system message) for chat-like apiType '${llmConfig.apiType}'. Applying default user message structure. Consider defining a promptFrame for optimal results.`);
         }
 
         messages.push({role: "user", content: finalGameSummaryContent.trim()});
@@ -73,4 +78,4 @@ export class BaseChatLLMStrategy extends BaseLLMStrategy {
     }
 }
 
-// --- FILE END ---
+// --- UPDATED FILE END ---

@@ -5,6 +5,9 @@ import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
 import {getApiKeyFromFile as getApiKeyFromFileSystem} from '../../utils/apiKeyFileRetriever.js';
 import {Workspace_retry} from '../../utils/apiUtils.js';
 
+// +++ ADD IMPORTS FOR BASE STRATEGIES +++
+import {BaseChatLLMStrategy} from '../../llms/strategies/base/BaseChatLLMStrategy.js'; // Adjust path as per your structure
+import {BaseCompletionLLMStrategy} from '../../llms/strategies/base/BaseCompletionLLMStrategy.js'; // Adjust path
 
 /**
  * @typedef {import('../../services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
@@ -48,28 +51,22 @@ const GAME_AI_ACTION_SPEECH_TOOL_PARAMETERS_SCHEMA = {
 // MODIFICATION END (Ticket 2.2)
 
 // MODIFICATION START (Ticket 2.3)
-/**
- * JSON Schema definition for OpenRouter's response_format: { type: 'json_schema' }.
- * This schema defines the expected {'action': 'string', 'speech': 'string'} output.
- * Includes name, strict: true, and the schema object with properties and required fields.
- * [cite: 130, 131, 132, 133]
- */
 const OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA = {
-    name: "game_ai_action_speech_output", // [cite: 130] A descriptive name for the schema
-    strict: true, // [cite: 130] Enforces strict adherence, disallowing additional properties
-    schema: { // [cite: 130] The JSON Schema object itself
+    name: "game_ai_action_speech_output", // A descriptive name for the schema
+    strict: true, // Enforces strict adherence, disallowing additional properties
+    schema: { // The JSON Schema object itself
         type: "object",
         properties: {
             action: {
                 type: "string",
-                description: "A concise game command string representing the character's action (e.g., 'USE_ITEM torch', 'LOOK_AROUND', 'SPEAK_TO goblin')." // [cite: 131, 146]
+                description: "A concise game command string representing the character's action (e.g., 'USE_ITEM torch', 'LOOK_AROUND', 'SPEAK_TO goblin')." //
             },
             speech: {
                 type: "string",
-                description: "The exact line of dialogue the character should speak. Can be empty if no speech is appropriate." // [cite: 132, 147]
+                description: "The exact line of dialogue the character should speak. Can be empty if no speech is appropriate." //
             }
         },
-        required: ["action", "speech"] // [cite: 133, 148]
+        required: ["action", "speech"] //
     }
 };
 
@@ -427,66 +424,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         return this.#currentActiveLlmConfig;
     }
 
-    /**
-     * Constructs the prompt-related part of the payload for an LLM API request.
-     * This method uses the `promptFrame` from the LLM configuration to structure
-     * the `gameSummary` appropriately for the target LLM's API. [cite: 778, 1119]
-     *
-     * @private
-     * @param {string} gameSummary - The detailed textual representation of the game state.
-     * @param {object | string | undefined} promptFrame - The promptFrame object from the LLM configuration. [cite: 778, 1119]
-     * @param {string} apiType - The apiType string from the LLM configuration. [cite: 745, 1118]
-     * @returns {object} An object containing either a `messages` array or a `prompt` string,
-     * suitable for inclusion in the LLM API request payload.
-     * Example: `{ messages: [...] }` or `{ prompt: "..." }`.
-     */
-    _constructPromptPayload(gameSummary, promptFrame, apiType) {
-        this.#logger.debug(`ConfigurableLLMAdapter._constructPromptPayload: Constructing prompt. apiType: '${apiType}'.`, {promptFrame});
-
-        const messages = [];
-        let finalGameSummary = gameSummary;
-
-        const hasActualPromptFrameObject = promptFrame && typeof promptFrame === 'object' && Object.keys(promptFrame).length > 0;
-        const isNonEmptyStringPromptFrame = typeof promptFrame === 'string' && promptFrame.trim() !== '';
-        const localApiTypesForLogging = ['ollama', 'llama_cpp_server_openai_compatible', 'tgi_openai_compatible'];
-
-        if (isNonEmptyStringPromptFrame) {
-            if (['openai', 'openrouter', 'anthropic'].includes(apiType)) {
-                messages.push({role: "system", content: promptFrame.trim()});
-            } else {
-                finalGameSummary = `${promptFrame.trim()}\n\n${gameSummary}`;
-            }
-        } else if (hasActualPromptFrameObject) {
-            if (typeof promptFrame.system === 'string' && promptFrame.system.trim() !== '') {
-                messages.push({role: "system", content: promptFrame.system.trim()});
-            }
-            if (typeof promptFrame.user_prefix === 'string' && promptFrame.user_prefix.trim() !== '') {
-                finalGameSummary = `${promptFrame.user_prefix.trim()} ${finalGameSummary}`;
-            }
-            if (typeof promptFrame.user_suffix === 'string' && promptFrame.user_suffix.trim() !== '') {
-                finalGameSummary = `${finalGameSummary} ${promptFrame.user_suffix.trim()}`;
-            }
-        } else {
-            if (apiType === 'openai' || apiType === 'openrouter' || apiType === 'anthropic') {
-                this.#logger.warn(`ConfigurableLLMAdapter._constructPromptPayload: promptFrame is missing or effectively empty for chat-like apiType '${apiType}'. Applying default user message structure. Consider defining a promptFrame for optimal results.`);
-            } else if (apiType && !localApiTypesForLogging.includes(apiType) && !['openai', 'openrouter', 'anthropic'].includes(apiType)) {
-                this.#logger.warn(`ConfigurableLLMAdapter._constructPromptPayload: promptFrame is missing or effectively empty for apiType '${apiType}' which might benefit from it. Applying default prompt string structure.`);
-            }
-        }
-
-
-        if (['openai', 'openrouter', 'anthropic'].includes(apiType)) {
-            messages.push({role: "user", content: finalGameSummary.trim()});
-            this.#logger.debug("ConfigurableLLMAdapter._constructPromptPayload: Constructed 'messages' array:", messages.map(m => ({
-                role: m.role,
-                contentPreview: typeof m.content === 'string' ? m.content.substring(0, 70) + (m.content.length > 70 ? '...' : '') : '[Non-string content]'
-            })));
-            return {messages};
-        } else {
-            this.#logger.debug(`ConfigurableLLMAdapter._constructPromptPayload: Constructed single 'prompt' string. Preview: ${finalGameSummary.trim().substring(0, 70) + (finalGameSummary.trim().length > 70 ? '...' : '')}`);
-            return {prompt: finalGameSummary.trim()};
-        }
-    }
+    // --- _constructPromptPayload method has been REMOVED ---
 
     /**
      * @private
@@ -567,7 +505,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
         this.#logger.debug(`_executeApiCall: Making API call to '${finalEndpointUrl}' for LLM '${configId}'.`, {
             method: 'POST',
-            headers: finalHeaders, // Be cautious logging headers if they contain sensitive info not managed by proxy
+            // headers: finalHeaders, // Be cautious logging headers if they contain sensitive info not managed by proxy
             payloadLength: JSON.stringify(finalBodyPayload)?.length
         });
 
@@ -600,7 +538,10 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     async _handleToolCalling(gameSummary, llmConfig, activeApiKeyForServerCall) {
         this.#logger.info(`ConfigurableLLMAdapter._handleToolCalling invoked for LLM '${llmConfig.id}'. apiType: ${llmConfig.apiType}`);
 
-        const basePayloadPromptPart = this._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig.apiType);
+        // Use new prompt construction via BaseChatLLMStrategy
+        const promptBuilder = new BaseChatLLMStrategy(this.#logger);
+        const basePayloadPromptPart = promptBuilder._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
+
         let providerRequestPayload;
         let dynamicProviderHeaders = {}; // For headers like anthropic-version
 
@@ -664,7 +605,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                         const argumentsString = toolCall.function.arguments;
                         this.#logger.info(`_handleToolCalling (OpenAI): Extracted tool arguments string for LLM '${llmConfig.id}'.`);
                         this.#logger.debug(`_handleToolCalling (OpenAI): Arguments string: ${argumentsString}`);
-                        // The string itself is returned for Ticket 1.3 processing
                         return argumentsString;
                     } else {
                         this.#logger.error(`_handleToolCalling (OpenAI): Unexpected tool_call structure or name for LLM '${llmConfig.id}'. Expected function '${OPENAI_TOOL_NAME}'.`, {toolCall});
@@ -683,7 +623,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                         const argumentsObject = toolUseBlock.input;
                         this.#logger.info(`_handleToolCalling (Anthropic): Extracted tool input object for LLM '${llmConfig.id}'.`);
                         this.#logger.debug(`_handleToolCalling (Anthropic): Arguments object:`, argumentsObject);
-                        // Stringify the object for consistent return type for Ticket 1.3 processing
                         return JSON.stringify(argumentsObject);
                     } else {
                         this.#logger.error(`_handleToolCalling (Anthropic): No matching tool_use block or valid input object found for LLM '${llmConfig.id}'. Expected tool name '${ANTHROPIC_TOOL_NAME}'.`, {content: responseData.content});
@@ -701,9 +640,8 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 llmId: llmConfig.id,
                 originalErrorName: error.name,
                 originalErrorMessage: error.message,
-                // stack: error.stack // Optional: log stack for deeper debugging
             });
-            throw error; // Re-throw to be handled by getAIDecision's caller (e.g., GameTurnManager)
+            throw error;
         }
     }
 
@@ -713,14 +651,10 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     /**
      * @private
      * Handles LLM interaction using OpenRouter's `response_format: { type: 'json_schema' }` strategy.
-     * This method constructs the API request with the defined JSON schema for `{'action': 'string', 'speech': 'string'}`
-     * and processes OpenRouter's response to extract the content, with a fallback to check `tool_calls`.
      * @param {string} gameSummary - The current game state summary.
      * @param {LLMModelConfig} llmConfig - The active LLM configuration (must be for OpenRouter).
      * @param {string | null} activeApiKeyForServerCall - The API key for server-side cloud calls, or null.
      * @returns {Promise<string>} A promise resolving to a JSON string that represents the structured output.
-     * @throws {Error | ConfigurationError} If the API call fails, the response structure is unexpected,
-     * or if the required JSON content cannot be extracted.
      */
     async _handleOpenRouterJsonSchema(gameSummary, llmConfig, activeApiKeyForServerCall) {
         this.#logger.info(`ConfigurableLLMAdapter._handleOpenRouterJsonSchema invoked for LLM '${llmConfig.id}'.`);
@@ -730,22 +664,23 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             throw new ConfigurationError(`_handleOpenRouterJsonSchema strategy only supports 'openrouter' apiType.`, {llmId: llmConfig.id});
         }
 
-        const basePayloadPromptPart = this._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig.apiType);
+        // Use new prompt construction via BaseChatLLMStrategy (OpenRouter JSON schema uses chat messages)
+        const promptBuilder = new BaseChatLLMStrategy(this.#logger);
+        const basePayloadPromptPart = promptBuilder._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
 
         const responseFormat = {
             type: "json_schema",
-            json_schema: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA // Use the defined constant
+            json_schema: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA
         };
 
         const providerRequestPayload = {
-            ...llmConfig.defaultParameters, // Apply default parameters like temperature, max_tokens
+            ...llmConfig.defaultParameters,
             model: llmConfig.modelIdentifier,
             ...basePayloadPromptPart, // This should contain the 'messages' array
             response_format: responseFormat
         };
 
         this.#logger.debug(`_handleOpenRouterJsonSchema: Constructed payload for LLM '${llmConfig.id}'.`, {payloadLength: JSON.stringify(providerRequestPayload)?.length});
-        // Note: providerSpecificHeaders (HTTP-Referer, X-Title) are handled by _executeApiCall from llmConfig
 
         try {
             const responseData = await this._executeApiCall(llmConfig, providerRequestPayload, activeApiKeyForServerCall);
@@ -755,13 +690,11 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             let extractedJsonString = null;
 
             if (message) {
-                // Primary extraction from message.content
                 if (message.content) {
                     if (typeof message.content === 'string' && message.content.trim() !== '') {
                         this.#logger.info(`_handleOpenRouterJsonSchema: Extracted JSON string from message.content for LLM '${llmConfig.id}'.`);
                         extractedJsonString = message.content;
-                    } else if (typeof message.content === 'object' && message.content !== null) {
-                        // If OpenRouter returns an already parsed object, stringify for consistent pipeline input
+                    } else if (typeof message.content === 'object') {
                         this.#logger.info(`_handleOpenRouterJsonSchema: Extracted JSON object from message.content for LLM '${llmConfig.id}'. Stringifying.`);
                         extractedJsonString = JSON.stringify(message.content);
                     } else if (typeof message.content === 'string' && message.content.trim() === '') {
@@ -773,13 +706,11 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                     this.#logger.info(`_handleOpenRouterJsonSchema: message.content is null or undefined for LLM '${llmConfig.id}'. Checking tool_calls fallback.`);
                 }
 
-                // Fallback to tool_calls if message.content was not usable or not found
-                // This handles cases where OpenRouter might translate json_schema to a tool_call for certain models. [cite: 1242]
                 if (!extractedJsonString && message.tool_calls && message.tool_calls.length > 0) {
                     this.#logger.info(`_handleOpenRouterJsonSchema: message.content was not usable, attempting tool_calls fallback for LLM '${llmConfig.id}'.`);
                     const toolCall = message.tool_calls[0];
                     if (toolCall?.type === "function" &&
-                        toolCall.function?.name === OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name && // Compare with schema name
+                        toolCall.function?.name === OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name &&
                         typeof toolCall.function?.arguments === 'string' &&
                         toolCall.function.arguments.trim() !== '') {
                         this.#logger.info(`_handleOpenRouterJsonSchema: Extracted JSON string from tool_calls fallback for LLM '${llmConfig.id}'.`);
@@ -792,7 +723,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
             if (extractedJsonString) {
                 this.#logger.debug(`_handleOpenRouterJsonSchema: Returning extracted/processed JSON string for LLM '${llmConfig.id}'. Preview: ${extractedJsonString.substring(0, 100)}...`);
-                return extractedJsonString; // Returned for post-processing (Ticket 1.3)
+                return extractedJsonString;
             } else {
                 this.#logger.error(`_handleOpenRouterJsonSchema: Failed to extract valid JSON content from message.content or tool_call arguments from OpenRouter response for LLM '${llmConfig.id}'.`, {response: responseData});
                 throw new Error(`OpenRouter response for LLM '${llmConfig.id}' did not contain usable message.content or a valid tool_call fallback that matched the schema name '${OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name}'.`);
@@ -804,7 +735,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 originalErrorName: error.name,
                 originalErrorMessage: error.message,
             });
-            throw error; // Re-throw to be handled by getAIDecision's caller
+            throw error;
         }
     }
 
@@ -813,21 +744,34 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     // MODIFICATION START (Ticket 2.4)
     /**
      * @private
-     * Handles LLM interaction using native "JSON mode" features offered by providers like OpenAI and Ollama.
-     * This method constructs the API request with the appropriate JSON mode parameters and processes
-     * the LLM's response to extract the JSON string.
-     *
+     * Handles LLM interaction using native "JSON mode" features.
      * @param {string} gameSummary - The current game state summary.
      * @param {LLMModelConfig} llmConfig - The active LLM configuration.
      * @param {string | null} activeApiKeyForServerCall - The API key for server-side cloud calls, or null.
-     * @returns {Promise<string>} A promise resolving to a JSON string that represents the structured output.
-     * @throws {Error | ConfigurationError} If the API call fails, the response structure is unexpected,
-     * the apiType is not supported for native JSON mode, or the JSON content cannot be extracted.
+     * @returns {Promise<string>} A promise resolving to a JSON string.
      */
     async _handleNativeJsonMode(gameSummary, llmConfig, activeApiKeyForServerCall) {
         this.#logger.info(`ConfigurableLLMAdapter._handleNativeJsonMode invoked for LLM '${llmConfig.id}'. apiType: ${llmConfig.apiType}`);
 
-        const basePayloadPromptPart = this._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig.apiType);
+        let basePayloadPromptPart;
+        let promptBuilder;
+
+        if (llmConfig.apiType === 'openai') {
+            promptBuilder = new BaseChatLLMStrategy(this.#logger);
+            basePayloadPromptPart = promptBuilder._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
+        } else if (llmConfig.apiType === 'ollama') {
+            // For Ollama, decide based on endpoint or other config if it's chat or completion style
+            if (llmConfig.endpointUrl && llmConfig.endpointUrl.includes('/api/chat')) {
+                promptBuilder = new BaseChatLLMStrategy(this.#logger);
+            } else { // Default to completion for /api/generate or other Ollama endpoints
+                promptBuilder = new BaseCompletionLLMStrategy(this.#logger);
+            }
+            basePayloadPromptPart = promptBuilder._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
+        } else {
+            this.#logger.error(`_handleNativeJsonMode: Unsupported apiType '${llmConfig.apiType}' for native JSON mode strategy for LLM '${llmConfig.id}'.`);
+            throw new ConfigurationError(`Native JSON mode not supported for apiType: ${llmConfig.apiType}`, {llmId: llmConfig.id});
+        }
+
         let providerRequestPayload;
         let extractedJsonString = null;
 
@@ -836,7 +780,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 ...llmConfig.defaultParameters,
                 model: llmConfig.modelIdentifier,
                 ...basePayloadPromptPart, // Should contain 'messages'
-                response_format: {type: "json_object"} // [cite: 473, 1247]
+                response_format: {type: "json_object"}
             };
             this.#logger.debug(`_handleNativeJsonMode (OpenAI): Constructed payload for LLM '${llmConfig.id}'. Note: Prompt must include 'JSON' for this mode to work correctly.`, {
                 payloadLength: JSON.stringify(providerRequestPayload)?.length
@@ -848,7 +792,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
                 const content = responseData?.choices?.[0]?.message?.content;
                 if (typeof content === 'string' && content.trim() !== '') {
-                    // OpenAI guarantees this is valid JSON. [cite: 475]
                     extractedJsonString = content;
                     this.#logger.info(`_handleNativeJsonMode (OpenAI): Extracted JSON string from message.content for LLM '${llmConfig.id}'.`);
                 } else {
@@ -864,20 +807,18 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             providerRequestPayload = {
                 ...llmConfig.defaultParameters,
                 model: llmConfig.modelIdentifier,
-                ...basePayloadPromptPart, // Should contain 'messages' or 'prompt' based on _constructPromptPayload
-                format: "json", // [cite: 208, 232, 1247]
-                stream: false // Ensure non-streaming for single JSON object [cite: 247]
+                ...basePayloadPromptPart, // Can be {messages} or {prompt}
+                format: "json",
+                stream: false
             };
             this.#logger.debug(`_handleNativeJsonMode (Ollama): Constructed payload for LLM '${llmConfig.id}'. Endpoint: ${llmConfig.endpointUrl}`, {
                 payloadLength: JSON.stringify(providerRequestPayload)?.length
             });
 
             try {
-                const responseData = await this._executeApiCall(llmConfig, providerRequestPayload, activeApiKeyForServerCall); // API key usually null for local Ollama
+                const responseData = await this._executeApiCall(llmConfig, providerRequestPayload, activeApiKeyForServerCall);
                 this.#logger.debug(`_handleNativeJsonMode (Ollama): Raw API response received for LLM '${llmConfig.id}'. Preview: ${JSON.stringify(responseData)?.substring(0, 200)}...`);
 
-                // Ollama's /api/chat returns JSON in responseData.message.content [cite: 234, 250]
-                // Ollama's /api/generate returns JSON in responseData.response [cite: 234]
                 if (responseData?.message && typeof responseData.message.content === 'string' && responseData.message.content.trim() !== '') {
                     extractedJsonString = responseData.message.content;
                     this.#logger.info(`_handleNativeJsonMode (Ollama): Extracted JSON string from responseData.message.content (likely /api/chat) for LLM '${llmConfig.id}'.`);
@@ -892,18 +833,13 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 this.#logger.error(`_handleNativeJsonMode (Ollama): API call or response processing failed for LLM '${llmConfig.id}'. Error: ${error.message}`, {llmId: llmConfig.id});
                 throw error;
             }
-
-        } else {
-            this.#logger.error(`_handleNativeJsonMode: Unsupported apiType '${llmConfig.apiType}' for native JSON mode strategy for LLM '${llmConfig.id}'.`);
-            throw new ConfigurationError(`Native JSON mode not supported for apiType: ${llmConfig.apiType}`, {llmId: llmConfig.id});
         }
+        // No 'else' here as unsupported apiTypes for this handler are caught at the beginning.
 
         if (extractedJsonString) {
             this.#logger.debug(`_handleNativeJsonMode: Returning extracted JSON string for LLM '${llmConfig.id}'. Preview: ${extractedJsonString.substring(0, 100)}...`);
-            return extractedJsonString; // Returned for post-processing (Ticket 1.3)
+            return extractedJsonString;
         } else {
-            // This case should ideally be caught by the specific provider logic throwing an error if extraction fails.
-            // However, as a safeguard:
             this.#logger.error(`_handleNativeJsonMode: Failed to extract JSON string for an unknown reason for LLM '${llmConfig.id}'. This indicates an issue in the provider-specific logic.`);
             throw new Error(`_handleNativeJsonMode failed to extract JSON string for LLM '${llmConfig.id}'.`);
         }
@@ -913,18 +849,14 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
     /**
      * @private
-     * Placeholder handler for "GBNF Grammar" output strategy with local LLMs. [cite: 1248]
-     * For now, it's a stub.
-     * @param {string} gameSummary - The current game state summary.
-     * @param {LLMModelConfig} llmConfig - The active LLM configuration.
-     * @param {string | null} activeApiKey - The API key (typically null for local LLMs).
-     * @returns {Promise<string>} A promise resolving to a JSON string (currently a stubbed response).
+     * Placeholder handler for "GBNF Grammar" output strategy.
      */
     async _handleGbnfGrammar(gameSummary, llmConfig, activeApiKey) {
         this.#logger.info(`ConfigurableLLMAdapter._handleGbnfGrammar invoked for LLM '${llmConfig.id}'. THIS IS A STUB.`);
-        // In a full implementation:
-        // 1. Construct payload including the `grammar` parameter. [cite: 1248]
-        // 2. Call _executeApiCall.
+        // When fleshed out, this would use BaseCompletionLLMStrategy or similar
+        // const promptBuilder = new BaseCompletionLLMStrategy(this.#logger);
+        // const promptPayload = promptBuilder._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
+        // const apiPayload = { model: llmConfig.modelIdentifier, ...promptPayload, grammar: "...", ...llmConfig.defaultParameters };
         const stubbedResponse = {
             ...DEFAULT_FALLBACK_ACTION,
             speech: `Stub response from _handleGbnfGrammar for LLM ID: ${llmConfig.id}`
@@ -935,22 +867,25 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     /**
      * @private
      * Placeholder handler for the "Prompt Engineering" JSON output strategy.
-     * This is the fallback if no specialized JSON features are used.
-     * For now, it's a stub.
-     * @param {string} gameSummary - The current game state summary.
-     * @param {LLMModelConfig} llmConfig - The active LLM configuration.
-     * @param {string | null} activeApiKey - The API key for server-side cloud calls, or null.
-     * @returns {Promise<string>} A promise resolving to a JSON string (currently a stubbed response).
      */
     async _handlePromptEngineering(gameSummary, llmConfig, activeApiKey) {
         this.#logger.info(`ConfigurableLLMAdapter._handlePromptEngineering invoked for LLM '${llmConfig.id}'. THIS IS A STUB.`);
-        // In a full implementation:
-        // 1. Construct payload based on prompt engineering best practices.
-        //    This often means ensuring the promptFrame explicitly requests JSON.
-        // 2. Call _executeApiCall.
+        let promptBuilder;
+        // Decide if chat or completion based on apiType or promptFrame hints
+        // This is a simplified choice for the stub.
+        if (['openai', 'openrouter', 'anthropic'].includes(llmConfig.apiType) || (typeof llmConfig.promptFrame === 'object' && llmConfig.promptFrame && llmConfig.promptFrame.system)) {
+            promptBuilder = new BaseChatLLMStrategy(this.#logger);
+        } else {
+            promptBuilder = new BaseCompletionLLMStrategy(this.#logger);
+        }
+        const promptPayload = promptBuilder._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
+        // const apiPayload = { model: llmConfig.modelIdentifier, ...promptPayload, ...llmConfig.defaultParameters };
+        // this.logger.debug(`_handlePromptEngineering: Constructed payload (stubbed call):`, { apiPayloadPreview: JSON.stringify(apiPayload)?.substring(0,100) });
+
+
         const stubbedResponse = {
             ...DEFAULT_FALLBACK_ACTION,
-            speech: `Stub response from _handlePromptEngineering for LLM ID: ${llmConfig.id}`
+            speech: `Stub response from _handlePromptEngineering (using ${promptBuilder.constructor.name}) for LLM ID: ${llmConfig.id}`
         };
         return Promise.resolve(JSON.stringify(stubbedResponse));
     }
@@ -958,17 +893,11 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
     /**
      * Generates an action and speech based on the provided game summary using a configured LLM.
-     * It retrieves the active LLM configuration, determines the JSON output strategy,
-     * and dispatches to a strategy-specific handler. [cite: 1244]
-     *
      * @async
      * @param {string} gameSummary - A string providing a summarized representation
      * of the current game state and relevant actor information.
-     * @returns {Promise<string>} A Promise that resolves to a JSON string
-     * conforming to the LLM_TURN_ACTION_SCHEMA (or a stubbed/fallback JSON string
-     * in case of errors or if strategy handlers are stubs).
-     * @throws {Error | ConfigurationError} If the adapter is not operational, not initialized, no active LLM is set,
-     * essential configuration is missing/invalid, or if the method is not yet implemented or an API call fails critically.
+     * @returns {Promise<string>} A Promise that resolves to a JSON string.
+     * @throws {Error | ConfigurationError} If issues occur.
      */
     async getAIDecision(gameSummary) {
         this.#logger.debug('ConfigurableLLMAdapter.getAIDecision called.', {
@@ -978,26 +907,20 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         });
 
         if (!this.#isInitialized) {
-            // MODIFICATION START (Ticket 2.2 - Propagate error for central fallback)
             this.#logger.error("ConfigurableLLMAdapter.getAIDecision: Adapter not initialized. Call init() first.");
             throw new Error("Adapter not initialized. Call init() first.");
-            // MODIFICATION END (Ticket 2.2)
         }
 
         if (!this.#isOperational) {
-            // MODIFICATION START (Ticket 2.2 - Propagate error for central fallback)
             this.#logger.error("ConfigurableLLMAdapter.getAIDecision: Adapter is not operational due to configuration loading issues.");
             throw new Error("Adapter is not operational due to configuration loading issues.");
-            // MODIFICATION END (Ticket 2.2)
         }
 
         const activeConfig = this.getCurrentActiveLlmConfig();
         if (!activeConfig) {
-            // MODIFICATION START (Ticket 2.2 - Propagate error for central fallback)
             const msg = "No active LLM configuration is set. Use setActiveLlm() or set a defaultLlmId.";
             this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
             throw new ConfigurationError(msg);
-            // MODIFICATION END (Ticket 2.2)
         }
 
         const {
@@ -1007,7 +930,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             apiType,
             jsonOutputStrategy,
             apiKeyEnvVar,
-            apiKeyFileName // MODIFICATION (Ticket 1.4.3.1) - Added apiKeyFileName
+            apiKeyFileName
         } = activeConfig;
 
         const validationErrors = [];
@@ -1022,12 +945,12 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         }
 
         if (jsonOutputStrategy && typeof jsonOutputStrategy === 'object' && jsonOutputStrategy.method && typeof jsonOutputStrategy.method === 'string' && jsonOutputStrategy.method.trim() !== '') {
-            // Looks okay for dispatching
+            // Looks okay
         } else if (jsonOutputStrategy && typeof jsonOutputStrategy === 'object' && (!jsonOutputStrategy.method || typeof jsonOutputStrategy.method !== 'string' || jsonOutputStrategy.method.trim() === '')) {
             validationErrors.push({
                 field: 'jsonOutputStrategy.method',
                 value: jsonOutputStrategy.method,
-                reason: 'Missing or invalid (must be a non-empty string if jsonOutputStrategy is present)'
+                reason: 'Missing or invalid'
             });
         } else if (!jsonOutputStrategy) {
             this.#logger.debug(`ConfigurableLLMAdapter.getAIDecision: 'jsonOutputStrategy' is missing for LLM '${configId}'. Will default to 'prompt_engineering'.`);
@@ -1036,14 +959,12 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
         if (validationErrors.length > 0) {
             const errorDetailsMessage = validationErrors.map(err => `${err.field}: ${err.reason} (value: ${JSON.stringify(err.value)})`).join('; ');
-            // MODIFICATION START (Ticket 2.2 - Propagate error for central fallback)
             const msg = `Active LLM config '${configId}' is missing essential field(s): ${errorDetailsMessage}`;
             this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
             throw new ConfigurationError(msg, {
                 llmId: configId,
                 problematicFields: validationErrors.map(e => ({field: e.field, value: e.value, reason: e.reason}))
             });
-            // MODIFICATION END (Ticket 2.2)
         }
 
         let actualApiKeyForServer = null;
@@ -1074,7 +995,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                     this.#logger.error(keyRetrievalErrorMessage);
                     serverKeyRetrievalFailed = true;
                 }
-            } else if (apiKeyFileName && typeof apiKeyFileName === 'string' && apiKeyFileName.trim() !== '') { // MODIFICATION (Ticket 1.4.3.1)
+            } else if (apiKeyFileName && typeof apiKeyFileName === 'string' && apiKeyFileName.trim() !== '') {
                 if (!this.#projectRootPath) {
                     keyRetrievalErrorMessage = "'projectRootPath' not set for file key retrieval.";
                     this.#logger.error(keyRetrievalErrorMessage);
@@ -1084,7 +1005,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                         actualApiKeyForServer = await getApiKeyFromFileSystem(apiKeyFileName, this.#projectRootPath, this.#logger);
                         if (actualApiKeyForServer) this.#logger.info(`API key retrieved from file '${apiKeyFileName}'.`);
                         else {
-                            keyRetrievalErrorMessage = `Failed to retrieve key from file '${apiKeyFileName}'. File might be missing, empty, or unreadable.`;
+                            keyRetrievalErrorMessage = `Failed to retrieve key from file '${apiKeyFileName}'.`;
                             this.#logger.error(keyRetrievalErrorMessage);
                             serverKeyRetrievalFailed = true;
                         }
@@ -1100,29 +1021,23 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 serverKeyRetrievalFailed = true;
             }
 
-            // MODIFICATION START (Ticket 2.2 - Propagate error for central fallback)
             if (serverKeyRetrievalFailed) {
                 const msg = `Server-side API key retrieval failed for LLM '${configId}'. Reason: ${keyRetrievalErrorMessage}`;
                 this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
                 throw new ConfigurationError(msg, {llmId: configId});
             }
-            // MODIFICATION END (Ticket 2.2)
 
         } else if (isCloudService && this.#executionEnvironment === 'client') {
-            if ((!apiKeyEnvVar || apiKeyEnvVar.trim() === '') && (!apiKeyFileName || apiKeyFileName.trim() === '')) { // MODIFICATION (Ticket 1.4.3.1)
-                // MODIFICATION START (Ticket 2.2 - Propagate error for central fallback)
+            if ((!apiKeyEnvVar || apiKeyEnvVar.trim() === '') && (!apiKeyFileName || apiKeyFileName.trim() === '')) {
                 const msg = `Client-side - API key identifier (apiKeyEnvVar or apiKeyFileName) missing for cloud LLM '${configId}'. Proxy cannot retrieve key.`;
                 this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
                 throw new ConfigurationError(msg, {llmId: configId});
-                // MODIFICATION END (Ticket 2.2)
             }
             this.#logger.debug(`Client-side call for cloud LLM '${configId}'. Proxy will handle API key.`);
         } else if (isCloudService && this.#executionEnvironment === 'unknown') {
-            // MODIFICATION START (Ticket 2.2 - Propagate error for central fallback)
             const msg = `Execution environment 'unknown' for cloud LLM '${configId}'. API key security unclear.`;
             this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
             throw new ConfigurationError(msg, {llmId: configId});
-            // MODIFICATION END (Ticket 2.2)
         }
 
 
@@ -1142,13 +1057,12 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
         this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: Dispatching to JSON strategy handler: '${currentStrategyMethod}' for LLM '${configId}'.`);
 
-        // MODIFICATION START (Ticket 2.2 - Add try-catch for strategy handlers)
         try {
             switch (currentStrategyMethod) {
                 case 'tool_calling':
                     return await this._handleToolCalling(gameSummary, activeConfig, actualApiKeyForServer);
                 case 'openrouter_json_schema':
-                    return await this._handleOpenRouterJsonSchema(gameSummary, activeConfig, actualApiKeyForServer); // MODIFICATION (Ticket 2.3)
+                    return await this._handleOpenRouterJsonSchema(gameSummary, activeConfig, actualApiKeyForServer);
                 case 'native_json_mode':
                     return await this._handleNativeJsonMode(gameSummary, activeConfig, actualApiKeyForServer);
                 case 'gbnf_grammar':
@@ -1163,12 +1077,9 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                 strategy: currentStrategyMethod,
                 originalErrorName: strategyError.name,
                 originalErrorMessage: strategyError.message,
-                // strategyError // Can log the full error object if needed
             });
-            // Propagate the error; the caller (e.g., GameTurnManager) will handle the ultimate fallback.
             throw strategyError;
         }
-        // MODIFICATION END (Ticket 2.2)
     }
 
     /**
