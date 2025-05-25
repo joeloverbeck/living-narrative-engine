@@ -1,12 +1,12 @@
-// src/tests/domUI/domUiFacade.test.js
+// tests/domUI/domUiFacade.test.js
 /**
  * @fileoverview Unit tests for the DomUiFacade class.
  */
-import {DomUiFacade} from '../../src/domUI/index.js'; // Adjusted path to point to index.js
-import {beforeEach, describe, expect, it, jest} from "@jest/globals";
 
-// Mock the renderer/controller classes
-// We only need to mock the methods checked in the facade constructor
+import {DomUiFacade} from '../../src/domUI/index.js';
+import {beforeEach, describe, expect, it, jest} from '@jest/globals';
+
+/* -------- mock components -------- */
 const mockActionButtonsRenderer = {render: jest.fn(), dispose: jest.fn()};
 const mockInventoryPanel = {toggle: jest.fn(), dispose: jest.fn()};
 const mockLocationRenderer = {render: jest.fn(), dispose: jest.fn()};
@@ -14,17 +14,16 @@ const mockTitleRenderer = {set: jest.fn(), dispose: jest.fn()};
 const mockInputStateController = {setEnabled: jest.fn(), dispose: jest.fn()};
 const mockUiMessageRenderer = {render: jest.fn(), dispose: jest.fn()};
 const mockPerceptionLogRenderer = {render: jest.fn(), dispose: jest.fn()};
-const mockSaveGameUI = {show: jest.fn(), dispose: jest.fn()}; // <<< ADDED MOCK
-const mockLoadGameUI = {show: jest.fn(), dispose: jest.fn()}; // <<< ADDED MOCK
+const mockSaveGameUI = {show: jest.fn(), dispose: jest.fn()};
+const mockLoadGameUI = {show: jest.fn(), dispose: jest.fn()};
+const mockLlmSelectionModal = {show: jest.fn(), dispose: jest.fn()};   // ← NEW
 
 describe('DomUiFacade', () => {
     let validDeps;
 
     beforeEach(() => {
-        // Reset mocks before each test
         jest.clearAllMocks();
 
-        // Set up valid dependencies
         validDeps = {
             actionButtonsRenderer: mockActionButtonsRenderer,
             inventoryPanel: mockInventoryPanel,
@@ -33,74 +32,89 @@ describe('DomUiFacade', () => {
             inputStateController: mockInputStateController,
             uiMessageRenderer: mockUiMessageRenderer,
             perceptionLogRenderer: mockPerceptionLogRenderer,
-            saveGameUI: mockSaveGameUI, // <<< ADDED TO VALID DEPS
-            loadGameUI: mockLoadGameUI   // <<< ADDED TO VALID DEPS
+            saveGameUI: mockSaveGameUI,
+            loadGameUI: mockLoadGameUI,
+            llmSelectionModal: mockLlmSelectionModal,            // ← NEW
         };
     });
 
-    // --- Constructor Tests ---
-
+    /* ---------- constructor happy-path ---------- */
     it('should create an instance successfully with valid dependencies', () => {
         expect(() => new DomUiFacade(validDeps)).not.toThrow();
     });
 
+    /* ---------- constructor guard clauses ---------- */
     it('should throw an error if actionButtonsRenderer is missing', () => {
         const deps = {...validDeps};
         delete deps.actionButtonsRenderer;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
     });
 
     it('should throw an error if inventoryPanel is missing', () => {
         const deps = {...validDeps};
         delete deps.inventoryPanel;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid inventoryPanel dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid inventoryPanel dependency.');
     });
 
     it('should throw an error if locationRenderer is missing', () => {
         const deps = {...validDeps};
         delete deps.locationRenderer;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid locationRenderer dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid locationRenderer dependency.');
     });
 
     it('should throw an error if titleRenderer is missing', () => {
         const deps = {...validDeps};
         delete deps.titleRenderer;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid titleRenderer dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid titleRenderer dependency.');
     });
 
     it('should throw an error if inputStateController is missing', () => {
         const deps = {...validDeps};
         delete deps.inputStateController;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid inputStateController dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid inputStateController dependency.');
     });
 
     it('should throw an error if uiMessageRenderer is missing', () => {
         const deps = {...validDeps};
         delete deps.uiMessageRenderer;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid uiMessageRenderer dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid uiMessageRenderer dependency.');
     });
 
     it('should throw an error if perceptionLogRenderer is missing', () => {
         const deps = {...validDeps};
         delete deps.perceptionLogRenderer;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.');
     });
 
-    it('should throw an error if saveGameUI is missing', () => { // <<< ADDED TEST
+    it('should throw an error if saveGameUI is missing', () => {
         const deps = {...validDeps};
         delete deps.saveGameUI;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid saveGameUI dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid saveGameUI dependency.');
     });
 
-    it('should throw an error if loadGameUI is missing', () => { // <<< ADDED TEST
+    it('should throw an error if loadGameUI is missing', () => {
         const deps = {...validDeps};
         delete deps.loadGameUI;
-        expect(() => new DomUiFacade(deps)).toThrow('DomUiFacade: Missing or invalid loadGameUI dependency.');
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid loadGameUI dependency.');
     });
 
+    it('should throw an error if llmSelectionModal is missing', () => {
+        const deps = {...validDeps};
+        delete deps.llmSelectionModal;
+        expect(() => new DomUiFacade(deps))
+            .toThrow('DomUiFacade: Missing or invalid llmSelectionModal dependency.');
+    });
 
-    // --- Getter Tests (Acceptance Criteria) ---
-
+    /* ---------- getters ---------- */
     it('should provide a getter for actionButtonsRenderer', () => {
         const facade = new DomUiFacade(validDeps);
         expect(facade.actionButtons).toBe(mockActionButtonsRenderer);
@@ -136,19 +150,22 @@ describe('DomUiFacade', () => {
         expect(facade.perceptionLog).toBe(mockPerceptionLogRenderer);
     });
 
-    it('should provide a getter for saveGame', () => { // <<< ADDED TEST
+    it('should provide a getter for saveGame', () => {
         const facade = new DomUiFacade(validDeps);
         expect(facade.saveGame).toBe(mockSaveGameUI);
     });
 
-    it('should provide a getter for loadGame', () => { // <<< ADDED TEST
+    it('should provide a getter for loadGame', () => {
         const facade = new DomUiFacade(validDeps);
         expect(facade.loadGame).toBe(mockLoadGameUI);
     });
 
+    it('should provide a getter for llmSelectionModal', () => {
+        const facade = new DomUiFacade(validDeps);
+        expect(facade.llmSelectionModal).toBe(mockLlmSelectionModal);
+    });
 
-    // --- Dispose Test ---
-
+    /* ---------- dispose ---------- */
     it('should call dispose on all underlying renderers if they have a dispose method', () => {
         const facade = new DomUiFacade(validDeps);
         facade.dispose();
@@ -160,31 +177,24 @@ describe('DomUiFacade', () => {
         expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
         expect(mockUiMessageRenderer.dispose).toHaveBeenCalledTimes(1);
         expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
-        expect(mockSaveGameUI.dispose).toHaveBeenCalledTimes(1); // <<< ADDED CHECK
-        expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1); // <<< ADDED CHECK
+        expect(mockSaveGameUI.dispose).toHaveBeenCalledTimes(1);
+        expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1);
+        expect(mockLlmSelectionModal.dispose).toHaveBeenCalledTimes(1);
     });
 
     it('should not throw if a renderer lacks a dispose method', () => {
         const incompleteDeps = {
             ...validDeps,
-            actionButtonsRenderer: {render: jest.fn()}, // No dispose
-            saveGameUI: {show: jest.fn()} // No dispose for saveGameUI either
+            actionButtonsRenderer: {render: jest.fn()}, // no dispose
+            saveGameUI: {show: jest.fn()},   // no dispose
         };
-        // Ensure other mocks are still present
-        if (!incompleteDeps.perceptionLogRenderer) {
-            incompleteDeps.perceptionLogRenderer = mockPerceptionLogRenderer;
-        }
-        if (!incompleteDeps.loadGameUI) { // ensure loadGameUI is present
-            incompleteDeps.loadGameUI = mockLoadGameUI;
-        }
-
 
         const facade = new DomUiFacade(incompleteDeps);
         expect(() => facade.dispose()).not.toThrow();
-        // Check others were still called
+
         expect(mockInventoryPanel.dispose).toHaveBeenCalledTimes(1);
         expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
-        expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1); // Check loadGameUI dispose
-        // mockSaveGameUI.dispose should not have been called since it was replaced
+        expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1);
+        expect(mockLlmSelectionModal.dispose).toHaveBeenCalledTimes(1);
     });
 });

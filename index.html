@@ -50,6 +50,7 @@
             <h3 id="game-actions-heading">Game Menu</h3>
             <button type="button" id="open-save-game-button" class="menu-button">Save Game</button>
             <button type="button" id="open-load-game-button" class="menu-button">Load Game</button>
+            <button type="button" id="change-llm-button" class="menu-button">Change LLM</button>
         </div>
     </aside>
 </div>
@@ -104,6 +105,22 @@
             <button type="button" id="confirm-load-button" class="button-primary" disabled>Load</button>
             <button type="button" id="delete-save-button" class="button-danger">Delete</button>
             <button type="button" id="cancel-load-button" class="button-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="llm-selection-modal" class="modal-overlay" role="dialog" aria-labelledby="llm-selection-modal-title"
+     aria-modal="true" style="display: none;">
+    <div class="modal-content">
+        <h2 id="llm-selection-modal-title" class="modal-title">Select Language Model</h2>
+        <div id="llm-selection-list-container" role="radiogroup" aria-labelledby="llm-selection-list-label">
+            <p id="llm-selection-list-label" class="visually-hidden">Available Language Models</p>
+            <ul id="llm-selection-list"></ul>
+        </div>
+        <div id="llm-selection-status-message" class="status-message-area" role="status" aria-live="polite">
+        </div>
+        <div class="modal-actions">
+            <button type="button" id="llm-selection-modal-close-button" class="button-secondary">Cancel</button>
         </div>
     </div>
 </div>

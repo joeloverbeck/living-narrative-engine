@@ -1,5 +1,5 @@
 // src/config/tokens.js
-
+// --- FILE START ---
 /**
  * @fileoverview Centralized repository for Dependency Injection (DI) keys/tokens.
  * Using tokens instead of raw strings prevents typos and aids refactoring.
@@ -40,6 +40,7 @@
  * @property {DiToken} DomUiFacade - Token for the facade aggregating all UI components.
  * @property {DiToken} SaveGameUI - Token for the Save Game UI component.
  * @property {DiToken} LoadGameUI - Token for the Load Game UI component.
+ * @property {DiToken} LlmSelectionModal - Token for the LLM Selection Modal UI component. // <<< ADDED TOKEN
  * @property {DiToken} EngineUIManager - Token for the service managing UI updates from GameEngine events. // <<< ADDED
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
  *
@@ -152,6 +153,7 @@ export const tokens = Object.freeze({
     DomUiFacade: 'DomUiFacade',
     SaveGameUI: 'SaveGameUI',
     LoadGameUI: 'LoadGameUI',
+    LlmSelectionModal: 'LlmSelectionModal', // <<< ADDED TOKEN
     EngineUIManager: 'EngineUIManager', // <<< ADDED TOKEN
     // DomRenderer: 'DomRenderer', // Example if it was to be explicitly listed before removal or for deprecation
 

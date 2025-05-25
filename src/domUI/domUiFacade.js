@@ -11,7 +11,9 @@
 /** @typedef {import('./uiMessageRenderer').UiMessageRenderer} UiMessageRenderer */
 /** @typedef {import('./perceptionLogRenderer').PerceptionLogRenderer} PerceptionLogRenderer */
 /** @typedef {import('./saveGameUI').default} SaveGameUI */
-/** @typedef {import('./loadGameUI').default} LoadGameUI */ // <<< ADDED
+/** @typedef {import('./loadGameUI').default} LoadGameUI */
+
+/** @typedef {import('./llmSelectionModal').LlmSelectionModal} LlmSelectionModal */
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -28,7 +30,8 @@ export class DomUiFacade {
     /** @private @type {UiMessageRenderer} */ #uiMessageRenderer;
     /** @private @type {PerceptionLogRenderer} */ #perceptionLogRenderer;
     /** @private @type {SaveGameUI} */ #saveGameUI;
-    /** @private @type {LoadGameUI} */ #loadGameUI; // <<< ADDED
+    /** @private @type {LoadGameUI} */ #loadGameUI;
+    /** @private @type {LlmSelectionModal} */ #llmSelectionModal;
 
     /**
      * Creates an instance of DomUiFacade.
@@ -42,7 +45,8 @@ export class DomUiFacade {
      * @param {UiMessageRenderer} deps.uiMessageRenderer - Renderer for UI messages (echo, info, error).
      * @param {PerceptionLogRenderer} deps.perceptionLogRenderer - Renderer for perception logs.
      * @param {SaveGameUI} deps.saveGameUI - The Save Game UI component.
-     * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component. // <<< ADDED
+     * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component.
+     * @param {LlmSelectionModal} deps.llmSelectionModal - The LLM Selection Modal component.
      * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor({
@@ -54,7 +58,8 @@ export class DomUiFacade {
                     uiMessageRenderer,
                     perceptionLogRenderer,
                     saveGameUI,
-                    loadGameUI // <<< ADDED
+                    loadGameUI,
+                    llmSelectionModal
                 }) {
         // Basic validation to ensure all renderers are provided
         if (!actionButtonsRenderer || typeof actionButtonsRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
@@ -65,7 +70,8 @@ export class DomUiFacade {
         if (!uiMessageRenderer || typeof uiMessageRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid uiMessageRenderer dependency.');
         if (!perceptionLogRenderer || typeof perceptionLogRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.');
         if (!saveGameUI || typeof saveGameUI.show !== 'function') throw new Error('DomUiFacade: Missing or invalid saveGameUI dependency.');
-        if (!loadGameUI || typeof loadGameUI.show !== 'function') throw new Error('DomUiFacade: Missing or invalid loadGameUI dependency.'); // <<< ADDED
+        if (!loadGameUI || typeof loadGameUI.show !== 'function') throw new Error('DomUiFacade: Missing or invalid loadGameUI dependency.');
+        if (!llmSelectionModal || typeof llmSelectionModal.show !== 'function') throw new Error('DomUiFacade: Missing or invalid llmSelectionModal dependency.');
 
         this.#actionButtonsRenderer = actionButtonsRenderer;
         this.#inventoryPanel = inventoryPanel;
@@ -75,7 +81,8 @@ export class DomUiFacade {
         this.#uiMessageRenderer = uiMessageRenderer;
         this.#perceptionLogRenderer = perceptionLogRenderer;
         this.#saveGameUI = saveGameUI;
-        this.#loadGameUI = loadGameUI; // <<< ADDED
+        this.#loadGameUI = loadGameUI;
+        this.#llmSelectionModal = llmSelectionModal;
     }
 
     /** @returns {ActionButtonsRenderer} */
@@ -118,10 +125,15 @@ export class DomUiFacade {
         return this.#saveGameUI;
     }
 
-    /** @returns {LoadGameUI} */ // <<< ADDED
-    get loadGame() { // <<< ADDED
-        return this.#loadGameUI; // <<< ADDED
-    } // <<< ADDED
+    /** @returns {LoadGameUI} */
+    get loadGame() {
+        return this.#loadGameUI;
+    }
+
+    /** @returns {LlmSelectionModal} */
+    get llmSelectionModal() {
+        return this.#llmSelectionModal;
+    }
 
     /**
      * Optional: Dispose method to potentially call dispose on all managed renderers.
@@ -136,6 +148,7 @@ export class DomUiFacade {
         this.#uiMessageRenderer?.dispose?.();
         this.#perceptionLogRenderer?.dispose?.();
         this.#saveGameUI?.dispose?.();
-        this.#loadGameUI?.dispose?.(); // <<< ADDED
+        this.#loadGameUI?.dispose?.();
+        this.#llmSelectionModal?.dispose?.();
     }
 }

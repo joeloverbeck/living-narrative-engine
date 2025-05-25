@@ -21,6 +21,8 @@
 @import url('components/_forms.css');
 @import url('components/_messages.css');
 @import url('components/_modals.css');
+@import url('components/_llm-selection-modal.css');
+/* Added new import */
 @import url('components/_location-info.css');
 @import url('components/_character-status.css');
 @import url('components/_actions-widget.css');
