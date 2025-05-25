@@ -184,7 +184,10 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
             logger.debug(`AIPlayerStrategy: Received LLM JSON response for actor ${actorId}: ${llmJsonResponse}`);
 
             // 5. Process LLM Response (and return its result)
-            return this.#llmResponseProcessor.processResponse(llmJsonResponse, actorId, logger);
+            // --- MODIFICATION START ---
+            // Added await as processResponse is now async
+            return await this.#llmResponseProcessor.processResponse(llmJsonResponse, actorId, logger);
+            // --- MODIFICATION END ---
 
         } catch (error) {
             const errorMessage = error && typeof error.message === 'string' ? error.message : 'Unknown error object';

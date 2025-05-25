@@ -255,15 +255,21 @@ export class LlmSelectionModal {
 
         if (errorOccurredLoadingList) {
             const errorItem = this.#domElementFactory.create('li', {
-                textContent: listLoadingErrorMessage,
-                className: 'llm-item-message llm-error-message' // For styling error messages in the list
+                textContent: listLoadingErrorMessage, // This uses textContent, if factory expects 'text', this might be an issue too
+                // However, the main problem was with the LLM options list.
+                // For consistency, if the factory strictly uses 'text', this should also be 'text'.
+                // Let's assume 'text' is the convention for the factory's generic create method for now.
+                // So, changing this one too for consistency with the primary fix.
+                text: listLoadingErrorMessage,
+                className: 'llm-item-message llm-error-message'
             });
             this.#llmListElement.appendChild(errorItem);
         } else if (llmOptions.length === 0) {
             this.#logger.warn('LlmSelectionModal: No LLM options available or list is empty.');
             const noOptionsItem = this.#domElementFactory.create('li', {
-                textContent: 'No Language Models are currently configured.',
-                className: 'llm-item-message llm-empty-message' // For styling empty messages in the list
+                // textContent: 'No Language Models are currently configured.', // Same as above
+                text: 'No Language Models are currently configured.',
+                className: 'llm-item-message llm-empty-message'
             });
             this.#llmListElement.appendChild(noOptionsItem);
         } else {
@@ -273,13 +279,13 @@ export class LlmSelectionModal {
             llmOptions.forEach((option, index) => {
                 const {id, displayName} = option;
                 const listItemElement = this.#domElementFactory.create('li', {
-                    className: 'llm-item',
-                    textContent: displayName || id // Fallback to ID if displayName is missing
+                    cls: 'llm-item',
+                    text: displayName || id // CORRECTED: Was textContent, now text
                 });
 
-                listItemElement.dataset.llmId = id; // Store llmId in a data attribute
+                listItemElement.dataset.llmId = id;
                 listItemElement.setAttribute('role', 'radio');
-                listItemElement.setAttribute('tabindex', '-1'); // Initially not focusable by Tab
+                listItemElement.setAttribute('tabindex', '-1');
 
                 const isActive = (id === currentActiveLlmId);
                 listItemElement.setAttribute('aria-checked', isActive ? 'true' : 'false');

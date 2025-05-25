@@ -89,16 +89,14 @@ describe('LLMResponseProcessor', () => {
     describe('_createProcessingFallbackAction', () => {
         test('should create a fallback action with correct structure and log details', () => {
             const errorContext = 'test_error';
-            const problematicOutput = {detail: 'some problem'};
-            const fallbackAction = processor['_createProcessingFallbackAction'](errorContext, actorId, logger, problematicOutput);
+            // This object is passed as `errorDetailsInput`
+            const errorDetailsInput = {customDetail: 'some problem'};
+            const fallbackAction = processor['_createProcessingFallbackAction'](errorContext, actorId, logger, errorDetailsInput);
 
-            const expectedFallbackAction = {
-                ...BASE_FALLBACK_WAIT_ACTION_STRUCTURE,
-                llmProcessingFailureInfo: {
-                    errorContext: errorContext,
-                }
-            };
-            expect(fallbackAction).toEqual(expectedFallbackAction);
+            expect(fallbackAction.actionDefinitionId).toEqual(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.actionDefinitionId);
+            expect(fallbackAction.commandString).toEqual(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.commandString);
+            expect(fallbackAction.speech).toEqual(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.speech);
+            expect(fallbackAction.llmProcessingFailureInfo.errorContext).toEqual(errorContext);
 
             const loggableErrorReason = `AI LLM Processing Error for ${actorId}: ${errorContext}.`;
             expect(logger.error).toHaveBeenCalledWith(
@@ -106,15 +104,18 @@ describe('LLMResponseProcessor', () => {
                 expect.objectContaining({
                     actorId,
                     errorContext,
-                    problematicOutputDetails: problematicOutput,
-                    fallbackActionTaken: expectedFallbackAction
+                    // For a generic error context, problematicOutputDetailsForLog in _createProcessingFallbackAction
+                    // becomes errorDetailsInput if it's not one of the specific contexts that cherry-pick fields.
+                    problematicOutputDetails: errorDetailsInput,
+                    llmFailureInfo: fallbackAction.llmProcessingFailureInfo,
+                    fallbackActionTaken: fallbackAction
                 })
             );
         });
 
-        test('should create fallback and log correctly if problematicOutput is not provided', () => {
+        test('should create fallback and log correctly if errorDetailsInput is not provided', () => {
             const errorContext = 'another_error';
-            const fallbackAction = processor['_createProcessingFallbackAction'](errorContext, actorId, logger);
+            const fallbackAction = processor['_createProcessingFallbackAction'](errorContext, actorId, logger); // errorDetailsInput is null
 
             const expectedFallbackAction = {
                 ...BASE_FALLBACK_WAIT_ACTION_STRUCTURE,
@@ -130,7 +131,8 @@ describe('LLMResponseProcessor', () => {
                 expect.objectContaining({
                     actorId,
                     errorContext,
-                    problematicOutputDetails: null,
+                    problematicOutputDetails: null, // Because errorDetailsInput was null
+                    llmFailureInfo: fallbackAction.llmProcessingFailureInfo,
                     fallbackActionTaken: expectedFallbackAction
                 })
             );
@@ -139,14 +141,14 @@ describe('LLMResponseProcessor', () => {
 
     describe('processResponse', () => {
         describe('Valid Inputs', () => {
-            test('should process a valid JSON string with all fields', () => {
+            test('should process a valid JSON string with all fields', async () => {
                 const llmResponse = JSON.stringify({
                     actionDefinitionId: 'core:move',
                     commandString: 'go north',
                     speech: 'Moving north',
                 });
                 schemaValidatorMock.validate.mockReturnValue({isValid: true, errors: []});
-                const result = processor.processResponse(llmResponse, actorId, logger);
+                const result = await processor.processResponse(llmResponse, actorId, logger);
 
                 expect(result).toEqual({
                     actionDefinitionId: 'core:move',
@@ -161,14 +163,14 @@ describe('LLMResponseProcessor', () => {
                 expect(schemaValidatorMock.validate).toHaveBeenCalledWith(LLM_TURN_ACTION_SCHEMA_ID, JSON.parse(llmResponse));
             });
 
-            test('should process valid JSON with empty speech', () => {
+            test('should process valid JSON with empty speech', async () => {
                 const llmResponse = JSON.stringify({
                     actionDefinitionId: 'core:wait',
                     commandString: 'Wait a moment',
                     speech: ""
                 });
                 schemaValidatorMock.validate.mockReturnValue({isValid: true, errors: []});
-                const result = processor.processResponse(llmResponse, actorId, logger);
+                const result = await processor.processResponse(llmResponse, actorId, logger);
                 expect(result).toEqual({
                     actionDefinitionId: 'core:wait',
                     commandString: 'Wait a moment',
@@ -179,14 +181,14 @@ describe('LLMResponseProcessor', () => {
                 }));
             });
 
-            test('should trim actionDefinitionId and commandString', () => {
+            test('should trim actionDefinitionId and commandString', async () => {
                 const llmResponse = JSON.stringify({
                     actionDefinitionId: '  core:interact  ',
                     commandString: '  pull the lever   ',
                     speech: "Okay"
                 });
                 schemaValidatorMock.validate.mockReturnValue({isValid: true, errors: []});
-                const result = processor.processResponse(llmResponse, actorId, logger);
+                const result = await processor.processResponse(llmResponse, actorId, logger);
                 expect(result).toEqual({
                     actionDefinitionId: 'core:interact',
                     commandString: 'pull the lever',
@@ -196,83 +198,86 @@ describe('LLMResponseProcessor', () => {
         });
 
         describe('Invalid/Malformed JSON Inputs', () => {
-            test('should return fallback for malformed JSON string (syntax error)', () => {
+            test('should return fallback for malformed JSON string (syntax error)', async () => {
                 const malformedJson = '{"actionDefinitionId": "core:speak", "commandString": "say Hello"';
-                const errorContext = 'json_parse_error';
-                const result = processor.processResponse(malformedJson, actorId, logger);
+                // errorContext determined by parseAndRepairJson (will be 'json_parse_error' due to JsonProcessingError)
+                const result = await processor.processResponse(malformedJson, actorId, logger);
 
                 expect(result.actionDefinitionId).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.actionDefinitionId);
                 expect(result.commandString).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.commandString);
                 expect(result.speech).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.speech);
-                expect(result.llmProcessingFailureInfo).toEqual({
-                    errorContext: errorContext,
-                    rawResponse: malformedJson,
-                });
+                expect(result.llmProcessingFailureInfo).toBeDefined();
+                expect(result.llmProcessingFailureInfo.errorContext).toBe('json_parse_error');
+                expect(result.llmProcessingFailureInfo.rawResponse).toBe(malformedJson);
+
 
                 expect(logger.error).toHaveBeenCalledWith(
-                    expect.stringContaining(`LLMResponseProcessor: Failed to parse LLM JSON response for actor ${actorId}. Error:`),
+                    expect.stringContaining(`LLMResponseProcessor: Failed to parse/repair LLM JSON response for actor ${actorId}. Error:`),
                     expect.objectContaining({
                         rawResponse: malformedJson,
                         actorId,
-                        error: expect.any(SyntaxError)
+                        errorName: 'JsonProcessingError',
                     })
                 );
-                const loggableErrorReason = `AI LLM Processing Error for ${actorId}: ${errorContext}.`;
+                const loggableErrorReason = `AI LLM Processing Error for ${actorId}: ${result.llmProcessingFailureInfo.errorContext}.`;
                 expect(logger.error).toHaveBeenCalledWith(
                     `LLMResponseProcessor: ${loggableErrorReason} Creating fallback action.`,
                     expect.objectContaining({
                         actorId,
-                        errorContext,
+                        errorContext: result.llmProcessingFailureInfo.errorContext,
+                        // problematicOutputDetails for json_parse_error will be the rawLlmResponse (or cleaned if available from error)
                         problematicOutputDetails: malformedJson,
                         fallbackActionTaken: result
                     })
                 );
             });
 
-            test('should return fallback for llmJsonResponse being null', () => {
-                const errorContext = 'json_parse_error';
-                const result = processor.processResponse(null, actorId, logger);
+            test('should return fallback for llmJsonResponse being null', async () => {
+                const errorContext = 'invalid_input_type';
+                const result = await processor.processResponse(null, actorId, logger);
 
                 expect(result.commandString).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.commandString);
-                // With the code adjustment, rawResponse should now be explicitly null
-                expect(result.llmProcessingFailureInfo).toEqual({
-                    errorContext: errorContext,
-                    rawResponse: null,
-                });
+                expect(result.llmProcessingFailureInfo).toBeDefined();
+                expect(result.llmProcessingFailureInfo.errorContext).toBe(errorContext);
+                expect(result.llmProcessingFailureInfo.rawResponse).toBeNull();
+
                 expect(logger.error).toHaveBeenCalledWith(
-                    expect.stringContaining(`LLMResponseProcessor: Failed to parse LLM JSON response for actor ${actorId}. Error: LLM JSON response is null, undefined, or empty.`),
-                    expect.objectContaining({rawResponse: null, error: expect.any(Error)})
+                    expect.stringContaining(`LLMResponseProcessor: Invalid input type for LLM JSON response for actor ${actorId}. Error:`),
+                    expect.objectContaining({rawResponse: null, errorName: 'TypeError'})
                 );
                 const loggableErrorReason = `AI LLM Processing Error for ${actorId}: ${errorContext}.`;
                 expect(logger.error).toHaveBeenCalledWith(
                     `LLMResponseProcessor: ${loggableErrorReason} Creating fallback action.`,
-                    expect.objectContaining({problematicOutputDetails: null, fallbackActionTaken: result})
+                    expect.objectContaining({
+                        problematicOutputDetails: null, // rawLlmResponse (null) passed as errorDetailsInput
+                        fallbackActionTaken: result
+                    })
                 );
             });
 
-            test('should return fallback for llmJsonResponse being undefined', () => {
-                const errorContext = 'json_parse_error';
-                const result = processor.processResponse(undefined, actorId, logger);
+            test('should return fallback for llmJsonResponse being undefined', async () => {
+                const errorContext = 'invalid_input_type';
+                const result = await processor.processResponse(undefined, actorId, logger);
 
                 expect(result.commandString).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.commandString);
-                // rawProblematicOutput in _createProcessingFallbackAction becomes null due to default param.
-                expect(result.llmProcessingFailureInfo).toEqual({
-                    errorContext: errorContext,
-                    rawResponse: null,
-                });
+                expect(result.llmProcessingFailureInfo).toBeDefined();
+                expect(result.llmProcessingFailureInfo.errorContext).toBe(errorContext);
+                expect(result.llmProcessingFailureInfo.rawResponse).toBeUndefined();
+
                 expect(logger.error).toHaveBeenCalledWith(
-                    `LLMResponseProcessor: Failed to parse LLM JSON response for actor ${actorId}. Error: LLM JSON response is null, undefined, or empty.. Response:`,
+                    expect.stringContaining(`LLMResponseProcessor: Invalid input type for LLM JSON response for actor ${actorId}. Error:`),
                     expect.objectContaining({
-                        rawResponse: undefined, // This log is before _createProcessingFallbackAction is called
-                        error: expect.objectContaining({message: "LLM JSON response is null, undefined, or empty."})
+                        rawResponse: undefined,
+                        errorName: 'TypeError'
                     })
                 );
                 const loggableErrorReason = `AI LLM Processing Error for ${actorId}: ${errorContext}.`;
                 expect(logger.error).toHaveBeenCalledWith(
                     `LLMResponseProcessor: ${loggableErrorReason} Creating fallback action.`,
-                    // problematicOutputDetails in the log will be null because 'undefined' was passed to
-                    // rawProblematicOutput which has a default of 'null'.
-                    expect.objectContaining({problematicOutputDetails: null, fallbackActionTaken: result})
+                    expect.objectContaining({
+                        problematicOutputDetails: undefined, // rawLlmResponse (undefined) passed as errorDetailsInput
+                        fallbackActionTaken: result
+                    })
                 );
             });
 
@@ -285,21 +290,24 @@ describe('LLMResponseProcessor', () => {
             ];
 
             nonObjectJsonValues.forEach(item => {
-                test(`should return fallback for valid JSON that is ${item.description}`, () => {
+                test(`should return fallback for valid JSON that is ${item.description}`, async () => {
                     const errorContext = 'json_schema_validation_error';
                     const mockValidationErrors = [{message: "should be object"}];
-                    schemaValidatorMock.validate.mockReturnValueOnce({
-                        isValid: false,
-                        errors: mockValidationErrors
+                    schemaValidatorMock.validate.mockImplementation((schemaId, dataToValidate) => {
+                        if (typeof dataToValidate !== 'object' || dataToValidate === null || Array.isArray(dataToValidate)) {
+                            return {isValid: false, errors: mockValidationErrors};
+                        }
+                        return {isValid: true, errors: []};
                     });
-                    const result = processor.processResponse(item.valueStr, actorId, logger);
+
+                    const result = await processor.processResponse(item.valueStr, actorId, logger);
 
                     expect(result.commandString).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.commandString);
-                    expect(result.llmProcessingFailureInfo).toEqual({
-                        errorContext: errorContext,
-                        parsedResponse: item.parsed,
-                        validationErrors: mockValidationErrors,
-                    });
+                    expect(result.llmProcessingFailureInfo).toBeDefined();
+                    expect(result.llmProcessingFailureInfo.errorContext).toBe(errorContext);
+                    expect(result.llmProcessingFailureInfo.parsedResponse).toEqual(item.parsed);
+                    expect(result.llmProcessingFailureInfo.validationErrors).toEqual(mockValidationErrors);
+
                     expect(logger.error).toHaveBeenCalledWith(
                         `LLMResponseProcessor: LLM response JSON schema validation failed for actor ${actorId}. Errors:`,
                         expect.objectContaining({validationErrors: mockValidationErrors, parsedJson: item.parsed})
@@ -308,11 +316,15 @@ describe('LLMResponseProcessor', () => {
                     expect(logger.error).toHaveBeenCalledWith(
                         `LLMResponseProcessor: ${loggableErrorReason} Creating fallback action.`,
                         expect.objectContaining({
-                            problematicOutputDetails: {
-                                parsedJsonAttempt: item.parsed,
+                            errorContext: 'json_schema_validation_error',
+                            // CORRECTED: problematicOutputDetails should be the parsed value itself
+                            problematicOutputDetails: item.parsed,
+                            fallbackActionTaken: result,
+                            llmFailureInfo: expect.objectContaining({
+                                rawResponse: item.valueStr,
+                                parsedResponse: item.parsed,
                                 validationErrors: mockValidationErrors
-                            },
-                            fallbackActionTaken: result
+                            })
                         })
                     );
                 });
@@ -321,7 +333,7 @@ describe('LLMResponseProcessor', () => {
 
         describe('Schema Validation Failures', () => {
             const testSchemaFailure = (description, llmResponsePartial, expectedInstancePath = '') => {
-                test(`should return fallback if ${description}`, () => {
+                test(`should return fallback if ${description}`, async () => {
                     const errorContext = 'json_schema_validation_error';
                     let baseLlmObject = {
                         actionDefinitionId: 'core:valid',
@@ -330,8 +342,10 @@ describe('LLMResponseProcessor', () => {
                     };
 
                     if (llmResponsePartial === undefined && expectedInstancePath) {
-                        delete baseLlmObject[expectedInstancePath];
-                    } else {
+                        const tempBase = {...baseLlmObject};
+                        delete tempBase[expectedInstancePath];
+                        baseLlmObject = tempBase;
+                    } else if (llmResponsePartial !== undefined) {
                         baseLlmObject = {...baseLlmObject, ...llmResponsePartial};
                     }
 
@@ -344,14 +358,13 @@ describe('LLMResponseProcessor', () => {
                     }];
                     schemaValidatorMock.validate.mockReturnValueOnce({isValid: false, errors: mockErrors});
 
-                    const result = processor.processResponse(llmResponse, actorId, logger);
+                    const result = await processor.processResponse(llmResponse, actorId, logger);
 
                     expect(result.commandString).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.commandString);
-                    expect(result.llmProcessingFailureInfo).toEqual({
-                        errorContext: errorContext,
-                        parsedResponse: parsedJson,
-                        validationErrors: mockErrors,
-                    });
+                    expect(result.llmProcessingFailureInfo).toBeDefined();
+                    expect(result.llmProcessingFailureInfo.errorContext).toBe(errorContext);
+                    expect(result.llmProcessingFailureInfo.parsedResponse).toEqual(parsedJson);
+                    expect(result.llmProcessingFailureInfo.validationErrors).toEqual(mockErrors);
 
                     expect(logger.error).toHaveBeenCalledWith(
                         `LLMResponseProcessor: LLM response JSON schema validation failed for actor ${actorId}. Errors:`,
@@ -361,11 +374,15 @@ describe('LLMResponseProcessor', () => {
                     expect(logger.error).toHaveBeenCalledWith(
                         `LLMResponseProcessor: ${loggableErrorReason} Creating fallback action.`,
                         expect.objectContaining({
-                            problematicOutputDetails: {
-                                parsedJsonAttempt: parsedJson,
+                            errorContext: 'json_schema_validation_error',
+                            // CORRECTED: problematicOutputDetails should be the parsed JSON object
+                            problematicOutputDetails: parsedJson,
+                            fallbackActionTaken: result,
+                            llmFailureInfo: expect.objectContaining({
+                                rawResponse: llmResponse,
+                                parsedResponse: parsedJson,
                                 validationErrors: mockErrors
-                            },
-                            fallbackActionTaken: result
+                            })
                         })
                     );
                 });
@@ -374,15 +391,15 @@ describe('LLMResponseProcessor', () => {
             testSchemaFailure('actionDefinitionId key is missing', undefined, 'actionDefinitionId');
             testSchemaFailure('commandString key is missing', undefined, 'commandString');
             testSchemaFailure('speech key is missing', undefined, 'speech');
-            testSchemaFailure('actionDefinitionId is null', {actionDefinitionId: null});
-            testSchemaFailure('actionDefinitionId is empty string', {actionDefinitionId: ""});
-            testSchemaFailure('actionDefinitionId is a number', {actionDefinitionId: 123});
-            testSchemaFailure('commandString is null', {commandString: null});
-            testSchemaFailure('commandString is empty string', {commandString: ""});
-            testSchemaFailure('speech is a number', {speech: 123});
+            testSchemaFailure('actionDefinitionId is null', {actionDefinitionId: null}, 'actionDefinitionId');
+            testSchemaFailure('actionDefinitionId is empty string', {actionDefinitionId: ""}, 'actionDefinitionId');
+            testSchemaFailure('actionDefinitionId is a number', {actionDefinitionId: 123}, 'actionDefinitionId');
+            testSchemaFailure('commandString is null', {commandString: null}, 'commandString');
+            testSchemaFailure('commandString is empty string', {commandString: ""}, 'commandString');
+            testSchemaFailure('speech is a number', {speech: 123}, 'speech');
         });
 
-        test('fallback now has clean commandString, error context is in llmProcessingFailureInfo', () => {
+        test('fallback now has clean commandString, error context is in llmProcessingFailureInfo', async () => {
             const llmResponse = JSON.stringify({actionDefinitionId: 123});
             const errorContext = 'json_schema_validation_error';
             const mockValidationErrors = [{instancePath: "actionDefinitionId", message: "should be string"}];
@@ -390,13 +407,18 @@ describe('LLMResponseProcessor', () => {
                 isValid: false,
                 errors: mockValidationErrors
             });
-            const result = processor.processResponse(llmResponse, actorId, logger);
+            const result = await processor.processResponse(llmResponse, actorId, logger);
+            const parsedLlmResponse = JSON.parse(llmResponse);
 
             expect(result.commandString).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.commandString);
+            expect(result.actionDefinitionId).toBe(BASE_FALLBACK_WAIT_ACTION_STRUCTURE.actionDefinitionId);
+
             expect(result.llmProcessingFailureInfo).toBeDefined();
             expect(result.llmProcessingFailureInfo.errorContext).toBe(errorContext);
-            expect(result.llmProcessingFailureInfo.parsedResponse).toEqual(JSON.parse(llmResponse));
+            expect(result.llmProcessingFailureInfo.parsedResponse).toEqual(parsedLlmResponse);
             expect(result.llmProcessingFailureInfo.validationErrors).toEqual(mockValidationErrors);
+            expect(result.llmProcessingFailureInfo.rawResponse).toBe(llmResponse);
+
 
             const loggableErrorReason = `AI LLM Processing Error for ${actorId}: ${errorContext}.`;
             expect(logger.error).toHaveBeenCalledWith(
@@ -404,11 +426,14 @@ describe('LLMResponseProcessor', () => {
                 expect.objectContaining({
                     actorId,
                     errorContext,
-                    problematicOutputDetails: {
-                        parsedJsonAttempt: JSON.parse(llmResponse),
+                    // CORRECTED: problematicOutputDetails should be the parsed JSON object
+                    problematicOutputDetails: parsedLlmResponse,
+                    fallbackActionTaken: result,
+                    llmFailureInfo: expect.objectContaining({
+                        rawResponse: llmResponse,
+                        parsedResponse: parsedLlmResponse,
                         validationErrors: mockValidationErrors
-                    },
-                    fallbackActionTaken: result
+                    })
                 })
             );
         });

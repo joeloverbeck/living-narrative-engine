@@ -46,6 +46,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden; /* For internal scrolling of LLM list */
+    align-items: center; /* <<< ADD THIS LINE TO CENTER FLEX ITEMS HORIZONTALLY */
 
     /* --- Transition Additions (mirroring _modals.css) --- */
     opacity: 0;
@@ -64,16 +65,25 @@
 
 /* LLM List Container */
 #llm-selection-list-container {
-    overflow-y: auto; /* Make LLM list scrollable */
+    overflow-y: auto;
     margin-bottom: var(--spacing-lg);
-    flex-grow: 1;
-    padding-right: var(--spacing-sm); /* For scrollbar spacing */
+    flex-grow: 1; /* This is for its role as a flex item in .modal-content */
+    /* padding-right: var(--spacing-sm); */ /* We might not need this if the UL is centered and has its own padding if necessary for scrollbar */
     border: var(--border-width) solid var(--border-color-subtle);
     border-radius: var(--border-radius-sm);
     background-color: var(--secondary-bg-color);
-    list-style: none; /* Remove default list styling if it's a <ul> */
-    padding: 0; /* Reset padding if it's a <ul> */
-    margin: 0; /* Reset margin if it's a <ul> */
+    /* list-style: none; /* This on a div doesn't affect child ul markers directly */
+    /* padding: 0; */ /* Let's manage padding more carefully */
+    /* margin: 0; /* margin-bottom is set above */
+
+    /* --- Add these lines --- */
+    display: flex;
+    justify-content: center; /* This will center the child UL horizontally */
+    /* You can remove padding:0 and padding-right from here,
+       or adjust if the scrollbar needs specific spacing relative to the centered UL.
+       For now, let's assume the UL itself will manage its padding. */
+    padding: 0; /* Resetting all paddings on container for now */
+
 }
 
 /* Individual LLM Items */
@@ -82,6 +92,7 @@
     padding: var(--spacing-md);
     border-bottom: var(--border-width) solid var(--panel-border-color);
     cursor: pointer;
+    user-select: none; /* Standard */
     transition: background-color 0.2s ease-in-out, border-left-color 0.2s ease-in-out;
     background-color: var(--panel-bg-color);
     color: var(--primary-text-color);
@@ -121,6 +132,16 @@
 .llm-item:focus-visible {
     outline: none;
     box-shadow: inset 0 0 0 2px var(--panel-bg-color), inset 0 0 0 4px var(--accent-color-secondary);
+}
+
+/* Add these new rules for the UL itself */
+#llm-selection-list {
+    width: -moz-fit-content; /* Shrink-wrap to content for Firefox */
+    width: fit-content; /* Shrink-wrap to content */
+    max-width: 100%; /* Ensure it doesn't overflow its flex parent if content is very wide */
+    list-style-type: none; /* Explicitly remove list markers */
+    padding: 0; /* Remove default user-agent padding for UL */
+    margin: 0; /* Remove default user-agent margin for UL */
 }
 
 /* LLM Modal Close/Cancel Button */

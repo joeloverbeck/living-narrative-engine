@@ -13,13 +13,6 @@
 
 <div id="app-layout-container">
     <aside id="left-pane" class="panel">
-        <div id="location-info-container" role="region" aria-labelledby="location-name-display" aria-live="polite"
-             aria-atomic="true">
-            <h2 id="location-name-display"></h2>
-            <p id="location-description-display"></p>
-            <div id="location-exits-display"></div>
-            <div id="location-characters-display"></div>
-        </div>
         <div id="character-status-widget" role="region" aria-labelledby="character-status-heading" aria-live="polite">
             <h3 id="character-status-heading">Status</h3>
             <p>Health: <span id="player-health">N/A</span></p>
@@ -43,6 +36,13 @@
     </main>
 
     <aside id="right-pane" class="panel">
+        <div id="location-info-container" role="region" aria-labelledby="location-name-display" aria-live="polite"
+             aria-atomic="true">
+            <h2 id="location-name-display"></h2>
+            <p id="location-description-display"></p>
+            <div id="location-exits-display"></div>
+            <div id="location-characters-display"></div>
+        </div>
         <div id="inventory-widget" role="region" aria-label="Inventory">
         </div>
 
