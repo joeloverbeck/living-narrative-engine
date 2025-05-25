@@ -141,6 +141,12 @@ describe('ConfigurableLLMAdapter', () => {
 
             mockLlmConfigLoader.loadConfigs.mockResolvedValue(getOperationalConfigs());
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
+            // Clear logs again after init as init logs some info
+            mockLogger.info.mockClear();
+            mockLogger.warn.mockClear();
+            mockLogger.error.mockClear();
+            mockLogger.debug.mockClear();
+
 
             // Default mocks for successful execution paths
             mockLlmStrategy.execute.mockResolvedValue(mockSuccessDecision);
@@ -191,31 +197,30 @@ describe('ConfigurableLLMAdapter', () => {
             });
 
             it('should throw ConfigurationError if no activeConfig is set', async () => {
-                // Create a new adapter instance for this specific scenario
-                const adapterWithNoDefault = new ConfigurableLLMAdapter({ // Instantiate with all deps
+                const adapterWithNoDefault = new ConfigurableLLMAdapter({
                     logger: mockLogger,
                     environmentContext: mockEnvironmentContext,
                     apiKeyProvider: mockApiKeyProvider,
                     llmStrategyFactory: mockLlmStrategyFactory,
                 });
-                mockLogger.error.mockClear(); // Clear constructor log
+                mockLogger.error.mockClear();
 
                 const noDefaultConfigs = {...getOperationalConfigs(), defaultLlmId: null};
-                mockLlmConfigLoader.loadConfigs.mockResolvedValue(noDefaultConfigs); // Configure for this adapter
+                mockLlmConfigLoader.loadConfigs.mockResolvedValue(noDefaultConfigs);
                 await adapterWithNoDefault.init({llmConfigLoader: mockLlmConfigLoader});
-                expect(adapterWithNoDefault.isOperational()).toBe(true); // It's operational
-                expect(await adapterWithNoDefault.getCurrentActiveLlmConfig()).toBeNull(); // But no active LLM
+                expect(adapterWithNoDefault.isOperational()).toBe(true);
+                expect(await adapterWithNoDefault.getCurrentActiveLlmConfig()).toBeNull();
 
-                mockLogger.error.mockClear(); // Clear init logs
+                mockLogger.error.mockClear();
+                const expectedErrorMessage = "No active LLM configuration is set. Use setActiveLlm() or ensure a valid defaultLlmId is in config.";
                 await expect(adapterWithNoDefault.getAIDecision(gameSummary))
-                    .rejects.toThrow(new ConfigurationError("No active LLM configuration is set (activeConfig is null post-init). Use setActiveLlm() or set a defaultLlmId that successfully loads."));
-                expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("ConfigurableLLMAdapter.getAIDecision: No active LLM configuration is set (activeConfig is null post-init)."));
+                    .rejects.toThrow(new ConfigurationError(expectedErrorMessage));
+                expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`ConfigurableLLMAdapter.getAIDecision: ${expectedErrorMessage}`));
             });
         });
 
         describe('Active Configuration Validation (Ticket 21)', () => {
             const createInvalidConfig = (overrides) => {
-                // Ensure we're using a deep copy of a known good config as a base
                 const baseConfig = JSON.parse(JSON.stringify(getOperationalConfigs().llms['test-llm-operational']));
                 return {
                     ...baseConfig,
@@ -235,12 +240,11 @@ describe('ConfigurableLLMAdapter', () => {
             ])('should throw ConfigurationError if activeConfig field is invalid: %p', async (invalidFieldOverride, expectedMsgPart) => {
                 const currentInvalidConf = createInvalidConfig(invalidFieldOverride);
                 const tempConfigs = getOperationalConfigs();
-                const testConfigKey = `config-under-test-${JSON.stringify(invalidFieldOverride)}`; // Make key unique
+                const testConfigKey = `config-under-test-${JSON.stringify(invalidFieldOverride)}`;
                 tempConfigs.llms[testConfigKey] = currentInvalidConf;
                 tempConfigs.defaultLlmId = testConfigKey;
 
                 mockLlmConfigLoader.loadConfigs.mockResolvedValue(tempConfigs);
-                // Use a fresh adapter for this specific config state
                 const testAdapter = new ConfigurableLLMAdapter({
                     logger: mockLogger,
                     environmentContext: mockEnvironmentContext,
@@ -248,19 +252,21 @@ describe('ConfigurableLLMAdapter', () => {
                     llmStrategyFactory: mockLlmStrategyFactory
                 });
                 await testAdapter.init({llmConfigLoader: mockLlmConfigLoader});
-                mockLogger.error.mockClear(); // Clear init logs
+                mockLogger.error.mockClear();
 
                 await expect(testAdapter.getAIDecision(gameSummary))
-                    .rejects.toThrow(ConfigurationError); // General type check
+                    .rejects.toThrow(ConfigurationError);
 
                 try {
                     await testAdapter.getAIDecision(gameSummary);
                 } catch (e) {
-                    const actualIdInError = currentInvalidConf.id === null ? 'null' : currentInvalidConf.id; // Handle null ID in error message construction
-                    expect(e.message).toContain(`Active LLM config '${actualIdInError}' is missing essential field(s) or has invalid structure`);
+                    // This logic determines how the ID part of the error message is displayed by the source code
+                    const idDisplayInErrorMessage = currentInvalidConf.id || 'unknown';
+
+                    expect(e.message).toContain(`Active LLM config '${idDisplayInErrorMessage}' is invalid:`);
                     expect(e.message).toContain(expectedMsgPart);
-                    expect(e.llmId).toBe(currentInvalidConf.id); // e.llmId should be the actual problematic id
-                    expect(e.problematicFields.some(f => f.reason === 'Missing or invalid')).toBe(true);
+                    expect(e.llmId).toBe(currentInvalidConf.id);
+                    expect(e.problematicFields.some(f => f.reason === 'Missing or invalid' && expectedMsgPart.startsWith(f.field))).toBe(true);
                 }
             });
 
@@ -272,7 +278,7 @@ describe('ConfigurableLLMAdapter', () => {
                 tempConfigs.defaultLlmId = testConfigKey;
 
                 mockLlmConfigLoader.loadConfigs.mockResolvedValue(tempConfigs);
-                const testAdapter = new ConfigurableLLMAdapter({ // Fresh adapter
+                const testAdapter = new ConfigurableLLMAdapter({
                     logger: mockLogger, environmentContext: mockEnvironmentContext,
                     apiKeyProvider: mockApiKeyProvider, llmStrategyFactory: mockLlmStrategyFactory
                 });
@@ -283,9 +289,10 @@ describe('ConfigurableLLMAdapter', () => {
                 try {
                     await testAdapter.getAIDecision(gameSummary);
                 } catch (e) {
-                    expect(e.message).toContain(`Active LLM config '${currentInvalidConf.id}'`);
+                    expect(e.message).toContain(`Active LLM config '${currentInvalidConf.id}' is invalid:`);
                     expect(e.message).toContain("jsonOutputStrategy: Must be an object if provided");
                     expect(e.llmId).toBe(currentInvalidConf.id);
+                    expect(e.problematicFields.some(f => f.field === 'jsonOutputStrategy' && f.reason === 'Must be an object if provided')).toBe(true);
                 }
             });
 
@@ -297,7 +304,7 @@ describe('ConfigurableLLMAdapter', () => {
                 tempConfigs.defaultLlmId = testConfigKey;
 
                 mockLlmConfigLoader.loadConfigs.mockResolvedValue(tempConfigs);
-                const testAdapter = new ConfigurableLLMAdapter({ // Fresh adapter
+                const testAdapter = new ConfigurableLLMAdapter({
                     logger: mockLogger, environmentContext: mockEnvironmentContext,
                     apiKeyProvider: mockApiKeyProvider, llmStrategyFactory: mockLlmStrategyFactory
                 });
@@ -308,40 +315,53 @@ describe('ConfigurableLLMAdapter', () => {
                 try {
                     await testAdapter.getAIDecision(gameSummary);
                 } catch (e) {
-                    expect(e.message).toContain(`Active LLM config '${currentInvalidConf.id}'`);
+                    expect(e.message).toContain(`Active LLM config '${currentInvalidConf.id}' is invalid:`);
                     expect(e.message).toContain("jsonOutputStrategy.method: Must be a non-empty string if provided");
                     expect(e.llmId).toBe(currentInvalidConf.id);
+                    expect(e.problematicFields.some(f => f.field === 'jsonOutputStrategy.method' && f.reason === 'Must be a non-empty string if provided')).toBe(true);
                 }
             });
         });
 
         describe('API Key Retrieval', () => {
-            // These tests use the 'adapter' from the outer beforeEach, which is initialized to be operational.
             it('should call IApiKeyProvider.getKey with correct activeConfig and environmentContext', async () => {
-                await adapter.setActiveLlm('test-llm-operational'); // Ensure specific active LLM
+                await adapter.setActiveLlm('test-llm-operational');
+                // Clear info logs from setActiveLlm if any
+                mockLogger.info.mockClear();
                 await adapter.getAIDecision(gameSummary);
                 const expectedActiveConfig = getOperationalConfigs().llms['test-llm-operational'];
                 expect(mockApiKeyProvider.getKey).toHaveBeenCalledWith(expectedActiveConfig, mockEnvironmentContext);
             });
 
             it('should throw ConfigurationError if API key is required (cloud API on server) but getKey returns null', async () => {
-                await adapter.setActiveLlm('test-llm-cloud-server-requires-key');
+                const llmId = 'test-llm-cloud-server-requires-key';
+                await adapter.setActiveLlm(llmId);
                 mockApiKeyProvider.getKey.mockResolvedValue(null);
-                mockEnvironmentContext.isServer.mockReturnValue(true); // Ensure server context
+                mockEnvironmentContext.isServer.mockReturnValue(true);
                 mockLogger.error.mockClear();
+                mockLogger.info.mockClear(); // Clear setActiveLlm log
 
+                const expectedErrorMessage = `API key missing for server-side cloud LLM '${llmId}'.`;
                 await expect(adapter.getAIDecision(gameSummary))
                     .rejects.toThrow(new ConfigurationError(
-                        "API key retrieval failed or key is missing for LLM 'test-llm-cloud-server-requires-key' which requires it in the current environment (server-side cloud API).",
-                        {llmId: 'test-llm-cloud-server-requires-key'}
+                        expectedErrorMessage,
+                        {llmId: llmId, problematicField: 'apiKey'}
                     ));
-                expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("ConfigurableLLMAdapter.getAIDecision: API key retrieval failed or key is missing for LLM 'test-llm-cloud-server-requires-key'"));
+                // The error is thrown from within getAIDecision, then caught by the main catch block which logs it.
+                expect(mockLogger.error).toHaveBeenCalledWith(
+                    expect.stringContaining(`Error during getAIDecision for LLM '${llmId}': ${expectedErrorMessage}`),
+                    expect.objectContaining({
+                        llmId: llmId,
+                        errorName: 'ConfigurationError',
+                        problematicFields: undefined // The error object does NOT have problematicFields (plural) set here
+                    })
+                );
             });
 
             it('should proceed with null API key if not strictly required (local LLM)', async () => {
                 await adapter.setActiveLlm('test-llm-local-no-key-needed');
-                mockApiKeyProvider.getKey.mockResolvedValue(null); // Assume provider returns null if not found/applicable
-                mockLogger.info.mockClear();
+                mockApiKeyProvider.getKey.mockResolvedValue(null);
+                mockLogger.info.mockClear(); // Clear setActiveLlm log
 
                 await adapter.getAIDecision(gameSummary);
                 expect(mockLlmStrategy.execute).toHaveBeenCalledWith(expect.objectContaining({apiKey: null}));
@@ -350,10 +370,10 @@ describe('ConfigurableLLMAdapter', () => {
 
             it('should proceed with null API key if not strictly required (cloud API on client - assuming proxy handles key)', async () => {
                 await adapter.setActiveLlm('test-llm-cloud-server-requires-key');
-                mockApiKeyProvider.getKey.mockResolvedValue(null); // Simulate key not being found by client provider
+                mockApiKeyProvider.getKey.mockResolvedValue(null);
                 mockEnvironmentContext.isServer.mockReturnValue(false);
                 mockEnvironmentContext.isClient.mockReturnValue(true);
-                mockLogger.info.mockClear();
+                mockLogger.info.mockClear(); // Clear setActiveLlm log
 
                 await adapter.getAIDecision(gameSummary);
                 expect(mockLlmStrategy.execute).toHaveBeenCalledWith(expect.objectContaining({apiKey: null}));
@@ -361,14 +381,15 @@ describe('ConfigurableLLMAdapter', () => {
             });
 
             it('should log info if API key is retrieved successfully', async () => {
-                await adapter.setActiveLlm('test-llm-cloud-server-requires-key');
+                const llmId = 'test-llm-cloud-server-requires-key';
+                await adapter.setActiveLlm(llmId);
                 mockApiKeyProvider.getKey.mockResolvedValue('a-valid-key-123');
-                mockEnvironmentContext.isServer.mockReturnValue(true); // Ensure it's a context where key might be used
-                mockLogger.info.mockClear();
+                mockEnvironmentContext.isServer.mockReturnValue(true);
+                mockLogger.info.mockClear(); // Clear setActiveLlm log
 
                 await adapter.getAIDecision(gameSummary);
                 expect(mockLogger.info).toHaveBeenCalledWith(
-                    "ConfigurableLLMAdapter.getAIDecision: API key retrieved successfully for LLM 'test-llm-cloud-server-requires-key'."
+                    `API key retrieved for LLM '${llmId}'.`
                 );
             });
         });
@@ -376,39 +397,58 @@ describe('ConfigurableLLMAdapter', () => {
         describe('Strategy Factory Interaction', () => {
             it('should call LLMStrategyFactory.getStrategy with the correct activeConfig', async () => {
                 await adapter.setActiveLlm('test-llm-operational');
+                mockLogger.info.mockClear(); // Clear setActiveLlm log
                 await adapter.getAIDecision(gameSummary);
                 const expectedActiveConfig = getOperationalConfigs().llms['test-llm-operational'];
                 expect(mockLlmStrategyFactory.getStrategy).toHaveBeenCalledWith(expectedActiveConfig);
             });
 
             it('should throw ConfigurationError if factory.getStrategy throws an error', async () => {
+                const llmId = 'test-llm-operational';
+                await adapter.setActiveLlm(llmId);
+                mockLogger.info.mockClear(); // Clear setActiveLlm log
+
                 const factoryError = new Error("Factory failed to create strategy");
                 mockLlmStrategyFactory.getStrategy.mockImplementation(() => {
                     throw factoryError;
                 });
                 mockLogger.error.mockClear();
 
+                const expectedWrappedErrorMessage = `Failed to get strategy from factory for LLM '${llmId}': ${factoryError.message}`;
                 await expect(adapter.getAIDecision(gameSummary))
-                    .rejects.toThrow(new ConfigurationError( // Expecting the wrapped ConfigurationError
-                        "Failed to get strategy from factory for LLM 'test-llm-operational': Factory failed to create strategy",
-                        {llmId: 'test-llm-operational'}
+                    .rejects.toThrow(new ConfigurationError(
+                        expectedWrappedErrorMessage,
+                        {llmId: llmId}
                     ));
-                // Check the specific log for factory failure
+
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining("LLMStrategyFactory failed to provide a strategy for LLM 'test-llm-operational'. Error: Factory failed to create strategy"),
-                    expect.objectContaining({originalError: factoryError})
+                    expect.stringContaining(`Error during getAIDecision for LLM '${llmId}': ${expectedWrappedErrorMessage}`),
+                    expect.objectContaining({llmId: llmId, errorName: 'ConfigurationError'}) // problematicFields will be undefined
                 );
             });
 
             it('should throw ConfigurationError if factory.getStrategy returns null/undefined', async () => {
+                const llmId = 'test-llm-operational';
+                await adapter.setActiveLlm(llmId);
+                mockLogger.info.mockClear(); // Clear setActiveLlm log
+
                 mockLlmStrategyFactory.getStrategy.mockReturnValue(null);
                 mockLogger.error.mockClear();
+
+                const expectedErrorMessage = `No suitable LLM strategy for config '${llmId}'.`;
                 await expect(adapter.getAIDecision(gameSummary))
                     .rejects.toThrow(new ConfigurationError(
-                        "No suitable LLM strategy found for configuration 'test-llm-operational'. LLMStrategyFactory returned null/undefined.",
-                        {llmId: 'test-llm-operational'}
+                        expectedErrorMessage,
+                        {llmId: llmId}
                     ));
-                expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("ConfigurableLLMAdapter.getAIDecision: No suitable LLM strategy found for configuration 'test-llm-operational'"));
+                expect(mockLogger.error).toHaveBeenCalledWith(
+                    expect.stringContaining(`Error during getAIDecision for LLM '${llmId}': ${expectedErrorMessage}`),
+                    expect.objectContaining({
+                        llmId: llmId,
+                        errorName: 'ConfigurationError',
+                        problematicFields: undefined // ConfigurationError constructed without problematicFields here
+                    })
+                );
             });
         });
 
@@ -416,22 +456,27 @@ describe('ConfigurableLLMAdapter', () => {
             it('should call strategy.execute with correct parameters', async () => {
                 const apiKeyToUse = 'key-for-strategy';
                 mockApiKeyProvider.getKey.mockResolvedValue(apiKeyToUse);
-                await adapter.setActiveLlm('test-llm-operational');
+                const llmId = 'test-llm-operational';
+                await adapter.setActiveLlm(llmId);
+                mockLogger.info.mockClear(); // Clear setActiveLlm log & API key log
 
                 await adapter.getAIDecision(gameSummary);
 
-                const expectedActiveConfig = getOperationalConfigs().llms['test-llm-operational'];
+                const expectedActiveConfig = getOperationalConfigs().llms[llmId];
                 expect(mockLlmStrategy.execute).toHaveBeenCalledWith({
                     gameSummary,
                     llmConfig: expectedActiveConfig,
                     apiKey: apiKeyToUse,
                     environmentContext: mockEnvironmentContext,
                 });
+                expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Executing strategy for LLM '${llmId}'.`));
             });
 
             it('should return the JSON string from strategy.execute', async () => {
                 const strategyResponse = JSON.stringify({strategy: "response"});
                 mockLlmStrategy.execute.mockResolvedValue(strategyResponse);
+                mockLogger.info.mockClear();
+
 
                 const result = await adapter.getAIDecision(gameSummary);
                 expect(result).toBe(strategyResponse);
@@ -439,38 +484,43 @@ describe('ConfigurableLLMAdapter', () => {
         });
 
         describe('Error Propagation', () => {
+            const llmId = 'test-llm-operational';
+            beforeEach(async () => {
+                await adapter.setActiveLlm(llmId);
+                mockLogger.info.mockClear();
+                mockLogger.error.mockClear();
+            });
+
             it('should catch, log, and re-throw errors from IApiKeyProvider.getKey', async () => {
                 const apiKeyError = new Error("API Key Provider Error");
                 mockApiKeyProvider.getKey.mockRejectedValue(apiKeyError);
-                mockLogger.error.mockClear();
 
                 await expect(adapter.getAIDecision(gameSummary))
                     .rejects.toThrow(apiKeyError);
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining("Error during decision processing for LLM 'test-llm-operational'. Error: API Key Provider Error"),
-                    expect.objectContaining({llmId: 'test-llm-operational', errorName: 'Error'})
+                    expect.stringContaining(`Error during getAIDecision for LLM '${llmId}': ${apiKeyError.message}`),
+                    expect.objectContaining({
+                        llmId: llmId,
+                        errorName: apiKeyError.name,
+                        errorDetails: expect.objectContaining({message: apiKeyError.message})
+                    })
                 );
             });
 
-            it('should catch, log, and re-throw errors from LLMStrategyFactory.getStrategy (if not ConfigurationError)', async () => {
+            it('should catch, log, and re-throw ConfigurationError when LLMStrategyFactory.getStrategy throws non-ConfigurationError', async () => {
                 const factoryGenericError = new Error("Factory generic meltdown");
                 mockLlmStrategyFactory.getStrategy.mockImplementation(() => {
                     throw factoryGenericError;
                 });
-                mockLogger.error.mockClear();
 
+                const expectedWrappedMessage = `Failed to get strategy from factory for LLM '${llmId}': ${factoryGenericError.message}`;
                 await expect(adapter.getAIDecision(gameSummary))
-                    .rejects.toThrow(ConfigurationError); // It gets wrapped into a ConfigurationError
+                    .rejects.toThrow(new ConfigurationError(expectedWrappedMessage, {llmId}));
 
-                // First log: from the factory catch block
+                expect(mockLogger.error).toHaveBeenCalledTimes(1);
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining("LLMStrategyFactory failed to provide a strategy for LLM 'test-llm-operational'. Error: Factory generic meltdown"),
-                    expect.objectContaining({originalError: factoryGenericError})
-                );
-                // Second log: from the main catch block in getAIDecision
-                expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining("Error during decision processing for LLM 'test-llm-operational'. Error: Failed to get strategy from factory for LLM 'test-llm-operational': Factory generic meltdown"),
-                    expect.objectContaining({llmId: 'test-llm-operational', errorName: 'ConfigurationError'})
+                    expect.stringContaining(`Error during getAIDecision for LLM '${llmId}': ${expectedWrappedMessage}`),
+                    expect.objectContaining({llmId: llmId, errorName: 'ConfigurationError'})
                 );
             });
 
@@ -478,17 +528,20 @@ describe('ConfigurableLLMAdapter', () => {
             it('should catch, log, and re-throw errors from strategy.execute', async () => {
                 const strategyExecuteError = new Error("Strategy Execution Failed");
                 mockLlmStrategy.execute.mockRejectedValue(strategyExecuteError);
-                mockLogger.error.mockClear();
 
                 await expect(adapter.getAIDecision(gameSummary))
                     .rejects.toThrow(strategyExecuteError);
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining("Error during decision processing for LLM 'test-llm-operational'. Error: Strategy Execution Failed"),
-                    expect.objectContaining({llmId: 'test-llm-operational', errorName: 'Error'})
+                    expect.stringContaining(`Error during getAIDecision for LLM '${llmId}': ${strategyExecuteError.message}`),
+                    expect.objectContaining({
+                        llmId: llmId,
+                        errorName: strategyExecuteError.name,
+                        errorDetails: expect.objectContaining({message: strategyExecuteError.message})
+                    })
                 );
             });
 
-            it('should re-throw ConfigurationError from validation steps directly', async () => {
+            it('should re-throw ConfigurationError from validation steps directly, and log it once via main catch', async () => {
                 const invalidIdConf = {...getOperationalConfigs().llms['test-llm-operational'], id: null};
                 const tempConfigs = getOperationalConfigs();
                 const testConfigKey = 'invalid-for-direct-rethrow';
@@ -496,7 +549,7 @@ describe('ConfigurableLLMAdapter', () => {
                 tempConfigs.defaultLlmId = testConfigKey;
                 mockLlmConfigLoader.loadConfigs.mockResolvedValue(tempConfigs);
 
-                const testAdapter = new ConfigurableLLMAdapter({ // Fresh adapter for this specific config
+                const testAdapter = new ConfigurableLLMAdapter({
                     logger: mockLogger, environmentContext: mockEnvironmentContext,
                     apiKeyProvider: mockApiKeyProvider, llmStrategyFactory: mockLlmStrategyFactory
                 });
@@ -504,23 +557,27 @@ describe('ConfigurableLLMAdapter', () => {
                 mockLogger.error.mockClear();
 
                 let thrownError;
+                const expectedValidationErrorMessage = `Active LLM config 'unknown' is invalid: id: Missing or invalid`;
                 try {
                     await testAdapter.getAIDecision(gameSummary);
                 } catch (e) {
                     thrownError = e;
                 }
                 expect(thrownError).toBeInstanceOf(ConfigurationError);
-                expect(thrownError.message).toContain("Active LLM config 'null' is missing essential field(s)");
-                expect(thrownError.llmId).toBeNull(); // ID of the config was null
+                expect(thrownError.message).toBe(expectedValidationErrorMessage);
+                expect(thrownError.llmId).toBeNull();
+                expect(thrownError.problematicFields).toEqual(expect.arrayContaining([
+                    expect.objectContaining({field: 'id', reason: 'Missing or invalid'})
+                ]));
 
-                expect(mockLogger.error).toHaveBeenCalledTimes(2);
-                expect(mockLogger.error).toHaveBeenCalledWith( // Log from validation block inside getAIDecision
-                    "ConfigurableLLMAdapter.getAIDecision: Active LLM config 'null' is missing essential field(s) or has invalid structure: id: Missing or invalid"
-                );
-                // Log from the outer catch block in getAIDecision. activeConfig.id is null, so llmId in log is 'null'
+                expect(mockLogger.error).toHaveBeenCalledTimes(1);
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining("Error during decision processing for LLM 'unknown'. Error: Active LLM config 'null' is missing essential field(s) or has invalid structure: id: Missing or invalid"), // Expect 'unknown' for the LLM identifier in the message
-                    expect.objectContaining({llmId: 'unknown', errorName: 'ConfigurationError'}) // Expect 'unknown' for the llmId in the details object
+                    expect.stringContaining(`Error during getAIDecision for LLM 'unknown': ${expectedValidationErrorMessage}`),
+                    expect.objectContaining({
+                        llmId: 'unknown',
+                        errorName: 'ConfigurationError',
+                        problematicFields: thrownError.problematicFields
+                    })
                 );
             });
         });
