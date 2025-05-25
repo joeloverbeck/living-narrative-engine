@@ -21,4 +21,6 @@ export const DISLIKES_COMPONENT_ID = 'core:dislikes';
 export const SECRETS_COMPONENT_ID = 'core:secrets';
 export const SPEECH_PATTERNS_COMPONENT_ID = 'core:speech_patterns';
 
+export const PORTRAIT_COMPONENT_ID = 'core:portrait';
+
 // --- FILE END ---

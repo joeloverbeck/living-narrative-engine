@@ -3,7 +3,6 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../types/common.js').NamespacedId} NamespacedId */
 
 /**
  * @typedef {object} LogEntry

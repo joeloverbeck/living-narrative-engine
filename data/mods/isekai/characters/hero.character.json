@@ -9,6 +9,10 @@
     "core:description": {
       "text": "A big, powerful hero, ready to take over this isekai world."
     },
+    "core:portrait": {
+      "imagePath": "portraits/hero.png",
+      "altText": "A valiant hero with a bright sword."
+    },
     "core:position": {
       "locationId": "isekai:adventurers_guild",
       "x": 0,

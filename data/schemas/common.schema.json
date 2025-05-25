@@ -8,20 +8,6 @@
       "type": "string",
       "pattern": "^[a-zA-Z0-9_\\-:]+$"
     },
-    "DefinitionRefComponent": {
-      "description": "A generic component holding a single reference ID string, typically to a definition (e.g., an item definition ID on an instance, a character class definition).",
-      "type": "object",
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "$ref": "#/definitions/namespacedId",
-          "description": "The namespaced ID referencing the target definition."
-        }
-      },
-      "additionalProperties": false
-    },
     "nullableNamespacedId": {
       "description": "A unique identifier string, typically namespaced (like namespacedId), or null.",
       "oneOf": [
@@ -33,19 +19,6 @@
           "type": "null"
         }
       ]
-    },
-    "NameComponent": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string",
-          "description": "The primary display name or title of the entity (e.g., 'Player', 'Goblin Sentry', 'Iron Key')."
-        }
-      }
     },
     "entityReference": {
       "description": "Specifies an entity. Can be a keyword ('actor', 'target'), a direct non-empty entity ID string, or an object containing the entity ID.",
@@ -73,130 +46,6 @@
           "description": "Reference via explicit entityId property."
         }
       ]
-    },
-    "DescriptionComponent": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "text"
-      ],
-      "properties": {
-        "text": {
-          "type": "string",
-          "description": "A static description text for the entity."
-        }
-      }
-    },
-    "MetaDescriptionComponent": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "keywords"
-      ],
-      "properties": {
-        "keywords": {
-          "type": "array",
-          "description": "A list of concise keywords or short phrases describing the location's key features, atmosphere, or contents (e.g., ['damp stone', 'flickering torchlight', 'smell of decay', 'distant dripping']). Used as input for LLM description generation.",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1
-        },
-        "style_hint": {
-          "type": "string",
-          "description": "(Optional) Hint for the LLM about the desired writing style (e.g., 'brief', 'ominous', 'poetic')."
-        }
-      }
-    },
-    "EquipmentComponent": {
-      "type": "object",
-      "description": "Tracks items equipped by the entity in specific body slots.",
-      "properties": {
-        "slots": {
-          "type": "object",
-          "description": "A map where keys are slot IDs (e.g., 'core:slot_main_hand') and values are the entity ID string of the equipped item, or null if empty.",
-          "additionalProperties": {
-            "$ref": "#/definitions/nullableNamespacedId"
-          },
-          "propertyNames": {
-            "$ref": "#/definitions/namespacedId"
-          },
-          "examples": [
-            {
-              "core:slot_main_hand": "demo:item_sword",
-              "core:slot_head": null
-            }
-          ]
-        }
-      },
-      "required": [
-        "slots"
-      ],
-      "additionalProperties": false
-    },
-    "QuestLogComponent": {
-      "type": "object",
-      "description": "Component for entities (typically the player) that track quest progress.",
-      "properties": {
-        "active_quests": {
-          "type": "array",
-          "description": "List of IDs of quests currently being tracked.",
-          "items": {
-            "$ref": "#/definitions/namespacedId"
-          },
-          "default": [],
-          "uniqueItems": true
-        },
-        "completed_quests": {
-          "type": "array",
-          "description": "List of IDs of quests that have been completed.",
-          "items": {
-            "$ref": "#/definitions/namespacedId"
-          },
-          "default": [],
-          "uniqueItems": true
-        }
-      },
-      "required": [],
-      "additionalProperties": false
-    },
-    "TypedParameterBase": {
-      "type": "object",
-      "description": "Base structure for objects where a 'type' string dictates the structure of a 'parameters' object.",
-      "required": [
-        "type",
-        "parameters"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Identifier determining the required structure of the 'parameters' object."
-        },
-        "parameters": {
-          "type": "object",
-          "description": "Container for parameters specific to the 'type'. Specific properties defined in consuming schemas using oneOf/allOf."
-        }
-      },
-      "additionalProperties": false
-    },
-    "eventDefinition": {
-      "type": "object",
-      "description": "Defines an event structure containing a name/ID and optional data payload.",
-      "required": [
-        "eventName"
-      ],
-      "properties": {
-        "eventName": {
-          "$ref": "#/definitions/namespacedId",
-          "description": "The unique, namespaced name/ID of the event to fire."
-        },
-        "eventData": {
-          "type": "object",
-          "description": "Optional payload data object for the event. Structure depends on the specific event being fired.",
-          "additionalProperties": true
-        }
-      },
-      "additionalProperties": false
     }
   }
 }

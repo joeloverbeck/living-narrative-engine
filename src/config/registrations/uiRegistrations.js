@@ -23,7 +23,7 @@ import {
     LlmSelectionModal, // <<< ADDED IMPORT for LlmSelectionModal
     // Base utilities
     DomElementFactory,
-    DocumentContext
+    DocumentContext, CurrentTurnActorRenderer
 } from '../../domUI/index.js';
 import SaveGameUI from "../../domUI/saveGameUI.js";
 import LoadGameUI from "../../domUI/loadGameUI.js";
@@ -205,7 +205,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     }));
     logger.debug(`UI Registrations: Registered ${tokens.LoadGameUI}.`);
 
-    // LlmSelectionModal <<< NEW REGISTRATION
+    // LlmSelectionModal
     registrar.singletonFactory(tokens.LlmSelectionModal, c => new LlmSelectionModal({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
@@ -214,6 +214,14 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     }));
     logger.debug(`UI Registrations: Registered ${tokens.LlmSelectionModal}.`);
 
+    // CurrentTurnActorRenderer
+    registrar.singletonFactory(tokens.CurrentTurnActorRenderer, c => new CurrentTurnActorRenderer({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        entityManager: c.resolve(tokens.IEntityManager)
+    }));
+    logger.debug(`UI Registrations: Registered ${tokens.CurrentTurnActorRenderer}.`);
 
     // --- 3. Register Facade ---
     registrar.single(tokens.DomUiFacade, DomUiFacade, [

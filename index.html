@@ -13,6 +13,13 @@
 
 <div id="app-layout-container">
     <aside id="left-pane" class="panel">
+        <div id="current-turn-actor-panel" class="widget" role="region" aria-labelledby="current-turn-actor-heading">
+            <h3 id="current-turn-actor-heading">Current Turn</h3>
+            <div class="actor-visuals">
+                <img id="current-actor-image" src="" alt="Current Actor Portrait" style="display: none;">
+            </div>
+            <p id="current-actor-name" class="actor-name-display">N/A</p>
+        </div>
         <div id="character-status-widget" role="region" aria-labelledby="character-status-heading" aria-live="polite">
             <h3 id="character-status-heading">Status</h3>
             <p>Health: <span id="player-health">N/A</span></p>

@@ -136,7 +136,7 @@ export async function initializeGameEngineStage(container, logger) {
 }
 
 /**
- * Bootstrap Stage: Initializes auxiliary services like EngineUIManager, SaveGameUI, LoadGameUI, and LlmSelectionModal.
+ * Bootstrap Stage: Initializes auxiliary services like EngineUIManager, SaveGameUI, LoadGameUI, LlmSelectionModal, and CurrentTurnActorRenderer.
  *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
@@ -206,11 +206,24 @@ export async function initializeAuxiliaryServicesStage(container, gameEngine, lo
         if (llmSelectionModalInstance) {
             logger.info(`${stageName}: LlmSelectionModal resolved and initialized successfully.`);
         } else {
-            // This case should ideally be caught by the container if resolution fails critically
             logger.warn(`${stageName}: LlmSelectionModal instance could not be resolved. 'Change LLM' functionality may be unavailable.`);
         }
     } catch (llmModalError) {
         logger.error(`${stageName}: Error resolving LlmSelectionModal. 'Change LLM' functionality may be impaired.`, llmModalError);
+    }
+
+    // CurrentTurnActorRenderer Initialization (Resolution is enough as constructor sets up listeners) // <<< NEW
+    try {
+        logger.info(`${stageName}: Resolving CurrentTurnActorRenderer...`);
+        const currentTurnActorRendererInstance = container.resolve(diTokens.CurrentTurnActorRenderer);
+        if (currentTurnActorRendererInstance) {
+            logger.info(`${stageName}: CurrentTurnActorRenderer resolved and initialized successfully (via constructor).`);
+        } else {
+            // This case should ideally be caught by the container if resolution fails critically
+            logger.warn(`${stageName}: CurrentTurnActorRenderer instance could not be resolved. 'Current Turn' panel may not function.`);
+        }
+    } catch (ctarError) {
+        logger.error(`${stageName}: Error resolving CurrentTurnActorRenderer. 'Current Turn' panel may be impaired.`, ctarError);
     }
 
     logger.info(`Bootstrap Stage: ${stageName} completed.`);

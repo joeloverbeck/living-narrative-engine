@@ -153,9 +153,9 @@ export const tokens = Object.freeze({
     DomUiFacade: 'DomUiFacade',
     SaveGameUI: 'SaveGameUI',
     LoadGameUI: 'LoadGameUI',
-    LlmSelectionModal: 'LlmSelectionModal', // <<< ADDED TOKEN
-    EngineUIManager: 'EngineUIManager', // <<< ADDED TOKEN
-    // DomRenderer: 'DomRenderer', // Example if it was to be explicitly listed before removal or for deprecation
+    LlmSelectionModal: 'LlmSelectionModal',
+    EngineUIManager: 'EngineUIManager',
+    CurrentTurnActorRenderer: 'CurrentTurnActorRenderer',
 
     // Loaders
     SchemaLoader: 'SchemaLoader',

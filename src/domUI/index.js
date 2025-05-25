@@ -18,4 +18,7 @@ export {LlmSelectionModal} from './llmSelectionModal.js'; // <<< ADDED EXPORT
 
 // *** ADDED: Export the new facade *** (Already present, but ensure it's correct)
 export {DomUiFacade} from './domUiFacade.js'; // Use named export
+
+// --- NEW EXPORT ---
+export {CurrentTurnActorRenderer} from './currentTurnActorRenderer.js';
 // --- FILE END ---

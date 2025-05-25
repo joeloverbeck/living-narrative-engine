@@ -6,10 +6,6 @@
  */
 
 /**
- * @typedef {import('../interfaces/common.js').DiToken} DiToken // Assuming DiToken might be defined centrally
- */
-
-/**
  * @typedef {object} RegistrationOptions
  * @property {Lifecycle} [lifecycle='singleton'] - How the instance should be managed.
  * @property {DiToken[]} [dependencies] - Dependencies (keys) for class constructor injection. Added by Registrar.single/transient.

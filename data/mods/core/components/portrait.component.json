@@ -1,0 +1,24 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:portrait",
+  "description": "Provides portrait image information for an entity, used for UI display in the 'Current Turn' panel and potentially elsewhere.",
+  "dataSchema": {
+    "title": "Core: Portrait Component Data",
+    "description": "Defines the data structure for portrait information an entity possesses.",
+    "type": "object",
+    "properties": {
+      "imagePath": {
+        "type": "string",
+        "description": "Relative path to the portrait image within this mod's directory structure (e.g., 'portraits/hero.png' or 'images/avatars/player_character.webp')."
+      },
+      "altText": {
+        "type": "string",
+        "description": "Alternative text for the image, crucial for accessibility. If not provided, the entity's name can be used as a fallback by the UI."
+      }
+    },
+    "required": [
+      "imagePath"
+    ],
+    "additionalProperties": false
+  }
+}

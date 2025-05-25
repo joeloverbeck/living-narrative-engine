@@ -20,7 +20,8 @@
       "likes.component.json",
       "dislikes.component.json",
       "secrets.component.json",
-      "speech_patterns.component.json"
+      "speech_patterns.component.json",
+      "portrait.component.json"
     ],
     "characters": [
     ],
