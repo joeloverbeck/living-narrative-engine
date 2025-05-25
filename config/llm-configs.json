@@ -1,27 +1,27 @@
 {
   "defaultLlmId": "openrouter-qwen3-235b-a22b",
   "llms": {
-    "openrouter-claude3-haiku": {
-      "id": "openrouter-claude3-haiku",
-      "displayName": "Claude 3 Haiku (OpenRouter)",
-      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
-      "apiKeyFileName": "openrouter_api_key.txt",
+    "openrouter-claude3-haiku-jsonschema": {
+      "id": "openrouter-claude3-haiku-jsonschema",
+      "displayName": "Anthropic Claude 3 Haiku (OpenRouter JSON Schema)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY",
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "anthropic/claude-3-haiku-20240307",
       "apiType": "openrouter",
       "promptFrame": {
-        "system": "You are a helpful AI assistant for a text adventure game. Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
+        "system": "You are an AI controlling a character in a text adventure game. Based on the game state, decide an action and speech. Output ONLY a valid JSON object adhering to the schema: {\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\"}, \"speech\": {\"type\": \"string\"}}, \"required\": [\"action\", \"speech\"]}."
       },
-      "providerSpecificHeaders": {
-        "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "My Text Adventure Game"
-      },
+      "contextTokenLimit": 200000,
       "jsonOutputStrategy": {
         "method": "openrouter_json_schema"
       },
       "defaultParameters": {
-        "temperature": 0.7,
-        "max_tokens": 250
+        "temperature": 0.65,
+        "max_tokens": 200
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://yourgame.com/my-awesome-adventure",
+        "X-Title": "My Awesome Text Adventure"
       }
     },
     "openrouter-qwen3-235b-a22b": {
@@ -112,48 +112,67 @@
         "temperature": 1.0
       }
     },
-    "local-ollama-mistral": {
-      "id": "local-ollama-mistral",
-      "displayName": "Local Mistral (Ollama)",
+    "ollama-llama3-nativejson": {
+      "id": "ollama-llama3-nativejson",
+      "displayName": "Ollama Llama3 (Native JSON Mode)",
+      "apiKeyEnvVar": null,
       "endpointUrl": "http://localhost:11434/api/chat",
-      "modelIdentifier": "mistral",
+      "modelIdentifier": "llama3:latest",
       "apiType": "ollama",
+      "promptFrame": "You are an NPC in a fantasy game. Provide your action and speech as a JSON object with keys 'action' and 'speech'. Example: {\"action\": \"MOVE_EAST\", \"speech\": \"I shall investigate further!\"}. Ensure your output is ONLY the JSON object.",
+      "contextTokenLimit": 8192,
       "jsonOutputStrategy": {
         "method": "native_json_mode"
       },
       "defaultParameters": {
-        "temperature": 0.5
-      }
+        "temperature": 0.8,
+        "mirostat": 1,
+        "num_ctx": 4096
+      },
+      "providerSpecificHeaders": {}
     },
-    "openai-gpt-4o": {
-      "id": "openai-gpt-4o",
-      "displayName": "OpenAI GPT-4o",
-      "apiKeyEnvVar": "OPENAI_API_KEY_PROXY_ENV",
+    "openai-gpt-4o-toolcall": {
+      "id": "openai-gpt-4o-toolcall",
+      "displayName": "OpenAI GPT-4o (Tool Call)",
+      "apiKeyEnvVar": "OPENAI_API_KEY",
       "endpointUrl": "https://api.openai.com/v1/chat/completions",
       "modelIdentifier": "gpt-4o",
       "apiType": "openai",
       "promptFrame": {
-        "system": "You are a helpful AI assistant for a text adventure game. Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema, using the specified tool if available."
+        "system": "You are an AI assistant for a text-based adventure game. Your primary goal is to decide the character's next action and what they would say. Please respond using the 'get_action_speech' tool."
       },
+      "contextTokenLimit": 128000,
       "jsonOutputStrategy": {
         "method": "tool_calling",
-        "toolName": "game_ai_action_speech",
-        "toolDescription": "Extracts the character's next game action and speech based on the situation. Both action and speech are required."
+        "toolName": "get_action_speech"
       },
       "defaultParameters": {
-        "temperature": 0.6
-      }
+        "temperature": 0.7,
+        "max_tokens": 300
+      },
+      "providerSpecificHeaders": {}
     },
-    "local-llama-cpp-server": {
-      "id": "local-llama-cpp-server",
-      "displayName": "Local Llama.cpp Server (OpenAI Compatible)",
+    "local-llama-cpp-gbnf": {
+      "id": "local-llama-cpp-gbnf",
+      "displayName": "Local Llama.cpp Server (GBNF)",
+      "apiKeyEnvVar": null,
       "endpointUrl": "http://localhost:8080/v1/chat/completions",
-      "modelIdentifier": "local-model-gguf-name",
+      "modelIdentifier": "your-local-model.gguf",
       "apiType": "llama_cpp_server_openai_compatible",
+      "promptFrame": {
+        "system": "You are a game AI. Generate a JSON object with 'action' and 'speech' keys according to the provided grammar."
+      },
+      "contextTokenLimit": 4096,
       "jsonOutputStrategy": {
         "method": "gbnf_grammar",
-        "grammar": "./grammars/action_speech.gbnf"
-      }
+        "grammar": "root ::= \"{\\\"action\\\": \\\"\" ([^\\\"\\\\]|\\\\.)* \"\\\", \\\"speech\\\": \\\"\" ([^\\\"\\\\]|\\\\.)* \"\\\"}\""
+      },
+      "defaultParameters": {
+        "temperature": 0.5,
+        "max_tokens": 150,
+        "top_p": 0.9
+      },
+      "providerSpecificHeaders": {}
     }
   }
 }

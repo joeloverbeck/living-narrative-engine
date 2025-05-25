@@ -25,17 +25,18 @@ import {Workspace_retry} from '../utils/apiUtils.js';
 /**
  * @typedef {object} LLMModelConfig
  * @description Represents the configuration for a single LLM model.
- * Refer to 'Jira Epics for ILLMAdapter' Table 3 for detailed properties.
- * @property {string} id - Unique identifier for the LLM configuration.
- * @property {string} displayName - User-friendly name for logs or UI.
- * @property {string} [apiKeyEnvVar] - Name of the environment variable holding the API key.
- * @property {string} endpointUrl - Base URL of the LLM API.
- * @property {string} modelIdentifier - Provider-specific model name.
- * @property {string} apiType - Enum indicating API family (e.g., "openai", "openrouter", "ollama").
- * @property {object | string} [promptFrame] - Model-specific system prompt or template for prompt construction.
+ * All fields are based on "Table 3: Key Parameters for External LLM Configuration File"
+ * from the "Jira Epics for ILLMAdapter" document.
+ * @property {string} id - Unique identifier for the LLM configuration. (Required)
+ * @property {string} displayName - User-friendly name for logs or UI. (Required)
+ * @property {string} [apiKeyEnvVar] - Name of the environment variable holding the API key (optional, for cloud services).
+ * @property {string} endpointUrl - Base URL of the LLM API. (Required)
+ * @property {string} modelIdentifier - Provider-specific model name. (Required)
+ * @property {string} apiType - Enum indicating API family (e.g., "openai", "openrouter", "ollama", "llama_cpp_server_openai_compatible", "tgi_openai_compatible"). (Required)
+ * @property {object | string} [promptFrame] - Model-specific system prompt or template for prompt construction (object or string).
  * @property {number} [contextTokenLimit] - Maximum context tokens (input + output) for the model.
- * @property {object} jsonOutputStrategy - Object defining the method for achieving JSON output.
- * @property {string} jsonOutputStrategy.method - Enum for JSON strategy (e.g., "tool_calling", "native_json_mode", "gbnf_grammar").
+ * @property {object} jsonOutputStrategy - Object defining the method for achieving JSON output. (Required)
+ * @property {string} jsonOutputStrategy.method - Enum for JSON strategy (e.g., "tool_calling", "native_json_mode", "gbnf_grammar", "openrouter_json_schema"). (Required)
  * @property {string} [jsonOutputStrategy.toolName] - Name of the tool to invoke (if method is "tool_calling").
  * @property {string} [jsonOutputStrategy.grammar] - GBNF grammar string or path to grammar file (if method is "gbnf_grammar").
  * @property {object} [defaultParameters] - Default API parameters (e.g., temperature, max_tokens for output).
@@ -108,6 +109,8 @@ export class LlmConfigLoader {
      * or a default path if none is provided.
      * This method uses the Workspace API (simulated by `Workspace_retry` using `Workspace`)
      * to retrieve the content of the `llm-configs.json` file. [Ticket 1.4.2]
+     * It now also ensures that optional fields like defaultParameters and
+     * providerSpecificHeaders are initialized to empty objects ({}) if not present.
      *
      * @async
      * @param {string} [filePath] - The path to the llm-configs.json file (e.g., "config/llm-configs.json").
@@ -135,7 +138,7 @@ export class LlmConfigLoader {
             this.#logger.info(`LlmConfigLoader: Successfully fetched and parsed LLM configurations from ${path}.`);
 
             // Basic validation of the overall structure.
-            if (typeof parsedResponse !== 'object' || parsedResponse === null || typeof parsedResponse.llms !== 'object') {
+            if (typeof parsedResponse !== 'object' || parsedResponse === null || typeof parsedResponse.llms !== 'object' || parsedResponse.llms === null) {
                 this.#logger.error(`LlmConfigLoader: Configuration file from ${path} is malformed or missing 'llms' object.`, {
                     path,
                     parsedResponse // Log the actual parsedResponse for debugging
@@ -147,6 +150,40 @@ export class LlmConfigLoader {
                     path: path
                 };
             }
+
+            // Enhance configurations with default values for optional fields.
+            // JSON.parse() will include all keys present in the JSON, so we just need to
+            // handle the cases where optional fields that should default to {} are missing.
+            for (const llmId in parsedResponse.llms) {
+                if (Object.prototype.hasOwnProperty.call(parsedResponse.llms, llmId)) {
+                    const config = parsedResponse.llms[llmId];
+
+                    // Ensure config is an object before trying to access/set properties
+                    if (typeof config === 'object' && config !== null) {
+                        // Default 'defaultParameters' to {} if missing or explicitly undefined
+                        if (config.defaultParameters === undefined) {
+                            config.defaultParameters = {};
+                            this.#logger.debug(`LlmConfigLoader: LLM config '${llmId}' missing 'defaultParameters'. Defaulted to {}.`);
+                        }
+
+                        // Default 'providerSpecificHeaders' to {} if missing or explicitly undefined
+                        if (config.providerSpecificHeaders === undefined) {
+                            config.providerSpecificHeaders = {};
+                            this.#logger.debug(`LlmConfigLoader: LLM config '${llmId}' missing 'providerSpecificHeaders'. Defaulted to {}.`);
+                        }
+
+                        // Other optional fields like apiKeyEnvVar, promptFrame, contextTokenLimit,
+                        // jsonOutputStrategy.toolName, and jsonOutputStrategy.grammar
+                        // will naturally be undefined if not present in the JSON,
+                        // which is the desired behavior per requirements.
+                    } else {
+                        // This case should ideally be caught by schema validation if one were in place here,
+                        // but good to log if an llm entry isn't an object.
+                        this.#logger.warn(`LlmConfigLoader: LLM configuration for ID '${llmId}' is not an object. Skipping default optional field processing for this entry.`, {config});
+                    }
+                }
+            }
+            this.#logger.info(`LlmConfigLoader: Processed optional fields for all LLM configurations from ${path}.`);
             return parsedResponse;
 
         } catch (error) {

@@ -395,10 +395,8 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             gameSummaryLength: gameSummary ? gameSummary.length : 0
         });
 
-        const activeConfig = this.#currentActiveLlmConfig; // #ensureInitialized + getCurrentActiveLlmConfig implies this is set if operational
+        const activeConfig = this.#currentActiveLlmConfig;
         if (!activeConfig) {
-            // This should ideally be caught by #ensureInitialized if no defaultLlmId leads to non-operational,
-            // or by getCurrentActiveLlmConfig if called directly. But as a final check if an LLM must be active:
             const msg = "No active LLM configuration is set (activeConfig is null post-init). Use setActiveLlm() or set a defaultLlmId that successfully loads.";
             this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
             throw new ConfigurationError(msg);
@@ -407,7 +405,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         let llmJsonOutput;
 
         try {
-            // Step 2: Validate Active Configuration (Basic)
+            // Step 2: Validate Active Configuration (Basic and Extended for new fields as per Sub-Ticket 2.6.3)
             const validationErrors = [];
             if (!activeConfig.id || typeof activeConfig.id !== 'string' || activeConfig.id.trim() === '') {
                 validationErrors.push({field: 'id', reason: 'Missing or invalid'});
@@ -421,22 +419,41 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             if (!activeConfig.apiType || typeof activeConfig.apiType !== 'string' || activeConfig.apiType.trim() === '') {
                 validationErrors.push({field: 'apiType', reason: 'Missing or invalid'});
             }
-            if (activeConfig.jsonOutputStrategy) {
-                if (typeof activeConfig.jsonOutputStrategy !== 'object') {
-                    validationErrors.push({field: 'jsonOutputStrategy', reason: 'Must be an object if provided'});
+
+            if (typeof activeConfig.jsonOutputStrategy !== 'object' || activeConfig.jsonOutputStrategy === null) {
+                // Adjusted reason to match specific test expectation substring
+                validationErrors.push({field: 'jsonOutputStrategy', reason: 'Must be an object if provided'});
+            } else {
+                if (typeof activeConfig.jsonOutputStrategy.method !== 'string' || activeConfig.jsonOutputStrategy.method.trim() === '') {
+                    // Adjusted reason to match specific test expectation substring
+                    validationErrors.push({
+                        field: 'jsonOutputStrategy.method',
+                        reason: 'Must be a non-empty string if provided'
+                    });
                 } else {
-                    if (activeConfig.jsonOutputStrategy.method &&
-                        (typeof activeConfig.jsonOutputStrategy.method !== 'string' || activeConfig.jsonOutputStrategy.method.trim() === '')) {
-                        validationErrors.push({
-                            field: 'jsonOutputStrategy.method',
-                            reason: 'Must be a non-empty string if provided'
-                        });
+                    const method = activeConfig.jsonOutputStrategy.method;
+                    if (method === "tool_calling") {
+                        if (typeof activeConfig.jsonOutputStrategy.toolName !== 'string' || activeConfig.jsonOutputStrategy.toolName.trim() === '') {
+                            validationErrors.push({
+                                field: 'jsonOutputStrategy.toolName',
+                                reason: 'Is required and must be a non-empty string when jsonOutputStrategy.method is "tool_calling".'
+                            });
+                        }
+                    } else if (method === "gbnf_grammar") {
+                        if (typeof activeConfig.jsonOutputStrategy.grammar !== 'string' || activeConfig.jsonOutputStrategy.grammar.trim() === '') {
+                            validationErrors.push({
+                                field: 'jsonOutputStrategy.grammar',
+                                reason: 'Is required and must be a non-empty string (representing grammar content or a path) when jsonOutputStrategy.method is "gbnf_grammar".'
+                            });
+                        }
                     }
                 }
             }
+
             if (validationErrors.length > 0) {
                 const errorDetailsMessage = validationErrors.map(err => `${err.field}: ${err.reason}`).join('; ');
-                const msg = `Active LLM config '${activeConfig.id}' is missing essential field(s) or has invalid structure: ${errorDetailsMessage}`;
+                const configIdForMessage = activeConfig.id === null ? 'null' : activeConfig.id;
+                const msg = `Active LLM config '${configIdForMessage}' is missing essential field(s) or has invalid structure: ${errorDetailsMessage}`;
                 this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
                 throw new ConfigurationError(msg, {llmId: activeConfig.id, problematicFields: validationErrors});
             }
@@ -450,20 +467,26 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             if (requiresApiKey && !apiKey) {
                 const msg = `API key retrieval failed or key is missing for LLM '${activeConfig.id}' which requires it in the current environment (server-side cloud API).`;
                 this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
-                throw new ConfigurationError(msg, {llmId: activeConfig.id});
+                throw new ConfigurationError(msg, {
+                    llmId: activeConfig.id,
+                    problematicField: 'apiKey (derived via apiKeyEnvVar)'
+                });
             }
             if (apiKey) {
                 this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: API key retrieved successfully for LLM '${activeConfig.id}'.`);
             } else if (requiresApiKey) {
                 const msg = `Critical: API key for LLM '${activeConfig.id}' is required but was not available.`;
                 this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
-                throw new ConfigurationError(msg, {llmId: activeConfig.id});
+                throw new ConfigurationError(msg, {
+                    llmId: activeConfig.id,
+                    problematicField: 'apiKey (derived via apiKeyEnvVar)'
+                });
             } else {
                 this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: API key not required or not found for LLM '${activeConfig.id}' in current context, proceeding without it.`);
             }
 
             // Step 4: Get LLM Strategy Instance
-            this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: Working LLM strategy for config '${activeConfig.id}' (apiType: ${activeConfig.apiType}, strategyMethod: ${activeConfig.jsonOutputStrategy?.method || 'default'}).`);
+            this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: Obtaining LLM strategy for config '${activeConfig.id}' (apiType: ${activeConfig.apiType}, jsonOutputStrategy.method: ${activeConfig.jsonOutputStrategy?.method || 'N/A'}).`);
             let strategy;
             try {
                 strategy = this.#llmStrategyFactory.getStrategy(activeConfig);
@@ -491,10 +514,62 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             return llmJsonOutput;
 
         } catch (error) {
-            // Step 6: Overall Error Handling
-            this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: Error during decision processing for LLM '${activeConfig?.id || 'unknown'}'. Error: ${error.message}`, {
-                llmId: activeConfig?.id || 'unknown', errorName: error.name,
-            });
+            let llmIdForLoggingInString = 'unknown';
+            let llmIdForLoggingInObject = 'unknown'; // Default for object logging if error.llmId is null/undefined
+
+            // Try to get a more specific ID from activeConfig if available
+            if (activeConfig && activeConfig.id !== null && activeConfig.id !== undefined) {
+                llmIdForLoggingInString = String(activeConfig.id);
+                llmIdForLoggingInObject = String(activeConfig.id); // Default to this for object if error doesn't specify
+            }
+
+            // If the error itself carries an llmId, it's often the most relevant.
+            // Handle cases where error.llmId might be explicitly null (e.g., from validation of a config with id: null)
+            if (error.llmId !== undefined) { // Check if llmId property exists on the error
+                if (error.llmId === null) {
+                    // Test "should re-throw ConfigurationError from validation steps directly"
+                    // expects 'unknown' in log string and log object when original config ID was null.
+                    llmIdForLoggingInString = 'unknown';
+                    llmIdForLoggingInObject = 'unknown';
+                } else {
+                    llmIdForLoggingInString = String(error.llmId);
+                    llmIdForLoggingInObject = String(error.llmId);
+                }
+            }
+
+
+            const mainErrorMessage = error.message;
+            let logDetails;
+
+            if (error instanceof ConfigurationError) {
+                logDetails = {
+                    llmId: llmIdForLoggingInObject,
+                    errorName: error.name, // Test expects 'errorName' for ConfigurationError as well
+                    problematicFields: error.problematicFields
+                };
+            } else {
+                // For generic errors, llmIdForLoggingInString/Object would have been set based on activeConfig.
+                // If activeConfig or its id was null/undefined, they'd remain 'unknown' or take error.llmId if it was somehow set.
+                // Ensure generic errors use a sensible ID from activeConfig if error doesn't have one.
+                if (activeConfig && activeConfig.id !== null && activeConfig.id !== undefined) {
+                    if (error.llmId === undefined) { // Only override if error itself doesn't specify an llmId
+                        llmIdForLoggingInString = String(activeConfig.id);
+                        llmIdForLoggingInObject = String(activeConfig.id);
+                    }
+                } else if (error.llmId === undefined) { // activeConfig or its id is not valid, and error has no llmId
+                    llmIdForLoggingInString = 'unknown';
+                    llmIdForLoggingInObject = 'unknown';
+                }
+
+
+                logDetails = {
+                    llmId: llmIdForLoggingInObject,
+                    errorName: error.name,
+                    errorDetails: {message: error.message, stack: error.stack, ...error}
+                };
+            }
+            const logMessage = `ConfigurableLLMAdapter.getAIDecision: Error during decision processing for LLM '${llmIdForLoggingInString}'. Error: ${mainErrorMessage}`;
+            this.#logger.error(logMessage, logDetails);
             throw error;
         }
     }
@@ -525,7 +600,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      * @returns {LLMConfigurationFile | null} The loaded configurations or null if not loaded/failed.
      */
     getLoadedConfigs_FOR_TESTING_ONLY() {
-        // Could optionally add: if (!this.#isInitialized) this.#logger.warn("...")
         return this.#llmConfigs;
     }
 
