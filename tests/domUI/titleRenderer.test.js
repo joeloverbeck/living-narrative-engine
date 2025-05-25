@@ -1,6 +1,6 @@
-// src/tests/domUI/titleRenderer.test.js
+// tests/domUI/titleRenderer.test.js
 import {beforeEach, describe, expect, it, jest} from '@jest/globals'; // Use if needed for mocking
-import {TitleRenderer} from '../../src/domUI/titleRenderer.js'; // Adjust path as necessary
+import {TitleRenderer} from '../../src/domUI/index.js'; // Adjust path as necessary
 
 // Mock dependencies
 const mockLogger = {
