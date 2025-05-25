@@ -31,7 +31,8 @@
       "enable_input.event.json",
       "disable_input.event.json",
       "command_echo.event.json",
-      "update_available_actions.event.json"
+      "update_available_actions.event.json",
+      "display_speech.event.json"
     ],
     "operations": [
     ]

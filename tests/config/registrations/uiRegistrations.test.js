@@ -506,10 +506,11 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
             tokens.TitleRenderer,
             tokens.InputStateController,
             tokens.UiMessageRenderer,
+            tokens.SpeechBubbleRenderer,
             tokens.PerceptionLogRenderer,
             tokens.SaveGameUI,
             tokens.LoadGameUI,
-            tokens.LlmSelectionModal // <<< MODIFIED: ADDED LlmSelectionModal
+            tokens.LlmSelectionModal
         ];
         // regCall[2] is the options object: { lifecycle: 'single', dependencies: [...] }
         // The actual registrar maps `single` to `lifecycle: 'singleton'` and passes dependencies.

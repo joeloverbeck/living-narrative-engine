@@ -52,34 +52,26 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
      * @param {ITurnState_Interface} [previousState]
      */
     async enterState(handler, previousState) {
-        // Get ITurnContext via the inherited _getTurnContext()
         const turnCtx = this._getTurnContext();
-
-        // Logger should be obtained from ITurnContext.
-        // If turnCtx is null, super.enterState will use handler.getLogger() as a fallback.
         await super.enterState(handler, previousState); // Handles initial logging
 
         if (!turnCtx) {
-            const fallbackLogger = handler.getLogger(); // Use handler's logger if context is unavailable
+            const fallbackLogger = handler.getLogger();
             fallbackLogger.error(`${this.getStateName()}: Critical - ITurnContext not available on entry. Transitioning to Idle.`);
-            // No turnCtx to call endTurn() on, so handler must reset and transition.
-            // This will call PlayerTurnHandler._resetTurnStateAndResources
             handler._resetTurnStateAndResources(`critical-entry-no-context-${this.getStateName()}`);
             await handler._transitionToState(new TurnIdleState(handler));
             return;
         }
 
-        const logger = turnCtx.getLogger(); // Use logger from the valid turnCtx
+        const logger = turnCtx.getLogger();
         const actor = turnCtx.getActor();
 
         if (!actor) {
             logger.error(`${this.getStateName()}: No actor in ITurnContext. Ending turn.`);
-            // Safely attempt to end turn. If turnCtx.endTurn throws, it should be caught by the caller or here.
             try {
                 turnCtx.endTurn(new Error(`${this.getStateName()}: No actor in ITurnContext on entry.`));
             } catch (e) {
                 logger.error(`${this.getStateName()}: Error calling turnCtx.endTurn due to no actor: ${e.message}`, e);
-                // If endTurn fails, handler needs to recover.
                 handler._resetTurnStateAndResources(`critical-entry-no-actor-endturn-failed-${this.getStateName()}`);
                 await handler._transitionToState(new TurnIdleState(handler));
             }
@@ -88,46 +80,41 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
         const actorId = actor.id;
 
         try {
-            // 1. Inform the handler (via TurnContext) that we are now awaiting an external event.
             logger.debug(`${this.getStateName()}: Calling turnCtx.setAwaitingExternalEvent(true, ${actorId}).`);
             turnCtx.setAwaitingExternalEvent(true, actorId);
             logger.debug(`${this.getStateName()}: Successfully marked actor ${actorId} as awaiting external event via ITurnContext.`);
 
-            // 2. Subscribe to the core:turn_ended event using SubscriptionLifecycleManager from ITurnContext.
-            logger.debug(`${this.getStateName()}: Subscribing to ${TURN_ENDED_ID} events for actor ${actorId}.`);
+            logger.debug(`${this.getStateName()}: Subscribing to ${TURN_ENDED_ID} events for actor ${actorId} via SubscriptionLifecycleManager.`);
             const subMan = turnCtx.getSubscriptionManager();
-            this.#unsubscribeTurnEndedFn = subMan.subscribeToTurnEnded(
+            const returnedUnsubscribeFn = subMan.subscribeToTurnEnded(
                 /** @param {SystemEventPayloads[TURN_ENDED_ID_TYPE]} payload */
-                (payload) => this.handleTurnEndedEvent(handler, payload) // Pass handler for context
+                (payload) => this.handleTurnEndedEvent(handler, payload)
             );
 
-            if (typeof this.#unsubscribeTurnEndedFn !== 'function') {
-                // This case should ideally be prevented by a robust SubscriptionLifecycleManager.
-                logger.warn(`${this.getStateName()}: subscribeToTurnEnded did not return an unsubscribe function for ${actorId}. This is unexpected.`);
-                // Proceeding, but unsubscription might fail or not be possible.
+            if (typeof returnedUnsubscribeFn === 'function') {
+                this.#unsubscribeTurnEndedFn = returnedUnsubscribeFn; // Store the token
+                logger.info(`${this.getStateName()}: Successfully initiated subscription via SubscriptionLifecycleManager – awaiting ${TURN_ENDED_ID} for actor ${actorId}.`);
+            } else {
+                // SubscriptionLifecycleManager.subscribeToTurnEnded itself should log if the underlying subscription fails.
+                // This state just notes that it didn't receive a valid token, implying the managed subscription might not be active.
+                logger.warn(`${this.getStateName()}: SubscriptionLifecycleManager.subscribeToTurnEnded did not return an unsubscribe function for ${actorId}. The subscription might not be active as expected.`);
+                this.#unsubscribeTurnEndedFn = undefined; // Ensure it's falsy
             }
-            logger.info(`${this.getStateName()}: Successfully subscribed – awaiting ${TURN_ENDED_ID} for actor ${actorId}.`);
 
         } catch (error) {
             logger.error(`${this.getStateName()}: Error during enterState setup for actor ${actorId}: ${error.message}`, error);
-            // Ensure the awaiting flag is cleared if setup fails AFTER it was set.
             try {
-                // Check if isAwaitingExternalEvent reflects the intended 'true' state before attempting to clear.
-                // This check should be on turnCtx if available.
-                if (turnCtx && typeof turnCtx.isAwaitingExternalEvent === 'function' && turnCtx.isAwaitingExternalEvent()) {
+                if (turnCtx.isAwaitingExternalEvent()) {
                     logger.debug(`${this.getStateName()}: Attempting to clear awaiting flag for ${actorId} due to setup error.`);
                     turnCtx.setAwaitingExternalEvent(false, actorId);
                 }
             } catch (clearFlagError) {
                 logger.error(`${this.getStateName()}: Failed to clear awaiting flag for ${actorId} during error recovery: ${clearFlagError.message}`, clearFlagError);
             }
-            // End turn via ITurnContext with the original error
-            // Ensure turnCtx is still valid before calling endTurn
             if (turnCtx && typeof turnCtx.endTurn === 'function') {
                 turnCtx.endTurn(error);
             } else {
                 logger.error(`${this.getStateName()}: Cannot end turn during setup error for ${actorId} as ITurnContext became invalid.`);
-                // Fallback to handler reset if context is gone
                 handler._resetTurnStateAndResources(`critical-setup-error-no-context-${actorId}`);
                 await handler._transitionToState(new TurnIdleState(handler));
             }
@@ -260,16 +247,22 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
      * @param {string} reasonForLog
      */
     async #performUnsubscribe(logger, reasonForLog) {
-        if (this.#unsubscribeTurnEndedFn) {
-            logger.debug(`${this.getStateName()}: Performing unsubscription from ${TURN_ENDED_ID} due to: ${reasonForLog}.`);
-            try {
-                this.#unsubscribeTurnEndedFn();
-            } catch (err) {
-                logger.warn(`${this.getStateName()}: Error during manual unsubscription (${reasonForLog}): ${err.message}`);
+        if (this.#unsubscribeTurnEndedFn) { // Check if this state instance believes it has an active subscription token
+            const turnCtx = this._getTurnContext();
+            if (turnCtx) {
+                try {
+                    const subMan = turnCtx.getSubscriptionManager();
+                    logger.debug(`${this.getStateName()}: Requesting unsubscription from ${TURN_ENDED_ID} via SubscriptionLifecycleManager due to: ${reasonForLog}.`);
+                    subMan.unsubscribeFromTurnEnded(); // Manager handles actual unsubscription and flag clearing
+                } catch (e) {
+                    logger.error(`${this.getStateName()}: Error obtaining/using SubscriptionManager to unsubscribe for ${TURN_ENDED_ID}: ${e.message}`, e);
+                }
+            } else {
+                logger.warn(`${this.getStateName()}: Cannot notify SubscriptionLifecycleManager to unsubscribe from ${TURN_ENDED_ID}. No ITurnContext available (reason: ${reasonForLog}).`);
             }
-            this.#unsubscribeTurnEndedFn = undefined; // Clear after attempting
+            this.#unsubscribeTurnEndedFn = undefined; // Clear the token for this state instance
         } else {
-            logger.debug(`${this.getStateName()}: Unsubscribe call for ${TURN_ENDED_ID} (reason: ${reasonForLog}), but no active unsubscribe function found or already cleared.`);
+            logger.debug(`${this.getStateName()}: Unsubscribe call for ${TURN_ENDED_ID} (reason: ${reasonForLog}), but no active unsubscribe token found or already cleared for this state instance.`);
         }
     }
 

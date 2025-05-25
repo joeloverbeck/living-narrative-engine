@@ -31,6 +31,7 @@
  * @property {DiToken} IDocumentContext - Token for the DOM access abstraction service.
  * @property {DiToken} DomElementFactory - Token for the utility creating DOM elements.
  * @property {DiToken} UiMessageRenderer - Token for the component rendering UI messages/echoes.
+ * @property {DiToken} SpeechBubbleRenderer - Token for the component rendering speech bubbles with portraits. // <<< NEW TOKEN
  * @property {DiToken} TitleRenderer - Token for the component rendering the main H1 title.
  * @property {DiToken} InputStateController - Token for the component controlling input field state.
  * @property {DiToken} LocationRenderer - Token for the component rendering location details.
@@ -40,9 +41,10 @@
  * @property {DiToken} DomUiFacade - Token for the facade aggregating all UI components.
  * @property {DiToken} SaveGameUI - Token for the Save Game UI component.
  * @property {DiToken} LoadGameUI - Token for the Load Game UI component.
- * @property {DiToken} LlmSelectionModal - Token for the LLM Selection Modal UI component. // <<< ADDED TOKEN
- * @property {DiToken} EngineUIManager - Token for the service managing UI updates from GameEngine events. // <<< ADDED
+ * @property {DiToken} LlmSelectionModal - Token for the LLM Selection Modal UI component.
+ * @property {DiToken} EngineUIManager - Token for the service managing UI updates from GameEngine events.
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
+ * @property {DiToken} CurrentTurnActorRenderer - Token for the component displaying the current turn actor's portrait and name.
  *
  * --- Loaders ---
  * @property {DiToken} SchemaLoader - Token for the schema loading service.
@@ -144,6 +146,7 @@ export const tokens = Object.freeze({
     IDocumentContext: 'IDocumentContext',
     DomElementFactory: 'DomElementFactory',
     UiMessageRenderer: 'UiMessageRenderer',
+    SpeechBubbleRenderer: 'SpeechBubbleRenderer', // <<< NEW TOKEN
     TitleRenderer: 'TitleRenderer',
     InputStateController: 'InputStateController',
     LocationRenderer: 'LocationRenderer',
@@ -213,7 +216,7 @@ export const tokens = Object.freeze({
     ISaveLoadService: 'ISaveLoadService',
     IStorageProvider: 'IStorageProvider',
     IInitializationService: 'IInitializationService',
-    ILLMAdapter: 'ILLMAdapter', // <<< ADDED TOKEN
+    ILLMAdapter: 'ILLMAdapter',
 
     // Initialization & Orchestration
     WorldInitializer: 'WorldInitializer',

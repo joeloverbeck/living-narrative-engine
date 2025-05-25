@@ -1,6 +1,7 @@
 // src/domUI/uiMessageRenderer.js
 import {RendererBase} from './rendererBase.js';
-import DomElementFactory from './domElementFactory.js';   // keep this import
+import DomElementFactory from './domElementFactory.js';
+import {ACTION_FAILED_ID, DISPLAY_MESSAGE_ID, SYSTEM_ERROR_OCCURRED_ID} from "../constants/eventIds.js";   // keep this import
 
 /**
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
@@ -68,19 +69,19 @@ export class UiMessageRenderer extends RendererBase {
         // ------------------------------------------------------------
         this.#subscriptions.push(
             this.validatedEventDispatcher.subscribe(
-                'textUI:display_message',
+                DISPLAY_MESSAGE_ID,
                 this.#onShow.bind(this)
             )
         );
         this.#subscriptions.push(
             this.validatedEventDispatcher.subscribe(
-                'core:system_error_occurred',
+                SYSTEM_ERROR_OCCURRED_ID,
                 this.#onShowFatal.bind(this)
             )
         );
         this.#subscriptions.push(
             this.validatedEventDispatcher.subscribe(
-                'core:action_failed',
+                ACTION_FAILED_ID,
                 this.#onCommandEcho.bind(this)
             )
         );

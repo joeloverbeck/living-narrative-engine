@@ -77,6 +77,9 @@
     --border-radius-xs: 2px;
     --border-radius-sm: 4px;
     --border-radius-md: 6px;
+    --border-radius-lg: 12px;
+    --border-radius-circle: 50%; /* For perfectly circular elements */
+    --border-radius-standard: var(--border-radius-md); /* Alias for common rounded corners, using existing md */
     --border-width: 2px; /* CHANGED from 1px to 2px */
     --border-color-subtle: var(--panel-border-color);
 
@@ -84,6 +87,12 @@
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06); /* Slightly more noticeable for small elements */
     --shadow-md: 0 5px 10px rgba(0, 0, 0, 0.1); /* Deeper shadow for panels, cards, etc. */
     --shadow-lg: 0 15px 25px rgba(0, 0, 0, 0.15); /* More prominent shadow for modals or elevated elements */
+
+    --portrait-size-medium: 60px; /* For consistent portrait sizes across UI */
+    --portrait-size-large: 200px;
+
+    --line-height-base: 1.5; /* A common base line height for readability */
+    --color-bg-surface-raised: var(--secondary-bg-color); /* Or var(--panel-bg-color) if you prefer white. Using secondary-bg-color for a slight distinction. */
 }
 
 @media (max-width: 1024px) {
@@ -122,5 +131,3 @@
         --spacing-xs: 3px;
     }
 }
-
-s

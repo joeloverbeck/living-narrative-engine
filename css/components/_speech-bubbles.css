@@ -1,0 +1,72 @@
+/* css/components/_speech-bubbles.css */
+
+.speech-entry {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-sm);
+    width: 100%;
+}
+
+.speech-entry .speech-portrait {
+    width: var(--portrait-size-large, 100px); /* USE NEW LARGER SIZE */
+    height: var(--portrait-size-large, 100px); /* USE NEW LARGER SIZE */
+    border-radius: var(--border-radius-lg, 12px); /* USE NEW LARGER RADIUS */
+    margin-right: var(--spacing-md); /* Increased margin for larger portrait */
+    object-fit: cover;
+    border: 1px solid var(--border-color-subtle);
+    flex-shrink: 0;
+    background-color: var(--secondary-bg-color); /* Fallback bg if image is slow/fails */
+}
+
+.speech-entry .speech-bubble {
+    background-color: var(--speech-bg-color);
+    color: var(--speech-text-color);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-standard, var(--border-radius-md));
+    border: 1px solid var(--speech-border-color);
+    flex-grow: 1;
+    /* Adjust max-width based on the new portrait size and margin */
+    max-width: calc(100% - var(--portrait-size-large, 100px) - var(--spacing-md) - 2px);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: var(--line-height-base, 1.5);
+}
+
+/* New styles for structured speech text */
+.speech-bubble .speech-speaker-intro {
+    font-weight: bold; /* Make "[Character Name] says:" bold */
+    color: var(--primary-text-color); /* Or a slightly different shade from --speech-text-color if desired */
+    margin-right: var(--spacing-xs); /* Small space before the quote */
+}
+
+.speech-bubble .speech-quoted-text {
+    font-style: italic; /* Make the actual speech italic */
+    /* The color will be inherited from .speech-bubble (var(--speech-text-color))
+       or you can specify a different one here if needed. */
+}
+
+
+.speech-entry.no-portrait .speech-bubble {
+    max-width: 100%;
+}
+
+/* Optional: Player speech styling - uncomment and adapt if needed
+.speech-entry.player-speech {
+    flex-direction: row-reverse;
+}
+
+.speech-entry.player-speech .speech-portrait {
+    margin-right: 0;
+    margin-left: var(--spacing-md);
+}
+
+.speech-entry.player-speech .speech-bubble {
+    background-color: var(--accent-color-primary);
+    color: var(--button-text-color);
+}
+
+.speech-entry.player-speech .speech-bubble .speech-speaker-intro,
+.speech-entry.player-speech .speech-bubble .speech-quoted-text {
+    color: var(--button-text-color); // Ensure text inside player bubble is also readable
+}
+*/

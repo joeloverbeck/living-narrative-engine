@@ -13,6 +13,7 @@ import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler 
 // --- NEW DOM UI Component Imports ---
 import {
     UiMessageRenderer,
+    SpeechBubbleRenderer, // <<< ADDED IMPORT
     TitleRenderer,
     InputStateController,
     LocationRenderer,
@@ -20,7 +21,7 @@ import {
     ActionButtonsRenderer,
     PerceptionLogRenderer,
     DomUiFacade,
-    LlmSelectionModal, // <<< ADDED IMPORT for LlmSelectionModal
+    LlmSelectionModal,
     // Base utilities
     DomElementFactory,
     DocumentContext, CurrentTurnActorRenderer
@@ -39,7 +40,8 @@ import {EngineUIManager} from '../../domUI/engineUIManager.js';
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
-/** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */ // <<< ADDED for LlmSelectionModal
+
+/** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
 
 /**
@@ -48,7 +50,8 @@ import {EngineUIManager} from '../../domUI/engineUIManager.js';
  * - Registers the DomUiFacade under its own token.
  * - Registers the InputHandler with its updated dependency.
  * - Registers the new EngineUIManager.
- * - Registers the LlmSelectionModal. // <<< ADDED
+ * - Registers the LlmSelectionModal.
+ * - Registers the SpeechBubbleRenderer. // <<< ADDED
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -95,6 +98,17 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         tokens.DomElementFactory
     ]);
     logger.debug(`UI Registrations: Registered ${tokens.UiMessageRenderer}.`);
+
+    // SpeechBubbleRenderer // <<< NEW REGISTRATION
+    registrar.single(tokens.SpeechBubbleRenderer, SpeechBubbleRenderer, [
+        tokens.ILogger,
+        tokens.IDocumentContext,
+        tokens.IValidatedEventDispatcher,
+        tokens.IEntityManager,
+        tokens.DomElementFactory
+    ]);
+    logger.debug(`UI Registrations: Registered ${tokens.SpeechBubbleRenderer}.`);
+
 
     // TitleRenderer
     registrar.singletonFactory(tokens.TitleRenderer, c => new TitleRenderer({
@@ -210,7 +224,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-        llmAdapter: c.resolve(tokens.ILLMAdapter) // Assuming ILLMAdapter is registered
+        llmAdapter: c.resolve(tokens.ILLMAdapter)
     }));
     logger.debug(`UI Registrations: Registered ${tokens.LlmSelectionModal}.`);
 
@@ -231,10 +245,11 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         tokens.TitleRenderer,
         tokens.InputStateController,
         tokens.UiMessageRenderer,
+        tokens.SpeechBubbleRenderer, // <<< ADDED to facade dependencies (optional, but good for consistency)
         tokens.PerceptionLogRenderer,
         tokens.SaveGameUI,
         tokens.LoadGameUI,
-        tokens.LlmSelectionModal // <<< ADDED LlmSelectionModal to facade dependencies
+        tokens.LlmSelectionModal
     ]);
     logger.info(`UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`);
 

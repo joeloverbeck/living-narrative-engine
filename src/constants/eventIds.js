@@ -8,9 +8,12 @@ export const GAME_LOADED_ID = 'core:game_loaded';
 export const GAME_SAVED_ID = 'core:game_saved';
 export const TURN_STARTED_ID = 'core:turn_started';
 export const TURN_ENDED_ID = 'core:turn_ended';
+export const ACTION_FAILED_ID = 'core:action_failed';
 export const SYSTEM_ERROR_OCCURRED_ID = 'core:system_error_occurred';
 export const PLAYER_TURN_SUBMITTED_ID = 'core:player_turn_submitted';
 export const ENTITY_SPOKE_ID = 'core:entity_spoke';
+export const DISPLAY_MESSAGE_ID = 'textUI:display_message';
+export const DISPLAY_SPEECH_ID = 'textUI:display_speech';
 
 // New Event IDs for GameEngine to UI communication (GE-REFAC-006)
 

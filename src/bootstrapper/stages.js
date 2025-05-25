@@ -136,7 +136,7 @@ export async function initializeGameEngineStage(container, logger) {
 }
 
 /**
- * Bootstrap Stage: Initializes auxiliary services like EngineUIManager, SaveGameUI, LoadGameUI, LlmSelectionModal, and CurrentTurnActorRenderer.
+ * Bootstrap Stage: Initializes auxiliary services like EngineUIManager, SaveGameUI, LoadGameUI, LlmSelectionModal, CurrentTurnActorRenderer, and SpeechBubbleRenderer.
  *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
@@ -212,19 +212,32 @@ export async function initializeAuxiliaryServicesStage(container, gameEngine, lo
         logger.error(`${stageName}: Error resolving LlmSelectionModal. 'Change LLM' functionality may be impaired.`, llmModalError);
     }
 
-    // CurrentTurnActorRenderer Initialization (Resolution is enough as constructor sets up listeners) // <<< NEW
+    // CurrentTurnActorRenderer Initialization (Resolution is enough as constructor sets up listeners)
     try {
         logger.info(`${stageName}: Resolving CurrentTurnActorRenderer...`);
         const currentTurnActorRendererInstance = container.resolve(diTokens.CurrentTurnActorRenderer);
         if (currentTurnActorRendererInstance) {
             logger.info(`${stageName}: CurrentTurnActorRenderer resolved and initialized successfully (via constructor).`);
         } else {
-            // This case should ideally be caught by the container if resolution fails critically
             logger.warn(`${stageName}: CurrentTurnActorRenderer instance could not be resolved. 'Current Turn' panel may not function.`);
         }
     } catch (ctarError) {
         logger.error(`${stageName}: Error resolving CurrentTurnActorRenderer. 'Current Turn' panel may be impaired.`, ctarError);
     }
+
+    // SpeechBubbleRenderer Initialization (Resolution is enough as constructor sets up listeners) // <<< NEW
+    try {
+        logger.info(`${stageName}: Resolving SpeechBubbleRenderer...`);
+        const speechBubbleRendererInstance = container.resolve(diTokens.SpeechBubbleRenderer);
+        if (speechBubbleRendererInstance) {
+            logger.info(`${stageName}: SpeechBubbleRenderer resolved and initialized successfully (via constructor).`);
+        } else {
+            logger.warn(`${stageName}: SpeechBubbleRenderer instance could not be resolved. Speech bubble display will not function.`);
+        }
+    } catch (sbrError) {
+        logger.error(`${stageName}: Error resolving SpeechBubbleRenderer. Speech bubble display may be impaired.`, sbrError);
+    }
+
 
     logger.info(`Bootstrap Stage: ${stageName} completed.`);
 }

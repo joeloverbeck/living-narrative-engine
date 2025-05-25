@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "textUI:display_speech",
+  "description": "Fired when an entity's speech should be displayed in the UI, potentially with a portrait.",
+  "payloadSchema": {
+    "title": "TextUI Display Speech Payload",
+    "description": "Payload for the textUI:display_speech event.",
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the entity that spoke. Used to fetch the portrait."
+      },
+      "speechContent": {
+        "type": "string",
+        "description": "The text content of what the entity said."
+      },
+      "allowHtml": {
+        "type": "boolean",
+        "description": "If true, the speechContent will be treated as HTML. Defaults to false.",
+        "default": false
+      }
+    },
+    "required": [
+      "entityId",
+      "speechContent"
+    ],
+    "additionalProperties": false
+  }
+}

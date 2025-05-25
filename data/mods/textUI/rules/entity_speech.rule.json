@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "entity_speech",
-  "comment": "Handles entity speech by querying speaker's info, fetching timestamp, dispatching a 'core:perceptible_event' for logging, and dispatching a UI message.",
+  "comment": "Handles entity speech by querying speaker's info, fetching timestamp, dispatching a 'core:perceptible_event' for logging, and dispatching a UI speech event.",
   "event_type": "core:entity_spoke",
   "actions": [
     {
@@ -55,12 +55,12 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Send the formatted speech content to the UI with a special 'speech' type.",
+      "comment": "Send the speech content and speaking entity's ID to the UI for display.",
       "parameters": {
-        "eventType": "textUI:display_message",
+        "eventType": "textUI:display_speech",
         "payload": {
-          "message": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
-          "type": "speech",
+          "entityId": "{event.payload.entityId}",
+          "speechContent": "{event.payload.speechContent}",
           "allowHtml": false
         }
       }

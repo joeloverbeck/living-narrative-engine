@@ -8,6 +8,10 @@
     "core:description": {
       "text": "The receptionist of the adventurers' guild. She has a lovely smile, and big, meaty tits."
     },
+    "core:portrait": {
+      "imagePath": "portraits/receptionist.jpg",
+      "altText": "The receptionist at the adventurers' guild."
+    },
     "core:position": {
       "locationId": "isekai:adventurers_guild",
       "x": 0,
