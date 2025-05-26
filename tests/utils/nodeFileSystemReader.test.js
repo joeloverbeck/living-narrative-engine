@@ -2,7 +2,7 @@
 // --- CORRECTED FILE START ---
 
 import {jest, describe, beforeEach, test, expect} from '@jest/globals';
-import {NodeFileSystemReader} from '../../llm-proxy-server/nodeFileSystemReader.js';
+import {NodeFileSystemReader} from '../../llm-proxy-server/src/nodeFileSystemReader.js';
 
 // Mock the 'node:fs/promises' module
 // The factory function returns an object with the functions we want to mock.
