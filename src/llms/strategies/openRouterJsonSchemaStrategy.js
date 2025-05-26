@@ -7,10 +7,10 @@ import {ConfigurationError} from '../../turns/adapters/configurableLLMAdapter.js
 import {OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA} from '../constants/llmConstants.js';
 
 /**
- * @typedef {import('../../interfaces/IHttpClient.js').IHttpClient} IHttpClient
+ * @typedef {import('../interfaces/IHttpClient.js').IHttpClient} IHttpClient
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
- * @typedef {import('../../interfaces/ILLMStrategy.js').LLMStrategyExecuteParams} LLMStrategyExecuteParams
+ * @typedef {import('../interfaces/ILLMStrategy.js').LLMStrategyExecuteParams} LLMStrategyExecuteParams
  * @typedef {import('../../environmentContext.js').EnvironmentContext} EnvironmentContext
  */
 

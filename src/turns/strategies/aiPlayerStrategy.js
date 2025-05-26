@@ -176,8 +176,11 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
                 logger.error(`AIPlayerStrategy: Prompt formatter failed or returned error for actor ${actorId}. Prompt content: ${promptContentDetail}`);
                 return this._createFallbackAction('prompt_formatter_failure', actorId);
             }
-            logger.info(`AIPlayerStrategy: Generated LLM prompt for actor ${actorId}. Length: ${llmPromptString.length}`);
-            logger.debug(`AIPlayerStrategy: LLM Prompt for ${actorId}:\n${llmPromptString}`);
+            // MODIFICATION: Changed logger.debug to logger.info for the full prompt log.
+            // Also kept a concise info log before the full prompt.
+            logger.info(`AIPlayerStrategy: Generated LLM prompt for actor ${actorId}. Length: ${llmPromptString.length}. Full prompt being sent to LLM follows.`);
+            logger.info(`AIPlayerStrategy: LLM Prompt for ${actorId}:\n${llmPromptString}`);
+
 
             // 4. Call LLM Adapter
             const llmJsonResponse = await this.#llmAdapter.getAIDecision(llmPromptString);

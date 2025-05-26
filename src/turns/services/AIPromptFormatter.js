@@ -218,7 +218,7 @@ export class AIPromptFormatter extends IAIPromptFormatter {
     formatPrompt(gameState, logger) {
         const logInfo = (message, ...args) => (logger && logger.info) ? logger.info(message, ...args) : console.info(message, ...args);
         const logError = (message, ...args) => (logger && logger.error) ? logger.error(message, ...args) : console.error(message, ...args);
-        const logDebug = (message, ...args) => (logger && logger.debug) ? logger.debug(message, ...args) : console.debug(message, ...args);
+        // const logDebug = (message, ...args) => (logger && logger.debug) ? logger.debug(message, ...args) : console.debug(message, ...args); // MODIFICATION: Removed as logDebug helper is no longer used here for the full prompt
 
         logInfo("AIPromptFormatter: Starting LLM prompt generation.");
 
@@ -272,11 +272,11 @@ export class AIPromptFormatter extends IAIPromptFormatter {
         );
         promptSegments.push(
             "EXAMPLE 2: Taking an item without speech.\n" +
-            "Suppose available action is: Name: \"Take Item\", System ID: \"app:take_item\", Base Command: \"take <item> from <source>\".\n" +
+            "Suppose available action is: Name: \"Take Item\", System ID: \"app:take_item\", Base Command: \"take <item>\".\n" +
             "{\n" +
             "  \"actionDefinitionId\": \"app:take_item\",\n" +
             // commandString now includes the specifics previously in resolvedParameters
-            "  \"commandString\": \"take the old map from the dusty table\",\n" +
+            "  \"commandString\": \"take old map\",\n" +
             "  \"speech\": \"\"\n" +
             "}"
         );
@@ -290,32 +290,14 @@ export class AIPromptFormatter extends IAIPromptFormatter {
             "}"
         );
         promptSegments.push(
-            "EXAMPLE 4: Just speaking (using a 'say' action if available, or 'wait' and putting speech in `speech` and `commandString`).\n" +
-            "Suppose available action is: Name: \"Say something\", System ID: \"app:say\", Base Command: \"say <message>\".\n" +
-            "{\n" +
-            "  \"actionDefinitionId\": \"app:say\",\n" +
-            // commandString now includes the message
-            "  \"commandString\": \"say Greetings, stranger!\",\n" +
-            "  \"speech\": \"Greetings, stranger!\"\n" +
-            "}\n" +
-            "Alternatively, if no specific 'say' action, using 'wait':\n" +
-            "{\n" +
-            "  \"actionDefinitionId\": \"core:wait\",\n" +
-            // commandString could be 'wait' or 'say ...' if parser handles it.
-            // Let's assume 'wait' for the action, and speech field for the words.
-            // Or if 'say' is a general command the parser understands even with 'core:wait'
-            "  \"commandString\": \"say Greetings, stranger!\",\n" +
-            "  \"speech\": \"Greetings, stranger!\"\n" +
-            "}"
-        );
-        promptSegments.push(
             "Now, based on all the information provided, make your decision and provide your response ONLY as a valid JSON object adhering to the schema."
         );
 
         const llmPromptString = promptSegments.join('\n\n');
 
         logInfo("AIPromptFormatter: LLM prompt generation complete.");
-        logDebug(`AIPromptFormatter: Generated Prompt (length ${llmPromptString.length}):\n${llmPromptString}`);
+        // MODIFICATION: Removed the logDebug line that previously logged the full prompt here.
+        // logDebug(`AIPromptFormatter: Generated Prompt (length ${llmPromptString.length}):\n${llmPromptString}`);
 
         return llmPromptString;
     }

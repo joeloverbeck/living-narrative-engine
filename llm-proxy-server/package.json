@@ -2,12 +2,12 @@
   "name": "llm-proxy-server",
   "version": "1.0.0",
   "description": "Backend proxy server for securely handling API keys for LLM services.",
-  "main": "server.js",
+  "main": "src/core/server.js",
   "type": "module",
   "scripts": {
     "start": "node src/core/server.js",
     "dev": "node --watch src/core/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [
     "llm",
@@ -20,5 +20,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.27.1",
+    "@babel/preset-env": "^7.27.2",
+    "babel-jest": "^29.7.0"
   }
 }

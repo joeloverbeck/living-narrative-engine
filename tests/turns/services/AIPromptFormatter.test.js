@@ -26,6 +26,7 @@ const NEW_INTRO_PARAGRAPH = "You are an AI character in a detailed, interactive 
 
 const LLM_SCHEMA_STRING = JSON.stringify(LLM_TURN_ACTION_SCHEMA, null, 2);
 
+// MODIFICATION: Updated JSON_FORMATTING_INSTRUCTIONS_BLOCK
 const JSON_FORMATTING_INSTRUCTIONS_BLOCK = [
     "RESPONSE FORMATTING INSTRUCTIONS:\n" +
     "You MUST respond with a single, valid JSON object. Do NOT include any text, explanations, or conversational pleasantries before or after this JSON object. " +
@@ -48,10 +49,10 @@ const JSON_FORMATTING_INSTRUCTIONS_BLOCK = [
     "}",
 
     "EXAMPLE 2: Taking an item without speech.\n" +
-    "Suppose available action is: Name: \"Take Item\", System ID: \"app:take_item\", Base Command: \"take <item> from <source>\".\n" +
+    "Suppose available action is: Name: \"Take Item\", System ID: \"app:take_item\", Base Command: \"take <item>\".\n" + // Corrected Base Command
     "{\n" +
     "  \"actionDefinitionId\": \"app:take_item\",\n" +
-    "  \"commandString\": \"take the old map from the dusty table\",\n" +
+    "  \"commandString\": \"take old map\",\n" + // Corrected commandString
     "  \"speech\": \"\"\n" +
     "}",
 
@@ -62,21 +63,7 @@ const JSON_FORMATTING_INSTRUCTIONS_BLOCK = [
     "  \"commandString\": \"wait\",\n" +
     "  \"speech\": \"\"\n" +
     "}",
-
-    "EXAMPLE 4: Just speaking (using a 'say' action if available, or 'wait' and putting speech in `speech` and `commandString`).\n" +
-    "Suppose available action is: Name: \"Say something\", System ID: \"app:say\", Base Command: \"say <message>\".\n" +
-    "{\n" +
-    "  \"actionDefinitionId\": \"app:say\",\n" +
-    "  \"commandString\": \"say Greetings, stranger!\",\n" +
-    "  \"speech\": \"Greetings, stranger!\"\n" +
-    "}\n" +
-    "Alternatively, if no specific 'say' action, using 'wait':\n" +
-    "{\n" +
-    "  \"actionDefinitionId\": \"core:wait\",\n" +
-    "  \"commandString\": \"say Greetings, stranger!\",\n" +
-    "  \"speech\": \"Greetings, stranger!\"\n" +
-    "}",
-
+    // EXAMPLE 4 removed
     "Now, based on all the information provided, make your decision and provide your response ONLY as a valid JSON object adhering to the schema."
 ].join('\n\n');
 
@@ -173,10 +160,8 @@ describe('AIPromptFormatter', () => {
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Formatted 2 items for section "Recent events relevant to you (oldest first)".');
                 expect(logger.debug).toHaveBeenCalledWith("AIPromptFormatter: Formatting actions segment.");
                 expect(logger.debug).toHaveBeenCalledWith('AIPromptFormatter: Formatted 2 items for section "Your available actions are (for your JSON response, use \'System ID\' for \'actionDefinitionId\' and construct a complete \'commandString\' based on the \'Base Command\')".');
-                expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining("AIPromptFormatter: Generated Prompt"));
-                // The number of debug calls might change if more components are logged in _formatCharacterSegment
-                // expect(logger.debug).toHaveBeenCalledTimes(9); Adjust if necessary based on new logging.
-
+                // MODIFICATION: Removed expectation for the debug log of the full prompt string
+                // expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining("AIPromptFormatter: Generated Prompt"));
 
                 expect(logger.error).not.toHaveBeenCalled();
             });
