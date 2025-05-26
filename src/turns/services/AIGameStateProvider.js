@@ -16,7 +16,7 @@
 
 
 import {IAIGameStateProvider} from '../interfaces/IAIGameStateProvider.js';
-import {ActorDataExtractor} from './ActorDataExtractor.js';
+import {ActorDataExtractor} from './actorDataExtractor.js';
 import {
     NAME_COMPONENT_ID,
     DESCRIPTION_COMPONENT_ID,
