@@ -1,11 +1,13 @@
 // src/turns/services/AIGameStateProvider.js
+// --- FILE START ---
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider_InterfaceType */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
-/** @typedef {import('../dtos/AIActorStateDTO.js').AIActorStateDTO} AIActorStateDTO */
+/** @typedef {import('../dtos/AIGameStateDTO.js').AIActorStateDTO} AIActorStateDTO */
+/** @typedef {import('../dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIPerceptionLogEntryDTO} AIPerceptionLogEntryDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AILocationSummaryDTO} AILocationSummaryDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AILocationExitDTO} AILocationExitDTO */
@@ -14,6 +16,7 @@
 
 
 import {IAIGameStateProvider} from '../interfaces/IAIGameStateProvider.js';
+import {ActorDataExtractor} from './ActorDataExtractor.js';
 import {
     NAME_COMPONENT_ID,
     DESCRIPTION_COMPONENT_ID,
@@ -27,6 +30,21 @@ import {
     SECRETS_COMPONENT_ID,
     SPEECH_PATTERNS_COMPONENT_ID
 } from "../../constants/componentIds.js";
+// --- TICKET AIPF-REFACTOR-009 START: Import Standardized Fallback Strings ---
+import {
+    DEFAULT_FALLBACK_CHARACTER_NAME,
+    DEFAULT_FALLBACK_DESCRIPTION_RAW,
+    DEFAULT_FALLBACK_LOCATION_NAME,
+    DEFAULT_FALLBACK_EXIT_DIRECTION,
+    DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW,
+    DEFAULT_FALLBACK_ACTION_ID,
+    DEFAULT_FALLBACK_ACTION_COMMAND,
+    DEFAULT_FALLBACK_ACTION_NAME,
+    DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
+    DEFAULT_COMPONENT_VALUE_NA
+} from '../../constants/textDefaults.js';
+
+// --- TICKET AIPF-REFACTOR-009 END ---
 
 /**
  * @class AIGameStateProvider
@@ -38,13 +56,13 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         super();
     }
 
-    _getComponentText(entity, componentId, defaultValue = 'N/A', propertyPath = 'text') {
+    // --- TICKET AIPF-REFACTOR-009: Updated default value to use constant ---
+    _getComponentText(entity, componentId, defaultValue = DEFAULT_COMPONENT_VALUE_NA, propertyPath = 'text') {
+        // --- TICKET AIPF-REFACTOR-009 END ---
         if (!entity || typeof entity.getComponentData !== 'function') {
             return defaultValue;
         }
         const componentData = entity.getComponentData(componentId);
-        // Safely access propertyPath, assuming it's simple like 'text'
-        // For deeply nested paths, a more robust getter would be needed.
         const value = componentData?.[propertyPath];
         if (typeof value === 'string' && value.trim() !== '') {
             return value.trim();
@@ -54,20 +72,23 @@ export class AIGameStateProvider extends IAIGameStateProvider {
 
     _buildActorState(actor, logger) {
         logger.debug(`AIGameStateProvider: Building actor state for ${actor.id}`);
+        /** @type {AIActorStateDTO} */
         const actorState = {
             id: actor.id,
         };
 
         // Mandatory: Name and Description
-        // Stored as { text: "value" } under their component ID, used by AIPromptFormatter
+        // Stored as { text: "value" } under their component ID, used by ActorDataExtractor
+        // ActorDataExtractor will apply its own final fallbacks if these are still considered "empty" by its logic
+        // --- TICKET AIPF-REFACTOR-009: Use constants for default values passed to _getComponentText ---
         actorState[NAME_COMPONENT_ID] = {
-            text: this._getComponentText(actor, NAME_COMPONENT_ID, 'Unknown Name')
+            text: this._getComponentText(actor, NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME)
         };
         actorState[DESCRIPTION_COMPONENT_ID] = {
-            text: this._getComponentText(actor, DESCRIPTION_COMPONENT_ID, 'No description available.')
+            text: this._getComponentText(actor, DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW)
         };
+        // --- TICKET AIPF-REFACTOR-009 END ---
 
-        // Conditional text-based components
         const conditionalTextComponents = [
             PERSONALITY_COMPONENT_ID,
             PROFILE_COMPONENT_ID,
@@ -77,7 +98,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         ];
 
         for (const componentId of conditionalTextComponents) {
-            const textValue = this._getComponentText(actor, componentId, null); // Use null to check for existence
+            const textValue = this._getComponentText(actor, componentId, null);
             if (textValue !== null) {
                 actorState[componentId] = {text: textValue};
                 logger.debug(`AIGameStateProvider: Added component '${componentId}' to actor state for ${actor.id}.`);
@@ -86,11 +107,9 @@ export class AIGameStateProvider extends IAIGameStateProvider {
             }
         }
 
-        // Conditional SPEECH_PATTERNS_COMPONENT_ID (expects a different structure)
         if (actor.hasComponent(SPEECH_PATTERNS_COMPONENT_ID)) {
             const speechData = actor.getComponentData(SPEECH_PATTERNS_COMPONENT_ID);
             if (speechData && Array.isArray(speechData.patterns) && speechData.patterns.length > 0) {
-                // Filter out any non-string or empty patterns, as AIPromptFormatter expects valid strings
                 const validPatterns = speechData.patterns.filter(p => typeof p === 'string' && p.trim() !== '');
                 if (validPatterns.length > 0) {
                     actorState[SPEECH_PATTERNS_COMPONENT_ID] = {...speechData, patterns: validPatterns};
@@ -143,34 +162,42 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                 return null;
             }
 
-            const name = this._getComponentText(locationEntity, NAME_COMPONENT_ID, 'Unknown Location');
-            const description = this._getComponentText(locationEntity, DESCRIPTION_COMPONENT_ID, 'No description available.');
+            // --- TICKET AIPF-REFACTOR-009: Use constants for default location name and description ---
+            const name = this._getComponentText(locationEntity, NAME_COMPONENT_ID, DEFAULT_FALLBACK_LOCATION_NAME);
+            const description = this._getComponentText(locationEntity, DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW);
+            // --- TICKET AIPF-REFACTOR-009 END ---
 
             const exitsComponentData = locationEntity.getComponentData(EXITS_COMPONENT_ID);
+            /** @type {AILocationExitDTO[]} */
             let exitsDto = [];
             if (exitsComponentData && Array.isArray(exitsComponentData)) {
                 exitsDto = exitsComponentData
                     .map(exit => ({
-                        direction: exit.direction || 'Unmarked Exit',
+                        // --- TICKET AIPF-REFACTOR-009: Use constant for default exit direction ---
+                        direction: exit.direction || DEFAULT_FALLBACK_EXIT_DIRECTION,
+                        // --- TICKET AIPF-REFACTOR-009 END ---
                         targetLocationId: exit.target,
+                        // targetLocationName would be populated here if available, or defaulted by AIPromptFormatter if still missing
                     }))
-                    .filter(e => e.direction && e.direction !== 'Unmarked Exit' && e.targetLocationId);
+                    // --- TICKET AIPF-REFACTOR-009: Adjust filter if DEFAULT_FALLBACK_EXIT_DIRECTION is a valid display string ---
+                    .filter(e => e.direction && e.targetLocationId); // Assuming DEFAULT_FALLBACK_EXIT_DIRECTION is acceptable if direction was missing
+                // If DEFAULT_FALLBACK_EXIT_DIRECTION itself means "invalid", the filter might need: e.direction !== DEFAULT_FALLBACK_EXIT_DIRECTION
+                // For now, assume it's a displayable fallback.
+                // --- TICKET AIPF-REFACTOR-009 END ---
             }
 
+            /** @type {AICharacterInLocationDTO[]} */
             let charactersDto = [];
             logger.debug(`AIGameStateProvider: Querying entities for location: ${currentLocationInstanceId}`);
-            const entityIdsSet = await entityManager.getEntitiesInLocation(currentLocationInstanceId); // This returns a Set
+            const entityIdsSet = await entityManager.getEntitiesInLocation(currentLocationInstanceId);
 
-            // Log the raw Set object and explain JSON.stringify behavior
             logger.debug(`AIGameStateProvider: Received entityIdsSet from EntityManager for ${currentLocationInstanceId}: ${JSON.stringify(entityIdsSet)} (Note: JSON.stringify(Set) often yields '{}'. Actual Set size: ${entityIdsSet ? entityIdsSet.size : 'N/A'})`);
 
-            // Convert the Set to an Array for further processing
             const entityIdsInLoc = entityIdsSet ? Array.from(entityIdsSet) : [];
             logger.debug(`AIGameStateProvider: Converted entityIdsSet to array entityIdsInLoc (size ${entityIdsInLoc.length}): ${JSON.stringify(entityIdsInLoc)}`);
 
 
-            // Now, use the entityIdsInLoc (which is an array)
-            if (Array.isArray(entityIdsInLoc)) { // This check is technically redundant if Array.from() was successful, but good for safety.
+            if (Array.isArray(entityIdsInLoc)) {
                 logger.debug(`AIGameStateProvider: Iterating ${entityIdsInLoc.length} IDs from converted array. Actor ID to skip: ${actor.id}`);
                 for (const entityIdInLoc of entityIdsInLoc) {
                     if (entityIdInLoc === actor.id) {
@@ -180,21 +207,22 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                     logger.debug(`AIGameStateProvider: Processing entityIdInLoc: ${entityIdInLoc}`);
                     const otherEntity = await entityManager.getEntityInstance(entityIdInLoc);
                     if (otherEntity) {
-                        logger.debug(`AIGameStateProvider: Successfully retrieved entity instance for ${entityIdInLoc}. Name: ${this._getComponentText(otherEntity, NAME_COMPONENT_ID, 'Unknown Name')}`);
+                        // --- TICKET AIPF-REFACTOR-009: Use constants for default other character name and description ---
+                        logger.debug(`AIGameStateProvider: Successfully retrieved entity instance for ${entityIdInLoc}. Name: ${this._getComponentText(otherEntity, NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME)}`);
                         charactersDto.push({
                             id: otherEntity.id,
-                            name: this._getComponentText(otherEntity, NAME_COMPONENT_ID, 'Unnamed Character'),
-                            description: this._getComponentText(otherEntity, DESCRIPTION_COMPONENT_ID, 'No description available.')
+                            name: this._getComponentText(otherEntity, NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME),
+                            description: this._getComponentText(otherEntity, DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW)
                         });
+                        // --- TICKET AIPF-REFACTOR-009 END ---
                     } else {
                         logger.warn(`AIGameStateProvider: Could not retrieve entity instance for ID '${entityIdInLoc}' in location '${currentLocationInstanceId}'. This entity will NOT be listed.`);
                     }
                 }
             } else {
-                // This path should ideally not be hit if entityIdsSet was a valid Set or null/undefined
                 logger.error(`AIGameStateProvider: entityIdsInLoc is NOT an array even after attempting conversion from Set. Value: ${JSON.stringify(entityIdsInLoc)}. Location: ${currentLocationInstanceId}. Character list will be empty.`);
             }
-
+            /** @type {AILocationSummaryDTO} */
             const summary = {
                 name,
                 description,
@@ -214,6 +242,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
 
     async _getAvailableActions(actor, turnContext, locationSummary, logger) {
         logger.debug(`AIGameStateProvider: Discovering available actions for actor ${actor.id}`);
+        /** @type {AIAvailableActionDTO[]} */
         let availableActionsDto = [];
         try {
             if (typeof turnContext.getActionDiscoverySystem === 'function') {
@@ -231,10 +260,12 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                 const discoveredActions = await ads.getValidActions(actor, actionCtx);
                 if (discoveredActions && Array.isArray(discoveredActions)) {
                     availableActionsDto = discoveredActions.map(action => ({
-                        id: action.id || 'unknown:action',
-                        command: action.command || '',
-                        name: action.name || 'Unnamed Action',
-                        description: action.description || 'No description available.'
+                        // --- TICKET AIPF-REFACTOR-009: Use constants for default action properties ---
+                        id: action.id || DEFAULT_FALLBACK_ACTION_ID,
+                        command: action.command || DEFAULT_FALLBACK_ACTION_COMMAND, // Assuming a command should generally exist
+                        name: action.name || DEFAULT_FALLBACK_ACTION_NAME,
+                        description: action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW
+                        // --- TICKET AIPF-REFACTOR-009 END ---
                     }));
                 }
                 logger.debug(`AIGameStateProvider: Discovered ${availableActionsDto.length} actions for actor ${actor.id}.`);
@@ -246,22 +277,25 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                 error: adsErr,
                 stack: adsErr.stack
             });
-            availableActionsDto = [];
+            availableActionsDto = []; // Ensure empty on error
         }
         return availableActionsDto;
     }
 
     async _getPerceptionLog(actor, logger) {
         logger.debug(`AIGameStateProvider: Retrieving perception log for actor ${actor.id}`);
+        /** @type {AIPerceptionLogEntryDTO[]} */
         let perceptionLogDto = [];
         try {
             if (actor.hasComponent(PERCEPTION_LOG_COMPONENT_ID)) {
                 const perceptionData = actor.getComponentData(PERCEPTION_LOG_COMPONENT_ID);
                 if (perceptionData && Array.isArray(perceptionData.logEntries)) {
                     perceptionLogDto = perceptionData.logEntries.map(entry => ({
-                        description: entry.descriptionText || "Undescribed event.",
+                        // --- TICKET AIPF-REFACTOR-009: Use constant for default event description ---
+                        description: entry.descriptionText || DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW,
+                        // --- TICKET AIPF-REFACTOR-009 END ---
                         timestamp: entry.timestamp || Date.now(),
-                        type: entry.perceptionType || "unknown",
+                        type: entry.perceptionType || "unknown", // "unknown" type can remain as is, or be a constant if needed
                     }));
                     logger.debug(`AIGameStateProvider: Retrieved ${perceptionLogDto.length} perception log entries for actor ${actor.id}.`);
                 } else {
@@ -291,12 +325,18 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         logger.debug(`AIGameStateProvider: Starting to build game state for actor ${actor.id}.`);
 
         const actorState = this._buildActorState(actor, logger);
+
+        const actorDataExtractor = new ActorDataExtractor();
+        const actorPromptData = actorDataExtractor.extractPromptData(actorState);
+
         const locationSummary = await this._buildLocationSummary(actor, turnContext, logger);
         const availableActions = await this._getAvailableActions(actor, turnContext, locationSummary, logger);
         const perceptionLog = await this._getPerceptionLog(actor, logger);
 
+        /** @type {AIGameStateDTO} */
         const gameState = {
             actorState,
+            actorPromptData,
             currentLocation: locationSummary,
             availableActions,
             perceptionLog,
@@ -308,3 +348,5 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         return gameState;
     }
 }
+
+// --- FILE END ---

@@ -12,6 +12,7 @@
  * @typedef {object} AILocationExitDTO
  * @property {string} direction - The direction of the exit (e.g., "north", "south-east").
  * @property {string} targetLocationId - The instance ID of the location this exit leads to.
+ * @property {string} [targetLocationName] - Optional. The name of the target location. (Added to support prompt requirements)
  * @property {string} [description] - Optional. e.g., "a dark archway". (Future consideration)
  * @property {boolean} [isLocked] - Optional. If the exit is known to be locked. (Future consideration)
  */
@@ -55,25 +56,50 @@
  */
 
 /**
- * Purpose: Represents the AI actor's own state relevant for decision making.
+ * Purpose: Represents the raw AI actor's state relevant for decision making,
+ * mirroring the component data structure expected by the current AIPromptFormatter._formatCharacterSegment.
+ * This will be refined or replaced by ActorPromptDataDTO in later refactoring stages.
  * @typedef {object} AIActorStateDTO
  * @property {string} id - The AI actor's unique ID.
- * @property {string} name - The AI actor's name.
- * @property {string} description - The AI actor's description (personality, role).
- * @property {string} [currentGoal] - Optional. The AI's immediate objective. (Future consideration)
- * @property {string[]} [inventorySummary] - Optional. Key items the AI possesses. (Future consideration)
+ * // Other properties are dynamic, based on component IDs like NAME_COMPONENT_ID,
+ * // PERSONALITY_COMPONENT_ID, etc. Their values are typically objects like { text: "value" }
+ * // or { patterns: ["pattern1", "pattern2"] } for speech patterns.
+ * @property {object} [core:name] - Component data for name.
+ * @property {object} [core:description] - Component data for description.
+ * @property {object} [core:personality] - Component data for personality.
+ * @property {object} [core:profile] - Component data for profile.
+ * @property {object} [core:likes] - Component data for likes.
+ * @property {object} [core:dislikes] - Component data for dislikes.
+ * @property {object} [core:secrets] - Component data for secrets.
+ * @property {object} [core:speech_patterns] - Component data for speech patterns.
  */
 
+/**
+ * @typedef {import('./AIActorPromptDataDTO.js').ActorPromptDataDTO} ActorPromptDataDTO // Assuming path - Note: ActorPromptDataDTO is defined below in this file.
+ */
 /**
  * Purpose: The top-level DTO that aggregates all other AI-relevant state information.
  * This is the primary object passed to the prompt formatter.
  * @typedef {object} AIGameStateDTO
- * @property {AIActorStateDTO} actorState - The AI actor's own state.
+ * @property {AIActorStateDTO} actorState - The AI actor's own raw state (still needed for other systems potentially).
+ * @property {ActorPromptDataDTO} actorPromptData - Pre-processed character data for prompt generation.
  * @property {AILocationSummaryDTO | null} currentLocation - Summary of the current location, or null if unknown.
  * @property {AIPerceptionLogEntryDTO[]} perceptionLog - Array of recent perceptions.
  * @property {AIAvailableActionDTO[]} availableActions - Array of actions the AI can currently take.
  * @property {object} [worldStateSummary] - Optional. e.g., time of day, weather. (Future consideration)
  * @property {string[]} [missionBriefing] - Optional. Current objectives for the AI. (Future consideration)
+ */
+
+/**
+ * @typedef {object} ActorPromptDataDTO
+ * @property {string} name - The character's name, defaulting if not set (e.g., "Unnamed Character").
+ * @property {string} description - The character's description, punctuated and defaulted if not set (e.g., "No description available.").
+ * @property {string} [personality] - Optional. The character's personality traits.
+ * @property {string} [profile] - Optional. The character's profile information.
+ * @property {string} [likes] - Optional. Things the character likes.
+ * @property {string} [dislikes] - Optional. Things the character dislikes.
+ * @property {string} [secrets] - Optional. Secrets the character might have.
+ * @property {string[]} [speechPatterns] - Optional. An array of trimmed, valid speech patterns. An empty array or undefined if no valid patterns exist.
  */
 
 // To make this file a module and allow JSDoc types to be potentially imported
