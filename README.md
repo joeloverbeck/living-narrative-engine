@@ -20,35 +20,64 @@ truly living narratives.
 
 ## Getting Started
 
-This project primarily runs in the browser using JavaScript. A minimal Python backend may be used for specific features
-like future AI integration.
+This project primarily runs in the browser using JavaScript, with a Node.js-based proxy server for handling requests to Large Language Models (LLMs).
 
 ### Prerequisites
 
-Ensure you have Node.js and npm installed.
+Ensure you have Node.js and npm installed. You can download them from [https://nodejs.org/](https://nodejs.org/).
 
 ### Installation & Setup
 
-1. **Clone the repository (if you haven't already)**
-   ```bash
-   git clone <your-repository-url>
-   cd living-narrative-engine
+1.  **Clone the repository (if you haven't already)**
 
-2. **Install development dependencies**
-    ```bash
-    npm install --save-dev jest @babel/core @babel/preset-env
+    git clone https://github.com/joeloverbeck/living-narrative-engine.git
+    cd living-narrative-engine
+
+2.  **Install root project dependencies**
+    Navigate to the root directory of the cloned project (e.g., `living-narrative-engine`) and run:
+
+    npm install
+
+3.  **Install LLM Proxy Server dependencies**
+    Navigate to the `llm-proxy-server` subdirectory within the project:
+
+    cd llm-proxy-server
+
+    Then, install its specific dependencies:
+
+    npm install
+
+    Once done, return to the root project directory:
+
+    cd ..
 
 ### Running locally
 
-Since this is a browser-based application, you need a simple web-server to serve the files locally. We recommend using
-`http-server`.
+To run the application, you will need to start two separate processes in two different command line terminals or "windows":
 
-```bash
-    npm install --global http-server   # one-time
-    http-server                        # from repo root
-   ``` 
+1.  **Start the LLM Proxy Server:**
+  * Open a new command line terminal.
+  * Navigate to the `llm-proxy-server` directory:
 
-Then open the printed URL (usually http://localhost:8080) in your browser.
+    cd path/to/your/project/living-narrative-engine/llm-proxy-server
+
+  * Run the development server:
+
+    npm run dev
+
+    This server will handle API requests related to LLM interactions. Keep this terminal window open.
+
+2.  **Start the Main Application:**
+  * Open a separate new command line terminal.
+  * Navigate to the root directory of the project (e.g., `living-narrative-engine`):
+
+    cd path/to/your/project/living-narrative-engine
+
+  * Run the main application:
+
+    npm run start
+
+    This will typically open the application in your default web browser (e.g., at a URL like `http://localhost:3000` or similar, depending on your project's `start` script configuration). Check the terminal output for the exact URL.
 
 ## Configuration
 
@@ -75,15 +104,14 @@ The `game.json` file must be a JSON object containing a single required property
 
 * `mods`: An array of unique strings. Each string is the identifier (ID) of a mod to be loaded.
 
-```json
-{
+  {
   "mods": [
-    "core_essentials",
-    "base_adventure_mechanics",
-    "my_custom_story_mod"
+  "core",
+  "textUI",
+  "base_adventure_mechanics",
+  "my_custom_story_mod"
   ]
-}
-```
+  }
 
 **Load Order / Priority:**
 
@@ -121,10 +149,10 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
 * **Reasoning:** The mod explicitly requires functionality or content from the missing dependency. Proceeding would
   likely lead to runtime errors.
 * **Example:**
-    * `ModA/mod.manifest.json`:
-      `{ "id": "ModA", "version": "1.0.0", "dependencies": [{ "modId": "CoreUtils", "version": ">=1.2.0" }] }`
-    * `game.json`: `{ "mods": ["ModA", "AnotherMod"] }` (Missing "CoreUtils")
-    * **Outcome:** Loading halts with an error indicating "ModA" requires missing dependency "CoreUtils".
+  * `ModA/mod.manifest.json`:
+    `{ "id": "ModA", "version": "1.0.0", "dependencies": [{ "modId": "CoreUtils", "version": ">=1.2.0" }] }`
+  * `game.json`: `{ "mods": ["ModA", "AnotherMod"] }` (Missing "CoreUtils")
+  * **Outcome:** Loading halts with an error indicating "ModA" requires missing dependency "CoreUtils".
 
 **Rule D2: Version Mismatch (Incompatible Version)**
 
@@ -135,12 +163,12 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
   version (too old or potentially too new if explicitly restricted) can cause API incompatibilities or unexpected
   behavior.
 * **Example:**
-    * `ModB/mod.manifest.json`:
-      `{ "id": "ModB", "version": "2.0.0", "dependencies": [{ "modId": "CoreUtils", "version": "^1.3.0" }] }` (Requires
-      CoreUtils >=1.3.0 and <2.0.0)
-    * `CoreUtils/mod.manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
-    * `game.json`: `{ "mods": ["CoreUtils", "ModB"] }`
-    * **Outcome:** Loading halts. Error: "ModB" requires "CoreUtils" version "^1.3.0", but found "1.2.5".
+  * `ModB/mod.manifest.json`:
+    `{ "id": "ModB", "version": "2.0.0", "dependencies": [{ "modId": "CoreUtils", "version": "^1.3.0" }] }` (Requires
+    CoreUtils >=1.3.0 and <2.0.0)
+  * `CoreUtils/mod.manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
+  * `game.json`: `{ "mods": ["CoreUtils", "ModB"] }`
+  * **Outcome:** Loading halts. Error: "ModB" requires "CoreUtils" version "^1.3.0", but found "1.2.5".
 
 **Rule D3: Circular Dependency**
 
@@ -149,9 +177,9 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
 * **Severity:** **FATAL**
 * **Reasoning:** Circular dependencies create an unresolvable load order and often indicate a design flaw in the mods.
 * **Example:**
-    * `ModX/mod.manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
-    * `ModY/mod.manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
-    * **Outcome:** Loading halts with an error detecting a circular dependency between "ModX" and "ModY".
+  * `ModX/mod.manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
+  * `ModY/mod.manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
+  * **Outcome:** Loading halts with an error detecting a circular dependency between "ModX" and "ModY".
 
 ### Conflict Rules
 
@@ -167,12 +195,12 @@ this mod is known to be incompatible with. Version ranges *can* be specified but
   overriding the same critical data in incompatible ways, causing game-breaking bugs). Respecting this declaration
   prevents known unstable states.
 * **Example:**
-    * `AwesomeSwords/mod.manifest.json`:
-      `{ "id": "AwesomeSwords", "version": "1.0.0", "conflicts": [{ "modId": "SuperSwords" }] }`
-    * `SuperSwords/mod.manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
-    * `game.json`: `{ "mods": ["AwesomeSwords", "SuperSwords"] }`
-    * **Outcome:** Loading halts. Error: Detected conflict between "AwesomeSwords" and "SuperSwords" as declared by "
-      AwesomeSwords".
+  * `AwesomeSwords/mod.manifest.json`:
+    `{ "id": "AwesomeSwords", "version": "1.0.0", "conflicts": [{ "modId": "SuperSwords" }] }`
+  * `SuperSwords/mod.manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
+  * `game.json`: `{ "mods": ["AwesomeSwords", "SuperSwords"] }`
+  * **Outcome:** Loading halts. Error: Detected conflict between "AwesomeSwords" and "SuperSwords" as declared by "
+    AwesomeSwords".
 
 **Rule C2: Duplicate Mod ID Loaded**
 
@@ -184,10 +212,10 @@ this mod is known to be incompatible with. Version ranges *can* be specified but
   overrides or data corruption. The user must resolve the ambiguity by removing or renaming one of the sources. Note:
   This rule applies *before* dependency/conflict checks based on the final list of loaded mods.
 * **Example:**
-    * Directory `./mods/MyMod/mod.manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
-    * Directory `./mods/AnotherAttempt/mod.manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
-    * `game.json`: `{ "mods": ["MyMod", "AnotherAttempt"] }` (Assuming both directories correspond to these IDs)
-    * **Outcome:** Loading halts. Error: Duplicate mod ID "mymod" found from sources "MyMod" and "AnotherAttempt".
+  * Directory `./mods/MyMod/mod.manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
+  * Directory `./mods/AnotherAttempt/mod.manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
+  * `game.json`: `{ "mods": ["MyMod", "AnotherAttempt"] }` (Assuming both directories correspond to these IDs)
+  * **Outcome:** Loading halts. Error: Duplicate mod ID "mymod" found from sources "MyMod" and "AnotherAttempt".
 
 ### Engine Compatibility
 
@@ -201,12 +229,12 @@ Mods can specify the range of engine versions they are compatible with using the
 * **Behavior:** During startup, the engine checks its own version (imported as `ENGINE_VERSION` in the code) against the
   `gameVersion` range specified by *each* loaded mod that includes this field.
 * **Validation:**
-    * If a mod specifies a `gameVersion` range, and the `ENGINE_VERSION` does *not* satisfy that range, the engine will
-      **halt startup** with a fatal `ModDependencyError`, listing all incompatible mods.
-    * If a mod specifies a `gameVersion` that is not a valid SemVer range string (e.g., misspelled, incorrect type), the
-      engine will **halt startup** with a fatal `TypeError`.
-    * If a mod *omits* the `gameVersion` field, or sets it to `null`, an empty string (`""`), or only whitespace, it is
-      **skipped** for this check and will not cause an engine compatibility error.
+  * If a mod specifies a `gameVersion` range, and the `ENGINE_VERSION` does *not* satisfy that range, the engine will
+    **halt startup** with a fatal `ModDependencyError`, listing all incompatible mods.
+  * If a mod specifies a `gameVersion` that is not a valid SemVer range string (e.g., misspelled, incorrect type), the
+    engine will **halt startup** with a fatal `TypeError`.
+  * If a mod *omits* the `gameVersion` field, or sets it to `null`, an empty string (`""`), or only whitespace, it is
+    **skipped** for this check and will not cause an engine compatibility error.
 
 **Rule E1: Engine Version Incompatibility**
 
@@ -216,10 +244,10 @@ Mods can specify the range of engine versions they are compatible with using the
 * **Reasoning:** The mod author expects specific engine features or behavior present only within the declared version
   range. Running outside this range risks runtime errors or incorrect functionality.
 * **Example:**
-    * `SomeMod/mod.manifest.json`: `{ "id": "SomeMod", "version": "1.0.0", "gameVersion": "^1.2.0" }` (Requires engine >
-      =1.2.0 and <2.0.0)
-    * Current Engine Version (`ENGINE_VERSION`): `1.1.5`
-    * **Outcome:** Loading halts. Error: "SomeMod" incompatible with engine v1.1.5 (requires '^1.2.0').
+  * `SomeMod/mod.manifest.json`: `{ "id": "SomeMod", "version": "1.0.0", "gameVersion": "^1.2.0" }` (Requires engine >
+    =1.2.0 and <2.0.0)
+  * Current Engine Version (`ENGINE_VERSION`): `1.1.5`
+  * **Outcome:** Loading halts. Error: "SomeMod" incompatible with engine v1.1.5 (requires '^1.2.0').
 
 ### Validation Summary Table
 
@@ -240,13 +268,11 @@ loaders/validators but are included here for completeness as fatal loading error
 
 ### Documentation ▶️
 
-**JSON Logic – Composite Operators ➜ docs/composite-logical-operators.md**
+**JSON Logic – Composite Operators ➜ docs/json-logic/composite-logical-operators.md**
 Quick reference for and, or, and not/!, including edge-cases and examples.
 
-**Full JSON Logic Usage Guide ➜ docs/json-logic-usage.md**
+**Full JSON Logic Usage Guide ➜ docs/json-logic/json-logic-usage.md**
 Complete operator list, context explanation, and many ready-made patterns.
-
-**Action Event Payload Mapping ➜ docs/action_event_payload_mapping.md**
 
 **Mod Manifest Loader Usage ➜ docs/mods/modManifestLoader.md**
 How to use the ModManifestLoader service and handle potential errors.

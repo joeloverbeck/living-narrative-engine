@@ -38,14 +38,11 @@ export class UIBootstrapper {
         const foundElements = {document: doc}; // Start with the document object
         const missingElementNames = [];
 
-        console.log('[UIBootstrapper] Gathering essential UI elements...');
-
         elementsToQuery.forEach(item => {
             try {
                 const element = docContext.query(item.selector);
                 if (element) {
                     foundElements[item.key] = element;
-                    console.log(`[UIBootstrapper] Found: ${item.name}`);
                 } else {
                     console.warn(`[UIBootstrapper] Missing: ${item.name}`);
                     missingElementNames.push(item.name);

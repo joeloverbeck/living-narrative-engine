@@ -68,6 +68,59 @@ describe('SubscriptionLifecycleManager - Command Input', () => {
             mockCommandInputPort.onCommand.mockClear();
         });
 
+        // --- ADDED TEST CASE ---
+        it('should call the original unsubscribe function, log a warning, and subscribe the new handler', () => {
+            // Arrange: Define a new unsubscribe function for the re-subscription attempt
+            const mockNewUnsubscribeFn = jest.fn();
+            mockCommandInputPort.onCommand.mockReturnValueOnce(mockNewUnsubscribeFn); // Setup for the re-subscription
+
+            // Act: Attempt to subscribe again with a new handler
+            const resultUnsubscribeFn = manager.subscribeToCommandInput(mockCommandHandler2);
+
+            // Assert:
+            // 1. Warning for re-subscription
+            expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                `${CLASS_NAME_PREFIX}subscribeToCommandInput called when already subscribed. Unsubscribing from previous command input first.`
+            );
+
+            // 2. Previous unsubscribe function should have been called
+            expect(mockUnsubscribeCommandFn1).toHaveBeenCalledTimes(1);
+
+            // 3. Debug logs for the unsubscription part of the re-subscription
+            //    These come from the unsubscribeFromCommandInput() method called internally
+            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Unsubscribing from command input.`);
+            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Command input unsubscribe process completed.`);
+
+            // 4. commandInputPort.onCommand should have been called with the NEW handler
+            expect(mockCommandInputPort.onCommand).toHaveBeenCalledTimes(1);
+            expect(mockCommandInputPort.onCommand).toHaveBeenCalledWith(mockCommandHandler2);
+
+            // 5. The returned unsubscribe function should be the new one
+            expect(resultUnsubscribeFn).toBe(mockNewUnsubscribeFn);
+
+            // 6. Debug logs for the new subscription attempt
+            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Attempting to subscribe to command input.`);
+            expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_NAME_PREFIX}Successfully subscribed to command input.`);
+
+            // 7. Verify state: If we try to unsubscribe the "original" one again, it should say not subscribed
+            //    (because the manager should now only know about the new subscription)
+            //    To do this cleanly, let's first clear the current mock calls to logger.debug.
+            mockLogger.debug.mockClear();
+            //    Then call the original unsubscribe directly (which shouldn't do anything within the manager anymore)
+            //    and then attempt to unsubscribe via the manager, which should log "no active subscription"
+            //    if the internal state correctly reflects the new subscription.
+
+            //    Actually, more direct is to check internal state by unsubscribing, then re-unsubscribing.
+            manager.unsubscribeFromCommandInput(); // Unsubscribe the current (second) subscription
+            expect(mockNewUnsubscribeFn).toHaveBeenCalledTimes(1); // The new one should be called
+
+            mockLogger.debug.mockClear();
+            manager.unsubscribeFromCommandInput(); // Try to unsubscribe again
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `${CLASS_NAME_PREFIX}unsubscribeFromCommandInput called but no active command subscription to unsubscribe.`
+            );
+        });
     });
 
     describe('Test Case 4: unsubscribeFromCommandInput when not subscribed', () => {

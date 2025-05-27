@@ -4,7 +4,7 @@
 import {IHttpClient} from './interfaces/IHttpClient.js';
 
 /**
- * @typedef {import('../../llms/interfaces/ILogger.js').ILogger} ILogger
+ * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
  * @typedef {import('../../interfaces/IHttpClient.js').IHttpClient} IHttpClient
  * @typedef {import('../../interfaces/IHttpClient.js').HttpClientRequestOptions} HttpClientRequestOptions
  * @typedef {import('../../interfaces/IHttpClient.js').HttpMethod} HttpMethod
