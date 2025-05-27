@@ -8,6 +8,8 @@ export const DEFAULT_FALLBACK_ACTION = {
 };
 export const DEFAULT_FALLBACK_ACTION_JSON_STRING = JSON.stringify(DEFAULT_FALLBACK_ACTION);
 
+export const FALLBACK_SPEECH_MESSAGE = "I'm having a bit of trouble and will wait for now.";
+
 export const CLOUD_API_TYPES = ['openrouter', 'openai', 'anthropic'];
 
 // MODIFICATION START (Ticket 2.2)

@@ -1,7 +1,7 @@
 // src/tests/domUI/inputStateController.test.js
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
-import {InputStateController} from '../../src/domUI/index.js'; // Assuming index exports it
+import {InputStateController} from '../../src/domUI'; // Assuming index exports it
 import DocumentContext from '../../src/domUI/documentContext.js';
 import ConsoleLogger from '../../src/services/consoleLogger.js';
 import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';

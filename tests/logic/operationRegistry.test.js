@@ -1,4 +1,4 @@
-// src/tests/logic/operationRegistry.test.js
+// tests/logic/operationRegistry.test.js
 
 /**
  * @jest-environment node
