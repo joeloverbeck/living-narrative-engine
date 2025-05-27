@@ -13,7 +13,7 @@ import {CLOUD_API_TYPES} from '../constants/llmConstants.js';
  * @typedef {import('../interfaces/ILLMStrategy.js').LLMStrategyExecuteParams} LLMStrategyExecuteParams
  * @typedef {import('../interfaces/IHttpClient.js').IHttpClient} IHttpClient
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('../environmentContext.js').EnvironmentContext} EnvironmentContext
  */
 

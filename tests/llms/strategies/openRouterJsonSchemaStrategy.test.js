@@ -79,7 +79,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                     environmentContext: mockEnvironmentContext
                 };
                 await expect(strategy.execute(params))
-                    .rejects.toThrow(new ConfigurationError("Missing llmConfig for OpenRouterJsonSchemaStrategy", {llmId: 'UnknownLLM'}));
+                    .rejects.toThrow(new ConfigurationError("OpenRouterJsonSchemaStrategy: Missing llmConfig. Cannot proceed.", {llmId: 'Unknown (llmConfig missing)'}));
             });
 
             it('should throw ConfigurationError if environmentContext is missing', async () => {
@@ -90,7 +90,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                     environmentContext: null
                 };
                 await expect(strategy.execute(params))
-                    .rejects.toThrow(new ConfigurationError("Missing environmentContext for OpenRouterJsonSchemaStrategy", {llmId: baseLlmConfig.id}));
+                    .rejects.toThrow(new ConfigurationError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Missing environmentContext. Cannot proceed.`, {llmId: baseLlmConfig.id}));
             });
 
             it('should throw ConfigurationError if apiType is not "openrouter"', async () => {
@@ -118,7 +118,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                     environmentContext: mockEnvironmentContext
                 };
                 await expect(strategy.execute(params))
-                    .rejects.toThrow(new ConfigurationError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): API key is missing for server-side/direct OpenRouter call.`, {
+                    .rejects.toThrow(new ConfigurationError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): API key is missing for server-side/direct OpenRouter call. An API key must be configured and provided.`, {
                         llmId: baseLlmConfig.id,
                         problematicField: 'apiKey'
                     }));
@@ -162,7 +162,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 expect(requestBody.messages).toEqual(mockConstructedMessages);
                 expect(requestBody.temperature).toBe(baseLlmConfig.defaultParameters.temperature);
                 expect(requestBody.response_format.type).toBe("json_schema");
-                expect(requestBody.response_format.json_schema).toEqual(OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA);
+                expect(requestBody.response_format.json_schema).toEqual(OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema);
             });
 
             it('should extract from message.content when it is an object', async () => {
@@ -226,7 +226,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 expect(actualTargetPayload.messages).toEqual(mockConstructedMessages);
                 expect(actualTargetPayload.temperature).toBe(baseLlmConfig.defaultParameters.temperature);
                 expect(actualTargetPayload.response_format.type).toBe("json_schema");
-                expect(actualTargetPayload.response_format.json_schema).toEqual(OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA);
+                expect(actualTargetPayload.response_format.json_schema).toEqual(OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema);
 
                 // Ensure llmConfig details like endpointUrl are NOT in the proxied payload
                 expect(finalPayloadSentToProxy.targetLlmConfig).toBeUndefined();
@@ -262,13 +262,19 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 const result = await strategy.execute(params);
                 expect(result).toBe(expectedOutputJsonString);
                 expect(mockLogger.info).toHaveBeenCalledWith(
-                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content is missing. Will check tool_calls fallback.`)
+                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content is missing. Will check tool_calls fallback.`),
+                    expect.objectContaining({llmId: baseLlmConfig.id})
                 );
                 expect(mockLogger.info).toHaveBeenCalledWith(
-                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content not usable, attempting tool_calls fallback.`)
+                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content not usable, attempting tool_calls fallback.`),
+                    expect.objectContaining({llmId: baseLlmConfig.id})
                 );
                 expect(mockLogger.info).toHaveBeenCalledWith(
-                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Extracted JSON string from tool_calls fallback`)
+                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Extracted JSON string from tool_calls fallback`),
+                    expect.objectContaining({
+                        llmId: baseLlmConfig.id,
+                        functionName: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name
+                    })
                 );
             });
 
@@ -296,18 +302,20 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 const result = await strategy.execute(params);
                 expect(result).toBe(expectedOutputJsonString);
                 expect(mockLogger.warn).toHaveBeenCalledWith(
-                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content was an empty string. Will check tool_calls fallback.`)
+                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content was an empty string. Will check tool_calls fallback.`),
+                    expect.objectContaining({llmId: baseLlmConfig.id})
                 );
             });
 
             it('should ignore tool_calls if function name does not match schema name', async () => {
+                const wrongToolName = "wrong_tool_name";
                 mockHttpClient.request.mockResolvedValueOnce({
                     choices: [{
                         message: {
                             content: null,
                             tool_calls: [{
                                 type: "function",
-                                function: {name: "wrong_tool_name", arguments: expectedOutputJsonString}
+                                function: {name: wrongToolName, arguments: expectedOutputJsonString}
                             }]
                         }
                     }]
@@ -322,10 +330,12 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                     .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Failed to extract JSON content from OpenRouter response. Neither message.content nor a valid tool_call fallback was usable.`, baseLlmConfig.id, null, expect.anything()));
 
                 expect(mockLogger.warn).toHaveBeenCalledWith(
-                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): tool_calls structure did not match expected schema or arguments were empty. Expected function name '${OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name}'.`),
+                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): tool_calls structure for fallback did not match expected schema or arguments were empty. Expected function name '${OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name}'.`),
                     expect.objectContaining({
+                        llmId: baseLlmConfig.id,
+                        expectedToolName: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name,
                         toolCallDetails: expect.objectContaining({
-                            function: expect.objectContaining({name: "wrong_tool_name"})
+                            functionName: wrongToolName
                         })
                     })
                 );
@@ -338,7 +348,8 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             });
 
             it('should throw LLMStrategyError if choices array is missing', async () => {
-                mockHttpClient.request.mockResolvedValueOnce({});
+                const responseData = {};
+                mockHttpClient.request.mockResolvedValueOnce(responseData);
                 const params = {
                     gameSummary: mockGameSummary,
                     llmConfig: baseLlmConfig,
@@ -346,11 +357,12 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                     environmentContext: mockEnvironmentContext
                 };
                 await expect(strategy.execute(params))
-                    .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Failed to extract JSON content from OpenRouter response. Neither message.content nor a valid tool_call fallback was usable.`, baseLlmConfig.id, null, expect.anything()));
+                    .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Response structure did not contain 'choices[0].message'.`, baseLlmConfig.id, null, expect.objectContaining({responsePreview: JSON.stringify(responseData).substring(0, 500)})));
             });
 
             it('should throw LLMStrategyError if message is missing in choices[0]', async () => {
-                mockHttpClient.request.mockResolvedValueOnce({choices: [{}]});
+                const responseData = {choices: [{}]};
+                mockHttpClient.request.mockResolvedValueOnce(responseData);
                 const params = {
                     gameSummary: mockGameSummary,
                     llmConfig: baseLlmConfig,
@@ -358,7 +370,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                     environmentContext: mockEnvironmentContext
                 };
                 await expect(strategy.execute(params))
-                    .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Failed to extract JSON content from OpenRouter response. Neither message.content nor a valid tool_call fallback was usable.`, baseLlmConfig.id, null, expect.anything()));
+                    .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Response structure did not contain 'choices[0].message'.`, baseLlmConfig.id, null, expect.objectContaining({responsePreview: JSON.stringify(responseData).substring(0, 500)})));
             });
 
             it('should throw LLMStrategyError if message.content and tool_calls are unusable', async () => {
@@ -376,10 +388,11 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             });
 
             it('should throw LLMStrategyError if message.content is unexpected type and tool_calls are unusable', async () => {
+                const contentValue = 123;
                 mockHttpClient.request.mockResolvedValueOnce({
                     choices: [{
                         message: {
-                            content: 123,
+                            content: contentValue, // Unexpected type
                             tool_calls: [{type: "function", function: {name: "wrong_name", arguments: "{}"}}]
                         }
                     }]
@@ -392,8 +405,14 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 };
                 await expect(strategy.execute(params))
                     .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): Failed to extract JSON content from OpenRouter response. Neither message.content nor a valid tool_call fallback was usable.`, baseLlmConfig.id, null, expect.anything()));
+
                 expect(mockLogger.warn).toHaveBeenCalledWith(
-                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content was present but not a non-empty string or object`)
+                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): message.content was present but not a non-empty string or object (type: ${typeof contentValue}, value: ${contentValue}). Will check tool_calls fallback.`),
+                    expect.objectContaining({
+                        llmId: baseLlmConfig.id,
+                        contentType: typeof contentValue,
+                        contentValue: contentValue
+                    })
                 );
             });
         });
@@ -404,6 +423,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 httpError.name = "HttpClientError";
                 httpError.status = 500;
                 httpError.url = baseLlmConfig.endpointUrl;
+                // httpError.responseBody = undefined; // Assuming this based on received log in error output
                 mockHttpClient.request.mockRejectedValueOnce(httpError);
                 const params = {
                     gameSummary: mockGameSummary,
@@ -414,8 +434,15 @@ describe('OpenRouterJsonSchemaStrategy', () => {
 
                 await expect(strategy.execute(params)).rejects.toThrow(httpError);
                 expect(mockLogger.error).toHaveBeenCalledWith(
-                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): HttpClientError occurred during API call to '${baseLlmConfig.endpointUrl}'`),
-                    expect.objectContaining({originalError: httpError})
+                    expect.stringContaining(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): HttpClientError occurred during API call to '${baseLlmConfig.endpointUrl}'. Status: ${httpError.status}. Message: ${httpError.message}`),
+                    expect.objectContaining({
+                        llmId: baseLlmConfig.id,
+                        url: httpError.url,
+                        status: httpError.status,
+                        originalErrorName: httpError.name,
+                        originalErrorMessage: httpError.message
+                        // responseBody: httpError.responseBody // if responseBody is part of httpError, include it here
+                    })
                 );
             });
 
@@ -430,7 +457,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                 };
 
                 await expect(strategy.execute(params))
-                    .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): An unexpected error occurred during API call or response processing for endpoint '${baseLlmConfig.endpointUrl}'. Message: ${genericError.message}`, baseLlmConfig.id, genericError, expect.anything()));
+                    .rejects.toThrow(new LLMStrategyError(`OpenRouterJsonSchemaStrategy (${baseLlmConfig.id}): An unexpected error occurred during API call or response processing for endpoint '${baseLlmConfig.endpointUrl}'. Original message: ${genericError.message}`, baseLlmConfig.id, genericError, expect.anything()));
             });
 
             it('should correctly handle prompt construction error', async () => {

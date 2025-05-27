@@ -72,8 +72,9 @@ class LogHandler /* implements OperationHandler */ {
 
         // Call Logger Method
         try {
-            const logFunction = this.#logger[level];
-            logFunction(messageToLog); // Log the final string
+            // --- CORRECTED LINE ---
+            // Directly call the method on this.#logger to preserve its 'this' context
+            this.#logger[level](messageToLog);
 
         } catch (logError) {
             const errorMsg = `LogHandler: Failed to write log message via ILogger instance (Level: ${level}). Check logger implementation.`;

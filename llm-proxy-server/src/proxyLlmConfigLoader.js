@@ -18,7 +18,7 @@ import {ensureValidLogger} from "./utils/loggerUtils.js"; // Assuming correct pa
  */
 
 /**
- * @typedef {import('../../src/services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../../src/llms/services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  */
 
 /**

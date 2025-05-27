@@ -12,7 +12,7 @@
 
 /**
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  */
 
 // Try to get ILLMStrategy from the uploaded files.
@@ -65,11 +65,15 @@ export class BaseLLMStrategy extends ILLMStrategyBase {
     /**
      * Constructs a new BaseLLMStrategy.
      * @param {ILogger} logger - The logger instance.
+     * @throws {Error} If a valid logger instance (compliant with ILogger, having at least an 'info' method) is not provided.
+     * This constructor ensures that `this.logger` is always a valid, functional logger.
+     * It is assumed that any logger passed, if it has an `info` method, will also
+     * adhere to the full ILogger interface (debug, warn, error).
      */
     constructor(logger) {
         super();
         if (!logger || typeof logger.info !== 'function') {
-            throw new Error("BaseLLMStrategy constructor: Valid logger instance is required.");
+            throw new Error("BaseLLMStrategy constructor: Valid logger instance (ILogger, with at least an 'info' method) is required.");
         }
         this.logger = logger;
     }

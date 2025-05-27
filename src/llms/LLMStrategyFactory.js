@@ -1,44 +1,33 @@
-// src/llms/factories/LLMStrategyFactory.js
-// --- NEW FILE START ---
-import {IHttpClient} from './interfaces/IHttpClient.js';
-import {ILogger} from '../interfaces/ILogger.js';
-import {ILLMStrategy} from './interfaces/ILLMStrategy.js';
+// src/llms/LLMStrategyFactory.js
+// --- MODIFIED FILE START ---
+import {IHttpClient} from './interfaces/IHttpClient.js'; // Assuming IHttpClient is in ./interfaces/
+import {ILogger} from '../interfaces/ILogger.js'; // Assuming ILogger is in ../interfaces/
+import {ILLMStrategy} from './interfaces/ILLMStrategy.js'; // Assuming ILLMStrategy is in ./interfaces/
 import {ConfigurationError} from '../turns/adapters/configurableLLMAdapter.js';
 import {LLMStrategyFactoryError} from './errors/LLMStrategyFactoryError.js';
 
 // Import concrete strategy implementations
-import {OpenAIToolCallingStrategy} from './strategies/openAIToolCallingStrategy.js';
-import {AnthropicToolCallingStrategy} from './strategies/anthropicToolCallingStrategy.js';
 import {OpenRouterJsonSchemaStrategy} from './strategies/openRouterJsonSchemaStrategy.js';
-import {OpenAINativeJsonStrategy} from './strategies/openAINativeJsonStrategy.js';
-import {OllamaNativeJsonStrategy} from './strategies/ollamaNativeJsonStrategy.js';
-import {DefaultPromptEngineeringStrategy} from './strategies/defaultPromptEngineeringStrategy.js';
+import {OpenRouterToolCallingStrategy} from './strategies/openRouterToolCallingStrategy.js';
+// DefaultPromptEngineeringStrategy import removed
 
 /**
- * @typedef {import('../../src/services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfigType
  */
 
 const strategyMappings = {
-    'openai': {
-        'tool_calling': OpenAIToolCallingStrategy,
-        'native_json_mode': OpenAINativeJsonStrategy,
-    },
-    'anthropic': {
-        'tool_calling': AnthropicToolCallingStrategy,
-    },
     'openrouter': {
         'openrouter_json_schema': OpenRouterJsonSchemaStrategy,
-    },
-    'ollama': {
-        'native_json_mode': OllamaNativeJsonStrategy,
+        'openrouter_tool_calling': OpenRouterToolCallingStrategy,
     }
+    // Other API types and their specific strategies would be added here.
 };
 
 const KNOWN_API_TYPES_FOR_FACTORY = Object.keys(strategyMappings);
 
 /**
  * @class LLMStrategyFactory
- * @description Creates and returns concrete ILLMStrategy instances based on LLMModelConfig.
+ * @description Creates and returns concrete ILLMStrategy instances based on LLMModelConfigType.
  * This factory decouples the ConfigurableLLMAdapter from specific strategy implementations.
  */
 export class LLMStrategyFactory {
@@ -88,7 +77,8 @@ export class LLMStrategyFactory {
      * @param {LLMModelConfigType} llmConfig - The configuration for the LLM model.
      * @returns {ILLMStrategy} An instance of the selected concrete ILLMStrategy.
      * @throws {ConfigurationError} If llmConfig is invalid (e.g., missing apiType).
-     * @throws {LLMStrategyFactoryError} If no suitable strategy can be determined for the given llmConfig.
+     * @throws {LLMStrategyFactoryError} If no suitable strategy can be determined for the given llmConfig
+     * (e.g., missing jsonOutputStrategy.method, unsupported method, or unsupported apiType).
      */
     getStrategy(llmConfig) {
         if (!llmConfig || typeof llmConfig.apiType !== 'string' || !llmConfig.apiType.trim()) {
@@ -105,43 +95,77 @@ export class LLMStrategyFactory {
         const configuredMethod = llmConfig.jsonOutputStrategy?.method?.trim()?.toLowerCase();
 
         this.#logger.debug(`LLMStrategyFactory: Determining strategy for LLM ID: '${llmId}', apiType: '${apiType}'.`, {
-            configuredJsonMethod: configuredMethod || 'N/A',
+            configuredJsonMethod: configuredMethod || 'NOT SET',
             fullConfigJsonStrategy: llmConfig.jsonOutputStrategy
         });
 
-        let effectiveMethod = configuredMethod;
-        if (!effectiveMethod) {
-            effectiveMethod = 'prompt_engineering';
-            this.#logger.info(`LLMStrategyFactory: jsonOutputStrategy.method is missing or empty for LLM ID '${llmId}' (apiType: '${apiType}'). Defaulting to '${effectiveMethod}'.`);
+        if (!configuredMethod) {
+            const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${llmId}' (apiType: '${apiType}') but was missing or empty. A specific method must be configured.`;
+            this.#logger.error(errorMsg, {
+                llmId,
+                apiType,
+                llmConfigJsonOutputStrategy: llmConfig.jsonOutputStrategy
+            });
+            throw new LLMStrategyFactoryError(errorMsg, {
+                apiType: apiType,
+                jsonOutputMethod: configuredMethod
+            });
+        }
+
+        if (configuredMethod === 'prompt_engineering') {
+            const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' cannot be 'prompt_engineering' for LLM ID '${llmId}' (apiType: '${apiType}'). This strategy is no longer supported as an explicit choice. Please configure a specific JSON output strategy (e.g., 'openrouter_json_schema', 'openrouter_tool_calling', etc.).`;
+            this.#logger.error(errorMsg, {llmId, apiType, configuredMethod});
+            throw new LLMStrategyFactoryError(errorMsg, {
+                apiType: apiType,
+                jsonOutputMethod: configuredMethod
+            });
         }
 
         let StrategyClass = null;
+        const apiTypeStrategies = strategyMappings[apiType];
 
-        if (effectiveMethod === 'prompt_engineering') {
-            StrategyClass = DefaultPromptEngineeringStrategy;
-        } else {
-            const apiStrategies = strategyMappings[apiType];
-            if (apiStrategies) {
-                StrategyClass = apiStrategies[effectiveMethod];
-            }
+        if (apiTypeStrategies) {
+            StrategyClass = apiTypeStrategies[configuredMethod];
         }
 
         if (!StrategyClass) {
-            if (KNOWN_API_TYPES_FOR_FACTORY.includes(apiType)) {
-                this.#logger.warn(`LLMStrategyFactory: Unrecognized jsonOutputStrategy.method '${configuredMethod}' for apiType '${apiType}' (LLM ID: '${llmId}'). Falling back to DefaultPromptEngineeringStrategy.`);
-                StrategyClass = DefaultPromptEngineeringStrategy;
-                effectiveMethod = 'prompt_engineering';
+            let errorMessage;
+            // Base context for logging, matching some test expectations.
+            const errorLogContext = {
+                apiType: apiType,
+                jsonOutputMethod: configuredMethod
+                // llmId is part of the message string as per test expectations for some errors
+            };
+
+            if (!KNOWN_API_TYPES_FOR_FACTORY.includes(apiType)) {
+                // Case 1: apiType itself is unknown/unsupported.
+                // Adjusted to match test's expected error message string format.
+                errorMessage = `Unsupported apiType: '${apiType}' (LLM ID: '${llmId}'). No strategy can be determined. Supported API types for specialized strategies are: ${KNOWN_API_TYPES_FOR_FACTORY.join(', ')}.`;
+                // The llmId is included in the message string itself for these tests.
             } else {
-                const errorMessage = `Unsupported apiType: '${apiType}' (LLM ID: '${llmId}'). No strategy can be determined. Supported API types for specialized strategies are: ${KNOWN_API_TYPES_FOR_FACTORY.join(', ')}.`;
-                this.#logger.error(`LLMStrategyFactory: ${errorMessage}`);
-                throw new LLMStrategyFactoryError(errorMessage, {
-                    apiType: apiType,
-                    jsonOutputMethod: configuredMethod
-                });
+                // Case 2: apiType is known, but the configuredMethod is not valid for it.
+                const knownMethodsForCurrentApi = Object.keys(strategyMappings[apiType] || {}).join(', ') || 'none';
+                const availableMethodsForLog = KNOWN_API_TYPES_FOR_FACTORY.map(type => {
+                    return `${type}: [${Object.keys(strategyMappings[type] || {}).join(', ') || 'none'}]`;
+                }).join('; ');
+                errorMessage = `Unrecognized jsonOutputStrategy.method: '${configuredMethod}' for apiType '${apiType}' (LLM ID: '${llmId}'). Supported methods for this apiType are: [${knownMethodsForCurrentApi}]. Full list of supported API types and methods: ${availableMethodsForLog || 'None configured'}.`;
+                // For more detailed internal logging, we can add more to the context here if desired,
+                // but the test error log context for "unsupported apiType" is simpler.
+                // Let's add llmId to the context explicitly for consistency in our internal logging.
+                errorLogContext.llmId = llmId;
+                errorLogContext.availableApiTypes = KNOWN_API_TYPES_FOR_FACTORY;
+                errorLogContext.availableMethodsForApiType = strategyMappings[apiType] ? Object.keys(strategyMappings[apiType]) : "N/A";
             }
+
+            this.#logger.error(`LLMStrategyFactory: ${errorMessage}`, errorLogContext);
+            throw new LLMStrategyFactoryError(errorMessage, {
+                apiType: apiType,
+                jsonOutputMethod: configuredMethod
+            });
         }
 
-        this.#logger.info(`LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod='${effectiveMethod}', configuredMethod='${configuredMethod || "N/A"}'.`);
+        // Adjusted log message to include 'effectiveMethod' (same as configuredMethod here) to match test expectations.
+        this.#logger.info(`LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod='${configuredMethod}', configuredMethod='${configuredMethod}'.`);
 
         return new StrategyClass({
             httpClient: this.#httpClient,
@@ -150,4 +174,4 @@ export class LLMStrategyFactory {
     }
 }
 
-// --- CORRECTED FILE END ---
+// --- MODIFIED FILE END ---

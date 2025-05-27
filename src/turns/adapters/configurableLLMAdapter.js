@@ -14,10 +14,10 @@ import {
 
 
 /**
- * @typedef {import('../../services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
- * @typedef {import('../../services/llmConfigLoader.js').LLMConfigurationFile} LLMConfigurationFile
- * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
- * @typedef {import('../../services/llmConfigLoader.js').LoadConfigsErrorResult} LoadConfigsErrorResult
+ * @typedef {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
+ * @typedef {import('../../llms/services/llmConfigLoader.js').LLMConfigurationFile} LLMConfigurationFile
+ * @typedef {import('../../llms/services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../../llms/services/llmConfigLoader.js').LoadConfigsErrorResult} LoadConfigsErrorResult
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../schemas/llmOutputSchemas.js').LLM_TURN_ACTION_SCHEMA} LLM_TURN_ACTION_SCHEMA_TYPE
  * @typedef {import('../../llms/environmentContext.js').EnvironmentContext} EnvironmentContext

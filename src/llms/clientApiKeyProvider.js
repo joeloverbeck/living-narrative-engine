@@ -5,7 +5,7 @@ import {IApiKeyProvider} from './interfaces/IApiKeyProvider.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
- * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('./services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('./interfaces/ILogger.js').ILogger} ILogger
  */
 

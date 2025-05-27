@@ -49,7 +49,7 @@ jest.mock('../../../src/llms/LLMStrategyFactory.js', () => ({
     })
 }));
 
-jest.mock('../../../src/services/llmConfigLoader.js', () => ({
+jest.mock('../../../src/llms/services/llmConfigLoader.js', () => ({
     LlmConfigLoader: jest.fn().mockImplementation((...args) => {
         mockLlmConfigLoaderConstructor(...args);
         return {};

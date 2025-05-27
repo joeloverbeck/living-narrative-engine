@@ -26,9 +26,7 @@ export const PROMPT_FALLBACK_UNKNOWN_LOCATION = "Your current location is unknow
 export const PROMPT_FALLBACK_NO_EXITS = "There are no obvious exits.";
 export const PROMPT_FALLBACK_ALONE_IN_LOCATION = "You are alone here.";
 export const PROMPT_FALLBACK_NO_RECENT_EVENTS = "Nothing noteworthy has happened recently.";
-
-export const PROMPT_FALLBACK_NO_ACTIONS_DEFAULT = "You have no specific actions available right now. If 'core:wait' (or similar) is an option, use its System ID for 'actionDefinitionId' and an appropriate 'commandString' (e.g., 'wait'). Otherwise, the game rules will dictate behavior.";
-export const PROMPT_FALLBACK_NO_ACTIONS_CAN_WAIT = "If no other action is suitable, you can choose to wait (e.g., using 'core:wait' or similar System ID and commandString 'wait').";
+export const PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE = "You have no specific actions immediately apparent. Consider what your character would do in this situation; you might wait, observe, or reflect.";
 
 // --- AIPromptFormatter: Character Segment Specific Messages (typically fully punctuated) ---
 export const PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS = "Your character details are unknown.";

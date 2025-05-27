@@ -1,7 +1,7 @@
 // src/services/llmConfigLoader.js
 // --- FILE START ---
 
-import {Workspace_retry} from '../utils/apiUtils.js';
+import {Workspace_retry} from '../../utils/apiUtils.js';
 
 /**
  * @typedef {object} ILogger

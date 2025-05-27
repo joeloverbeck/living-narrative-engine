@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import {jest, describe, beforeEach, test, expect} from '@jest/globals';
-import {LlmConfigLoader} from '../../src/services/llmConfigLoader.js'; // Adjust path as needed
+import {LlmConfigLoader} from '../../src/llms/services/llmConfigLoader.js'; // Adjust path as needed
 import {Workspace_retry} from '../../src/utils/apiUtils.js'; // Adjust path as needed
 
 // Mock the Workspace_retry utility

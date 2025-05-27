@@ -471,8 +471,10 @@ describe('AIPlayerStrategy', () => {
             expect(resultAction).toBe(mockProcessedAction_da);
 
             expect(capturedLogger_da.info).toHaveBeenCalledWith(`AIPlayerStrategy: decideAction called for actor ${mockActor_da.id}. Orchestrating AI decision pipeline.`);
-            expect(capturedLogger_da.info).toHaveBeenCalledWith(`AIPlayerStrategy: Generated LLM prompt for actor ${mockActor_da.id}. Length: ${mockLlmPromptString_da.length}. Full prompt being sent to LLM follows.`);
-            expect(capturedLogger_da.info).toHaveBeenCalledWith(`AIPlayerStrategy: LLM Prompt for ${mockActor_da.id}:\n${mockLlmPromptString_da}`);
+            expect(capturedLogger_da.info).toHaveBeenCalledWith(`AIPlayerStrategy: Generated LLM prompt for actor ${mockActor_da.id}. Length: ${mockLlmPromptString_da.length}.`);
+            // --- MODIFICATION START (TASK-003 Test Fix) ---
+            expect(capturedLogger_da.debug).toHaveBeenCalledWith(`AIPlayerStrategy: LLM Prompt for ${mockActor_da.id}:\n${mockLlmPromptString_da}`);
+            // --- MODIFICATION END (TASK-003 Test Fix) ---
             expect(capturedLogger_da.debug).toHaveBeenCalledWith(`AIPlayerStrategy: Received LLM JSON response for actor ${mockActor_da.id}: ${mockLlmJsonResponse_da}`);
             expect(capturedLogger_da.error).not.toHaveBeenCalled();
         });

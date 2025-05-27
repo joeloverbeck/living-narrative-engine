@@ -7,7 +7,7 @@ import {EnvironmentContext} from '../../src/llms/environmentContext.js';
 
 /**
  * @typedef {import('../../src/llms/interfaces/ILogger.js').ILogger} ILogger
- * @typedef {import('../../src/services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../../src/llms/services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  */
 
 /**

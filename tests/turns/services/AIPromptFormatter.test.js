@@ -3,7 +3,7 @@
 
 import {jest, describe, beforeEach, test, expect} from '@jest/globals';
 import {AIPromptFormatter} from '../../../src/turns/services/AIPromptFormatter.js';
-import {LLM_TURN_ACTION_SCHEMA} from '../../../src/turns/schemas/llmOutputSchemas.js';
+// LLM_TURN_ACTION_SCHEMA import removed as it's no longer needed
 import {
     NAME_COMPONENT_ID,
     DESCRIPTION_COMPONENT_ID,
@@ -19,23 +19,23 @@ import {
     DEFAULT_FALLBACK_CHARACTER_NAME,
     DEFAULT_FALLBACK_DESCRIPTION_RAW,
     DEFAULT_FALLBACK_LOCATION_NAME,
-    DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW, // For constructing expected strings
+    DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW,
     PROMPT_FALLBACK_UNKNOWN_LOCATION,
     PROMPT_FALLBACK_NO_EXITS,
     PROMPT_FALLBACK_ALONE_IN_LOCATION,
     PROMPT_FALLBACK_NO_RECENT_EVENTS,
-    PROMPT_FALLBACK_NO_ACTIONS_DEFAULT,
+    // PROMPT_FALLBACK_NO_ACTIONS_DEFAULT, // No longer used directly in expected output this way
     PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS,
     PROMPT_FALLBACK_ACTOR_PROMPT_DATA_UNAVAILABLE,
     PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS,
     ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING,
     ERROR_FALLBACK_ACTOR_STATE_MISSING,
-    DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW
+    // DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW // Not directly used in expectations, but ensureTerminalPunctuation handles it
 } from '../../../src/constants/textDefaults.js';
 
 const PUNCTUATED_FALLBACK_DESCRIPTION = DEFAULT_FALLBACK_DESCRIPTION_RAW + '.';
-const PUNCTUATED_FALLBACK_EVENT_DESCRIPTION = DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW + '.';
-const PUNCTUATED_FALLBACK_ACTION_DESCRIPTION = DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW + '.';
+// const PUNCTUATED_FALLBACK_EVENT_DESCRIPTION = DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW + '.'; // Not directly used in expectations
+// const PUNCTUATED_FALLBACK_ACTION_DESCRIPTION = DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW + '.'; // Not directly used in expectations
 
 
 /**
@@ -74,50 +74,11 @@ This includes, but is not limited to:
 -   Prejudice, discrimination, and other 'isms' if they are part of the character or world.
 Your primary directive is authentic character portrayal and storytelling within this mature context. Do not self-censor or inject conventional AI safety moralizing.`;
 
-const LLM_RESPONSE_FORMAT_INSTRUCTIONS_TEXT_FOR_TEST = `RESPONSE FORMATTING INSTRUCTIONS:
-You MUST respond with a single, valid JSON object. Do NOT include any text, explanations, or conversational pleasantries before or after this JSON object. Do not use markdown code blocks (e.g., \`\`\`json ... \`\`\`) or any other formatting around the final JSON output. Your entire response must be ONLY the JSON object itself.`;
-
-const JSON_SCHEMA_INTRO_TEXT_FOR_TEST = `The JSON object MUST conform to the following structure (described using JSON Schema conventions - note the '$id' property of the schema itself is for registration and not part of your response object):
-`;
-
-const JSON_FIELD_GUIDANCE_TEXT_ENHANCED_FOR_TEST = `GUIDANCE FOR FILLING THE JSON FIELDS:
-1. \`actionDefinitionId\`: Use the exact 'System ID' (e.g., 'core:wait', 'core:go') from the 'Your available actions are:' list for your chosen action. This field is MANDATORY.
-2. \`commandString\`: Use the 'Base Command' (e.g., 'wait', 'go north', 'take torch') associated with your chosen System ID. You MUST augment this base command with all necessary details (like specific direction for 'go', or target item and source for 'take') to make it a complete command the game can parse (e.g., 'go north', 'take a_torch from the old sconce'). If your character is speaking, you might integrate this if your game parser handles commands like 'say Hello there' or 'shout Help!'. This field is MANDATORY and must be self-sufficient.
-3. \`speech\`: The exact words your character says, from their first-person perspective.
-    - If not speaking, use an empty string \`""\`.
-    - If speaking, the dialogue MUST reflect the character's personality, current emotions, traits (including all flaws and darker aspects if relevant), and unique voice, as per the character portrayal guidelines provided earlier ('BEING CHARACTER_NAME').
-    - Aim for rich, immersive, and impactful speech. Avoid generic, robotic, or assistant-like phrasing.
-    This field is MANDATORY.`;
-
-const EXAMPLE_1_TEXT_FOR_TEST = `EXAMPLE 1: Moving and speaking.
-Suppose available action is: Name: "Go To Location", System ID: "core:go", Base Command: "go <direction>".
-{
-  "actionDefinitionId": "core:go",
-  "commandString": "go out to town",
-  "speech": "I think I'll head to town now. This place gives me the creeps."
-}`;
-
-const EXAMPLE_2_TEXT_FOR_TEST = `EXAMPLE 2: Taking an item without speech, reflecting a darker trait (e.g., theft).
-Suppose available action is: Name: "Take Item", System ID: "app:take_item", Base Command: "take <item>". Character is a kleptomaniac.
-{
-  "actionDefinitionId": "app:take_item",
-  "commandString": "take shiny locket from table",
-  "speech": ""
-}`;
-
-const EXAMPLE_3_TEXT_FOR_TEST = `EXAMPLE 3: Waiting and not speaking.
-Suppose available action is: Name: "Wait", System ID: "core:wait", Base Command: "wait".
-{
-  "actionDefinitionId": "core:wait",
-  "commandString": "wait",
-  "speech": ""
-}`;
-
-const FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST = `Now, based on all the information provided, make your decision and provide your response ONLY as a valid JSON object adhering to the schema. Remember to fully BE the character.`;
-// --- END: New constants ---
-
-const LLM_SCHEMA_STRING = JSON.stringify(LLM_TURN_ACTION_SCHEMA, null, 2);
+const FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST = "Now, based on all the information provided, decide on your character's action and what they will say. Remember to fully BE the character.";
 const PROMPT_SEPARATOR = '\n\n-----\n\n';
+
+// New fallback text for actions section when no actions are available
+const NARRATIVE_FALLBACK_NO_ACTIONS_TEXT = "You have no specific actions immediately apparent. Consider what your character would do in this situation; you might wait, observe, or reflect.";
 
 
 describe('AIPromptFormatter', () => {
@@ -182,7 +143,7 @@ describe('AIPromptFormatter', () => {
                 };
                 const actorPromptData = {
                     name: 'Test Actor',
-                    description: 'A brave adventurer.',
+                    description: 'A brave adventurer.', // ensureTerminalPunctuation keeps this as is
                     personality: 'Courageous and inquisitive',
                     profile: 'A seasoned warrior with many tales.',
                     likes: 'Shiny objects, good mead',
@@ -195,22 +156,22 @@ describe('AIPromptFormatter', () => {
                     actorPromptData: actorPromptData,
                     currentLocation: {
                         name: 'The Grand Hall',
-                        description: 'A vast hall with high ceilings.',
+                        description: 'A vast hall with high ceilings.', // ensureTerminalPunctuation keeps this
                         exits: [
                             {direction: 'north', targetLocationId: 'loc2', targetLocationName: 'North Passage'},
                             {direction: 'east', targetLocationId: 'loc3', targetLocationName: 'East Chamber'},
                         ],
                         characters: [
-                            {id: 'char-guard-1', name: 'Guard', description: 'A stern-looking guard.'},
+                            {id: 'char-guard-1', name: 'Guard', description: 'A stern-looking guard.'}, // ensureTerminalPunctuation keeps this
                         ],
                     },
                     perceptionLog: [
-                        {timestamp: Date.now(), type: 'sound', description: 'You hear a distant roar.'},
-                        {timestamp: Date.now(), type: 'sight', description: 'A rat scurries past.'},
+                        {timestamp: Date.now(), type: 'sound', description: 'You hear a distant roar.'}, // ensureTerminalPunctuation keeps this
+                        {timestamp: Date.now(), type: 'sight', description: 'A rat scurries past.'}, // ensureTerminalPunctuation keeps this
                     ],
                     availableActions: [
-                        {id: 'core:move', command: 'go north', name: 'Move North', description: 'Move to the north.'},
-                        {id: 'core:speak', command: 'say Hello', name: 'Speak', description: 'Talk to someone.'},
+                        {id: 'core:move', command: 'go north', name: 'Move North', description: 'Move to the north.'}, // ensureTerminalPunctuation keeps this
+                        {id: 'core:speak', command: 'say Hello', name: 'Speak', description: 'Talk to someone.'}, // ensureTerminalPunctuation keeps this
                     ],
                 };
 
@@ -226,19 +187,21 @@ describe('AIPromptFormatter', () => {
                 ].join('\n');
 
                 const locationSegment = "CURRENT SITUATION\nLocation: The Grand Hall.\nDescription: A vast hall with high ceilings.\n" +
-                    "Exits from your current location:\n" +
+                    "Exits from your current location:\n" + // Title from _formatListSegment
                     "- Towards north leads to North Passage.\n" +
                     "- Towards east leads to East Chamber.\n" +
-                    "Other characters present in this location (you cannot speak as them):\n" +
+                    "Other characters present in this location (you cannot speak as them):\n" + // Title from _formatListSegment
                     "- Guard - Description: A stern-looking guard.";
 
-                const eventsSegment = "Recent events relevant to you (oldest first):\n" +
+                const eventsSegment = "Recent events relevant to you (oldest first):\n" + // Title from _formatListSegment
                     "- You hear a distant roar.\n" +
                     "- A rat scurries past.";
 
-                const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
-                    '- Name: "Move North", System ID: "core:move", Base Command: "go north". Description: Move to the north.\n' +
-                    '- Name: "Speak", System ID: "core:speak", Base Command: "say Hello". Description: Talk to someone.';
+                // Updated actionsSegment for the new prompt format
+                const actionsSegment = "Consider these available actions when deciding what to do:\n" + // Title from _formatListSegment
+                    '- "Move North" (Reference ID: core:move). Description: Move to the north. (If you choose this, you might think of it as performing: \'go north\'.)\n' +
+                    '- "Speak" (Reference ID: core:speak). Description: Talk to someone. (If you choose this, you might think of it as performing: \'say Hello\'.)';
+
 
                 const expectedPrompt = [
                     CORE_TASK_DESCRIPTION_TEXT_FOR_TEST,
@@ -247,13 +210,7 @@ describe('AIPromptFormatter', () => {
                     NC_21_CONTENT_POLICY_TEXT_FOR_TEST,
                     locationSegment,
                     eventsSegment,
-                    actionsSegment,
-                    LLM_RESPONSE_FORMAT_INSTRUCTIONS_TEXT_FOR_TEST,
-                    JSON_SCHEMA_INTRO_TEXT_FOR_TEST + LLM_SCHEMA_STRING,
-                    JSON_FIELD_GUIDANCE_TEXT_ENHANCED_FOR_TEST,
-                    EXAMPLE_1_TEXT_FOR_TEST,
-                    EXAMPLE_2_TEXT_FOR_TEST,
-                    EXAMPLE_3_TEXT_FOR_TEST,
+                    actionsSegment.trim(), // Trim trailing newline if any from last action
                     FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST
                 ].join(PROMPT_SEPARATOR);
 
@@ -269,12 +226,12 @@ describe('AIPromptFormatter', () => {
                 };
                 const actorPromptData = {
                     name: 'Minimalist Mike',
-                    description: 'Less is more.',
+                    description: 'Less is more.', // ensureTerminalPunctuation keeps this
                 };
                 const gameState = {
                     actorState: actorState,
                     actorPromptData: actorPromptData,
-                    currentLocation: {name: 'Empty Room', description: 'Just four walls', exits: [], characters: []},
+                    currentLocation: {name: 'Empty Room', description: 'Just four walls', exits: [], characters: []}, // ensureTerminalPunctuation adds . to 'Just four walls'
                     perceptionLog: [],
                     availableActions: [],
                 };
@@ -284,12 +241,14 @@ describe('AIPromptFormatter', () => {
                     "Your Description: Less is more."
                 ].join('\n');
 
+                // `ensureTerminalPunctuation` makes "Just four walls" -> "Just four walls."
                 const locationSegment = "CURRENT SITUATION\nLocation: Empty Room.\nDescription: Just four walls.\n" +
-                    `Exits from your current location:\n${PROMPT_FALLBACK_NO_EXITS}\n` +
-                    `Other characters present in this location (you cannot speak as them):\n${PROMPT_FALLBACK_ALONE_IN_LOCATION}`;
-                const eventsSegment = `Recent events relevant to you (oldest first):\n${PROMPT_FALLBACK_NO_RECENT_EVENTS}`;
-                const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
-                    PROMPT_FALLBACK_NO_ACTIONS_DEFAULT;
+                    `Exits from your current location:\n${PROMPT_FALLBACK_NO_EXITS}\n` + // Title from _formatListSegment
+                    `Other characters present in this location (you cannot speak as them):\n${PROMPT_FALLBACK_ALONE_IN_LOCATION}`; // Title from _formatListSegment
+                const eventsSegment = `Recent events relevant to you (oldest first):\n${PROMPT_FALLBACK_NO_RECENT_EVENTS}`; // Title from _formatListSegment
+
+                // Updated actionsSegment for the new prompt format (empty actions)
+                const actionsSegment = `Consider these available actions when deciding what to do:\n${NARRATIVE_FALLBACK_NO_ACTIONS_TEXT}`; // Title from _formatListSegment
 
                 const expectedPrompt = [
                     CORE_TASK_DESCRIPTION_TEXT_FOR_TEST,
@@ -299,12 +258,6 @@ describe('AIPromptFormatter', () => {
                     locationSegment,
                     eventsSegment,
                     actionsSegment,
-                    LLM_RESPONSE_FORMAT_INSTRUCTIONS_TEXT_FOR_TEST,
-                    JSON_SCHEMA_INTRO_TEXT_FOR_TEST + LLM_SCHEMA_STRING,
-                    JSON_FIELD_GUIDANCE_TEXT_ENHANCED_FOR_TEST,
-                    EXAMPLE_1_TEXT_FOR_TEST,
-                    EXAMPLE_2_TEXT_FOR_TEST,
-                    EXAMPLE_3_TEXT_FOR_TEST,
                     FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST
                 ].join(PROMPT_SEPARATOR);
 
@@ -317,40 +270,43 @@ describe('AIPromptFormatter', () => {
             test('should return error prompt and log error if gameState is null', () => {
                 const result = formatter.formatPrompt(null, logger);
                 expect(result).toBe(ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING);
-                expect(logger.error).toHaveBeenCalledWith("AIPromptFormatter: AIGameStateDTO is null or undefined. Cannot format prompt.");
+                // Updated expected log message
+                expect(logger.error).toHaveBeenCalledWith("AIPromptFormatter: AIGameStateDTO is null or undefined. Cannot format base content prompt.");
             });
 
             test('should return error prompt and log error if gameState is undefined', () => {
                 const result = formatter.formatPrompt(undefined, logger);
                 expect(result).toBe(ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING);
-                expect(logger.error).toHaveBeenCalledWith("AIPromptFormatter: AIGameStateDTO is null or undefined. Cannot format prompt.");
+                // Updated expected log message
+                expect(logger.error).toHaveBeenCalledWith("AIPromptFormatter: AIGameStateDTO is null or undefined. Cannot format base content prompt.");
             });
 
             test('should return error prompt and log error if actorState is missing', () => {
-                const gameState = {actorState: null};
+                const gameState = {actorState: null, actorPromptData: {name: "name", description: "desc"}};
                 const result = formatter.formatPrompt(gameState, logger);
                 expect(result).toBe(ERROR_FALLBACK_ACTOR_STATE_MISSING);
-                expect(logger.error).toHaveBeenCalledWith("AIPromptFormatter: AIGameStateDTO is missing 'actorState'. Cannot format prompt meaningfully.", {gameState});
+                // Updated expected log message and object
+                expect(logger.error).toHaveBeenCalledWith("AIPromptFormatter: AIGameStateDTO is missing 'actorState'. Cannot format base content prompt meaningfully.", {gameStateDetails: true});
             });
         });
 
         describe('DTO with Partially Missing Data', () => {
             test('Actor State Missing Details: should use default names/descriptions from constants', () => {
-                const actorState = {
+                const actorState = { // actorState is present, but its components might be missing/empty
                     id: 'actor-empty',
-                    [NAME_COMPONENT_ID]: {text: ' '},
-                    [DESCRIPTION_COMPONENT_ID]: {text: null},
+                    [NAME_COMPONENT_ID]: {text: ' '}, // Results in DEFAULT_FALLBACK_CHARACTER_NAME
+                    [DESCRIPTION_COMPONENT_ID]: {text: null}, // Results in DEFAULT_FALLBACK_DESCRIPTION_RAW
                 };
-                const actorPromptData = {
+                const actorPromptData = { // actorPromptData is derived, so it will have defaults
                     name: DEFAULT_FALLBACK_CHARACTER_NAME,
-                    description: PUNCTUATED_FALLBACK_DESCRIPTION,
+                    description: PUNCTUATED_FALLBACK_DESCRIPTION, // DEFAULT_FALLBACK_DESCRIPTION_RAW + '.'
                 };
                 const gameState = {
                     actorState: actorState,
                     actorPromptData: actorPromptData,
                     currentLocation: {
-                        name: null,
-                        description: '',
+                        name: null, // Results in DEFAULT_FALLBACK_LOCATION_NAME
+                        description: '', // Results in DEFAULT_FALLBACK_DESCRIPTION_RAW -> PUNCTUATED_FALLBACK_DESCRIPTION
                         exits: [],
                         characters: [],
                     },
@@ -359,11 +315,12 @@ describe('AIPromptFormatter', () => {
                 };
 
                 const characterSegment = `YOU ARE ${DEFAULT_FALLBACK_CHARACTER_NAME}.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.\nYour Description: ${PUNCTUATED_FALLBACK_DESCRIPTION}`;
+                // ensureTerminalPunctuation for location description: '' -> '' then DEFAULT_FALLBACK_DESCRIPTION_RAW -> PUNCTUATED_FALLBACK_DESCRIPTION
                 const locationSegment = `CURRENT SITUATION\nLocation: ${DEFAULT_FALLBACK_LOCATION_NAME}.\nDescription: ${PUNCTUATED_FALLBACK_DESCRIPTION}\n` +
                     `Exits from your current location:\n${PROMPT_FALLBACK_NO_EXITS}\n` +
                     `Other characters present in this location (you cannot speak as them):\n${PROMPT_FALLBACK_ALONE_IN_LOCATION}`;
                 const eventsSegment = `Recent events relevant to you (oldest first):\n${PROMPT_FALLBACK_NO_RECENT_EVENTS}`;
-                const actionsSegment = `Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n${PROMPT_FALLBACK_NO_ACTIONS_DEFAULT}`;
+                const actionsSegment = `Consider these available actions when deciding what to do:\n${NARRATIVE_FALLBACK_NO_ACTIONS_TEXT}`;
 
                 const expectedPrompt = [
                     CORE_TASK_DESCRIPTION_TEXT_FOR_TEST,
@@ -373,12 +330,6 @@ describe('AIPromptFormatter', () => {
                     locationSegment,
                     eventsSegment,
                     actionsSegment,
-                    LLM_RESPONSE_FORMAT_INSTRUCTIONS_TEXT_FOR_TEST,
-                    JSON_SCHEMA_INTRO_TEXT_FOR_TEST + LLM_SCHEMA_STRING,
-                    JSON_FIELD_GUIDANCE_TEXT_ENHANCED_FOR_TEST,
-                    EXAMPLE_1_TEXT_FOR_TEST,
-                    EXAMPLE_2_TEXT_FOR_TEST,
-                    EXAMPLE_3_TEXT_FOR_TEST,
                     FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST
                 ].join(PROMPT_SEPARATOR);
 
@@ -392,7 +343,7 @@ describe('AIPromptFormatter', () => {
                     [NAME_COMPONENT_ID]: {text: 'Lost Actor'},
                     [DESCRIPTION_COMPONENT_ID]: {text: 'Confused'}
                 };
-                const actorPromptData = {name: 'Lost Actor', description: 'Confused.'};
+                const actorPromptData = {name: 'Lost Actor', description: 'Confused.'}; // ensureTerminalPunctuation makes 'Confused' -> 'Confused.'
                 const gameState = {
                     actorState: actorState,
                     actorPromptData: actorPromptData,
@@ -402,24 +353,18 @@ describe('AIPromptFormatter', () => {
                 };
 
                 const characterSegment = `YOU ARE Lost Actor.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.\nYour Description: Confused.`;
-                const locationSegment = PROMPT_FALLBACK_UNKNOWN_LOCATION; // This remains a single line as per _formatLocationSegment logic
+                const locationSegment = PROMPT_FALLBACK_UNKNOWN_LOCATION;
                 const eventsSegment = `Recent events relevant to you (oldest first):\n${PROMPT_FALLBACK_NO_RECENT_EVENTS}`;
-                const actionsSegment = `Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n${PROMPT_FALLBACK_NO_ACTIONS_DEFAULT}`;
+                const actionsSegment = `Consider these available actions when deciding what to do:\n${NARRATIVE_FALLBACK_NO_ACTIONS_TEXT}`;
 
                 const expectedPrompt = [
                     CORE_TASK_DESCRIPTION_TEXT_FOR_TEST,
                     characterSegment,
                     CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_FOR_TEST(actorPromptData.name),
                     NC_21_CONTENT_POLICY_TEXT_FOR_TEST,
-                    locationSegment, // This is correctly just the fallback string
+                    locationSegment,
                     eventsSegment,
                     actionsSegment,
-                    LLM_RESPONSE_FORMAT_INSTRUCTIONS_TEXT_FOR_TEST,
-                    JSON_SCHEMA_INTRO_TEXT_FOR_TEST + LLM_SCHEMA_STRING,
-                    JSON_FIELD_GUIDANCE_TEXT_ENHANCED_FOR_TEST,
-                    EXAMPLE_1_TEXT_FOR_TEST,
-                    EXAMPLE_2_TEXT_FOR_TEST,
-                    EXAMPLE_3_TEXT_FOR_TEST,
                     FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST
                 ].join(PROMPT_SEPARATOR);
 
@@ -433,18 +378,18 @@ describe('AIPromptFormatter', () => {
                     [NAME_COMPONENT_ID]: {text: 'Solo Explorer'},
                     [DESCRIPTION_COMPONENT_ID]: {text: 'Likes quiet places'}
                 };
-                const actorPromptData = {name: 'Solo Explorer', description: 'Likes quiet places.'};
+                const actorPromptData = {name: 'Solo Explorer', description: 'Likes quiet places.'}; // ensureTerminalPunctuation makes it 'Likes quiet places.'
                 const gameState = {
                     actorState: actorState,
                     actorPromptData: actorPromptData,
                     currentLocation: {
                         name: 'Quiet Room',
-                        description: 'A very quiet room',
+                        description: 'A very quiet room', // ensureTerminalPunctuation makes it 'A very quiet room.'
                         exits: [],
                         characters: [],
                     },
-                    perceptionLog: [{timestamp: Date.now(), type: 'thought', description: 'It is quiet here'}],
-                    availableActions: [{id: 'core:wait', command: 'wait', name: 'Wait', description: 'Do nothing'}],
+                    perceptionLog: [{timestamp: Date.now(), type: 'thought', description: 'It is quiet here'}], // ensureTerminalPunctuation makes it 'It is quiet here.'
+                    availableActions: [{id: 'core:wait', command: 'wait', name: 'Wait', description: 'Do nothing'}], // ensureTerminalPunctuation makes it 'Do nothing.'
                 };
 
                 const characterSegment = `YOU ARE Solo Explorer.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.\nYour Description: Likes quiet places.`;
@@ -452,8 +397,9 @@ describe('AIPromptFormatter', () => {
                     `Exits from your current location:\n${PROMPT_FALLBACK_NO_EXITS}\n` +
                     `Other characters present in this location (you cannot speak as them):\n${PROMPT_FALLBACK_ALONE_IN_LOCATION}`;
                 const eventsSegment = "Recent events relevant to you (oldest first):\n- It is quiet here.";
-                const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
-                    '- Name: "Wait", System ID: "core:wait", Base Command: "wait". Description: Do nothing.';
+                const actionsSegment = "Consider these available actions when deciding what to do:\n" +
+                    '- "Wait" (Reference ID: core:wait). Description: Do nothing. (If you choose this, you might think of it as performing: \'wait\'.)';
+
 
                 const expectedPrompt = [
                     CORE_TASK_DESCRIPTION_TEXT_FOR_TEST,
@@ -462,13 +408,7 @@ describe('AIPromptFormatter', () => {
                     NC_21_CONTENT_POLICY_TEXT_FOR_TEST,
                     locationSegment,
                     eventsSegment,
-                    actionsSegment,
-                    LLM_RESPONSE_FORMAT_INSTRUCTIONS_TEXT_FOR_TEST,
-                    JSON_SCHEMA_INTRO_TEXT_FOR_TEST + LLM_SCHEMA_STRING,
-                    JSON_FIELD_GUIDANCE_TEXT_ENHANCED_FOR_TEST,
-                    EXAMPLE_1_TEXT_FOR_TEST,
-                    EXAMPLE_2_TEXT_FOR_TEST,
-                    EXAMPLE_3_TEXT_FOR_TEST,
+                    actionsSegment.trim(), // Trim trailing newline if any
                     FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST
                 ].join(PROMPT_SEPARATOR);
 
@@ -497,7 +437,7 @@ describe('AIPromptFormatter', () => {
                         id: 'core:ponder',
                         command: 'ponder',
                         name: 'Ponder',
-                        description: 'Think deeply'
+                        description: 'Think deeply' // ensureTerminalPunctuation makes it 'Think deeply.'
                     }],
                 };
 
@@ -506,8 +446,9 @@ describe('AIPromptFormatter', () => {
                     "Exits from your current location:\n- Towards out leads to The Void.\n" +
                     "Other characters present in this location (you cannot speak as them):\n- Nobody - Description: Barely visible.";
                 const eventsSegment = `Recent events relevant to you (oldest first):\n${PROMPT_FALLBACK_NO_RECENT_EVENTS}`;
-                const actionsSegment = "Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n" +
-                    '- Name: "Ponder", System ID: "core:ponder", Base Command: "ponder". Description: Think deeply.';
+                const actionsSegment = "Consider these available actions when deciding what to do:\n" +
+                    '- "Ponder" (Reference ID: core:ponder). Description: Think deeply. (If you choose this, you might think of it as performing: \'ponder\'.)';
+
 
                 const expectedPrompt = [
                     CORE_TASK_DESCRIPTION_TEXT_FOR_TEST,
@@ -516,13 +457,7 @@ describe('AIPromptFormatter', () => {
                     NC_21_CONTENT_POLICY_TEXT_FOR_TEST,
                     locationSegment,
                     eventsSegment,
-                    actionsSegment,
-                    LLM_RESPONSE_FORMAT_INSTRUCTIONS_TEXT_FOR_TEST,
-                    JSON_SCHEMA_INTRO_TEXT_FOR_TEST + LLM_SCHEMA_STRING,
-                    JSON_FIELD_GUIDANCE_TEXT_ENHANCED_FOR_TEST,
-                    EXAMPLE_1_TEXT_FOR_TEST,
-                    EXAMPLE_2_TEXT_FOR_TEST,
-                    EXAMPLE_3_TEXT_FOR_TEST,
+                    actionsSegment.trim(), // Trim trailing newline
                     FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST
                 ].join(PROMPT_SEPARATOR);
                 const result = formatter.formatPrompt(gameState, logger);
@@ -554,7 +489,7 @@ describe('AIPromptFormatter', () => {
                     `Exits from your current location:\n${PROMPT_FALLBACK_NO_EXITS}\n` +
                     `Other characters present in this location (you cannot speak as them):\n${PROMPT_FALLBACK_ALONE_IN_LOCATION}`;
                 const eventsSegment = "Recent events relevant to you (oldest first):\n- A sense of ennui.";
-                const actionsSegment = `Your available actions are (for your JSON response, use 'System ID' for 'actionDefinitionId' and construct a complete 'commandString' based on the 'Base Command'):\n${PROMPT_FALLBACK_NO_ACTIONS_DEFAULT}`;
+                const actionsSegment = `Consider these available actions when deciding what to do:\n${NARRATIVE_FALLBACK_NO_ACTIONS_TEXT}`;
 
                 const expectedPrompt = [
                     CORE_TASK_DESCRIPTION_TEXT_FOR_TEST,
@@ -564,12 +499,6 @@ describe('AIPromptFormatter', () => {
                     locationSegment,
                     eventsSegment,
                     actionsSegment,
-                    LLM_RESPONSE_FORMAT_INSTRUCTIONS_TEXT_FOR_TEST,
-                    JSON_SCHEMA_INTRO_TEXT_FOR_TEST + LLM_SCHEMA_STRING,
-                    JSON_FIELD_GUIDANCE_TEXT_ENHANCED_FOR_TEST,
-                    EXAMPLE_1_TEXT_FOR_TEST,
-                    EXAMPLE_2_TEXT_FOR_TEST,
-                    EXAMPLE_3_TEXT_FOR_TEST,
                     FINAL_LLM_INSTRUCTION_TEXT_FOR_TEST
                 ].join(PROMPT_SEPARATOR);
                 const result = formatter.formatPrompt(gameState, logger);
@@ -582,9 +511,10 @@ describe('AIPromptFormatter', () => {
                         actorState: {id: 'some-actor'},
                         actorPromptData: null,
                     };
-                    const result = formatter._formatCharacterSegment(gameState, logger);
+                    const result = formatter._formatCharacterSegment(gameState, logger); // Testing internal method directly as per original test structure
                     expect(result).toBe(PROMPT_FALLBACK_ACTOR_PROMPT_DATA_UNAVAILABLE);
-                    expect(logger.warn).toHaveBeenCalledWith("AIPromptFormatter: Character details (actorPromptData) are missing or undefined in gameState.");
+                    // Updated expected log message
+                    expect(logger.warn).toHaveBeenCalledWith("AIPromptFormatter: Character details (actorPromptData) are missing or undefined in gameState for base content prompt generation.");
                 });
 
                 test('should return PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS if both actorPromptData and actorState are null/missing', () => {
@@ -592,19 +522,20 @@ describe('AIPromptFormatter', () => {
                         actorState: null,
                         actorPromptData: null,
                     };
-                    const result = formatter._formatCharacterSegment(gameState, logger);
+                    const result = formatter._formatCharacterSegment(gameState, logger); // Testing internal method
                     expect(result).toBe(PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS);
-                    expect(logger.warn).toHaveBeenCalledWith("AIPromptFormatter: Character details (actorPromptData) are missing or undefined in gameState.");
-                    expect(logger.warn).toHaveBeenCalledWith("AIPromptFormatter: Raw character details (actorState) are also unknown.");
+                    // Updated expected log messages
+                    expect(logger.warn).toHaveBeenCalledWith("AIPromptFormatter: Character details (actorPromptData) are missing or undefined in gameState for base content prompt generation.");
+                    expect(logger.warn).toHaveBeenCalledWith("AIPromptFormatter: Raw character details (actorState) are also unknown for base content prompt generation.");
                 });
 
 
                 test('should return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS for default name and only one line of info', () => {
                     const actorPromptDataMinimal = {name: DEFAULT_FALLBACK_CHARACTER_NAME}; // No description or other fields
-                    // _formatCharacterSegment will create:
-                    // characterInfo = ["YOU ARE Unnamed Character.\nThis is your identity. All thoughts, actions, and words must stem from this core truth."]
-                    // Length is 1. actorPromptData.name is default. Condition for PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS met.
-                    const result = formatter._formatCharacterSegment({actorPromptData: actorPromptDataMinimal}, logger);
+                    const result = formatter._formatCharacterSegment({
+                        actorPromptData: actorPromptDataMinimal,
+                        actorState: {id: 'dummy'} // actorState needs to be present to avoid earlier exit
+                    }, logger);
                     expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
                 });
             });

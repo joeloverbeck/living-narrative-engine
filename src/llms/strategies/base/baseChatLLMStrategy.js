@@ -5,7 +5,7 @@ import {BaseLLMStrategy} from './baseLLMStrategy.js'; // Assuming PascalCase for
 
 /**
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  */
 
 /**

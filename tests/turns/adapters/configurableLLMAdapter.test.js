@@ -38,7 +38,7 @@ const mockLlmStrategy = {
 };
 
 // Mock for LLMModelConfig (sample, can be expanded in tests)
-/** @type {import('../../../src/services/llmConfigLoader.js').LLMModelConfig} */
+/** @type {import('../../../src/llms/services/llmConfigLoader.js').LLMModelConfig} */
 const sampleLlmModelConfig = {
     id: 'test-llm-1',
     displayName: 'Test LLM 1',
@@ -50,7 +50,7 @@ const sampleLlmModelConfig = {
     jsonOutputStrategy: {method: 'native_json'},
 };
 
-/** @type {import('../../../src/services/llmConfigLoader.js').LLMModelConfig} */
+/** @type {import('../../../src/llms/services/llmConfigLoader.js').LLMModelConfig} */
 const sampleLlmModelConfig2 = {
     id: 'test-llm-2',
     displayName: 'Test LLM 2 (Cloud)',

@@ -39,7 +39,7 @@ import {EnvironmentContext} from '../../llms/environmentContext.js';
 import {ClientApiKeyProvider} from '../../llms/clientApiKeyProvider.js';
 import {RetryHttpClient} from '../../llms/retryHttpClient.js';
 import {LLMStrategyFactory} from '../../llms/LLMStrategyFactory.js';
-import {LlmConfigLoader} from '../../services/llmConfigLoader.js';
+import {LlmConfigLoader} from '../../llms/services/llmConfigLoader.js';
 
 /**
  * Registers the default port adapters and the ConfigurableLLMAdapter with its dependencies

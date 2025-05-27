@@ -37,7 +37,7 @@ const mockLlmStrategy = {
     execute: jest.fn(),
 };
 
-/** @type {import('../../../src/services/llmConfigLoader.js').LLMModelConfig} */
+/** @type {import('../../../src/llms/services/llmConfigLoader.js').LLMModelConfig} */
 const sampleLlmModelConfig1 = {
     id: 'test-llm-1',
     displayName: 'Test LLM 1',
@@ -49,7 +49,7 @@ const sampleLlmModelConfig1 = {
     jsonOutputStrategy: {method: 'native_json'}, // Added for completeness
 };
 
-/** @type {import('../../../src/services/llmConfigLoader.js').LLMModelConfig} */
+/** @type {import('../../../src/llms/services/llmConfigLoader.js').LLMModelConfig} */
 const sampleLlmModelConfig2 = {
     id: 'test-llm-2',
     displayName: 'Test LLM 2 (Cloud)',
@@ -62,7 +62,7 @@ const sampleLlmModelConfig2 = {
     jsonOutputStrategy: {method: 'native_json'}, // Added for completeness
 };
 
-/** @type {import('../../../src/services/llmConfigLoader.js').LLMModelConfig} */
+/** @type {import('../../../src/llms/services/llmConfigLoader.js').LLMModelConfig} */
 const llmConfigNoDisplayName = {
     id: 'llm-no-display',
     apiType: 'openai',

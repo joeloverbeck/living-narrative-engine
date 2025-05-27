@@ -8,7 +8,7 @@
  */
 
 /**
- * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('../environmentContext.js').EnvironmentContext} EnvironmentContext
  */
 

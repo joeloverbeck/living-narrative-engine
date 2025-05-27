@@ -2,7 +2,7 @@
 // --- CORRECTED FILE START ---
 
 // Corrected import path
-import {IEnvironmentVariableReader} from '../../llm-proxy-server/interfaces/IServerUtils.js';
+import {IEnvironmentVariableReader} from '../../llm-proxy-server/src/interfaces/IServerUtils.js';
 
 /**
  * @class ProcessEnvReader

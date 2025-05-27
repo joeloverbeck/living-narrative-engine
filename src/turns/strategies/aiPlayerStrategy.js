@@ -16,7 +16,7 @@ import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
 import {IAIGameStateProvider} from '../interfaces/IAIGameStateProvider.js';
 import {IAIPromptFormatter} from '../interfaces/IAIPromptFormatter.js';
 import {ILLMResponseProcessor} from '../interfaces/ILLMResponseProcessor.js';
-import {DEFAULT_FALLBACK_ACTION, FALLBACK_SPEECH_MESSAGE} from "../../llms/constants/llmConstants";
+import {DEFAULT_FALLBACK_ACTION} from "../../llms/constants/llmConstants";
 
 /**
  * @class AIPlayerStrategy
@@ -191,10 +191,12 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
                 logger.error(`AIPlayerStrategy: Prompt formatter failed or returned error for actor ${actorId}. Prompt content: ${promptContentDetail}`);
                 return this._createFallbackAction('prompt_formatter_failure', actorId);
             }
-            // MODIFICATION: Changed logger.debug to logger.info for the full prompt log.
-            // Also kept a concise info log before the full prompt.
-            logger.info(`AIPlayerStrategy: Generated LLM prompt for actor ${actorId}. Length: ${llmPromptString.length}. Full prompt being sent to LLM follows.`);
-            logger.info(`AIPlayerStrategy: LLM Prompt for ${actorId}:\n${llmPromptString}`);
+            // --- MODIFICATION START (TASK-003) ---
+            // Retain concise info log, rephrased according to ticket
+            logger.info(`AIPlayerStrategy: Generated LLM prompt for actor ${actorId}. Length: ${llmPromptString.length}.`);
+            // Change full prompt log to DEBUG
+            logger.debug(`AIPlayerStrategy: LLM Prompt for ${actorId}:\n${llmPromptString}`);
+            // --- MODIFICATION END (TASK-003) ---
 
 
             // 4. Call LLM Adapter
