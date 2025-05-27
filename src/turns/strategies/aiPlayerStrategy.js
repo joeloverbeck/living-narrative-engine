@@ -16,8 +16,7 @@ import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
 import {IAIGameStateProvider} from '../interfaces/IAIGameStateProvider.js';
 import {IAIPromptFormatter} from '../interfaces/IAIPromptFormatter.js';
 import {ILLMResponseProcessor} from '../interfaces/ILLMResponseProcessor.js';
-
-import {FALLBACK_AI_ACTION} from '../constants/aiConstants.js'; // Centralized import. Local definition confirmed removed.
+import {DEFAULT_FALLBACK_ACTION, FALLBACK_SPEECH_MESSAGE} from "../../llms/constants/llmConstants";
 
 /**
  * @class AIPlayerStrategy
@@ -121,11 +120,27 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
      * @returns {ITurnAction} The fallback ITurnAction.
      */
     _createFallbackAction(errorContext, actorId = 'UnknownActor') {
+        const detailedErrorContext = `AI Error for ${actorId}: ${errorContext}. Waiting.`;
+        this._getSafeLogger(null).debug(`AIPlayerStrategy: Creating fallback action. Error context: "${errorContext}", Actor: ${actorId}`);
+
+        // Make speech a bit more informative but not too technical for the user
+        let userFriendlyErrorBrief = "an unexpected issue";
+        if (typeof errorContext === 'string') {
+            if (errorContext.toLowerCase().includes("http error 500")) {
+                userFriendlyErrorBrief = "a connection problem";
+            } else if (errorContext.startsWith("unhandled_orchestration_error:")) {
+                userFriendlyErrorBrief = "an internal processing error";
+            }
+            // Add more conditions if needed to make user-friendly summaries
+        }
+        const speechMessage = `I encountered ${userFriendlyErrorBrief} and will wait.`;
+
         return {
-            actionDefinitionId: FALLBACK_AI_ACTION.actionDefinitionId,
-            commandString: `AI Error for ${actorId}: ${errorContext}. Waiting.`,
+            actionDefinitionId: DEFAULT_FALLBACK_ACTION.actionDefinitionId,
+            commandString: DEFAULT_FALLBACK_ACTION.commandString, // Should be "wait"
+            speech: speechMessage,
             resolvedParameters: {
-                errorContext: errorContext,
+                errorContext: detailedErrorContext,
                 actorId: actorId,
             },
         };

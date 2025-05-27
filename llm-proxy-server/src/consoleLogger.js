@@ -1,4 +1,4 @@
-// src/core/services/consoleLogger.js
+// llm-proxy-server/src/consoleLogger.js
 
 /**
  * @fileoverview Basic ILogger implementation that directs output to the browser/Node console.
