@@ -20,6 +20,7 @@ const EXPECTED_SCHEMA_FILES = [
     'mod.manifest.schema.json',
     'operation.schema.json',
     'rule.schema.json',
+    'llm-configs.schema.json'
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -72,7 +73,7 @@ describe('StaticConfiguration', () => {
             expect(files).toEqual(EXPECTED_SCHEMA_FILES);
             // Verify order as well (toEqual checks order for arrays)
             expect(files[0]).toBe('common.schema.json');
-            expect(files[files.length - 1]).toBe('rule.schema.json');
+            expect(files[files.length - 1]).toBe('llm-configs.schema.json');
         });
 
         it('should return a *copy* of the internal schema files array', () => {

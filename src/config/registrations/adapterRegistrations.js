@@ -9,6 +9,8 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
@@ -159,13 +161,30 @@ export function registerAdapters(container) { // Reverted to synchronous
     });
     logger.debug('Adapter Registration: LLMStrategyFactory instantiated.');
 
-    // 5. Instantiate LlmConfigLoader
+    // 5. Instantiate LlmConfigLoader - MODIFIED for Sub-Ticket 1.6.2
+    /** @type {ISchemaValidator} */
+    const schemaValidator = container.resolve(tokens.ISchemaValidator);
+    if (!schemaValidator) {
+        const errorMsg = `Adapter Registration: Failed to resolve ${tokens.ISchemaValidator} for LlmConfigLoader.`;
+        logger.error(errorMsg);
+        throw new Error(errorMsg);
+    }
+    /** @type {IConfiguration} */
+    const configuration = container.resolve(tokens.IConfiguration);
+    if (!configuration) {
+        const errorMsg = `Adapter Registration: Failed to resolve ${tokens.IConfiguration} for LlmConfigLoader.`;
+        logger.error(errorMsg);
+        throw new Error(errorMsg);
+    }
+
     const llmConfigLoader = new LlmConfigLoader({
         logger,
+        schemaValidator, // Injected ISchemaValidator
+        configuration,   // Injected IConfiguration
         // LlmConfigLoader for client might fetch configs differently, possibly through http if not bundled.
         // For now, assuming it's configured to load client-side appropriate configs.
     });
-    logger.debug('Adapter Registration: LlmConfigLoader instantiated.');
+    logger.debug('Adapter Registration: LlmConfigLoader instantiated with schemaValidator and configuration.');
 
     // 6. Instantiate Refactored ConfigurableLLMAdapter
     registrar.singletonFactory(tokens.ILLMAdapter, () => {
@@ -174,16 +193,18 @@ export function registerAdapters(container) { // Reverted to synchronous
             environmentContext, // This passes the proxyUrl (or undefined) to the adapter
             apiKeyProvider,
             llmStrategyFactory
+            // initialLlmId is not set here, will be picked up from llm-configs.json defaultLlmId
+            // or can be set via adapterInstance.init if that method is updated to take it
         });
         logger.info(`Adapter Registration: ConfigurableLLMAdapter instance created (token: ${tokens.ILLMAdapter}). Ready for async initialization.`);
 
         // The adapter's init method is now responsible for loading its own configuration
         // using the LlmConfigLoader.
-        adapterInstance.init({llmConfigLoader})
+        adapterInstance.init({llmConfigLoader}) // llmConfigLoader is now passed to init
             .then(() => {
                 logger.info(`Adapter Registration: ConfigurableLLMAdapter (token: ${tokens.ILLMAdapter}) initialized successfully and is operational: ${adapterInstance.isOperational()}.`);
                 if (!adapterInstance.isOperational()) {
-                    logger.warn(`Adapter Registration: ConfigurableLLMAdapter (token: ${tokens.ILLMAdapter}) initialized BUT IS NOT OPERATIONAL. Check logs for LlmConfigLoader errors (e.g., if it tried to fetch remote llm-configs.json and failed, or if no LLMs were configured/valid).`);
+                    logger.warn(`Adapter Registration: ConfigurableLLMAdapter (token: ${tokens.ILLMAdapter}) initialized BUT IS NOT OPERATIONAL. Check logs for LlmConfigLoader errors (e.g., failed fetch, parse, or schema validation of llm-configs.json, or if no LLMs were configured/valid).`);
                 }
             })
             .catch(error => {

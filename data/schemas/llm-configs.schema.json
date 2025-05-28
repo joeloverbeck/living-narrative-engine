@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/llm-configs.schema.json",
+  "title": "LLM Configurations Schema",
+  "description": "Schema for the llm-configs.json file, which contains an array of LLM prompt configurations.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "A single LLM prompt configuration set.",
+    "properties": {
+      "config_id": {
+        "type": "string",
+        "description": "A unique identifier for this specific configuration set (e.g., \"claude_sonnet_adventure_wrappers_v2\")."
+      },
+      "model_identifier": {
+        "type": "string",
+        "description": "The specific model ID (e.g., from OpenRouter) or a model family wildcard (e.g., \"anthropic/claude-*\") that this configuration applies to. This allows for hierarchical configuration application (specific ID > family wildcard > global default if any)."
+      },
+      "prompt_elements": {
+        "type": "array",
+        "description": "Defines the various named prompt parts and their wrappers. Each object in the array has key, prefix, and suffix fields. This array accommodates conventional keys like 'perception_log_wrapper' and 'perception_log_entry' for specialized handling of perception logs.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "A unique string identifier for the prompt part. This key is used in prompt_assembly_order and by the PromptBuilder to fetch content. Common examples include \"system_prompt\", \"user_input\", etc. Specific conventional keys like \"perception_log_wrapper\" (to enclose a list of perception entries) and \"perception_log_entry\" (to format each individual perception entry, often with placeholders like {entry_type} and {timestamp}) have special handling in the PromptBuilder. Another conventional key is \"assistant_response_prefix\"."
+            },
+            "prefix": {
+              "type": "string",
+              "description": "The string to be prepended to the content of this part. Can include placeholders (e.g., {character_name}) for dynamic substitution. Typically an XML opening tag for Claude (e.g., \"<system_prompt>\\n\", \"<entry type=\\\"{entry_type}\\\">\\n\")."
+            },
+            "suffix": {
+              "type": "string",
+              "description": "The string to be appended to the content of this part. Typically an XML closing tag for Claude (e.g., \"\\n</system_prompt>\", \"\\n</entry>\"). Can also include placeholders."
+            }
+          },
+          "required": [
+            "key",
+            "prefix",
+            "suffix"
+          ]
+        }
+      },
+      "prompt_assembly_order": {
+        "type": "array",
+        "description": "An ordered list of prompt_elements keys, defining the sequence in which parts are assembled into the final prompt (e.g., [\"system_prompt\", \"perception_log_wrapper\", \"user_input\"]).",
+        "items": {
+          "type": "string",
+          "description": "A key corresponding to one of the 'key' values defined in the 'prompt_elements' array for this configuration."
+        }
+      }
+    },
+    "required": [
+      "config_id",
+      "model_identifier",
+      "prompt_elements",
+      "prompt_assembly_order"
+    ],
+    "additionalProperties": false
+  }
+}

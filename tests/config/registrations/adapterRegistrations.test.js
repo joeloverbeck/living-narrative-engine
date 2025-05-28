@@ -7,6 +7,8 @@ import {tokens} from '../../../src/config/tokens.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../../../src/core/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../../src/core/interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../../../src/core/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
 /** @typedef {import('../../../src/core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
 /** @typedef {ReturnType<typeof createMockContainer>} MockAppContainer */
@@ -31,28 +33,31 @@ const mockConfigurableLLMAdapterIsOperational = jest.fn().mockReturnValue(true);
 jest.mock('../../../src/llms/clientApiKeyProvider.js', () => ({
     ClientApiKeyProvider: jest.fn().mockImplementation((...args) => {
         mockClientApiKeyProviderConstructor(...args);
-        return {};
+        return {}; // Return a simple object mock
     })
 }));
 
 jest.mock('../../../src/llms/retryHttpClient.js', () => ({
     RetryHttpClient: jest.fn().mockImplementation((...args) => {
         mockRetryHttpClientConstructor(...args);
-        return {};
+        return {}; // Return a simple object mock
     })
 }));
 
 jest.mock('../../../src/llms/LLMStrategyFactory.js', () => ({
     LLMStrategyFactory: jest.fn().mockImplementation((...args) => {
         mockLLMStrategyFactoryConstructor(...args);
-        return {};
+        return {}; // Return a simple object mock
     })
 }));
 
 jest.mock('../../../src/llms/services/llmConfigLoader.js', () => ({
     LlmConfigLoader: jest.fn().mockImplementation((...args) => {
         mockLlmConfigLoaderConstructor(...args);
-        return {};
+        // Minimal mock, individual tests might need to expand this if LlmConfigLoader methods are called directly
+        return {
+            loadConfigs: jest.fn().mockResolvedValue({llms: {}}) // Ensure loadConfigs is a mock
+        };
     })
 }));
 
@@ -112,17 +117,19 @@ const createMockContainer = () => {
                     return resolvedInstances.get(token);
                 }
                 let instance;
-                if (typeof factoryOrValue === 'function' && factoryOrValue.prototype && factoryOrValue.prototype.constructor === factoryOrValue) {
+                // Check if factoryOrValue is a class constructor
+                if (typeof factoryOrValue === 'function' && factoryOrValue.prototype && typeof factoryOrValue.prototype.constructor === 'function' && factoryOrValue.name === factoryOrValue.prototype.constructor.name) {
                     instance = new factoryOrValue();
-                } else if (typeof factoryOrValue === 'function') {
-                    instance = factoryOrValue();
-                } else {
+                } else if (typeof factoryOrValue === 'function') { // Check if it's a factory function
+                    instance = factoryOrValue(container); // Pass container if it's a factory
+                } else { // It's a direct value
                     instance = factoryOrValue;
                 }
                 resolvedInstances.set(token, instance);
                 return instance;
             }
-            if (typeof factoryOrValue === 'function' && factoryOrValue.prototype && factoryOrValue.prototype.constructor === factoryOrValue) {
+            // Default to transient: if it's a class, instantiate it. If it's a factory function, call it.
+            if (typeof factoryOrValue === 'function' && factoryOrValue.prototype && typeof factoryOrValue.prototype.constructor === 'function' && factoryOrValue.name === factoryOrValue.prototype.constructor.name) {
                 return new factoryOrValue();
             } else if (typeof factoryOrValue === 'function') {
                 return factoryOrValue(container);
@@ -146,22 +153,28 @@ describe('Adapter Registrations - registerAdapters', () => {
     /** @type {MockAppContainer} */
     let mockContainer;
     /** @type {jest.Mocked<ILogger>} */
-    let mockLogger; // jest.Mocked is JSDoc sugar, not functional in JS
+    let mockLogger;
     /** @type {ISafeDispatcher} */
     let mockSafeEventDispatcher;
     /** @type {IValidatedDispatcher} */
     let mockValidatedEventDispatcher;
+    /** @type {jest.Mocked<ISchemaValidator>} */
+    let mockSchemaValidator;
+    /** @type {jest.Mocked<IConfiguration>} */
+    let mockConfiguration;
+
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.clearAllMocks(); // Clears all mocks, including those for constructors
 
         mockClientApiKeyProviderConstructor.mockClear();
         mockRetryHttpClientConstructor.mockClear();
         mockLLMStrategyFactoryConstructor.mockClear();
         mockLlmConfigLoaderConstructor.mockClear();
         mockConfigurableLLMAdapterConstructor.mockClear();
-        mockConfigurableLLMAdapterInit.mockClear();
-        mockConfigurableLLMAdapterIsOperational.mockClear();
+        mockConfigurableLLMAdapterInit.mockClear().mockResolvedValue(undefined); // Reset and re-mock
+        mockConfigurableLLMAdapterIsOperational.mockClear().mockReturnValue(true); // Reset and re-mock
+
 
         mockContainer = createMockContainer();
 
@@ -182,7 +195,37 @@ describe('Adapter Registrations - registerAdapters', () => {
             unsubscribe: jest.fn(),
         };
 
+        mockSchemaValidator = {
+            addSchema: jest.fn().mockResolvedValue(undefined),
+            removeSchema: jest.fn().mockReturnValue(true),
+            getValidator: jest.fn().mockReturnValue(() => ({isValid: true, errors: null})),
+            isSchemaLoaded: jest.fn().mockReturnValue(true),
+            validate: jest.fn().mockReturnValue({isValid: true, errors: null}),
+        };
+
+        mockConfiguration = {
+            getBaseDataPath: jest.fn().mockReturnValue('./data'),
+            getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
+            getContentBasePath: jest.fn().mockReturnValue('content_type'),
+            getWorldBasePath: jest.fn().mockReturnValue('worlds'),
+            getRuleBasePath: jest.fn().mockReturnValue('rules'),
+            getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
+            getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
+            getModsBasePath: jest.fn().mockReturnValue('mods'),
+            getSchemaFiles: jest.fn().mockReturnValue([]),
+            getContentTypeSchemaId: jest.fn((typeName) => {
+                if (typeName === 'llm-configs') {
+                    return 'http://example.com/schemas/llm-configs.schema.json';
+                }
+                return undefined;
+            }),
+            getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
+        };
+
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
+        // Register ISchemaValidator and IConfiguration so they can be resolved
+        mockContainer.register(tokens.ISchemaValidator, mockSchemaValidator, {lifecycle: 'singleton'});
+        mockContainer.register(tokens.IConfiguration, mockConfiguration, {lifecycle: 'singleton'});
     });
 
     it('should register EventBusTurnEndAdapter with ISafeEventDispatcher if available, and logger', () => {
@@ -203,14 +246,14 @@ describe('Adapter Registrations - registerAdapters', () => {
     });
 
     it('should register EventBusTurnEndAdapter with IValidatedEventDispatcher (and logger) if ISafeEventDispatcher is NOT available', () => {
-        const originalResolve = mockContainer.resolve.bind(mockContainer);
+        const originalResolve = mockContainer.resolve; // Keep a reference
         mockContainer.resolve = jest.fn((token) => {
-            if (token === tokens.ISafeEventDispatcher) return null;
-            if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
-            if (token === tokens.ILogger) return mockLogger;
-            return originalResolve(token);
+            if (token === tokens.ISafeEventDispatcher) return null; // Simulate ISafeEventDispatcher not being registered or resolving to null
+            // For other tokens, use the original mockContainer's resolve logic
+            return originalResolve.call(mockContainer, token);
         });
         mockContainer.register(tokens.IValidatedEventDispatcher, mockValidatedEventDispatcher, {lifecycle: 'singleton'});
+
 
         registerAdapters(mockContainer);
         mockContainer.resolve(tokens.ITurnEndPort);
@@ -223,23 +266,24 @@ describe('Adapter Registrations - registerAdapters', () => {
     });
 
     it('should throw an error during resolution if neither dispatcher is available for EventBusTurnEndAdapter', () => {
-        const originalResolve = mockContainer.resolve.bind(mockContainer);
+        const originalResolve = mockContainer.resolve;
         mockContainer.resolve = jest.fn((token) => {
             if (token === tokens.ISafeEventDispatcher) return null;
             if (token === tokens.IValidatedEventDispatcher) return null;
-            if (token === tokens.ILogger) return mockLogger;
-            return originalResolve(token);
+            return originalResolve.call(mockContainer, token);
         });
 
         expect(() => {
-            registerAdapters(mockContainer);
-            mockContainer.resolve(tokens.ITurnEndPort);
+            registerAdapters(mockContainer); // This sets up the factory
+            mockContainer.resolve(tokens.ITurnEndPort); // This attempts to call the factory
         }).toThrow('Missing dispatcher dependency for EventBusTurnEndAdapter');
+
         expect(mockLogger.error).toHaveBeenCalledWith(
             `Adapter Registration: Failed to resolve either ${tokens.ISafeEventDispatcher} or ${tokens.IValidatedEventDispatcher} for ${tokens.ITurnEndPort}.`
         );
         expect(EventBusTurnEndAdapter).not.toHaveBeenCalled();
     });
+
 
     it('should correctly register EventBusCommandInputGateway', () => {
         mockContainer.register(tokens.IValidatedEventDispatcher, mockValidatedEventDispatcher, {lifecycle: 'singleton'});
@@ -254,37 +298,47 @@ describe('Adapter Registrations - registerAdapters', () => {
         ));
     });
 
-    it('should pass the resolved logger to ConfigurableLLMAdapter and its dependencies', () => {
-        // Import the actual ConfigurableLLMAdapter to get its (mocked) instance methods
-        const {ConfigurableLLMAdapter} = require('../../../src/turns/adapters/configurableLLMAdapter.js');
+    it('should pass the resolved logger to ConfigurableLLMAdapter and its dependencies', async () => {
+        // No need to re-require, mocks are hoisted.
 
         registerAdapters(mockContainer);
         const llmAdapterInstance = mockContainer.resolve(tokens.ILLMAdapter);
+
+        // Wait for the async init call triggered within the factory to complete
+        // This requires the init mock to be a promise that resolves
+        await mockConfigurableLLMAdapterInit;
+
 
         expect(mockClientApiKeyProviderConstructor).toHaveBeenCalledWith(expect.objectContaining({logger: mockLogger}));
         expect(mockRetryHttpClientConstructor).toHaveBeenCalledWith(expect.objectContaining({logger: mockLogger}));
         expect(mockLLMStrategyFactoryConstructor).toHaveBeenCalledWith(expect.objectContaining({
             logger: mockLogger,
-            httpClient: expect.any(Object)
+            httpClient: expect.any(Object) // RetryHttpClient mock instance
         }));
-        expect(mockLlmConfigLoaderConstructor).toHaveBeenCalledWith(expect.objectContaining({logger: mockLogger}));
+
+        // Check LlmConfigLoader constructor args
+        expect(mockLlmConfigLoaderConstructor).toHaveBeenCalledWith(expect.objectContaining({
+            logger: mockLogger,
+            schemaValidator: mockSchemaValidator, // Check for the new dependencies
+            configuration: mockConfiguration
+        }));
+
 
         expect(mockConfigurableLLMAdapterConstructor).toHaveBeenCalledTimes(1);
         const adapterConstructorArgs = mockConfigurableLLMAdapterConstructor.mock.calls[0][0];
         expect(adapterConstructorArgs.logger).toBe(mockLogger);
         expect(adapterConstructorArgs.environmentContext).toBeDefined();
-        expect(adapterConstructorArgs.apiKeyProvider).toBeInstanceOf(Object);
-        expect(adapterConstructorArgs.llmStrategyFactory).toBeInstanceOf(Object);
+        expect(adapterConstructorArgs.apiKeyProvider).toBeInstanceOf(Object); // ClientApiKeyProvider mock instance
+        expect(adapterConstructorArgs.llmStrategyFactory).toBeInstanceOf(Object); // LLMStrategyFactory mock instance
 
         // llmAdapterInstance is an instance of the mocked ConfigurableLLMAdapter
         // Its methods 'init' and 'isOperational' are the spies we defined:
-        // mockConfigurableLLMAdapterInit and mockConfigurableLLMAdapterIsOperational
         expect(llmAdapterInstance.init).toBe(mockConfigurableLLMAdapterInit);
         expect(llmAdapterInstance.isOperational).toBe(mockConfigurableLLMAdapterIsOperational);
 
         expect(mockConfigurableLLMAdapterInit).toHaveBeenCalledTimes(1);
         expect(mockConfigurableLLMAdapterInit).toHaveBeenCalledWith(expect.objectContaining({
-            llmConfigLoader: expect.any(Object)
+            llmConfigLoader: expect.any(Object) // LlmConfigLoader mock instance
         }));
     });
 });

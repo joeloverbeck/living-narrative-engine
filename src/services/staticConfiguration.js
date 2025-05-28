@@ -74,9 +74,10 @@ class StaticConfiguration {
             'event-definition.schema.json',
             'game.schema.json',
             'json-logic.schema.json',
-            'mod.manifest.schema.json',          // ← NEW schema added
+            'mod.manifest.schema.json',
             'operation.schema.json',
             'rule.schema.json',
+            'llm-configs.schema.json',
         ];
     }
 
@@ -96,9 +97,10 @@ class StaticConfiguration {
             game: 'http://example.com/schemas/game.schema.json',
             items: 'http://example.com/schemas/entity.schema.json',
             locations: 'http://example.com/schemas/entity.schema.json',
-            'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json', // ← NEW mapping
+            'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
             operations: 'http://example.com/schemas/operation.schema.json',
             rules: 'http://example.com/schemas/rule.schema.json',
+            'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
         };
         return map[typeName];
     }
