@@ -6,87 +6,59 @@
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
+ * @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory // NEW
  */
 
-import {
-    TurnIdleState as ConcreteTurnIdleState
-} from '../states/turnIdleState.js';
-import {
-    TurnEndingState as ConcreteTurnEndingState
-} from '../states/turnEndingState.js';
+// Remove direct imports of concrete states if they are solely created by the factory
+// import { TurnIdleState as ConcreteTurnIdleState } from '../states/turnIdleState.js';
+// import { TurnEndingState as ConcreteTurnEndingState } from '../states/turnEndingState.js';
+// However, instanceof checks might still require them or a more abstract check.
+// For now, let's assume instanceof checks might remain or be refactored later.
+import { TurnIdleState as ConcreteTurnIdleState } from '../states/turnIdleState.js';
+import { TurnEndingState as ConcreteTurnEndingState } from '../states/turnEndingState.js';
+
 
 /**
  * @abstract
  * @class BaseTurnHandler
- * Abstract base class for all turn handlers (e.g., PlayerTurnHandler, AITurnHandler).
- * It provides the core machinery for managing turn lifecycles, state transitions,
- * and common resources like the ITurnContext. Subclasses are responsible for
- * specific behaviors related to the type of actor they handle and for providing
- * the initial concrete state.
+ * Abstract base class for all turn handlers.
  */
 export class BaseTurnHandler {
-    /* ──────────────────────────────── FIELDS ─────────────────────────────── */
-
-    /**
-     * Logger instance for this handler.
-     * @protected @readonly @type {ILogger}
-     */
+    /** @protected @readonly @type {ILogger} */
     _logger;
-
-    /**
-     * The current active state of the turn handler.
-     * @protected @type {ITurnState}
-     */
+    /** @protected @readonly @type {ITurnStateFactory} */ // NEW
+    _turnStateFactory;                                  // NEW
+    /** @protected @type {ITurnState} */
     _currentState;
-
-    /**
-     * The current turn-specific context.
-     * @protected @type {ITurnContext|null}
-     */
+    /** @protected @type {ITurnContext|null} */
     _currentTurnContext = null;
-
-    /**
-     * Flag indicating whether the handler has been completely destroyed.
-     * @protected @type {boolean}
-     */
+    /** @protected @type {boolean} */
     _isDestroyed = false;
-
-    /**
-     * Flag indicating destruction is currently in progress.
-     * (Set at the very start of destroy(), cleared at the very end.)
-     * @protected @type {boolean}
-     */
+    /** @protected @type {boolean} */
     _isDestroying = false;
-
-    /**
-     * The current actor whose turn is being processed.
-     * @protected @type {Entity|null}
-     */
+    /** @protected @type {Entity|null} */
     _currentActor = null;
-
-    /* ──────────────────────────────── CTOR ──────────────────────────────── */
 
     /**
      * @param {object} deps
      * @param {ILogger} deps.logger
+     * @param {ITurnStateFactory} deps.turnStateFactory - Factory for creating turn states. // NEW
      */
-    constructor({logger}) {
+    constructor({ logger, turnStateFactory }) { // MODIFIED
         if (!logger) {
             console.error('BaseTurnHandler: logger is required.');
             throw new Error('BaseTurnHandler: logger is required.');
         }
+        if (!turnStateFactory) { // NEW
+            console.error('BaseTurnHandler: turnStateFactory is required.');
+            throw new Error('BaseTurnHandler: turnStateFactory is required.');
+        }
 
         this._logger = logger;
+        this._turnStateFactory = turnStateFactory; // NEW
         this._currentState = null;
-        // other fields already initialized at declaration
     }
 
-    /* ─────────────────────────── ACCESSORS / HELPERS ────────────────────── */
-
-    /**
-     * Returns the most context-appropriate logger.
-     * Falls back to the handler-level logger if the context logger is unavailable.
-     */
     getLogger() {
         if (this._currentTurnContext) {
             try {
@@ -117,8 +89,6 @@ export class BaseTurnHandler {
         }
         return this._currentActor;
     }
-
-    /* ───────────────────────────── INTERNAL SETTERS ─────────────────────── */
 
     _setCurrentActorInternal(actor) {
         this.getLogger().debug(
@@ -157,8 +127,6 @@ export class BaseTurnHandler {
         }
     }
 
-    /* ────────────────────────── STATE TRANSITION CORE ───────────────────── */
-
     async _transitionToState(newState) {
         const logger = this.getLogger();
         if (
@@ -172,6 +140,9 @@ export class BaseTurnHandler {
         }
 
         const prevState = this._currentState;
+        // The instanceof check for ConcreteTurnIdleState might need reconsideration
+        // if you want to avoid direct dependencies on concrete types here.
+        // For now, it's kept as is, assuming ConcreteTurnIdleState is the specific type.
         if (prevState === newState && !(newState instanceof ConcreteTurnIdleState)) {
             logger.debug(
                 `${this.constructor.name}: Attempted to transition to the same state ${
@@ -208,6 +179,9 @@ export class BaseTurnHandler {
                 `${this.constructor.name}: Error during ${newState.getStateName()}.enterState or onEnterState hook – ${enterErr.message}`,
                 enterErr
             );
+            // Check if the current state is an idle state without direct concrete class dependency
+            // This might involve adding an `isIdle()` method to ITurnState or similar.
+            // For now, using instanceof as it was.
             if (!(this._currentState instanceof ConcreteTurnIdleState)) {
                 logger.warn(
                     `${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`
@@ -218,13 +192,15 @@ export class BaseTurnHandler {
                     `error-entering-${newState.getStateName()}-for-${actorIdForErr}`
                 );
                 try {
-                    await this._transitionToState(new ConcreteTurnIdleState(this));
+                    // MODIFIED: Use factory
+                    await this._transitionToState(this._turnStateFactory.createIdleState(this));
                 } catch (idleErr) {
                     logger.error(
                         `${this.constructor.name}: CRITICAL - Failed to transition to TurnIdleState after error entering ${newState.getStateName()}. Error: ${idleErr.message}`,
                         idleErr
                     );
-                    this._currentState = new ConcreteTurnIdleState(this);
+                    // MODIFIED: Use factory as a last resort
+                    this._currentState = this._turnStateFactory.createIdleState(this);
                 }
             } else {
                 logger.error(
@@ -257,7 +233,6 @@ export class BaseTurnHandler {
     /* ─────────────────────────── TURN-END HANDLING ─────────────────────── */
 
     async _handleTurnEnd(actorIdToEnd, turnError = null, fromDestroy = false) {
-        // Short-circuit if we've already been destroyed (and this isn't part of destroy()).
         if (this._isDestroyed && !fromDestroy) {
             this.getLogger().warn(
                 `${this.constructor.name}._handleTurnEnd ignored for actor ${
@@ -269,7 +244,7 @@ export class BaseTurnHandler {
 
         this._assertHandlerActiveUnlessDestroying(fromDestroy);
         const logger = this.getLogger();
-
+        // ... (actor ID resolution logic remains the same) ...
         const contextActorId = this._currentTurnContext?.getActor()?.id;
         const handlerActorId = this._currentActor?.id;
         const effectiveActor =
@@ -296,7 +271,7 @@ export class BaseTurnHandler {
             );
             return;
         }
-
+        // The instanceof checks might need reconsideration for full abstraction
         if (
             !fromDestroy &&
             (this._currentState instanceof ConcreteTurnEndingState ||
@@ -328,8 +303,9 @@ export class BaseTurnHandler {
             );
         }
 
+        // MODIFIED: Use factory
         await this._transitionToState(
-            new ConcreteTurnEndingState(
+            this._turnStateFactory.createEndingState(
                 this,
                 actorIdForState || 'UNKNOWN_ACTOR_FOR_STATE',
                 turnError
@@ -409,14 +385,12 @@ export class BaseTurnHandler {
             return;
         }
 
-        /* Begin orderly teardown */
         this._isDestroying = true;
         logger.info(
             `${name}.destroy() invoked. Current state: ${this._currentState?.getStateName() ??
             'N/A'}`
         );
 
-        /* Cancel any active prompt early */
         if (this._currentTurnContext?.cancelActivePrompt) {
             logger.debug(
                 `${name}.destroy: Attempting to cancel active prompt in TurnContext for actor ${this._currentTurnContext
@@ -433,7 +407,6 @@ export class BaseTurnHandler {
             }
         }
 
-        /* Let current state clean up */
         if (this._currentState?.destroy) {
             try {
                 logger.debug(
@@ -448,36 +421,34 @@ export class BaseTurnHandler {
             }
         }
 
-        /* Ensure we finish in TurnIdleState */
+        // The instanceof check might need reconsideration for full abstraction
         if (!(this._currentState instanceof ConcreteTurnIdleState)) {
             logger.debug(
-                `${name}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ??
-                'N/A'}).`
+                `${name}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ?? 'N/A'}).`
             );
             try {
-                await this._transitionToState(new ConcreteTurnIdleState(this));
+                // MODIFIED: Use factory
+                await this._transitionToState(this._turnStateFactory.createIdleState(this));
             } catch (e) {
                 logger.error(
                     `${name}.destroy: Error while transitioning to TurnIdleState during destroy: ${e.message}`,
                     e
                 );
-                this._currentState = new ConcreteTurnIdleState(this);
+                // MODIFIED: Use factory as a last resort
+                this._currentState = this._turnStateFactory.createIdleState(this);
                 logger.warn(
                     `${name}.destroy: Forcibly set state to TurnIdleState due to transition error.`
                 );
             }
         }
 
-        /* Drop remaining resources */
         logger.debug(`${name}.destroy: Calling _resetTurnStateAndResources.`);
         this._resetTurnStateAndResources(`destroy-${name}`);
 
-        /* Finish */
         this._isDestroyed = true;
         this._isDestroying = false;
         logger.info(
-            `${name}.destroy() complete. Final state: ${this._currentState?.getStateName() ??
-            'N/A'}`
+            `${name}.destroy() complete. Final state: ${this._currentState?.getStateName() ?? 'N/A'}`
         );
     }
 

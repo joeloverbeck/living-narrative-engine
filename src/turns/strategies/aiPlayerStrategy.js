@@ -5,214 +5,172 @@
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../services/promptBuilder.js').PromptBuilder} PromptBuilder */
+/** @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
+/** @typedef {import('../../types/promptData.js').PromptData} PromptData */
+/** @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
 
-// --- Interface Imports ---
 import {IActorTurnStrategy} from '../interfaces/IActorTurnStrategy.js';
 import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
-// Component ID imports (e.g., DESCRIPTION_COMPONENT_ID, EXITS_COMPONENT_ID, etc.)
-// are confirmed removed as this responsibility is now with AIGameStateProvider.
-
-// --- New Service Interface Imports ---
 import {IAIGameStateProvider} from '../interfaces/IAIGameStateProvider.js';
-import {IAIPromptFormatter} from '../interfaces/IAIPromptFormatter.js';
+import {AIPromptContentProvider} from '../../services/AIPromptContentProvider.js';
 import {ILLMResponseProcessor} from '../interfaces/ILLMResponseProcessor.js';
-import {DEFAULT_FALLBACK_ACTION} from "../../llms/constants/llmConstants";
+import {DEFAULT_FALLBACK_ACTION} from "../../llms/constants/llmConstants.js";
+
+// import {DEFAULT_FALLBACK_CHARACTER_NAME} from "../../constants/textDefaults.js"; // REMOVED - No longer used directly here
 
 /**
  * @class AIPlayerStrategy
  * @implements {IActorTurnStrategy}
  * @description Implements the IActorTurnStrategy for AI-controlled actors.
- * This class orchestrates the AI's decision-making process. It utilizes
- * IAIGameStateProvider to gather game state, IAIPromptFormatter to create an LLM prompt,
- * ILLMAdapter to communicate with the LLM, and ILLMResponseProcessor to parse
- * the LLM's response into a valid ITurnAction.
  */
 export class AIPlayerStrategy extends IActorTurnStrategy {
-    /**
-     * @private
-     * @type {ILLMAdapter}
-     */
+    /** @private @type {ILLMAdapter} */
     #llmAdapter;
-
-    /**
-     * @private
-     * @type {IAIGameStateProvider}
-     */
+    /** @private @type {IAIGameStateProvider} */
     #gameStateProvider;
-
-    /**
-     * @private
-     * @type {IAIPromptFormatter}
-     */
-    #promptFormatter;
-
-    /**
-     * @private
-     * @type {ILLMResponseProcessor}
-     */
+    /** @private @type {IAIPromptContentProvider} */
+    #promptContentProvider;
+    /** @private @type {PromptBuilder} */
+    #promptBuilder;
+    /** @private @type {ILLMResponseProcessor} */
     #llmResponseProcessor;
+    /** @private @type {ILogger} */
+    #logger;
+
 
     /**
      * Creates an instance of AIPlayerStrategy.
      * @param {object} dependencies - The dependencies for this strategy.
      * @param {ILLMAdapter} dependencies.llmAdapter - Adapter for LLM communication.
      * @param {IAIGameStateProvider} dependencies.gameStateProvider - Provider for AI game state.
-     * @param {IAIPromptFormatter} dependencies.promptFormatter - Formatter for LLM prompts.
+     * @param {IAIPromptContentProvider} dependencies.promptContentProvider - Provider for prompt content pieces.
+     * @param {PromptBuilder} dependencies.promptBuilder - Builder for assembling the final prompt string.
      * @param {ILLMResponseProcessor} dependencies.llmResponseProcessor - Processor for LLM responses.
+     * @param {ILogger} dependencies.logger - Logger instance.
      * @throws {Error} If any dependency is invalid.
      */
-    constructor({llmAdapter, gameStateProvider, promptFormatter, llmResponseProcessor}) {
+    constructor({
+                    llmAdapter,
+                    gameStateProvider,
+                    promptContentProvider,
+                    promptBuilder,
+                    llmResponseProcessor,
+                    logger
+                }) {
         super();
 
-        if (!llmAdapter || typeof llmAdapter.getAIDecision !== 'function') {
-            throw new Error("AIPlayerStrategy: Constructor requires a valid ILLMAdapter instance with a getAIDecision method.");
+        if (!llmAdapter || typeof llmAdapter.getAIDecision !== 'function' || typeof llmAdapter.getCurrentActiveLlmId !== 'function') {
+            throw new Error("AIPlayerStrategy: Constructor requires a valid ILLMAdapter.");
         }
         if (!gameStateProvider || typeof gameStateProvider.buildGameState !== 'function') {
-            throw new Error("AIPlayerStrategy: Constructor requires a valid IAIGameStateProvider instance with a buildGameState method.");
+            throw new Error("AIPlayerStrategy: Constructor requires a valid IAIGameStateProvider.");
         }
-        if (!promptFormatter || typeof promptFormatter.formatPrompt !== 'function') {
-            throw new Error("AIPlayerStrategy: Constructor requires a valid IAIPromptFormatter instance with a formatPrompt method.");
+        if (!promptContentProvider || typeof promptContentProvider.getPromptData !== 'function') {
+            throw new Error("AIPlayerStrategy: Constructor requires a valid IAIPromptContentProvider with a getPromptData method.");
+        }
+        if (!promptBuilder || typeof promptBuilder.build !== 'function') {
+            throw new Error("AIPlayerStrategy: Constructor requires a valid PromptBuilder instance.");
         }
         if (!llmResponseProcessor || typeof llmResponseProcessor.processResponse !== 'function') {
-            throw new Error("AIPlayerStrategy: Constructor requires a valid ILLMResponseProcessor instance with a processResponse method.");
+            throw new Error("AIPlayerStrategy: Constructor requires a valid ILLMResponseProcessor.");
+        }
+        if (!logger || typeof logger.info !== 'function') {
+            throw new Error("AIPlayerStrategy: Constructor requires a valid ILogger instance.");
         }
 
         this.#llmAdapter = llmAdapter;
         this.#gameStateProvider = gameStateProvider;
-        this.#promptFormatter = promptFormatter;
+        this.#promptContentProvider = promptContentProvider;
+        this.#promptBuilder = promptBuilder;
         this.#llmResponseProcessor = llmResponseProcessor;
+        this.#logger = logger;
     }
 
-    /**
-     * @private
-     * Safely gets the logger from the context or returns a console fallback.
-     * This method is retained as it's used by decideAction.
-     * @param {ITurnContext | null | undefined} context - The turn context.
-     * @returns {ILogger} A logger instance.
-     */
-    _getSafeLogger(context) {
-        try {
-            if (context && typeof context.getLogger === 'function') {
-                const logger = context.getLogger();
-                if (logger && typeof logger.error === 'function' && typeof logger.info === 'function' && typeof logger.warn === 'function' && typeof logger.debug === 'function') {
-                    return logger;
-                }
-            }
-        } catch (e) {
-            console.error("AIPlayerStrategy: Error retrieving logger from context, using console. Error:", e);
-        }
-        // Fallback logger
-        return {
-            info: (...args) => console.info("[AIPlayerStrategy (fallback logger)]", ...args),
-            warn: (...args) => console.warn("[AIPlayerStrategy (fallback logger)]", ...args),
-            error: (...args) => console.error("[AIPlayerStrategy (fallback logger)]", ...args),
-            debug: (...args) => console.debug("[AIPlayerStrategy (fallback logger)]", ...args),
-        };
-    }
-
-    /**
-     * @private
-     * Generates a fallback ITurnAction with a specific error context.
-     * This method is retained for orchestrator-level errors. Error messages
-     * have been verified as appropriate for its current scope.
-     * @param {string} errorContext - A string describing the error (e.g., 'null_turn_context').
-     * @param {string} [actorId='UnknownActor'] - The ID of the actor for logging purposes.
-     * @returns {ITurnAction} The fallback ITurnAction.
-     */
     _createFallbackAction(errorContext, actorId = 'UnknownActor') {
         const detailedErrorContext = `AI Error for ${actorId}: ${errorContext}. Waiting.`;
-        this._getSafeLogger(null).debug(`AIPlayerStrategy: Creating fallback action. Error context: "${errorContext}", Actor: ${actorId}`);
-
-        // Make speech a bit more informative but not too technical for the user
+        this.#logger.debug(`AIPlayerStrategy: Creating fallback action. Error: "${errorContext}", Actor: ${actorId}`);
         let userFriendlyErrorBrief = "an unexpected issue";
-        if (typeof errorContext === 'string') {
-            if (errorContext.toLowerCase().includes("http error 500")) {
-                userFriendlyErrorBrief = "a connection problem";
-            } else if (errorContext.startsWith("unhandled_orchestration_error:")) {
-                userFriendlyErrorBrief = "an internal processing error";
-            }
-            // Add more conditions if needed to make user-friendly summaries
+        if (typeof errorContext === 'string' && errorContext.toLowerCase().includes("http error 500")) {
+            userFriendlyErrorBrief = "a connection problem";
         }
         const speechMessage = `I encountered ${userFriendlyErrorBrief} and will wait.`;
-
         return {
             actionDefinitionId: DEFAULT_FALLBACK_ACTION.actionDefinitionId,
-            commandString: DEFAULT_FALLBACK_ACTION.commandString, // Should be "wait"
+            commandString: DEFAULT_FALLBACK_ACTION.commandString,
             speech: speechMessage,
-            resolvedParameters: {
-                errorContext: detailedErrorContext,
-                actorId: actorId,
-            },
+            resolvedParameters: {errorContext: detailedErrorContext, actorId: actorId},
         };
     }
 
-    // Obsolete _transformAndValidateLLMOutput method (previously here and commented out)
-    // has been removed. Its functionality was moved to LLMResponseProcessor.processResponse
-    // as per Ticket 19 and prior refactoring.
-
-    /**
-     * Determines the action an AI actor will take for the current turn by orchestrating
-     * calls to various AI services.
-     * Obsolete logic for direct data gathering (location summary, actions, perception log),
-     * gameSummary object construction, direct LLM prompt building, and direct JSON parsing
-     * of LLM response have been confirmed removed from this method, with responsibilities
-     * delegated to AIGameStateProvider, AIPromptFormatter, and LLMResponseProcessor.
-     * @async
-     * @param {ITurnContext} context - The turn context for the current turn.
-     * @returns {Promise<ITurnAction>} A Promise that resolves to an ITurnAction object,
-     * either generated by the AI or a fallback action in case of errors.
-     */
     async decideAction(context) {
-        const logger = this._getSafeLogger(context);
         let actor;
-        let actorId = 'UnknownActor'; // Default for logging if actor retrieval fails
+        let actorId = 'UnknownActor';
 
         try {
-            // 1. Initial Validation
             if (!context) {
-                logger.error("AIPlayerStrategy: Critical - ITurnContext is null or undefined in decideAction.");
+                this.#logger.error("AIPlayerStrategy: Critical - ITurnContext is null.");
                 return this._createFallbackAction('null_turn_context');
             }
             actor = context.getActor();
             if (!actor || !actor.id) {
-                logger.error("AIPlayerStrategy: Critical - Actor not available or ID missing in ITurnContext.");
+                this.#logger.error("AIPlayerStrategy: Critical - Actor not available in context.");
                 return this._createFallbackAction('missing_actor_in_context');
             }
             actorId = actor.id;
-            logger.info(`AIPlayerStrategy: decideAction called for actor ${actorId}. Orchestrating AI decision pipeline.`);
+            this.#logger.info(`AIPlayerStrategy: decideAction for actor ${actorId}.`);
+
+            // 1. Get current LLM ID for PromptBuilder
+            const currentLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
+            if (!currentLlmId) {
+                this.#logger.error(`AIPlayerStrategy: Could not determine active LLM ID for actor ${actorId}. Cannot build prompt.`);
+                return this._createFallbackAction('missing_active_llm_id', actorId);
+            }
+            this.#logger.debug(`AIPlayerStrategy: Active LLM ID for prompt construction: ${currentLlmId}`);
 
             // 2. Build Game State DTO
-            const gameStateDto = await this.#gameStateProvider.buildGameState(actor, context, logger);
+            const gameStateDto = await this.#gameStateProvider.buildGameState(actor, context, this.#logger);
 
-            // 3. Format LLM Prompt
-            const llmPromptString = this.#promptFormatter.formatPrompt(gameStateDto, logger);
-            if (!llmPromptString || llmPromptString.startsWith("Error:")) { // Assuming error from formatter might be prefixed
-                const promptContentDetail = llmPromptString === null ? "null" : (llmPromptString === "" ? "empty" : `"${llmPromptString}"`);
-                logger.error(`AIPlayerStrategy: Prompt formatter failed or returned error for actor ${actorId}. Prompt content: ${promptContentDetail}`);
-                return this._createFallbackAction('prompt_formatter_failure', actorId);
+            // Static check on AIGameStateDTO. If this check needs to throw to halt execution,
+            // it should be designed to do so. If getPromptData re-validates or handles, it might be okay.
+            // Current AIPromptContentProvider.checkCriticalGameState returns an object {isValid, errorContent}
+            // and doesn't throw by itself. The AIPromptContentProvider.getPromptData method uses this
+            // and *does* throw if !isValid. So the check here is somewhat redundant if getPromptData handles it robustly.
+            // For now, kept as per original structure, assuming it might have a purpose or be enhanced.
+            AIPromptContentProvider.checkCriticalGameState(gameStateDto, this.#logger);
+
+            // 3. Assemble promptData using AIPromptContentProvider
+            this.#logger.debug(`AIPlayerStrategy: Requesting PromptData from AIPromptContentProvider for actor ${actorId}.`);
+            const promptData = await this.#promptContentProvider.getPromptData(gameStateDto, this.#logger);
+            this.#logger.debug(`AIPlayerStrategy: promptData received for actor ${actorId}. Keys: ${Object.keys(promptData).join(', ')}`);
+
+            // 4. Build the final prompt string using PromptBuilder
+            const finalPromptString = await this.#promptBuilder.build(currentLlmId, promptData);
+
+            if (!finalPromptString) { // Covers null, undefined, and empty string ''
+                this.#logger.error(`AIPlayerStrategy: PromptBuilder returned an empty or invalid prompt for LLM ${currentLlmId}, actor ${actorId}.`);
+                return this._createFallbackAction('prompt_builder_empty_result', actorId);
             }
-            // --- MODIFICATION START (TASK-003) ---
-            // Retain concise info log, rephrased according to ticket
-            logger.info(`AIPlayerStrategy: Generated LLM prompt for actor ${actorId}. Length: ${llmPromptString.length}.`);
-            // Change full prompt log to DEBUG
-            logger.debug(`AIPlayerStrategy: LLM Prompt for ${actorId}:\n${llmPromptString}`);
-            // --- MODIFICATION END (TASK-003) ---
+            this.#logger.info(`AIPlayerStrategy: Generated final prompt string for actor ${actorId} using LLM config for '${currentLlmId}'. Length: ${finalPromptString.length}.`);
+            this.#logger.debug(`AIPlayerStrategy: Final Prompt String for ${actorId} (LLM: ${currentLlmId}):\n${finalPromptString}`);
 
+            // 5. Call LLM Adapter with the final prompt string
+            const llmJsonResponse = await this.#llmAdapter.getAIDecision(finalPromptString);
+            this.#logger.debug(`AIPlayerStrategy: Received LLM JSON response for actor ${actorId}: ${llmJsonResponse}`);
 
-            // 4. Call LLM Adapter
-            const llmJsonResponse = await this.#llmAdapter.getAIDecision(llmPromptString);
-            logger.debug(`AIPlayerStrategy: Received LLM JSON response for actor ${actorId}: ${llmJsonResponse}`);
-
-            // 5. Process LLM Response (and return its result)
-            // --- MODIFICATION START ---
-            // Added await as processResponse is now async
-            return await this.#llmResponseProcessor.processResponse(llmJsonResponse, actorId, logger);
-            // --- MODIFICATION END ---
+            // 6. Process LLM Response
+            return await this.#llmResponseProcessor.processResponse(llmJsonResponse, actorId, this.#logger);
 
         } catch (error) {
-            const errorMessage = error && typeof error.message === 'string' ? error.message : 'Unknown error object';
-            const mainErrorMsg = `AIPlayerStrategy: Unhandled error during decideAction orchestration for actor ${actorId}: ${errorMessage}`;
-            logger.error(mainErrorMsg, {errorDetails: error, stack: error.stack}); // Using error.stack for better debugging
+            const errorMessage = error?.message || 'Unknown error object';
+            this.#logger.error(`AIPlayerStrategy: Unhandled error for actor ${actorId}: ${errorMessage}`, {
+                errorDetails: error,
+                stack: error?.stack
+            });
+            // The specific if condition checking for error.message.includes("AIPromptContentProvider.getPromptData")
+            // or errorContent has been removed as errorContent was out of scope and the generic
+            // fallback creation already handles errors from getPromptData appropriately.
+            // The errorMessage will contain the specific message from any upstream error.
             return this._createFallbackAction(`unhandled_orchestration_error: ${errorMessage}`, actorId);
         }
     }

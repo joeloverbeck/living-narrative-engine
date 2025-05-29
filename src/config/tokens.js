@@ -239,5 +239,22 @@ export const tokens = Object.freeze({
     QueryComponentHandler: 'QueryComponentHandler',
     SetVariableHandler: 'SetVariableHandler',
     QuerySystemDataHandler: 'QuerySystemDataHandler',
+
+    // --- Turn System Factories ---
+    ITurnStateFactory: 'ITurnStateFactory',
+    IAIPlayerStrategyFactory: 'IAIPlayerStrategyFactory',
+    ITurnContextFactory: 'ITurnContextFactory',
+
+    // --- Service Interfaces for AITurnHandler dependencies (if not already defined) ---
+    IPromptBuilder: 'IPromptBuilder',
+    IAIGameStateProvider: 'IAIGameStateProvider',
+    IAIPromptContentProvider: 'IAIPromptContentProvider',
+    ILLMResponseProcessor: 'ILLMResponseProcessor',
+
+    // --- Concrete Service Tokens (if needed for direct registration before interface mapping) ---
+    PromptBuilder: 'PromptBuilder', // Assuming ConcretePromptBuilder might be registered directly
+    AIGameStateProvider: 'AIGameStateProvider', // For ConcreteAIGameStateProvider
+    AIPromptContentProvider: 'AIPromptContentProvider', // For ConcreteAIPromptContentProvider
+    LLMResponseProcessor: 'LLMResponseProcessor', // For ConcreteLLMResponseProcessor
 });
 // --- FILE END ---

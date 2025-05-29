@@ -24,6 +24,13 @@ import PlaytimeTracker from '../../services/playtimeTracker.js';
 
 // --- GamePersistenceService Import ---
 import GamePersistenceService from '../../services/gamePersistenceService.js';
+import {ConcreteTurnContextFactory} from "../../turns/factories/concreteTurnContextFactory.js";
+import {ConcreteAIPlayerStrategyFactory} from "../../turns/factories/concreteAIPlayerStrategyFactory.js";
+import {ConcreteTurnStateFactory} from "../../turns/factories/concreteTurnStateFactory.js";
+import {LLMResponseProcessor} from "../../turns/services/LLMResponseProcessor.js";
+import {AIPromptContentProvider} from "../../services/AIPromptContentProvider.js";
+import {AIGameStateProvider} from "../../turns/services/AIGameStateProvider.js";
+import {PromptBuilder} from "../../services/promptBuilder.js";
 
 
 // --- Type Imports for JSDoc ---
@@ -237,6 +244,49 @@ export function registerDomainServices(container) {
         return new GamePersistenceService(gpsDeps);
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.GamePersistenceService)} (via factory).`);
+
+    // --- Register Services for AITurnHandler and AIPlayerStrategy ---
+
+    // PromptBuilder (assuming PromptBuilder is the implementation)
+    // PromptBuilder needs logger and configFilePath (from IConfiguration)
+    r.singletonFactory(tokens.IPromptBuilder, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        const config = /** @type {import('../../interfaces/coreServices.js').IConfiguration} */ (c.resolve(tokens.IConfiguration));
+        // Assuming IConfiguration provides a method to get the specific path
+        // or the path is hardcoded/derived if not available via IConfiguration.
+        // For example, if configFilePath comes from a specific config key:
+        const configFilePath = config.get('paths.llmConfigs'); // Example: adjust key as needed
+        if (!configFilePath) {
+            logger.warn(`${String(tokens.IPromptBuilder)} factory: configFilePath for PromptBuilder not found in configuration. PromptBuilder might not initialize correctly.`);
+        }
+        return new PromptBuilder({logger, configFilePath});
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IPromptBuilder)}.`);
+
+    // AIGameStateProvider (stateless, no constructor dependencies in its file)
+    r.single(tokens.IAIGameStateProvider, AIGameStateProvider);
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IAIGameStateProvider)}.`);
+
+    // AIPromptContentProvider (stateless, no constructor dependencies)
+    r.single(tokens.IAIPromptContentProvider, AIPromptContentProvider);
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IAIPromptContentProvider)}.`);
+
+    // LLMResponseProcessor (depends on ISchemaValidator)
+    r.single(tokens.ILLMResponseProcessor, LLMResponseProcessor, [
+        tokens.ISchemaValidator // Dependency for LLMResponseProcessor's constructor { schemaValidator: ... }
+    ]);
+    log.debug(`Domain Services Registration: Registered ${String(tokens.ILLMResponseProcessor)}.`);
+
+
+    // --- Register Turn System Factories ---
+    r.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
+    log.debug(`Domain Services Registration: Registered ${String(tokens.ITurnStateFactory)}.`);
+
+    r.single(tokens.IAIPlayerStrategyFactory, ConcreteAIPlayerStrategyFactory);
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IAIPlayerStrategyFactory)}.`);
+
+    r.single(tokens.ITurnContextFactory, ConcreteTurnContextFactory);
+    log.debug(`Domain Services Registration: Registered ${String(tokens.ITurnContextFactory)}.`);
 
     log.info('Domain-services Registration: complete.');
 }

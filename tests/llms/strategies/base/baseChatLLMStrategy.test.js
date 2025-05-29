@@ -1,4 +1,4 @@
-// tests/llms/strategies/base/BaseChatLLMStrategy.test.js
+// tests/llms/strategies/base/baseChatLLMStrategy.test.js
 // --- UPDATED FILE START ---
 
 import {BaseChatLLMStrategy} from '../../../../src/llms/strategies/base/baseChatLLMStrategy.js'; // Adjusted path to match your provided test file
@@ -41,14 +41,13 @@ describe('BaseChatLLMStrategy', () => {
         });
 
         test('should handle empty string promptFrame as if null/undefined and log warning for chat API', () => {
-            const llmConfig = {apiType: 'openai', promptFrame: "   "};
+            const llmConfig = {apiType: 'openai', promptFrame: "   "}; // Intentionally spaces to test trim
             const result = strategy._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
 
             expect(result.messages).toHaveLength(1); // No system message from frame
             expect(result.messages[0]).toEqual({role: 'user', content: gameSummary});
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                // Updated expectation to match the new warning message
-                expect.stringContaining("promptFrame is missing or effectively empty (did not yield a system message) for chat-like apiType 'openai'")
+                "BaseChatLLMStrategy: No system message added from llmConfig.promptFrame for apiType 'openai'. The prompt built by PromptBuilder will be the sole user message content."
             );
         });
 
@@ -68,28 +67,29 @@ describe('BaseChatLLMStrategy', () => {
         test('should use promptFrame user_prefix and user_suffix if promptFrame is an object and log warning if no system message', () => {
             const llmConfig = {
                 apiType: 'anthropic',
-                promptFrame: {user_prefix: "Prefix:", user_suffix: ":Suffix"}
+                promptFrame: {user_prefix: "Prefix:", user_suffix: ":Suffix"} // These are ignored by current logic
             };
             const result = strategy._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
 
             expect(result.messages).toHaveLength(1); // No system message from this frame
-            expect(result.messages[0]).toEqual({role: 'user', content: `Prefix: ${gameSummary} :Suffix`});
-            expect(mockLogger.warn).toHaveBeenCalledWith( // Because .system is missing for a chat API
-                // Updated expectation
-                expect.stringContaining("promptFrame is missing or effectively empty (did not yield a system message) for chat-like apiType 'anthropic'")
+            // User prefix/suffix are intentionally ignored by BaseChatLLMStrategy, PromptBuilder handles final user content
+            expect(result.messages[0]).toEqual({role: 'user', content: gameSummary});
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                "BaseChatLLMStrategy: No system message added from llmConfig.promptFrame for apiType 'anthropic'. The prompt built by PromptBuilder will be the sole user message content."
             );
         });
 
         test('should use all parts of object promptFrame: system, user_prefix, user_suffix', () => {
             const llmConfig = {
                 apiType: 'openai',
-                promptFrame: {system: "Sys instruction.", user_prefix: "User PRE ", user_suffix: " POST user"}
+                promptFrame: {system: "Sys instruction.", user_prefix: "User PRE ", user_suffix: " POST user"} // user_prefix/suffix are ignored
             };
             const result = strategy._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
 
             expect(result.messages).toHaveLength(2);
             expect(result.messages[0]).toEqual({role: 'system', content: 'Sys instruction.'});
-            expect(result.messages[1]).toEqual({role: 'user', content: `User PRE ${gameSummary} POST user`});
+            // User prefix/suffix are intentionally ignored by BaseChatLLMStrategy
+            expect(result.messages[1]).toEqual({role: 'user', content: gameSummary});
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
@@ -100,22 +100,20 @@ describe('BaseChatLLMStrategy', () => {
             expect(result.messages).toHaveLength(1);
             expect(result.messages[0]).toEqual({role: 'user', content: gameSummary});
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                // Updated expectation
-                expect.stringContaining("promptFrame is missing or effectively empty (did not yield a system message) for chat-like apiType 'openai'")
+                "BaseChatLLMStrategy: No system message added from llmConfig.promptFrame for apiType 'openai'. The prompt built by PromptBuilder will be the sole user message content."
             );
         });
 
         test('should handle object promptFrame with empty string values and log warning for chat API', () => {
             const llmConfig = {
                 apiType: 'openai',
-                promptFrame: {system: "  ", user_prefix: "\t", user_suffix: ""}
+                promptFrame: {system: "  ", user_prefix: "\t", user_suffix: ""} // system will be trimmed, effectively empty
             };
             const result = strategy._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
             expect(result.messages).toHaveLength(1);
             expect(result.messages[0]).toEqual({role: 'user', content: gameSummary});
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                // Updated expectation
-                expect.stringContaining("promptFrame is missing or effectively empty (did not yield a system message) for chat-like apiType 'openai'")
+                "BaseChatLLMStrategy: No system message added from llmConfig.promptFrame for apiType 'openai'. The prompt built by PromptBuilder will be the sole user message content."
             );
         });
 
@@ -125,8 +123,7 @@ describe('BaseChatLLMStrategy', () => {
             expect(result.messages).toHaveLength(1);
             expect(result.messages[0]).toEqual({role: 'user', content: gameSummary});
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                // Updated expectation
-                expect.stringContaining("promptFrame is missing or effectively empty (did not yield a system message) for chat-like apiType 'openai'")
+                "BaseChatLLMStrategy: No system message added from llmConfig.promptFrame for apiType 'openai'. The prompt built by PromptBuilder will be the sole user message content."
             );
         });
 
@@ -136,13 +133,12 @@ describe('BaseChatLLMStrategy', () => {
             expect(result.messages).toHaveLength(1);
             expect(result.messages[0]).toEqual({role: 'user', content: gameSummary});
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                // Updated expectation
-                expect.stringContaining("promptFrame is missing or effectively empty (did not yield a system message) for chat-like apiType 'openrouter'")
+                "BaseChatLLMStrategy: No system message added from llmConfig.promptFrame for apiType 'openrouter'. The prompt built by PromptBuilder will be the sole user message content."
             );
         });
 
         test('should not log warning for non-designated chat API if promptFrame is missing', () => {
-            const llmConfig = {apiType: 'ollama', promptFrame: null};
+            const llmConfig = {apiType: 'ollama', promptFrame: null}; // ollama is not in ['openai', 'openrouter', 'anthropic']
             const result = strategy._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
             expect(result.messages).toHaveLength(1);
             expect(result.messages[0]).toEqual({role: 'user', content: gameSummary});
@@ -168,15 +164,26 @@ describe('BaseChatLLMStrategy', () => {
 
         test('should log debug messages for construction and preview', () => {
             const llmConfig = {apiType: 'openai', promptFrame: "System."};
-            strategy._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
+            const localGameSummary = "Current game state summary."; // Length 27
+            strategy._constructPromptPayload(localGameSummary, llmConfig.promptFrame, llmConfig);
 
+            // Check for the initial processing debug message
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining("BaseChatLLMStrategy._constructPromptPayload: Constructing prompt."),
-                expect.any(Object)
+                `BaseChatLLMStrategy._constructPromptPayload for apiType '${llmConfig.apiType}'. gameSummary (finalPromptString) length: ${localGameSummary.length}.`
             );
+
+            // Check for the system message addition log (since promptFrame is a string here)
             expect(mockLogger.debug).toHaveBeenCalledWith(
-                expect.stringContaining("BaseChatLLMStrategy._constructPromptPayload: Constructed 'messages' array:"),
-                expect.any(Array)
+                "BaseChatLLMStrategy: Added system message from llmConfig.promptFrame (string)."
+            );
+
+            // Check for the final constructed messages array preview
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                "BaseChatLLMStrategy._constructPromptPayload: Constructed 'messages' array:",
+                [
+                    {role: 'system', contentPreview: "System."}, // System.length < 70
+                    {role: 'user', contentPreview: "Current game state summary."} // localGameSummary.length < 70
+                ]
             );
         });
 

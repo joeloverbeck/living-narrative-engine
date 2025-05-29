@@ -1,7 +1,7 @@
-// src/llms/strategies/base/BaseChatLLMStrategy.js
+// src/llms/strategies/base/baseChatLLMStrategy.js
 // --- FILE START ---
 
-import {BaseLLMStrategy} from './baseLLMStrategy.js'; // Assuming PascalCase for BaseLLMStrategy.js
+import {BaseLLMStrategy} from './baseLLMStrategy.js';
 
 /**
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
@@ -24,50 +24,41 @@ export class BaseChatLLMStrategy extends BaseLLMStrategy {
 
     /**
      * Constructs the prompt payload for chat-based LLM APIs.
-     * This method uses the `promptFrame` from the LLM configuration to structure
-     * the `gameSummary` into a `messages` array.
+     * The `gameSummary` parameter is now the `finalPromptString` produced by `PromptBuilder`.
+     * The `promptFrame.system` from `llmConfig` can still provide a system message.
+     * Other parts of `promptFrame` (like user_prefix/suffix) are ignored as `PromptBuilder` handles the main content.
      *
      * @protected
-     * @param {string} gameSummary - The detailed textual representation of the game state.
-     * @param {object | string | undefined} promptFrame - The promptFrame object from the LLM configuration.
-     * @param {LLMModelConfig} llmConfig - The full LLM configuration, including apiType.
+     * @param {string} gameSummary - The `finalPromptString` from `PromptBuilder`.
+     * @param {object | string | undefined} promptFrame - The promptFrame object from the LLM configuration (adapter's config).
+     * @param {LLMModelConfig} llmConfig - The full LLM configuration.
      * @returns {{messages: Array<object>}} An object containing a `messages` array.
      */
     _constructPromptPayload(gameSummary, promptFrame, llmConfig) {
-        this.logger.debug(`BaseChatLLMStrategy._constructPromptPayload: Constructing prompt. apiType: '${llmConfig.apiType}'.`, {promptFrame});
+        this.logger.debug(`BaseChatLLMStrategy._constructPromptPayload for apiType '${llmConfig.apiType}'. gameSummary (finalPromptString) length: ${gameSummary.length}.`);
 
         const messages = [];
-        let finalGameSummaryContent = gameSummary;
-        let systemMessageSuccessfullyAdded = false; // Flag to track if a system message was meaningfully added
+        let systemMessageAdded = false;
 
-        const hasActualPromptFrameObject = promptFrame && typeof promptFrame === 'object' && Object.keys(promptFrame).length > 0;
-        const isNonEmptyStringPromptFrame = typeof promptFrame === 'string' && promptFrame.trim() !== '';
-
-        if (isNonEmptyStringPromptFrame) {
+        // Use promptFrame.system from the adapter's llmConfig if available
+        if (promptFrame && typeof promptFrame === 'object' && typeof promptFrame.system === 'string' && promptFrame.system.trim() !== '') {
+            messages.push({role: "system", content: promptFrame.system.trim()});
+            systemMessageAdded = true;
+            this.logger.debug(`BaseChatLLMStrategy: Added system message from llmConfig.promptFrame.system.`);
+        } else if (typeof promptFrame === 'string' && promptFrame.trim() !== '') {
+            // If promptFrame is a string, assume it's a system message (legacy or simple config)
             messages.push({role: "system", content: promptFrame.trim()});
-            systemMessageSuccessfullyAdded = true;
-        } else if (hasActualPromptFrameObject) {
-            if (typeof promptFrame.system === 'string' && promptFrame.system.trim() !== '') {
-                messages.push({role: "system", content: promptFrame.system.trim()});
-                systemMessageSuccessfullyAdded = true;
-            }
-            // User prefix and suffix are applied regardless of whether a system message was added from the object
-            if (typeof promptFrame.user_prefix === 'string' && promptFrame.user_prefix.trim() !== '') {
-                finalGameSummaryContent = `${promptFrame.user_prefix.trim()} ${finalGameSummaryContent}`;
-            }
-            if (typeof promptFrame.user_suffix === 'string' && promptFrame.user_suffix.trim() !== '') {
-                finalGameSummaryContent = `${finalGameSummaryContent} ${promptFrame.user_suffix.trim()}`;
-            }
+            systemMessageAdded = true;
+            this.logger.debug(`BaseChatLLMStrategy: Added system message from llmConfig.promptFrame (string).`);
         }
 
-        // Log a warning if no system message was derived from the promptFrame for relevant chat APIs
-        // This warning will now trigger if promptFrame was null/undefined, an empty string (after trim),
-        // an empty object, or an object that didn't yield a system message (e.g., only user_prefix/suffix, or system was an empty string after trim).
-        if (!systemMessageSuccessfullyAdded && ['openai', 'openrouter', 'anthropic'].includes(llmConfig.apiType)) {
-            this.logger.warn(`BaseChatLLMStrategy._constructPromptPayload: promptFrame is missing or effectively empty (did not yield a system message) for chat-like apiType '${llmConfig.apiType}'. Applying default user message structure. Consider defining a promptFrame for optimal results.`);
-        }
+        // The gameSummary (finalPromptString from PromptBuilder) is now the user message content.
+        // User prefix/suffix from promptFrame are ignored as PromptBuilder handled the user message's full content.
+        messages.push({role: "user", content: gameSummary.trim()});
 
-        messages.push({role: "user", content: finalGameSummaryContent.trim()});
+        if (!systemMessageAdded && ['openai', 'openrouter', 'anthropic'].includes(llmConfig.apiType)) {
+            this.logger.warn(`BaseChatLLMStrategy: No system message added from llmConfig.promptFrame for apiType '${llmConfig.apiType}'. The prompt built by PromptBuilder will be the sole user message content.`);
+        }
 
         this.logger.debug("BaseChatLLMStrategy._constructPromptPayload: Constructed 'messages' array:", messages.map(m => ({
             role: m.role,
@@ -78,4 +69,4 @@ export class BaseChatLLMStrategy extends BaseLLMStrategy {
     }
 }
 
-// --- UPDATED FILE END ---
+// --- FILE END ---
