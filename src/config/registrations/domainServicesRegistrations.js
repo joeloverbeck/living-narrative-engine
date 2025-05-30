@@ -251,15 +251,14 @@ export function registerDomainServices(container) {
     // PromptBuilder needs logger and configFilePath (from IConfiguration)
     r.singletonFactory(tokens.IPromptBuilder, (c) => {
         const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
-        const config = /** @type {import('../../interfaces/coreServices.js').IConfiguration} */ (c.resolve(tokens.IConfiguration));
-        // Assuming IConfiguration provides a method to get the specific path
-        // or the path is hardcoded/derived if not available via IConfiguration.
-        // For example, if configFilePath comes from a specific config key:
-        const configFilePath = config.get('paths.llmConfigs'); // Example: adjust key as needed
-        if (!configFilePath) {
-            logger.warn(`${String(tokens.IPromptBuilder)} factory: configFilePath for PromptBuilder not found in configuration. PromptBuilder might not initialize correctly.`);
-        }
-        return new PromptBuilder({logger, configFilePath});
+
+        // The path to llm-configs.json is fixed relative to the application root.
+        const llmConfigsPath = "./config/llm-configs.json";
+        log.info(`${String(tokens.IPromptBuilder)} factory: Using fixed configFilePath: "${llmConfigsPath}"`);
+        // --- END MODIFIED PART ---
+
+        // Pass the logger and the fixed configFilePath to the PromptBuilder constructor
+        return new PromptBuilder({logger, configFilePath: llmConfigsPath});
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.IPromptBuilder)}.`);
 
