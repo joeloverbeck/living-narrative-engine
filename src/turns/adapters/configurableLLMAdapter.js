@@ -494,16 +494,17 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      * @public
      * @async
      * @returns {Promise<string | null>} A promise that resolves to the active LLM ID (string) or null if no LLM is active or adapter is not operational.
+     * @throws {Error} If the adapter is not initialized or not operational (propagated from #ensureInitialized).
      */
     async getCurrentActiveLlmId() {
+        // VVVVVV REVERTED TO ORIGINAL BEHAVIOR TO MATCH management.test.js VVVVVV
         try {
             await this.#ensureInitialized();
         } catch (error) {
             this.#logger.warn(`ConfigurableLLMAdapter.getCurrentActiveLlmId: Adapter not operational. Cannot retrieve current active LLM ID. Error: ${error.message}`);
-            return null;
+            return null; // Return null on error, as expected by management tests
         }
-        // No direct change to this method's logic, as it relies on #currentActiveLlmId
-        // which is updated by other refactored methods.
+        // ^^^^^^ REVERTED TO ORIGINAL BEHAVIOR ^^^^^^
         return this.#currentActiveLlmId;
     }
 

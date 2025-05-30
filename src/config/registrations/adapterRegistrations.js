@@ -41,7 +41,9 @@ import {EnvironmentContext} from '../../llms/environmentContext.js';
 import {ClientApiKeyProvider} from '../../llms/clientApiKeyProvider.js';
 import {RetryHttpClient} from '../../llms/retryHttpClient.js';
 import {LLMStrategyFactory} from '../../llms/LLMStrategyFactory.js';
-import {LlmConfigLoader} from '../../llms/services/llmConfigLoader.js';
+// LlmConfigLoader import is removed here as it's not directly instantiated in this file anymore
+// for the adapter's immediate initialization. It will be needed by the code that calls init().
+// import {LlmConfigLoader} from '../../llms/services/llmConfigLoader.js';
 
 /**
  * Registers the default port adapters and the ConfigurableLLMAdapter with its dependencies
@@ -50,7 +52,7 @@ import {LlmConfigLoader} from '../../llms/services/llmConfigLoader.js';
  * @export
  * @param {AppContainer} container - The application's DI container.
  */
-export function registerAdapters(container) { // Reverted to synchronous
+export function registerAdapters(container) {
     const registrar = new Registrar(container);
     /** @type {ILogger} */
     const logger = container.resolve(tokens.ILogger);
@@ -91,9 +93,7 @@ export function registerAdapters(container) { // Reverted to synchronous
             throw new Error(`Missing dispatcher dependency for EventBusTurnEndAdapter`);
         }
         return new EventBusTurnEndAdapter({
-            // MODIFICATION START: Corrected property name from safeDispatcher to safeEventDispatcher
             safeEventDispatcher: safeDispatcher,
-            // MODIFICATION END
             validatedEventDispatcher: validatedDispatcher,
             logger: logger
         });
@@ -104,40 +104,30 @@ export function registerAdapters(container) { // Reverted to synchronous
     logger.info('Adapter Registrations: Starting LLM Adapter setup for CLIENT environment...');
 
     // 1. Instantiate Core Services and Context
-    const executionEnv = 'client'; // Explicitly client for this version of registrations
-    const projectRoot = null; // No project root concept from client-side like in Node.js file system
+    const executionEnv = 'client';
+    const projectRoot = null;
 
-    // MODIFICATION START: Safely access process.env.PROXY_URL
     let proxyUrl = undefined;
     if (typeof process !== 'undefined' && process.env) {
-        // If process.env.PROXY_URL is an empty string, it will become undefined here,
-        // which is consistent with the original `|| undefined` behavior.
         proxyUrl = process.env.PROXY_URL || undefined;
     }
-    // If your client needs to connect to the proxy, proxyUrl should be configured
-    // to a value like 'http://localhost:3001' through a build system or other client-side config mechanism.
-    // The fix above ensures no crash if process.env.PROXY_URL is not defined by a build tool.
-    // MODIFICATION END
 
     const environmentContext = new EnvironmentContext({
         logger,
         executionEnvironment: executionEnv,
         projectRootPath: projectRoot,
-        proxyServerUrl: proxyUrl // Will be undefined if not set via a build tool/client config
+        proxyServerUrl: proxyUrl
     });
     logger.debug(`Adapter Registration: EnvironmentContext instantiated. Environment: ${environmentContext.getExecutionEnvironment()}, Proxy URL: ${proxyUrl || 'Not configured'}`);
-
-    // IFileSystemReader & IEnvironmentVariableReader are not used in client environment.
 
     // 2. Instantiate IApiKeyProvider - Always ClientApiKeyProvider for this bundle
     /** @type {IApiKeyProvider} */
     let apiKeyProvider;
 
-    if (environmentContext.isClient()) { // This will always be true given executionEnv = 'client'
+    if (environmentContext.isClient()) {
         apiKeyProvider = new ClientApiKeyProvider({logger});
         logger.debug('Adapter Registration: ClientApiKeyProvider instantiated.');
     } else {
-        // This branch should ideally not be reachable if executionEnv is hardcoded 'client'.
         const errorMessage = `Adapter Registration: Critical error - Expected client environment for APIKeyProvider, but got '${environmentContext.getExecutionEnvironment()}'. This bundle is intended for client-side only.`;
         logger.error(errorMessage);
         throw new Error(errorMessage);
@@ -146,9 +136,6 @@ export function registerAdapters(container) { // Reverted to synchronous
     // 3. Instantiate IHttpClient (RetryHttpClient)
     const retryHttpClient = new RetryHttpClient({
         logger,
-        // If RetryHttpClient needs proxyUrl directly, it would get it from EnvironmentContext
-        // or have it passed if its constructor is updated. Assuming it uses EnvironmentContext internally
-        // or that strategy factory below handles proxying.
     });
     logger.debug('Adapter Registration: RetryHttpClient instantiated.');
 
@@ -156,69 +143,36 @@ export function registerAdapters(container) { // Reverted to synchronous
     const llmStrategyFactory = new LLMStrategyFactory({
         httpClient: retryHttpClient,
         logger,
-        // LLMStrategyFactory might also use environmentContext to know about the proxy
-        // or this is handled by the adapter itself using the context.
     });
     logger.debug('Adapter Registration: LLMStrategyFactory instantiated.');
 
-    // 5. Instantiate LlmConfigLoader - MODIFIED for Sub-Ticket 1.6.2
-    /** @type {ISchemaValidator} */
-    const schemaValidator = container.resolve(tokens.ISchemaValidator);
-    if (!schemaValidator) {
-        const errorMsg = `Adapter Registration: Failed to resolve ${tokens.ISchemaValidator} for LlmConfigLoader.`;
-        logger.error(errorMsg);
-        throw new Error(errorMsg);
-    }
-    /** @type {IConfiguration} */
-    const configuration = container.resolve(tokens.IConfiguration);
-    if (!configuration) {
-        const errorMsg = `Adapter Registration: Failed to resolve ${tokens.IConfiguration} for LlmConfigLoader.`;
-        logger.error(errorMsg);
-        throw new Error(errorMsg);
-    }
+    // 5. LlmConfigLoader is NOT instantiated here for the adapter's init.
+    //    The code that calls adapter.init() later will be responsible for
+    //    creating/providing LlmConfigLoader, ensuring it gets an ISchemaValidator
+    //    instance that has all necessary schemas loaded.
 
-    const llmConfigLoader = new LlmConfigLoader({
-        logger,
-        schemaValidator, // Injected ISchemaValidator
-        configuration,   // Injected IConfiguration
-        // LlmConfigLoader for client might fetch configs differently, possibly through http if not bundled.
-        // For now, assuming it's configured to load client-side appropriate configs.
-    });
-    logger.debug('Adapter Registration: LlmConfigLoader instantiated with schemaValidator and configuration.');
-
-    // 6. Instantiate Refactored ConfigurableLLMAdapter
+    // 6. Instantiate ConfigurableLLMAdapter (without immediate initialization)
     registrar.singletonFactory(tokens.ILLMAdapter, () => {
+        // Dependencies for ConfigurableLLMAdapter constructor are resolved here or taken from above.
         const adapterInstance = new ConfigurableLLMAdapter({
-            logger,
-            environmentContext, // This passes the proxyUrl (or undefined) to the adapter
+            logger: container.resolve(tokens.ILogger), // Resolve a fresh logger instance if appropriate, or use the existing 'logger'
+            environmentContext,
             apiKeyProvider,
             llmStrategyFactory
-            // initialLlmId is not set here, will be picked up from llm-configs.json defaultLlmId
-            // or can be set via adapterInstance.init if that method is updated to take it
+            // initialLlmId: null // Or get from a configuration if needed
         });
-        logger.info(`Adapter Registration: ConfigurableLLMAdapter instance created (token: ${tokens.ILLMAdapter}). Ready for async initialization.`);
 
-        // The adapter's init method is now responsible for loading its own configuration
-        // using the LlmConfigLoader.
-        adapterInstance.init({llmConfigLoader}) // llmConfigLoader is now passed to init
-            .then(() => {
-                logger.info(`Adapter Registration: ConfigurableLLMAdapter (token: ${tokens.ILLMAdapter}) initialized successfully and is operational: ${adapterInstance.isOperational()}.`);
-                if (!adapterInstance.isOperational()) {
-                    logger.warn(`Adapter Registration: ConfigurableLLMAdapter (token: ${tokens.ILLMAdapter}) initialized BUT IS NOT OPERATIONAL. Check logs for LlmConfigLoader errors (e.g., failed fetch, parse, or schema validation of llm-configs.json, or if no LLMs were configured/valid).`);
-                }
-            })
-            .catch(error => {
-                // This error is critical because if the adapter fails to init, the app likely can't use LLMs.
-                logger.error(`Adapter Registration: CRITICAL - ConfigurableLLMAdapter (token: ${tokens.ILLMAdapter}) failed to initialize: ${error.message}`, {error});
-                // Depending on app requirements, you might want to re-throw or handle this more gracefully,
-                // e.g., by setting a global state that LLM functionality is unavailable.
-            });
+        logger.info(`Adapter Registration: ConfigurableLLMAdapter instance (token: ${tokens.ILLMAdapter}) created. It must be initialized explicitly later in the application's bootstrap sequence, after all schemas have been loaded by SchemaLoader.`);
+
+        // CRITICAL CHANGE: DO NOT call adapterInstance.init() here.
+        // The init() call and its associated .then().catch() logic will be handled
+        // by the component/service responsible for orchestrating the initialization sequence.
 
         return adapterInstance;
     });
-    logger.info(`Adapter Registration: Registered ConfigurableLLMAdapter factory as ${tokens.ILLMAdapter}. Asynchronous initialization will follow.`);
+    logger.info(`Adapter Registration: Registered ConfigurableLLMAdapter factory as ${tokens.ILLMAdapter}. Deferred (explicit) initialization is required.`);
 
-    logger.info('Adapter Registrations: LLM Adapter setup complete.');
+    logger.info('Adapter Registrations: LLM Adapter setup complete (instance created, not initialized).');
     logger.info('Adapter Registrations: All registrations complete.');
 }
 

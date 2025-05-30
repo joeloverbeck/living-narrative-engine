@@ -13,6 +13,7 @@
 /** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 import {IInitializationService} from '../../interfaces/IInitializationService.js';
 import {tokens} from '../../config/tokens.js';
+import {LlmConfigLoader} from '../../llms/services/llmConfigLoader.js'; // <<< ADDED IMPORT
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
@@ -45,8 +46,9 @@ class InitializationService extends IInitializationService {
             const errorMsg = 'InitializationService: Missing or invalid required dependency \'logger\'.';
             console.error(errorMsg);
             try {
+                // Attempt to use logger from container if direct one is bad, for this specific error only.
                 container.resolve(tokens.ILogger)?.error(errorMsg);
-            } catch (e) { /* Ignore */
+            } catch (e) { /* Ignore if container or logger resolution fails */
             }
             throw new Error(errorMsg);
         }
@@ -83,8 +85,47 @@ class InitializationService extends IInitializationService {
             this.#logger.debug('Resolving WorldLoader...');
             const worldLoader = /** @type {WorldLoader} */ (this.#container.resolve(tokens.WorldLoader));
             this.#logger.info('WorldLoader resolved. Loading world data...');
-            await worldLoader.loadWorld(worldName);
+            await worldLoader.loadWorld(worldName); // Schemas are loaded by this point
             this.#logger.info(`InitializationService: World data loaded successfully for world: ${worldName}.`);
+
+            // ***** START: Initialize ConfigurableLLMAdapter *****
+            this.#logger.info('InitializationService: Attempting to initialize ConfigurableLLMAdapter...');
+            try {
+                const llmAdapter = /** @type {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} */
+                    (this.#container.resolve(tokens.ILLMAdapter));
+
+                if (!llmAdapter) {
+                    this.#logger.error('InitializationService: Failed to resolve ILLMAdapter from container. Cannot initialize.');
+                } else if (typeof llmAdapter.init !== 'function') {
+                    this.#logger.error('InitializationService: Resolved ILLMAdapter does not have an init method.');
+                } else if (typeof llmAdapter.isInitialized === 'function' && llmAdapter.isInitialized()) {
+                    this.#logger.info('InitializationService: ConfigurableLLMAdapter already initialized. Skipping re-initialization.');
+                } else {
+                    const llmConfigLoaderInstance = new LlmConfigLoader({
+                        logger: this.#container.resolve(tokens.ILogger),
+                        schemaValidator: this.#container.resolve(tokens.ISchemaValidator),
+                        configuration: this.#container.resolve(tokens.IConfiguration),
+                    });
+                    this.#logger.debug('InitializationService: LlmConfigLoader instance created for adapter initialization.');
+
+                    await llmAdapter.init({llmConfigLoader: llmConfigLoaderInstance});
+
+                    if (typeof llmAdapter.isOperational === 'function' && llmAdapter.isOperational()) {
+                        this.#logger.info(`InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.`);
+                    } else {
+                        this.#logger.warn(`InitializationService: ConfigurableLLMAdapter.init() completed BUT THE ADAPTER IS NOT OPERATIONAL. Check adapter-specific logs (e.g., LlmConfigLoader errors).`);
+                    }
+                }
+            } catch (adapterInitError) {
+                this.#logger.error(`InitializationService: CRITICAL error during ConfigurableLLMAdapter.init(): ${adapterInitError.message}`, {
+                    errorName: adapterInitError.name,
+                    errorStack: adapterInitError.stack,
+                    errorObj: adapterInitError
+                });
+                // Note: This error is logged but does not currently stop the entire initialization sequence.
+                // The ILLMAdapter will be non-operational.
+            }
+            // ***** END: Initialize ConfigurableLLMAdapter *****
 
             this.#logger.debug('Resolving SystemInitializer...');
             const systemInitializer = /** @type {SystemInitializer} */ (this.#container.resolve(tokens.SystemInitializer));
@@ -110,7 +151,6 @@ class InitializationService extends IInitializationService {
             this.#logger.debug('Resolving DomUiFacade to ensure UI components can be instantiated...');
             try {
                 this.#container.resolve(tokens.DomUiFacade);
-                // CORRECTED Log message to match test expectation
                 this.#logger.info('InitializationService: DomUiFacade resolved, UI components instantiated.');
             } catch (uiResolveError) {
                 this.#logger.warn('InitializationService: Failed to resolve DomUiFacade. UI might not function correctly if it was expected.', uiResolveError);
