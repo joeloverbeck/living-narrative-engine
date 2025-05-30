@@ -22,21 +22,21 @@ const MOCK_CONFIG_FILE_PATH = './test-llm-configs.json';
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_1 = {
-    config_id: "test_config_v1",
-    model_identifier: "test-vendor/test-model-exact",
-    prompt_elements: [
+    configId: "test_config_v1",
+    modelIdentifier: "test-vendor/test-model-exact",
+    promptElements: [
         {key: "system_prompt", prefix: "System: ", suffix: "\n"},
         {key: "user_query", prefix: "User: ", suffix: "\n"}
     ],
-    prompt_assembly_order: ["system_prompt", "user_query"]
+    promptAssemblyOrder: ["system_prompt", "user_query"]
 };
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_2 = {
-    config_id: "test_config_v2_wildcard",
-    model_identifier: "test-vendor/wildcard*",
-    prompt_elements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
-    prompt_assembly_order: ["instruction"]
+    configId: "test_config_v2_wildcard",
+    modelIdentifier: "test-vendor/wildcard*",
+    promptElements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
+    promptAssemblyOrder: ["instruction"]
 };
 
 
@@ -61,19 +61,19 @@ describe('PromptBuilder', () => {
 
     describe('Special Handling for Perception Log', () => {
         const perceptionLogTestConfig = {
-            config_id: "p_log_test", model_identifier: "log/test",
-            prompt_elements: [
+            configId: "p_log_test", modelIdentifier: "log/test",
+            promptElements: [
                 {key: "header", prefix: "Conversation Start (ID: {session_id})\n"},
                 {key: "perception_log_entry", prefix: "[{timestamp}][{role} ({source_system})]: ", suffix: "\n"},
                 {key: "perception_log_wrapper", prefix: "--- Log ---\n", suffix: "--- End Log ---\n"},
                 {key: "footer", prefix: "End."}
             ],
-            prompt_assembly_order: ["header", "perception_log_wrapper", "footer"]
+            promptAssemblyOrder: ["header", "perception_log_wrapper", "footer"]
         };
         const noEntryConfig = {
-            config_id: "no_entry_cfg", model_identifier: "log/no_entry",
-            prompt_elements: [{key: "perception_log_wrapper", prefix: "<WRAP>", suffix: "</WRAP>"}],
-            prompt_assembly_order: ["perception_log_wrapper"]
+            configId: "no_entry_cfg", modelIdentifier: "log/no_entry",
+            promptElements: [{key: "perception_log_wrapper", prefix: "<WRAP>", suffix: "</WRAP>"}],
+            promptAssemblyOrder: ["perception_log_wrapper"]
         };
 
         beforeEach(() => {
@@ -116,7 +116,7 @@ describe('PromptBuilder', () => {
             const result = await promptBuilder.build("log/no_entry", promptData);
             expect(result).toBe("");
             // Updated expectation to match the actual log message format
-            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("Missing 'perception_log_entry' for config_id \"no_entry_cfg\""));
+            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("Missing 'perception_log_entry' for configId \"no_entry_cfg\""));
             // Corrected expected string to match actual log output
             expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining("Perception log 'perception_log_wrapper' resulted in no entries. Skipping wrapper."));
         });

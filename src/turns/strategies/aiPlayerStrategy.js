@@ -5,7 +5,7 @@
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../services/promptBuilder.js').PromptBuilder} PromptBuilder */
+/** @typedef {import('../../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
 /** @typedef {import('../../types/promptData.js').PromptData} PromptData */
 /** @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
@@ -15,6 +15,7 @@ import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
 import {IAIGameStateProvider} from '../interfaces/IAIGameStateProvider.js';
 import {ILLMResponseProcessor} from '../interfaces/ILLMResponseProcessor.js';
 import {DEFAULT_FALLBACK_ACTION} from "../../llms/constants/llmConstants.js";
+
 
 /**
  * @class AIPlayerStrategy
@@ -26,9 +27,11 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     #llmAdapter;
     /** @private @type {IAIGameStateProvider} */
     #gameStateProvider;
+    // MODIFICATION: Updated type to IAIPromptContentProvider
     /** @private @type {IAIPromptContentProvider} */
     #promptContentProvider;
-    /** @private @type {PromptBuilder} */
+    // MODIFICATION: Updated type to IPromptBuilder
+    /** @private @type {IPromptBuilder} */
     #promptBuilder;
     /** @private @type {ILLMResponseProcessor} */
     #llmResponseProcessor;
@@ -42,7 +45,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
      * @param {ILLMAdapter} dependencies.llmAdapter - Adapter for LLM communication.
      * @param {IAIGameStateProvider} dependencies.gameStateProvider - Provider for AI game state.
      * @param {IAIPromptContentProvider} dependencies.promptContentProvider - Provider for prompt content pieces.
-     * @param {PromptBuilder} dependencies.promptBuilder - Builder for assembling the final prompt string.
+     * @param {IPromptBuilder} dependencies.promptBuilder - Builder for assembling the final prompt string.
      * @param {ILLMResponseProcessor} dependencies.llmResponseProcessor - Processor for LLM responses.
      * @param {ILogger} dependencies.logger - Logger instance.
      * @throws {Error} If any dependency is invalid.
@@ -63,14 +66,16 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         if (!gameStateProvider || typeof gameStateProvider.buildGameState !== 'function') {
             throw new Error("AIPlayerStrategy: Constructor requires a valid IAIGameStateProvider.");
         }
+        // MODIFICATION: Updated validation for promptContentProvider
         // The constructor check should ensure promptContentProvider has getPromptData.
         // If validateGameStateForPrompting needed to be called directly by AIPlayerStrategy,
         // we'd add a check for it here, but it's internal to getPromptData now.
         if (!promptContentProvider || typeof promptContentProvider.getPromptData !== 'function') {
-            throw new Error("AIPlayerStrategy: Constructor requires a valid IAIPromptContentProvider with a getPromptData method.");
+            throw new Error("AIPlayerStrategy: Constructor requires a valid IAIPromptContentProvider instance with a getPromptData method.");
         }
+        // MODIFICATION: Updated validation for promptBuilder
         if (!promptBuilder || typeof promptBuilder.build !== 'function') {
-            throw new Error("AIPlayerStrategy: Constructor requires a valid PromptBuilder instance.");
+            throw new Error("AIPlayerStrategy: Constructor requires a valid IPromptBuilder instance with a build method.");
         }
         if (!llmResponseProcessor || typeof llmResponseProcessor.processResponse !== 'function') {
             throw new Error("AIPlayerStrategy: Constructor requires a valid ILLMResponseProcessor.");

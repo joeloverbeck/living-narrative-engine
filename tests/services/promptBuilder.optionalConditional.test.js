@@ -22,21 +22,21 @@ const MOCK_CONFIG_FILE_PATH = './test-llm-configs.json';
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_1 = {
-    config_id: "test_config_v1",
-    model_identifier: "test-vendor/test-model-exact",
-    prompt_elements: [
+    configId: "test_config_v1",
+    modelIdentifier: "test-vendor/test-model-exact",
+    promptElements: [
         {key: "system_prompt", prefix: "System: ", suffix: "\n"},
         {key: "user_query", prefix: "User: ", suffix: "\n"}
     ],
-    prompt_assembly_order: ["system_prompt", "user_query"]
+    promptAssemblyOrder: ["system_prompt", "user_query"]
 };
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_2 = {
-    config_id: "test_config_v2_wildcard",
-    model_identifier: "test-vendor/wildcard*",
-    prompt_elements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
-    prompt_assembly_order: ["instruction"]
+    configId: "test_config_v2_wildcard",
+    modelIdentifier: "test-vendor/wildcard*",
+    promptElements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
+    promptAssemblyOrder: ["instruction"]
 };
 
 
@@ -61,14 +61,14 @@ describe('PromptBuilder', () => {
     
     describe('Handling of Optional and Conditional Parts', () => {
         const conditionalTestConfig = {
-            config_id: "cond_test", model_identifier: "cond/test",
-            prompt_elements: [
+            configId: "cond_test", modelIdentifier: "cond/test",
+            promptElements: [
                 {key: "opt_part"},
                 {key: "truthy_cond", prefix: "Truthy: ", condition: {promptDataFlag: "enableIt"}},
                 {key: "val_cond", prefix: "ValMode: ", condition: {promptDataFlag: "mode", expectedValue: "active"}},
                 {key: "bad_cond_flag", prefix: "Bad:", condition: {promptDataFlag: 123}}
             ],
-            prompt_assembly_order: ["opt_part", "truthy_cond", "val_cond", "bad_cond_flag"]
+            promptAssemblyOrder: ["opt_part", "truthy_cond", "val_cond", "bad_cond_flag"]
         };
 
         beforeEach(() => {

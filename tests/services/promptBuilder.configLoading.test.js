@@ -22,21 +22,21 @@ const MOCK_CONFIG_FILE_PATH = './test-llm-configs.json';
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_1 = {
-    config_id: "test_config_v1",
-    model_identifier: "test-vendor/test-model-exact",
-    prompt_elements: [
+    configId: "test_config_v1",
+    modelIdentifier: "test-vendor/test-model-exact",
+    promptElements: [
         {key: "system_prompt", prefix: "System: ", suffix: "\n"},
         {key: "user_query", prefix: "User: ", suffix: "\n"}
     ],
-    prompt_assembly_order: ["system_prompt", "user_query"]
+    promptAssemblyOrder: ["system_prompt", "user_query"]
 };
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_2 = {
-    config_id: "test_config_v2_wildcard",
-    model_identifier: "test-vendor/wildcard*",
-    prompt_elements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
-    prompt_assembly_order: ["instruction"]
+    configId: "test_config_v2_wildcard",
+    modelIdentifier: "test-vendor/wildcard*",
+    promptElements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
+    promptAssemblyOrder: ["instruction"]
 };
 
 
@@ -75,7 +75,7 @@ describe('PromptBuilder', () => {
             expect(fetchSpy).toHaveBeenCalledWith(MOCK_CONFIG_FILE_PATH);
             expect(logger.info).toHaveBeenCalledWith(expect.stringContaining(`PromptBuilder: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}`));
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(2);
-            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_1.config_id)).toEqual(MOCK_CONFIG_1);
+            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_1.configId)).toEqual(MOCK_CONFIG_1);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
@@ -162,7 +162,7 @@ describe('PromptBuilder', () => {
         });
 
         test('should skip invalid configuration objects during file load but load valid ones', async () => {
-            const invalidConfig = {config_id: "invalid_cfg"}; // Missing other required fields
+            const invalidConfig = {configId: "invalid_cfg"}; // Missing other required fields
             const validConfig = MOCK_CONFIG_1;
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
@@ -179,8 +179,8 @@ describe('PromptBuilder', () => {
                 {config: invalidConfig}
             );
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(2);
-            expect(promptBuilder.getLlmConfigsCacheForTest().has(validConfig.config_id)).toBe(true);
-            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.config_id)).toBe(true);
+            expect(promptBuilder.getLlmConfigsCacheForTest().has(validConfig.configId)).toBe(true);
+            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.configId)).toBe(true);
             expect(promptBuilder.getLlmConfigsCacheForTest().has("invalid_cfg")).toBe(false);
             expect(logger.info).toHaveBeenCalledWith(expect.stringContaining(`PromptBuilder: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}`));
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
@@ -202,7 +202,7 @@ describe('PromptBuilder', () => {
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
             expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('PromptBuilder initialized with 1 preloaded configurations.'));
 
-            await promptBuilder.build(MOCK_CONFIG_1.model_identifier, {systemPromptContent: "Test"});
+            await promptBuilder.build(MOCK_CONFIG_1.modelIdentifier, {systemPromptContent: "Test"});
             expect(fetchSpy).not.toHaveBeenCalled();
             // This debug log means it recognized configs were already there (from initialConfigs)
             expect(logger.debug).toHaveBeenCalledWith('PromptBuilder.#ensureConfigsLoaded: Configurations already loaded or load attempt was made and cache is not empty.');
@@ -218,7 +218,7 @@ describe('PromptBuilder', () => {
             }));
             promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
 
-            await promptBuilder.build(MOCK_CONFIG_1.model_identifier, {systemPromptContent: "Test"}); // Loads MOCK_CONFIG_1
+            await promptBuilder.build(MOCK_CONFIG_1.modelIdentifier, {systemPromptContent: "Test"}); // Loads MOCK_CONFIG_1
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
 
@@ -234,11 +234,11 @@ describe('PromptBuilder', () => {
                 status: 200,
                 statusText: "OK"
             }));
-            await promptBuilder.build(MOCK_CONFIG_2.model_identifier, {instructionContent: "Test"}); // Should trigger fetch again
+            await promptBuilder.build(MOCK_CONFIG_2.modelIdentifier, {instructionContent: "Test"}); // Should trigger fetch again
 
             expect(fetchSpy).toHaveBeenCalledTimes(2); // Called once for initial load, once after reset
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
-            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.config_id)).toBe(true);
+            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.configId)).toBe(true);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
@@ -249,17 +249,17 @@ describe('PromptBuilder', () => {
 
             const updatedMockConfig1 = {
                 ...MOCK_CONFIG_1,
-                model_identifier: "new-model-id",
-                prompt_elements: MOCK_CONFIG_1.prompt_elements, // Ensure these are copied if not deeply spread
-                prompt_assembly_order: MOCK_CONFIG_1.prompt_assembly_order
+                modelIdentifier: "new-model-id",
+                promptElements: MOCK_CONFIG_1.promptElements, // Ensure these are copied if not deeply spread
+                promptAssemblyOrder: MOCK_CONFIG_1.promptAssemblyOrder
             };
             const newConfig = MOCK_CONFIG_2;
 
             promptBuilder.addOrUpdateConfigs([updatedMockConfig1, newConfig]);
             expect(logger.info).toHaveBeenCalledWith('PromptBuilder.addOrUpdateConfigs: Loaded 1 new, updated 1 existing configurations.');
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(2);
-            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_1.config_id)?.model_identifier).toBe("new-model-id");
-            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_2.config_id)).toEqual(newConfig);
+            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_1.configId)?.modelIdentifier).toBe("new-model-id");
+            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_2.configId)).toEqual(newConfig);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
@@ -274,12 +274,12 @@ describe('PromptBuilder', () => {
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false); // Still false as no valid configs added
 
-            const invalidConfig = {config_id: "no_model_id"}; // Missing model_identifier and other required fields
+            const invalidConfig = {configId: "no_model_id"}; // Missing modelIdentifier and other required fields
             promptBuilder.addOrUpdateConfigs([invalidConfig, MOCK_CONFIG_1]);
             // FIX: Updated expected warning message
             expect(logger.warn).toHaveBeenCalledWith('PromptBuilder.addOrUpdateConfigs: Skipping invalid configuration object.', {config: invalidConfig});
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
-            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_1.config_id)).toBe(true);
+            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_1.configId)).toBe(true);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true); // Becomes true after MOCK_CONFIG_1 is added
         });
 

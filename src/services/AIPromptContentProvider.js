@@ -1,12 +1,12 @@
 // src/services/AIPromptContentProvider.js
 // --- FILE START ---
 
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
-/** @typedef {import('../dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
+/** @typedef {import('../turns/dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
 /** @typedef {import('../types/promptData.js').PromptData} PromptData */
-/** @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
 
+import {IAIPromptContentProvider} from "../turns/interfaces/IAIPromptContentProvider.js";
 import {ensureTerminalPunctuation} from '../utils/textUtils.js';
 import {
     DEFAULT_FALLBACK_CHARACTER_NAME,
@@ -60,9 +60,10 @@ export const FINAL_LLM_INSTRUCTION_TEXT = "Now, based on all the information pro
  * @description Generates specific content pieces from game state data for use with PromptBuilder.
  * This class is responsible for preparing the raw text for different sections of a prompt.
  */
-export class AIPromptContentProvider {
+export class AIPromptContentProvider extends IAIPromptContentProvider {
     constructor() {
         // Initialization, if any, would go here.
+        super();
     }
 
     /**

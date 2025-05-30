@@ -2,6 +2,8 @@
 // --- FILE START ---
 
 import {jest, describe, beforeEach, test, expect} from '@jest/globals';
+// Correct the import path based on your actual project structure
+// Assuming LlmConfigLoader is now in 'src/services/' not 'src/llms/services/'
 import {LlmConfigLoader} from '../../src/llms/services/llmConfigLoader.js';
 import {Workspace_retry} from '../../src/utils/apiUtils.js';
 
@@ -36,38 +38,48 @@ const mockConfigurationInstance = () => ({
     getSchemaFiles: jest.fn().mockReturnValue([]),
     getContentTypeSchemaId: jest.fn((typeName) => {
         if (typeName === 'llm-configs') {
-            return 'http://example.com/schemas/llm-configs.schema.json'; // Schema for the prompt config objects
+            return 'http://example.com/schemas/llm-configs.schema.json';
         }
         return `http://example.com/schemas/${typeName}.schema.json`;
     }),
     getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
 });
 
-// Updated default path for prompt configurations
-const defaultPromptConfigPath = "config/llm-configs.json";
+const defaultLlmConfigPath = "config/llm-configs.json"; // Renamed for clarity
 
-// Example valid llm-configs.json content (an array of prompt config objects)
-const validPromptConfigsArray = [
-    {
-        config_id: "full_config_example_01",
-        model_identifier: "anthropic/claude-3-sonnet-20240229",
-        prompt_elements: [
-            {key: "system_prompt", prefix: "<system_prompt>\n", suffix: "\n</system_prompt>"},
-            {key: "context_world_lore", prefix: "<context_world_lore>\n", suffix: "\n</context_world_lore>"},
-            {key: "user_input", prefix: "<user_input>\n", suffix: "\n</user_input>"},
-            {key: "assistant_response_prefix", prefix: "Character: ", suffix: ""}
-        ],
-        prompt_assembly_order: ["system_prompt", "context_world_lore", "user_input"]
-    },
-    {
-        config_id: "minimal_config_example_02",
-        model_identifier: "generic-model-*",
-        prompt_elements: [
-            {key: "query", prefix: "", suffix: ""}
-        ],
-        prompt_assembly_order: ["query"]
+// Example valid llm-configs.json content, now as a root object
+const mockValidRootConfig = {
+    defaultConfigId: "full_config_example_01",
+    configs: {
+        "full_config_example_01": {
+            configId: "full_config_example_01", // Recommended to match key
+            displayName: "Full Example 1",
+            modelIdentifier: "anthropic/claude-3-sonnet-20240229",
+            endpointUrl: "https://api.anthropic.com/v1/messages",
+            apiType: "anthropic_messages",
+            jsonOutputStrategy: {method: "manual_prompting"},
+            promptElements: [
+                {key: "system_prompt", prefix: "<system_prompt>\n", suffix: "\n</system_prompt>"},
+                {key: "context_world_lore", prefix: "<context_world_lore>\n", suffix: "\n</context_world_lore>"},
+                {key: "user_input", prefix: "<user_input>\n", suffix: "\n</user_input>"},
+                {key: "assistant_response_prefix", prefix: "Character: ", suffix: ""}
+            ],
+            promptAssemblyOrder: ["system_prompt", "context_world_lore", "user_input", "assistant_response_prefix"]
+        },
+        "minimal_config_example_02": {
+            configId: "minimal_config_example_02", // Recommended to match key
+            displayName: "Minimal Example 2",
+            modelIdentifier: "generic-model-*",
+            endpointUrl: "http://localhost:8080/v1/chat/completions",
+            apiType: "openai_compatible",
+            jsonOutputStrategy: {method: "native_json_mode"},
+            promptElements: [
+                {key: "query", prefix: "", suffix: ""}
+            ],
+            promptAssemblyOrder: ["query"]
+        }
     }
-];
+};
 
 describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
     /** @type {LlmConfigLoader} */
@@ -89,167 +101,229 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
             logger: loggerMock,
             schemaValidator: schemaValidatorMock,
             configuration: configurationMock,
-            // Uses the class default: "config/llm-configs.json"
         });
         Workspace_retry.mockReset();
     });
 
-    describe('Prompt Configuration Array Parsing', () => {
-        test('should correctly parse a valid llm-configs.json array with multiple entries', async () => {
-            const mockConfigs = JSON.parse(JSON.stringify(validPromptConfigsArray));
-            Workspace_retry.mockResolvedValueOnce(mockConfigs);
-            schemaValidatorMock.validate.mockReturnValueOnce({isValid: true, errors: null}); // Assume schema and semantic validation pass
+    describe('LLM Root Configuration Parsing', () => {
+        test('should correctly parse a valid llm-configs.json root object with multiple entries', async () => {
+            const localMockValidRootConfig = JSON.parse(JSON.stringify(mockValidRootConfig));
+            Workspace_retry.mockResolvedValueOnce(localMockValidRootConfig);
+            // Schema validation should pass for this valid root object
+            schemaValidatorMock.validate.mockReturnValueOnce({isValid: true, errors: null});
 
-            const result = await loader.loadConfigs(defaultPromptConfigPath);
+            const result = await loader.loadConfigs(defaultLlmConfigPath);
 
             expect(Workspace_retry).toHaveBeenCalledWith(
-                defaultPromptConfigPath,
+                defaultLlmConfigPath,
                 expect.any(Object), expect.any(Number), expect.any(Number), expect.any(Number)
             );
-            expect(schemaValidatorMock.validate).toHaveBeenCalledWith(configurationMock.getContentTypeSchemaId('llm-configs'), mockConfigs);
+            expect(schemaValidatorMock.validate).toHaveBeenCalledWith(
+                configurationMock.getContentTypeSchemaId('llm-configs'),
+                localMockValidRootConfig
+            );
 
-            // Result should be the array itself
-            expect(Array.isArray(result)).toBe(true);
-            expect(result).toEqual(mockConfigs);
-            expect(result.length).toBe(2);
+            expect(result.error).toBeUndefined();
+            expect(typeof result).toBe('object');
+            expect(result).not.toBeNull();
+            expect(result.defaultConfigId).toBe("full_config_example_01");
+            expect(result.configs).toBeDefined();
+            expect(Object.keys(result.configs).length).toBe(2);
 
-            // Check properties of the first config object
-            const firstConfig = result[0];
-            expect(firstConfig.config_id).toBe("full_config_example_01");
-            expect(firstConfig.model_identifier).toBe("anthropic/claude-3-sonnet-20240229");
-            expect(firstConfig.prompt_elements.length).toBe(4);
-            expect(firstConfig.prompt_elements[0].key).toBe("system_prompt");
-            expect(firstConfig.prompt_assembly_order).toEqual(["system_prompt", "context_world_lore", "user_input"]);
+            const firstConfig = result.configs["full_config_example_01"];
+            expect(firstConfig).toBeDefined();
+            expect(firstConfig.configId).toBe("full_config_example_01");
+            expect(firstConfig.modelIdentifier).toBe("anthropic/claude-3-sonnet-20240229");
+            expect(firstConfig.promptElements.length).toBe(4);
+            expect(firstConfig.promptElements[0].key).toBe("system_prompt");
+            expect(firstConfig.promptAssemblyOrder).toEqual(["system_prompt", "context_world_lore", "user_input", "assistant_response_prefix"]);
 
-            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: LLM Prompt configuration file from ${defaultPromptConfigPath} passed semantic validation.`);
+            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: Semantic validation passed for ${defaultLlmConfigPath}.`);
+            // Also check the final success log to be thorough
+            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: LLM Prompt configurations from ${defaultLlmConfigPath} processed successfully.`);
         });
 
-        test('should handle an empty array as valid llm-configs.json content', async () => {
-            const emptyArrayConfig = [];
-            Workspace_retry.mockResolvedValueOnce(JSON.parse(JSON.stringify(emptyArrayConfig)));
-            schemaValidatorMock.validate.mockReturnValueOnce({isValid: true, errors: null});
+        test('should handle a minimal valid root configuration (e.g., empty configs map)', async () => {
+            const minimalRootConfig = {
+                defaultConfigId: "some_default_or_placeholder", // Schema requires defaultConfigId
+                configs: {} // Empty configs map
+            };
+            Workspace_retry.mockResolvedValueOnce(JSON.parse(JSON.stringify(minimalRootConfig)));
+            schemaValidatorMock.validate.mockReturnValueOnce({isValid: true, errors: null}); // Assume this is schema-valid
 
-            const result = await loader.loadConfigs(defaultPromptConfigPath);
-            expect(Array.isArray(result)).toBe(true);
-            expect(result).toEqual(emptyArrayConfig);
-            expect(result.length).toBe(0);
-            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: LLM Prompt configuration file from ${defaultPromptConfigPath} passed semantic validation.`);
+            const result = await loader.loadConfigs(defaultLlmConfigPath);
+
+            expect(result.error).toBeUndefined();
+            expect(typeof result).toBe('object');
+            expect(result.defaultConfigId).toBe("some_default_or_placeholder");
+            expect(result.configs).toEqual({});
+            // CORRECTED LOG EXPECTATION:
+            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: Semantic validation passed for ${defaultLlmConfigPath}.`);
+            // Also check the final success log
+            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: LLM Prompt configurations from ${defaultLlmConfigPath} processed successfully.`);
         });
     });
 
-    describe('Optional Fields within a Prompt Config Object (as per schema)', () => {
-        // The schema for llm-configs (data/schemas/llm-configs.schema.json)
-        // defines all top-level properties of a config object as required.
-        // So, "optional fields" tests would primarily relate to optional fields *within*
-        // structures like prompt_elements, if any were defined as such, or if the
-        // schema itself were to change to make some top-level fields optional.
-        // For now, the schema enforces presence of config_id, model_identifier, etc.
-
+    describe('Individual Configuration Object Parsing (within root.configs)', () => {
         test('should parse correctly if all required fields in a config object are present', async () => {
-            const singleEntryConfig = [{
-                config_id: "test_config_001",
-                model_identifier: "test/model-v1",
-                prompt_elements: [{key: "main", prefix: "<p>", suffix: "</p>"}],
-                prompt_assembly_order: ["main"]
-            }];
-            Workspace_retry.mockResolvedValueOnce(JSON.parse(JSON.stringify(singleEntryConfig)));
+            const singleEntryRootConfig = {
+                defaultConfigId: "test_config_001",
+                configs: {
+                    "test_config_001": {
+                        configId: "test_config_001", // Required
+                        displayName: "Test Config 001", // Required
+                        modelIdentifier: "test/model-v1", // Required
+                        endpointUrl: "http://example.com/api", // Required
+                        apiType: "custom", // Required
+                        jsonOutputStrategy: {method: "manual_prompting"}, // Required
+                        promptElements: [{key: "main", prefix: "<p>", suffix: "</p>"}], // Required
+                        promptAssemblyOrder: ["main"] // Required
+                        // Optional fields like apiKeyEnvVar, apiKeyFileName, defaultParameters, etc., are omitted
+                    }
+                }
+            };
+            Workspace_retry.mockResolvedValueOnce(JSON.parse(JSON.stringify(singleEntryRootConfig)));
             schemaValidatorMock.validate.mockReturnValueOnce({isValid: true, errors: null});
 
-            const result = await loader.loadConfigs(defaultPromptConfigPath);
-            expect(Array.isArray(result)).toBe(true);
-            expect(result.length).toBe(1);
-            expect(result[0].config_id).toBe("test_config_001");
-            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: LLM Prompt configuration file from ${defaultPromptConfigPath} passed semantic validation.`);
+            const result = await loader.loadConfigs(defaultLlmConfigPath);
+
+            expect(result.error).toBeUndefined();
+            expect(result.defaultConfigId).toBe("test_config_001");
+            expect(result.configs).toHaveProperty("test_config_001");
+            expect(result.configs["test_config_001"].configId).toBe("test_config_001");
+            expect(result.configs["test_config_001"].modelIdentifier).toBe("test/model-v1");
+            // CORRECTED LOG EXPECTATION:
+            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: Semantic validation passed for ${defaultLlmConfigPath}.`);
+            // Also check the final success log
+            expect(loggerMock.info).toHaveBeenCalledWith(`LlmConfigLoader: LLM Prompt configurations from ${defaultLlmConfigPath} processed successfully.`);
         });
     });
 
-    // Tests for 'defaultLlmId' are removed as it's not part of llm-configs.json structure.
-
-    describe('Error Handling for Prompt Configs', () => {
+    describe('Error Handling for LLM Configs', () => {
         test('should return LoadConfigsErrorResult for syntactically invalid JSON', async () => {
             const parsingError = new SyntaxError("Unexpected token 'X' in JSON at position 0");
             Workspace_retry.mockRejectedValueOnce(parsingError);
 
-            const result = await loader.loadConfigs(defaultPromptConfigPath);
+            const result = await loader.loadConfigs(defaultLlmConfigPath);
 
             expect(result.error).toBe(true);
-            // Message now refers to LLM Prompt configurations
-            expect(result.message).toContain(`Failed to load, parse, or validate LLM Prompt configurations from ${defaultPromptConfigPath}: ${parsingError.message}`);
+            // Message updated in LlmConfigLoader to match this test expectation
+            expect(result.message).toBe(`Failed to load, parse, or validate LLM Prompt configurations from ${defaultLlmConfigPath}: ${parsingError.message}`);
             expect(result.stage).toBe('parse');
             expect(result.originalError).toBe(parsingError);
-            expect(result.path).toBe(defaultPromptConfigPath);
+            expect(result.path).toBe(defaultLlmConfigPath); // Property name is 'path'
             expect(schemaValidatorMock.validate).not.toHaveBeenCalled();
         });
 
-        test('should return LoadConfigsErrorResult if schema validation fails for prompt configs (e.g., not an array)', async () => {
-            const notAnArrayContent = {"some_object_not_array": true};
-            Workspace_retry.mockResolvedValueOnce(notAnArrayContent);
-            // This is the raw error object that schemaValidator.validate would return
+        test('should return LoadConfigsErrorResult if schema validation fails for the root object structure', async () => {
+            // Example: defaultConfigId is missing, which is required by the new schema
+            const malformedRootObject = {
+                // defaultConfigId: "missing", // This field is missing
+                configs: {"someConf": {configId: "someConf" /* ... other valid fields */}}
+            };
+            Workspace_retry.mockResolvedValueOnce(malformedRootObject);
+
             const rawSchemaError = {
-                instancePath: "",
-                keyword: "type",
-                message: "must be array",
-                schemaPath: "#/type",
-                params: {type: "array"}
+                instancePath: "", // Or could be "/defaultConfigId" if schema identifies specific missing field
+                keyword: "required",
+                message: "must have required property 'defaultConfigId'",
+                schemaPath: "#/required",
+                params: {missingProperty: "defaultConfigId"}
             };
             schemaValidatorMock.validate.mockReturnValueOnce({isValid: false, errors: [rawSchemaError]});
 
-            const result = await loader.loadConfigs(defaultPromptConfigPath);
+            const result = await loader.loadConfigs(defaultLlmConfigPath);
+
             expect(result.error).toBe(true);
+            // Message updated in LlmConfigLoader to match this test expectation
             expect(result.message).toBe('LLM Prompt configuration schema validation failed.');
             expect(result.stage).toBe('validation');
-            expect(result.path).toBe(defaultPromptConfigPath);
-            // Expect the standardized error structure
+            expect(result.path).toBe(defaultLlmConfigPath); // Property name is 'path'
+
             expect(result.validationErrors).toEqual([
                 expect.objectContaining({
                     errorType: "SCHEMA_VALIDATION",
-                    configId: "N/A (root data)",
-                    path: "(root)",
-                    message: "must be array", // Message from the rawSchemaError
-                    details: expect.objectContaining(rawSchemaError), // Original raw error in details
-                    expected: "array" // Derived from rawSchemaError.params.type
+                    // configId might be "N/A (root data)" or similar depending on #formatAjvErrorToStandardizedError logic for root errors
+                    configId: "N/A (root data)", // Assuming error is on root due to missing top-level required prop
+                    path: "(root)", // Or "defaultConfigId" if instancePath was /defaultConfigId
+                    message: "must have required property 'defaultConfigId'",
+                    details: expect.objectContaining(rawSchemaError)
                 })
             ]);
         });
 
         test('should return LoadConfigsErrorResult if semantic validation fails for prompt configs', async () => {
-            const semanticallyInvalidConfig = [{
-                config_id: "bad_order",
-                model_identifier: "test/model",
-                prompt_elements: [{key: "system", prefix: "", suffix: ""}],
-                prompt_assembly_order: ["non_existent_key"] // This key is not in prompt_elements
-            }];
-            Workspace_retry.mockResolvedValueOnce(JSON.parse(JSON.stringify(semanticallyInvalidConfig)));
+            const semanticallyInvalidRootConfig = {
+                defaultConfigId: "bad_order_config",
+                configs: {
+                    "bad_order_config": {
+                        configId: "bad_order_config",
+                        displayName: "Bad Order",
+                        modelIdentifier: "test/model",
+                        endpointUrl: "http://example.com/api",
+                        apiType: "custom",
+                        jsonOutputStrategy: {method: "manual_prompting"},
+                        promptElements: [{key: "system", prefix: "", suffix: ""}],
+                        promptAssemblyOrder: ["non_existent_key"] // Key not in promptElements
+                    }
+                }
+            };
+            Workspace_retry.mockResolvedValueOnce(JSON.parse(JSON.stringify(semanticallyInvalidRootConfig)));
             schemaValidatorMock.validate.mockReturnValueOnce({isValid: true, errors: null}); // Schema validation passes
 
-            // We expect performSemanticValidations to return an error like:
-            // {
-            //   config_id: "bad_order",
-            //   path: "prompt_assembly_order[0]", // Or similar, indicating the bad key
-            //   message: "Key 'non_existent_key' not found...",
-            //   errorType: "SEMANTIC_VALIDATION_KEY_NOT_FOUND",
-            //   problematic_key_ref: "non_existent_key" // Assuming this field name from original test expectation
-            // }
-            // This test relies on the actual implementation of performSemanticValidations.
+            const result = await loader.loadConfigs(defaultLlmConfigPath);
 
-            const result = await loader.loadConfigs(defaultPromptConfigPath);
             expect(result.error).toBe(true);
+            // Message updated in LlmConfigLoader to match this test expectation
             expect(result.message).toBe('LLM Prompt configuration semantic validation failed.');
             expect(result.stage).toBe('semantic_validation');
-            expect(result.path).toBe(defaultPromptConfigPath);
+            expect(result.path).toBe(defaultLlmConfigPath); // Property name is 'path'
             expect(result.semanticErrors).toBeDefined();
             expect(result.semanticErrors.length).toBeGreaterThan(0);
 
             const firstSemanticError = result.semanticErrors[0];
-            expect(firstSemanticError.configId).toBe("bad_order"); // Check standardized camelCase field
-            // Assuming performSemanticValidations's original error had 'problematic_key_ref' field
-            // This will be in the 'details' of the standardized error.
+            expect(firstSemanticError.configId).toBe("bad_order_config");
             expect(firstSemanticError.details.problematic_key_ref).toBe("non_existent_key");
-            // Also check other standardized fields
-            expect(firstSemanticError.message).toContain("non_existent_key"); // Check the message on the standardized error
-            expect(firstSemanticError.path).toBeDefined(); // Path should be a string
-            expect(typeof firstSemanticError.path).toBe('string');
-            expect(firstSemanticError.errorType).toBeDefined();
+            expect(firstSemanticError.message).toContain("'non_existent_key'");
+            // Path should be absolute, pointing to the specific location within the config
+            expect(firstSemanticError.path).toBe('configs.bad_order_config.promptAssemblyOrder[0]');
+            expect(firstSemanticError.errorType).toBe('SEMANTIC_VALIDATION_MISSING_ASSEMBLY_KEY');
+        });
+        test('should return LoadConfigsErrorResult if "configs" property is not an object map', async () => {
+            const malformedConfigsProperty = {
+                defaultConfigId: "main",
+                configs: ["this should be an object, not an array"] // Invalid: configs is an array
+            };
+            Workspace_retry.mockResolvedValueOnce(malformedConfigsProperty);
+            // Schema validation should catch this if schema strictly defines configs as an object.
+            // If schema is loose and allows array here (it shouldn't for the new structure),
+            // then semantic validation will catch it.
+            // Let's assume schema catches it first.
+            const rawSchemaError = {
+                instancePath: "/configs",
+                keyword: "type",
+                message: "must be object",
+                schemaPath: "#/properties/configs/type",
+                params: {type: "object"}
+            };
+            schemaValidatorMock.validate.mockReturnValueOnce({isValid: false, errors: [rawSchemaError]});
+
+            const result = await loader.loadConfigs(defaultLlmConfigPath);
+
+            expect(result.error).toBe(true);
+            expect(result.message).toBe('LLM Prompt configuration schema validation failed.');
+            expect(result.stage).toBe('validation');
+            expect(result.path).toBe(defaultLlmConfigPath);
+            expect(result.validationErrors).toEqual([
+                expect.objectContaining({
+                    errorType: "SCHEMA_VALIDATION",
+                    configId: "N/A (configs property)", // configId refers to the root 'configs' property
+                    path: "configs", // Path points to the 'configs' property itself
+                    message: "must be object",
+                    details: expect.objectContaining(rawSchemaError),
+                    expected: "object"
+                })
+            ]);
         });
     });
 });

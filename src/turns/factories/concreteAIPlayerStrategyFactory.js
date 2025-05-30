@@ -1,5 +1,5 @@
-// src/core/turns/factories/ConcreteAIPlayerStrategyFactory.js
-// ──────────────────────────────────────────────────────────────────────────────
+// src/turns/factories/ConcreteAIPlayerStrategyFactory.js
+// --- FILE START ---
 
 import {IAIPlayerStrategyFactory} from '../interfaces/IAIPlayerStrategyFactory.js';
 import {AIPlayerStrategy} from '../strategies/aiPlayerStrategy.js';
@@ -7,8 +7,8 @@ import {AIPlayerStrategy} from '../strategies/aiPlayerStrategy.js';
 /**
  * @typedef {import('../interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter
  * @typedef {import('../interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider
- * @typedef {import('../../services/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider
- * @typedef {import('../../services/promptBuilder.js').PromptBuilder} IPromptBuilder
+ * @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider
+ * @typedef {import('../../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder
  * @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy

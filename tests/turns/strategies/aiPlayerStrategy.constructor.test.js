@@ -211,7 +211,7 @@ describe('AIPlayerStrategy', () => {
             })).toThrow(commonIAIGameStateProviderError);
         });
 
-        const commonAIPromptContentProviderError = "AIPlayerStrategy: Constructor requires a valid IAIPromptContentProvider with a getPromptData method.";
+        const commonAIPromptContentProviderError = "AIPlayerStrategy: Constructor requires a valid IAIPromptContentProvider instance with a getPromptData method.";
         test('should throw an error if promptContentProvider is not provided', () => {
             expect(() => new AIPlayerStrategy({
                 llmAdapter, gameStateProvider,
@@ -249,7 +249,7 @@ describe('AIPlayerStrategy', () => {
             })).toThrow(commonAIPromptContentProviderError);
         });
 
-        const commonPromptBuilderError = "AIPlayerStrategy: Constructor requires a valid PromptBuilder instance.";
+        const commonPromptBuilderError = "AIPlayerStrategy: Constructor requires a valid IPromptBuilder instance with a build method.";
         test('should throw an error if promptBuilder is not provided', () => {
             expect(() => new AIPlayerStrategy({
                 llmAdapter, gameStateProvider, promptContentProvider,

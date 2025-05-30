@@ -23,21 +23,21 @@ const MOCK_CONFIG_FILE_PATH = './test-llm-configs.json';
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_1 = {
-    config_id: "test_config_v1",
-    model_identifier: "test-vendor/test-model-exact",
-    prompt_elements: [
+    configId: "test_config_v1",
+    modelIdentifier: "test-vendor/test-model-exact",
+    promptElements: [
         {key: "system_prompt", prefix: "System: ", suffix: "\n"},
         {key: "user_query", prefix: "User: ", suffix: "\n"}
     ],
-    prompt_assembly_order: ["system_prompt", "user_query"]
+    promptAssemblyOrder: ["system_prompt", "user_query"]
 };
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_2 = {
-    config_id: "test_config_v2_wildcard",
-    model_identifier: "test-vendor/wildcard*",
-    prompt_elements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
-    prompt_assembly_order: ["instruction"]
+    configId: "test_config_v2_wildcard",
+    modelIdentifier: "test-vendor/wildcard*",
+    promptElements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
+    promptAssemblyOrder: ["instruction"]
 };
 
 
@@ -82,7 +82,7 @@ describe('PromptBuilder', () => {
             promptBuilder = new PromptBuilder({logger, initialConfigs: [MOCK_CONFIG_1]});
             expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('PromptBuilder initialized with 1 preloaded configurations.'));
             // Check if the config is findable, implying it's in the cache
-            expect(promptBuilder._findConfiguration(MOCK_CONFIG_1.model_identifier)).toEqual(MOCK_CONFIG_1);
+            expect(promptBuilder._findConfiguration(MOCK_CONFIG_1.modelIdentifier)).toEqual(MOCK_CONFIG_1);
             // The log message "PromptBuilder initialized with 1 preloaded configurations."
             // implies that configsLoadedOrAttempted was set to true internally.
         });

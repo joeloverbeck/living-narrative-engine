@@ -29,13 +29,13 @@
  * (the path being relative to the application's structure or explicitly configured).
  * Each configuration defines how a prompt should be assembled for a specific LLM or family of LLMs.
  *
- * @property {string} config_id - A unique identifier for this specific configuration (e.g., "claude_default_v1").
- * @property {string} model_identifier - The identifier of the LLM or LLM family this configuration applies to.
+ * @property {string} configId - A unique identifier for this specific configuration (e.g., "claude_default_v1").
+ * @property {string} modelIdentifier - The identifier of the LLM or LLM family this configuration applies to.
  * Can be an exact match (e.g., "anthropic/claude-3-sonnet-20240229")
  * or a wildcard pattern (e.g., "anthropic/*", "openai/gpt-4*").
- * @property {Array<PromptElement>} prompt_elements - An array defining the constituent parts of the prompt,
+ * @property {Array<PromptElement>} promptElements - An array defining the constituent parts of the prompt,
  * including their potential prefixes, suffixes, and conditional inclusion logic.
- * @property {string[]} prompt_assembly_order - An array of `key`s from `prompt_elements`, specifying the order
+ * @property {string[]} promptAssemblyOrder - An array of `key`s from `promptElements`, specifying the order
  * in which these elements should be concatenated to form the final prompt.
  * Special keys like 'perception_log_wrapper' dictate specific assembly logic.
  */
@@ -56,16 +56,18 @@
  * Keys for content parts typically follow a pattern like `${camelCaseElementKey}Content` (e.g., `systemPromptContent` for `system_prompt` key).
  * Flag keys are used for conditional logic (e.g., `enableChainOfThought`).
  *
- * @property {string} [exampleContentKeyContent] - Example: `systemPromptContent`, `userQueryContent`. (Content for a `prompt_elements` item with key `example_content_key`).
+ * @property {string} [exampleContentKeyContent] - Example: `systemPromptContent`, `userQueryContent`. (Content for a `promptElements` item with key `example_content_key`).
  * @property {Array<PerceptionLogEntry>} [perceptionLogArray] - An array of perception log entries,
- * processed if 'perception_log_wrapper' is in `prompt_assembly_order`.
+ * processed if 'perception_log_wrapper' is in `promptAssemblyOrder`.
  * @property {boolean} [someConditionFlag] - Example: `enableHistory`, `includeExtendedContext`. (Used by `PromptElementCondition.promptDataFlag`).
- * // Specific properties will depend on the defined `prompt_elements` in `llm-configs.json`.
+ * // Specific properties will depend on the defined `promptElements` in `llm-configs.json`.
  * // For example, if llm-configs.json has a prompt_element with key "character_sheet":
  * @property {string} [characterSheetContent] - Content for the character sheet.
  * // If it has a conditional element based on "enableReasoning":
  * @property {boolean} [enableReasoning] - Flag to enable reasoning steps.
  */
+
+import {IPromptBuilder} from "../interfaces/IPromptBuilder.js";
 
 /**
  * @class PromptBuilder
@@ -78,12 +80,12 @@
  * rather than pre-formatted strings for individual prompt parts, allowing it to take full
  * ownership of all formatting and assembly processes.
  */
-export class PromptBuilder {
+export class PromptBuilder extends IPromptBuilder {
     /**
      * @private
      * @type {Map<string, LLMConfig>}
-     * @description Internal cache for storing loaded LLM configurations, keyed by config_id.
-     * Each LLMConfig object contains the model_identifier used for selection.
+     * @description Internal cache for storing loaded LLM configurations, keyed by configId.
+     * Each LLMConfig object contains the modelIdentifier used for selection.
      *
      */
     #llmConfigsCache = new Map();
@@ -119,6 +121,8 @@ export class PromptBuilder {
      * @param {string} [options.configFilePath] - Optional path to the `llm-configs.json` file to be loaded.
      */
     constructor(options = {}) {
+        super();
+
         this.#logger = options.logger || console;
         this.#configFilePath = options.configFilePath;
 
@@ -205,8 +209,8 @@ export class PromptBuilder {
             this.#llmConfigsCache.clear();
             let loadedCount = 0;
             for (const config of configsArray) {
-                if (config && config.config_id && config.model_identifier && Array.isArray(config.prompt_elements) && Array.isArray(config.prompt_assembly_order)) {
-                    this.#llmConfigsCache.set(config.config_id, config);
+                if (config && config.configId && config.modelIdentifier && Array.isArray(config.promptElements) && Array.isArray(config.promptAssemblyOrder)) {
+                    this.#llmConfigsCache.set(config.configId, config);
                     loadedCount++;
                 } else {
                     this.#logger.warn('PromptBuilder: Skipping invalid or incomplete configuration object during file load.', {config});
@@ -275,7 +279,7 @@ export class PromptBuilder {
             this.#logger.error('PromptBuilder.build: llmId is required and must be a string.');
             return "";
         }
-        if (!promptData || typeof promptData !== 'object' || promptData === null) {
+        if (!promptData || typeof promptData !== 'object') {
             this.#logger.error('PromptBuilder.build: promptData is required and must be a non-null object.');
             return "";
         }
@@ -286,15 +290,15 @@ export class PromptBuilder {
             this.#logger.error(`PromptBuilder.build: No configuration found for llmId "${llmId}". Cannot build prompt.`);
             return "";
         }
-        this.#logger.debug(`PromptBuilder.build: Using configuration: ${selectedConfig.config_id} for llmId: ${llmId}`);
+        this.#logger.debug(`PromptBuilder.build: Using configuration: ${selectedConfig.configId} for llmId: ${llmId}`);
 
         let finalPromptString = "";
-        const promptElementsMap = new Map(selectedConfig.prompt_elements.map(el => [el.key, el]));
+        const promptElementsMap = new Map(selectedConfig.promptElements.map(el => [el.key, el]));
 
-        for (const key of selectedConfig.prompt_assembly_order) {
+        for (const key of selectedConfig.promptAssemblyOrder) {
             const elementConfig = promptElementsMap.get(key);
             if (!elementConfig) {
-                this.#logger.warn(`PromptBuilder.build: Key "${key}" from prompt_assembly_order not found in prompt_elements for config_id "${selectedConfig.config_id}". Skipping.`);
+                this.#logger.warn(`PromptBuilder.build: Key "${key}" from promptAssemblyOrder not found in promptElements for configId "${selectedConfig.configId}". Skipping.`);
                 continue;
             }
 
@@ -331,7 +335,7 @@ export class PromptBuilder {
                     let assembledLogEntries = "";
                     const perceptionLogEntryConfig = promptElementsMap.get('perception_log_entry');
                     if (!perceptionLogEntryConfig) {
-                        this.#logger.warn(`PromptBuilder.build: Missing 'perception_log_entry' for config_id "${selectedConfig.config_id}".`);
+                        this.#logger.warn(`PromptBuilder.build: Missing 'perception_log_entry' for configId "${selectedConfig.configId}".`);
                     } else {
                         for (const entry of perceptionLogArray) {
                             if (typeof entry !== 'object' || entry === null) {
@@ -376,7 +380,7 @@ export class PromptBuilder {
             if (resolvedPrefix !== "" || centralContentString !== "" || resolvedSuffix !== "") {
                 finalPromptString += `${resolvedPrefix}${centralContentString}${resolvedSuffix}`;
             } else {
-                this.#logger.debug(`PromptBuilder.build: Element '${key}' for config '${selectedConfig.config_id}' is entirely empty. Skipping.`);
+                this.#logger.debug(`PromptBuilder.build: Element '${key}' for config '${selectedConfig.configId}' is entirely empty. Skipping.`);
             }
         }
 
@@ -398,12 +402,12 @@ export class PromptBuilder {
         let longestWildcardPrefixLength = -1;
 
         for (const config of this.#llmConfigsCache.values()) {
-            if (config.model_identifier === llmId) {
+            if (config.modelIdentifier === llmId) {
                 exactMatchConfig = config;
                 break;
             }
-            if (config.model_identifier && config.model_identifier.endsWith('*')) {
-                const wildcardPrefix = config.model_identifier.slice(0, -1);
+            if (config.modelIdentifier && config.modelIdentifier.endsWith('*')) {
+                const wildcardPrefix = config.modelIdentifier.slice(0, -1);
                 if (llmId.startsWith(wildcardPrefix)) {
                     if (wildcardPrefix.length > longestWildcardPrefixLength) {
                         longestWildcardPrefixLength = wildcardPrefix.length;
@@ -414,11 +418,11 @@ export class PromptBuilder {
         }
 
         if (exactMatchConfig) {
-            this.#logger.info(`_findConfiguration: Selected exact match config_id "${exactMatchConfig.config_id}" for llmId "${llmId}".`);
+            this.#logger.info(`_findConfiguration: Selected exact match configId "${exactMatchConfig.configId}" for llmId "${llmId}".`);
             return exactMatchConfig;
         }
         if (bestWildcardMatchConfig) {
-            this.#logger.info(`_findConfiguration: Selected wildcard match config_id "${bestWildcardMatchConfig.config_id}" for llmId "${llmId}".`);
+            this.#logger.info(`_findConfiguration: Selected wildcard match configId "${bestWildcardMatchConfig.configId}" for llmId "${llmId}".`);
             return bestWildcardMatchConfig;
         }
         this.#logger.warn(`_findConfiguration: No configuration found for llmId "${llmId}".`);
@@ -437,9 +441,9 @@ export class PromptBuilder {
         let loadedCount = 0;
         let updatedCount = 0;
         configs.forEach(config => {
-            if (config && config.config_id && config.model_identifier && Array.isArray(config.prompt_elements) && Array.isArray(config.prompt_assembly_order)) {
-                if (this.#llmConfigsCache.has(config.config_id)) updatedCount++; else loadedCount++;
-                this.#llmConfigsCache.set(config.config_id, config);
+            if (config && config.configId && config.modelIdentifier && Array.isArray(config.promptElements) && Array.isArray(config.promptAssemblyOrder)) {
+                if (this.#llmConfigsCache.has(config.configId)) updatedCount++; else loadedCount++;
+                this.#llmConfigsCache.set(config.configId, config);
             } else {
                 this.#logger.warn('PromptBuilder.addOrUpdateConfigs: Skipping invalid configuration object.', {config});
             }

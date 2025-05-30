@@ -22,21 +22,21 @@ const MOCK_CONFIG_FILE_PATH = './test-llm-configs.json';
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_1 = {
-    config_id: "test_config_v1",
-    model_identifier: "test-vendor/test-model-exact",
-    prompt_elements: [
+    configId: "test_config_v1",
+    modelIdentifier: "test-vendor/test-model-exact",
+    promptElements: [
         {key: "system_prompt", prefix: "System: ", suffix: "\n"},
         {key: "user_query", prefix: "User: ", suffix: "\n"}
     ],
-    prompt_assembly_order: ["system_prompt", "user_query"]
+    promptAssemblyOrder: ["system_prompt", "user_query"]
 };
 
 /** @type {LLMConfig} */
 const MOCK_CONFIG_2 = {
-    config_id: "test_config_v2_wildcard",
-    model_identifier: "test-vendor/wildcard*",
-    prompt_elements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
-    prompt_assembly_order: ["instruction"]
+    configId: "test_config_v2_wildcard",
+    modelIdentifier: "test-vendor/wildcard*",
+    promptElements: [{key: "instruction", prefix: "Instruction Wildcard: "}],
+    promptAssemblyOrder: ["instruction"]
 };
 
 
@@ -61,21 +61,21 @@ describe('PromptBuilder', () => {
 
     describe('Core Assembly Logic & Placeholder Substitution', () => {
         const coreLogicConfig = {
-            config_id: "core_test_config", model_identifier: "core/test",
-            prompt_elements: [
+            configId: "core_test_config", modelIdentifier: "core/test",
+            promptElements: [
                 {key: "header", prefix: "== HEADER {global_id} ==\n", suffix: "\n== END HEADER =="},
                 {key: "introduction", prefix: "Intro: {character_name} says: \"", suffix: "\"\n"},
                 {key: "main_content", prefix: "Content: ", suffix: ""},
                 {key: "footer", prefix: "\n-- Footer {world_name} --", suffix: "\nEnd of Prompt."}
             ],
-            prompt_assembly_order: ["header", "introduction", "main_content", "footer"]
+            promptAssemblyOrder: ["header", "introduction", "main_content", "footer"]
         };
 
         beforeEach(() => {
             promptBuilder = new PromptBuilder({logger, initialConfigs: [coreLogicConfig]});
         });
 
-        test('should assemble prompt according to prompt_assembly_order with prefixes, suffixes, and placeholders', async () => {
+        test('should assemble prompt according to promptAssemblyOrder with prefixes, suffixes, and placeholders', async () => {
             const promptData = {
                 headerContent: "Title",
                 introductionContent: "Hello",
@@ -107,10 +107,10 @@ describe('PromptBuilder', () => {
 
         test('should handle placeholders with accidental spaces like { placeholder_name }', async () => {
             const cfg = {
-                config_id: "s",
-                model_identifier: "s/s",
-                prompt_elements: [{key: "el", prefix: "V: {  val  }"}],
-                prompt_assembly_order: ["el"]
+                configId: "s",
+                modelIdentifier: "s/s",
+                promptElements: [{key: "el", prefix: "V: {  val  }"}],
+                promptAssemblyOrder: ["el"]
             };
             promptBuilder = new PromptBuilder({logger, initialConfigs: [cfg]});
             const result = await promptBuilder.build("s/s", {val: "test", elContent: ""});
@@ -126,10 +126,10 @@ describe('PromptBuilder', () => {
 
         test('should convert snake_case element key to camelCaseContent for promptData lookup', async () => {
             const cfg = {
-                config_id: "snake",
-                model_identifier: "s/t",
-                prompt_elements: [{key: "my_key"}],
-                prompt_assembly_order: ["my_key"]
+                configId: "snake",
+                modelIdentifier: "s/t",
+                promptElements: [{key: "my_key"}],
+                promptAssemblyOrder: ["my_key"]
             };
             promptBuilder = new PromptBuilder({logger, initialConfigs: [cfg]});
             const result = await promptBuilder.build("s/t", {myKeyContent: "Data"});
