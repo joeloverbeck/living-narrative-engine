@@ -9,6 +9,15 @@
  */
 
 /**
+ * @typedef {object} LlmConfigOption
+ * @property {string} configId - The unique identifier for the LLM configuration.
+ * @property {string} displayName - The user-friendly display name for the LLM.
+ * // This type can be expanded to include other properties from the llmConfiguration schema
+ * // if needed by the modal in the future, but for now, only configId and displayName are directly used.
+ */
+
+
+/**
  * @class LlmSelectionModal
  * @description Manages the LLM selection modal, including its visibility,
  * fetching LLM options, displaying them, and handling LLM selection by the user.
@@ -126,6 +135,7 @@ export class LlmSelectionModal {
      */
     async #handleLlmSelection(event) {
         const clickedItem = event.currentTarget; // currentTarget is the element the listener was attached to (the LI)
+        // @ts-ignore
         const selectedLlmId = clickedItem.dataset.llmId;
 
         if (!selectedLlmId) {
@@ -162,41 +172,22 @@ export class LlmSelectionModal {
 
             if (success) {
                 this.#logger.info(`LlmSelectionModal: setActiveLlm successful for LLM ID: ${selectedLlmId}. Closing modal.`);
-                // Optional: Provide brief success feedback before closing
-                // if (this.#llmStatusMessageElement) {
-                //     this.#llmStatusMessageElement.textContent = `Successfully switched to ${clickedItem.textContent}.`;
-                //     this.#llmStatusMessageElement.classList.add('llm-success-message');
-                // }
-                // await new Promise(resolve => setTimeout(resolve, 750)); // Delay if showing message
-
                 this.hide();
-                // (Optional: Dispatch an event or call a callback for external UI feedback, e.g., update "Change LLM" button text)
-                // Example:
-                // const llmChangedEvent = new CustomEvent('llmChanged', {
-                //     detail: { llmId: selectedLlmId, displayName: clickedItem.textContent },
-                //     bubbles: true,
-                //     composed: true
-                // });
-                // this.#documentContext.dispatchEvent(llmChangedEvent);
             } else {
-                // setActiveLlm returned false (e.g., LLM ID not found by adapter, or validation failed)
                 const errorMsg = `Failed to switch to ${clickedItem.textContent}. The LLM may be unavailable or the selection invalid.`;
                 this.#logger.error(`LlmSelectionModal: llmAdapter.setActiveLlm returned false for LLM ID: ${selectedLlmId}.`);
                 if (this.#llmStatusMessageElement) {
                     this.#llmStatusMessageElement.textContent = errorMsg;
                     this.#llmStatusMessageElement.classList.add('llm-error-message');
                 }
-                // Modal remains open, visual selection is kept to indicate user's last attempt.
             }
         } catch (error) {
-            // Exception occurred during setActiveLlm
             const errorMsg = `An error occurred while trying to switch to ${clickedItem.textContent}: ${error.message || 'Unknown error.'}`;
             this.#logger.error(`LlmSelectionModal: Exception during llmAdapter.setActiveLlm for ID: ${selectedLlmId}. Error: ${error.message}`, {error});
             if (this.#llmStatusMessageElement) {
                 this.#llmStatusMessageElement.textContent = errorMsg;
                 this.#llmStatusMessageElement.classList.add('llm-error-message');
             }
-            // Modal remains open, visual selection is kept.
         }
     }
 
@@ -213,7 +204,6 @@ export class LlmSelectionModal {
             return;
         }
 
-        // Clear any previous status messages from LLM switching attempts
         if (this.#llmStatusMessageElement) {
             this.#llmStatusMessageElement.textContent = '';
             this.#llmStatusMessageElement.className = 'status-message-area';
@@ -221,17 +211,16 @@ export class LlmSelectionModal {
 
         if (!this.#llmListElement) {
             this.#logger.error('LlmSelectionModal: #llm-selection-list element not found. Cannot populate LLM list.');
-            // Display error within the modal if possible, or fallback to console.
-            // For now, error is logged. Modal will show empty or with static frame.
-            this.#modalElement.style.display = 'flex'; // Show modal frame
+            this.#modalElement.style.display = 'flex';
             requestAnimationFrame(() => {
                 if (this.#modalElement) this.#modalElement.classList.add('visible');
             });
             return;
         }
 
-        this.#llmListElement.innerHTML = ''; // Clear previous items/messages from the list
+        this.#llmListElement.innerHTML = '';
 
+        /** @type {LlmConfigOption[]} */
         let llmOptions = [];
         let currentActiveLlmId = null;
         let errorOccurredLoadingList = false;
@@ -239,6 +228,7 @@ export class LlmSelectionModal {
 
         try {
             this.#logger.debug('LlmSelectionModal: Fetching available LLM options...');
+            // Assuming getAvailableLlmOptions now returns an array of full LlmConfigOption objects
             llmOptions = await this.#llmAdapter.getAvailableLlmOptions();
             this.#logger.debug(`LlmSelectionModal: Fetched ${llmOptions.length} LLM options.`);
 
@@ -255,11 +245,6 @@ export class LlmSelectionModal {
 
         if (errorOccurredLoadingList) {
             const errorItem = this.#domElementFactory.create('li', {
-                textContent: listLoadingErrorMessage, // This uses textContent, if factory expects 'text', this might be an issue too
-                // However, the main problem was with the LLM options list.
-                // For consistency, if the factory strictly uses 'text', this should also be 'text'.
-                // Let's assume 'text' is the convention for the factory's generic create method for now.
-                // So, changing this one too for consistency with the primary fix.
                 text: listLoadingErrorMessage,
                 className: 'llm-item-message llm-error-message'
             });
@@ -267,7 +252,6 @@ export class LlmSelectionModal {
         } else if (llmOptions.length === 0) {
             this.#logger.warn('LlmSelectionModal: No LLM options available or list is empty.');
             const noOptionsItem = this.#domElementFactory.create('li', {
-                // textContent: 'No Language Models are currently configured.', // Same as above
                 text: 'No Language Models are currently configured.',
                 className: 'llm-item-message llm-empty-message'
             });
@@ -277,17 +261,29 @@ export class LlmSelectionModal {
             let selectedItemElement = null;
 
             llmOptions.forEach((option, index) => {
-                const {id, displayName} = option;
+                // MODIFIED: Adapt to the new structure where 'option' is a full config object
+                // 'configId' is the identifier, 'displayName' is for display.
+                const idForSelection = option.configId;
+                const nameForDisplay = option.displayName;
+
+                if (!idForSelection) {
+                    this.#logger.warn('LlmSelectionModal: LLM option is missing configId.', {option});
+                    // Skip this option or handle as an error, depending on desired strictness
+                    return;
+                }
+
                 const listItemElement = this.#domElementFactory.create('li', {
                     cls: 'llm-item',
-                    text: displayName || id // CORRECTED: Was textContent, now text
+                    text: nameForDisplay || idForSelection // Fallback to configId if displayName is missing
                 });
 
-                listItemElement.dataset.llmId = id;
+                // @ts-ignore
+                listItemElement.dataset.llmId = idForSelection;
                 listItemElement.setAttribute('role', 'radio');
                 listItemElement.setAttribute('tabindex', '-1');
 
-                const isActive = (id === currentActiveLlmId);
+                // currentActiveLlmId should match one of the configId values
+                const isActive = (idForSelection === currentActiveLlmId);
                 listItemElement.setAttribute('aria-checked', isActive ? 'true' : 'false');
 
                 if (isActive) {
@@ -295,9 +291,7 @@ export class LlmSelectionModal {
                     selectedItemElement = listItemElement;
                 }
 
-                // Attach click listener for selection logic
                 listItemElement.addEventListener('click', (event) => this.#handleLlmSelection(event));
-
                 this.#llmListElement.appendChild(listItemElement);
 
                 if (index === 0) {
@@ -305,25 +299,23 @@ export class LlmSelectionModal {
                 }
             });
 
-            // Set tabindex="0" for the currently selected item, or the first item if none are selected.
-            // This makes the radiogroup navigable.
             if (selectedItemElement) {
                 selectedItemElement.setAttribute('tabindex', '0');
             } else if (firstItemElement) {
-                firstItemElement.setAttribute('tabindex', '0');
+                // Ensure firstItemElement is not null (e.g. if all options had missing configId)
+                if (firstItemElement) firstItemElement.setAttribute('tabindex', '0');
             }
-            this.#logger.info(`LlmSelectionModal: LLM list populated with ${llmOptions.length} options. Current active: ${currentActiveLlmId || 'none'}.`);
+            this.#logger.info(`LlmSelectionModal: LLM list populated with ${this.#llmListElement.children.length} valid options. Current active: ${currentActiveLlmId || 'none'}.`);
         }
 
-        // Make the modal visible
         this.#modalElement.style.display = 'flex';
         requestAnimationFrame(() => {
             if (this.#modalElement) {
                 this.#modalElement.classList.add('visible');
                 this.#logger.info('LlmSelectionModal: Modal display set to visible.');
-                // Focus the first focusable element or the list itself for accessibility
                 const focusTarget = this.#llmListElement.querySelector('li[tabindex="0"]') || this.#closeModalButton;
                 if (focusTarget) {
+                    // @ts-ignore
                     focusTarget.focus();
                 }
             }
@@ -337,21 +329,17 @@ export class LlmSelectionModal {
     hide() {
         if (this.#modalElement && this.#modalElement.classList.contains('visible')) {
             this.#modalElement.classList.remove('visible');
-            // CSS should handle display:none based on .visible class removal
             this.#logger.info('LlmSelectionModal: Modal hidden.');
 
-            // Clear any status messages when hiding
             if (this.#llmStatusMessageElement) {
                 this.#llmStatusMessageElement.textContent = '';
                 this.#llmStatusMessageElement.className = 'status-message-area';
             }
 
-            // Return focus to the button that opened the modal, if available
             if (this.#changeLlmButton) {
                 this.#changeLlmButton.focus();
             }
         } else if (this.#modalElement) {
-            // Already hidden or not properly set up.
             this.#logger.debug('LlmSelectionModal: hide() called, but modal was not visible or not found.');
         } else {
             this.#logger.error('LlmSelectionModal: Cannot hide modal, #llm-selection-modal element not found.');

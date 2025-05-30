@@ -15,16 +15,45 @@ import {
 
 /**
  * @typedef {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
- * @typedef {import('../../llms/services/llmConfigLoader.js').LLMConfigurationFile} LLMConfigurationFile
- * @typedef {import('../../llms/services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
- * @typedef {import('../../llms/services/llmConfigLoader.js').LoadConfigsErrorResult} LoadConfigsErrorResult
- * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../schemas/llmOutputSchemas.js').LLM_TURN_ACTION_SCHEMA} LLM_TURN_ACTION_SCHEMA_TYPE
- * @typedef {import('../../llms/environmentContext.js').EnvironmentContext} EnvironmentContext
- * @typedef {import('../../llms/interfaces/IApiKeyProvider.js').IApiKeyProvider} IApiKeyProvider
- * @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory
- * @typedef {import('../../llms/interfaces/ILLMStrategy.js').ILLMStrategy} ILLMStrategy
+ * @typedef {object} LLMModelConfig
+ * @description A self-contained LLM configuration, including properties for prompt engineering and API interaction.
+ * Corresponds to the `llmConfiguration` definition in `llm-configs.schema.json`.
+ * @property {string} configId - Unique identifier for this LLM configuration.
+ * @property {string} displayName - A user-friendly name for this configuration.
+ * @property {string} modelIdentifier - The specific model ID or family identifier.
+ * @property {string} endpointUrl - The base API endpoint URL.
+ * @property {string} apiType - Identifier for the API type (e.g., 'openai', 'openrouter').
+ * @property {string} [apiKeyEnvVar] - Optional: Environment variable for API key.
+ * @property {string} [apiKeyFileName] - Optional: File name for API key.
+ * @property {object} jsonOutputStrategy - Defines the strategy for ensuring JSON output.
+ * @property {string} jsonOutputStrategy.method - The method for enforcing JSON output.
+ * @property {string} [jsonOutputStrategy.toolName] - Required if method is 'tool_calling'.
+ * @property {string} [jsonOutputStrategy.grammar] - Required if method is 'gbnf_grammar'.
+ * @property {object} [jsonOutputStrategy.jsonSchema] - Required if method uses JSON schema.
+ * @property {object} [defaultParameters] - Optional: Default parameters for LLM requests.
+ * @property {object} [providerSpecificHeaders] - Optional: HTTP headers specific to the LLM provider.
+ * @property {Array<{key: string, prefix: string, suffix: string}>} promptElements - Defines named prompt parts.
+ * @property {string[]} promptAssemblyOrder - Ordered list of 'promptElements' keys.
+ * @property {number} [contextTokenLimit] - Optional: Maximum context tokens for the model.
+ * @property {object} [promptFrame] - Optional: Defines a framing structure for the prompt.
+ * @property {string} [promptFrame.system] - A system-level message for the LLM.
  */
+
+/**
+ * @typedef {object} LLMConfigurationFile
+ * @description The root structure of the LLM configuration file.
+ * @property {string} defaultConfigId - The ID of the default LLM configuration to use.
+ * @property {Object<string, LLMModelConfig>} configs - A map of LLM configurations, where each key is a configId.
+ */
+
+/** @typedef {import('../../llms/services/llmConfigLoader.js').LoadConfigsErrorResult} LoadConfigsErrorResult */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../schemas/llmOutputSchemas.js').LLM_TURN_ACTION_SCHEMA} LLM_TURN_ACTION_SCHEMA_TYPE */
+/** @typedef {import('../../llms/environmentContext.js').EnvironmentContext} EnvironmentContext */
+/** @typedef {import('../../llms/interfaces/IApiKeyProvider.js').IApiKeyProvider} IApiKeyProvider */
+/** @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory */
+
+/** @typedef {import('../../llms/interfaces/ILLMStrategy.js').ILLMStrategy} ILLMStrategy */
 
 
 /**
@@ -72,8 +101,16 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     #llmStrategyFactory;
     /** @private @type {LlmConfigLoader | null} */
     #configLoader = null;
+
     /** @private @type {LLMConfigurationFile | null} */
-    #llmConfigs = null;
+    #llmRootConfig = null; // Renamed from #llmConfigs to reflect it holds the root object
+
+    /** @private @type {string | null} */
+    #defaultConfigIdFromFile = null;
+    /** @private @type {Object<string, LLMModelConfig> | null} */
+    #allConfigsMap = null;
+
+
     /** @private @type {boolean} */
     #isInitialized = false; // Tracks if init attempt has been made and core logic run
     /** @private @type {boolean} */
@@ -147,65 +184,73 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         this.#logger.info(`ConfigurableLLMAdapter: Instance created. Execution environment: ${this.#environmentContext.getExecutionEnvironment()}. Initial LLM ID from constructor: '${this.#initialLlmIdFromConstructor || 'not set'}'. Ready for initialization call.`);
     }
 
+
     /**
      * @private
      * @description Sets the active LLM configuration based on initialLlmId (from constructor)
-     * and defaultLlmId (from loaded config), adhering to specified priorities.
+     * and defaultConfigId (from loaded config), adhering to specified priorities.
      * This method is called internally after configurations are successfully loaded.
      */
     #selectInitialActiveLlm() {
-        if (!this.#llmConfigs || !this.#llmConfigs.llms || typeof this.#llmConfigs.llms !== 'object') {
-            this.#logger.warn('ConfigurableLLMAdapter.#selectInitialActiveLlm: Cannot select active LLM because configurations are not loaded or llms object is invalid.');
+        // Use #allConfigsMap and #defaultConfigIdFromFile
+        if (!this.#allConfigsMap || typeof this.#allConfigsMap !== 'object') {
+            this.#logger.warn('ConfigurableLLMAdapter.#selectInitialActiveLlm: Cannot select active LLM because configurations map is not loaded or is invalid.');
             this.#currentActiveLlmId = null;
             this.#currentActiveLlmConfig = null;
             return;
         }
 
-        const allLlms = this.#llmConfigs.llms;
-        const defaultLlmIdFromConfig = this.#llmConfigs.defaultLlmId;
+        const allConfigsMap = this.#allConfigsMap;
+        const defaultConfigId = this.#defaultConfigIdFromFile; // This might be null if not a string in the file
         let llmSelected = false;
         let specificWarningForDefaultNotFoundLogged = false;
 
         // Priority 1: initialLlmId from constructor
         if (this.#initialLlmIdFromConstructor && typeof this.#initialLlmIdFromConstructor === 'string' && this.#initialLlmIdFromConstructor.trim() !== '') {
-            const targetConfig = allLlms[this.#initialLlmIdFromConstructor];
+            const targetConfig = allConfigsMap[this.#initialLlmIdFromConstructor];
             if (targetConfig) {
                 this.#currentActiveLlmId = this.#initialLlmIdFromConstructor;
                 this.#currentActiveLlmConfig = targetConfig;
-                this.#logger.info(`ConfigurableLLMAdapter: LLM configuration '${this.#currentActiveLlmId}' (${targetConfig.displayName || 'N/A'}) set as active by initialLlmId.`);
+                this.#logger.info(`ConfigurableLLMAdapter: LLM configuration '${this.#currentActiveLlmId}' (${targetConfig.displayName || 'N/A'}) set as active by initialLlmId from constructor.`);
                 llmSelected = true;
             } else {
-                this.#logger.warn(`ConfigurableLLMAdapter.#selectInitialActiveLlm: initialLlmId ('${this.#initialLlmIdFromConstructor}') was provided to constructor, but no LLM configuration with this ID exists. Falling back to defaultLlmId logic.`);
+                this.#logger.warn(`ConfigurableLLMAdapter.#selectInitialActiveLlm: initialLlmId ('${this.#initialLlmIdFromConstructor}') was provided to constructor, but no LLM configuration with this ID exists in the configs map. Falling back to defaultConfigId logic.`);
             }
         }
 
-        // Priority 2: defaultLlmId from configuration file
+        // Priority 2: defaultConfigId from configuration file
         if (!llmSelected) {
-            if (defaultLlmIdFromConfig && typeof defaultLlmIdFromConfig === 'string' && defaultLlmIdFromConfig.trim() !== '') {
-                const targetConfig = allLlms[defaultLlmIdFromConfig];
+            // Check if defaultConfigId (which is this.#defaultConfigIdFromFile) is a valid, non-empty string
+            if (defaultConfigId && typeof defaultConfigId === 'string' && defaultConfigId.trim() !== '') {
+                const targetConfig = allConfigsMap[defaultConfigId];
                 if (targetConfig) {
-                    this.#currentActiveLlmId = defaultLlmIdFromConfig;
+                    this.#currentActiveLlmId = defaultConfigId;
                     this.#currentActiveLlmConfig = targetConfig;
-                    this.#logger.info(`ConfigurableLLMAdapter: LLM configuration '${this.#currentActiveLlmId}' (${targetConfig.displayName || 'N/A'}) set as active by default.`);
+                    this.#logger.info(`ConfigurableLLMAdapter: LLM configuration '${this.#currentActiveLlmId}' (${targetConfig.displayName || 'N/A'}) set as active by defaultConfigId from file.`);
                     llmSelected = true;
-                } else { // DefaultLlmId specified but not found
-                    this.#logger.warn(`ConfigurableLLMAdapter: 'defaultLlmId' ("${defaultLlmIdFromConfig}") is specified in configurations, but no LLM configuration with this ID exists. No default LLM set.`);
+                } else { // defaultConfigId specified but not found in configs map
+                    this.#logger.warn(`ConfigurableLLMAdapter: 'defaultConfigId' ("${defaultConfigId}") is specified in configurations, but no LLM configuration with this ID exists in the configs map. No default LLM set.`);
                     specificWarningForDefaultNotFoundLogged = true;
                 }
-            } else if (defaultLlmIdFromConfig) { // defaultLlmId is present but e.g. empty string or wrong type
-                this.#logger.warn(`ConfigurableLLMAdapter.#selectInitialActiveLlm: 'defaultLlmId' found in configurations but it is not a valid non-empty string ("${defaultLlmIdFromConfig}").`);
-            } else { // defaultLlmId is null or undefined
-                this.#logger.info(`ConfigurableLLMAdapter: No "defaultLlmId" specified in configurations. No LLM is set as active by default.`);
+            } else if (defaultConfigId) { // defaultConfigId is present (e.g. from file) but empty string or was not a string initially (e.g. null)
+                this.#logger.warn(`ConfigurableLLMAdapter.#selectInitialActiveLlm: 'defaultConfigId' found in configurations but it is not a valid non-empty string ("${defaultConfigId}").`);
+            } else { // defaultConfigId is null or undefined (either missing from file or was null/invalid type)
+                this.#logger.info(`ConfigurableLLMAdapter: No "defaultConfigId" specified in configurations. No LLM is set as active by default.`);
             }
         }
 
         if (!llmSelected) {
             this.#currentActiveLlmId = null;
             this.#currentActiveLlmConfig = null;
-            if (Object.keys(allLlms).length === 0) {
-                this.#logger.warn('ConfigurableLLMAdapter.#selectInitialActiveLlm: No LLM configurations found in llmConfigs.llms. No LLM can be set as active.');
-            } else if (!specificWarningForDefaultNotFoundLogged) {
-                this.#logger.warn('ConfigurableLLMAdapter.#selectInitialActiveLlm: No default LLM set. Neither initialLlmId nor defaultLlmId resulted in a valid active LLM selection.');
+            if (Object.keys(allConfigsMap).length === 0) {
+                this.#logger.warn('ConfigurableLLMAdapter.#selectInitialActiveLlm: No LLM configurations found in the configs map. No LLM can be set as active.');
+            } else if (!specificWarningForDefaultNotFoundLogged &&
+                !(this.#initialLlmIdFromConstructor && allConfigsMap[this.#initialLlmIdFromConstructor]) && /* ensure no initialLlmId was found */
+                !defaultConfigId /* ensure no default Config Id was even attempted if it was null/undefined */
+            ) {
+                // This general warning should only appear if no specific issue (like default ID not found, or invalid empty string) was already logged.
+                // And no initial id from constructor was used, and no default config id was even present.
+                this.#logger.warn('ConfigurableLLMAdapter.#selectInitialActiveLlm: No default LLM set. Neither initialLlmIdFromConstructor nor defaultConfigId resulted in a valid active LLM selection.');
             }
         }
     }
@@ -259,6 +304,10 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             this.#currentActiveLlmId = null;
             this.#currentActiveLlmConfig = null;
             this.#isOperational = false;
+            this.#llmRootConfig = null; // Reset before loading
+            this.#defaultConfigIdFromFile = null;
+            this.#allConfigsMap = null;
+
 
             try {
                 const configResult = await this.#configLoader.loadConfigs();
@@ -269,24 +318,27 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                         message: loadError.message, stage: loadError.stage, path: loadError.path,
                         originalErrorMessage: loadError.originalError ? loadError.originalError.message : 'N/A'
                     });
-                    this.#llmConfigs = null;
-                } else if (configResult && typeof configResult.llms === 'object' && configResult.llms !== null) {
-                    this.#llmConfigs = /** @type {LLMConfigurationFile} */ (configResult);
+                }
+                // Stricter condition as per original ticket description and schema requirements
+                else if (configResult && typeof configResult.configs === 'object' && configResult.configs !== null && typeof configResult.defaultConfigId === 'string') {
+                    this.#llmRootConfig = /** @type {LLMConfigurationFile} */ (configResult);
+                    this.#defaultConfigIdFromFile = this.#llmRootConfig.defaultConfigId;
+                    this.#allConfigsMap = this.#llmRootConfig.configs;
+
                     this.#logger.info('ConfigurableLLMAdapter: LLM configurations loaded successfully.', {
-                        numberOfConfigs: Object.keys(this.#llmConfigs.llms).length,
-                        defaultLlmId: this.#llmConfigs.defaultLlmId || 'Not set'
+                        numberOfConfigs: Object.keys(this.#allConfigsMap).length,
+                        defaultConfigId: this.#defaultConfigIdFromFile || 'Not set'
                     });
                     this.#isOperational = true;
                     this.#selectInitialActiveLlm();
                 } else {
                     this.#logger.error('ConfigurableLLMAdapter: LLM configuration loading returned an unexpected structure.', {configResult});
-                    this.#llmConfigs = null;
+                    // this.#isOperational remains false
                 }
             } catch (error) {
                 this.#logger.error('ConfigurableLLMAdapter: Unexpected exception during LLM configuration loading.', {
                     errorMessage: error.message, errorStack: error.stack
                 });
-                this.#llmConfigs = null;
                 this.#isOperational = false; // Ensure this is set on exception
                 this.#isInitialized = true; // Mark that an attempt was made
                 throw error; // Re-throw to reject this.#initPromise
@@ -341,81 +393,59 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      * @throws {Error} If the adapter is not initialized or not operational (propagated from #ensureInitialized).
      */
     async setActiveLlm(llmId) {
-        // Per AC: "Calling setActiveLlm first ensures the adapter is initialized and operational by awaiting this.#ensureInitialized().
-        // If not operational, an error is logged, and false is returned (or ensureInitialized throws)."
-        // #ensureInitialized will throw if not operational. The catch block below was removed to allow propagation.
-        // If #ensureInitialized throws, this method will reject as per test expectations.
-        // If it doesn't throw, the adapter is operational.
         try {
             await this.#ensureInitialized();
         } catch (error) {
-            // Log the error as per AC "an error is logged" if ensureInitialized throws.
-            // #ensureInitialized already logs its specific error.
-            // This additional log can indicate context if desired, but might be redundant if #ensureInitialized logging is sufficient.
-            // For test alignment, tests expect #ensureInitialized's log.
-            // If we return false here, it contradicts tests expecting a throw. So, re-throw.
-            // this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: Prerequisite check failed. Error: ${error.message}`);
             throw error; // Re-throw to make setActiveLlm reject as per failing tests.
         }
 
-
-        // Per AC: "The method handles cases where this.#llmConfigs or this.#llmConfigs.llms might be null/undefined
-        // (though ensureInitialized should prevent this if operational), logging an error and returning false."
-        if (!this.#llmConfigs || !this.#llmConfigs.llms) {
-            this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: LLM configurations object or llms map is not available. Cannot set LLM ID '${llmId}'. This may indicate an issue post-initialization.`);
+        // Use #allConfigsMap
+        if (!this.#allConfigsMap) {
+            this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: LLM configurations map is not available. Cannot set LLM ID '${llmId}'. This may indicate an issue post-initialization.`);
             return false;
         }
 
-        // Per AC: "If llmId is invalid (e.g., not a string, empty string, or not found in this.#llmConfigs.llms)"
-        // Validate llmId: ensure it's a non-empty string. Log error and return false if not.
         if (typeof llmId !== 'string' || llmId.trim() === '') {
-            // Test expects: StringContaining "Invalid llmId provided (must be a non-empty string). Received: '...'")
-            // Test also expects logger.error
             this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: Invalid llmId provided (must be a non-empty string). Received: '${llmId}'. Active LLM remains '${this.#currentActiveLlmId || 'none'}'.`);
             return false;
         }
 
-        const targetConfig = this.#llmConfigs.llms[llmId];
+        // Use #allConfigsMap
+        const targetConfig = this.#allConfigsMap[llmId];
 
         if (targetConfig) {
             const oldLlmId = this.#currentActiveLlmId;
             this.#currentActiveLlmId = llmId;
-            this.#currentActiveLlmConfig = targetConfig;
+            this.#currentActiveLlmConfig = targetConfig; // targetConfig is already the new LLMModelConfig type
             const newDisplayName = targetConfig.displayName || 'N/A';
-            // Test expects: "ConfigurableLLMAdapter.setActiveLlm: Active LLM configuration changed from 'test-llm-1' to 'test-llm-2' (Test LLM 2 (Cloud))."
             this.#logger.info(`ConfigurableLLMAdapter.setActiveLlm: Active LLM configuration changed from '${oldLlmId || 'none'}' to '${llmId}' (${newDisplayName}).`);
             return true;
         } else {
-            // Test expects: "ConfigurableLLMAdapter.setActiveLlm: No LLM configuration found with ID 'non-existent-llm'. Active LLM remains unchanged ('test-llm-1')."
-            // Test also expects logger.error
-            this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: No LLM configuration found with ID '${llmId}'. Active LLM remains unchanged ('${this.#currentActiveLlmId || 'none'}').`);
+            this.#logger.error(`ConfigurableLLMAdapter.setActiveLlm: No LLM configuration found with ID '${llmId}' in the configs map. Active LLM remains unchanged ('${this.#currentActiveLlmId || 'none'}').`);
             return false;
         }
     }
 
     /**
      * Retrieves the full configuration object for the currently active LLM.
+     * The object returned is of type LLMModelConfig.
      *
      * @returns {Promise<LLMModelConfig | null>} The active LLMModelConfig object, or null if no LLM is active.
      * @throws {Error} If the adapter is not initialized or not operational (propagated from #ensureInitialized).
      */
     async getCurrentActiveLlmConfig() {
-        // #ensureInitialized will throw if not operational.
-        // If it throws, this method will reject as per failing tests.
         try {
             await this.#ensureInitialized();
         } catch (error) {
-            // As per test: "should throw error if adapter is not operational when calling getCurrentActiveLlmConfig"
-            // #ensureInitialized already logs its error. Re-throwing.
-            // this.#logger.warn(`ConfigurableLLMAdapter.getCurrentActiveLlmConfig: Adapter not ready. Error: ${error.message}. Returning null.`);
             throw error;
         }
 
         if (!this.#currentActiveLlmConfig) {
             this.#logger.debug('ConfigurableLLMAdapter.getCurrentActiveLlmConfig: No LLM configuration is currently active. Returning null.');
-            // This case is valid if operational but no LLM is selected (e.g. no default, setActiveLlm not called)
             return null;
         }
+        // this.#currentActiveLlmConfig is already updated to be an LLMModelConfig instance
+        // by #selectInitialActiveLlm or setActiveLlm.
         return this.#currentActiveLlmConfig;
     }
 
@@ -431,26 +461,28 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         try {
             await this.#ensureInitialized();
         } catch (error) {
-            // #ensureInitialized already logs. This specific method's AC: "If not operational...it logs a warning and returns an empty array."
-            // #ensureInitialized throws, so this catch block handles the "not operational" case.
             this.#logger.warn(`ConfigurableLLMAdapter.getAvailableLlmOptions: Adapter not operational. Cannot retrieve LLM options. Error: ${error.message}`);
             return [];
         }
 
-        if (!this.#isOperational || !this.#llmConfigs || !this.#llmConfigs.llms) {
-            this.#logger.warn('ConfigurableLLMAdapter.getAvailableLlmOptions: Adapter is not operational or LLM configurations are not loaded. Returning empty array.');
+        // Use #allConfigsMap
+        if (!this.#isOperational || !this.#allConfigsMap) { // Should be caught by #ensureInitialized if !this.#isOperational
+            this.#logger.warn('ConfigurableLLMAdapter.getAvailableLlmOptions: Adapter is not operational or LLM configurations map is not loaded. Returning empty array.');
             return [];
         }
 
-        const llmsArray = Object.values(this.#llmConfigs.llms);
-        if (llmsArray.length === 0) {
-            this.#logger.warn('ConfigurableLLMAdapter.getAvailableLlmOptions: No LLM configurations found in this.#llmConfigs.llms. Returning empty array.');
+        // Use #allConfigsMap
+        const configsArray = Object.values(this.#allConfigsMap);
+        if (configsArray.length === 0) {
+            this.#logger.warn('ConfigurableLLMAdapter.getAvailableLlmOptions: No LLM configurations found in the configs map. Returning empty array.');
             return [];
         }
 
-        const options = llmsArray.map(config => ({
-            id: config.id,
-            displayName: config.displayName || config.id // Fallback to id if displayName is not present
+        // Map to use config.configId and config.displayName
+        // The schema and llm-configs.json example use "configId" (camelCase) inside each configuration object.
+        const options = configsArray.map(config => ({
+            id: config.configId, // Use configId as per schema and example data
+            displayName: config.displayName || config.configId // Fallback to configId if displayName is not present
         }));
 
         return options;
@@ -467,14 +499,11 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         try {
             await this.#ensureInitialized();
         } catch (error) {
-            // #ensureInitialized already logs. AC: "If not operational, it logs a warning and returns null."
             this.#logger.warn(`ConfigurableLLMAdapter.getCurrentActiveLlmId: Adapter not operational. Cannot retrieve current active LLM ID. Error: ${error.message}`);
             return null;
         }
-
-        // After #ensureInitialized, if it didn't throw, #isOperational is true.
-        // So, we don't need an explicit check for this.#isOperational here again for returning null based on that,
-        // as the catch block handles it. The main task is to return the ID.
+        // No direct change to this method's logic, as it relies on #currentActiveLlmId
+        // which is updated by other refactored methods.
         return this.#currentActiveLlmId;
     }
 
@@ -489,7 +518,6 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      */
     async getAIDecision(gameSummary) {
         // #ensureInitialized will throw if not initialized or not operational.
-        // This is the desired behavior as getAIDecision cannot proceed otherwise.
         await this.#ensureInitialized();
 
         this.#logger.debug('ConfigurableLLMAdapter.getAIDecision called.', {
@@ -497,29 +525,33 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             gameSummaryLength: gameSummary ? gameSummary.length : 0
         });
 
-        const activeConfig = this.#currentActiveLlmConfig; // Already retrieved by getCurrentActiveLlmConfig if needed, or directly accessible
+        const activeConfig = this.#currentActiveLlmConfig;
         if (!activeConfig) {
-            const msg = "No active LLM configuration is set. Use setActiveLlm() or ensure a valid defaultLlmId is in config.";
+            const msg = "No active LLM configuration is set. Use setActiveLlm() or ensure a valid defaultConfigId is in the config file.";
             this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
+            // Ensure #currentActiveLlmId is used for the llmId in error if activeConfig is null
             throw new ConfigurationError(msg, {llmId: this.#currentActiveLlmId || 'unknown'});
         }
 
         try {
             // Validate critical fields of the active LLM configuration.
+            // Property names must match the new LLMModelConfig schema (e.g., configId).
             const validationErrors = [];
-            if (!activeConfig.id || typeof activeConfig.id !== 'string' || activeConfig.id.trim() === '') {
-                validationErrors.push({field: 'id', reason: 'Missing or invalid'});
+            // Check activeConfig.configId instead of activeConfig.id
+            if (!activeConfig.configId || typeof activeConfig.configId !== 'string' || activeConfig.configId.trim() === '') {
+                validationErrors.push({field: 'configId', reason: 'Missing or invalid'});
             }
             if (!activeConfig.endpointUrl || typeof activeConfig.endpointUrl !== 'string' || activeConfig.endpointUrl.trim() === '') {
                 validationErrors.push({field: 'endpointUrl', reason: 'Missing or invalid'});
             }
+            // modelIdentifier is correct as per schema
             if (!activeConfig.modelIdentifier || typeof activeConfig.modelIdentifier !== 'string' || activeConfig.modelIdentifier.trim() === '') {
                 validationErrors.push({field: 'modelIdentifier', reason: 'Missing or invalid'});
             }
             if (!activeConfig.apiType || typeof activeConfig.apiType !== 'string' || activeConfig.apiType.trim() === '') {
                 validationErrors.push({field: 'apiType', reason: 'Missing or invalid'});
             }
-            // Enhanced validation for jsonOutputStrategy based on its method
+
             if (typeof activeConfig.jsonOutputStrategy !== 'object' || activeConfig.jsonOutputStrategy === null) {
                 validationErrors.push({field: 'jsonOutputStrategy', reason: 'Is required and must be an object.'});
             } else {
@@ -541,39 +573,44 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
                             reason: 'Is required and must be a non-empty string (representing grammar content or a path) when jsonOutputStrategy.method is "gbnf_grammar".'
                         });
                     }
-                    // Add checks for other methods like "native_json_mode", "openrouter_json_schema" if they have specific required sub-properties.
+                        // Note: The schema also conditionally requires jsonSchema for "openrouter_json_schema".
+                    // Adding validation for that as per schema structure for completeness, if not already covered implicitly.
+                    else if (method === "openrouter_json_schema" && (typeof activeConfig.jsonOutputStrategy.jsonSchema !== 'object' || activeConfig.jsonOutputStrategy.jsonSchema === null)) {
+                        validationErrors.push({
+                            field: 'jsonOutputStrategy.jsonSchema',
+                            reason: 'Is required and must be an object when jsonOutputStrategy.method is "openrouter_json_schema".'
+                        });
+                    }
                 }
             }
 
             if (validationErrors.length > 0) {
                 const errorDetailsMessage = validationErrors.map(err => `${err.field}: ${err.reason}`).join('; ');
-                const msg = `Active LLM config '${activeConfig.id || 'unknown'}' is invalid: ${errorDetailsMessage}`;
-                throw new ConfigurationError(msg, {llmId: activeConfig.id, problematicFields: validationErrors});
+                // Use activeConfig.configId for the message
+                const msg = `Active LLM config '${activeConfig.configId || 'unknown'}' is invalid: ${errorDetailsMessage}`;
+                throw new ConfigurationError(msg, {llmId: activeConfig.configId, problematicFields: validationErrors});
             }
 
-            this.#logger.debug(`Attempting to retrieve API key for LLM '${activeConfig.id}'.`);
+            this.#logger.debug(`Attempting to retrieve API key for LLM '${activeConfig.configId}'.`); // Use configId
             const apiKey = await this.#apiKeyProvider.getKey(activeConfig, this.#environmentContext);
             const isCloudApi = CLOUD_API_TYPES.includes(activeConfig.apiType);
 
-            // Determine if API key is strictly required
             const requiresApiKey = isCloudApi && this.#environmentContext.isServer();
 
             if (requiresApiKey && !apiKey) {
-                const msg = `API key missing for server-side cloud LLM '${activeConfig.id}'. Key is required in this context.`;
-                throw new ConfigurationError(msg, {llmId: activeConfig.id, problematicField: 'apiKey'});
+                const msg = `API key missing for server-side cloud LLM '${activeConfig.configId}'. Key is required in this context.`; // Use configId
+                throw new ConfigurationError(msg, {llmId: activeConfig.configId, problematicField: 'apiKey'}); // Use configId
             }
 
             if (apiKey) {
-                this.#logger.info(`API key retrieved for LLM '${activeConfig.id}'.`);
+                this.#logger.info(`API key retrieved for LLM '${activeConfig.configId}'.`); // Use configId
             } else if (requiresApiKey) {
-                // This case should ideally be caught by the block above, but as a safeguard:
-                throw new ConfigurationError(`Critical: API key for LLM '${activeConfig.id}' required but unavailable.`, {
-                    llmId: activeConfig.id,
+                throw new ConfigurationError(`Critical: API key for LLM '${activeConfig.configId}' required but unavailable.`, { // Use configId
+                    llmId: activeConfig.configId, // Use configId
                     problematicField: 'apiKey'
                 });
             } else {
-                // API key not required or not found, but not critical in this context (e.g., local LLM, or client-side with CORS)
-                this.#logger.info(`API key not required or not found for LLM '${activeConfig.id}', proceeding. (Is Cloud API: ${isCloudApi}, Is Server: ${this.#environmentContext.isServer()})`);
+                this.#logger.info(`API key not required or not found for LLM '${activeConfig.configId}', proceeding. (Is Cloud API: ${isCloudApi}, Is Server: ${this.#environmentContext.isServer()})`); // Use configId
             }
 
 
@@ -581,49 +618,46 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
             try {
                 strategy = this.#llmStrategyFactory.getStrategy(activeConfig);
             } catch (factoryError) {
-                // MODIFICATION START: Comment out or remove the logger call below
+                // MODIFICATION START: Comment out or remove the logger call below (already present in original code)
                 /*
-                this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: Failed to get strategy from factory for LLM '${activeConfig.id}'. Error: ${factoryError.message}`, {
-                    llmId: activeConfig.id,
+                this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: Failed to get strategy from factory for LLM '${activeConfig.configId}'. Error: ${factoryError.message}`, { // Use configId
+                    llmId: activeConfig.configId, // Use configId
                     factoryError
                 });
                 */
                 // MODIFICATION END
-                throw new ConfigurationError(`Failed to get strategy from factory for LLM '${activeConfig.id}': ${factoryError.message}`, {
-                    llmId: activeConfig.id,
+                throw new ConfigurationError(`Failed to get strategy from factory for LLM '${activeConfig.configId}': ${factoryError.message}`, { // Use configId
+                    llmId: activeConfig.configId, // Use configId
                     originalError: factoryError
                 });
             }
 
             if (!strategy) {
-                // This should ideally be caught by the factory's error handling, but as a safeguard:
-                const msg = `No suitable LLM strategy could be created for the active configuration '${activeConfig.id}'. Check factory logic and LLM config apiType.`;
-                this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`, {llmId: activeConfig.id});
-                throw new ConfigurationError(msg, {llmId: activeConfig.id});
+                const msg = `No suitable LLM strategy could be created for the active configuration '${activeConfig.configId}'. Check factory logic and LLM config apiType.`; // Use configId
+                this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`, {llmId: activeConfig.configId}); // Use configId
+                throw new ConfigurationError(msg, {llmId: activeConfig.configId}); // Use configId
             }
 
-            this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: Executing strategy for LLM '${activeConfig.id}'.`);
+            this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: Executing strategy for LLM '${activeConfig.configId}'.`); // Use configId
             return await strategy.execute({
                 gameSummary,
                 llmConfig: activeConfig,
-                apiKey, // May be null if not required/found, strategy should handle this.
+                apiKey,
                 environmentContext: this.#environmentContext
             });
 
         } catch (error) {
-            const llmIdForLog = (activeConfig && activeConfig.id) || (error.llmId) || this.#currentActiveLlmId || 'unknown';
+            const llmIdForLog = (activeConfig && activeConfig.configId) || (error.llmId) || this.#currentActiveLlmId || 'unknown'; // Use configId
             const logDetails = {llmId: llmIdForLog, errorName: error.name};
 
             if (error instanceof ConfigurationError) {
-                // ConfigurationErrors are more structured and likely have 'problematicFields' or 'problematicField'
                 logDetails.problematicFields = error.problematicFields || error.problematicField;
                 logDetails.originalErrorMessage = error.originalError ? error.originalError.message : undefined;
             } else {
-                // For generic errors, include more raw details
                 logDetails.errorDetails = {message: error.message, stack: error.stack, ...error};
             }
             this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: Error during getAIDecision for LLM '${llmIdForLog}': ${error.message}`, logDetails);
-            throw error; // Re-throw the original error to be handled by the caller
+            throw error;
         }
     }
 
@@ -645,11 +679,12 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
     // --- Methods for Testing ---
     /**
-     * FOR TESTING ONLY: Retrieves the loaded LLM configurations.
+     * FOR TESTING ONLY: Retrieves the loaded LLM configurations (the root object).
      * @returns {LLMConfigurationFile | null}
      */
     getLoadedConfigs_FOR_TESTING_ONLY() {
-        return this.#llmConfigs;
+        // Return the root configuration object which includes defaultConfigId and the configs map
+        return this.#llmRootConfig;
     }
 
     /**

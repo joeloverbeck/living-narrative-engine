@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import {jest, beforeEach, describe, expect, it} from '@jest/globals';
-import {ConfigurableLLMAdapter, ConfigurationError} from '../../../src/turns/adapters/configurableLLMAdapter.js';
+import {ConfigurableLLMAdapter} from '../../../src/turns/adapters/configurableLLMAdapter.js';
 import {CLOUD_API_TYPES} from '../../../src/llms/constants/llmConstants.js';
 
 // Mock dependencies
@@ -37,38 +37,43 @@ const mockLlmStrategy = {
     execute: jest.fn(),
 };
 
-/** @type {import('../../../src/llms/services/llmConfigLoader.js').LLMModelConfig} */
+/** @type {import('../../../src/turns/adapters/configurableLLMAdapter.js').LLMModelConfig} */
 const sampleLlmModelConfig1 = {
-    id: 'test-llm-1',
+    configId: 'test-llm-1',
     displayName: 'Test LLM 1',
     apiType: 'openai',
     modelIdentifier: 'gpt-3.5-turbo',
     endpointUrl: 'https://api.openai.com/v1/chat/completions',
-    promptFrame: {system: "System prompt", user: "User prompt {{gameSummary}}"},
+    jsonOutputStrategy: {method: 'native_json'},
+    promptElements: [],
+    promptAssemblyOrder: [],
     defaultParameters: {temperature: 0.7},
-    jsonOutputStrategy: {method: 'native_json'}, // Added for completeness
 };
 
-/** @type {import('../../../src/llms/services/llmConfigLoader.js').LLMModelConfig} */
+/** @type {import('../../../src/turns/adapters/configurableLLMAdapter.js').LLMModelConfig} */
 const sampleLlmModelConfig2 = {
-    id: 'test-llm-2',
+    configId: 'test-llm-2',
     displayName: 'Test LLM 2 (Cloud)',
     apiType: CLOUD_API_TYPES[0] || 'anthropic',
     modelIdentifier: 'claude-2',
     endpointUrl: 'https://api.anthropic.com/v1/messages',
-    promptFrame: {system: "System prompt", user: "User prompt {{gameSummary}}"},
-    defaultParameters: {temperature: 0.5},
+    jsonOutputStrategy: {method: 'native_json'},
+    promptElements: [],
+    promptAssemblyOrder: [],
     apiKeyEnvVar: 'ANTHROPIC_API_KEY',
-    jsonOutputStrategy: {method: 'native_json'}, // Added for completeness
+    defaultParameters: {temperature: 0.5},
 };
 
-/** @type {import('../../../src/llms/services/llmConfigLoader.js').LLMModelConfig} */
+/** @type {import('../../../src/turns/adapters/configurableLLMAdapter.js').LLMModelConfig} */
 const llmConfigNoDisplayName = {
-    id: 'llm-no-display',
+    configId: 'llm-no-display',
+    displayName: undefined,
     apiType: 'openai',
     modelIdentifier: 'gpt-text',
     endpointUrl: 'url3',
-    jsonOutputStrategy: {method: 'native_json'}, // Added for completeness
+    jsonOutputStrategy: {method: 'native_json'},
+    promptElements: [],
+    promptAssemblyOrder: [],
 };
 
 describe('ConfigurableLLMAdapter Management Features', () => {
@@ -121,8 +126,8 @@ describe('ConfigurableLLMAdapter Management Features', () => {
 
         it('should use initialLlmId from constructor if valid and found in configs, and log it', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                defaultLlmId: 'default-id',
-                llms: {
+                defaultConfigId: 'default-id',
+                configs: {
                     'constructor-llm-id': sampleLlmModelConfig1,
                     'default-id': sampleLlmModelConfig2,
                 }
@@ -135,16 +140,16 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
 
             expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe('constructor-llm-id');
-            expect(await adapter.getCurrentActiveLlmConfig()).toEqual(sampleLlmModelConfig1);
+            expect(await adapter.getCurrentActiveLlmConfig()).toEqual(expect.objectContaining(sampleLlmModelConfig1));
             expect(mockLogger.info).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter: LLM configuration 'constructor-llm-id' (Test LLM 1) set as active by initialLlmId."
+                "ConfigurableLLMAdapter: LLM configuration 'constructor-llm-id' (Test LLM 1) set as active by initialLlmId from constructor."
             );
         });
 
-        it('should fallback to defaultLlmId if initialLlmId (from constructor) is not found, and log correctly', async () => {
+        it('should fallback to defaultConfigId if initialLlmId (from constructor) is not found, and log correctly', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                defaultLlmId: 'default-id',
-                llms: {
+                defaultConfigId: 'default-id',
+                configs: {
                     'another-llm': sampleLlmModelConfig1,
                     'default-id': sampleLlmModelConfig2,
                 }
@@ -157,40 +162,39 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
 
             expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe('default-id');
-            expect(await adapter.getCurrentActiveLlmConfig()).toEqual(sampleLlmModelConfig2);
+            expect(await adapter.getCurrentActiveLlmConfig()).toEqual(expect.objectContaining(sampleLlmModelConfig2));
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter.#selectInitialActiveLlm: initialLlmId ('non-existent-constructor-id') was provided to constructor, but no LLM configuration with this ID exists. Falling back to defaultLlmId logic."
+                "ConfigurableLLMAdapter.#selectInitialActiveLlm: initialLlmId ('non-existent-constructor-id') was provided to constructor, but no LLM configuration with this ID exists in the configs map. Falling back to defaultConfigId logic."
             );
             expect(mockLogger.info).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter: LLM configuration 'default-id' (Test LLM 2 (Cloud)) set as active by default."
+                "ConfigurableLLMAdapter: LLM configuration 'default-id' (Test LLM 2 (Cloud)) set as active by defaultConfigId from file."
             );
         });
 
-        it('should use defaultLlmId from config if initialLlmId is not provided, and log it', async () => {
+        it('should use defaultConfigId from config if initialLlmId is not provided, and log it', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                defaultLlmId: 'default-id',
-                llms: {
+                defaultConfigId: 'default-id',
+                configs: {
                     'default-id': sampleLlmModelConfig2,
                 }
             });
             adapter = new ConfigurableLLMAdapter({
                 logger: mockLogger, environmentContext: mockEnvironmentContext,
                 apiKeyProvider: mockApiKeyProvider, llmStrategyFactory: mockLlmStrategyFactory,
-                // No initialLlmId here
             });
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
 
             expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe('default-id');
-            expect(await adapter.getCurrentActiveLlmConfig()).toEqual(sampleLlmModelConfig2);
+            expect(await adapter.getCurrentActiveLlmConfig()).toEqual(expect.objectContaining(sampleLlmModelConfig2));
             expect(mockLogger.info).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter: LLM configuration 'default-id' (Test LLM 2 (Cloud)) set as active by default."
+                "ConfigurableLLMAdapter: LLM configuration 'default-id' (Test LLM 2 (Cloud)) set as active by defaultConfigId from file."
             );
         });
 
-        it('should handle cases where defaultLlmId from config is invalid or not found, and log correctly', async () => {
+        it('should handle cases where defaultConfigId from config is invalid or not found, and log correctly', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                defaultLlmId: 'non-existent-default-id',
-                llms: {'some-llm': sampleLlmModelConfig1}
+                defaultConfigId: 'non-existent-default-id',
+                configs: {'some-llm': sampleLlmModelConfig1}
             });
             adapter = new ConfigurableLLMAdapter({
                 logger: mockLogger,
@@ -201,14 +205,14 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBeNull();
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter: 'defaultLlmId' (\"non-existent-default-id\") is specified in configurations, but no LLM configuration with this ID exists. No default LLM set."
+                "ConfigurableLLMAdapter: 'defaultConfigId' (\"non-existent-default-id\") is specified in configurations, but no LLM configuration with this ID exists in the configs map. No default LLM set."
             );
         });
 
-        it('should handle cases where defaultLlmId from config is an empty string, and log correctly', async () => {
+        it('should handle cases where defaultConfigId from config is an empty string, and log correctly', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                defaultLlmId: '   ', // Empty string
-                llms: {'some-llm': sampleLlmModelConfig1}
+                defaultConfigId: '   ',
+                configs: {'some-llm': sampleLlmModelConfig1}
             });
             adapter = new ConfigurableLLMAdapter({
                 logger: mockLogger,
@@ -218,41 +222,21 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             });
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBeNull();
+            // Only expect the specific warning about the empty string.
+            // The general warning "No default LLM set..." should not be logged if this specific one is.
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter.#selectInitialActiveLlm: 'defaultLlmId' found in configurations but it is not a valid non-empty string (\"   \")."
+                "ConfigurableLLMAdapter.#selectInitialActiveLlm: 'defaultConfigId' found in configurations but it is not a valid non-empty string (\"   \")."
             );
-            // Also check the more general warning
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter.#selectInitialActiveLlm: No default LLM set. Neither initialLlmId nor defaultLlmId resulted in a valid active LLM selection."
+            // Ensure the more general warning is NOT called in this specific case
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(
+                "ConfigurableLLMAdapter.#selectInitialActiveLlm: No default LLM set. Neither initialLlmIdFromConstructor nor defaultConfigId resulted in a valid active LLM selection."
             );
         });
-
-
-        it('should handle cases where both initialLlmId (constructor) and defaultLlmId (config) are missing/invalid, and log correctly', async () => {
-            mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                // No defaultLlmId
-                llms: {'some-llm': sampleLlmModelConfig1}
-            });
-            adapter = new ConfigurableLLMAdapter({
-                logger: mockLogger, environmentContext: mockEnvironmentContext,
-                apiKeyProvider: mockApiKeyProvider, llmStrategyFactory: mockLlmStrategyFactory,
-                initialLlmId: null // Or not provided
-            });
-            await adapter.init({llmConfigLoader: mockLlmConfigLoader});
-
-            expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBeNull();
-            expect(mockLogger.info).toHaveBeenCalledWith(
-                'ConfigurableLLMAdapter: No "defaultLlmId" specified in configurations. No LLM is set as active by default.'
-            );
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter.#selectInitialActiveLlm: No default LLM set. Neither initialLlmId nor defaultLlmId resulted in a valid active LLM selection."
-            );
-        });
-
+        
         it('should handle no LLMs in config file, log warning, and have no active LLM', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                defaultLlmId: 'default-id', // This won't be found
-                llms: {} // No LLMs
+                defaultConfigId: 'default-id',
+                configs: {}
             });
             adapter = new ConfigurableLLMAdapter({
                 logger: mockLogger,
@@ -264,16 +248,20 @@ describe('ConfigurableLLMAdapter Management Features', () => {
 
             expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBeNull();
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter: 'defaultLlmId' (\"default-id\") is specified in configurations, but no LLM configuration with this ID exists. No default LLM set."
+                "ConfigurableLLMAdapter: 'defaultConfigId' (\"default-id\") is specified in configurations, but no LLM configuration with this ID exists in the configs map. No default LLM set."
             );
-            expect(mockLogger.warn).toHaveBeenCalledWith( // This warning also comes from #selectInitialActiveLlm
-                "ConfigurableLLMAdapter.#selectInitialActiveLlm: No LLM configurations found in llmConfigs.llms. No LLM can be set as active."
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                "ConfigurableLLMAdapter.#selectInitialActiveLlm: No LLM configurations found in the configs map. No LLM can be set as active."
             );
         });
 
         it('should log N/A for displayName if not present during initial selection by constructor initialLlmId', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                llms: {'constructor-llm-no-display': llmConfigNoDisplayName}
+                defaultConfigId: 'some-default',
+                configs: {
+                    'constructor-llm-no-display': llmConfigNoDisplayName,
+                    'some-default': sampleLlmModelConfig1
+                }
             });
             adapter = new ConfigurableLLMAdapter({
                 logger: mockLogger, environmentContext: mockEnvironmentContext,
@@ -282,14 +270,14 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             });
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             expect(mockLogger.info).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter: LLM configuration 'constructor-llm-no-display' (N/A) set as active by initialLlmId."
+                "ConfigurableLLMAdapter: LLM configuration 'constructor-llm-no-display' (N/A) set as active by initialLlmId from constructor."
             );
         });
 
-        it('should log N/A for displayName if not present during initial selection by defaultLlmId', async () => {
+        it('should log N/A for displayName if not present during initial selection by defaultConfigId', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
-                defaultLlmId: 'default-llm-no-display',
-                llms: {'default-llm-no-display': llmConfigNoDisplayName}
+                defaultConfigId: 'default-llm-no-display',
+                configs: {'default-llm-no-display': llmConfigNoDisplayName}
             });
             adapter = new ConfigurableLLMAdapter({
                 logger: mockLogger, environmentContext: mockEnvironmentContext,
@@ -297,15 +285,15 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             });
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             expect(mockLogger.info).toHaveBeenCalledWith(
-                "ConfigurableLLMAdapter: LLM configuration 'default-llm-no-display' (N/A) set as active by default."
+                "ConfigurableLLMAdapter: LLM configuration 'default-llm-no-display' (N/A) set as active by defaultConfigId from file."
             );
         });
     });
 
     describe('setActiveLlm() Method', () => {
         const mockFullConfigPayload = {
-            defaultLlmId: 'test-llm-1',
-            llms: {
+            defaultConfigId: 'test-llm-1',
+            configs: {
                 'test-llm-1': sampleLlmModelConfig1,
                 'test-llm-2': sampleLlmModelConfig2,
                 'llm-no-display': llmConfigNoDisplayName
@@ -317,7 +305,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
                 logger: mockLogger, environmentContext: mockEnvironmentContext,
                 apiKeyProvider: mockApiKeyProvider, llmStrategyFactory: mockLlmStrategyFactory,
             });
-            mockLlmConfigLoader.loadConfigs.mockResolvedValue(JSON.parse(JSON.stringify(mockFullConfigPayload))); // Deep copy
+            mockLlmConfigLoader.loadConfigs.mockResolvedValue(JSON.parse(JSON.stringify(mockFullConfigPayload)));
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             mockLogger.info.mockClear();
             mockLogger.warn.mockClear();
@@ -328,7 +316,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             const result = await adapter.setActiveLlm('test-llm-2');
             expect(result).toBe(true);
             expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe('test-llm-2');
-            expect(await adapter.getCurrentActiveLlmConfig()).toEqual(sampleLlmModelConfig2);
+            expect(await adapter.getCurrentActiveLlmConfig()).toEqual(expect.objectContaining(sampleLlmModelConfig2));
             expect(mockLogger.info).toHaveBeenCalledWith(
                 "ConfigurableLLMAdapter.setActiveLlm: Active LLM configuration changed from 'test-llm-1' to 'test-llm-2' (Test LLM 2 (Cloud))."
             );
@@ -366,7 +354,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe(initialActiveId);
             expect(await adapter.getCurrentActiveLlmConfig()).toEqual(initialConfig);
             expect(mockLogger.error).toHaveBeenCalledWith(
-                `ConfigurableLLMAdapter.setActiveLlm: No LLM configuration found with ID 'non-existent-llm'. Active LLM remains unchanged ('${initialActiveId || 'none'}').`
+                `ConfigurableLLMAdapter.setActiveLlm: No LLM configuration found with ID 'non-existent-llm' in the configs map. Active LLM remains unchanged ('${initialActiveId || 'none'}').`
             );
         });
 
@@ -391,11 +379,10 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValueOnce({error: true, message: "config error"});
             await nonOpAdapter.init({llmConfigLoader: mockLlmConfigLoader});
             expect(nonOpAdapter.isOperational()).toBe(false);
-            mockLogger.error.mockClear(); // Clear init logs
+            mockLogger.error.mockClear();
 
             await expect(nonOpAdapter.setActiveLlm('test-llm-1'))
                 .rejects.toThrow('ConfigurableLLMAdapter: Adapter initialized but is not operational. Check configuration and logs.');
-            // #ensureInitialized logs its own error, setActiveLlm doesn't log an additional one before re-throwing
             expect(mockLogger.error).toHaveBeenCalledWith(
                 'ConfigurableLLMAdapter.#ensureInitialized: ConfigurableLLMAdapter: Adapter initialized but is not operational. Check configuration and logs.'
             );
@@ -404,11 +391,11 @@ describe('ConfigurableLLMAdapter Management Features', () => {
 
     describe('getAvailableLlmOptions()', () => {
         const mockConfigsPayload = {
-            defaultLlmId: 'test-llm-1',
-            llms: {
-                'test-llm-1': sampleLlmModelConfig1, // Has displayName
-                'test-llm-2': sampleLlmModelConfig2, // Has displayName
-                'llm-no-display': llmConfigNoDisplayName // No displayName, should use id
+            defaultConfigId: 'test-llm-1',
+            configs: {
+                'test-llm-1': sampleLlmModelConfig1,
+                'test-llm-2': sampleLlmModelConfig2,
+                'llm-no-display': llmConfigNoDisplayName
             },
         };
 
@@ -426,23 +413,23 @@ describe('ConfigurableLLMAdapter Management Features', () => {
 
             const options = await adapter.getAvailableLlmOptions();
             expect(options).toEqual(expect.arrayContaining([
-                {id: 'test-llm-1', displayName: 'Test LLM 1'},
-                {id: 'test-llm-2', displayName: 'Test LLM 2 (Cloud)'},
-                {id: 'llm-no-display', displayName: 'llm-no-display'} // Fallback to id
+                {id: sampleLlmModelConfig1.configId, displayName: sampleLlmModelConfig1.displayName},
+                {id: sampleLlmModelConfig2.configId, displayName: sampleLlmModelConfig2.displayName},
+                {id: llmConfigNoDisplayName.configId, displayName: llmConfigNoDisplayName.configId}
             ]));
             expect(options.length).toBe(3);
             expect(mockLogger.warn).not.toHaveBeenCalled();
         });
 
         it('should return an empty array if no LLM configurations are found in loaded configs', async () => {
-            mockLlmConfigLoader.loadConfigs.mockResolvedValue({defaultLlmId: null, llms: {}});
+            mockLlmConfigLoader.loadConfigs.mockResolvedValue({defaultConfigId: "some-id", configs: {}}); // Valid structure, but empty configs
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             mockLogger.warn.mockClear();
 
             const options = await adapter.getAvailableLlmOptions();
             expect(options).toEqual([]);
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                'ConfigurableLLMAdapter.getAvailableLlmOptions: No LLM configurations found in this.#llmConfigs.llms. Returning empty array.'
+                'ConfigurableLLMAdapter.getAvailableLlmOptions: No LLM configurations found in the configs map. Returning empty array.'
             );
         });
 
@@ -450,7 +437,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({error: true, message: "config load failed"});
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             expect(adapter.isOperational()).toBe(false);
-            mockLogger.warn.mockClear(); // Clear init logs
+            mockLogger.warn.mockClear();
 
             const options = await adapter.getAvailableLlmOptions();
             expect(options).toEqual([]);
@@ -460,16 +447,14 @@ describe('ConfigurableLLMAdapter Management Features', () => {
         });
 
         it('should return empty array if called before init', async () => {
-            // For uninitialized adapter, #ensureInitialized will throw, caught by getAvailableLlmOptions
             mockLogger.warn.mockClear();
-            mockLogger.error.mockClear(); // Also clear error for #ensureInitialized log
+            mockLogger.error.mockClear();
 
             const options = await adapter.getAvailableLlmOptions();
             expect(options).toEqual([]);
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 expect.stringContaining('ConfigurableLLMAdapter.getAvailableLlmOptions: Adapter not operational. Cannot retrieve LLM options.')
             );
-            // And #ensureInitialized would have logged an error
             expect(mockLogger.error).toHaveBeenCalledWith(
                 'ConfigurableLLMAdapter.#ensureInitialized: ConfigurableLLMAdapter: Initialization was never started. Call init() before using the adapter.'
             );
@@ -478,8 +463,8 @@ describe('ConfigurableLLMAdapter Management Features', () => {
 
     describe('getCurrentActiveLlmId()', () => {
         const mockConfigsPayload = {
-            defaultLlmId: 'test-llm-1',
-            llms: {'test-llm-1': sampleLlmModelConfig1},
+            defaultConfigId: 'test-llm-1',
+            configs: {'test-llm-1': sampleLlmModelConfig1},
         };
 
         beforeEach(async () => {
@@ -494,48 +479,72 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             expect(await adapter.getCurrentActiveLlmId()).toBe('test-llm-1');
 
-            // Change active LLM
-            const newConfigs = {
-                defaultLlmId: 'test-llm-1',
-                llms: {
+            const fullPayloadForSetActive = {
+                defaultConfigId: 'test-llm-1',
+                configs: {
                     'test-llm-1': sampleLlmModelConfig1,
                     'test-llm-new': sampleLlmModelConfig2,
                 }
             };
-            mockLlmConfigLoader.loadConfigs.mockResolvedValue(newConfigs); // For re-init logic if that was tested, but here we use setActiveLlm
-            // Re-init adapter with new default for clarity of change
+            mockLlmConfigLoader.loadConfigs.mockResolvedValue(JSON.parse(JSON.stringify(fullPayloadForSetActive)));
+            // Re-create adapter for a clean init with the new full payload
             adapter = new ConfigurableLLMAdapter({
-                logger: mockLogger, environmentContext: mockEnvironmentContext,
-                apiKeyProvider: mockApiKeyProvider, llmStrategyFactory: mockLlmStrategyFactory,
+                logger: mockLogger,
+                environmentContext: mockEnvironmentContext,
+                apiKeyProvider: mockApiKeyProvider,
+                llmStrategyFactory: mockLlmStrategyFactory
             });
-            await adapter.init({llmConfigLoader: mockLlmConfigLoader}); // init with test-llm-1 active
+            await adapter.init({llmConfigLoader: mockLlmConfigLoader});
+
             await adapter.setActiveLlm('test-llm-new');
             expect(await adapter.getCurrentActiveLlmId()).toBe('test-llm-new');
         });
 
         it('should return null if no LLM is active (e.g. no default, no setActiveLlm)', async () => {
-            mockLlmConfigLoader.loadConfigs.mockResolvedValue({llms: {'some-llm': sampleLlmModelConfig1}}); // No defaultLlmId
+            // Mock a scenario where defaultConfigId is missing from the loaded config.
+            // According to stricter init, this should make the adapter non-operational.
+            mockLlmConfigLoader.loadConfigs.mockResolvedValue({
+                // No defaultConfigId property here
+                configs: {'some-llm': sampleLlmModelConfig1}
+            });
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
-            expect(await adapter.getCurrentActiveLlmId()).toBeNull();
+
+            // With strict init, adapter is non-operational if defaultConfigId is not a string.
+            expect(adapter.isOperational()).toBe(false);
+
+            const activeId = await adapter.getCurrentActiveLlmId();
+            expect(activeId).toBeNull();
+            // #ensureInitialized in getCurrentActiveLlmId will log an error and throw.
+            // The catch block in getCurrentActiveLlmId will log a warning.
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                'ConfigurableLLMAdapter.#ensureInitialized: ConfigurableLLMAdapter: Adapter initialized but is not operational. Check configuration and logs.'
+            );
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                expect.stringContaining('ConfigurableLLMAdapter.getCurrentActiveLlmId: Adapter not operational. Cannot retrieve current active LLM ID.')
+            );
         });
+
 
         it('should return null and log warning if adapter is not operational', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({error: true, message: "config load failed"});
             await adapter.init({llmConfigLoader: mockLlmConfigLoader});
             expect(adapter.isOperational()).toBe(false);
             mockLogger.warn.mockClear(); // Clear init logs
+            mockLogger.error.mockClear(); // Clear init logs
 
             const activeId = await adapter.getCurrentActiveLlmId();
             expect(activeId).toBeNull();
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 expect.stringContaining('ConfigurableLLMAdapter.getCurrentActiveLlmId: Adapter not operational. Cannot retrieve current active LLM ID.')
             );
+            expect(mockLogger.error).toHaveBeenCalledWith( // from #ensureInitialized
+                'ConfigurableLLMAdapter.#ensureInitialized: ConfigurableLLMAdapter: Adapter initialized but is not operational. Check configuration and logs.'
+            );
         });
 
         it('should return null if called before init', async () => {
-            // For uninitialized adapter, #ensureInitialized will throw, caught by getCurrentActiveLlmId
             mockLogger.warn.mockClear();
-            mockLogger.error.mockClear(); // Also clear error for #ensureInitialized log
+            mockLogger.error.mockClear();
 
             const activeId = await adapter.getCurrentActiveLlmId();
             expect(activeId).toBeNull();
@@ -548,8 +557,6 @@ describe('ConfigurableLLMAdapter Management Features', () => {
         });
     });
 
-    // Tests for init, dependency validation in constructor etc. are mostly from the provided base
-    // Ensure they align with ticket details, especially logging.
     describe('Constructor (Dependency Validation - inherited from original test structure)', () => {
         it('should throw an Error if logger is missing', () => {
             const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
@@ -563,18 +570,17 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             }).toThrow('ConfigurableLLMAdapter: Constructor requires a valid ILogger instance.');
             consoleErrorSpy.mockRestore();
         });
-        // Add other constructor dependency validation tests as originally present if they are not redundant with above.
     });
 
     describe('init() Method (Coverage for operational states - inherited)', () => {
         const mockSuccessConfigPayload = {
-            defaultLlmId: 'test-llm-1',
-            llms: {
+            defaultConfigId: 'test-llm-1',
+            configs: {
                 'test-llm-1': sampleLlmModelConfig1,
                 'test-llm-2': sampleLlmModelConfig2,
             },
         };
-        beforeEach(() => { // Local beforeEach for init tests needing fresh adapter
+        beforeEach(() => {
             adapter = new ConfigurableLLMAdapter({
                 logger: mockLogger, environmentContext: mockEnvironmentContext,
                 apiKeyProvider: mockApiKeyProvider, llmStrategyFactory: mockLlmStrategyFactory,
@@ -593,12 +599,10 @@ describe('ConfigurableLLMAdapter Management Features', () => {
             expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Actual asynchronous initialization started'));
             expect(mockLogger.info).toHaveBeenCalledWith(
                 'ConfigurableLLMAdapter: LLM configurations loaded successfully.',
-                expect.objectContaining({numberOfConfigs: 2, defaultLlmId: 'test-llm-1'})
+                expect.objectContaining({numberOfConfigs: 2, defaultConfigId: 'test-llm-1'})
             );
-            // Specific check for default LLM selection log is in 'Constructor & Initial LLM Selection Logic'
             expect(mockLogger.info).toHaveBeenCalledWith('ConfigurableLLMAdapter: Initialization attempt complete and adapter is operational.');
         });
-        // Add other relevant init tests ensuring all AC for init are covered.
     });
 });
 

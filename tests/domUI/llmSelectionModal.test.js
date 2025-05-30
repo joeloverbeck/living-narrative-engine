@@ -86,8 +86,6 @@ describe('LlmSelectionModal', () => {
                     case '#llm-selection-status-message':
                         return llmStatusMessageElement;
                     default:
-                        // Allow querying within a specific element if 'this' is that element.
-                        // This is a simplified approach; robust context would require more.
                         if (typeof this !== 'undefined' && this instanceof mockWindow.HTMLElement && this.querySelector) {
                             return this.querySelector(selector);
                         }
@@ -113,10 +111,8 @@ describe('LlmSelectionModal', () => {
                 } else if (options.text !== undefined) {
                     el.textContent = options.text;
                 }
-                // For other attributes like 'id', 'src', etc.
                 Object.keys(options).forEach(key => {
                     if (key !== 'className' && key !== 'cls' && key !== 'textContent' && key !== 'text') {
-                        // Handle data-* attributes
                         if (key.startsWith('data-')) {
                             el.dataset[key.substring(5)] = options[key];
                         } else {
@@ -245,7 +241,6 @@ describe('LlmSelectionModal', () => {
             changeLlmButton = null;
             mockDocumentContext.query = jest.fn(selector => {
                 if (selector === '#change-llm-button') return null;
-                // Fallback to original behavior for other selectors to ensure modal constructs
                 if (selector === '#llm-selection-modal') return modalElement;
                 if (selector === '#llm-selection-list') return llmListElement;
                 if (selector === '#llm-selection-modal-close-button') return closeModalButton;
@@ -289,7 +284,6 @@ describe('LlmSelectionModal', () => {
             closeModalButton = null;
             mockDocumentContext.query = jest.fn(selector => {
                 if (selector === '#llm-selection-modal-close-button') return null;
-                // Fallback for other selectors
                 if (selector === '#change-llm-button') return changeLlmButton;
                 if (selector === '#llm-selection-modal') return modalElement;
                 if (selector === '#llm-selection-list') return llmListElement;
@@ -328,8 +322,7 @@ describe('LlmSelectionModal', () => {
             clickCallback(mockEventOverlay);
             expect(modal.hide).toHaveBeenCalledTimes(1);
 
-            // Test click on child element (should not hide)
-            modal.hide.mockClear(); // Clear previous calls
+            modal.hide.mockClear();
             const childElement = mockDocument.createElement('div');
             modalElement.appendChild(childElement);
             const mockEventChild = new mockWindow.MouseEvent('click');
@@ -340,12 +333,11 @@ describe('LlmSelectionModal', () => {
 
         it('should not try to attach overlay click listener if #llm-selection-modal is not found, and log error', () => {
             const tempOriginalQuery = mockDocumentContext.query;
-            const originalModalElement = modalElement; // Save
-            modalElement = null; // Simulate not found
+            const originalModalElement = modalElement;
+            modalElement = null;
 
             mockDocumentContext.query = jest.fn(selector => {
                 if (selector === '#llm-selection-modal') return null;
-                // Fallback for other selectors
                 if (selector === '#change-llm-button') return changeLlmButton;
                 if (selector === '#llm-selection-list') return llmListElement;
                 if (selector === '#llm-selection-modal-close-button') return closeModalButton;
@@ -359,13 +351,12 @@ describe('LlmSelectionModal', () => {
                 domElementFactory: mockDomElementFactory,
                 llmAdapter: mockLlmAdapter
             });
-            // The error is for not finding the element during bind, not specifically about listener attachment.
             expect(mockLogger.error).toHaveBeenCalledWith('LlmSelectionModal: Could not find #llm-selection-modal element.');
 
 
-            mockDocumentContext.query = tempOriginalQuery; // Restore
-            modalElement = originalModalElement; // Restore
-            if (modalElement) jest.spyOn(modalElement, 'addEventListener'); // Re-spy if restored
+            mockDocumentContext.query = tempOriginalQuery;
+            modalElement = originalModalElement;
+            if (modalElement) jest.spyOn(modalElement, 'addEventListener');
         });
     });
 
@@ -379,7 +370,7 @@ describe('LlmSelectionModal', () => {
                 domElementFactory: mockDomElementFactory,
                 llmAdapter: mockLlmAdapter
             });
-            if (modalElement) { // Ensure modalElement exists before manipulating it
+            if (modalElement) {
                 modalElement.style.display = 'none';
                 modalElement.classList.remove('visible');
             }
@@ -400,11 +391,10 @@ describe('LlmSelectionModal', () => {
         it('should log an error and return if modalElement is not found', async () => {
             const originalQuery = mockDocumentContext.query;
             const originalModalElement = modalElement;
-            modalElement = null; // Simulate modalElement is not found for this specific test
+            modalElement = null;
 
             mockDocumentContext.query = jest.fn(selector => {
                 if (selector === '#llm-selection-modal') return null;
-                // Maintain other elements for constructor sanity, though they might not be strictly needed for this test
                 if (selector === '#change-llm-button') return changeLlmButton;
                 if (selector === '#llm-selection-list') return llmListElement;
                 if (selector === '#llm-selection-modal-close-button') return closeModalButton;
@@ -412,7 +402,6 @@ describe('LlmSelectionModal', () => {
                 return originalQuery(selector);
             });
 
-            // Re-initialize with the modalElement being null due to the modified query mock
             modalInstance = new LlmSelectionModal({
                 logger: mockLogger,
                 documentContext: mockDocumentContext,
@@ -424,8 +413,8 @@ describe('LlmSelectionModal', () => {
             expect(mockLogger.error).toHaveBeenCalledWith('LlmSelectionModal: Cannot show modal, #llm-selection-modal element not found.');
             expect(mockLlmAdapter.getAvailableLlmOptions).not.toHaveBeenCalled();
 
-            modalElement = originalModalElement; // Restore modalElement
-            mockDocumentContext.query = originalQuery; // Restore original query behavior for other tests
+            modalElement = originalModalElement;
+            mockDocumentContext.query = originalQuery;
         });
 
         it('should clear previous status messages', async () => {
@@ -444,11 +433,10 @@ describe('LlmSelectionModal', () => {
         it('should log error, show modal frame, if #llm-selection-list is not found', async () => {
             const originalQuery = mockDocumentContext.query;
             const originalLlmListElement = llmListElement;
-            llmListElement = null; // Simulate list element not found
+            llmListElement = null;
 
             mockDocumentContext.query = jest.fn(selector => {
                 if (selector === '#llm-selection-list') return null;
-                // Ensure modalElement itself is found
                 if (selector === '#llm-selection-modal') return modalElement;
                 if (selector === '#change-llm-button') return changeLlmButton;
                 if (selector === '#llm-selection-modal-close-button') return closeModalButton;
@@ -468,19 +456,19 @@ describe('LlmSelectionModal', () => {
             jest.runAllTimers();
 
             expect(mockLogger.error).toHaveBeenCalledWith('LlmSelectionModal: #llm-selection-list element not found. Cannot populate LLM list.');
-            expect(modalElement.style.display).toBe('flex'); // Modal frame should still show
+            expect(modalElement.style.display).toBe('flex');
             expect(modalElement.classList.contains('visible')).toBe(true);
             expect(mockLlmAdapter.getAvailableLlmOptions).not.toHaveBeenCalled();
 
-            llmListElement = originalLlmListElement; // Restore
-            mockDocumentContext.query = originalQuery; // Restore
+            llmListElement = originalLlmListElement;
+            mockDocumentContext.query = originalQuery;
         });
 
         it('should call adapter methods and populate list correctly', async () => {
             const mockOptions = [
-                {id: 'llm1', displayName: 'LLM One'},
-                {id: 'llm2', displayName: 'LLM Two (Active)'},
-                {id: 'llm3', displayName: 'LLM Three'},
+                {configId: 'llm1', displayName: 'LLM One'},
+                {configId: 'llm2', displayName: 'LLM Two (Active)'},
+                {configId: 'llm3', displayName: 'LLM Three'},
             ];
             const activeLlmId = 'llm2';
             mockLlmAdapter.getAvailableLlmOptions.mockResolvedValue(mockOptions);
@@ -499,9 +487,9 @@ describe('LlmSelectionModal', () => {
 
             items.forEach((item, index) => {
                 expect(item.textContent).toBe(mockOptions[index].displayName);
-                expect(item.dataset.llmId).toBe(mockOptions[index].id);
+                expect(item.dataset.llmId).toBe(mockOptions[index].configId);
                 expect(item.getAttribute('role')).toBe('radio');
-                const isActive = mockOptions[index].id === activeLlmId;
+                const isActive = mockOptions[index].configId === activeLlmId;
                 expect(item.classList.contains('selected')).toBe(isActive);
                 expect(item.getAttribute('aria-checked')).toBe(String(isActive));
                 expect(item.getAttribute('tabindex')).toBe(isActive ? '0' : '-1');
@@ -514,7 +502,7 @@ describe('LlmSelectionModal', () => {
         });
 
         it('should populate list with ID if displayName is missing', async () => {
-            const mockOptions = [{id: 'llm-no-name', displayName: null}];
+            const mockOptions = [{configId: 'llm-no-name', displayName: null}];
             mockLlmAdapter.getAvailableLlmOptions.mockResolvedValue(mockOptions);
             mockLlmAdapter.getCurrentActiveLlmId.mockResolvedValue(null);
 
@@ -564,7 +552,7 @@ describe('LlmSelectionModal', () => {
         });
 
         it('should handle error from getCurrentActiveLlmId', async () => {
-            const mockOptions = [{id: 'llm1', displayName: 'LLM One'}];
+            const mockOptions = [{configId: 'llm1', displayName: 'LLM One'}];
             const error = new Error('Adapter failed to get active ID');
             mockLlmAdapter.getAvailableLlmOptions.mockResolvedValue(mockOptions);
             mockLlmAdapter.getCurrentActiveLlmId.mockRejectedValue(error);
@@ -579,7 +567,10 @@ describe('LlmSelectionModal', () => {
         });
 
         it('should set tabindex="0" on the first item if no item is active and list is not empty', async () => {
-            const mockOptions = [{id: 'llm1', displayName: 'LLM One'}, {id: 'llm2', displayName: 'LLM Two'}];
+            const mockOptions = [{configId: 'llm1', displayName: 'LLM One'}, {
+                configId: 'llm2',
+                displayName: 'LLM Two'
+            }];
             mockLlmAdapter.getAvailableLlmOptions.mockResolvedValue(mockOptions);
             mockLlmAdapter.getCurrentActiveLlmId.mockResolvedValue(null);
 
@@ -634,7 +625,7 @@ describe('LlmSelectionModal', () => {
         it('should not throw if changeLlmButton is not available for focus return', () => {
             const originalQuery = mockDocumentContext.query;
             const originalChangeLlmButton = changeLlmButton;
-            changeLlmButton = null; // Simulate not found
+            changeLlmButton = null;
 
             mockDocumentContext.query = jest.fn(selector => {
                 if (selector === '#change-llm-button') return null;
@@ -655,7 +646,7 @@ describe('LlmSelectionModal', () => {
 
             expect(() => modalInstance.hide()).not.toThrow();
 
-            changeLlmButton = originalChangeLlmButton; // Restore
+            changeLlmButton = originalChangeLlmButton;
             mockDocumentContext.query = originalQuery;
         });
 
@@ -668,11 +659,10 @@ describe('LlmSelectionModal', () => {
         it('should log error if modalElement is not found when hide is called', () => {
             const originalQuery = mockDocumentContext.query;
             const originalModalElement = modalElement;
-            modalElement = null; // Simulate not found
+            modalElement = null;
 
             mockDocumentContext.query = jest.fn(selector => {
                 if (selector === '#llm-selection-modal') return null;
-                // Keep other elements for constructor
                 if (selector === '#change-llm-button') return changeLlmButton;
                 if (selector === '#llm-selection-list') return llmListElement;
                 if (selector === '#llm-selection-modal-close-button') return closeModalButton;
@@ -689,7 +679,7 @@ describe('LlmSelectionModal', () => {
             modalInstance.hide();
             expect(mockLogger.error).toHaveBeenCalledWith('LlmSelectionModal: Cannot hide modal, #llm-selection-modal element not found.');
 
-            modalElement = originalModalElement; // Restore
+            modalElement = originalModalElement;
             mockDocumentContext.query = originalQuery;
         });
     });
@@ -697,9 +687,9 @@ describe('LlmSelectionModal', () => {
     describe('LLM Item Click Logic (#handleLlmSelection)', () => {
         let modalInstance;
         const mockOptions = [
-            {id: 'llm1', displayName: 'LLM One'},
-            {id: 'llm2', displayName: 'LLM Two (Currently Active)'},
-            {id: 'llm3', displayName: 'LLM Three'},
+            {configId: 'llm1', displayName: 'LLM One'},
+            {configId: 'llm2', displayName: 'LLM Two (Currently Active)'},
+            {configId: 'llm3', displayName: 'LLM Three'},
         ];
         const initialActiveLlmId = 'llm2';
 
@@ -717,16 +707,18 @@ describe('LlmSelectionModal', () => {
                 domElementFactory: mockDomElementFactory,
                 llmAdapter: mockLlmAdapter
             });
-            // CORRECTED: Remove .mockCallThrough()
             jest.spyOn(modalInstance, 'hide');
         });
 
+        // ***** CORRECTED HERE *****
         async function simulateClickOnItemById(llmId) {
             const itemToClick = llmListElement.querySelector(`[data-llm-id="${llmId}"]`);
+            // CORRECTED: Removed custom message string from toBeNull
             expect(itemToClick).not.toBeNull();
 
             const addEventListenerCalls = itemToClick.addEventListener.mock.calls;
             const clickHandlerCall = addEventListenerCalls.find(call => call[0] === 'click');
+            // CORRECTED: Removed custom message string from toBeDefined
             expect(clickHandlerCall).toBeDefined();
             const handler = clickHandlerCall[1];
 
