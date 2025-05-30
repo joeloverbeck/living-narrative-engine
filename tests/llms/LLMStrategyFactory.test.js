@@ -8,7 +8,6 @@ import {LLMStrategyFactoryError} from '../../src/llms/errors/LLMStrategyFactoryE
 // Import concrete strategies to check instanceof and to mock their modules
 import {OpenRouterJsonSchemaStrategy} from '../../src/llms/strategies/openRouterJsonSchemaStrategy.js';
 import {OpenRouterToolCallingStrategy} from '../../src/llms/strategies/openRouterToolCallingStrategy.js';
-// DefaultPromptEngineeringStrategy import removed
 
 /**
  * @typedef {import('../../src/interfaces/IHttpClient.js').IHttpClient} IHttpClient
@@ -19,7 +18,6 @@ import {OpenRouterToolCallingStrategy} from '../../src/llms/strategies/openRoute
 // Mock the concrete strategy modules
 jest.mock('../../src/llms/strategies/openRouterJsonSchemaStrategy.js');
 jest.mock('../../src/llms/strategies/openRouterToolCallingStrategy.js');
-// DefaultPromptEngineeringStrategy mock removed
 
 /** @returns {jest.Mocked<ILogger>} */
 const mockLoggerInstance = () => ({
@@ -34,6 +32,34 @@ const mockHttpClientInstance = () => ({
     request: jest.fn(),
 });
 
+// Helper function to create a minimal valid LLMModelConfigType
+/**
+ * @param {object} overrides - Object to override default mock config properties.
+ * @returns {LLMModelConfigType}
+ */
+const createMockLlmConfig = (overrides) => {
+    const defaultConfig = {
+        // Use configId as the primary identifier
+        configId: overrides.id || overrides.configId || 'default-test-id', // Prioritize overrides.id for backward compatibility in test data
+        displayName: 'Test LLM',
+        modelIdentifier: 'test-model',
+        endpointUrl: 'http://example.com/api',
+        apiType: 'openrouter', // Default apiType
+        jsonOutputStrategy: {method: 'openrouter_json_schema'}, // Default strategy
+        promptElements: [],
+        promptAssemblyOrder: [],
+        // Add other mandatory fields from LLMModelConfigType with default values if necessary
+    };
+    // If 'id' was passed in overrides (from old test data), ensure it's mapped to configId if configId isn't already set
+    const finalConfig = {...defaultConfig, ...overrides};
+    if (overrides.id && !overrides.configId) {
+        finalConfig.configId = overrides.id;
+    }
+    delete finalConfig.id; // Ensure 'id' is not on the final object if it was just for mapping
+    return finalConfig;
+};
+
+
 describe('LLMStrategyFactory', () => {
     /** @type {jest.Mocked<ILogger>} */
     let logger;
@@ -46,10 +72,8 @@ describe('LLMStrategyFactory', () => {
         logger = mockLoggerInstance();
         httpClient = mockHttpClientInstance();
 
-        // Clear all mocks
         OpenRouterJsonSchemaStrategy.mockClear();
         OpenRouterToolCallingStrategy.mockClear();
-        // DefaultPromptEngineeringStrategy.mockClear() removed;
 
         factory = new LLMStrategyFactory({httpClient, logger});
     });
@@ -71,7 +95,7 @@ describe('LLMStrategyFactory', () => {
         test('should throw error if httpClient is invalid or missing', () => {
             const invalidHttpClients = [null, undefined, {}, {request: 'not a function'}];
             invalidHttpClients.forEach(invalidClient => {
-                const tempLogger = mockLoggerInstance(); // Use a fresh logger for this specific sub-test
+                const tempLogger = mockLoggerInstance();
                 expect(() => new LLMStrategyFactory({
                     httpClient: /** @type {any} */ (invalidClient),
                     logger: tempLogger
@@ -86,112 +110,125 @@ describe('LLMStrategyFactory', () => {
         const successfulTestCases = [
             {
                 description: 'OpenRouter JSON Schema',
-                config: {
-                    id: 'or-schema',
+                configOverrides: { // Use overrides
+                    configId: 'or-schema', // Changed from id
                     apiType: 'openrouter',
                     jsonOutputStrategy: {method: 'openrouter_json_schema'}
                 },
                 ExpectedStrategy: OpenRouterJsonSchemaStrategy,
                 expectedApiTypeLog: 'openrouter',
-                expectedEffectiveMethod: 'openrouter_json_schema', // Test expects this field in log
+                expectedEffectiveMethod: 'openrouter_json_schema',
                 expectedConfiguredMethodLog: 'openrouter_json_schema'
             },
             {
                 description: 'OpenRouter Tool Calling',
-                config: {
-                    id: 'or-tool',
+                configOverrides: { // Use overrides
+                    configId: 'or-tool', // Changed from id
                     apiType: 'openrouter',
                     jsonOutputStrategy: {method: 'openrouter_tool_calling'}
                 },
                 ExpectedStrategy: OpenRouterToolCallingStrategy,
                 expectedApiTypeLog: 'openrouter',
-                expectedEffectiveMethod: 'openrouter_tool_calling', // Test expects this field in log
+                expectedEffectiveMethod: 'openrouter_tool_calling',
                 expectedConfiguredMethodLog: 'openrouter_tool_calling'
             }
         ];
 
         successfulTestCases.forEach(({
                                          description,
-                                         config,
+                                         configOverrides,
                                          ExpectedStrategy,
                                          expectedApiTypeLog,
                                          expectedEffectiveMethod,
                                          expectedConfiguredMethodLog
                                      }) => {
             test(`should create ${description} and inject dependencies`, () => {
-                const strategy = factory.getStrategy(/** @type {LLMModelConfigType} */ (config));
+                const mockConfig = createMockLlmConfig(configOverrides);
+                const strategy = factory.getStrategy(mockConfig);
 
                 expect(strategy).toBeInstanceOf(ExpectedStrategy);
                 expect(ExpectedStrategy).toHaveBeenCalledTimes(1);
                 expect(ExpectedStrategy).toHaveBeenCalledWith({httpClient, logger});
                 expect(logger.info).toHaveBeenCalledWith(
-                    // Adjusted to match current factory log which includes effectiveMethod (same as configuredMethod here)
-                    `LLMStrategyFactory: Selected strategy '${ExpectedStrategy.name}' for LLM ID '${config.id}'. Details: apiType='${expectedApiTypeLog}', effectiveMethod='${expectedEffectiveMethod}', configuredMethod='${expectedConfiguredMethodLog}'.`
+                    `LLMStrategyFactory: Selected strategy '${ExpectedStrategy.name}' for LLM ID '${mockConfig.configId}'. Details: apiType='${expectedApiTypeLog}', effectiveMethod='${expectedEffectiveMethod}', configuredMethod='${expectedConfiguredMethodLog}'.`
                 );
             });
         });
 
-        // These test cases expect an error because the apiType is not in strategyMappings
-        // The error message format for these was updated in the factory and should now pass
         const unsupportedApiTypePlusSpecificMethodTestCases = [
             {
                 description: 'OpenAI Tool Calling (specific, now unsupported)',
-                config: {id: 'oai-tool', apiType: 'openai', jsonOutputStrategy: {method: 'tool_calling'}},
+                configOverrides: {
+                    configId: 'oai-tool',
+                    apiType: 'openai',
+                    jsonOutputStrategy: {method: 'tool_calling'}
+                },
             },
             {
                 description: 'Anthropic Tool Calling (specific, now unsupported)',
-                config: {id: 'ant-tool', apiType: 'anthropic', jsonOutputStrategy: {method: 'tool_calling'}},
+                configOverrides: {
+                    configId: 'ant-tool',
+                    apiType: 'anthropic',
+                    jsonOutputStrategy: {method: 'tool_calling'}
+                },
             },
             {
                 description: 'OpenAI Native JSON Mode (specific, now unsupported)',
-                config: {id: 'oai-json', apiType: 'openai', jsonOutputStrategy: {method: 'native_json_mode'}},
+                configOverrides: {
+                    configId: 'oai-json',
+                    apiType: 'openai',
+                    jsonOutputStrategy: {method: 'native_json_mode'}
+                },
             },
             {
                 description: 'Ollama Native JSON Mode (specific, now unsupported)',
-                config: {id: 'ollama-json', apiType: 'ollama', jsonOutputStrategy: {method: 'native_json_mode'}},
+                configOverrides: {
+                    configId: 'ollama-json',
+                    apiType: 'ollama',
+                    jsonOutputStrategy: {method: 'native_json_mode'}
+                },
             },
             {
                 description: "apiType is 'openai' and method is unrecognized (specific, now unsupported)",
-                config: {
-                    id: 'fallback-unrec-method-openai',
+                configOverrides: {
+                    configId: 'fallback-unrec-method-openai',
                     apiType: 'openai',
                     jsonOutputStrategy: {method: 'unknown_method'}
                 },
             },
             {
                 description: "apiType is 'anthropic' and method is unrecognized (specific, now unsupported)",
-                config: {
-                    id: 'fallback-unrec-method-ant',
+                configOverrides: {
+                    configId: 'fallback-unrec-method-ant',
                     apiType: 'anthropic',
                     jsonOutputStrategy: {method: 'some_other_method'}
                 },
             },
             {
                 description: "apiType is 'ollama' and method is unmapped (specific, now unsupported)",
-                config: {
-                    id: 'fallback-unrec-method-ollama',
+                configOverrides: {
+                    configId: 'fallback-unrec-method-ollama',
                     apiType: 'ollama',
                     jsonOutputStrategy: {method: 'tool_calling_for_ollama_maybe'}
                 },
             }
         ];
 
-        unsupportedApiTypePlusSpecificMethodTestCases.forEach(({description, config}) => {
+        unsupportedApiTypePlusSpecificMethodTestCases.forEach(({description, configOverrides}) => {
             test(`should throw LLMStrategyFactoryError when ${description}`, () => {
-                const expectedApiType = config.apiType.toLowerCase();
-                const expectedJsonOutputMethod = config.jsonOutputStrategy.method.toLowerCase();
-                // This is the expected error message string from the factory for unknown apiTypes
-                const expectedThrownErrorMessage = `Unsupported apiType: '${expectedApiType}' (LLM ID: '${config.id}'). No strategy can be determined. Supported API types for specialized strategies are: openrouter.`;
+                const mockConfig = createMockLlmConfig(configOverrides);
+                const expectedApiType = mockConfig.apiType.toLowerCase();
+                const expectedJsonOutputMethod = mockConfig.jsonOutputStrategy.method.toLowerCase();
+                const expectedThrownErrorMessage = `Unsupported apiType: '${expectedApiType}' (LLM ID: '${mockConfig.configId}'). No strategy can be determined. Supported API types for specialized strategies are: openrouter.`;
 
-                /** @type {LLMStrategyFactoryError | null} */
                 let thrownError = null;
                 try {
-                    factory.getStrategy(/** @type {LLMModelConfigType} */ (config));
+                    factory.getStrategy(mockConfig);
                 } catch (e) {
                     if (e instanceof LLMStrategyFactoryError) {
                         thrownError = e;
                     } else {
-                        throw e;
+                        throw e; // Re-throw if it's not the expected error type
                     }
                 }
 
@@ -202,8 +239,8 @@ describe('LLMStrategyFactory', () => {
 
                 expect(logger.error).toHaveBeenCalledTimes(1);
                 expect(logger.error).toHaveBeenCalledWith(
-                    `LLMStrategyFactory: ${expectedThrownErrorMessage}`, // Logger prepends "LLMStrategyFactory: "
-                    { // Context for logger
+                    `LLMStrategyFactory: ${expectedThrownErrorMessage}`,
+                    {
                         apiType: expectedApiType,
                         jsonOutputMethod: expectedJsonOutputMethod
                     }
@@ -211,122 +248,138 @@ describe('LLMStrategyFactory', () => {
             });
         });
 
-        // Renamed describe block
         describe('Error Handling for Invalid or Obsolete Method Configurations', () => {
             test('should throw LLMStrategyFactoryError if jsonOutputStrategy.method is missing', () => {
-                const config = {id: 'missing-method', apiType: 'openrouter', jsonOutputStrategy: {}};
-                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${config.id}' (apiType: '${config.apiType}') but was missing or empty. A specific method must be configured.`;
+                const configOverrides = {configId: 'missing-method', apiType: 'openrouter', jsonOutputStrategy: {}};
+                const mockConfig = createMockLlmConfig(configOverrides);
+                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${mockConfig.configId}' (apiType: '${mockConfig.apiType}') but was missing or empty. A specific method must be configured.`;
                 let thrownError = null;
 
                 try {
-                    factory.getStrategy(config);
+                    factory.getStrategy(mockConfig);
                 } catch (e) {
                     thrownError = e;
                 }
 
                 expect(thrownError).toBeInstanceOf(LLMStrategyFactoryError);
                 expect(thrownError?.message).toBe(expectedErrorMessage);
-                expect(thrownError?.apiType).toBe(config.apiType);
-                expect(thrownError?.jsonOutputMethod).toBeUndefined();
+                expect(thrownError?.apiType).toBe(mockConfig.apiType);
+                expect(thrownError?.jsonOutputMethod).toBeUndefined(); // method is undefined
                 expect(logger.error).toHaveBeenCalledWith(expectedErrorMessage, {
-                    llmId: config.id,
-                    apiType: config.apiType,
-                    llmConfigJsonOutputStrategy: config.jsonOutputStrategy
+                    llmId: mockConfig.configId,
+                    apiType: mockConfig.apiType,
+                    llmConfigJsonOutputStrategy: mockConfig.jsonOutputStrategy
                 });
             });
 
             test('should throw LLMStrategyFactoryError if jsonOutputStrategy.method is an empty string', () => {
-                const config = {id: 'empty-method', apiType: 'openrouter', jsonOutputStrategy: {method: '   '}};
-                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${config.id}' (apiType: '${config.apiType}') but was missing or empty. A specific method must be configured.`;
+                const configOverrides = {
+                    configId: 'empty-method',
+                    apiType: 'openrouter',
+                    jsonOutputStrategy: {method: '   '}
+                };
+                const mockConfig = createMockLlmConfig(configOverrides);
+                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${mockConfig.configId}' (apiType: '${mockConfig.apiType}') but was missing or empty. A specific method must be configured.`;
                 let thrownError = null;
 
                 try {
-                    factory.getStrategy(config);
+                    factory.getStrategy(mockConfig);
                 } catch (e) {
                     thrownError = e;
                 }
                 expect(thrownError).toBeInstanceOf(LLMStrategyFactoryError);
                 expect(thrownError?.message).toBe(expectedErrorMessage);
-                expect(thrownError?.apiType).toBe(config.apiType);
-                expect(thrownError?.jsonOutputMethod).toBe(''); // configuredMethod becomes ''
+                expect(thrownError?.apiType).toBe(mockConfig.apiType);
+                expect(thrownError?.jsonOutputMethod).toBe('');
                 expect(logger.error).toHaveBeenCalledWith(expectedErrorMessage, {
-                    llmId: config.id,
-                    apiType: config.apiType,
-                    llmConfigJsonOutputStrategy: config.jsonOutputStrategy
+                    llmId: mockConfig.configId,
+                    apiType: mockConfig.apiType,
+                    llmConfigJsonOutputStrategy: mockConfig.jsonOutputStrategy
                 });
             });
 
             test('should throw LLMStrategyFactoryError if jsonOutputStrategy is missing', () => {
-                const config = {id: 'missing-strategy-obj', apiType: 'openrouter'};
-                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${config.id}' (apiType: '${config.apiType}') but was missing or empty. A specific method must be configured.`;
+                const configOverrides = {
+                    configId: 'missing-strategy-obj',
+                    apiType: 'openrouter',
+                    jsonOutputStrategy: undefined
+                };
+                const mockConfig = createMockLlmConfig(configOverrides);
+                // Explicitly remove jsonOutputStrategy for this test case after mock creation if createMockLlmConfig adds it by default
+                delete mockConfig.jsonOutputStrategy;
+
+
+                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${mockConfig.configId}' (apiType: '${mockConfig.apiType}') but was missing or empty. A specific method must be configured.`;
                 let thrownError = null;
 
                 try {
-                    factory.getStrategy(config);
+                    factory.getStrategy(mockConfig);
                 } catch (e) {
                     thrownError = e;
                 }
                 expect(thrownError).toBeInstanceOf(LLMStrategyFactoryError);
                 expect(thrownError?.message).toBe(expectedErrorMessage);
-                expect(thrownError?.apiType).toBe(config.apiType);
+                expect(thrownError?.apiType).toBe(mockConfig.apiType);
                 expect(thrownError?.jsonOutputMethod).toBeUndefined();
                 expect(logger.error).toHaveBeenCalledWith(expectedErrorMessage, {
-                    llmId: config.id,
-                    apiType: config.apiType,
+                    llmId: mockConfig.configId,
+                    apiType: mockConfig.apiType,
                     llmConfigJsonOutputStrategy: undefined
                 });
             });
 
             test("should throw LLMStrategyFactoryError if method is explicitly 'prompt_engineering'", () => {
-                const config = {
-                    id: 'explicit-prompt-eng',
-                    apiType: 'openrouter', // Can be any apiType
+                const configOverrides = {
+                    configId: 'explicit-prompt-eng',
+                    apiType: 'openrouter',
                     jsonOutputStrategy: {method: 'prompt_engineering'}
                 };
-                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' cannot be 'prompt_engineering' for LLM ID '${config.id}' (apiType: '${config.apiType}'). This strategy is no longer supported as an explicit choice. Please configure a specific JSON output strategy (e.g., 'openrouter_json_schema', 'openrouter_tool_calling', etc.).`;
+                const mockConfig = createMockLlmConfig(configOverrides);
+                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' cannot be 'prompt_engineering' for LLM ID '${mockConfig.configId}' (apiType: '${mockConfig.apiType}'). This strategy is no longer supported as an explicit choice. Please configure a specific JSON output strategy (e.g., 'openrouter_json_schema', 'openrouter_tool_calling', etc.).`;
                 let thrownError = null;
 
                 try {
-                    factory.getStrategy(config);
+                    factory.getStrategy(mockConfig);
                 } catch (e) {
                     thrownError = e;
                 }
                 expect(thrownError).toBeInstanceOf(LLMStrategyFactoryError);
                 expect(thrownError?.message).toBe(expectedErrorMessage);
-                expect(thrownError?.apiType).toBe(config.apiType);
+                expect(thrownError?.apiType).toBe(mockConfig.apiType);
                 expect(thrownError?.jsonOutputMethod).toBe('prompt_engineering');
                 expect(logger.error).toHaveBeenCalledWith(expectedErrorMessage, {
-                    llmId: config.id,
-                    apiType: config.apiType,
+                    llmId: mockConfig.configId,
+                    apiType: mockConfig.apiType,
                     configuredMethod: 'prompt_engineering'
                 });
             });
 
             test('should throw LLMStrategyFactoryError if apiType is known (e.g., openrouter) but method is unrecognized', () => {
-                const config = {
-                    id: 'or-unrec-method',
+                const configOverrides = {
+                    configId: 'or-unrec-method',
                     apiType: 'openrouter',
                     jsonOutputStrategy: {method: 'non_existent_or_method'}
                 };
-                const expectedThrownErrorMessage = `Unrecognized jsonOutputStrategy.method: '${config.jsonOutputStrategy.method}' for apiType '${config.apiType}' (LLM ID: '${config.id}'). Supported methods for this apiType are: [openrouter_json_schema, openrouter_tool_calling]. Full list of supported API types and methods: openrouter: [openrouter_json_schema, openrouter_tool_calling].`;
+                const mockConfig = createMockLlmConfig(configOverrides);
+                const expectedThrownErrorMessage = `Unrecognized jsonOutputStrategy.method: '${mockConfig.jsonOutputStrategy.method}' for apiType '${mockConfig.apiType}' (LLM ID: '${mockConfig.configId}'). Supported methods for this apiType are: [openrouter_json_schema, openrouter_tool_calling]. Full list of supported API types and methods: openrouter: [openrouter_json_schema, openrouter_tool_calling].`;
                 let thrownError = null;
 
                 try {
-                    factory.getStrategy(config);
+                    factory.getStrategy(mockConfig);
                 } catch (e) {
                     thrownError = e;
                 }
 
                 expect(thrownError).toBeInstanceOf(LLMStrategyFactoryError);
                 expect(thrownError?.message).toBe(expectedThrownErrorMessage);
-                expect(thrownError?.apiType).toBe(config.apiType);
-                expect(thrownError?.jsonOutputMethod).toBe(config.jsonOutputStrategy.method);
+                expect(thrownError?.apiType).toBe(mockConfig.apiType);
+                expect(thrownError?.jsonOutputMethod).toBe(mockConfig.jsonOutputStrategy.method);
                 expect(logger.error).toHaveBeenCalledWith(
                     `LLMStrategyFactory: ${expectedThrownErrorMessage}`,
                     {
-                        apiType: config.apiType,
-                        jsonOutputMethod: config.jsonOutputStrategy.method,
-                        llmId: config.id,
+                        apiType: mockConfig.apiType,
+                        jsonOutputMethod: mockConfig.jsonOutputStrategy.method,
+                        llmId: mockConfig.configId, // Ensure llmId is logged
                         availableApiTypes: ['openrouter'],
                         availableMethodsForApiType: ['openrouter_json_schema', 'openrouter_tool_calling']
                     }
@@ -346,32 +399,33 @@ describe('LLMStrategyFactory', () => {
             });
 
             test('should throw ConfigurationError if llmConfig is missing apiType', () => {
-                const invalidConfig = {id: 'invalid'};
-                expect(() => factory.getStrategy(/** @type {LLMModelConfigType} */(invalidConfig)))
+                const invalidConfig = createMockLlmConfig({configId: 'invalid-no-apiType', apiType: undefined});
+                // @ts-ignore
+                delete invalidConfig.apiType; // Ensure apiType is truly missing
+                expect(() => factory.getStrategy(invalidConfig))
                     .toThrow(new ConfigurationError("LLMStrategyFactory: llmConfig is invalid or missing a non-empty apiType."));
             });
 
             test('should throw ConfigurationError if llmConfig.apiType is an empty string', () => {
-                const invalidConfig = {id: 'invalid-empty-apiType', apiType: '   '};
-                expect(() => factory.getStrategy(/** @type {LLMModelConfigType} */(invalidConfig)))
+                const invalidConfig = createMockLlmConfig({configId: 'invalid-empty-apiType', apiType: '   '});
+                expect(() => factory.getStrategy(invalidConfig))
                     .toThrow(new ConfigurationError("LLMStrategyFactory: llmConfig is invalid or missing a non-empty apiType."));
             });
 
-            // This test case is from the original `unsupportedApiTypePlusSpecificMethodTestCases`
-            // It verifies the error for a completely unsupported apiType.
             test('should throw LLMStrategyFactoryError for an unsupported apiType (not in strategyMappings)', () => {
-                const unsupportedConfig = {
-                    id: 'unsupported-api',
-                    apiType: 'megacorp_llm', // Not in strategyMappings
+                const unsupportedConfigOverrides = {
+                    configId: 'unsupported-api',
+                    apiType: 'megacorp_llm',
                     jsonOutputStrategy: {method: 'proprietary_mode'}
                 };
-                const expectedApiType = unsupportedConfig.apiType.toLowerCase();
-                const expectedJsonOutputMethod = unsupportedConfig.jsonOutputStrategy.method.toLowerCase();
-                const expectedThrownErrorMessage = `Unsupported apiType: '${expectedApiType}' (LLM ID: '${unsupportedConfig.id}'). No strategy can be determined. Supported API types for specialized strategies are: openrouter.`;
+                const mockConfig = createMockLlmConfig(unsupportedConfigOverrides);
+                const expectedApiType = mockConfig.apiType.toLowerCase();
+                const expectedJsonOutputMethod = mockConfig.jsonOutputStrategy.method.toLowerCase();
+                const expectedThrownErrorMessage = `Unsupported apiType: '${expectedApiType}' (LLM ID: '${mockConfig.configId}'). No strategy can be determined. Supported API types for specialized strategies are: openrouter.`;
                 let thrownError = null;
 
                 try {
-                    factory.getStrategy(/** @type {LLMModelConfigType} */ (unsupportedConfig));
+                    factory.getStrategy(mockConfig);
                 } catch (e) {
                     thrownError = e;
                 }
@@ -385,49 +439,52 @@ describe('LLMStrategyFactory', () => {
                 );
             });
 
-            // This test replaces the old:
-            // 'should use DefaultPromptEngineeringStrategy if apiType is unsupported but method defaults to prompt_engineering'
             test('should throw LLMStrategyFactoryError if apiType is unsupported and jsonOutputStrategy.method is missing', () => {
-                const config = {id: 'unknown-api-no-method', apiType: 'very_new_llm_provider'}; // Method missing
-                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${config.id}' (apiType: '${config.apiType}') but was missing or empty. A specific method must be configured.`;
+                const configOverrides = {
+                    configId: 'unknown-api-no-method',
+                    apiType: 'very_new_llm_provider',
+                    jsonOutputStrategy: {}
+                };
+                const mockConfig = createMockLlmConfig(configOverrides);
+                const expectedErrorMessage = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${mockConfig.configId}' (apiType: '${mockConfig.apiType}') but was missing or empty. A specific method must be configured.`;
                 let thrownError = null;
 
                 try {
-                    factory.getStrategy(/** @type {LLMModelConfigType} */(config));
+                    factory.getStrategy(mockConfig);
                 } catch (e) {
                     thrownError = e;
                 }
 
                 expect(thrownError).toBeInstanceOf(LLMStrategyFactoryError);
                 expect(thrownError?.message).toBe(expectedErrorMessage);
-                expect(thrownError?.apiType).toBe(config.apiType);
+                expect(thrownError?.apiType).toBe(mockConfig.apiType);
                 expect(thrownError?.jsonOutputMethod).toBeUndefined();
                 expect(logger.error).toHaveBeenCalledWith(expectedErrorMessage, {
-                    llmId: config.id,
-                    apiType: config.apiType,
-                    llmConfigJsonOutputStrategy: undefined
+                    llmId: mockConfig.configId,
+                    apiType: mockConfig.apiType,
+                    llmConfigJsonOutputStrategy: mockConfig.jsonOutputStrategy
                 });
             });
         });
 
         test('logging of debug and info messages during successful OpenRouter strategy determination', () => {
-            const config = {
-                id: 'log-test-or',
+            const configOverrides = {
+                configId: 'log-test-or',
                 apiType: 'openrouter',
                 jsonOutputStrategy: {method: 'openrouter_json_schema'}
             };
-            factory.getStrategy(/** @type {LLMModelConfigType} */(config));
+            const mockConfig = createMockLlmConfig(configOverrides);
+            factory.getStrategy(mockConfig);
 
             expect(logger.debug).toHaveBeenCalledWith(
-                `LLMStrategyFactory: Determining strategy for LLM ID: '${config.id}', apiType: '${config.apiType}'.`,
+                `LLMStrategyFactory: Determining strategy for LLM ID: '${mockConfig.configId}', apiType: '${mockConfig.apiType}'.`,
                 expect.objectContaining({
                     configuredJsonMethod: 'openrouter_json_schema',
-                    fullConfigJsonStrategy: config.jsonOutputStrategy
+                    fullConfigJsonStrategy: mockConfig.jsonOutputStrategy
                 })
             );
-            // Log message updated to match the factory's current output
             expect(logger.info).toHaveBeenCalledWith(
-                `LLMStrategyFactory: Selected strategy 'OpenRouterJsonSchemaStrategy' for LLM ID '${config.id}'. Details: apiType='openrouter', effectiveMethod='openrouter_json_schema', configuredMethod='openrouter_json_schema'.`
+                `LLMStrategyFactory: Selected strategy 'OpenRouterJsonSchemaStrategy' for LLM ID '${mockConfig.configId}'. Details: apiType='openrouter', effectiveMethod='openrouter_json_schema', configuredMethod='openrouter_json_schema'.`
             );
         });
     });

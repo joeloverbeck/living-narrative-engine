@@ -1,4 +1,5 @@
 // src/llms/LLMStrategyFactory.js
+
 // --- MODIFIED FILE START ---
 import {IHttpClient} from './interfaces/IHttpClient.js'; // Assuming IHttpClient is in ./interfaces/
 import {ILogger} from '../interfaces/ILogger.js'; // Assuming ILogger is in ../interfaces/
@@ -90,17 +91,19 @@ export class LLMStrategyFactory {
             });
         }
 
-        const llmId = llmConfig.id || 'UnknownLLM';
+        // MODIFICATION START: Use llmConfig.configId
+        const llmId = llmConfig.configId || 'UnknownLLM';
+        // MODIFICATION END
         const apiType = llmConfig.apiType.trim().toLowerCase();
         const configuredMethod = llmConfig.jsonOutputStrategy?.method?.trim()?.toLowerCase();
 
-        this.#logger.debug(`LLMStrategyFactory: Determining strategy for LLM ID: '${llmId}', apiType: '${apiType}'.`, {
+        this.#logger.debug(`LLMStrategyFactory: Determining strategy for LLM ID: '${llmId}', apiType\: '${apiType}'.`, {
             configuredJsonMethod: configuredMethod || 'NOT SET',
             fullConfigJsonStrategy: llmConfig.jsonOutputStrategy
         });
 
         if (!configuredMethod) {
-            const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${llmId}' (apiType: '${apiType}') but was missing or empty. A specific method must be configured.`;
+            const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${llmId}' \(apiType\: '${apiType}') but was missing or empty. A specific method must be configured.`;
             this.#logger.error(errorMsg, {
                 llmId,
                 apiType,
@@ -113,7 +116,7 @@ export class LLMStrategyFactory {
         }
 
         if (configuredMethod === 'prompt_engineering') {
-            const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' cannot be 'prompt_engineering' for LLM ID '${llmId}' (apiType: '${apiType}'). This strategy is no longer supported as an explicit choice. Please configure a specific JSON output strategy (e.g., 'openrouter_json_schema', 'openrouter_tool_calling', etc.).`;
+            const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' cannot be 'prompt_engineering' for LLM ID '${llmId}' \(apiType\: '${apiType}'). This strategy is no longer supported as an explicit choice. Please configure a specific JSON output strategy (e.g., 'openrouter_json_schema', 'openrouter_tool_calling', etc.).`;
             this.#logger.error(errorMsg, {llmId, apiType, configuredMethod});
             throw new LLMStrategyFactoryError(errorMsg, {
                 apiType: apiType,
@@ -140,19 +143,19 @@ export class LLMStrategyFactory {
             if (!KNOWN_API_TYPES_FOR_FACTORY.includes(apiType)) {
                 // Case 1: apiType itself is unknown/unsupported.
                 // Adjusted to match test's expected error message string format.
-                errorMessage = `Unsupported apiType: '${apiType}' (LLM ID: '${llmId}'). No strategy can be determined. Supported API types for specialized strategies are: ${KNOWN_API_TYPES_FOR_FACTORY.join(', ')}.`;
+                errorMessage = `Unsupported apiType: '${apiType}' \(LLM ID\: '${llmId}'). No strategy can be determined. Supported API types for specialized strategies are: ${KNOWN_API_TYPES_FOR_FACTORY.join(', ')}.`;
                 // The llmId is included in the message string itself for these tests.
             } else {
                 // Case 2: apiType is known, but the configuredMethod is not valid for it.
                 const knownMethodsForCurrentApi = Object.keys(strategyMappings[apiType] || {}).join(', ') || 'none';
                 const availableMethodsForLog = KNOWN_API_TYPES_FOR_FACTORY.map(type => {
-                    return `${type}: [${Object.keys(strategyMappings[type] || {}).join(', ') || 'none'}]`;
+                    return `${type}\: \[${Object.keys(strategyMappings[type] || {}).join(', ') || 'none'}]`;
                 }).join('; ');
-                errorMessage = `Unrecognized jsonOutputStrategy.method: '${configuredMethod}' for apiType '${apiType}' (LLM ID: '${llmId}'). Supported methods for this apiType are: [${knownMethodsForCurrentApi}]. Full list of supported API types and methods: ${availableMethodsForLog || 'None configured'}.`;
+                errorMessage = `Unrecognized jsonOutputStrategy.method: '${configuredMethod}' for apiType '${apiType}' (LLM ID: '${llmId}'\)\. Supported methods for this apiType are\: \[${knownMethodsForCurrentApi}]. Full list of supported API types and methods: ${availableMethodsForLog || 'None configured'}.`;
                 // For more detailed internal logging, we can add more to the context here if desired,
                 // but the test error log context for "unsupported apiType" is simpler.
                 // Let's add llmId to the context explicitly for consistency in our internal logging.
-                errorLogContext.llmId = llmId;
+                errorLogContext.llmId = llmId; // Ensure llmId (derived from configId) is in the log context
                 errorLogContext.availableApiTypes = KNOWN_API_TYPES_FOR_FACTORY;
                 errorLogContext.availableMethodsForApiType = strategyMappings[apiType] ? Object.keys(strategyMappings[apiType]) : "N/A";
             }
@@ -165,7 +168,7 @@ export class LLMStrategyFactory {
         }
 
         // Adjusted log message to include 'effectiveMethod' (same as configuredMethod here) to match test expectations.
-        this.#logger.info(`LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod='${configuredMethod}', configuredMethod='${configuredMethod}'.`);
+        this.#logger.info(`LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod\='${configuredMethod}', configuredMethod='${configuredMethod}'.`);
 
         return new StrategyClass({
             httpClient: this.#httpClient,

@@ -30,11 +30,9 @@ describe('ClientApiKeyProvider', () => {
     const createMockEnvironmentContext = (isClientVal, executionEnvVal = 'unknown') => {
         const ecLogger = mockLogger(); // Separate logger for EC if needed for its internal logs
         const contextParams = {logger: ecLogger, executionEnvironment: executionEnvVal};
-        // MODIFICATION START: Provide projectRootPath for server environment
         if (executionEnvVal === 'server') {
             contextParams.projectRootPath = '/fake/project/root';
         }
-        // MODIFICATION END
         const ec = new EnvironmentContext(contextParams);
         jest.spyOn(ec, 'isClient').mockReturnValue(isClientVal);
         jest.spyOn(ec, 'getExecutionEnvironment').mockReturnValue(executionEnvVal);
@@ -67,14 +65,21 @@ describe('ClientApiKeyProvider', () => {
         let environmentContext;
 
         beforeEach(() => {
+            // MODIFICATION START: Change 'id' to 'configId' to match the corrected provider logic
             llmConfig = {
-                id: 'test-llm',
+                configId: 'test-llm', // Changed from id to configId
                 displayName: 'Test LLM',
                 endpointUrl: 'http://localhost/api',
                 modelIdentifier: 'test-model',
                 apiType: 'openai', // Default to a cloud service for many tests
-                jsonOutputStrategy: {method: 'native_json_mode'}
+                // Ensure all required fields from LLMModelConfig are present if stricter validation occurs
+                apiKeyEnvVar: undefined,
+                apiKeyFileName: undefined,
+                jsonOutputStrategy: {method: 'native_json_mode'},
+                promptElements: [], // Added to match LLMModelConfig more closely
+                promptAssemblyOrder: [], // Added to match LLMModelConfig more closely
             };
+            // MODIFICATION END
             // Default to a client environment for most tests
             environmentContext = createMockEnvironmentContext(true, 'client');
         });
@@ -126,7 +131,7 @@ describe('ClientApiKeyProvider', () => {
                     const key = await provider.getKey(llmConfig, environmentContext);
                     expect(key).toBeNull();
                     expect(logger.error).not.toHaveBeenCalledWith(expect.stringContaining('missing both'));
-                    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining(`Configuration for cloud service '${apiType}' has required key identifier(s)`));
+                    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining(`ClientApiKeyProvider.getKey (test-llm): Configuration for cloud service '${apiType}' has required key identifier(s)`));
                 });
 
                 test(`should return null and NOT log error for cloud service '${apiType}' when apiKeyFileName is present`, async () => {
@@ -137,7 +142,7 @@ describe('ClientApiKeyProvider', () => {
                     const key = await provider.getKey(llmConfig, environmentContext);
                     expect(key).toBeNull();
                     expect(logger.error).not.toHaveBeenCalledWith(expect.stringContaining('missing both'));
-                    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining(`Configuration for cloud service '${apiType}' has required key identifier(s)`));
+                    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining(`ClientApiKeyProvider.getKey (test-llm): Configuration for cloud service '${apiType}' has required key identifier(s)`));
                 });
 
                 test(`should return null and NOT log error for cloud service '${apiType}' when BOTH apiKeyEnvVar and apiKeyFileName are present`, async () => {
@@ -148,7 +153,7 @@ describe('ClientApiKeyProvider', () => {
                     const key = await provider.getKey(llmConfig, environmentContext);
                     expect(key).toBeNull();
                     expect(logger.error).not.toHaveBeenCalledWith(expect.stringContaining('missing both'));
-                    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining(`Configuration for cloud service '${apiType}' has required key identifier(s)`));
+                    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining(`ClientApiKeyProvider.getKey (test-llm): Configuration for cloud service '${apiType}' has required key identifier(s)`));
                 });
 
                 test(`should return null and log error for cloud service '${apiType}' when BOTH apiKeyEnvVar and apiKeyFileName are missing`, async () => {

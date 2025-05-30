@@ -63,7 +63,9 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
      * @returns {Promise<string | null>} A Promise that always resolves to null.
      */
     async getKey(llmConfig, environmentContext) {
-        const llmId = llmConfig?.id || 'UnknownLLM'; // For logging context
+        // MODIFICATION START: Use llmConfig.configId
+        const llmId = llmConfig?.configId || 'UnknownLLM'; // For logging context
+        // MODIFICATION END
 
         if (!environmentContext || typeof environmentContext.isClient !== 'function') {
             this.#logger.error(`ClientApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`);
@@ -87,12 +89,12 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
             const hasApiKeyFileName = llmConfig.apiKeyFileName && typeof llmConfig.apiKeyFileName === 'string' && llmConfig.apiKeyFileName.trim() !== '';
 
             if (!hasApiKeyEnvVar && !hasApiKeyFileName) {
-                this.#logger.error(`ClientApiKeyProvider.getKey (${llmId}): Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`);
+                this.#logger.error(`ClientApiKeyProvider.getKey (${llmId}\)\: Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`);
             } else {
-                this.#logger.debug(`ClientApiKeyProvider.getKey (${llmId}): Configuration for cloud service '${apiType}' has required key identifier(s) for proxy usage (apiKeyEnvVar: '${llmConfig.apiKeyEnvVar || 'N/A'}', apiKeyFileName: '${llmConfig.apiKeyFileName || 'N/A'}').`);
+                this.#logger.debug(`ClientApiKeyProvider.getKey (${llmId}\)\: Configuration for cloud service '${apiType}' has required key identifier(s) for proxy usage (apiKeyEnvVar: '${llmConfig.apiKeyEnvVar || 'N/A'}', apiKeyFileName\: '${llmConfig.apiKeyFileName || 'N/A'}').`);
             }
         } else if (apiType && typeof apiType === 'string') {
-            this.#logger.debug(`ClientApiKeyProvider.getKey (${llmId}): LLM apiType '${apiType}' is not listed as a cloud service requiring proxy key identifier validation. Skipping checks.`);
+            this.#logger.debug(`ClientApiKeyProvider.getKey (${llmId}\)\: LLM apiType '${apiType}' is not listed as a cloud service requiring proxy key identifier validation. Skipping checks.`);
         } else {
             // This case implies llmConfig.apiType is missing or invalid, which might be an issue itself,
             // but the primary role here is to check cloud services.

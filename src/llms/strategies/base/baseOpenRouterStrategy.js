@@ -1,4 +1,5 @@
 // src/llms/strategies/base/baseOpenRouterStrategy.js
+
 // --- FILE START ---
 import {BaseChatLLMStrategy} from './baseChatLLMStrategy.js';
 import {ConfigurationError} from '../../../turns/adapters/configurableLLMAdapter.js'; // Ensure this path is correct
@@ -66,7 +67,9 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
      */
     _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
         const errorMessage = `${this.constructor.name}._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.`;
-        const llmId = llmConfig?.id || 'UnknownLLM';
+        // MODIFICATION START: Use llmConfig.configId for logging
+        const llmId = llmConfig?.configId || 'UnknownLLM';
+        // MODIFICATION END
         this.logger.error(errorMessage, {llmId});
         throw new Error(errorMessage); // Or potentially an LLMStrategyError
     }
@@ -86,7 +89,9 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
      */
     async _extractJsonOutput(responseData, llmConfig, providerRequestPayload) {
         const errorMessage = `${this.constructor.name}._extractJsonOutput: Method not implemented. Subclasses must override this method.`;
-        const llmId = llmConfig?.id || 'UnknownLLM';
+        // MODIFICATION START: Use llmConfig.configId for logging
+        const llmId = llmConfig?.configId || 'UnknownLLM';
+        // MODIFICATION END
         this.logger.error(errorMessage, {llmId});
         throw new Error(errorMessage); // Or potentially an LLMStrategyError
     }
@@ -108,10 +113,12 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
             throw new ConfigurationError(errorMsg, {llmId: 'Unknown (llmConfig missing)'});
         }
 
-        const llmId = llmConfig.id || 'UnknownLLM';
+        // MODIFICATION START: Use llmConfig.configId
+        const llmId = llmConfig.configId || 'UnknownLLM';
+        // MODIFICATION END
 
         if (!environmentContext) {
-            const errorMsg = `${this.constructor.name} (${llmId}): Missing environmentContext. Cannot proceed.`;
+            const errorMsg = `${this.constructor.name} \(${llmId}): Missing environmentContext. Cannot proceed.`;
             this.logger.error(errorMsg, {llmId});
             throw new ConfigurationError(errorMsg, {llmId});
         }
@@ -119,14 +126,14 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         this.logger.info(`${this.constructor.name}.execute called for LLM ID: ${llmId}.`);
 
         if (llmConfig.apiType !== 'openrouter') {
-            const errorMsg = `${this.constructor.name} (${llmId}): Invalid apiType '${llmConfig.apiType}'. This strategy is specific to 'openrouter'.`;
+            const errorMsg = `${this.constructor.name} \(${llmId}): Invalid apiType '${llmConfig.apiType}'. This strategy is specific to 'openrouter'.`;
             this.logger.error(errorMsg, {llmId, problematicField: 'apiType', fieldValue: llmConfig.apiType});
             throw new ConfigurationError(errorMsg, {llmId, problematicField: 'apiType', fieldValue: llmConfig.apiType});
         }
 
         const baseMessagesPayload = this._constructPromptPayload(gameSummary, llmConfig.promptFrame, llmConfig);
 
-        this.logger.debug(`${this.constructor.name} (${llmId}): Constructed base prompt payload:`, {
+        this.logger.debug(`${this.constructor.name} \(${llmId}): Constructed base prompt payload:`, {
             llmId,
             messagesPreview: baseMessagesPayload.messages.map(m => ({
                 role: m.role,
@@ -141,7 +148,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         });
 
         const providerSpecificPayloadAdditions = this._buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig);
-        this.logger.debug(`${this.constructor.name} (${llmId}): Received provider-specific payload additions.`, {
+        this.logger.debug(`${this.constructor.name} \(${llmId}): Received provider-specific payload additions.`, {
             llmId,
             providerSpecificPayloadAdditions
         });
@@ -152,7 +159,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
             ...baseMessagesPayload,
             ...providerSpecificPayloadAdditions
         };
-        this.logger.debug(`${this.constructor.name} (${llmId}): Assembled provider request payload.`, {
+        this.logger.debug(`${this.constructor.name} \(${llmId}): Assembled provider request payload.`, {
             llmId,
             keys: Object.keys(providerRequestPayload)
         });
@@ -166,18 +173,20 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
 
         if (environmentContext.isClient()) {
             targetUrl = environmentContext.getProxyServerUrl();
+            // MODIFICATION START: Use llmConfig.configId in proxy payload
             finalPayload = {
-                llmId: llmConfig.id,
+                llmId: llmConfig.configId, // Crucial change for proxy compatibility
                 targetPayload: providerRequestPayload,
                 targetHeaders: llmConfig.providerSpecificHeaders || {}
             };
-            this.logger.info(`${this.constructor.name} (${llmId}): Client-side execution. Using proxy URL: ${targetUrl}. Payload prepared according to proxy API contract.`, {llmId});
+            // MODIFICATION END
+            this.logger.info(`${this.constructor.name} \(${llmId}): Client-side execution. Using proxy URL: ${targetUrl}. Payload prepared according to proxy API contract.`, {llmId});
         } else {
             if (apiKey) {
                 headers['Authorization'] = `Bearer ${apiKey}`;
-                this.logger.debug(`${this.constructor.name} (${llmId}): Server-side/direct execution. Authorization header set using provided API key.`, {llmId});
+                this.logger.debug(`${this.constructor.name} \(${llmId}): Server-side/direct execution. Authorization header set using provided API key.`, {llmId});
             } else {
-                const errorMsg = `${this.constructor.name} (${llmId}): API key is missing for server-side/direct OpenRouter call. An API key must be configured and provided.`;
+                const errorMsg = `${this.constructor.name} \(${llmId}): API key is missing for server-side/direct OpenRouter call. An API key must be configured and provided.`;
                 this.logger.error(errorMsg, {llmId, problematicField: 'apiKey'});
                 throw new ConfigurationError(errorMsg, {llmId, problematicField: 'apiKey'});
             }
@@ -186,9 +195,9 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         let responseData;
 
         try {
-            this.logger.debug(`${this.constructor.name} (${llmId}): Making API call to '${targetUrl}'. Payload length: ${JSON.stringify(finalPayload)?.length}`, {llmId});
+            this.logger.debug(`${this.constructor.name} \(${llmId}): Making API call to '${targetUrl}'. Payload length: ${JSON.stringify(finalPayload)?.length}`, {llmId});
             this.logger.info(
-                `${this.constructor.name} (${llmId}): Final prompt to be sent to '${targetUrl}':`,
+                `${this.constructor.name} \(${llmId}): Final prompt to be sent to '${targetUrl}':`,
                 {llmId, payload: JSON.stringify(finalPayload, null, 2)}
             );
 
@@ -198,7 +207,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
                 body: JSON.stringify(finalPayload)
             });
 
-            this.logger.debug(`${this.constructor.name} (${llmId}): Raw API response received.`, {
+            this.logger.debug(`${this.constructor.name} \(${llmId}): Raw API response received.`, {
                 llmId,
                 responsePreview: JSON.stringify(responseData)?.substring(0, 250) + '...'
             });
@@ -206,10 +215,10 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
             const extractedJsonString = await this._extractJsonOutput(responseData, llmConfig, providerRequestPayload);
 
             if (extractedJsonString !== null && typeof extractedJsonString === 'string' && extractedJsonString.trim() !== '') {
-                this.logger.info(`${this.constructor.name} (${llmId}): Successfully extracted JSON string. Length: ${extractedJsonString.length}.`, {llmId});
+                this.logger.info(`${this.constructor.name} \(${llmId}): Successfully extracted JSON string. Length: ${extractedJsonString.length}.`, {llmId});
                 return extractedJsonString;
             } else {
-                const errorMsg = `${this.constructor.name} (${llmId}): Failed to extract usable JSON content from OpenRouter response. _extractJsonOutput returned null, empty, or non-string.`;
+                const errorMsg = `${this.constructor.name} \(${llmId}): Failed to extract usable JSON content from OpenRouter response. _extractJsonOutput returned null, empty, or non-string.`;
                 this.logger.error(errorMsg, {
                     llmId,
                     responseDataPreview: JSON.stringify(responseData)?.substring(0, 500),
@@ -229,7 +238,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
 
             let finalError;
             if (isHttpClientError) {
-                this.logger.error(`${this.constructor.name} (${llmId}): HttpClientError occurred during API call to '${targetUrl}'. Status: ${error.status || 'N/A'}. Message: ${error.message}`, {
+                this.logger.error(`${this.constructor.name} \(${llmId}): HttpClientError occurred during API call to '${targetUrl}'. Status: ${error.status || 'N/A'}. Message: ${error.message}`, {
                     llmId,
                     originalErrorName: error.name,
                     originalErrorMessage: error.message,
@@ -239,7 +248,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
                 });
                 finalError = error;
             } else {
-                const errorMsg = `${this.constructor.name} (${llmId}): An unexpected error occurred during API call or response processing for endpoint '${targetUrl}'. Original message: ${error.message}`;
+                const errorMsg = `${this.constructor.name} \(${llmId}): An unexpected error occurred during API call or response processing for endpoint '${targetUrl}'. Original message: ${error.message}`;
                 this.logger.error(errorMsg, {
                     llmId,
                     originalErrorName: error.name,
