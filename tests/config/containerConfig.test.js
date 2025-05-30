@@ -1,4 +1,4 @@
-// src/tests/core/config/containerConfig.test.js
+// tests/config/containerConfig.test.js
 // ****** MODIFIED FILE ******
 
 import AppContainer from '../../src/config/appContainer.js'; // Adjust path as needed

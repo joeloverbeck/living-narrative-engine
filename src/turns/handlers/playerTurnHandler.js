@@ -1,12 +1,16 @@
-// src/core/handlers/playerTurnHandler.js
+// src/turns/handlers/playerTurnHandler.js
+// (Assuming this path is correct based on your test output context)
 // ──────────────────────────────────────────────────────────────────────────────
 //  PlayerTurnHandler  – MODIFIED TO EXTEND BaseTurnHandler & USE ITurnContext
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {BaseTurnHandler} from './baseTurnHandler.js';
-import {TurnContext} from '../context/turnContext.js';
-import {HumanPlayerStrategy} from '../strategies/humanPlayerStrategy.js';
-import subscriptionLifecycleManager from "../../services/subscriptionLifecycleManager.js";
+import {TurnContext} from '../context/turnContext.js'; // Adjusted path relative to src/turns/handlers/
+import {HumanPlayerStrategy} from '../strategies/humanPlayerStrategy.js'; // Adjusted path
+
+// This import might not be strictly necessary if SubscriptionLifecycleManagerType is well-defined elsewhere
+// and only its instance is passed. However, keeping for potential type inference or direct use if any.
+import ActualSubscriptionLifecycleManagerClass from '../../services/subscriptionLifecycleManager.js'; // Adjusted path
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -17,10 +21,11 @@ import subscriptionLifecycleManager from "../../services/subscriptionLifecycleMa
 /** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy */
-/** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
+// Use the actual class for type if it's imported, otherwise a generic 'object' or a specific interface
+/** @typedef {ActualSubscriptionLifecycleManagerClass} SubscriptionLifecycleManagerType */
 
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
-/** @typedef {import('../interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */ // NEW
+/** @typedef {import('../interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
 
 class PlayerTurnHandler extends BaseTurnHandler {
     /** @type {ICommandProcessor} */
@@ -33,8 +38,8 @@ class PlayerTurnHandler extends BaseTurnHandler {
     #commandOutcomeInterpreter;
     /** @type {ISafeEventDispatcher} */
     #safeEventDispatcher;
-    /** @type {SubscriptionLifecycleManager} */
-    #subscriptionManager;
+    /** @type {SubscriptionLifecycleManagerType} */
+    #subscriptionManager; // This internal field name is fine, it's how it's stored.
     /** @type {object} */
     #gameWorldAccess;
 
@@ -48,44 +53,48 @@ class PlayerTurnHandler extends BaseTurnHandler {
     /**
      * @param {object} deps
      * @param {ILogger} deps.logger
-     * @param {ITurnStateFactory} deps.turnStateFactory // NEW
+     * @param {ITurnStateFactory} deps.turnStateFactory
      * @param {ICommandProcessor} deps.commandProcessor
      * @param {ITurnEndPort} deps.turnEndPort
      * @param {IPlayerPromptService} deps.playerPromptService
      * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter
      * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-     * @param {SubscriptionLifecycleManager} deps.subscriptionManager
+     * @param {SubscriptionLifecycleManagerType} deps.subscriptionLifecycleManager // <<<< CORRECTED PARAMETER NAME
      * @param {object} [deps.gameWorldAccess]
      */
     constructor({
                     logger,
-                    turnStateFactory, // NEW
+                    turnStateFactory,
                     commandProcessor,
                     turnEndPort,
                     playerPromptService,
                     commandOutcomeInterpreter,
                     safeEventDispatcher,
-                    subscriptionManager,
+                    subscriptionLifecycleManager, // <<<< CORRECTED PARAMETER NAME to match DI container's output
                     gameWorldAccess = {}
                 }) {
-        super({logger, turnStateFactory}); // MODIFIED: Pass turnStateFactory
+        super({logger, turnStateFactory});
 
         if (!commandProcessor) throw new Error('PlayerTurnHandler: commandProcessor is required');
         if (!turnEndPort) throw new Error('PlayerTurnHandler: turnEndPort is required');
         if (!playerPromptService) throw new Error('PlayerTurnHandler: playerPromptService is required');
         if (!commandOutcomeInterpreter) throw new Error('PlayerTurnHandler: commandOutcomeInterpreter is required');
         if (!safeEventDispatcher) throw new Error('PlayerTurnHandler: safeEventDispatcher is required');
-        if (!subscriptionLifecycleManager) throw new Error('PlayerTurnHandler: subscriptionLifecycleManager is required');
+        // --- CORRECTED CHECK BELOW ---
+        // The check is now on the corrected constructor parameter `subscriptionLifecycleManager`
+        if (!subscriptionLifecycleManager) throw new Error('PlayerTurnHandler: injected subscriptionManager is required');
+        // --- END CORRECTION ---
 
         this.#commandProcessor = commandProcessor;
         this.#turnEndPort = turnEndPort;
         this.#playerPromptService = playerPromptService;
         this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
         this.#safeEventDispatcher = safeEventDispatcher;
-        this.#subscriptionManager = subscriptionManager;
+        // --- CORRECTED ASSIGNMENT BELOW ---
+        this.#subscriptionManager = subscriptionLifecycleManager; // Assigns the (now validated) injected instance
+        // --- END CORRECTION ---
         this.#gameWorldAccess = gameWorldAccess;
 
-        // MODIFIED: Use the inherited and now initialized _turnStateFactory
         const initialState = this._turnStateFactory.createInitialState(this);
         this._setInitialState(initialState);
 
@@ -115,14 +124,10 @@ class PlayerTurnHandler extends BaseTurnHandler {
             commandProcessor: this.#commandProcessor,
             commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
             safeEventDispatcher: this.#safeEventDispatcher,
-            subscriptionManager: this.#subscriptionManager,
+            subscriptionManager: this.#subscriptionManager, // This will now be a valid instance
             turnEndPort: this.#turnEndPort,
         };
 
-        // NOTE: If TurnContext is to be created by a factory, this part needs to change.
-        // For now, assuming PlayerTurnHandler might still new it up if not refactored with ITurnContextFactory.
-        // However, to be consistent with AITurnHandler, PlayerTurnHandler should also use ITurnContextFactory.
-        // For this exercise, I'll leave it as is, but point out it's a candidate for further refactoring.
         const newTurnContext = new TurnContext({
             actor: actor,
             logger: this._logger,
@@ -137,7 +142,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
 
         this._logger.debug(`PlayerTurnHandler.startTurn: TurnContext created for actor ${actor.id} with HumanPlayerStrategy.`);
 
-        if (!this._currentState) { // Ensure initial state was set
+        if (!this._currentState) {
             this._logger.error(`${this.constructor.name}.startTurn: _currentState is null for actor ${actor.id}. This should have been set by turnStateFactory.`);
             const fallbackInitialState = this._turnStateFactory.createInitialState(this);
             if (fallbackInitialState) {
@@ -157,8 +162,12 @@ class PlayerTurnHandler extends BaseTurnHandler {
         super._resetTurnStateAndResources(logCtx);
         this._clearTurnEndWaitingMechanismsInternal();
         try {
-            this.#subscriptionManager.unsubscribeAll();
-            this._logger.debug(`${this.constructor.name}: All subscriptions managed by SubscriptionLifecycleManager unsubscribed for '${logCtx}'.`);
+            if (this.#subscriptionManager && typeof this.#subscriptionManager.unsubscribeAll === 'function') {
+                this.#subscriptionManager.unsubscribeAll();
+                this._logger.debug(`${this.constructor.name}: All subscriptions managed by SubscriptionLifecycleManager unsubscribed for '${logCtx}'.`);
+            } else {
+                this._logger.warn(`${this.constructor.name}: SubscriptionManager not available or unsubscribeAll not a function during reset for '${logCtx}'.`);
+            }
         } catch (err) {
             this._logger.warn(`${this.constructor.name}: unsubscribeAll failed during reset for '${logCtx}' – ${err.message}`, err);
         }
@@ -214,8 +223,11 @@ class PlayerTurnHandler extends BaseTurnHandler {
         if (!currentContext || currentContext.getActor()?.id !== actorEntity.id) {
             const errMsg = `${this.constructor.name}: handleSubmittedCommand actor mismatch or no context. Command for ${actorEntity.id}, context actor: ${currentContext?.getActor()?.id}.`;
             this._logger.error(errMsg);
-            if (currentContext) currentContext.endTurn(new Error("Actor mismatch in handleSubmittedCommand"));
-            else this._handleTurnEnd(actorEntity.id, new Error("No context in handleSubmittedCommand"));
+            if (currentContext && typeof currentContext.endTurn === 'function') {
+                currentContext.endTurn(new Error("Actor mismatch in handleSubmittedCommand"));
+            } else {
+                this._handleTurnEnd(actorEntity.id, new Error("No context in handleSubmittedCommand"));
+            }
             return;
         }
 
@@ -231,8 +243,10 @@ class PlayerTurnHandler extends BaseTurnHandler {
     async handleTurnEndedEvent(payload) {
         this._assertHandlerActive();
         const currentContext = this.getTurnContext();
+        const eventPayload = payload?.payload;
+
         if (!currentContext) {
-            this._logger.error(`${this.constructor.name}: handleTurnEndedEvent called but no ITurnContext is active. Payload actor: ${payload?.entityId}`);
+            this._logger.error(`${this.constructor.name}: handleTurnEndedEvent called but no ITurnContext is active. Payload actor: ${eventPayload?.entityId}`);
             if (this._currentState && typeof this._currentState.handleTurnEndedEvent === 'function') {
                 await this._currentState.handleTurnEndedEvent(this, payload);
             } else {
@@ -251,4 +265,3 @@ class PlayerTurnHandler extends BaseTurnHandler {
 }
 
 export default PlayerTurnHandler;
-// --- FILE END ---

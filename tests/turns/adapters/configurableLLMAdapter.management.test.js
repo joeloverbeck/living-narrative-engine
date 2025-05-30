@@ -232,7 +232,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
                 "ConfigurableLLMAdapter.#selectInitialActiveLlm: No default LLM set. Neither initialLlmIdFromConstructor nor defaultConfigId resulted in a valid active LLM selection."
             );
         });
-        
+
         it('should handle no LLMs in config file, log warning, and have no active LLM', async () => {
             mockLlmConfigLoader.loadConfigs.mockResolvedValue({
                 defaultConfigId: 'default-id',
@@ -413,9 +413,9 @@ describe('ConfigurableLLMAdapter Management Features', () => {
 
             const options = await adapter.getAvailableLlmOptions();
             expect(options).toEqual(expect.arrayContaining([
-                {id: sampleLlmModelConfig1.configId, displayName: sampleLlmModelConfig1.displayName},
-                {id: sampleLlmModelConfig2.configId, displayName: sampleLlmModelConfig2.displayName},
-                {id: llmConfigNoDisplayName.configId, displayName: llmConfigNoDisplayName.configId}
+                {configId: sampleLlmModelConfig1.configId, displayName: sampleLlmModelConfig1.displayName},
+                {configId: sampleLlmModelConfig2.configId, displayName: sampleLlmModelConfig2.displayName},
+                {configId: llmConfigNoDisplayName.configId, displayName: llmConfigNoDisplayName.configId} // Fallback is correct
             ]));
             expect(options.length).toBe(3);
             expect(mockLogger.warn).not.toHaveBeenCalled();

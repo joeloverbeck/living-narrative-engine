@@ -454,8 +454,8 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
      *
      * @public
      * @async
-     * @returns {Promise<Array<{id: string, displayName: string}>>} A promise that resolves to an array of LLM options.
-     * Each option is an object with 'id' and 'displayName'. Returns an empty array if not operational or no configs.
+     * @returns {Promise<Array<{configId: string, displayName: string}>>} A promise that resolves to an array of LLM options.
+     * Each option is an object with 'configId' and 'displayName'. Returns an empty array if not operational or no configs.
      */
     async getAvailableLlmOptions() {
         try {
@@ -481,8 +481,8 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         // Map to use config.configId and config.displayName
         // The schema and llm-configs.json example use "configId" (camelCase) inside each configuration object.
         const options = configsArray.map(config => ({
-            id: config.configId, // Use configId as per schema and example data
-            displayName: config.displayName || config.configId // Fallback to configId if displayName is not present
+            configId: config.configId, // Use 'configId' as the key
+            displayName: config.displayName || config.configId
         }));
 
         return options;
