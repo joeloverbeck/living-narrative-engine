@@ -24,8 +24,8 @@ import {ensureValidLogger} from "./utils/loggerUtils.js"; // Assuming correct pa
 /**
  * @typedef {object} LLMConfigurationFileForProxy
  * @description Represents the structure of the parsed llm-configs.json file for the proxy.
- * @property {string} [defaultLlmId] - Specifies the ID of the LLM configuration to use by default.
- * @property {Object<string, LLMModelConfig>} llms - A dictionary of LLM configurations.
+ * @property {string} [defaultConfigId] - Specifies the ID of the LLM configuration to use by default.
+ * @property {Object<string, LLMModelConfig>} configs - A dictionary of LLM configurations.
  */
 
 /**
@@ -63,7 +63,7 @@ export async function loadProxyLlmConfigs(configFilePath, logger, fileSystemRead
         effectiveLogger.error(errorMsg, {dependency: 'fileSystemReader', pathAttempted: configFilePath});
         return {
             error: true,
-            message: `ProxyLlmConfigLoader: ${errorMsg}`, // Keep prefix for external message if needed, or remove if consumer handles it
+            message: `ProxyLlmConfigLoader: ${errorMsg}`,
             stage: 'initialization_error_dependency_missing_filereader',
             pathAttempted: configFilePath
         };
@@ -79,29 +79,29 @@ export async function loadProxyLlmConfigs(configFilePath, logger, fileSystemRead
         const parsedConfigs = JSON.parse(fileContent);
         effectiveLogger.debug(`Successfully parsed JSON content from ${resolvedPath}.`);
 
-        if (typeof parsedConfigs !== 'object' || parsedConfigs === null || typeof parsedConfigs.llms !== 'object' || parsedConfigs.llms === null) {
-            const errorMsg = `Configuration file from ${resolvedPath} is malformed or missing 'llms' object.`;
+        if (typeof parsedConfigs !== 'object' || parsedConfigs === null || typeof parsedConfigs.configs !== 'object' || parsedConfigs.configs === null) {
+            const errorMsg = `Configuration file from ${resolvedPath} is malformed or missing 'configs' object.`;
             effectiveLogger.error(errorMsg, {
                 path: resolvedPath,
                 parsedContentPreview: JSON.stringify(parsedConfigs)?.substring(0, 200)
             });
             return {
                 error: true,
-                message: `ProxyLlmConfigLoader: ${errorMsg}`, // Keep prefix for external message
-                stage: 'validation_malformed_or_missing_llms',
+                message: `ProxyLlmConfigLoader: ${errorMsg}`,
+                stage: 'validation_malformed_or_missing_configs_map', // Updated stage
                 pathAttempted: resolvedPath
             };
         }
 
-        effectiveLogger.info(`LLM configurations loaded and validated successfully from ${resolvedPath}. Found ${Object.keys(parsedConfigs.llms).length} LLM configurations.`);
+        effectiveLogger.info(`LLM configurations loaded and validated successfully from ${resolvedPath}. Found ${Object.keys(parsedConfigs.configs).length} LLM configurations.`);
         return {
             error: false,
-            llmConfigs: parsedConfigs,
+            llmConfigs: parsedConfigs, // This now correctly contains the object with the 'configs' property
         };
 
     } catch (error) {
         let stage = 'unknown_load_parse_error';
-        let baseErrorMessage; // Store the core error message without prefix
+        let baseErrorMessage;
 
         if (error instanceof SyntaxError) {
             stage = 'parse_json_syntax_error';
@@ -116,7 +116,6 @@ export async function loadProxyLlmConfigs(configFilePath, logger, fileSystemRead
             baseErrorMessage = `An unexpected error occurred while loading/parsing LLM configurations from ${resolvedPath}: ${error.message}`;
         }
 
-        // Log the raw error message; the logger (especially fallback) will add the prefix.
         effectiveLogger.error(baseErrorMessage, {
             pathAttempted: resolvedPath,
             errorStage: stage,
@@ -125,7 +124,7 @@ export async function loadProxyLlmConfigs(configFilePath, logger, fileSystemRead
 
         return {
             error: true,
-            message: `ProxyLlmConfigLoader: ${baseErrorMessage}`, // The externally returned message includes the prefix
+            message: `ProxyLlmConfigLoader: ${baseErrorMessage}`,
             stage: stage,
             originalError: error,
             pathAttempted: resolvedPath

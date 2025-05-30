@@ -70,6 +70,7 @@
               "description": "The method to use for enforcing JSON output.",
               "examples": [
                 "tool_calling",
+                "openrouter_tool_calling",
                 "gbnf_grammar",
                 "native_json_mode",
                 "openrouter_json_schema",
@@ -78,7 +79,7 @@
             },
             "toolName": {
               "type": "string",
-              "description": "Required if 'method' is 'tool_calling'. The name of the tool the LLM should call."
+              "description": "Required if 'method' is 'tool_calling' or 'openrouter_tool_calling'. The name of the tool the LLM should call."
             },
             "grammar": {
               "type": "string",
@@ -97,7 +98,10 @@
               "if": {
                 "properties": {
                   "method": {
-                    "const": "tool_calling"
+                    "enum": [
+                      "tool_calling",
+                      "openrouter_tool_calling"
+                    ]
                   }
                 }
               },
