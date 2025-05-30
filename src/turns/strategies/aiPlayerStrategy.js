@@ -13,11 +13,8 @@
 import {IActorTurnStrategy} from '../interfaces/IActorTurnStrategy.js';
 import {ILLMAdapter} from '../interfaces/ILLMAdapter.js';
 import {IAIGameStateProvider} from '../interfaces/IAIGameStateProvider.js';
-import {AIPromptContentProvider} from '../../services/AIPromptContentProvider.js';
 import {ILLMResponseProcessor} from '../interfaces/ILLMResponseProcessor.js';
 import {DEFAULT_FALLBACK_ACTION} from "../../llms/constants/llmConstants.js";
-
-// import {DEFAULT_FALLBACK_CHARACTER_NAME} from "../../constants/textDefaults.js"; // REMOVED - No longer used directly here
 
 /**
  * @class AIPlayerStrategy
@@ -66,6 +63,9 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         if (!gameStateProvider || typeof gameStateProvider.buildGameState !== 'function') {
             throw new Error("AIPlayerStrategy: Constructor requires a valid IAIGameStateProvider.");
         }
+        // The constructor check should ensure promptContentProvider has getPromptData.
+        // If validateGameStateForPrompting needed to be called directly by AIPlayerStrategy,
+        // we'd add a check for it here, but it's internal to getPromptData now.
         if (!promptContentProvider || typeof promptContentProvider.getPromptData !== 'function') {
             throw new Error("AIPlayerStrategy: Constructor requires a valid IAIPromptContentProvider with a getPromptData method.");
         }
@@ -131,16 +131,12 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
             // 2. Build Game State DTO
             const gameStateDto = await this.#gameStateProvider.buildGameState(actor, context, this.#logger);
 
-            // Static check on AIGameStateDTO. If this check needs to throw to halt execution,
-            // it should be designed to do so. If getPromptData re-validates or handles, it might be okay.
-            // Current AIPromptContentProvider.checkCriticalGameState returns an object {isValid, errorContent}
-            // and doesn't throw by itself. The AIPromptContentProvider.getPromptData method uses this
-            // and *does* throw if !isValid. So the check here is somewhat redundant if getPromptData handles it robustly.
-            // For now, kept as per original structure, assuming it might have a purpose or be enhanced.
-            AIPromptContentProvider.checkCriticalGameState(gameStateDto, this.#logger);
+            // The call to AIPromptContentProvider.checkCriticalGameState(gameStateDto, this.#logger);
+            // has been REMOVED from here. Validation is now handled internally by getPromptData.
 
             // 3. Assemble promptData using AIPromptContentProvider
             this.#logger.debug(`AIPlayerStrategy: Requesting PromptData from AIPromptContentProvider for actor ${actorId}.`);
+            // The call to getPromptData will now internally validate gameStateDto and throw an error if it's invalid.
             const promptData = await this.#promptContentProvider.getPromptData(gameStateDto, this.#logger);
             this.#logger.debug(`AIPlayerStrategy: promptData received for actor ${actorId}. Keys: ${Object.keys(promptData).join(', ')}`);
 
@@ -167,10 +163,8 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
                 errorDetails: error,
                 stack: error?.stack
             });
-            // The specific if condition checking for error.message.includes("AIPromptContentProvider.getPromptData")
-            // or errorContent has been removed as errorContent was out of scope and the generic
-            // fallback creation already handles errors from getPromptData appropriately.
-            // The errorMessage will contain the specific message from any upstream error.
+            // The existing try...catch block will catch errors thrown by getPromptData (due to validation failure)
+            // or any other part of the process.
             return this._createFallbackAction(`unhandled_orchestration_error: ${errorMessage}`, actorId);
         }
     }

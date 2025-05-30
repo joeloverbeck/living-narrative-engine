@@ -95,6 +95,19 @@ export class IAIPromptContentProvider {
     getFinalInstructionsContent() {
         throw new Error("Method 'getFinalInstructionsContent()' must be implemented.");
     }
+
+    /**
+     * Validates if the provided AIGameStateDTO contains the critical information
+     * necessary for generating prompt data.
+     * @param {AIGameStateDTO} gameStateDto - The game state DTO to validate.
+     * @param {ILogger} logger - Logger instance for logging validation issues.
+     * @returns {{isValid: boolean, errorContent: string | null}} An object indicating if the state is valid
+     * and an error message if not.
+     * @throws {Error} May throw an error if validation itself fails unexpectedly.
+     */
+    validateGameStateForPrompting(gameStateDto, logger) { // eslint-disable-line no-unused-vars
+        throw new Error("Method 'validateGameStateForPrompting()' must be implemented.");
+    }
 }
 
 // --- FILE END ---

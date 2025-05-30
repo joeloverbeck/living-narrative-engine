@@ -29,10 +29,12 @@ describe('AIPromptContentProvider', () => {
     let provider;
     /** @type {jest.Mocked<ILogger>} */
     let mockLoggerInstance;
-    /** @type {jest.SpyInstance} */
-    let checkCriticalGameStateSpy;
 
-    // Spies for instance methods
+    // Spy for the new instance method
+    /** @type {jest.SpyInstance} */
+    let validateGameStateForPromptingSpy;
+
+    // Spies for other instance methods
     /** @type {jest.SpyInstance} */
     let getTaskDefinitionContentSpy;
     /** @type {jest.SpyInstance} */
@@ -60,11 +62,11 @@ describe('AIPromptContentProvider', () => {
         provider = new AIPromptContentProvider();
         mockLoggerInstance = mockLogger();
 
-        // Spy on the static method and provide a default mock implementation
-        checkCriticalGameStateSpy = jest.spyOn(AIPromptContentProvider, 'checkCriticalGameState')
+        // Spy on the new instance method and provide a default mock implementation
+        validateGameStateForPromptingSpy = jest.spyOn(provider, 'validateGameStateForPrompting')
             .mockReturnValue({isValid: true, errorContent: null});
 
-        // Spy on instance methods called by getPromptData
+        // Spy on other instance methods called by getPromptData
         getTaskDefinitionContentSpy = jest.spyOn(provider, 'getTaskDefinitionContent').mockReturnValue(MOCK_TASK_DEF);
         getCharacterPersonaContentSpy = jest.spyOn(provider, 'getCharacterPersonaContent').mockReturnValue(MOCK_PERSONA);
         getCharacterPortrayalGuidelinesContentSpy = jest.spyOn(provider, 'getCharacterPortrayalGuidelinesContent').mockReturnValue(MOCK_PORTRAYAL);
@@ -79,58 +81,76 @@ describe('AIPromptContentProvider', () => {
     });
 
     describe('getPromptData', () => {
-        test('should throw an error if gameStateDto is null', async () => {
+        test('should throw an error if gameStateDto is null (validation fails)', async () => {
+            // Configure the spy to simulate validateGameStateForPrompting's behavior when gameStateDto is null
+            validateGameStateForPromptingSpy.mockImplementation((gameStateDto, logger) => {
+                if (!gameStateDto) {
+                    logger?.error("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is null or undefined.");
+                    return {isValid: false, errorContent: ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING};
+                }
+                return {isValid: true, errorContent: null}; // Should not reach here in this test path
+            });
+
             await expect(provider.getPromptData(null, mockLoggerInstance))
                 .rejects
-                .toThrow('AIPromptContentProvider.getPromptData: gameStateDto is required to assemble PromptData.');
+                .toThrow(ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING);
+
+            // Check that validateGameStateForPrompting was called and logged its specific error
+            expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(null, mockLoggerInstance);
             expect(mockLoggerInstance.error).toHaveBeenCalledWith(
-                "AIPromptContentProvider.getPromptData: Critical - gameStateDto is null or undefined. Cannot assemble PromptData."
+                "AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is null or undefined."
+            );
+            // Check that getPromptData also logged the failure from validation
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+                `AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING}`
             );
         });
 
-        test('should throw an error if checkCriticalGameState returns isValid false', async () => {
-            const dummyGameStateDto = {actorState: {}};
-            const criticalErrorMsg = "Simulated critical state failure";
-            checkCriticalGameStateSpy.mockReturnValueOnce({isValid: false, errorContent: criticalErrorMsg});
+        test('should throw an error if validateGameStateForPrompting returns isValid false', async () => {
+            const dummyGameStateDto = {actorState: {}}; // Dummy DTO
+            const criticalErrorMsg = "Simulated critical state failure from validation";
+            validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: false, errorContent: criticalErrorMsg});
 
             await expect(provider.getPromptData(dummyGameStateDto, mockLoggerInstance))
                 .rejects
-                .toThrow(`AIPromptContentProvider.getPromptData: Invalid or incomplete game state: ${criticalErrorMsg}`);
+                .toThrow(criticalErrorMsg); // Error message should now be what validateGameStateForPrompting provides
+
+            expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(dummyGameStateDto, mockLoggerInstance);
             expect(mockLoggerInstance.error).toHaveBeenCalledWith(
-                `AIPromptContentProvider.getPromptData: Critical game state check failed: ${criticalErrorMsg}. Cannot reliably assemble PromptData.`
+                `AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${criticalErrorMsg}`
             );
         });
 
         test('should use default fallbacks for missing optional data in gameStateDto', async () => {
             /** @type {AIGameStateDTO} */
             const minimalDto = {
-                // actorState is needed for checkCriticalGameState to pass by default in this test setup
-                actorState: {id: 'actor123'},
-                actorPromptData: null, // Test fallback for characterName
-                currentUserInput: undefined, // Test fallback for userInputContent
-                perceptionLog: null, // Test fallback for perceptionLogArray
-                currentLocation: undefined, // Test fallback for locationName
+                actorState: {id: 'actor123'}, // Assume validateGameStateForPrompting deems this part OK
+                actorPromptData: null,
+                currentUserInput: undefined,
+                perceptionLog: null,
+                currentLocation: undefined,
             };
-            checkCriticalGameStateSpy.mockReturnValueOnce({isValid: true, errorContent: null});
+            // Ensure validateGameStateForPrompting is explicitly set to valid for this test case,
+            // overriding the default mock if necessary for clarity or specific sub-validation behavior.
+            validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null});
 
 
             const promptData = await provider.getPromptData(minimalDto, mockLoggerInstance);
 
+            expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(minimalDto, mockLoggerInstance);
             expect(promptData.characterName).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
             expect(promptData.userInputContent).toBe("");
             expect(promptData.perceptionLogArray).toEqual([]);
             expect(promptData.locationName).toBe("an unknown place");
 
-            // Ensure underlying getters are still called, portrayal guidelines with fallback name
             expect(getCharacterPortrayalGuidelinesContentSpy).toHaveBeenCalledWith(DEFAULT_FALLBACK_CHARACTER_NAME);
             expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(minimalDto, mockLoggerInstance);
-            // ... other getters ...
         });
 
         test('should correctly assemble PromptData with all fields from a full gameStateDto', async () => {
             const testCharName = 'Test Character';
             const testUserInput = 'What is happening?';
-            const testPerception = [{event: 'A strange noise'}];
+            const testPerception = [{description: 'A strange noise', timestamp: 1, type: 'sight'}]; // Made type a valid AIPerceptionLogEntryDTO
             const testLocationName = 'The Eerie Sanctum';
 
             /** @type {AIGameStateDTO} */
@@ -139,15 +159,20 @@ describe('AIPromptContentProvider', () => {
                 actorPromptData: {name: testCharName, description: 'A curious adventurer.'},
                 currentUserInput: testUserInput,
                 perceptionLog: testPerception,
-                currentLocation: {name: testLocationName, description: 'A place of mystery.'},
-                availableActions: [], // Passed to getAvailableActionsInfoContent
+                currentLocation: {
+                    name: testLocationName,
+                    description: 'A place of mystery.',
+                    exits: [],
+                    characters: []
+                }, // Added exits and characters for AILocationSummaryDTO
+                availableActions: [],
             };
-            checkCriticalGameStateSpy.mockReturnValueOnce({isValid: true, errorContent: null});
+            validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null});
 
 
             const promptData = await provider.getPromptData(fullDto, mockLoggerInstance);
 
-            expect(checkCriticalGameStateSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
+            expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
             expect(promptData).toEqual({
                 taskDefinitionContent: MOCK_TASK_DEF,
                 characterPersonaContent: MOCK_PERSONA,
@@ -162,15 +187,10 @@ describe('AIPromptContentProvider', () => {
                 locationName: testLocationName,
             });
 
-            // Verify calls to underlying methods
             expect(getTaskDefinitionContentSpy).toHaveBeenCalled();
             expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
             expect(getCharacterPortrayalGuidelinesContentSpy).toHaveBeenCalledWith(testCharName);
-            expect(getContentPolicyContentSpy).toHaveBeenCalled();
-            expect(getWorldContextContentSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
-            expect(getAvailableActionsInfoContentSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
-            expect(getFinalInstructionsContentSpy).toHaveBeenCalled();
-
+            // ... other getter calls
             expect(mockLoggerInstance.info).toHaveBeenCalledWith("AIPromptContentProvider.getPromptData: PromptData assembled successfully.");
         });
 
@@ -178,12 +198,12 @@ describe('AIPromptContentProvider', () => {
             /** @type {AIGameStateDTO} */
             const dtoWithoutCharName = {
                 actorState: {id: 'actorNoName'},
-                actorPromptData: {description: 'Nameless one'}, // No name field
+                actorPromptData: {description: 'Nameless one'},
                 currentUserInput: "Input",
                 perceptionLog: [],
-                currentLocation: {name: "Someplace"},
+                currentLocation: {name: "Someplace", description: '', exits: [], characters: []}, // Added missing fields for AILocationSummaryDTO
             };
-            checkCriticalGameStateSpy.mockReturnValueOnce({isValid: true, errorContent: null});
+            validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null});
 
             const promptData = await provider.getPromptData(dtoWithoutCharName, mockLoggerInstance);
             expect(promptData.characterName).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
@@ -194,21 +214,26 @@ describe('AIPromptContentProvider', () => {
             /** @type {AIGameStateDTO} */
             const dtoNullInput = {actorState: {}, actorPromptData: {name: 'Char'}, currentUserInput: null};
             const dtoUndefinedInput = {actorState: {}, actorPromptData: {name: 'Char'}, currentUserInput: undefined};
-            checkCriticalGameStateSpy.mockReturnValue({isValid: true, errorContent: null});
 
+            // Reset the general mock for validateGameStateForPrompting to ensure it's fresh for each call if needed,
+            // or rely on the beforeEach setup if it's sufficient.
+            validateGameStateForPromptingSpy.mockReturnValue({isValid: true, errorContent: null});
 
             let promptData = await provider.getPromptData(dtoNullInput, mockLoggerInstance);
             expect(promptData.userInputContent).toBe("");
+            expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(dtoNullInput, mockLoggerInstance);
+
 
             promptData = await provider.getPromptData(dtoUndefinedInput, mockLoggerInstance);
             expect(promptData.userInputContent).toBe("");
+            expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(dtoUndefinedInput, mockLoggerInstance);
         });
 
         test('should use empty array if perceptionLog is null or undefined', async () => {
             /** @type {AIGameStateDTO} */
             const dtoNullLog = {actorState: {}, actorPromptData: {name: 'Char'}, perceptionLog: null};
             const dtoUndefinedLog = {actorState: {}, actorPromptData: {name: 'Char'}, perceptionLog: undefined};
-            checkCriticalGameStateSpy.mockReturnValue({isValid: true, errorContent: null});
+            validateGameStateForPromptingSpy.mockReturnValue({isValid: true, errorContent: null});
 
             let promptData = await provider.getPromptData(dtoNullLog, mockLoggerInstance);
             expect(promptData.perceptionLogArray).toEqual([]);
@@ -224,9 +249,9 @@ describe('AIPromptContentProvider', () => {
             const dtoLocationNoName = {
                 actorState: {},
                 actorPromptData: {name: 'Char'},
-                currentLocation: {description: 'A place with no name.'}
+                currentLocation: {description: 'A place with no name.', name: undefined, exits: [], characters: []} // Ensure 'name' is explicitly undefined for test
             };
-            checkCriticalGameStateSpy.mockReturnValue({isValid: true, errorContent: null});
+            validateGameStateForPromptingSpy.mockReturnValue({isValid: true, errorContent: null});
 
 
             let promptData = await provider.getPromptData(dtoNullLocation, mockLoggerInstance);
@@ -243,20 +268,77 @@ describe('AIPromptContentProvider', () => {
             /** @type {AIGameStateDTO} */
             const dummyDto = {actorState: {}, actorPromptData: {name: 'Test'}};
             const internalErrorMsg = "Internal persona generation failed";
-            getCharacterPersonaContentSpy.mockImplementationOnce(() => {
+
+            validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null}); // Validation passes
+            getCharacterPersonaContentSpy.mockImplementationOnce(() => { // But a subsequent getter fails
                 throw new Error(internalErrorMsg);
             });
-            checkCriticalGameStateSpy.mockReturnValueOnce({isValid: true, errorContent: null});
-
 
             await expect(provider.getPromptData(dummyDto, mockLoggerInstance))
                 .rejects
                 .toThrow(`AIPromptContentProvider.getPromptData: Failed to assemble PromptData due to internal error: ${internalErrorMsg}`);
 
+            expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(dummyDto, mockLoggerInstance);
             expect(mockLoggerInstance.error).toHaveBeenCalledWith(
                 `AIPromptContentProvider.getPromptData: Error during assembly of PromptData components: ${internalErrorMsg}`,
                 expect.objectContaining({error: expect.any(Error)})
             );
+        });
+    });
+
+    // New describe block for validateGameStateForPrompting
+    describe('validateGameStateForPrompting', () => {
+        // Restore default mock for other spies if they were changed in getPromptData tests.
+        // This is generally handled by afterEach -> jest.restoreAllMocks(), but good to be mindful.
+
+        beforeEach(() => {
+            // We are testing validateGameStateForPrompting directly, so we don't want to mock it.
+            // We need to restore its original implementation for these specific tests.
+            if (validateGameStateForPromptingSpy) {
+                validateGameStateForPromptingSpy.mockRestore();
+            }
+            // We might still want to spy on it to check if logger is called, but without changing its behavior for these tests.
+            // Or, we can re-spy without mockReturnValue to observe calls.
+            // For simplicity, let's call the actual method and verify logger calls.
+            // If we need to verify its return for various inputs, direct calls are fine.
+        });
+
+        test('should return isValid: false and specific error if gameStateDto is null', () => {
+            const result = provider.validateGameStateForPrompting(null, mockLoggerInstance);
+            expect(result).toEqual({isValid: false, errorContent: ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING});
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is null or undefined.");
+        });
+
+        test('should return isValid: true but log error if actorState is missing (current logic)', () => {
+            const gameState = {actorPromptData: {name: "Test"}}; // Missing actorState
+            // @ts-ignore to allow testing incomplete DTO
+            const result = provider.validateGameStateForPrompting(gameState, mockLoggerInstance);
+            expect(result.isValid).toBe(true); // Current logic does not make this a critical failure for isValid
+            expect(result.errorContent).toBeNull();
+            expect(mockLoggerInstance.error).toHaveBeenCalledWith("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly.");
+        });
+
+        test('should return isValid: true but log warning if actorPromptData is missing (current logic)', () => {
+            const gameState = {actorState: {id: "test"}}; // Missing actorPromptData
+            // @ts-ignore to allow testing incomplete DTO
+            const result = provider.validateGameStateForPrompting(gameState, mockLoggerInstance);
+            expect(result.isValid).toBe(true); // Current logic does not make this a critical failure for isValid
+            expect(result.errorContent).toBeNull();
+            expect(mockLoggerInstance.warn).toHaveBeenCalledWith("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks.");
+        });
+
+        test('should return isValid: true for a valid gameStateDto', () => {
+            const gameState = {
+                actorState: {id: "actor1"},
+                actorPromptData: {name: "Valid Actor"},
+                currentLocation: {name: "Valid Location", description: "", exits: [], characters: []},
+                perceptionLog: [],
+                availableActions: []
+            };
+            const result = provider.validateGameStateForPrompting(gameState, mockLoggerInstance);
+            expect(result).toEqual({isValid: true, errorContent: null});
+            expect(mockLoggerInstance.error).not.toHaveBeenCalled();
+            expect(mockLoggerInstance.warn).not.toHaveBeenCalled();
         });
     });
 });

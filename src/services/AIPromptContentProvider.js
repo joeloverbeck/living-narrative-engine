@@ -4,8 +4,8 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
 /** @typedef {import('../dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
-/** @typedef {import('../../types/promptData.js').PromptData} PromptData */ // NEW
-/** @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */ // NEW
+/** @typedef {import('../types/promptData.js').PromptData} PromptData */
+/** @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
 
 import {ensureTerminalPunctuation} from '../utils/textUtils.js';
 import {
@@ -16,16 +16,15 @@ import {
     DEFAULT_FALLBACK_ACTION_COMMAND,
     DEFAULT_FALLBACK_ACTION_NAME,
     DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
-    PROMPT_FALLBACK_UNKNOWN_LOCATION, // Retained for other uses, though getPromptData uses "an unknown place" per ticket
+    PROMPT_FALLBACK_UNKNOWN_LOCATION,
     PROMPT_FALLBACK_NO_EXITS,
     PROMPT_FALLBACK_ALONE_IN_LOCATION,
     PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE,
     PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS,
     PROMPT_FALLBACK_ACTOR_PROMPT_DATA_UNAVAILABLE,
     PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS,
-    ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING,
-    ERROR_FALLBACK_ACTOR_STATE_MISSING
-} from '../constants/textDefaults.js'; // Corrected import to use constants directly
+    ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
+} from '../constants/textDefaults.js';
 
 // --- CORE PROMPT TEXT CONSTANTS (can be exported or remain internal) ---
 export const CORE_TASK_DESCRIPTION_TEXT = `Your sole focus is to BE the character detailed below. Live as them, think as them.
@@ -57,11 +56,11 @@ export const FINAL_LLM_INSTRUCTION_TEXT = "Now, based on all the information pro
 
 /**
  * @class AIPromptContentProvider
- * @implements {IAIPromptContentProvider} // NEW
+ * @implements {IAIPromptContentProvider}
  * @description Generates specific content pieces from game state data for use with PromptBuilder.
  * This class is responsible for preparing the raw text for different sections of a prompt.
  */
-export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvider" as it's an interface to be implemented
+export class AIPromptContentProvider {
     constructor() {
         // Initialization, if any, would go here.
     }
@@ -110,27 +109,64 @@ export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvi
     }
 
     /**
+     * Validates if the provided AIGameStateDTO contains the critical information
+     * necessary for generating prompt data.
+     * @param {AIGameStateDTO | null | undefined} gameStateDto - The game state DTO to validate.
+     * @param {ILogger} logger - Logger instance for logging validation issues.
+     * @returns {{isValid: boolean, errorContent: string | null}} An object indicating if the state is valid
+     * and an error message if not.
+     */
+    validateGameStateForPrompting(gameStateDto, logger) {
+        // Note: 'this' is not used in this specific method's logic as it's purely input-based,
+        // but it's an instance method as per the refactoring goal.
+        if (!gameStateDto) {
+            logger?.error("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is null or undefined.");
+            return {isValid: false, errorContent: ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING};
+        }
+        // actorState check might be too stringent if actorPromptData has all necessary info from it.
+        // For now, keeping it as per original, but this could be relaxed if actorPromptData is comprehensive.
+        if (!gameStateDto.actorState) {
+            logger?.error("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly.");
+            // Not returning false immediately, as actorPromptData is the primary source for character details.
+            // If actorPromptData is also missing, it becomes more critical.
+        }
+        if (!gameStateDto.actorPromptData) {
+            logger?.warn("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks.");
+            // Depending on how critical actorPromptData is for a *minimal* prompt, this could be an error.
+            // For now, it's a warning, assuming fallbacks can handle it.
+            // If actorPromptData.name is essential for getCharacterPortrayalGuidelinesContent, this might be an issue.
+            // However, DEFAULT_FALLBACK_CHARACTER_NAME is used, so it might proceed.
+        }
+        // Add more checks as necessary, e.g., for currentLocation if it's absolutely vital
+        // and PROMPT_FALLBACK_UNKNOWN_LOCATION is not an acceptable state for continuing.
+        // For now, assume that individual getters or getPromptData itself will handle missing optional data gracefully.
+        return {isValid: true, errorContent: null};
+    }
+
+    /**
      * Assembles the complete PromptData object required for constructing an LLM prompt.
      * @param {AIGameStateDTO} gameStateDto - The comprehensive game state for the current AI actor.
      * @param {ILogger} logger - Logger instance for logging during the assembly process.
      * @returns {Promise<PromptData>} A promise that resolves to the fully assembled PromptData object.
-     * @throws {Error} If critical information is missing (e.g., gameStateDto is null) and PromptData cannot be safely constructed.
+     * @throws {Error} If critical information is missing (e.g., gameStateDto is null or validation fails)
+     * and PromptData cannot be safely constructed.
      */
     async getPromptData(gameStateDto, logger) {
         logger.debug("AIPromptContentProvider: Starting assembly of PromptData.");
 
-        if (!gameStateDto) {
-            logger.error("AIPromptContentProvider.getPromptData: Critical - gameStateDto is null or undefined. Cannot assemble PromptData.");
-            throw new Error("AIPromptContentProvider.getPromptData: gameStateDto is required to assemble PromptData.");
+        // Validate game state at the beginning
+        const validationResult = this.validateGameStateForPrompting(gameStateDto, logger);
+        if (!validationResult.isValid) {
+            const errorMessage = validationResult.errorContent || ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING;
+            logger.error(`AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${errorMessage}`);
+            throw new Error(errorMessage);
         }
-
-        // Static check for critical parts of gameStateDto (can be enhanced or made more granular if needed)
-        const {isValid, errorContent} = AIPromptContentProvider.checkCriticalGameState(gameStateDto, logger);
-        if (!isValid) {
-            logger.error(`AIPromptContentProvider.getPromptData: Critical game state check failed: ${errorContent}. Cannot reliably assemble PromptData.`);
-            // Consider if specific errors from checkCriticalGameState should lead to specific error messages or types
-            throw new Error(`AIPromptContentProvider.getPromptData: Invalid or incomplete game state: ${errorContent}`);
-        }
+        // The explicit check for `!gameStateDto` after validation is somewhat redundant if
+        // `validateGameStateForPrompting` handles it, but kept for belt-and-suspenders.
+        // However, `validateGameStateForPrompting` already returns isValid:false if gameStateDto is null.
+        // The ticket indicates `if (!gameStateDto)` was present before, and also the new validation.
+        // I will rely on the new validation to throw the specific error.
+        // The `!gameStateDto` check inside `validateGameStateForPrompting` covers the initial `null` check.
 
         const characterName = gameStateDto.actorPromptData?.name || DEFAULT_FALLBACK_CHARACTER_NAME;
         logger.debug(`AIPromptContentProvider.getPromptData: Character name resolved to: "${characterName}".`);
@@ -141,7 +177,7 @@ export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvi
         const perceptionLogArray = gameStateDto.perceptionLog || [];
         logger.debug(`AIPromptContentProvider.getPromptData: Perception log array contains ${perceptionLogArray.length} items.`);
 
-        const locationName = gameStateDto.currentLocation?.name || "an unknown place"; // Per ticket's example output
+        const locationName = gameStateDto.currentLocation?.name || "an unknown place";
         logger.debug(`AIPromptContentProvider.getPromptData: Location name resolved to: "${locationName}".`);
 
         try {
@@ -165,6 +201,7 @@ export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvi
             return promptData;
         } catch (error) {
             logger.error(`AIPromptContentProvider.getPromptData: Error during assembly of PromptData components: ${error.message}`, {error});
+            // Wrapping the error for more context, but ensuring the original message is preserved.
             throw new Error(`AIPromptContentProvider.getPromptData: Failed to assemble PromptData due to internal error: ${error.message}`);
         }
     }
@@ -177,10 +214,11 @@ export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvi
      */
     getCharacterPersonaContent(gameState, logger) {
         logger?.debug("AIPromptContentProvider: Formatting character persona content.");
-        const {actorPromptData} = gameState;
+        const {actorPromptData} = gameState; // gameState is guaranteed to be non-null here due to check in getPromptData
 
         if (!actorPromptData) {
             logger?.warn("AIPromptContentProvider: actorPromptData is missing. Using fallback.");
+            // gameState.actorState check is relevant here as per the DTO and original validation logic
             return gameState.actorState ? PROMPT_FALLBACK_ACTOR_PROMPT_DATA_UNAVAILABLE : PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS;
         }
 
@@ -219,11 +257,9 @@ export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvi
      */
     getWorldContextContent(gameState, logger) {
         logger?.debug("AIPromptContentProvider: Formatting world context content.");
-        const {currentLocation} = gameState;
+        const {currentLocation} = gameState; // gameState is guaranteed non-null
 
         if (!currentLocation) {
-            // This specific string is for direct return, matching existing behavior.
-            // The getPromptData method will use "an unknown place" for its specific 'locationName' field.
             return PROMPT_FALLBACK_UNKNOWN_LOCATION;
         }
 
@@ -255,7 +291,7 @@ export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvi
             PROMPT_FALLBACK_ALONE_IN_LOCATION,
             logger
         ));
-        return segments.join('\n\n'); // Separate major parts of world context
+        return segments.join('\n\n');
     }
 
     /**
@@ -268,7 +304,7 @@ export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvi
         logger?.debug("AIPromptContentProvider: Formatting available actions info content.");
         let noActionsMessage = PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE;
 
-        if (!gameState.availableActions || gameState.availableActions.length === 0) {
+        if (!gameState.availableActions || gameState.availableActions.length === 0) { // gameState guaranteed non-null
             logger?.warn("AIPromptContentProvider: No available actions provided.");
         }
 
@@ -321,36 +357,8 @@ export class AIPromptContentProvider { // Removed "extends IAIPromptContentProvi
         return FINAL_LLM_INSTRUCTION_TEXT;
     }
 
-    /**
-     * Checks if critical game state for prompt generation is available.
-     * @param {AIGameStateDTO | null | undefined} gameState - The game state DTO.
-     * @param {ILogger | undefined} logger - Optional logger.
-     * @returns {{isValid: boolean, errorContent: string | null}}
-     */
-    static checkCriticalGameState(gameState, logger) {
-        if (!gameState) {
-            logger?.error("AIPromptContentProvider: AIGameStateDTO is null or undefined.");
-            return {isValid: false, errorContent: ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING};
-        }
-        // actorState check might be too stringent if actorPromptData has all necessary info from it.
-        // For now, keeping it as per original, but this could be relaxed if actorPromptData is comprehensive.
-        if (!gameState.actorState) {
-            logger?.error("AIPromptContentProvider: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly.");
-            // Not returning false immediately, as actorPromptData is the primary source for character details.
-            // If actorPromptData is also missing, it becomes more critical.
-        }
-        if (!gameState.actorPromptData) {
-            logger?.warn("AIPromptContentProvider: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks.");
-            // Depending on how critical actorPromptData is for a *minimal* prompt, this could be an error.
-            // For now, it's a warning, assuming fallbacks can handle it.
-            // If actorPromptData.name is essential for getCharacterPortrayalGuidelinesContent, this might be an issue.
-            // However, DEFAULT_FALLBACK_CHARACTER_NAME is used, so it might proceed.
-        }
-        // Add more checks as necessary, e.g., for currentLocation if it's absolutely vital
-        // and PROMPT_FALLBACK_UNKNOWN_LOCATION is not an acceptable state for continuing.
-        // For now, assume that individual getters or getPromptData itself will handle missing optional data gracefully.
-        return {isValid: true, errorContent: null};
-    }
+    // Static checkCriticalGameState method is now removed.
+    // Its logic has been moved to the instance method validateGameStateForPrompting(gameStateDto, logger).
 }
 
 // --- FILE END ---
