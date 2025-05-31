@@ -83,7 +83,6 @@ class WorldInitializer {
      */
     async initializeWorldEntities() {
         this.#logger.info('WorldInitializer: Starting world entity initialization process...');
-        // Dispatch 'initialization:world_initializer:started' if you have such an event
         let totalInstantiatedCount = 0;
         /** @type {Entity[]} */
         const instantiatedEntities = [];
@@ -131,151 +130,162 @@ class WorldInitializer {
 
             for (const entity of instantiatedEntities) {
                 // Check if the entity is valid and has the methods we need from the Entity class
-                if (!entity || typeof entity.componentEntries !== 'function' || typeof entity.addComponent !== 'function' || typeof entity.getComponentData !== 'function') {
+                if (!entity ||
+                    !entity.componentEntries || // Check if the getter returns a truthy value (the iterator)
+                    typeof entity.addComponent !== 'function' ||
+                    typeof entity.getComponentData !== 'function') {
                     this.#logger.error(`WorldInitializer (Pass 2): Entity ${entity?.id || 'Unknown ID'} is invalid or missing required component access methods. Skipping reference resolution for this entity.`);
                     continue;
                 }
 
-                // Iterate over component entries using the Entity's public API
-                for (const [componentTypeId, componentDataInstance] of entity.componentEntries()) {
-                    const componentDefinition = this.#repository.getComponentDefinition(componentTypeId);
+                const entriesIterable = entity.componentEntries; // Invoke the getter
 
-                    if (componentDefinition?.resolveFields && Array.isArray(componentDefinition.resolveFields)) {
-                        for (const spec of componentDefinition.resolveFields) {
-                            if (!spec || !spec.resolutionStrategy) {
-                                this.#logger.warn(`WorldInitializer (Pass 2): Invalid resolveFields spec for component ${componentTypeId} on entity ${entity.id}`, spec);
-                                continue;
-                            }
+                this.#logger.debug(`WorldInitializer (Pass 2): Processing entity ${entity.id}. Type of entity.componentEntries: ${typeof entriesIterable}.`);
+                if (entriesIterable && typeof entriesIterable[Symbol.iterator] === 'function') {
+                    const iterator = entriesIterable[Symbol.iterator]();
+                    if (iterator && typeof iterator.next === 'function') {
+                        this.#logger.debug(`WorldInitializer (Pass 2): Entity ${entity.id} componentEntries iterator has a 'next' method.`);
+                    } else {
+                        this.#logger.warn(`WorldInitializer (Pass 2): Entity ${entity.id} componentEntries[Symbol.iterator]() did not return a valid iterator.`);
+                    }
+                } else {
+                    this.#logger.warn(`WorldInitializer (Pass 2): Entity ${entity.id} componentEntries IS NOT ITERABLE or is problematic. Value: ${String(entriesIterable)}`);
+                }
 
-                            const {dataPath, dataPathIsSelf = false, resolutionStrategy} = spec;
-                            let currentValue;
-                            let valueChanged = false;
-                            let newValue = undefined; // Initialize to undefined
+                try {
+                    for (const [componentTypeId, componentDataInstance] of entriesIterable) {
+                        const componentDefinition = this.#repository.getComponentDefinition(componentTypeId);
 
-                            if (dataPathIsSelf) {
-                                currentValue = componentDataInstance;
-                            } else if (typeof dataPath === 'string' && dataPath.trim() !== '') {
-                                currentValue = _get(componentDataInstance, dataPath);
-                            } else {
-                                this.#logger.warn(`WorldInitializer (Pass 2): Invalid dataPath in resolveFields spec for ${componentTypeId} on entity ${entity.id}:`, spec);
-                                continue;
-                            }
+                        if (componentDefinition?.resolveFields && Array.isArray(componentDefinition.resolveFields)) {
+                            for (const spec of componentDefinition.resolveFields) {
+                                if (!spec || !spec.resolutionStrategy) {
+                                    this.#logger.warn(`WorldInitializer (Pass 2): Invalid resolveFields spec for component ${componentTypeId} on entity ${entity.id}`, spec);
+                                    continue;
+                                }
 
-                            if (currentValue === undefined && !dataPathIsSelf && dataPath) {
-                                // this.#logger.debug(`WorldInitializer (Pass 2): Path '${dataPath}' not found for ${componentTypeId} on entity ${entity.id}. Skipping resolution for this spec.`);
-                                continue; // Value at path does not exist, nothing to resolve
-                            }
+                                const {dataPath, dataPathIsSelf = false, resolutionStrategy} = spec;
+                                let currentValue;
+                                let valueChanged = false;
+                                let newValue = undefined;
 
-                            switch (resolutionStrategy.type) {
-                                case "direct":
-                                    if (typeof currentValue === 'string' && currentValue.includes(':')) {
-                                        const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(currentValue);
-                                        if (targetInstance) {
-                                            if (targetInstance.id !== currentValue) {
-                                                newValue = targetInstance.id;
-                                                valueChanged = true;
-                                                this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}' for entity ${entity.id}: '${currentValue}' -> '${newValue}'.`);
-                                            }
-                                        } else {
-                                            this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}' definitionId '${currentValue}' for entity ${entity.id}.`);
-                                        }
-                                    }
-                                    break;
-
-                                case "arrayOfDefinitionIds":
-                                    if (Array.isArray(currentValue)) {
-                                        const originalArray = [...currentValue]; // Shallow copy for comparison
-                                        const resolvedArray = currentValue.map((defId, index) => {
-                                            if (typeof defId === 'string' && defId.includes(':')) {
-                                                const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(defId);
-                                                if (targetInstance) {
-                                                    if (targetInstance.id !== defId) {
-                                                        this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}] for entity ${entity.id}: '${defId}' -> '${targetInstance.id}'.`);
-                                                        return targetInstance.id;
-                                                    }
-                                                    return targetInstance.id; // Return even if same, for consistency if array is rebuilt
-                                                } else {
-                                                    this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}] definitionId '${defId}' for entity ${entity.id}.`);
-                                                    return defId;
-                                                }
-                                            }
-                                            return defId;
-                                        });
-                                        // Check if any element actually changed
-                                        if (originalArray.some((val, i) => val !== resolvedArray[i])) {
-                                            newValue = resolvedArray;
-                                            valueChanged = true;
-                                        }
-                                    }
-                                    break;
-
-                                case "arrayOfObjects":
-                                    if (Array.isArray(currentValue) && typeof resolutionStrategy.idField === 'string') {
-                                        const idField = resolutionStrategy.idField;
-                                        let itemChangedInArray = false;
-                                        const tempArray = currentValue.map((obj, index) => {
-                                            let currentItem = obj; // Start with original object
-                                            if (typeof obj === 'object' && obj !== null) {
-                                                const definitionId = _get(obj, idField);
-                                                if (typeof definitionId === 'string' && definitionId.includes(':')) {
-                                                    const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(definitionId);
-                                                    if (targetInstance) {
-                                                        if (targetInstance.id !== definitionId) {
-                                                            const newObj = {...obj}; // Clone before modifying
-                                                            _set(newObj, idField, targetInstance.id);
-                                                            currentItem = newObj;
-                                                            itemChangedInArray = true;
-                                                            this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}].${idField} for entity ${entity.id}: '${definitionId}' -> '${targetInstance.id}'.`);
-                                                        }
-                                                    } else {
-                                                        this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}].${idField} definitionId '${definitionId}' for entity ${entity.id}.`);
-                                                    }
-                                                }
-                                            }
-                                            return currentItem;
-                                        });
-
-                                        if (itemChangedInArray) {
-                                            newValue = tempArray;
-                                            valueChanged = true;
-                                        }
-                                    }
-                                    break;
-                                default:
-                                    this.#logger.warn(`WorldInitializer (Pass 2): Unknown resolutionStrategy type '${resolutionStrategy.type}' for ${componentTypeId} on entity ${entity.id}.`);
-                            }
-
-                            if (valueChanged && newValue !== undefined) {
                                 if (dataPathIsSelf) {
-                                    // The componentDataInstance itself is being replaced.
-                                    // Update it in the entity's internal map using its public method.
-                                    entity.addComponent(componentTypeId, newValue);
-                                    this.#logger.debug(`WorldInitializer (Pass 2): Updated component [${componentTypeId}] data directly for entity ${entity.id} via addComponent with new value.`);
+                                    currentValue = componentDataInstance;
+                                } else if (typeof dataPath === 'string' && dataPath.trim() !== '') {
+                                    currentValue = _get(componentDataInstance, dataPath);
                                 } else {
-                                    _set(componentDataInstance, dataPath, newValue);
-                                    // This modifies the componentDataInstance obtained from the iterator.
-                                    // Since componentDataInstance is an object stored in the Entity's map,
-                                    // this modification will persist as long as the map holds references
-                                    // to these objects (which it does, as they are cloned on initial add).
-                                    this.#logger.debug(`WorldInitializer (Pass 2): Modified path '${dataPath}' in component [${componentTypeId}] for entity ${entity.id} to new value.`);
+                                    this.#logger.warn(`WorldInitializer (Pass 2): Invalid dataPath in resolveFields spec for ${componentTypeId} on entity ${entity.id}:`, spec);
+                                    continue;
+                                }
+
+                                if (currentValue === undefined && !dataPathIsSelf && dataPath) {
+                                    continue;
+                                }
+
+                                switch (resolutionStrategy.type) {
+                                    case "direct":
+                                        if (typeof currentValue === 'string' && currentValue.includes(':')) {
+                                            const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(currentValue);
+                                            if (targetInstance) {
+                                                if (targetInstance.id !== currentValue) {
+                                                    newValue = targetInstance.id;
+                                                    valueChanged = true;
+                                                    this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}' for entity ${entity.id}: '${currentValue}' -> '${newValue}'.`);
+                                                }
+                                            } else {
+                                                this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}' definitionId '${currentValue}' for entity ${entity.id}.`);
+                                            }
+                                        }
+                                        break;
+
+                                    case "arrayOfDefinitionIds":
+                                        if (Array.isArray(currentValue)) {
+                                            const originalArray = [...currentValue];
+                                            const resolvedArray = currentValue.map((defId, index) => {
+                                                if (typeof defId === 'string' && defId.includes(':')) {
+                                                    const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(defId);
+                                                    if (targetInstance) {
+                                                        if (targetInstance.id !== defId) {
+                                                            this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}] for entity ${entity.id}: '${defId}' -> '${targetInstance.id}'.`);
+                                                            return targetInstance.id;
+                                                        }
+                                                        return targetInstance.id;
+                                                    } else {
+                                                        this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}] definitionId '${defId}' for entity ${entity.id}.`);
+                                                        return defId;
+                                                    }
+                                                }
+                                                return defId;
+                                            });
+                                            if (originalArray.some((val, i) => val !== resolvedArray[i])) {
+                                                newValue = resolvedArray;
+                                                valueChanged = true;
+                                            }
+                                        }
+                                        break;
+
+                                    case "arrayOfObjects":
+                                        if (Array.isArray(currentValue) && typeof resolutionStrategy.idField === 'string') {
+                                            const idField = resolutionStrategy.idField;
+                                            let itemChangedInArray = false;
+                                            const tempArray = currentValue.map((obj, index) => {
+                                                let currentItem = obj;
+                                                if (typeof obj === 'object' && obj !== null) {
+                                                    const definitionId = _get(obj, idField);
+                                                    if (typeof definitionId === 'string' && definitionId.includes(':')) {
+                                                        const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(definitionId);
+                                                        if (targetInstance) {
+                                                            if (targetInstance.id !== definitionId) {
+                                                                const newObj = {...obj};
+                                                                _set(newObj, idField, targetInstance.id);
+                                                                currentItem = newObj;
+                                                                itemChangedInArray = true;
+                                                                this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}].${idField} for entity ${entity.id}: '${definitionId}' -> '${targetInstance.id}'.`);
+                                                            }
+                                                        } else {
+                                                            this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}].${idField} definitionId '${definitionId}' for entity ${entity.id}.`);
+                                                        }
+                                                    }
+                                                }
+                                                return currentItem;
+                                            });
+                                            if (itemChangedInArray) {
+                                                newValue = tempArray;
+                                                valueChanged = true;
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        this.#logger.warn(`WorldInitializer (Pass 2): Unknown resolutionStrategy type '${resolutionStrategy.type}' for ${componentTypeId} on entity ${entity.id}.`);
+                                }
+
+                                if (valueChanged && newValue !== undefined) {
+                                    if (dataPathIsSelf) {
+                                        entity.addComponent(componentTypeId, newValue);
+                                        this.#logger.debug(`WorldInitializer (Pass 2): Updated component [${componentTypeId}] data directly for entity ${entity.id} via addComponent with new value.`);
+                                    } else {
+                                        _set(componentDataInstance, dataPath, newValue);
+                                        this.#logger.debug(`WorldInitializer (Pass 2): Modified path '${dataPath}' in component [${componentTypeId}] for entity ${entity.id} to new value.`);
+                                    }
                                 }
                             }
                         }
-                    }
-                } // End of component loop for an entity
+                    } // End of component loop for an entity
+                } catch (loopError) {
+                    this.#logger.error(`WorldInitializer (Pass 2): CRITICAL error during component iteration for entity ${entity.id}. Investigate 'entriesIterable' value. Error:`, loopError);
+                    // Potentially re-throw or handle more gracefully depending on desired app behavior
+                    throw loopError;
+                }
 
-                // --- Spatial Index Population (uses the now-resolved component data) ---
-                // Assumes entity.getComponentData() correctly retrieves data from the Entity's internal map.
+
+                // --- Spatial Index Population ---
                 const positionComponentData = entity.getComponentData(POSITION_COMPONENT_ID);
                 let locationIdForSpatialIndex = null;
 
                 if (positionComponentData && typeof positionComponentData.locationId === 'string' && positionComponentData.locationId.trim() !== '') {
                     locationIdForSpatialIndex = positionComponentData.locationId;
-
                     if (locationIdForSpatialIndex.includes(':')) {
                         this.#logger.warn(`WorldInitializer (Pass 2): Entity ${entity.id}'s position component locationId '${locationIdForSpatialIndex}' appears to be an unresolved definitionId. Spatial index might be incorrect.`);
                     }
-
                     if (locationIdForSpatialIndex) {
                         const locationEntity = this.#entityManager.getEntityInstance(locationIdForSpatialIndex);
                         if (locationEntity || !locationIdForSpatialIndex.includes(':')) {
@@ -296,15 +306,15 @@ class WorldInitializer {
             } // End of for (const entity of instantiatedEntities)
 
             this.#logger.info(`WorldInitializer (Pass 2): Completed. Processed ${instantiatedEntities.length} entities for linking. Added ${entitiesAddedToSpatialIndex} entities to spatial index.`);
-
             this.#logger.info('WorldInitializer: World entity initialization and spatial indexing complete.');
-            // Dispatch 'initialization:world_initializer:completed' event if you have one.
             return true;
 
         } catch (error) {
-            this.#logger.error('WorldInitializer: CRITICAL ERROR during entity initialization or reference resolution:', error);
-            // Dispatch 'initialization:world_initializer:failed' event if you have one.
-            throw error;
+            // Ensure the error is logged here as the main catch block for the async function
+            if (!String(error.message).includes("CRITICAL error during component iteration")) { // Avoid double logging if already caught by inner try-catch
+                this.#logger.error('WorldInitializer: CRITICAL ERROR during entity initialization or reference resolution:', error);
+            }
+            throw error; // Re-throw to be caught by InitializationService
         }
     }
 }
