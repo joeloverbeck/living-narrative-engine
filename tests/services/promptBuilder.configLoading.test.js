@@ -2,9 +2,16 @@
 // --- FILE START ---
 import {jest, describe, beforeEach, test, expect, afterEach} from '@jest/globals';
 import {PromptBuilder} from '../../src/services/promptBuilder.js';
+import {LLMConfigService} from '../../src/services/llmConfigService.js';
+import {HttpConfigurationProvider} from '../../src/services/httpConfigurationProvider.js';
+import {PlaceholderResolver} from '../../src/utils/placeholderResolver.js'; // For mocking
+// Import assembler types for JSDoc
+/** @typedef {import('../../src/services/promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
+/** @typedef {import('../../src/services/promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
+
 
 /**
- * @typedef {import('../../src/services/promptBuilder.js').LLMConfig} LLMConfig
+ * @typedef {import('../../src/services/llmConfigService.js').LLMConfig} LLMConfig
  * @typedef {import('../../src/services/promptBuilder.js').PromptData} PromptData
  * @typedef {import('../../src/services/promptBuilder.js').PerceptionLogEntry} PerceptionLogEntry
  * @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger
@@ -17,6 +24,38 @@ const mockLoggerInstance = () => ({
     error: jest.fn(),
     debug: jest.fn(),
 });
+
+/** @returns {jest.Mocked<PlaceholderResolver>} */
+const mockPlaceholderResolverInstance = () => ({
+    resolve: jest.fn((str, ...dataSources) => { // Basic mock implementation
+        let resolvedStr = str;
+        if (str && dataSources.length > 0) {
+            const regex = /{([^{}]+)}/g;
+            resolvedStr = str.replace(regex, (match, placeholderKey) => {
+                const trimmedKey = placeholderKey.trim();
+                for (const dataSource of dataSources) {
+                    if (dataSource && typeof dataSource === 'object' && Object.prototype.hasOwnProperty.call(dataSource, trimmedKey)) {
+                        const value = dataSource[trimmedKey];
+                        return value !== null && value !== undefined ? String(value) : '';
+                    }
+                }
+                return '';
+            });
+        }
+        return resolvedStr;
+    }),
+});
+
+/** @returns {jest.Mocked<StandardElementAssembler>} */
+const mockStandardElementAssemblerInstance = () => ({
+    assemble: jest.fn().mockReturnValue(""),
+});
+
+/** @returns {jest.Mocked<PerceptionLogAssembler>} */
+const mockPerceptionLogAssemblerInstance = () => ({
+    assemble: jest.fn().mockReturnValue(""),
+});
+
 
 const MOCK_CONFIG_FILE_PATH = './test-llm-configs.json';
 
@@ -40,9 +79,17 @@ const MOCK_CONFIG_2 = {
 };
 
 
-describe('PromptBuilder', () => {
+describe('PromptBuilder interaction with LLMConfigService for Configuration Loading', () => {
     /** @type {jest.Mocked<ILogger>} */
     let logger;
+    /** @type {jest.Mocked<PlaceholderResolver>} */
+    let mockPlaceholderResolver;
+    /** @type {jest.Mocked<StandardElementAssembler>} */
+    let mockStandardAssembler;
+    /** @type {jest.Mocked<PerceptionLogAssembler>} */
+    let mockPerceptionLogAssembler;
+    /** @type {LLMConfigService} */
+    let llmConfigService;
     /** @type {PromptBuilder} */
     let promptBuilder;
     /** @type {jest.SpiedFunction<typeof fetch>} */
@@ -51,15 +98,17 @@ describe('PromptBuilder', () => {
 
     beforeEach(() => {
         logger = mockLoggerInstance();
-        // Ensure `fetch` is spied on and can be restored.
+        mockPlaceholderResolver = mockPlaceholderResolverInstance();
+        mockStandardAssembler = mockStandardElementAssemblerInstance();
+        mockPerceptionLogAssembler = mockPerceptionLogAssemblerInstance();
         fetchSpy = jest.spyOn(global, 'fetch');
     });
 
     afterEach(() => {
-        jest.restoreAllMocks(); // Restores all mocks, including fetchSpy
+        jest.restoreAllMocks();
     });
 
-    describe('Configuration Loading and Caching (#fetchAndCacheConfigurations, #ensureConfigsLoaded)', () => {
+    describe('Configuration Loading and Caching (via LLMConfigService)', () => {
         test('should load configurations from file successfully on first build call', async () => {
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
@@ -73,62 +122,108 @@ describe('PromptBuilder', () => {
                 status: 200,
                 statusText: "OK"
             }));
-            promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
 
-            await promptBuilder.build("test_config_v1", {systemPromptContent: "Hello"}); // Use configId
+            const httpProvider = new HttpConfigurationProvider({logger});
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: httpProvider,
+                configSourceIdentifier: MOCK_CONFIG_FILE_PATH
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
+
+            await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Hello"});
 
             expect(fetchSpy).toHaveBeenCalledTimes(1);
             expect(fetchSpy).toHaveBeenCalledWith(MOCK_CONFIG_FILE_PATH);
-            expect(logger.info).toHaveBeenCalledWith(expect.stringContaining(`PromptBuilder: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}`));
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(2);
-            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_1.configId)).toEqual(MOCK_CONFIG_1);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            expect(logger.info).toHaveBeenCalledWith(
+                expect.stringContaining(`LLMConfigService.#loadAndCacheConfigurationsFromSource: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}. 0 invalid configs skipped.`)
+            );
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(2);
+            expect(llmConfigService.getLlmConfigsCacheForTest().get(MOCK_CONFIG_1.configId)).toEqual(MOCK_CONFIG_1);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
         test('should handle fetch error when loading configurations', async () => {
+            const errorMessage = `Failed to fetch configuration file from ${MOCK_CONFIG_FILE_PATH}: Not Found`;
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: false,
                 status: 404,
                 statusText: "Not Found"
             }));
-            promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
+
+            const httpProvider = new HttpConfigurationProvider({logger});
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: httpProvider,
+                configSourceIdentifier: MOCK_CONFIG_FILE_PATH
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
             const result = await promptBuilder.build("any-llm-id", {});
             expect(result).toBe("");
             expect(fetchSpy).toHaveBeenCalledTimes(1);
+
             expect(logger.error).toHaveBeenCalledWith(
-                `PromptBuilder: Failed to fetch llm-configs.json from ${MOCK_CONFIG_FILE_PATH}. Status: 404 Not Found`
+                `HttpConfigurationProvider: Failed to fetch configuration from ${MOCK_CONFIG_FILE_PATH}. Status: 404 Not Found`
             );
             expect(logger.error).toHaveBeenCalledWith(
-                'PromptBuilder: Error loading or parsing llm-configs.json.',
+                `LLMConfigService.#loadAndCacheConfigurationsFromSource: Error loading or parsing configurations from ${MOCK_CONFIG_FILE_PATH}. Detail: ${errorMessage}`,
                 expect.objectContaining({
-                    path: MOCK_CONFIG_FILE_PATH,
-                    error: expect.objectContaining({message: 'Failed to fetch configuration file: Not Found'})
+                    error: expect.objectContaining({message: errorMessage})
                 })
             );
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
         test('should handle network error (fetch throws) when loading configurations', async () => {
             const networkError = new Error("Network failure");
             fetchSpy.mockRejectedValueOnce(networkError);
-            promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
+
+            const httpProvider = new HttpConfigurationProvider({logger});
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: httpProvider,
+                configSourceIdentifier: MOCK_CONFIG_FILE_PATH
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
             const result = await promptBuilder.build("any-llm-id", {});
             expect(result).toBe("");
             expect(fetchSpy).toHaveBeenCalledTimes(1);
+            // This log can come from HttpConfigurationProvider or LLMConfigService depending on how error is wrapped/rethrown
             expect(logger.error).toHaveBeenCalledWith(
-                'PromptBuilder: Error loading or parsing llm-configs.json.',
-                expect.objectContaining({path: MOCK_CONFIG_FILE_PATH, error: networkError})
+                expect.stringContaining(`Error loading or parsing configuration from ${MOCK_CONFIG_FILE_PATH}. Detail: ${networkError.message}`),
+                expect.objectContaining({error: networkError})
             );
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
 
         test('should handle malformed JSON when loading configurations', async () => {
             const syntaxError = new SyntaxError("Unexpected token");
+            // The HttpConfigurationProvider will make the detail message more specific
+            const detailErrorMessage = `Failed to parse configuration data from ${MOCK_CONFIG_FILE_PATH} as JSON: ${syntaxError.message}`;
+
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
                 json: async () => {
@@ -137,51 +232,79 @@ describe('PromptBuilder', () => {
                 status: 200,
                 statusText: "OK"
             }));
-            promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
+            const httpProvider = new HttpConfigurationProvider({logger});
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: httpProvider,
+                configSourceIdentifier: MOCK_CONFIG_FILE_PATH
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
             const result = await promptBuilder.build("any-llm-id", {});
             expect(result).toBe("");
             expect(fetchSpy).toHaveBeenCalledTimes(1);
             expect(logger.error).toHaveBeenCalledWith(
-                'PromptBuilder: Error loading or parsing llm-configs.json.',
-                expect.objectContaining({path: MOCK_CONFIG_FILE_PATH, error: syntaxError})
+                `HttpConfigurationProvider: Failed to parse JSON response from ${MOCK_CONFIG_FILE_PATH}.`,
+                expect.objectContaining({error: syntaxError.message}) // HttpConfig provider logs original error message part
             );
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            expect(logger.error).toHaveBeenCalledWith(
+                `LLMConfigService.#loadAndCacheConfigurationsFromSource: Error loading or parsing configurations from ${MOCK_CONFIG_FILE_PATH}. Detail: ${detailErrorMessage}`,
+                expect.objectContaining({
+                    error: expect.objectContaining({message: detailErrorMessage})
+                })
+            );
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
-        test('should handle non-object JSON or missing "configs" property', async () => {
+        test('should handle non-object JSON or missing "configs" property in RootLLMConfigsFile', async () => {
             const badJsonData = {"not": "the right structure"};
+            const detailErrorMessage = 'Invalid configuration data structure received from provider.';
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
                 json: async () => (badJsonData),
                 status: 200,
                 statusText: "OK"
             }));
-            promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
+            const httpProvider = new HttpConfigurationProvider({logger});
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: httpProvider,
+                configSourceIdentifier: MOCK_CONFIG_FILE_PATH
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
             const result = await promptBuilder.build("any-llm-id", {});
             expect(result).toBe("");
             expect(fetchSpy).toHaveBeenCalledTimes(1);
             expect(logger.error).toHaveBeenCalledWith(
-                'PromptBuilder: Loaded configuration data is not in the expected format. It must be an object with a "configs" property, where "configs" is an object map of configurations.',
-                {data: badJsonData}
+                'LLMConfigService.#loadAndCacheConfigurationsFromSource: Fetched data is not in the expected RootLLMConfigsFile format or "configs" map is missing/invalid.',
+                expect.objectContaining({source: MOCK_CONFIG_FILE_PATH, receivedData: badJsonData})
             );
             expect(logger.error).toHaveBeenCalledWith(
-                'PromptBuilder: Error loading or parsing llm-configs.json.',
+                `LLMConfigService.#loadAndCacheConfigurationsFromSource: Error loading or parsing configurations from ${MOCK_CONFIG_FILE_PATH}. Detail: ${detailErrorMessage}`,
                 expect.objectContaining({
-                    path: MOCK_CONFIG_FILE_PATH,
-                    error: expect.objectContaining({
-                        message: 'Configuration data must be an object with a "configs" property containing configuration objects.'
-                    })
+                    error: expect.objectContaining({message: detailErrorMessage})
                 })
             );
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
         test('should skip invalid configuration objects during file load but load valid ones', async () => {
-            const invalidConfig = {configId: "invalid_cfg"}; // Missing other required fields
+            const invalidConfig = {configId: "invalid_cfg"};
             const validConfig = MOCK_CONFIG_1;
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
@@ -189,54 +312,98 @@ describe('PromptBuilder', () => {
                     defaultConfigId: "any",
                     configs: {
                         [validConfig.configId]: validConfig,
-                        "some_key_for_invalid": invalidConfig, // The key in the map can be anything
+                        "some_key_for_invalid": invalidConfig,
                         [MOCK_CONFIG_2.configId]: MOCK_CONFIG_2,
                     }
                 }),
                 status: 200,
                 statusText: "OK"
             }));
-            promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
+
+            const httpProvider = new HttpConfigurationProvider({logger});
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: httpProvider,
+                configSourceIdentifier: MOCK_CONFIG_FILE_PATH
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
             await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Test"});
 
             expect(logger.warn).toHaveBeenCalledWith(
-                'PromptBuilder: Skipping invalid or incomplete configuration object during file load.',
-                {config: invalidConfig} // The object itself is passed in the log
+                `LLMConfigService.#loadAndCacheConfigurationsFromSource: Skipping invalid or incomplete configuration object during source load.`,
+                expect.objectContaining({configKey: "some_key_for_invalid", configData: invalidConfig})
             );
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(2);
-            expect(promptBuilder.getLlmConfigsCacheForTest().has(validConfig.configId)).toBe(true);
-            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.configId)).toBe(true);
-            // We don't expect a cache entry with key "invalid_cfg" or "some_key_for_invalid" if the object was invalid
-            expect(promptBuilder.getLlmConfigsCacheForTest().has("invalid_cfg")).toBe(false);
-            expect(logger.info).toHaveBeenCalledWith(expect.stringContaining(`PromptBuilder: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}`));
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(2);
+            expect(llmConfigService.getLlmConfigsCacheForTest().has(validConfig.configId)).toBe(true);
+            expect(llmConfigService.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.configId)).toBe(true);
+            expect(llmConfigService.getLlmConfigsCacheForTest().has("invalid_cfg")).toBe(false);
+            expect(logger.info).toHaveBeenCalledWith(
+                expect.stringContaining(`LLMConfigService.#loadAndCacheConfigurationsFromSource: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}. 1 invalid configs skipped.`)
+            );
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
 
-        test('should warn and not fetch if configFilePath is not set and no initial configs', async () => {
-            promptBuilder = new PromptBuilder({logger}); // No configFilePath, no initialConfigs
+        test('should warn and not fetch if configSourceIdentifier is not set and no initial configs', async () => {
+            const mockProvider = {fetchData: jest.fn()};
+            llmConfigService = new LLMConfigService({logger, configurationProvider: mockProvider});
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
+
             await promptBuilder.build("any-llm-id", {});
-            expect(fetchSpy).not.toHaveBeenCalled();
-            expect(logger.warn).toHaveBeenCalledWith('PromptBuilder.#ensureConfigsLoaded: No configFilePath set and no initial configurations loaded. PromptBuilder may not function correctly.');
-            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configurations available in cache. Cannot build prompt.');
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+
+            expect(mockProvider.fetchData).not.toHaveBeenCalled();
+            expect(logger.warn).toHaveBeenCalledWith('LLMConfigService.#ensureConfigsLoaded: No configSourceIdentifier set and no initial configurations were loaded. Cache is empty. Marking as loaded/attempted.');
+            expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('PromptBuilder.build: No configuration found or provided by LLMConfigService for llmId "any-llm-id"'));
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
-        test('should not attempt to load from file if initialConfigs were provided and no configFilePath', async () => {
-            promptBuilder = new PromptBuilder({logger, initialConfigs: [MOCK_CONFIG_1]});
-            // #configsLoadedOrAttempted should be true due to initialConfigs
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
-            expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('PromptBuilder initialized with 1 preloaded configurations.'));
+        test('should not attempt to load from file if initialConfigs were provided to LLMConfigService and no configSourceIdentifier', async () => {
+            const mockProvider = {fetchData: jest.fn()};
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: mockProvider,
+                initialConfigs: [MOCK_CONFIG_1]
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
-            await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Test"}); // Use configId
+            // Check initial log from constructor
+            expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('LLMConfigService: Processing 1 initial configurations.'));
+            expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('LLMConfigService: Successfully loaded 1 initial configurations into cache.'));
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+
+
+            // Clear mock calls from constructor before build
+            logger.info.mockClear();
+            logger.debug.mockClear();
+
+
+            await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Test"});
             expect(fetchSpy).not.toHaveBeenCalled();
-            // This debug log means it recognized configs were already there (from initialConfigs)
-            expect(logger.debug).toHaveBeenCalledWith('PromptBuilder.#ensureConfigsLoaded: Configurations already loaded or load attempt was made and cache is not empty.');
+            expect(mockProvider.fetchData).not.toHaveBeenCalled();
+            expect(logger.debug).toHaveBeenCalledWith('LLMConfigService.#ensureConfigsLoaded: Configurations previously loaded and cache is populated. Skipping load.');
         });
 
 
-        test('resetConfigurationCache should clear cache and reset loaded flag', async () => {
+        test('resetCache on LLMConfigService should clear its cache and reset its loaded flag', async () => {
             fetchSpy.mockResolvedValueOnce(Promise.resolve({ // For first load
                 ok: true,
                 json: async () => ({
@@ -246,91 +413,149 @@ describe('PromptBuilder', () => {
                 status: 200,
                 statusText: "OK"
             }));
-            promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
+            const httpProvider = new HttpConfigurationProvider({logger});
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: httpProvider,
+                configSourceIdentifier: MOCK_CONFIG_FILE_PATH
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
-            await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Test"}); // Loads MOCK_CONFIG_1
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Test"});
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(1);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
 
-            promptBuilder.resetConfigurationCache();
-            expect(logger.info).toHaveBeenCalledWith('PromptBuilder: Configuration cache cleared and loaded state reset.');
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
+            // Clear info logs from the initial load before calling resetCache
+            logger.info.mockClear();
 
-            // Setup fetch for the second load attempt
+            llmConfigService.resetCache();
+            expect(logger.info).toHaveBeenCalledWith('LLMConfigService: Cache cleared and loaded state reset. Configurations will be reloaded from source on next request if source is configured.');
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
+
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
                 json: async () => ({
                     defaultConfigId: MOCK_CONFIG_2.configId,
                     configs: {[MOCK_CONFIG_2.configId]: MOCK_CONFIG_2}
-                }), // Load a different config
+                }),
                 status: 200,
                 statusText: "OK"
             }));
-            await promptBuilder.build(MOCK_CONFIG_2.configId, {instructionContent: "Test"}); // Should trigger fetch again
+            await promptBuilder.build(MOCK_CONFIG_2.configId, {instructionContent: "Test"});
 
-            expect(fetchSpy).toHaveBeenCalledTimes(2); // Called once for initial load, once after reset
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
-            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.configId)).toBe(true);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            expect(fetchSpy).toHaveBeenCalledTimes(2);
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(1);
+            expect(llmConfigService.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.configId)).toBe(true);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
-        test('addOrUpdateConfigs should add new and update existing configurations', () => {
-            promptBuilder = new PromptBuilder({logger, initialConfigs: [MOCK_CONFIG_1]});
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true); // Due to initialConfigs
+        test('addOrUpdateConfigs on LLMConfigService should add new and update existing configurations', () => {
+            const mockProvider = {fetchData: jest.fn()};
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: mockProvider,
+                initialConfigs: [MOCK_CONFIG_1]
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
-            const updatedMockConfig1 = {
-                ...MOCK_CONFIG_1,
-                modelIdentifier: "new-model-id",
-                promptElements: MOCK_CONFIG_1.promptElements, // Ensure these are copied if not deeply spread
-                promptAssemblyOrder: MOCK_CONFIG_1.promptAssemblyOrder
-            };
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(1);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+
+            // Clear info logs from initial load
+            logger.info.mockClear();
+
+            const updatedMockConfig1 = {...MOCK_CONFIG_1, modelIdentifier: "new-model-id"};
             const newConfig = MOCK_CONFIG_2;
 
-            promptBuilder.addOrUpdateConfigs([updatedMockConfig1, newConfig]);
-            expect(logger.info).toHaveBeenCalledWith('PromptBuilder.addOrUpdateConfigs: Loaded 1 new, updated 1 existing configurations.');
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(2);
-            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_1.configId)?.modelIdentifier).toBe("new-model-id");
-            expect(promptBuilder.getLlmConfigsCacheForTest().get(MOCK_CONFIG_2.configId)).toEqual(newConfig);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+            llmConfigService.addOrUpdateConfigs([updatedMockConfig1, newConfig]);
+            expect(logger.info).toHaveBeenCalledWith('LLMConfigService.addOrUpdateConfigs: Processed 2 configs: 1 added, 1 updated, 0 skipped.');
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(2);
+            expect(llmConfigService.getLlmConfigsCacheForTest().get(MOCK_CONFIG_1.configId)?.modelIdentifier).toBe("new-model-id");
+            expect(llmConfigService.getLlmConfigsCacheForTest().get(MOCK_CONFIG_2.configId)).toEqual(newConfig);
         });
 
-        test('addOrUpdateConfigs should handle empty array and skip invalid configs', () => {
-            promptBuilder = new PromptBuilder({logger});
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false); // Initially false
+        test('addOrUpdateConfigs on LLMConfigService should handle empty array and skip invalid configs', () => {
+            const mockProvider = {fetchData: jest.fn()};
+            llmConfigService = new LLMConfigService({logger, configurationProvider: mockProvider});
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
 
-            promptBuilder.addOrUpdateConfigs([]);
-            // Original code does not log for (0 new, 0 updated)
-            expect(logger.info).not.toHaveBeenCalledWith(expect.stringContaining('Loaded 0 new, updated 0 existing configurations.'));
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false); // Still false as no valid configs added
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
+            logger.info.mockClear(); // Clear init logs
 
-            const invalidConfig = {configId: "no_model_id"}; // Missing modelIdentifier and other required fields
-            promptBuilder.addOrUpdateConfigs([invalidConfig, MOCK_CONFIG_1]);
-            expect(logger.warn).toHaveBeenCalledWith('PromptBuilder.addOrUpdateConfigs: Skipping invalid configuration object.', {config: invalidConfig});
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
-            expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_1.configId)).toBe(true);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true); // Becomes true after MOCK_CONFIG_1 is added
+            llmConfigService.addOrUpdateConfigs([]);
+            expect(logger.info).toHaveBeenCalledWith('LLMConfigService.addOrUpdateConfigs: No new or valid configurations to add/update from the provided array (length 0).');
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
+
+            logger.warn.mockClear(); // Clear before next call
+            logger.info.mockClear();
+
+            const invalidConfig = {configId: "no_model_id"};
+            llmConfigService.addOrUpdateConfigs([invalidConfig, MOCK_CONFIG_1]);
+            expect(logger.warn).toHaveBeenCalledWith('LLMConfigService.addOrUpdateConfigs: Skipping invalid configuration object.', {configAttempted: invalidConfig});
+            expect(logger.info).toHaveBeenCalledWith('LLMConfigService.addOrUpdateConfigs: Processed 2 configs: 1 added, 0 updated, 1 skipped.');
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(1);
+            expect(llmConfigService.getLlmConfigsCacheForTest().has(MOCK_CONFIG_1.configId)).toBe(true);
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
-        test('addOrUpdateConfigs should log if input is not an array', () => {
-            promptBuilder = new PromptBuilder({logger});
+        test('addOrUpdateConfigs on LLMConfigService should log if input is not an array', () => {
+            const mockProvider = {fetchData: jest.fn()};
+            llmConfigService = new LLMConfigService({logger, configurationProvider: mockProvider});
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
             // @ts-ignore
-            promptBuilder.addOrUpdateConfigs("not an array");
-            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.addOrUpdateConfigs: Input must be an array.');
-            expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
+            llmConfigService.addOrUpdateConfigs("not an array");
+            expect(logger.error).toHaveBeenCalledWith('LLMConfigService.addOrUpdateConfigs: Input must be an array of LLMConfig objects.');
+            expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
         });
 
-        test('build returns empty string if no configs and no filepath after attempted load', async () => {
-            promptBuilder = new PromptBuilder({logger}); // No path, no initial
+        test('build returns empty string if LLMConfigService provides no config after attempted load', async () => {
+            const mockProvider = {fetchData: jest.fn().mockResolvedValue({configs: {}})};
+            llmConfigService = new LLMConfigService({
+                logger,
+                configurationProvider: mockProvider,
+                configSourceIdentifier: "dummy-path"
+            });
+            promptBuilder = new PromptBuilder({
+                logger,
+                llmConfigService,
+                placeholderResolver: mockPlaceholderResolver,
+                standardElementAssembler: mockStandardAssembler,
+                perceptionLogAssembler: mockPerceptionLogAssembler
+            });
+
             const result = await promptBuilder.build('some-id', {someContent: 'data'});
             expect(result).toBe("");
-            expect(logger.warn).toHaveBeenCalledWith('PromptBuilder.#ensureConfigsLoaded: No configFilePath set and no initial configurations loaded. PromptBuilder may not function correctly.');
-            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configurations available in cache. Cannot build prompt.');
-            expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
+
+            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('LLMConfigService.#loadAndCacheConfigurationsFromSource: No valid configurations found or loaded from the "configs" map in dummy-path. 0 invalid configs skipped. Cache is empty.'));
+            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configuration found or provided by LLMConfigService for llmId "some-id". Cannot build prompt.');
+            expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
     });
 });
