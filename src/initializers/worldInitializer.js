@@ -11,12 +11,10 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 // --- Library Imports ---
-import _get from 'lodash/get.js'; // Assuming ES module imports for lodash
+import _get from 'lodash/get.js';
 import _set from 'lodash/set.js';
 
 // --- Constant Imports ---
-// Only POSITION_COMPONENT_ID is strictly needed here for the spatial indexing part.
-// EXITS_COMPONENT_ID is no longer specially handled here.
 import {POSITION_COMPONENT_ID} from '../constants/componentIds.js';
 
 /**
@@ -132,14 +130,14 @@ class WorldInitializer {
             let entitiesAddedToSpatialIndex = 0;
 
             for (const entity of instantiatedEntities) {
-                // Expect entity.components to be a plain JavaScript object
-                // where keys are componentTypeId and values are componentDataInstance.
-                if (typeof entity.components !== 'object' || entity.components === null) {
-                    this.#logger.error(`WorldInitializer (Pass 2): Entity ${entity.id} components property is not a valid object. Skipping reference resolution for this entity.`);
+                // Check if the entity is valid and has the methods we need from the Entity class
+                if (!entity || typeof entity.componentEntries !== 'function' || typeof entity.addComponent !== 'function' || typeof entity.getComponentData !== 'function') {
+                    this.#logger.error(`WorldInitializer (Pass 2): Entity ${entity?.id || 'Unknown ID'} is invalid or missing required component access methods. Skipping reference resolution for this entity.`);
                     continue;
                 }
 
-                for (const [componentTypeId, componentDataInstance] of Object.entries(entity.components)) {
+                // Iterate over component entries using the Entity's public API
+                for (const [componentTypeId, componentDataInstance] of entity.componentEntries()) {
                     const componentDefinition = this.#repository.getComponentDefinition(componentTypeId);
 
                     if (componentDefinition?.resolveFields && Array.isArray(componentDefinition.resolveFields)) {
@@ -250,10 +248,16 @@ class WorldInitializer {
                             if (valueChanged && newValue !== undefined) {
                                 if (dataPathIsSelf) {
                                     // The componentDataInstance itself is being replaced.
-                                    // So, update it in the parent entity.components object.
-                                    entity.components[componentTypeId] = newValue;
+                                    // Update it in the entity's internal map using its public method.
+                                    entity.addComponent(componentTypeId, newValue);
+                                    this.#logger.debug(`WorldInitializer (Pass 2): Updated component [${componentTypeId}] data directly for entity ${entity.id} via addComponent with new value.`);
                                 } else {
                                     _set(componentDataInstance, dataPath, newValue);
+                                    // This modifies the componentDataInstance obtained from the iterator.
+                                    // Since componentDataInstance is an object stored in the Entity's map,
+                                    // this modification will persist as long as the map holds references
+                                    // to these objects (which it does, as they are cloned on initial add).
+                                    this.#logger.debug(`WorldInitializer (Pass 2): Modified path '${dataPath}' in component [${componentTypeId}] for entity ${entity.id} to new value.`);
                                 }
                             }
                         }
@@ -261,7 +265,7 @@ class WorldInitializer {
                 } // End of component loop for an entity
 
                 // --- Spatial Index Population (uses the now-resolved component data) ---
-                // Assumes entity.getComponentData() correctly retrieves data from the object-based entity.components
+                // Assumes entity.getComponentData() correctly retrieves data from the Entity's internal map.
                 const positionComponentData = entity.getComponentData(POSITION_COMPONENT_ID);
                 let locationIdForSpatialIndex = null;
 
@@ -270,13 +274,11 @@ class WorldInitializer {
 
                     if (locationIdForSpatialIndex.includes(':')) {
                         this.#logger.warn(`WorldInitializer (Pass 2): Entity ${entity.id}'s position component locationId '${locationIdForSpatialIndex}' appears to be an unresolved definitionId. Spatial index might be incorrect.`);
-                        // Optionally, prevent adding to spatial index: locationIdForSpatialIndex = null;
                     }
 
                     if (locationIdForSpatialIndex) {
-                        // More robust check: ensure the locationId is a known entity instance (if your design requires locations to be entities)
                         const locationEntity = this.#entityManager.getEntityInstance(locationIdForSpatialIndex);
-                        if (locationEntity || !locationIdForSpatialIndex.includes(':')) { // Allow if it's a known instance OR doesn't look like a def ID (might be pre-set instance ID)
+                        if (locationEntity || !locationIdForSpatialIndex.includes(':')) {
                             this.#spatialIndexManager.addEntity(entity.id, locationIdForSpatialIndex);
                             entitiesAddedToSpatialIndex++;
                             this.#logger.debug(`WorldInitializer (Pass 2): Added entity ${entity.id} to spatial index at location ${locationIdForSpatialIndex}.`);
