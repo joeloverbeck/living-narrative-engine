@@ -24,52 +24,52 @@
         {
           "key": "task_definition",
           "prefix": "<task_definition>\n",
-          "suffix": "\n</task_definition>"
+          "suffix": "\n</task_definition>\n"
         },
         {
           "key": "character_persona",
           "prefix": "<character_persona>\n",
-          "suffix": "\n</character_persona>"
+          "suffix": "\n</character_persona>\n"
         },
         {
           "key": "portrayal_guidelines",
           "prefix": "<portrayal_guidelines>\n",
-          "suffix": "\n</portrayal_guidelines>"
+          "suffix": "\n</portrayal_guidelines>\n"
         },
         {
           "key": "content_policy",
           "prefix": "<content_policy>\n",
-          "suffix": "\n</content_policy>"
+          "suffix": "\n</content_policy>\n"
         },
         {
           "key": "world_context",
           "prefix": "<world_context>\n",
-          "suffix": "\n</world_context>"
+          "suffix": "\n</world_context>\n"
         },
         {
           "key": "perception_log_wrapper",
           "prefix": "<perception_log>\n",
-          "suffix": "\n</perception_log>"
+          "suffix": "\n</perception_log>\n"
         },
         {
           "key": "perception_log_entry",
           "prefix": "<entry type=\"{type}\" timestamp=\"{timestamp}\">\n",
-          "suffix": "\n</entry>"
+          "suffix": "\n</entry>\n"
         },
         {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
-          "suffix": "\n</available_actions_info>"
+          "suffix": "\n</available_actions_info>\n"
         },
         {
           "key": "user_input",
           "prefix": "<user_input>\n",
-          "suffix": "\n</user_input>"
+          "suffix": "\n</user_input>\n"
         },
         {
           "key": "final_instructions",
           "prefix": "<final_instructions>\n",
-          "suffix": "\n</final_instructions>"
+          "suffix": "\n</final_instructions>\n"
         },
         {
           "key": "assistant_response_prefix",
@@ -98,9 +98,6 @@
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "anthropic/claude-sonnet-4",
       "apiType": "openrouter",
-      "promptFrame": {
-        "system": "Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
-      },
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "My Text Adventure Game"
@@ -117,52 +114,52 @@
         {
           "key": "task_definition",
           "prefix": "<task_definition>\n",
-          "suffix": "\n</task_definition>"
+          "suffix": "\n</task_definition>\n"
         },
         {
           "key": "character_persona",
           "prefix": "<character_persona>\n",
-          "suffix": "\n</character_persona>"
+          "suffix": "\n</character_persona>\n"
         },
         {
           "key": "portrayal_guidelines",
           "prefix": "<portrayal_guidelines>\n",
-          "suffix": "\n</portrayal_guidelines>"
+          "suffix": "\n</portrayal_guidelines>\n"
         },
         {
           "key": "content_policy",
           "prefix": "<content_policy>\n",
-          "suffix": "\n</content_policy>"
+          "suffix": "\n</content_policy>\n"
         },
         {
           "key": "world_context",
           "prefix": "<world_context>\n",
-          "suffix": "\n</world_context>"
+          "suffix": "\n</world_context>\n"
         },
         {
           "key": "perception_log_wrapper",
           "prefix": "<perception_log>\n",
-          "suffix": "\n</perception_log>"
+          "suffix": "\n</perception_log>\n"
         },
         {
           "key": "perception_log_entry",
           "prefix": "<entry type=\"{type}\" timestamp=\"{timestamp}\">\n",
-          "suffix": "\n</entry>"
+          "suffix": "\n</entry>\n"
         },
         {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
-          "suffix": "\n</available_actions_info>"
+          "suffix": "\n</available_actions_info>\n"
         },
         {
           "key": "user_input",
           "prefix": "<user_input>\n",
-          "suffix": "\n</user_input>"
+          "suffix": "\n</user_input>\n"
         },
         {
           "key": "final_instructions",
           "prefix": "<final_instructions>\n",
-          "suffix": "\n</final_instructions>"
+          "suffix": "\n</final_instructions>\n"
         },
         {
           "key": "assistant_response_prefix",
@@ -191,9 +188,6 @@
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "qwen/qwen3-235b-a22b",
       "apiType": "openrouter",
-      "promptFrame": {
-        "system": "You are a helpful AI assistant for a text adventure game. Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
-      },
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "My Text Adventure Game"
@@ -209,52 +203,52 @@
         {
           "key": "task_definition",
           "prefix": "<task_definition>\n",
-          "suffix": "\n</task_definition>"
+          "suffix": "\n</task_definition>\n"
         },
         {
           "key": "character_persona",
           "prefix": "<character_persona>\n",
-          "suffix": "\n</character_persona>"
+          "suffix": "\n</character_persona>\n"
         },
         {
           "key": "portrayal_guidelines",
           "prefix": "<portrayal_guidelines>\n",
-          "suffix": "\n</portrayal_guidelines>"
+          "suffix": "\n</portrayal_guidelines>\n"
         },
         {
           "key": "content_policy",
           "prefix": "<content_policy>\n",
-          "suffix": "\n</content_policy>"
+          "suffix": "\n</content_policy>\n"
         },
         {
           "key": "world_context",
           "prefix": "<world_context>\n",
-          "suffix": "\n</world_context>"
+          "suffix": "\n</world_context>\n"
         },
         {
           "key": "perception_log_wrapper",
           "prefix": "<perception_log>\n",
-          "suffix": "\n</perception_log>"
+          "suffix": "\n</perception_log>\n"
         },
         {
           "key": "perception_log_entry",
           "prefix": "<entry type=\"{type}\" timestamp=\"{timestamp}\">\n",
-          "suffix": "\n</entry>"
+          "suffix": "\n</entry>\n"
         },
         {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
-          "suffix": "\n</available_actions_info>"
+          "suffix": "\n</available_actions_info>\n"
         },
         {
           "key": "user_input",
           "prefix": "<user_input>\n",
-          "suffix": "\n</user_input>"
+          "suffix": "\n</user_input>\n"
         },
         {
           "key": "final_instructions",
           "prefix": "<final_instructions>\n",
-          "suffix": "\n</final_instructions>"
+          "suffix": "\n</final_instructions>\n"
         },
         {
           "key": "assistant_response_prefix",
@@ -283,9 +277,6 @@
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "thedrummer/valkyrie-49b-v1",
       "apiType": "openrouter",
-      "promptFrame": {
-        "system": "You are a helpful AI assistant for a text adventure game. Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
-      },
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "My Text Adventure Game"
@@ -301,52 +292,52 @@
         {
           "key": "task_definition",
           "prefix": "<task_definition>\n",
-          "suffix": "\n</task_definition>"
+          "suffix": "\n</task_definition>\n"
         },
         {
           "key": "character_persona",
           "prefix": "<character_persona>\n",
-          "suffix": "\n</character_persona>"
+          "suffix": "\n</character_persona>\n"
         },
         {
           "key": "portrayal_guidelines",
           "prefix": "<portrayal_guidelines>\n",
-          "suffix": "\n</portrayal_guidelines>"
+          "suffix": "\n</portrayal_guidelines>\n"
         },
         {
           "key": "content_policy",
           "prefix": "<content_policy>\n",
-          "suffix": "\n</content_policy>"
+          "suffix": "\n</content_policy>\n"
         },
         {
           "key": "world_context",
           "prefix": "<world_context>\n",
-          "suffix": "\n</world_context>"
+          "suffix": "\n</world_context>\n"
         },
         {
           "key": "perception_log_wrapper",
           "prefix": "<perception_log>\n",
-          "suffix": "\n</perception_log>"
+          "suffix": "\n</perception_log>\n"
         },
         {
           "key": "perception_log_entry",
           "prefix": "<entry type=\"{type}\" timestamp=\"{timestamp}\">\n",
-          "suffix": "\n</entry>"
+          "suffix": "\n</entry>\n"
         },
         {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
-          "suffix": "\n</available_actions_info>"
+          "suffix": "\n</available_actions_info>\n"
         },
         {
           "key": "user_input",
           "prefix": "<user_input>\n",
-          "suffix": "\n</user_input>"
+          "suffix": "\n</user_input>\n"
         },
         {
           "key": "final_instructions",
           "prefix": "<final_instructions>\n",
-          "suffix": "\n</final_instructions>"
+          "suffix": "\n</final_instructions>\n"
         },
         {
           "key": "assistant_response_prefix",
@@ -375,9 +366,6 @@
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "thedrummer/anubis-pro-105b-v1",
       "apiType": "openrouter",
-      "promptFrame": {
-        "system": "Your goal is to determine the character's next action and what they would say. Respond in JSON format according to the provided schema."
-      },
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "My Text Adventure Game"
@@ -393,52 +381,52 @@
         {
           "key": "task_definition",
           "prefix": "<task_definition>\n",
-          "suffix": "\n</task_definition>"
+          "suffix": "\n</task_definition>\n"
         },
         {
           "key": "character_persona",
           "prefix": "<character_persona>\n",
-          "suffix": "\n</character_persona>"
+          "suffix": "\n</character_persona>\n"
         },
         {
           "key": "portrayal_guidelines",
           "prefix": "<portrayal_guidelines>\n",
-          "suffix": "\n</portrayal_guidelines>"
+          "suffix": "\n</portrayal_guidelines>\n"
         },
         {
           "key": "content_policy",
           "prefix": "<content_policy>\n",
-          "suffix": "\n</content_policy>"
+          "suffix": "\n</content_policy>\n"
         },
         {
           "key": "world_context",
           "prefix": "<world_context>\n",
-          "suffix": "\n</world_context>"
+          "suffix": "\n</world_context>\n"
         },
         {
           "key": "perception_log_wrapper",
           "prefix": "<perception_log>\n",
-          "suffix": "\n</perception_log>"
+          "suffix": "\n</perception_log>\n"
         },
         {
           "key": "perception_log_entry",
           "prefix": "<entry type=\"{type}\" timestamp=\"{timestamp}\">\n",
-          "suffix": "\n</entry>"
+          "suffix": "\n</entry>\n"
         },
         {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
-          "suffix": "\n</available_actions_info>"
+          "suffix": "\n</available_actions_info>\n"
         },
         {
           "key": "user_input",
           "prefix": "<user_input>\n",
-          "suffix": "\n</user_input>"
+          "suffix": "\n</user_input>\n"
         },
         {
           "key": "final_instructions",
           "prefix": "<final_instructions>\n",
-          "suffix": "\n</final_instructions>"
+          "suffix": "\n</final_instructions>\n"
         },
         {
           "key": "assistant_response_prefix",

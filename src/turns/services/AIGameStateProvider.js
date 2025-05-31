@@ -292,10 +292,10 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                 if (perceptionData && Array.isArray(perceptionData.logEntries)) {
                     perceptionLogDto = perceptionData.logEntries.map(entry => ({
                         // --- TICKET AIPF-REFACTOR-009: Use constant for default event description ---
-                        description: entry.descriptionText || DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW,
+                        descriptionText: entry.descriptionText || DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW,
                         // --- TICKET AIPF-REFACTOR-009 END ---
                         timestamp: entry.timestamp || Date.now(),
-                        type: entry.perceptionType || "unknown", // "unknown" type can remain as is, or be a constant if needed
+                        perceptionType: entry.perceptionType || "unknown", // "unknown" type can remain as is, or be a constant if needed
                     }));
                     logger.debug(`AIGameStateProvider: Retrieved ${perceptionLogDto.length} perception log entries for actor ${actor.id}.`);
                 } else {

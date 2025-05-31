@@ -35,8 +35,6 @@ import {
  * @property {Array<{key: string, prefix: string, suffix: string}>} promptElements - Defines named prompt parts.
  * @property {string[]} promptAssemblyOrder - Ordered list of 'promptElements' keys.
  * @property {number} [contextTokenLimit] - Optional: Maximum context tokens for the model.
- * @property {object} [promptFrame] - Optional: Defines a framing structure for the prompt.
- * @property {string} [promptFrame.system] - A system-level message for the LLM.
  */
 
 /**

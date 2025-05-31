@@ -192,17 +192,6 @@
           "type": "integer",
           "minimum": 0,
           "description": "(Optional) The maximum number of tokens the model can handle in its context."
-        },
-        "promptFrame": {
-          "type": "object",
-          "description": "(Optional) Defines a framing structure for the prompt, e.g., a system message that wraps the main content.",
-          "properties": {
-            "system": {
-              "type": "string",
-              "description": "A system-level message or instruction for the LLM."
-            }
-          },
-          "additionalProperties": false
         }
       },
       "required": [

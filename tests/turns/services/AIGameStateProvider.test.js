@@ -537,8 +537,8 @@ describe('AIGameStateProvider', () => {
                 mockActor.setComponentData(PERCEPTION_LOG_COMPONENT_ID, perceptionData);
                 const gameState = await provider.buildGameState(mockActor, turnContext, logger);
                 expect(gameState.perceptionLog).toEqual([
-                    {description: 'Heard a noise.', timestamp: 12345, type: 'sound'},
-                    {description: 'Saw something.', timestamp: frozenTime, type: 'unknown'},
+                    {descriptionText: 'Heard a noise.', timestamp: 12345, perceptionType: 'sound'},
+                    {descriptionText: 'Saw something.', timestamp: frozenTime, perceptionType: 'unknown'},
                 ]);
             });
 

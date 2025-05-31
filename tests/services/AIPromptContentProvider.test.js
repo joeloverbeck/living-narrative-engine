@@ -13,6 +13,8 @@ import {jest, describe, beforeEach, test, expect, afterEach} from '@jest/globals
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../src/turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
 /** @typedef {import('../../src/types/promptData.js').PromptData} PromptData */
+/** @typedef {import('../../src/services/AIPromptContentProvider.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
+
 
 /**
  * @returns {jest.Mocked<ILogger>}
@@ -150,27 +152,52 @@ describe('AIPromptContentProvider', () => {
         test('should correctly assemble PromptData with all fields from a full gameStateDto', async () => {
             const testCharName = 'Test Character';
             const testUserInput = 'What is happening?';
-            const testPerception = [{description: 'A strange noise', timestamp: 1, type: 'sight'}]; // Made type a valid AIPerceptionLogEntryDTO
             const testLocationName = 'The Eerie Sanctum';
+
+            // --- MODIFICATION FOR TEST ---
+            // 1. Use field names expected by the provider for raw log entries
+            /** @type {RawPerceptionLogEntry[]} */
+            const testRawPerceptionInput = [{
+                descriptionText: 'A strange noise', // Use descriptionText
+                timestamp: 1,                       // Timestamp is fine
+                perceptionType: 'sight',            // Use perceptionType
+                eventId: 'evt-001',                 // Add other fields to test passthrough
+                actorId: 'act-002',
+                targetId: 'tgt-003'
+            }];
+            // --- END MODIFICATION ---
 
             /** @type {AIGameStateDTO} */
             const fullDto = {
                 actorState: {id: 'actorTest'},
                 actorPromptData: {name: testCharName, description: 'A curious adventurer.'},
                 currentUserInput: testUserInput,
-                perceptionLog: testPerception,
+                perceptionLog: testRawPerceptionInput, // Use the modified raw input
                 currentLocation: {
                     name: testLocationName,
                     description: 'A place of mystery.',
                     exits: [],
                     characters: []
-                }, // Added exits and characters for AILocationSummaryDTO
+                },
                 availableActions: [],
             };
             validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null});
 
 
             const promptData = await provider.getPromptData(fullDto, mockLoggerInstance);
+
+            // --- MODIFICATION FOR TEST ---
+            // 2. Define the expected structure of the mapped perception log array
+            const expectedMappedPerceptionLog = [{
+                content: 'A strange noise',      // Mapped from descriptionText
+                timestamp: 1,
+                type: 'sight',                   // Mapped from perceptionType
+                eventId: 'evt-001',              // Passed through
+                actorId: 'act-002',              // Passed through
+                targetId: 'tgt-003'              // Passed through
+            }];
+            // --- END MODIFICATION ---
+
 
             expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
             expect(promptData).toEqual({
@@ -182,7 +209,7 @@ describe('AIPromptContentProvider', () => {
                 availableActionsInfoContent: MOCK_ACTIONS_INFO,
                 userInputContent: testUserInput,
                 finalInstructionsContent: MOCK_FINAL_INSTR,
-                perceptionLogArray: testPerception,
+                perceptionLogArray: expectedMappedPerceptionLog, // Assert against the transformed structure
                 characterName: testCharName,
                 locationName: testLocationName,
             });
@@ -201,7 +228,7 @@ describe('AIPromptContentProvider', () => {
                 actorPromptData: {description: 'Nameless one'},
                 currentUserInput: "Input",
                 perceptionLog: [],
-                currentLocation: {name: "Someplace", description: '', exits: [], characters: []}, // Added missing fields for AILocationSummaryDTO
+                currentLocation: {name: "Someplace", description: '', exits: [], characters: []},
             };
             validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null});
 
@@ -215,8 +242,6 @@ describe('AIPromptContentProvider', () => {
             const dtoNullInput = {actorState: {}, actorPromptData: {name: 'Char'}, currentUserInput: null};
             const dtoUndefinedInput = {actorState: {}, actorPromptData: {name: 'Char'}, currentUserInput: undefined};
 
-            // Reset the general mock for validateGameStateForPrompting to ensure it's fresh for each call if needed,
-            // or rely on the beforeEach setup if it's sufficient.
             validateGameStateForPromptingSpy.mockReturnValue({isValid: true, errorContent: null});
 
             let promptData = await provider.getPromptData(dtoNullInput, mockLoggerInstance);
@@ -249,7 +274,7 @@ describe('AIPromptContentProvider', () => {
             const dtoLocationNoName = {
                 actorState: {},
                 actorPromptData: {name: 'Char'},
-                currentLocation: {description: 'A place with no name.', name: undefined, exits: [], characters: []} // Ensure 'name' is explicitly undefined for test
+                currentLocation: {description: 'A place with no name.', name: undefined, exits: [], characters: []}
             };
             validateGameStateForPromptingSpy.mockReturnValue({isValid: true, errorContent: null});
 
@@ -269,8 +294,8 @@ describe('AIPromptContentProvider', () => {
             const dummyDto = {actorState: {}, actorPromptData: {name: 'Test'}};
             const internalErrorMsg = "Internal persona generation failed";
 
-            validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null}); // Validation passes
-            getCharacterPersonaContentSpy.mockImplementationOnce(() => { // But a subsequent getter fails
+            validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null});
+            getCharacterPersonaContentSpy.mockImplementationOnce(() => {
                 throw new Error(internalErrorMsg);
             });
 
@@ -286,21 +311,11 @@ describe('AIPromptContentProvider', () => {
         });
     });
 
-    // New describe block for validateGameStateForPrompting
     describe('validateGameStateForPrompting', () => {
-        // Restore default mock for other spies if they were changed in getPromptData tests.
-        // This is generally handled by afterEach -> jest.restoreAllMocks(), but good to be mindful.
-
         beforeEach(() => {
-            // We are testing validateGameStateForPrompting directly, so we don't want to mock it.
-            // We need to restore its original implementation for these specific tests.
             if (validateGameStateForPromptingSpy) {
                 validateGameStateForPromptingSpy.mockRestore();
             }
-            // We might still want to spy on it to check if logger is called, but without changing its behavior for these tests.
-            // Or, we can re-spy without mockReturnValue to observe calls.
-            // For simplicity, let's call the actual method and verify logger calls.
-            // If we need to verify its return for various inputs, direct calls are fine.
         });
 
         test('should return isValid: false and specific error if gameStateDto is null', () => {
@@ -310,19 +325,19 @@ describe('AIPromptContentProvider', () => {
         });
 
         test('should return isValid: true but log error if actorState is missing (current logic)', () => {
-            const gameState = {actorPromptData: {name: "Test"}}; // Missing actorState
-            // @ts-ignore to allow testing incomplete DTO
+            const gameState = {actorPromptData: {name: "Test"}};
+            // @ts-ignore
             const result = provider.validateGameStateForPrompting(gameState, mockLoggerInstance);
-            expect(result.isValid).toBe(true); // Current logic does not make this a critical failure for isValid
+            expect(result.isValid).toBe(true);
             expect(result.errorContent).toBeNull();
             expect(mockLoggerInstance.error).toHaveBeenCalledWith("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly.");
         });
 
         test('should return isValid: true but log warning if actorPromptData is missing (current logic)', () => {
-            const gameState = {actorState: {id: "test"}}; // Missing actorPromptData
-            // @ts-ignore to allow testing incomplete DTO
+            const gameState = {actorState: {id: "test"}};
+            // @ts-ignore
             const result = provider.validateGameStateForPrompting(gameState, mockLoggerInstance);
-            expect(result.isValid).toBe(true); // Current logic does not make this a critical failure for isValid
+            expect(result.isValid).toBe(true);
             expect(result.errorContent).toBeNull();
             expect(mockLoggerInstance.warn).toHaveBeenCalledWith("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks.");
         });

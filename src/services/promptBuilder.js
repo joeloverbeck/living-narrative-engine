@@ -260,12 +260,10 @@ export class PromptBuilder extends IPromptBuilder {
             this.#logger.debug('PromptBuilder.#ensureConfigsLoaded: Configurations already loaded or load attempt was made and cache is not empty.');
             return;
         }
-        // If a load was attempted from file and cache is empty, don't re-attempt unless reset.
         if (this.#configsLoadedOrAttempted && this.#llmConfigsCache.size === 0 && this.#configFilePath) {
             this.#logger.debug('PromptBuilder.#ensureConfigsLoaded: Previous load attempt from file resulted in an empty cache. Not re-attempting automatically.');
             return;
         }
-
 
         if (!this.#configsLoadedOrAttempted) {
             if (this.#configFilePath) {
@@ -304,7 +302,6 @@ export class PromptBuilder extends IPromptBuilder {
         }
 
         const selectedConfig = this._findConfiguration(llmId);
-
 
         if (!selectedConfig) {
             this.#logger.error(`PromptBuilder.build: No configuration found for llmId "${llmId}" (searched by configId and modelIdentifier patterns). Cannot build prompt.`);
@@ -345,64 +342,72 @@ export class PromptBuilder extends IPromptBuilder {
 
             const resolvedPrefix = this.#resolvePlaceholders(elementConfig.prefix || "", promptData);
             const resolvedSuffix = this.#resolvePlaceholders(elementConfig.suffix || "", promptData);
+            let currentElementOutput = "";
 
             if (key === 'perception_log_wrapper') {
                 const perceptionLogArray = promptData.perceptionLogArray;
-
                 if (perceptionLogArray && Array.isArray(perceptionLogArray) && perceptionLogArray.length > 0) {
                     let assembledLogEntries = "";
                     const perceptionLogEntryConfig = promptElementsMap.get('perception_log_entry');
 
                     if (!perceptionLogEntryConfig) {
-                        this.#logger.warn(`PromptBuilder.build: Missing 'perception_log_entry' config for perception log in configId "${selectedConfig.configId}". Cannot format entries.`);
+                        this.#logger.warn(`PromptBuilder.build: Missing 'perception_log_entry' config for perception log in configId "${selectedConfig.configId}". Entries will be empty.`);
                     } else {
                         for (const entry of perceptionLogArray) {
                             if (typeof entry !== 'object' || entry === null) {
                                 this.#logger.warn(`PromptBuilder.build: Invalid perception log entry. Skipping.`, {entry});
                                 continue;
                             }
+
+                            // Create a shallow copy of the entry for placeholder resolution,
+                            // and remove the timestamp property to prevent it from being rendered.
+                            const entryForResolution = {...entry};
+                            delete entryForResolution.timestamp; // MODIFICATION HERE
+
                             const entryContent = (entry.content !== null && entry.content !== undefined) ? String(entry.content) : '';
-                            const entryPrefixInternal = this.#resolvePlaceholders(perceptionLogEntryConfig.prefix || "", entry, promptData);
-                            const entrySuffixInternal = this.#resolvePlaceholders(perceptionLogEntryConfig.suffix || "", entry, promptData);
+                            // Use entryForResolution for resolving placeholders in prefix/suffix
+                            const entryPrefixInternal = this.#resolvePlaceholders(perceptionLogEntryConfig.prefix || "", entryForResolution, promptData);
+                            const entrySuffixInternal = this.#resolvePlaceholders(perceptionLogEntryConfig.suffix || "", entryForResolution, promptData);
                             assembledLogEntries += `${entryPrefixInternal}${entryContent}${entrySuffixInternal}`;
                         }
                     }
 
-                    finalPromptString += `${resolvedPrefix}${assembledLogEntries}${resolvedSuffix}`;
+                    currentElementOutput = `${resolvedPrefix}${assembledLogEntries}${resolvedSuffix}`;
 
                     if (assembledLogEntries === "" && !perceptionLogEntryConfig) {
                         this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added. Entries were not formatted due to missing 'perception_log_entry' config.`);
                     } else if (assembledLogEntries === "" && perceptionLogEntryConfig) {
-                        this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added, but all processed log entries resulted in empty strings.`);
+                        this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added, but all processed log entries resulted in empty strings (or timestamps were removed).`);
                     } else if (assembledLogEntries !== "") {
                         this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added with formatted entries.`);
                     }
                 } else {
                     this.#logger.debug(`PromptBuilder.build: Perception log array for '${key}' missing or empty in PromptData. Skipping wrapper element.`);
                 }
-                continue;
+            } else { // Not 'perception_log_wrapper'
+                const camelCaseKey = this.#snakeToCamel(key);
+                const contentKeyInPromptData = `${camelCaseKey}Content`;
+                const rawContent = promptData[contentKeyInPromptData];
+                let centralContentString = "";
+
+                if (rawContent === null || rawContent === undefined) {
+                    centralContentString = "";
+                    this.#logger.debug(`PromptBuilder.build: Content for '${key}' (from '${contentKeyInPromptData}') is null or undefined. Treating as empty string.`);
+                } else if (typeof rawContent === 'string') {
+                    centralContentString = rawContent;
+                } else {
+                    this.#logger.warn(`PromptBuilder.build: Content for '${key}' (from '${contentKeyInPromptData}') is not a string, null, or undefined. It is of type '${typeof rawContent}'. Skipping this entire element.`);
+                    continue; // Skip to next key in promptAssemblyOrder
+                }
+
+                if (resolvedPrefix !== "" || centralContentString !== "" || resolvedSuffix !== "") {
+                    currentElementOutput = `${resolvedPrefix}${centralContentString}${resolvedSuffix}`;
+                } else {
+                    this.#logger.debug(`PromptBuilder.build: Element '${key}' for config '${selectedConfig.configId}' is entirely empty (prefix, content, suffix). Output for this element is empty.`);
+                }
             }
 
-            const camelCaseKey = this.#snakeToCamel(key);
-            const contentKeyInPromptData = `${camelCaseKey}Content`;
-            const rawContent = promptData[contentKeyInPromptData];
-            let centralContentString = "";
-
-            if (rawContent === null || rawContent === undefined) {
-                centralContentString = "";
-                this.#logger.debug(`PromptBuilder.build: Content for '${key}' (from '${contentKeyInPromptData}') is null or undefined. Treating as empty string.`);
-            } else if (typeof rawContent === 'string') {
-                centralContentString = rawContent;
-            } else {
-                this.#logger.warn(`PromptBuilder.build: Content for '${key}' (from '${contentKeyInPromptData}') is not a string, null, or undefined. It is of type '${typeof rawContent}'. Skipping this element.`);
-                continue;
-            }
-
-            if (resolvedPrefix !== "" || centralContentString !== "" || resolvedSuffix !== "") {
-                finalPromptString += `${resolvedPrefix}${centralContentString}${resolvedSuffix}`;
-            } else {
-                this.#logger.debug(`PromptBuilder.build: Element '${key}' for config '${selectedConfig.configId}' is entirely empty (prefix, content, suffix). Skipping.`);
-            }
+            finalPromptString += currentElementOutput; // Direct concatenation
         }
 
         this.#logger.info(`PromptBuilder.build: Successfully assembled prompt for llmId: ${llmId} using config ${selectedConfig.configId}. Length: ${finalPromptString.length}`);

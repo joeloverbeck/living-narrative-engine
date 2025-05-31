@@ -1,4 +1,4 @@
-// src/llms/strategies/base/BaseLLMStrategy.js
+// src/llms/strategies/base/baseLLMStrategy.js
 // --- FILE START ---
 
 // Assuming ILLMStrategy is a class that can be extended, located at:
@@ -84,12 +84,11 @@ export class BaseLLMStrategy extends ILLMStrategyBase {
      *
      * @protected
      * @param {string} gameSummary - The detailed textual representation of the game state.
-     * @param {object | string | undefined} promptFrame - The promptFrame object from the LLM configuration.
      * @param {LLMModelConfig} llmConfig - The full LLM configuration.
      * @returns {object} An object containing either a `messages` array or a `prompt` string.
      * @throws {Error} If the method is not implemented by a subclass.
      */
-    _constructPromptPayload(gameSummary, promptFrame, llmConfig) {
+    _constructPromptPayload(gameSummary, llmConfig) {
         this.logger.error("BaseLLMStrategy._constructPromptPayload: Method not implemented. Subclasses must override this.");
         throw new Error("BaseLLMStrategy._constructPromptPayload: Method not implemented.");
     }

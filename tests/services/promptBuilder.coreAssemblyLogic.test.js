@@ -136,7 +136,7 @@ describe('PromptBuilder', () => {
 
             // Check for the specific warning about the headerContent type
             expect(logger.warn).toHaveBeenCalledWith(
-                "PromptBuilder.build: Content for 'header' (from 'headerContent') is not a string, null, or undefined. It is of type 'object'. Skipping this element."
+                "PromptBuilder.build: Content for 'header' (from 'headerContent') is not a string, null, or undefined. It is of type 'object'. Skipping this entire element."
             );
         });
 
