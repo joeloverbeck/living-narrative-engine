@@ -18,7 +18,7 @@
       },
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "My Text Adventure Game"
+        "X-Title": "Living Narrative Engine"
       },
       "promptElements": [
         {
@@ -100,7 +100,7 @@
       "apiType": "openrouter",
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "My Text Adventure Game"
+        "X-Title": "Living Narrative Engine"
       },
       "contextTokenLimit": 200000,
       "jsonOutputStrategy": {
@@ -190,7 +190,7 @@
       "apiType": "openrouter",
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "My Text Adventure Game"
+        "X-Title": "Living Narrative Engine"
       },
       "jsonOutputStrategy": {
         "method": "openrouter_json_schema",
@@ -279,7 +279,7 @@
       "apiType": "openrouter",
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "My Text Adventure Game"
+        "X-Title": "Living Narrative Engine"
       },
       "jsonOutputStrategy": {
         "method": "openrouter_json_schema",
@@ -368,7 +368,7 @@
       "apiType": "openrouter",
       "providerSpecificHeaders": {
         "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "My Text Adventure Game"
+        "X-Title": "Living Narrative Engine"
       },
       "jsonOutputStrategy": {
         "method": "openrouter_json_schema",

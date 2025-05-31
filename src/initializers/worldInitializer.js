@@ -132,15 +132,14 @@ class WorldInitializer {
             let entitiesAddedToSpatialIndex = 0;
 
             for (const entity of instantiatedEntities) {
-                // entity.components is Map<componentTypeId, componentDataInstance>
-                // It's iterable via .entries() or directly if Entity makes it so.
-                // Let's assume entity.components.entries() is available and entity.components is the Map instance.
-                if (!(entity.components instanceof Map)) {
-                    this.#logger.error(`WorldInitializer (Pass 2): Entity ${entity.id} components property is not a Map. Skipping reference resolution for this entity.`);
+                // Expect entity.components to be a plain JavaScript object
+                // where keys are componentTypeId and values are componentDataInstance.
+                if (typeof entity.components !== 'object' || entity.components === null) {
+                    this.#logger.error(`WorldInitializer (Pass 2): Entity ${entity.id} components property is not a valid object. Skipping reference resolution for this entity.`);
                     continue;
                 }
 
-                for (const [componentTypeId, componentDataInstance] of entity.components.entries()) {
+                for (const [componentTypeId, componentDataInstance] of Object.entries(entity.components)) {
                     const componentDefinition = this.#repository.getComponentDefinition(componentTypeId);
 
                     if (componentDefinition?.resolveFields && Array.isArray(componentDefinition.resolveFields)) {
@@ -169,7 +168,6 @@ class WorldInitializer {
                                 continue; // Value at path does not exist, nothing to resolve
                             }
 
-
                             switch (resolutionStrategy.type) {
                                 case "direct":
                                     if (typeof currentValue === 'string' && currentValue.includes(':')) {
@@ -197,7 +195,7 @@ class WorldInitializer {
                                                         this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}] for entity ${entity.id}: '${defId}' -> '${targetInstance.id}'.`);
                                                         return targetInstance.id;
                                                     }
-                                                    return targetInstance.id;
+                                                    return targetInstance.id; // Return even if same, for consistency if array is rebuilt
                                                 } else {
                                                     this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}] definitionId '${defId}' for entity ${entity.id}.`);
                                                     return defId;
@@ -251,7 +249,9 @@ class WorldInitializer {
 
                             if (valueChanged && newValue !== undefined) {
                                 if (dataPathIsSelf) {
-                                    entity.components.set(componentTypeId, newValue);
+                                    // The componentDataInstance itself is being replaced.
+                                    // So, update it in the parent entity.components object.
+                                    entity.components[componentTypeId] = newValue;
                                 } else {
                                     _set(componentDataInstance, dataPath, newValue);
                                 }
@@ -261,6 +261,7 @@ class WorldInitializer {
                 } // End of component loop for an entity
 
                 // --- Spatial Index Population (uses the now-resolved component data) ---
+                // Assumes entity.getComponentData() correctly retrieves data from the object-based entity.components
                 const positionComponentData = entity.getComponentData(POSITION_COMPONENT_ID);
                 let locationIdForSpatialIndex = null;
 

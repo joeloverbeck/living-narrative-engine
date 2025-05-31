@@ -17,21 +17,27 @@ describe('WorldInitializer', () => {
 
     // Updated createMockEntityInstance
     const createMockEntityInstance = (instanceId, definitionId, componentsData = {}) => {
-        const componentsMap = new Map();
+        const componentsObj = {}; // Changed from Map to Object
         for (const [type, data] of Object.entries(componentsData)) {
-            componentsMap.set(type, JSON.parse(JSON.stringify(data))); // Deep clone for isolation
+            componentsObj[type] = JSON.parse(JSON.stringify(data)); // Deep clone for isolation
         }
 
-        return {
+        const mockInstance = {
             id: instanceId,
             definitionId: definitionId,
-            components: componentsMap, // Crucial for the new WorldInitializer
+            components: componentsObj, // Now a plain object
             getComponentData: jest.fn((componentTypeId) => {
-                const data = componentsMap.get(componentTypeId);
+                const data = componentsObj[componentTypeId]; // Accessing object property
                 // Return a clone if the component data is an object/array to mimic real behavior
                 return data ? JSON.parse(JSON.stringify(data)) : undefined;
             }),
+            // Helper for tests to directly modify component data if needed, simulating external changes
+            // or for setting up pre-resolved states if WorldInitializer wasn't the one doing it.
+            _setComponentDataDirectly: (type, data) => { // Test-only helper if needed
+                componentsObj[type] = data;
+            }
         };
+        return mockInstance;
     };
 
     beforeEach(() => {
@@ -45,7 +51,6 @@ describe('WorldInitializer', () => {
         mockWorldContext = {};
         mockGameDataRepository = {
             getAllEntityDefinitions: jest.fn(),
-            // Mock getComponentDefinition will be set up in relevant describe/beforeEach blocks
             getComponentDefinition: jest.fn(),
         };
         mockValidatedEventDispatcher = {
@@ -109,9 +114,7 @@ describe('WorldInitializer', () => {
                 spatialIndexManager: mockSpatialIndexManager,
             });
 
-            // Setup default mock for getComponentDefinition to avoid undefined errors if called unexpectedly
             mockGameDataRepository.getComponentDefinition.mockImplementation(componentTypeId => {
-                // Default to no resolveFields if not one of the specifically mocked ones below
                 return {id: componentTypeId, resolveFields: []};
             });
         });
@@ -154,7 +157,6 @@ describe('WorldInitializer', () => {
 
 
             beforeEach(() => {
-                // Mock component definitions with resolveFields
                 mockGameDataRepository.getComponentDefinition.mockImplementation(componentTypeId => {
                     if (componentTypeId === POSITION_COMPONENT_ID) {
                         return {
@@ -169,38 +171,37 @@ describe('WorldInitializer', () => {
                         return {
                             id: EXITS_COMPONENT_ID,
                             resolveFields: [{
-                                dataPathIsSelf: true,
+                                dataPathIsSelf: true, // The component data itself is an array of objects
                                 resolutionStrategy: {type: "arrayOfObjects", idField: "target"}
                             }]
                         };
                     }
-                    return {id: componentTypeId, resolveFields: []}; // Default for other components
+                    return {id: componentTypeId, resolveFields: []};
                 });
 
                 originalLocationPositionComponentData = {locationId: 'def:outer_space'};
                 originalLocationExitsComponentData = [
                     {direction: 'north', target: 'def:target_room'},
-                    {direction: 'south', target: 'uuid-already-instance'}, // Already an instance ID
-                    {direction: 'east', target: 'def:unresolved_room'},    // Will fail to resolve
-                    {direction: 'west', target: ''},                       // Empty target
-                    {direction: 'up', target: null},                     // Null target
-                    {direction: 'down', target: 'def:another_target'}      // Another valid def ID
+                    {direction: 'south', target: 'uuid-already-instance'},
+                    {direction: 'east', target: 'def:unresolved_room'},
+                    {direction: 'west', target: ''},
+                    {direction: 'up', target: null},
+                    {direction: 'down', target: 'def:another_target'}
                 ];
 
                 locationDef = {
                     id: 'def:current_room',
                     components: {
-                        [POSITION_COMPONENT_ID]: originalLocationPositionComponentData,
-                        [EXITS_COMPONENT_ID]: originalLocationExitsComponentData
+                        [POSITION_COMPONENT_ID]: {...originalLocationPositionComponentData}, // Clone
+                        [EXITS_COMPONENT_ID]: JSON.parse(JSON.stringify(originalLocationExitsComponentData)) // Deep Clone
                     }
                 };
-                // Instance is created using a deep clone of definition components for its map
                 locationInstance = createMockEntityInstance('uuid-current-room', 'def:current_room', locationDef.components);
 
                 originalCharacterPositionComponentData = {locationId: 'def:current_room'};
                 characterDef = {
                     id: 'def:player',
-                    components: {[POSITION_COMPONENT_ID]: originalCharacterPositionComponentData}
+                    components: {[POSITION_COMPONENT_ID]: {...originalCharacterPositionComponentData}} // Clone
                 };
                 characterInstance = createMockEntityInstance('uuid-player', 'def:player', characterDef.components);
 
@@ -212,32 +213,30 @@ describe('WorldInitializer', () => {
                 mockEntityManager.getPrimaryInstanceByDefinitionId
                     .mockImplementation((defId) => {
                         if (defId === 'def:target_room') return targetRoomInstance;
-                        if (defId === 'def:current_room') return locationInstance; // player is in current_room
-                        if (defId === 'def:outer_space') return outerSpaceInstance; // current_room is in outer_space
+                        if (defId === 'def:current_room') return locationInstance;
+                        if (defId === 'def:outer_space') return outerSpaceInstance;
                         if (defId === 'def:another_target') return anotherTargetInstance;
-                        // 'def:unresolved_room' will return undefined
                         return undefined;
                     });
 
                 mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([locationDef, characterDef]);
                 mockEntityManager.createEntityInstance
                     .mockReset()
-                    .mockReturnValueOnce(locationInstance)
-                    .mockReturnValueOnce(characterInstance);
+                    .mockReturnValueOnce(locationInstance) // For def:current_room
+                    .mockReturnValueOnce(characterInstance);  // For def:player
             });
 
             it('should resolve position.locationId and update component data', async () => {
                 await worldInitializer.initializeWorldEntities();
 
-                // Access the component data from the instance's map
-                const charPosData = characterInstance.components.get(POSITION_COMPONENT_ID);
+                const charPosData = characterInstance.getComponentData(POSITION_COMPONENT_ID);
                 expect(charPosData.locationId).toBe('uuid-current-room');
                 expect(mockLogger.debug).toHaveBeenCalledWith(
                     `WorldInitializer (Pass 2): Resolved [${POSITION_COMPONENT_ID}]@'locationId' for entity uuid-player: 'def:current_room' -> 'uuid-current-room'.`
                 );
                 expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledWith('uuid-player', 'uuid-current-room');
 
-                const locPosData = locationInstance.components.get(POSITION_COMPONENT_ID);
+                const locPosData = locationInstance.getComponentData(POSITION_COMPONENT_ID);
                 expect(locPosData.locationId).toBe('uuid-outer-space');
                 expect(mockLogger.debug).toHaveBeenCalledWith(
                     `WorldInitializer (Pass 2): Resolved [${POSITION_COMPONENT_ID}]@'locationId' for entity uuid-current-room: 'def:outer_space' -> 'uuid-outer-space'.`
@@ -247,7 +246,7 @@ describe('WorldInitializer', () => {
 
             it('should resolve exitData.target for core:exits and update component data', async () => {
                 await worldInitializer.initializeWorldEntities();
-                const processedExits = locationInstance.components.get(EXITS_COMPONENT_ID);
+                const processedExits = locationInstance.getComponentData(EXITS_COMPONENT_ID);
 
                 expect(processedExits[0].target).toBe('uuid-target-room');
                 expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -261,18 +260,16 @@ describe('WorldInitializer', () => {
 
             it('should keep exitData.target as is if already an instance ID (no colon)', async () => {
                 await worldInitializer.initializeWorldEntities();
-                const processedExits = locationInstance.components.get(EXITS_COMPONENT_ID);
+                const processedExits = locationInstance.getComponentData(EXITS_COMPONENT_ID);
                 expect(processedExits[1].target).toBe('uuid-already-instance');
-                // The new generic resolver doesn't log a specific "already an instance" debug message,
-                // it simply doesn't attempt to resolve if there's no ':'. We verify no error/warning for this specific exit.
                 const relevantErrorOrWarnLogs = mockLogger.warn.mock.calls.filter(call => call[0].includes("'uuid-already-instance'"));
                 expect(relevantErrorOrWarnLogs.length).toBe(0);
             });
 
             it('should keep exitData.target as is and warn if definitionId cannot be resolved', async () => {
                 await worldInitializer.initializeWorldEntities();
-                const processedExits = locationInstance.components.get(EXITS_COMPONENT_ID);
-                expect(processedExits[2].target).toBe('def:unresolved_room'); // Remains original
+                const processedExits = locationInstance.getComponentData(EXITS_COMPONENT_ID);
+                expect(processedExits[2].target).toBe('def:unresolved_room');
                 expect(mockLogger.warn).toHaveBeenCalledWith(
                     `WorldInitializer (Pass 2): Could not resolve [${EXITS_COMPONENT_ID}]@'(self)'[2].target definitionId 'def:unresolved_room' for entity uuid-current-room.`
                 );
@@ -280,20 +277,13 @@ describe('WorldInitializer', () => {
 
             it('should keep empty or null exitData.target as is (no resolution attempt)', async () => {
                 await worldInitializer.initializeWorldEntities();
-                const processedExits = locationInstance.components.get(EXITS_COMPONENT_ID);
+                const processedExits = locationInstance.getComponentData(EXITS_COMPONENT_ID);
                 expect(processedExits[3].target).toBe('');
                 expect(processedExits[4].target).toBeNull();
-                // No specific warning from the resolver for these cases, as they don't look like def IDs.
-                // Schema validation should catch these if they are invalid by definition.
-                const warnCallsForEmptyTarget = mockLogger.warn.mock.calls.filter(call => call[0].includes("target: ''"));
-                const warnCallsForNullTarget = mockLogger.warn.mock.calls.filter(call => call[0].includes("target: null"));
-                // These specific old warnings are not generated by the new resolver in the same way
-                // expect(warnCallsForEmptyTarget.length).toBe(0); // Or check for a different type of log if any
-                // expect(warnCallsForNullTarget.length).toBe(0);
             });
 
             it('should not process non-array data for core:exits if resolveFields expects an array', async () => {
-                const malformedExitsComponentData = {not: 'an array'}; // Not an array
+                const malformedExitsComponentData = {not: 'an array'};
                 const malformedEntityDef = {
                     id: 'def:malformed',
                     components: {[EXITS_COMPONENT_ID]: malformedExitsComponentData}
@@ -302,19 +292,13 @@ describe('WorldInitializer', () => {
 
                 mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([malformedEntityDef]);
                 mockEntityManager.createEntityInstance.mockReset().mockReturnValueOnce(malformedInstance);
-                // Logger clear for this specific test
                 mockLogger.warn.mockClear();
                 mockLogger.debug.mockClear();
 
                 await worldInitializer.initializeWorldEntities();
 
-                const exitsDataAfter = malformedInstance.components.get(EXITS_COMPONENT_ID);
-                expect(_isEqual(exitsDataAfter, malformedExitsComponentData)).toBe(true); // Data remains unchanged
-
-                // The generic resolver's "arrayOfObjects" strategy has `if (Array.isArray(currentValue))`.
-                // If it's not an array, it won't proceed and doesn't log a specific "not an array" warning from that block.
-                // This kind of validation is better suited for schema validation of component data itself.
-                // So, we check that no *resolution warnings specific to array items* were logged.
+                const exitsDataAfter = malformedInstance.getComponentData(EXITS_COMPONENT_ID);
+                expect(_isEqual(exitsDataAfter, malformedExitsComponentData)).toBe(true);
                 const resolutionWarnings = mockLogger.warn.mock.calls.filter(call => call[0].includes(`Could not resolve [${EXITS_COMPONENT_ID}]`));
                 expect(resolutionWarnings.length).toBe(0);
             });
@@ -338,7 +322,6 @@ describe('WorldInitializer', () => {
 
                 await worldInitializer.initializeWorldEntities();
 
-                // Check that no debug messages related to EXITS_COMPONENT_ID processing for this entity were made
                 const debugCallsForExitsResolution = mockLogger.debug.mock.calls.filter(
                     call => call[0].includes(`[${EXITS_COMPONENT_ID}]`) && call[0].includes('uuid-no_exits')
                 );
@@ -347,7 +330,6 @@ describe('WorldInitializer', () => {
         });
 
         it('should throw and log error if a critical failure occurs (e.g., in repository)', async () => {
-            // worldInitializer is already created in the outer beforeEach
             const criticalError = new Error('Repository exploded');
             mockGameDataRepository.getAllEntityDefinitions.mockImplementation(() => {
                 throw criticalError;
