@@ -7,7 +7,7 @@
     "properties": {
       "locationId": {
         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
-        "description": "The ID of the location entity where the entity resides."
+        "description": "The ID of the location entity where the entity resides. This will be resolved to an instance ID during world initialization."
       },
       "x": {
         "description": "Optional x-coordinate within the location (if grid-based).",
@@ -24,5 +24,13 @@
       "locationId"
     ],
     "additionalProperties": false
-  }
+  },
+  "resolveFields": [
+    {
+      "dataPath": "locationId",
+      "resolutionStrategy": {
+        "type": "direct"
+      }
+    }
+  ]
 }

@@ -30,7 +30,6 @@ import {
     SECRETS_COMPONENT_ID,
     SPEECH_PATTERNS_COMPONENT_ID
 } from "../../constants/componentIds.js";
-// --- TICKET AIPF-REFACTOR-009 START: Import Standardized Fallback Strings ---
 import {
     DEFAULT_FALLBACK_CHARACTER_NAME,
     DEFAULT_FALLBACK_DESCRIPTION_RAW,
@@ -44,8 +43,6 @@ import {
     DEFAULT_COMPONENT_VALUE_NA
 } from '../../constants/textDefaults.js';
 
-// --- TICKET AIPF-REFACTOR-009 END ---
-
 /**
  * @class AIGameStateProvider
  * @implements {IAIGameStateProvider_InterfaceType}
@@ -56,9 +53,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         super();
     }
 
-    // --- TICKET AIPF-REFACTOR-009: Updated default value to use constant ---
     _getComponentText(entity, componentId, defaultValue = DEFAULT_COMPONENT_VALUE_NA, propertyPath = 'text') {
-        // --- TICKET AIPF-REFACTOR-009 END ---
         if (!entity || typeof entity.getComponentData !== 'function') {
             return defaultValue;
         }
@@ -77,17 +72,12 @@ export class AIGameStateProvider extends IAIGameStateProvider {
             id: actor.id,
         };
 
-        // Mandatory: Name and Description
-        // Stored as { text: "value" } under their component ID, used by ActorDataExtractor
-        // ActorDataExtractor will apply its own final fallbacks if these are still considered "empty" by its logic
-        // --- TICKET AIPF-REFACTOR-009: Use constants for default values passed to _getComponentText ---
         actorState[NAME_COMPONENT_ID] = {
             text: this._getComponentText(actor, NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME)
         };
         actorState[DESCRIPTION_COMPONENT_ID] = {
             text: this._getComponentText(actor, DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW)
         };
-        // --- TICKET AIPF-REFACTOR-009 END ---
 
         const conditionalTextComponents = [
             PERSONALITY_COMPONENT_ID,
@@ -133,28 +123,30 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         const positionComponent = actor.getComponentData(POSITION_COMPONENT_ID);
         const currentLocationInstanceId = positionComponent?.locationId;
 
-        let entityManager;
-        try {
-            if (turnContext && typeof turnContext.getEntityManager === 'function') {
-                entityManager = turnContext.getEntityManager();
-            } else {
-                logger.warn(`AIGameStateProvider: turnContext.getEntityManager is not a function for actor ${actor.id}. EntityManager not available.`);
-                entityManager = null;
-            }
-        } catch (e) {
-            logger.warn(`AIGameStateProvider: Error accessing EntityManager for actor ${actor.id}: ${e.message}`);
-            entityManager = null;
-        }
-
         if (!currentLocationInstanceId) {
             logger.info(`AIGameStateProvider: Actor ${actor.id} has no position component or locationId. Cannot generate location summary.`);
             return null;
         }
+
+        let entityManager;
+        if (turnContext && typeof turnContext.getEntityManager === 'function') {
+            try {
+                entityManager = turnContext.getEntityManager();
+            } catch (e) {
+                logger.warn(`AIGameStateProvider: Error accessing EntityManager for actor ${actor.id}: ${e.message}`);
+                return null;
+            }
+        } else {
+            logger.warn(`AIGameStateProvider: turnContext.getEntityManager is not a function for actor ${actor.id}. EntityManager not available.`);
+            return null;
+        }
+
         if (!entityManager) {
             logger.warn(`AIGameStateProvider: EntityManager not available for actor ${actor.id}. Cannot fetch location details.`);
             return null;
         }
 
+        // From here, entityManager is confirmed to be truthy and obtained without error.
         try {
             const locationEntity = await entityManager.getEntityInstance(currentLocationInstanceId);
             if (!locationEntity) {
@@ -162,29 +154,41 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                 return null;
             }
 
-            // --- TICKET AIPF-REFACTOR-009: Use constants for default location name and description ---
             const name = this._getComponentText(locationEntity, NAME_COMPONENT_ID, DEFAULT_FALLBACK_LOCATION_NAME);
             const description = this._getComponentText(locationEntity, DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW);
-            // --- TICKET AIPF-REFACTOR-009 END ---
 
             const exitsComponentData = locationEntity.getComponentData(EXITS_COMPONENT_ID);
             /** @type {AILocationExitDTO[]} */
             let exitsDto = [];
+
             if (exitsComponentData && Array.isArray(exitsComponentData)) {
-                exitsDto = exitsComponentData
-                    .map(exit => ({
-                        // --- TICKET AIPF-REFACTOR-009: Use constant for default exit direction ---
-                        direction: exit.direction || DEFAULT_FALLBACK_EXIT_DIRECTION,
-                        // --- TICKET AIPF-REFACTOR-009 END ---
-                        targetLocationId: exit.target,
-                        // targetLocationName would be populated here if available, or defaulted by AIPromptFormatter if still missing
-                    }))
-                    // --- TICKET AIPF-REFACTOR-009: Adjust filter if DEFAULT_FALLBACK_EXIT_DIRECTION is a valid display string ---
-                    .filter(e => e.direction && e.targetLocationId); // Assuming DEFAULT_FALLBACK_EXIT_DIRECTION is acceptable if direction was missing
-                // If DEFAULT_FALLBACK_EXIT_DIRECTION itself means "invalid", the filter might need: e.direction !== DEFAULT_FALLBACK_EXIT_DIRECTION
-                // For now, assume it's a displayable fallback.
-                // --- TICKET AIPF-REFACTOR-009 END ---
+                const exitPromises = exitsComponentData
+                    .filter(exitData => exitData.target) // Ensure target exists before trying to process
+                    .map(async (exitData) => {
+                        const targetLocationId = exitData.target;
+                        let targetLocationName = DEFAULT_FALLBACK_LOCATION_NAME;
+
+                        try {
+                            const targetLocationEntity = await entityManager.getEntityInstance(targetLocationId);
+                            if (targetLocationEntity) {
+                                targetLocationName = this._getComponentText(targetLocationEntity, NAME_COMPONENT_ID, DEFAULT_FALLBACK_LOCATION_NAME);
+                            } else {
+                                logger.warn(`AIGameStateProvider: Target location entity for exit target ID '${targetLocationId}' not found. Using fallback name.`);
+                            }
+                        } catch (err) {
+                            logger.error(`AIGameStateProvider: Error fetching target location entity for ID '${targetLocationId}': ${err.message}. Using fallback name.`);
+                        }
+
+                        return {
+                            direction: exitData.direction || DEFAULT_FALLBACK_EXIT_DIRECTION,
+                            targetLocationId: targetLocationId,
+                            targetLocationName: targetLocationName,
+                        };
+                    });
+                exitsDto = (await Promise.all(exitPromises))
+                    .filter(e => e.direction && e.targetLocationId);
             }
+
 
             /** @type {AICharacterInLocationDTO[]} */
             let charactersDto = [];
@@ -207,14 +211,12 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                     logger.debug(`AIGameStateProvider: Processing entityIdInLoc: ${entityIdInLoc}`);
                     const otherEntity = await entityManager.getEntityInstance(entityIdInLoc);
                     if (otherEntity) {
-                        // --- TICKET AIPF-REFACTOR-009: Use constants for default other character name and description ---
                         logger.debug(`AIGameStateProvider: Successfully retrieved entity instance for ${entityIdInLoc}. Name: ${this._getComponentText(otherEntity, NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME)}`);
                         charactersDto.push({
                             id: otherEntity.id,
                             name: this._getComponentText(otherEntity, NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME),
                             description: this._getComponentText(otherEntity, DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW)
                         });
-                        // --- TICKET AIPF-REFACTOR-009 END ---
                     } else {
                         logger.warn(`AIGameStateProvider: Could not retrieve entity instance for ID '${entityIdInLoc}' in location '${currentLocationInstanceId}'. This entity will NOT be listed.`);
                     }
@@ -247,12 +249,26 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         try {
             if (typeof turnContext.getActionDiscoverySystem === 'function') {
                 const ads = turnContext.getActionDiscoverySystem();
-                const entityManager = turnContext.getEntityManager();
+                // Ensure entityManager is available for action context, using the one from turnContext
+                let entityManagerForActions;
+                if (turnContext && typeof turnContext.getEntityManager === 'function') {
+                    try {
+                        entityManagerForActions = turnContext.getEntityManager();
+                    } catch (e) {
+                        logger.warn(`AIGameStateProvider (_getAvailableActions): Error accessing EntityManager for action context: ${e.message}. Actions requiring EM may not be discovered correctly.`);
+                        entityManagerForActions = null;
+                    }
+                } else {
+                    logger.warn(`AIGameStateProvider (_getAvailableActions): turnContext.getEntityManager is not a function. Actions requiring EM may not be discovered correctly.`);
+                    entityManagerForActions = null;
+                }
+
+
                 const positionComponent = actor.getComponentData(POSITION_COMPONENT_ID);
 
                 const actionCtx = {
                     currentLocation: positionComponent?.locationId ? {id: positionComponent.locationId} : null,
-                    entityManager,
+                    entityManager: entityManagerForActions, // Use potentially null EM
                     worldContext: turnContext?.game ?? {},
                     logger,
                 };
@@ -260,12 +276,10 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                 const discoveredActions = await ads.getValidActions(actor, actionCtx);
                 if (discoveredActions && Array.isArray(discoveredActions)) {
                     availableActionsDto = discoveredActions.map(action => ({
-                        // --- TICKET AIPF-REFACTOR-009: Use constants for default action properties ---
                         id: action.id || DEFAULT_FALLBACK_ACTION_ID,
-                        command: action.command || DEFAULT_FALLBACK_ACTION_COMMAND, // Assuming a command should generally exist
+                        command: action.command || DEFAULT_FALLBACK_ACTION_COMMAND,
                         name: action.name || DEFAULT_FALLBACK_ACTION_NAME,
                         description: action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW
-                        // --- TICKET AIPF-REFACTOR-009 END ---
                     }));
                 }
                 logger.debug(`AIGameStateProvider: Discovered ${availableActionsDto.length} actions for actor ${actor.id}.`);
@@ -291,11 +305,9 @@ export class AIGameStateProvider extends IAIGameStateProvider {
                 const perceptionData = actor.getComponentData(PERCEPTION_LOG_COMPONENT_ID);
                 if (perceptionData && Array.isArray(perceptionData.logEntries)) {
                     perceptionLogDto = perceptionData.logEntries.map(entry => ({
-                        // --- TICKET AIPF-REFACTOR-009: Use constant for default event description ---
                         descriptionText: entry.descriptionText || DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW,
-                        // --- TICKET AIPF-REFACTOR-009 END ---
                         timestamp: entry.timestamp || Date.now(),
-                        perceptionType: entry.perceptionType || "unknown", // "unknown" type can remain as is, or be a constant if needed
+                        perceptionType: entry.perceptionType || "unknown",
                     }));
                     logger.debug(`AIGameStateProvider: Retrieved ${perceptionLogDto.length} perception log entries for actor ${actor.id}.`);
                 } else {
@@ -330,6 +342,8 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         const actorPromptData = actorDataExtractor.extractPromptData(actorState);
 
         const locationSummary = await this._buildLocationSummary(actor, turnContext, logger);
+        // Note: _getAvailableActions needs its own robust way to get EntityManager if needed,
+        // as locationSummary might be null here.
         const availableActions = await this._getAvailableActions(actor, turnContext, locationSummary, logger);
         const perceptionLog = await this._getPerceptionLog(actor, logger);
 

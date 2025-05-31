@@ -1,6 +1,6 @@
 {
   "id": "core:exits",
-  "description": "Signifies the possible exits from a location entity. Each exit defines a direction, a target location, and an optional entity that might block the path.",
+  "description": "Signifies the possible exits from a location entity. Each exit defines a direction, a target location, and an optional entity that might block the path. Target and blocker IDs will be resolved to instance IDs during world initialization.",
   "dataSchema": {
     "type": "array",
     "description": "An array of possible exits from this location. May be empty (e.g., a supernatural trap with no exits until one is programmatically added).",
@@ -28,5 +28,21 @@
       "additionalProperties": false
     },
     "default": []
-  }
+  },
+  "resolveFields": [
+    {
+      "dataPathIsSelf": true,
+      "resolutionStrategy": {
+        "type": "arrayOfObjects",
+        "idField": "target"
+      }
+    },
+    {
+      "dataPathIsSelf": true,
+      "resolutionStrategy": {
+        "type": "arrayOfObjects",
+        "idField": "blocker"
+      }
+    }
+  ]
 }

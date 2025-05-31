@@ -61,7 +61,7 @@
  * @property {string} content - The main textual content of the log entry.
  * // Other properties can be included if they are used as placeholders in 'perception_log_entry' prefix/suffix.
  * @property {string} [role] - Example: "user", "assistant", "system".
- * @property {string} [timestamp] - Example: "2024-05-29T12:00:00Z".
+ * @property {string} [timestamp] - Example: "2024-05-29T12:00:00Z". // This property will be ignored for rendering if present in data.
  */
 
 /**
@@ -353,21 +353,49 @@ export class PromptBuilder extends IPromptBuilder {
                     if (!perceptionLogEntryConfig) {
                         this.#logger.warn(`PromptBuilder.build: Missing 'perception_log_entry' config for perception log in configId "${selectedConfig.configId}". Entries will be empty.`);
                     } else {
+                        /**
+                         * Removes 'timestamp="value"' attributes from a string and cleans up surrounding spaces.
+                         * @param {string} str - The string to clean.
+                         * @returns {string} The cleaned string.
+                         */
+                        const cleanTimestampAttributes = (str) => {
+                            if (!str) return "";
+                            const originalString = str; // Store original string
+                            // Phase 1: Remove the attribute itself (case-insensitive for 'timestamp')
+                            // This regex targets attributes like timestamp="..." timestamp='...' timestamp=...
+                            let newStr = str.replace(/timestamp\s*=\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s>]+)/gi, "");
+
+                            // Only do further space cleanup if the string was actually modified by the regex
+                            if (newStr !== originalString) {
+                                // Phase 2: Clean up spaces more thoroughly.
+                                newStr = newStr.replace(/\s\s+/g, ' '); // Replace multiple spaces with a single space.
+                                // Remove spaces specifically before a closing angle bracket if they resulted from attribute removal.
+                                newStr = newStr.replace(/\s+>/g, '>');
+                                newStr = newStr.trim(); // Trim leading/trailing whitespace from the string.
+                            }
+                            return newStr;
+                        };
+
                         for (const entry of perceptionLogArray) {
                             if (typeof entry !== 'object' || entry === null) {
                                 this.#logger.warn(`PromptBuilder.build: Invalid perception log entry. Skipping.`, {entry});
                                 continue;
                             }
 
-                            // Create a shallow copy of the entry for placeholder resolution,
-                            // and remove the timestamp property to prevent it from being rendered.
                             const entryForResolution = {...entry};
-                            delete entryForResolution.timestamp; // MODIFICATION HERE
+                            // Ensure timestamp property from data is not used for any placeholder resolution
+                            delete entryForResolution.timestamp;
 
                             const entryContent = (entry.content !== null && entry.content !== undefined) ? String(entry.content) : '';
-                            // Use entryForResolution for resolving placeholders in prefix/suffix
-                            const entryPrefixInternal = this.#resolvePlaceholders(perceptionLogEntryConfig.prefix || "", entryForResolution, promptData);
-                            const entrySuffixInternal = this.#resolvePlaceholders(perceptionLogEntryConfig.suffix || "", entryForResolution, promptData);
+
+                            // MODIFICATION: Clean timestamp attributes from prefix and suffix before resolving other placeholders
+                            let pLogEntryPrefix = cleanTimestampAttributes(perceptionLogEntryConfig.prefix || "");
+                            let pLogEntrySuffix = cleanTimestampAttributes(perceptionLogEntryConfig.suffix || "");
+
+                            // Use entryForResolution for resolving placeholders in the (now cleaned) prefix/suffix
+                            const entryPrefixInternal = this.#resolvePlaceholders(pLogEntryPrefix, entryForResolution, promptData);
+                            const entrySuffixInternal = this.#resolvePlaceholders(pLogEntrySuffix, entryForResolution, promptData);
+
                             assembledLogEntries += `${entryPrefixInternal}${entryContent}${entrySuffixInternal}`;
                         }
                     }
@@ -377,7 +405,7 @@ export class PromptBuilder extends IPromptBuilder {
                     if (assembledLogEntries === "" && !perceptionLogEntryConfig) {
                         this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added. Entries were not formatted due to missing 'perception_log_entry' config.`);
                     } else if (assembledLogEntries === "" && perceptionLogEntryConfig) {
-                        this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added, but all processed log entries resulted in empty strings (or timestamps were removed).`);
+                        this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added, but all processed log entries resulted in empty strings (or timestamps were removed and attributes cleaned).`);
                     } else if (assembledLogEntries !== "") {
                         this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added with formatted entries.`);
                     }
@@ -443,7 +471,7 @@ export class PromptBuilder extends IPromptBuilder {
         for (const config of this.#llmConfigsCache.values()) {
             // Check for exact modelIdentifier match
             if (config.modelIdentifier === llmId) {
-                if (!exactModelMatchConfig) { // MODIFICATION: Only set if not already found (first one wins)
+                if (!exactModelMatchConfig) { // Only set if not already found (first one wins)
                     exactModelMatchConfig = config;
                 }
             }

@@ -2,14 +2,22 @@
 // --- FILE START ---
 // --- Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../interfaces/IWorldContext.js').default} IWorldContext */ // Assuming IWorldContext is default export
+/** @typedef {import('../interfaces/IWorldContext.js').default} IWorldContext */
 /** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */
 /** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../data/schemas/entity.schema.json').EntityDefinition} EntityDefinition */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */ // Added for direct use
+/** @typedef {import('../interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */
+/** @typedef {import('../entities/entity.js').default} Entity */
 
-import {POSITION_COMPONENT_ID} from '../constants/componentIds.js'; // For resolving position
+// --- Library Imports ---
+import _get from 'lodash/get.js'; // Assuming ES module imports for lodash
+import _set from 'lodash/set.js';
+
+// --- Constant Imports ---
+// Only POSITION_COMPONENT_ID is strictly needed here for the spatial indexing part.
+// EXITS_COMPONENT_ID is no longer specially handled here.
+import {POSITION_COMPONENT_ID} from '../constants/componentIds.js';
 
 /**
  * Service responsible for instantiating entities defined
@@ -21,16 +29,15 @@ class WorldInitializer {
     /** @type {EntityManager} */
     #entityManager;
     /** @type {IWorldContext} */
-    #worldContext; // May not be strictly needed here if EM handles all entity access
+    #worldContext;
     /** @type {GameDataRepository} */
     #repository;
     /** @type {ValidatedEventDispatcher} */
     #validatedEventDispatcher;
     /** @type {ILogger} */
     #logger;
-    /** @type {ISpatialIndexManager} */ // Added for direct use
+    /** @type {ISpatialIndexManager} */
     #spatialIndexManager;
-
 
     /**
      * Creates an instance of WorldInitializer.
@@ -40,7 +47,7 @@ class WorldInitializer {
      * @param {GameDataRepository} dependencies.gameDataRepository
      * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher
      * @param {ILogger} dependencies.logger
-     * @param {ISpatialIndexManager} dependencies.spatialIndexManager - Added dependency
+     * @param {ISpatialIndexManager} dependencies.spatialIndexManager
      * @throws {Error} If any required dependency is missing or invalid.
      */
     constructor({
@@ -50,20 +57,20 @@ class WorldInitializer {
                     validatedEventDispatcher,
                     logger,
                     spatialIndexManager
-                }) { // Added spatialIndexManager
+                }) {
         if (!entityManager) throw new Error('WorldInitializer requires an EntityManager.');
         if (!worldContext) throw new Error('WorldInitializer requires a WorldContext.');
         if (!gameDataRepository) throw new Error('WorldInitializer requires a GameDataRepository.');
         if (!validatedEventDispatcher) throw new Error('WorldInitializer requires a ValidatedEventDispatcher.');
         if (!logger) throw new Error('WorldInitializer requires an ILogger.');
-        if (!spatialIndexManager) throw new Error('WorldInitializer requires an ISpatialIndexManager.'); // Added check
+        if (!spatialIndexManager) throw new Error('WorldInitializer requires an ISpatialIndexManager.');
 
         this.#entityManager = entityManager;
         this.#worldContext = worldContext;
         this.#repository = gameDataRepository;
         this.#validatedEventDispatcher = validatedEventDispatcher;
         this.#logger = logger;
-        this.#spatialIndexManager = spatialIndexManager; // Store dependency
+        this.#spatialIndexManager = spatialIndexManager;
 
         this.#logger.info('WorldInitializer: Instance created.');
     }
@@ -78,8 +85,9 @@ class WorldInitializer {
      */
     async initializeWorldEntities() {
         this.#logger.info('WorldInitializer: Starting world entity initialization process...');
+        // Dispatch 'initialization:world_initializer:started' if you have such an event
         let totalInstantiatedCount = 0;
-        /** @type {import('../entities/entity.js').default[]} */
+        /** @type {Entity[]} */
         const instantiatedEntities = [];
 
         try {
@@ -97,14 +105,11 @@ class WorldInitializer {
                     continue;
                 }
                 const definitionId = entityDef.id;
-
-                // Create a new instance; EntityManager will generate a unique UUID
-                // and map definitionId to instanceId internally, but NOT add to spatial index yet.
                 const instance = this.#entityManager.createEntityInstance(definitionId);
 
                 if (instance) {
                     this.#logger.info(`WorldInitializer (Pass 1): Instantiated entity ${instance.id} (from definition: ${instance.definitionId})`);
-                    instantiatedEntities.push(instance); // Collect for Pass 2
+                    instantiatedEntities.push(instance);
                     totalInstantiatedCount++;
 
                     this.#validatedEventDispatcher.dispatchValidated(
@@ -122,74 +127,181 @@ class WorldInitializer {
             }
             this.#logger.info(`WorldInitializer (Pass 1): Completed. Instantiated ${totalInstantiatedCount} total entities.`);
 
-            // --- PASS 2: Resolve references and populate spatial index ---
-            this.#logger.info('WorldInitializer (Pass 2): Resolving references and populating spatial index...');
+            // --- PASS 2: Resolve references based on component metadata and populate spatial index ---
+            this.#logger.info('WorldInitializer (Pass 2): Resolving component references and populating spatial index...');
             let entitiesAddedToSpatialIndex = 0;
+
             for (const entity of instantiatedEntities) {
-                const positionComponent = entity.getComponentData(POSITION_COMPONENT_ID);
+                // entity.components is Map<componentTypeId, componentDataInstance>
+                // It's iterable via .entries() or directly if Entity makes it so.
+                // Let's assume entity.components.entries() is available and entity.components is the Map instance.
+                if (!(entity.components instanceof Map)) {
+                    this.#logger.error(`WorldInitializer (Pass 2): Entity ${entity.id} components property is not a Map. Skipping reference resolution for this entity.`);
+                    continue;
+                }
 
-                if (positionComponent && typeof positionComponent.locationId === 'string' && positionComponent.locationId.trim() !== '') {
-                    const originalLocationId = positionComponent.locationId; // This is likely a definitionId, e.g., "isekai:adventurers_guild"
+                for (const [componentTypeId, componentDataInstance] of entity.components.entries()) {
+                    const componentDefinition = this.#repository.getComponentDefinition(componentTypeId);
 
-                    // Attempt to resolve the definitionId to an instanceId
-                    const locationEntityInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(originalLocationId);
+                    if (componentDefinition?.resolveFields && Array.isArray(componentDefinition.resolveFields)) {
+                        for (const spec of componentDefinition.resolveFields) {
+                            if (!spec || !spec.resolutionStrategy) {
+                                this.#logger.warn(`WorldInitializer (Pass 2): Invalid resolveFields spec for component ${componentTypeId} on entity ${entity.id}`, spec);
+                                continue;
+                            }
 
-                    let resolvedLocationInstanceId = originalLocationId; // Default to original if not resolved or not a defId
+                            const {dataPath, dataPathIsSelf = false, resolutionStrategy} = spec;
+                            let currentValue;
+                            let valueChanged = false;
+                            let newValue = undefined; // Initialize to undefined
 
-                    if (locationEntityInstance) {
-                        // Successfully resolved the definition ID to an actual location instance
-                        resolvedLocationInstanceId = locationEntityInstance.id;
-                        if (originalLocationId !== resolvedLocationInstanceId) {
-                            this.#logger.debug(`WorldInitializer (Pass 2): Resolved location for entity ${entity.id}. Original ref: '${originalLocationId}', Resolved instanceId: '${resolvedLocationInstanceId}'.`);
-                            // Update the component data on the entity instance
-                            positionComponent.locationId = resolvedLocationInstanceId;
-                        } else {
-                            // OriginalLocationId was already an instance ID (or a defId that matched an instanceId directly, less common)
-                            this.#logger.debug(`WorldInitializer (Pass 2): Location for entity ${entity.id} ('${originalLocationId}') did not require resolution or was already an instanceId.`);
-                        }
-                    } else {
-                        // Could not resolve originalLocationId. It might be:
-                        // 1. A definitionId for a location that wasn't defined/instantiated (error in data).
-                        // 2. Already an instanceId (e.g. if data was pre-processed or from a save).
-                        // 3. A deliberately non-existent location or an error.
-                        // A simple heuristic: if it contains ':', it was likely intended as a definitionId.
-                        if (originalLocationId.includes(':')) {
-                            this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve location definitionId '${originalLocationId}' to an instance for entity ${entity.id}. Entity might be misplaced or location data missing.`);
-                        } else {
-                            this.#logger.debug(`WorldInitializer (Pass 2): LocationId '${originalLocationId}' for entity ${entity.id} is not a known definitionId and not resolved. Assuming it's a direct instanceId or out-of-world.`);
+                            if (dataPathIsSelf) {
+                                currentValue = componentDataInstance;
+                            } else if (typeof dataPath === 'string' && dataPath.trim() !== '') {
+                                currentValue = _get(componentDataInstance, dataPath);
+                            } else {
+                                this.#logger.warn(`WorldInitializer (Pass 2): Invalid dataPath in resolveFields spec for ${componentTypeId} on entity ${entity.id}:`, spec);
+                                continue;
+                            }
+
+                            if (currentValue === undefined && !dataPathIsSelf && dataPath) {
+                                // this.#logger.debug(`WorldInitializer (Pass 2): Path '${dataPath}' not found for ${componentTypeId} on entity ${entity.id}. Skipping resolution for this spec.`);
+                                continue; // Value at path does not exist, nothing to resolve
+                            }
+
+
+                            switch (resolutionStrategy.type) {
+                                case "direct":
+                                    if (typeof currentValue === 'string' && currentValue.includes(':')) {
+                                        const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(currentValue);
+                                        if (targetInstance) {
+                                            if (targetInstance.id !== currentValue) {
+                                                newValue = targetInstance.id;
+                                                valueChanged = true;
+                                                this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}' for entity ${entity.id}: '${currentValue}' -> '${newValue}'.`);
+                                            }
+                                        } else {
+                                            this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}' definitionId '${currentValue}' for entity ${entity.id}.`);
+                                        }
+                                    }
+                                    break;
+
+                                case "arrayOfDefinitionIds":
+                                    if (Array.isArray(currentValue)) {
+                                        const originalArray = [...currentValue]; // Shallow copy for comparison
+                                        const resolvedArray = currentValue.map((defId, index) => {
+                                            if (typeof defId === 'string' && defId.includes(':')) {
+                                                const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(defId);
+                                                if (targetInstance) {
+                                                    if (targetInstance.id !== defId) {
+                                                        this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}] for entity ${entity.id}: '${defId}' -> '${targetInstance.id}'.`);
+                                                        return targetInstance.id;
+                                                    }
+                                                    return targetInstance.id;
+                                                } else {
+                                                    this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}] definitionId '${defId}' for entity ${entity.id}.`);
+                                                    return defId;
+                                                }
+                                            }
+                                            return defId;
+                                        });
+                                        // Check if any element actually changed
+                                        if (originalArray.some((val, i) => val !== resolvedArray[i])) {
+                                            newValue = resolvedArray;
+                                            valueChanged = true;
+                                        }
+                                    }
+                                    break;
+
+                                case "arrayOfObjects":
+                                    if (Array.isArray(currentValue) && typeof resolutionStrategy.idField === 'string') {
+                                        const idField = resolutionStrategy.idField;
+                                        let itemChangedInArray = false;
+                                        const tempArray = currentValue.map((obj, index) => {
+                                            let currentItem = obj; // Start with original object
+                                            if (typeof obj === 'object' && obj !== null) {
+                                                const definitionId = _get(obj, idField);
+                                                if (typeof definitionId === 'string' && definitionId.includes(':')) {
+                                                    const targetInstance = this.#entityManager.getPrimaryInstanceByDefinitionId(definitionId);
+                                                    if (targetInstance) {
+                                                        if (targetInstance.id !== definitionId) {
+                                                            const newObj = {...obj}; // Clone before modifying
+                                                            _set(newObj, idField, targetInstance.id);
+                                                            currentItem = newObj;
+                                                            itemChangedInArray = true;
+                                                            this.#logger.debug(`WorldInitializer (Pass 2): Resolved [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}].${idField} for entity ${entity.id}: '${definitionId}' -> '${targetInstance.id}'.`);
+                                                        }
+                                                    } else {
+                                                        this.#logger.warn(`WorldInitializer (Pass 2): Could not resolve [${componentTypeId}]@'${dataPathIsSelf ? '(self)' : dataPath}'[${index}].${idField} definitionId '${definitionId}' for entity ${entity.id}.`);
+                                                    }
+                                                }
+                                            }
+                                            return currentItem;
+                                        });
+
+                                        if (itemChangedInArray) {
+                                            newValue = tempArray;
+                                            valueChanged = true;
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    this.#logger.warn(`WorldInitializer (Pass 2): Unknown resolutionStrategy type '${resolutionStrategy.type}' for ${componentTypeId} on entity ${entity.id}.`);
+                            }
+
+                            if (valueChanged && newValue !== undefined) {
+                                if (dataPathIsSelf) {
+                                    entity.components.set(componentTypeId, newValue);
+                                } else {
+                                    _set(componentDataInstance, dataPath, newValue);
+                                }
+                            }
                         }
                     }
+                } // End of component loop for an entity
 
-                    // Add to spatial index using the (now hopefully resolved) location instanceId
-                    // If resolvedLocationInstanceId is still a definitionId because it couldn't be resolved,
-                    // the spatial index will be keyed by that. This is not ideal but better than crashing.
-                    // The spatial index should ideally only ever store instance IDs for locations.
-                    if (resolvedLocationInstanceId && typeof resolvedLocationInstanceId === 'string') {
-                        this.#spatialIndexManager.addEntity(entity.id, resolvedLocationInstanceId);
-                        entitiesAddedToSpatialIndex++;
-                        this.#logger.debug(`WorldInitializer (Pass 2): Added entity ${entity.id} to spatial index at location ${resolvedLocationInstanceId}.`);
-                    } else {
-                        this.#logger.warn(`WorldInitializer (Pass 2): Entity ${entity.id} has position component but an invalid or null final locationId ('${resolvedLocationInstanceId}'). Not added to spatial index.`);
+                // --- Spatial Index Population (uses the now-resolved component data) ---
+                const positionComponentData = entity.getComponentData(POSITION_COMPONENT_ID);
+                let locationIdForSpatialIndex = null;
+
+                if (positionComponentData && typeof positionComponentData.locationId === 'string' && positionComponentData.locationId.trim() !== '') {
+                    locationIdForSpatialIndex = positionComponentData.locationId;
+
+                    if (locationIdForSpatialIndex.includes(':')) {
+                        this.#logger.warn(`WorldInitializer (Pass 2): Entity ${entity.id}'s position component locationId '${locationIdForSpatialIndex}' appears to be an unresolved definitionId. Spatial index might be incorrect.`);
+                        // Optionally, prevent adding to spatial index: locationIdForSpatialIndex = null;
                     }
 
-                } else if (positionComponent) {
-                    this.#logger.debug(`WorldInitializer (Pass 2): Entity ${entity.id} has a position component but missing or invalid locationId. Not added to spatial index.`);
+                    if (locationIdForSpatialIndex) {
+                        // More robust check: ensure the locationId is a known entity instance (if your design requires locations to be entities)
+                        const locationEntity = this.#entityManager.getEntityInstance(locationIdForSpatialIndex);
+                        if (locationEntity || !locationIdForSpatialIndex.includes(':')) { // Allow if it's a known instance OR doesn't look like a def ID (might be pre-set instance ID)
+                            this.#spatialIndexManager.addEntity(entity.id, locationIdForSpatialIndex);
+                            entitiesAddedToSpatialIndex++;
+                            this.#logger.debug(`WorldInitializer (Pass 2): Added entity ${entity.id} to spatial index at location ${locationIdForSpatialIndex}.`);
+                        } else {
+                            this.#logger.warn(`WorldInitializer (Pass 2): Entity ${entity.id} locationId '${locationIdForSpatialIndex}' not added to spatial index because it's an unresolved definitionId or unknown instance.`);
+                        }
+                    } else {
+                        this.#logger.warn(`WorldInitializer (Pass 2): Entity ${entity.id} has position component but final locationId is invalid or null. Not added to spatial index.`);
+                    }
+                } else if (positionComponentData) {
+                    this.#logger.debug(`WorldInitializer (Pass 2): Entity ${entity.id} has a position component but missing or invalid locationId after resolution. Not added to spatial index.`);
                 } else {
                     this.#logger.debug(`WorldInitializer (Pass 2): Entity ${entity.id} has no position component. Not added to spatial index.`);
                 }
-            }
+            } // End of for (const entity of instantiatedEntities)
+
             this.#logger.info(`WorldInitializer (Pass 2): Completed. Processed ${instantiatedEntities.length} entities for linking. Added ${entitiesAddedToSpatialIndex} entities to spatial index.`);
 
-            // The old call this.#entityManager.buildInitialSpatialIndex(); is no longer needed
-            // as entities are added progressively above.
-
             this.#logger.info('WorldInitializer: World entity initialization and spatial indexing complete.');
+            // Dispatch 'initialization:world_initializer:completed' event if you have one.
             return true;
 
         } catch (error) {
             this.#logger.error('WorldInitializer: CRITICAL ERROR during entity initialization or reference resolution:', error);
-            // Consider dispatching a failure event
-            throw error; // Re-throw to allow higher-level error handling
+            // Dispatch 'initialization:world_initializer:failed' event if you have one.
+            throw error;
         }
     }
 }

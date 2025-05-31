@@ -1,6 +1,6 @@
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 
-/** @typedef {import('../interfaces/coreServices.js').IPathResolver}   IPathResolver */
+import {IPathResolver} from '../interfaces/IPathResolver.js';
 
 /**
  * Default implementation of IPathResolver.
@@ -8,7 +8,7 @@
  * Uses standard URL/path joining logic (adjust if running in Node.js vs Browser).
  * @implements {IPathResolver}
  */
-class DefaultPathResolver {
+class DefaultPathResolver extends IPathResolver {
     /** @private @type {IConfiguration} */
     #config;
 
@@ -16,6 +16,8 @@ class DefaultPathResolver {
      * @param {IConfiguration} configuration
      */
     constructor(configuration) {
+        super();
+        
         const serviceName = 'DefaultPathResolver';
         const configInterface = 'IConfiguration';
 
