@@ -9,6 +9,7 @@
 /** @typedef {import('../../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../../src/initializers/worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../../src/initializers/systemInitializer.js').default} SystemInitializer */
+/** @typedef {import('../../../src/initializers/services/referenceResolver.js').default} ReferenceResolver */ // <<< NEW
 /** @typedef {any} AppContainer */ // Using 'any' for the mock container type for simplicity
 
 // --- Jest Imports ---
@@ -24,6 +25,7 @@ import {INITIALIZABLE} from "../../../src/config/tags.js";
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../src/initializers/worldInitializer.js');
 jest.mock('../../../src/initializers/systemInitializer.js');
+// No need to mock ReferenceResolver as we provide a mock instance for its token
 
 // --- Import AFTER mocking ---
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
@@ -35,9 +37,8 @@ const mockEntityManager = {name: 'MockEntityManager'};
 const mockWorldContext = {name: 'MockWorldContext'};
 const mockGameDataRepository = {name: 'MockGameDataRepository'};
 const mockValidatedEventDispatcher = {name: 'MockValidatedEventDispatcher'};
-// VVVVVV ADDED MOCK VVVVVV
 const mockSpatialIndexManager = {name: 'MockSpatialIndexManager'};
-// ^^^^^^ ADDED MOCK ^^^^^^
+const mockReferenceResolver = {name: 'MockReferenceResolver', resolve: jest.fn()}; // <<< NEW MOCK INSTANCE
 
 
 const createMockContainer = () => {
@@ -47,7 +48,7 @@ const createMockContainer = () => {
         register: jest.fn((token, factoryOrValue, options = {}) => {
             if (!token) throw new Error('Mock Register Error: Token is required.');
             const registration = {factoryOrValue, options: {...options, tags: options.tags || []}, instance: undefined};
-            registrations.set(String(token), registration); // Use String(token) for consistency
+            registrations.set(String(token), registration);
         }),
         resolve: jest.fn((token) => {
             const registrationKey = String(token);
@@ -65,30 +66,21 @@ const createMockContainer = () => {
                 }
                 if (typeof factoryOrValue === 'function') {
                     try {
-                        // Check if it's a class constructor (ES6 classes are functions with prototypes)
-                        // or a simple factory function.
-                        // A simple heuristic: if it has a prototype and that prototype has a constructor.
-                        // This is not foolproof for all JS function types but helps distinguish common cases.
                         const isClass = factoryOrValue.prototype && typeof factoryOrValue.prototype.constructor === 'function';
-                        if (isClass && options?.lifecycle === 'singleton' && !options?.isFactory) { // Assuming an 'isFactory' hint if a class should be treated as factory
-                            registration.instance = new factoryOrValue(container); // if it was registered as a class to be newed up
+                        if (isClass && options?.lifecycle === 'singleton' && !options?.isFactory) {
+                            registration.instance = new factoryOrValue(container);
                         } else {
-                            registration.instance = factoryOrValue(container); // For factories or if isFactory was true
+                            registration.instance = factoryOrValue(container);
                         }
                     } catch (e) {
-                        // console.error(`Mock container: Error executing factory/constructor for ${registrationKey}: ${e.message}`);
-                        // Re-throwing the original error is better for Jest's error reporting
                         throw new Error(`Mock container: Error executing factory for ${registrationKey}: ${e.message}`);
-
                     }
                     return registration.instance;
                 }
-                // If factoryOrValue is not a function, it's a direct instance/value
                 registration.instance = factoryOrValue;
                 return registration.instance;
             }
 
-            // Transient resolution (always execute factory if it's a function)
             if (typeof factoryOrValue === 'function') {
                 try {
                     const isClass = factoryOrValue.prototype && typeof factoryOrValue.prototype.constructor === 'function';
@@ -100,17 +92,13 @@ const createMockContainer = () => {
                     throw new Error(`Mock container: Error executing transient factory for ${registrationKey}: ${e.message}`);
                 }
             }
-            return factoryOrValue; // Return direct value for transient
+            return factoryOrValue;
         }),
         resolveByTag: jest.fn(async (tag) => {
             const resolved = [];
-            registrations.forEach((reg, tokenKey) => { // tokenKey is already a string
+            registrations.forEach((reg, tokenKey) => {
                 if (reg.options?.tags?.includes(tag)) {
                     try {
-                        // Resolve using the token object itself, not its string representation,
-                        // if the original registration used the token object.
-                        // This part of the mock container might need refinement based on how tokens are stored/retrieved.
-                        // For simplicity, assuming tokenKey can be used if resolve handles string keys.
                         resolved.push(container.resolve(tokenKey));
                     } catch (e) {
                         console.warn(`Mock resolveByTag: Failed to resolve tagged token ${tokenKey}: ${e.message}`);
@@ -132,18 +120,18 @@ describe('registerInitializers', () => {
         jest.clearAllMocks();
         mockContainer = createMockContainer();
 
+        // Register all base dependencies that the factories might try to resolve
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IEntityManager, mockEntityManager, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IWorldContext, mockWorldContext, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IGameDataRepository, mockGameDataRepository, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockValidatedEventDispatcher, {lifecycle: 'singleton'});
-        // VVVVVV ADDED REGISTRATION VVVVVV
         mockContainer.register(tokens.ISpatialIndexManager, mockSpatialIndexManager, {lifecycle: 'singleton'});
-        // ^^^^^^ ADDED REGISTRATION ^^^^^^
+        mockContainer.register(tokens.IReferenceResolver, mockReferenceResolver, {lifecycle: 'singleton'}); // <<< REGISTER IReferenceResolver
 
         Object.values(mockLogger).forEach(fn => fn.mockClear?.());
-        if (WorldInitializer.mockClear) WorldInitializer.mockClear(); // From jest.mock
-        if (SystemInitializer.mockClear) SystemInitializer.mockClear(); // From jest.mock
+        if (WorldInitializer.mockClear) WorldInitializer.mockClear();
+        if (SystemInitializer.mockClear) SystemInitializer.mockClear();
     });
 
     it('should register initializer services without throwing errors', () => {
@@ -164,10 +152,10 @@ describe('registerInitializers', () => {
     });
 
     it('resolving WorldInitializer does not throw and calls its constructor with correctly resolved dependencies', () => {
-        registerInitializers(mockContainer);
+        registerInitializers(mockContainer); // This registers the factory for WorldInitializer
         let resolvedService;
         expect(() => {
-            resolvedService = mockContainer.resolve(tokens.WorldInitializer);
+            resolvedService = mockContainer.resolve(tokens.WorldInitializer); // This executes the factory
         }).not.toThrow();
 
         expect(resolvedService).toBeDefined();
@@ -178,9 +166,8 @@ describe('registerInitializers', () => {
             gameDataRepository: mockGameDataRepository,
             validatedEventDispatcher: mockValidatedEventDispatcher,
             logger: mockLogger,
-            // VVVVVV ADDED DEPENDENCY VVVVVV
-            spatialIndexManager: mockSpatialIndexManager
-            // ^^^^^^ ADDED DEPENDENCY ^^^^^^
+            spatialIndexManager: mockSpatialIndexManager,
+            referenceResolver: mockReferenceResolver // <<< EXPECTED DEPENDENCY
         });
     });
 
@@ -204,16 +191,19 @@ describe('registerInitializers', () => {
     it("WorldInitializer factory should attempt to resolve all its dependencies", () => {
         registerInitializers(mockContainer);
         const resolveSpy = jest.spyOn(mockContainer, 'resolve');
-        mockContainer.resolve(tokens.WorldInitializer); // Trigger the factory
 
-        expect(resolveSpy).toHaveBeenCalledWith(tokens.ILogger); // Logger is resolved first by registerInitializers itself
+        // We need to actually call the factory for WorldInitializer by resolving it.
+        // The first call to resolve ILogger is by registerInitializers itself.
+        // The subsequent calls are by the factory when WorldInitializer is resolved.
+        mockContainer.resolve(tokens.WorldInitializer);
+
+        expect(resolveSpy).toHaveBeenCalledWith(tokens.ILogger); // Called multiple times, once by registerInitializers, once by factory
         expect(resolveSpy).toHaveBeenCalledWith(tokens.IEntityManager);
         expect(resolveSpy).toHaveBeenCalledWith(tokens.IWorldContext);
         expect(resolveSpy).toHaveBeenCalledWith(tokens.IGameDataRepository);
         expect(resolveSpy).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-        // VVVVVV ADDED CHECK VVVVVV
         expect(resolveSpy).toHaveBeenCalledWith(tokens.ISpatialIndexManager);
-        // ^^^^^^ ADDED CHECK ^^^^^^
+        expect(resolveSpy).toHaveBeenCalledWith(tokens.IReferenceResolver); // <<< CHECK RESOLUTION
         resolveSpy.mockRestore();
     });
 });

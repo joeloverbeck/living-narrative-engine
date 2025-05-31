@@ -1,5 +1,5 @@
 // src/core/config/registrations/domainServicesRegistrations.js
-
+// --- FILE START ---
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 import {TargetResolutionService} from "../../services/targetResolutionService.js";
@@ -15,6 +15,7 @@ import CommandProcessor from "../../commands/commandProcessor.js";
 import HumanPlayerPromptService from '../../turns/services/humanPlayerPromptService.js'; // Concrete class
 import SubscriptionLifecycleManager from '../../services/subscriptionLifecycleManager.js';
 import PerceptionUpdateService from '../../services/perceptionUpdateService.js';
+import ReferenceResolver from '../../initializers/services/referenceResolver.js';
 
 // Import getEntityIdsForScopes directly
 import {getEntityIdsForScopes} from '../../services/entityScopeService.js';
@@ -48,16 +49,15 @@ import {PromptBuilder} from "../../services/promptBuilder.js";
 /** @typedef {import('../../services/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
 /** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
-/** @typedef {import('../../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */ // ADDED
+/** @typedef {import('../../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
 
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager_Type */
 /** @typedef {import('../../services/perceptionUpdateService.js').default} PerceptionUpdateService_Type */
-// PlaytimeTracker_Type typedef is no longer strictly needed here if we use IPlaytimeTracker for GamePersistenceService dependency.
-// /** @typedef {import('../../../services/playtimeTracker.js').default} PlaytimeTracker_Type */
 /** @typedef {import('../../services/gamePersistenceService.js').default} GamePersistenceService_Type */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface */
-
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */
+/** @typedef {import('../../../initializers/services/referenceResolver.js').default} ReferenceResolver_Concrete */ // <<< NEW TYPEDEF
+/** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */ // <<< NEW TYPEDEF
 
 
 /**
@@ -228,13 +228,11 @@ export function registerDomainServices(container) {
             saveLoadService: /** @type {ISaveLoadService_Interface} */ (c.resolve(tokens.ISaveLoadService)),
             entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
             dataRegistry: /** @type {IDataRegistry_Interface} */ (c.resolve(tokens.IDataRegistry)),
-            playtimeTracker: /** @type {IPlaytimeTracker} */ (c.resolve(tokens.PlaytimeTracker)), // MODIFIED
-            container: /** @type {AppContainer} */ (c) // Pass the AppContainer instance directly
+            playtimeTracker: /** @type {IPlaytimeTracker} */ (c.resolve(tokens.PlaytimeTracker)),
+            container: /** @type {AppContainer} */ (c)
         };
-
-        // Basic check for resolved dependencies (optional, but good practice)
         for (const [key, value] of Object.entries(gpsDeps)) {
-            if (!value && key !== 'container') { // 'container' is 'c' itself, always present
+            if (!value && key !== 'container') {
                 const errorMsg = `Domain-services Registration: Factory for ${String(tokens.GamePersistenceService)} FAILED to resolve dependency "${key}".`;
                 log.error(errorMsg);
                 throw new Error(errorMsg);
@@ -245,34 +243,41 @@ export function registerDomainServices(container) {
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.GamePersistenceService)} (via factory).`);
 
-    // --- Register Services for AITurnHandler and AIPlayerStrategy ---
+    // --- Register ReferenceResolver ---
+    r.singletonFactory(tokens.IReferenceResolver, (c) => { // Using IReferenceResolver token
+        log.debug(`Domain-services Registration: Factory creating ${String(tokens.IReferenceResolver)}...`);
+        const resolverDeps = {
+            entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+        };
+        if (!resolverDeps.entityManager || !resolverDeps.logger) {
+            const errorMsg = `Domain-services Registration: Factory for ${String(tokens.IReferenceResolver)} FAILED to resolve dependencies. EntityManager: ${!!resolverDeps.entityManager}, Logger: ${!!resolverDeps.logger}`;
+            log.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+        log.debug(`Domain-services Registration: Dependencies for ${String(tokens.IReferenceResolver)} resolved, creating instance.`);
+        return new ReferenceResolver(resolverDeps);
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IReferenceResolver)} implemented by ReferenceResolver.`);
 
-    // PromptBuilder (assuming PromptBuilder is the implementation)
-    // PromptBuilder needs logger and configFilePath (from IConfiguration)
+
+    // --- Register Services for AITurnHandler and AIPlayerStrategy ---
     r.singletonFactory(tokens.IPromptBuilder, (c) => {
         const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
-
-        // The path to llm-configs.json is fixed relative to the application root.
         const llmConfigsPath = "./config/llm-configs.json";
         log.info(`${String(tokens.IPromptBuilder)} factory: Using fixed configFilePath: "${llmConfigsPath}"`);
-        // --- END MODIFIED PART ---
-
-        // Pass the logger and the fixed configFilePath to the PromptBuilder constructor
         return new PromptBuilder({logger, configFilePath: llmConfigsPath});
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.IPromptBuilder)}.`);
 
-    // AIGameStateProvider (stateless, no constructor dependencies in its file)
     r.single(tokens.IAIGameStateProvider, AIGameStateProvider);
     log.debug(`Domain Services Registration: Registered ${String(tokens.IAIGameStateProvider)}.`);
 
-    // AIPromptContentProvider (stateless, no constructor dependencies)
     r.single(tokens.IAIPromptContentProvider, AIPromptContentProvider);
     log.debug(`Domain Services Registration: Registered ${String(tokens.IAIPromptContentProvider)}.`);
 
-    // LLMResponseProcessor (depends on ISchemaValidator)
     r.single(tokens.ILLMResponseProcessor, LLMResponseProcessor, [
-        tokens.ISchemaValidator // Dependency for LLMResponseProcessor's constructor { schemaValidator: ... }
+        tokens.ISchemaValidator
     ]);
     log.debug(`Domain Services Registration: Registered ${String(tokens.ILLMResponseProcessor)}.`);
 
@@ -289,3 +294,5 @@ export function registerDomainServices(container) {
 
     log.info('Domain-services Registration: complete.');
 }
+
+// --- FILE END ---

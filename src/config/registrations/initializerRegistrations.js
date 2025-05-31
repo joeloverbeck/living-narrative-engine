@@ -13,25 +13,24 @@ export function registerInitializers(container) {
     const r = new Registrar(container);
     const log = container.resolve(tokens.ILogger); // For logging within this function
 
-    // --- WorldInitializer (Ticket 15) ---
+    // --- WorldInitializer (Ticket 15 & Current Ticket) ---
     // Updated to use factory for object dependency constructor
     r.singletonFactory(
         tokens.WorldInitializer,
         (c) => {
             const dependencies = {
-                entityManager: c.resolve(tokens.IEntityManager), // Use interface token
+                entityManager: c.resolve(tokens.IEntityManager),
                 worldContext: c.resolve(tokens.IWorldContext),
-                gameDataRepository: c.resolve(tokens.IGameDataRepository), // Use interface token
+                gameDataRepository: c.resolve(tokens.IGameDataRepository),
                 validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
                 logger: c.resolve(tokens.ILogger),
-                // VVVVVV ADDED LINE VVVVVV
-                spatialIndexManager: c.resolve(tokens.ISpatialIndexManager) // Add the missing dependency
-                // ^^^^^^ ADDED LINE ^^^^^^
+                spatialIndexManager: c.resolve(tokens.ISpatialIndexManager),
+                referenceResolver: c.resolve(tokens.IReferenceResolver)
             };
             return new WorldInitializer(dependencies);
         }
     );
-    log.debug(`Initializer Registration: Registered ${tokens.WorldInitializer} (with VED and ISpatialIndexManager dependencies).`);
+    log.debug(`Initializer Registration: Registered ${tokens.WorldInitializer} (with VED, ISpatialIndexManager, and IReferenceResolver dependencies).`);
 
 
     // --- SystemInitializer (Ticket 15) ---
@@ -45,8 +44,6 @@ export function registerInitializers(container) {
                 validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
                 initializationTag: INITIALIZABLE[0] // Pass the tag string
             };
-            // AC1: Passes container (IServiceResolver), logger (ILogger), VED, and tag (string).
-            // AC2: Passes the correct tag string.
             return new SystemInitializer(dependencies);
         }
     );

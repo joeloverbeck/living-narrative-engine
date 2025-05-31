@@ -20,6 +20,7 @@
  * @property {DiToken} ISchemaValidator - Token for validating data against schemas.
  * @property {DiToken} IDataRegistry - Token for storing loaded game data.
  * @property {DiToken} ISpatialIndexManager - Token for managing the spatial index.
+ * @property {DiToken} IReferenceResolver - Token for the reference resolution service. // <<< NEW TOKEN
  *
  * --- External Dependencies / Environment ---
  * @property {DiToken} WindowDocument - Token for the browser's global `document` object.
@@ -31,7 +32,7 @@
  * @property {DiToken} IDocumentContext - Token for the DOM access abstraction service.
  * @property {DiToken} DomElementFactory - Token for the utility creating DOM elements.
  * @property {DiToken} UiMessageRenderer - Token for the component rendering UI messages/echoes.
- * @property {DiToken} SpeechBubbleRenderer - Token for the component rendering speech bubbles with portraits. // <<< NEW TOKEN
+ * @property {DiToken} SpeechBubbleRenderer - Token for the component rendering speech bubbles with portraits.
  * @property {DiToken} TitleRenderer - Token for the component rendering the main H1 title.
  * @property {DiToken} InputStateController - Token for the component controlling input field state.
  * @property {DiToken} LocationRenderer - Token for the component rendering location details.
@@ -62,6 +63,7 @@
  * @property {DiToken} GameDataRepository - Token for accessing registered game data (implementation).
  * @property {DiToken} EntityManager - Token for managing game entities and components (implementation).
  * @property {DiToken} TargetResolutionService - Token for resolving action targets.
+ * @property {DiToken} ReferenceResolver - Token for the reference resolution service (implementation). // <<< NEW TOKEN
  * @property {DiToken} JsonLogicEvaluationService - Token for evaluating JsonLogic rules.
  * @property {DiToken} ActionValidationContextBuilder - Token for building action validation contexts.
  * @property {DiToken} PrerequisiteEvaluationService - Token for evaluating action/quest prerequisites.
@@ -135,6 +137,7 @@ export const tokens = Object.freeze({
     ISchemaValidator: 'ISchemaValidator',
     IDataRegistry: 'IDataRegistry',
     ISpatialIndexManager: 'ISpatialIndexManager',
+    IReferenceResolver: 'IReferenceResolver', // <<< NEW TOKEN
 
     // --- External Dependencies / Environment ---
     WindowDocument: 'WindowDocument',
@@ -146,7 +149,7 @@ export const tokens = Object.freeze({
     IDocumentContext: 'IDocumentContext',
     DomElementFactory: 'DomElementFactory',
     UiMessageRenderer: 'UiMessageRenderer',
-    SpeechBubbleRenderer: 'SpeechBubbleRenderer', // <<< NEW TOKEN
+    SpeechBubbleRenderer: 'SpeechBubbleRenderer',
     TitleRenderer: 'TitleRenderer',
     InputStateController: 'InputStateController',
     LocationRenderer: 'LocationRenderer',
@@ -175,6 +178,7 @@ export const tokens = Object.freeze({
     // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
     GameDataRepository: 'GameDataRepository', // Concrete class token
     EntityManager: 'EntityManager',           // Concrete class token
+    ReferenceResolver: 'ReferenceResolver',   // <<< NEW TOKEN (Implementation)
     TargetResolutionService: 'TargetResolutionService',
     JsonLogicEvaluationService: 'JsonLogicEvaluationService',
     ActionValidationContextBuilder: 'ActionValidationContextBuilder',
