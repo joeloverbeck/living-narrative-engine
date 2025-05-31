@@ -63,13 +63,19 @@ describe('PromptBuilder', () => {
         test('should load configurations from file successfully on first build call', async () => {
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
-                json: async () => [MOCK_CONFIG_1, MOCK_CONFIG_2],
+                json: async () => ({
+                    defaultConfigId: MOCK_CONFIG_1.configId,
+                    configs: {
+                        [MOCK_CONFIG_1.configId]: MOCK_CONFIG_1,
+                        [MOCK_CONFIG_2.configId]: MOCK_CONFIG_2,
+                    }
+                }),
                 status: 200,
                 statusText: "OK"
             }));
             promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
 
-            await promptBuilder.build("test-vendor/test-model-exact", {systemPromptContent: "Hello"});
+            await promptBuilder.build("test_config_v1", {systemPromptContent: "Hello"}); // Use configId
 
             expect(fetchSpy).toHaveBeenCalledTimes(1);
             expect(fetchSpy).toHaveBeenCalledWith(MOCK_CONFIG_FILE_PATH);
@@ -95,7 +101,10 @@ describe('PromptBuilder', () => {
             );
             expect(logger.error).toHaveBeenCalledWith(
                 'PromptBuilder: Error loading or parsing llm-configs.json.',
-                expect.objectContaining({path: MOCK_CONFIG_FILE_PATH})
+                expect.objectContaining({
+                    path: MOCK_CONFIG_FILE_PATH,
+                    error: expect.objectContaining({message: 'Failed to fetch configuration file: Not Found'})
+                })
             );
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
@@ -119,10 +128,11 @@ describe('PromptBuilder', () => {
 
 
         test('should handle malformed JSON when loading configurations', async () => {
+            const syntaxError = new SyntaxError("Unexpected token");
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
                 json: async () => {
-                    throw new SyntaxError("Unexpected token");
+                    throw syntaxError;
                 },
                 status: 200,
                 statusText: "OK"
@@ -134,16 +144,17 @@ describe('PromptBuilder', () => {
             expect(fetchSpy).toHaveBeenCalledTimes(1);
             expect(logger.error).toHaveBeenCalledWith(
                 'PromptBuilder: Error loading or parsing llm-configs.json.',
-                expect.objectContaining({path: MOCK_CONFIG_FILE_PATH, error: expect.any(SyntaxError)})
+                expect.objectContaining({path: MOCK_CONFIG_FILE_PATH, error: syntaxError})
             );
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
-        test('should handle non-array JSON when loading configurations', async () => {
+        test('should handle non-object JSON or missing "configs" property', async () => {
+            const badJsonData = {"not": "the right structure"};
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
-                json: async () => ({"not": "an array"}),
+                json: async () => (badJsonData),
                 status: 200,
                 statusText: "OK"
             }));
@@ -152,10 +163,18 @@ describe('PromptBuilder', () => {
             const result = await promptBuilder.build("any-llm-id", {});
             expect(result).toBe("");
             expect(fetchSpy).toHaveBeenCalledTimes(1);
-            expect(logger.error).toHaveBeenCalledWith('PromptBuilder: Loaded configuration data is not an array.', {data: {"not": "an array"}});
+            expect(logger.error).toHaveBeenCalledWith(
+                'PromptBuilder: Loaded configuration data is not in the expected format. It must be an object with a "configs" property, where "configs" is an object map of configurations.',
+                {data: badJsonData}
+            );
             expect(logger.error).toHaveBeenCalledWith(
                 'PromptBuilder: Error loading or parsing llm-configs.json.',
-                expect.objectContaining({path: MOCK_CONFIG_FILE_PATH, error: expect.any(Error)}) // Error is "Configuration data must be an array."
+                expect.objectContaining({
+                    path: MOCK_CONFIG_FILE_PATH,
+                    error: expect.objectContaining({
+                        message: 'Configuration data must be an object with a "configs" property containing configuration objects.'
+                    })
+                })
             );
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
@@ -166,21 +185,29 @@ describe('PromptBuilder', () => {
             const validConfig = MOCK_CONFIG_1;
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
-                json: async () => [validConfig, invalidConfig, MOCK_CONFIG_2],
+                json: async () => ({
+                    defaultConfigId: "any",
+                    configs: {
+                        [validConfig.configId]: validConfig,
+                        "some_key_for_invalid": invalidConfig, // The key in the map can be anything
+                        [MOCK_CONFIG_2.configId]: MOCK_CONFIG_2,
+                    }
+                }),
                 status: 200,
                 statusText: "OK"
             }));
             promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
 
-            await promptBuilder.build("test-vendor/test-model-exact", {systemPromptContent: "Test"});
+            await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Test"});
 
             expect(logger.warn).toHaveBeenCalledWith(
                 'PromptBuilder: Skipping invalid or incomplete configuration object during file load.',
-                {config: invalidConfig}
+                {config: invalidConfig} // The object itself is passed in the log
             );
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(2);
             expect(promptBuilder.getLlmConfigsCacheForTest().has(validConfig.configId)).toBe(true);
             expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_2.configId)).toBe(true);
+            // We don't expect a cache entry with key "invalid_cfg" or "some_key_for_invalid" if the object was invalid
             expect(promptBuilder.getLlmConfigsCacheForTest().has("invalid_cfg")).toBe(false);
             expect(logger.info).toHaveBeenCalledWith(expect.stringContaining(`PromptBuilder: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}`));
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
@@ -192,7 +219,7 @@ describe('PromptBuilder', () => {
             await promptBuilder.build("any-llm-id", {});
             expect(fetchSpy).not.toHaveBeenCalled();
             expect(logger.warn).toHaveBeenCalledWith('PromptBuilder.#ensureConfigsLoaded: No configFilePath set and no initial configurations loaded. PromptBuilder may not function correctly.');
-            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configurations available. Cannot build prompt.');
+            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configurations available in cache. Cannot build prompt.');
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
 
@@ -202,7 +229,7 @@ describe('PromptBuilder', () => {
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
             expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('PromptBuilder initialized with 1 preloaded configurations.'));
 
-            await promptBuilder.build(MOCK_CONFIG_1.modelIdentifier, {systemPromptContent: "Test"});
+            await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Test"}); // Use configId
             expect(fetchSpy).not.toHaveBeenCalled();
             // This debug log means it recognized configs were already there (from initialConfigs)
             expect(logger.debug).toHaveBeenCalledWith('PromptBuilder.#ensureConfigsLoaded: Configurations already loaded or load attempt was made and cache is not empty.');
@@ -212,13 +239,16 @@ describe('PromptBuilder', () => {
         test('resetConfigurationCache should clear cache and reset loaded flag', async () => {
             fetchSpy.mockResolvedValueOnce(Promise.resolve({ // For first load
                 ok: true,
-                json: async () => [MOCK_CONFIG_1],
+                json: async () => ({
+                    defaultConfigId: MOCK_CONFIG_1.configId,
+                    configs: {[MOCK_CONFIG_1.configId]: MOCK_CONFIG_1}
+                }),
                 status: 200,
                 statusText: "OK"
             }));
             promptBuilder = new PromptBuilder({logger, configFilePath: MOCK_CONFIG_FILE_PATH});
 
-            await promptBuilder.build(MOCK_CONFIG_1.modelIdentifier, {systemPromptContent: "Test"}); // Loads MOCK_CONFIG_1
+            await promptBuilder.build(MOCK_CONFIG_1.configId, {systemPromptContent: "Test"}); // Loads MOCK_CONFIG_1
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
 
@@ -230,11 +260,14 @@ describe('PromptBuilder', () => {
             // Setup fetch for the second load attempt
             fetchSpy.mockResolvedValueOnce(Promise.resolve({
                 ok: true,
-                json: async () => [MOCK_CONFIG_2], // Load a different config
+                json: async () => ({
+                    defaultConfigId: MOCK_CONFIG_2.configId,
+                    configs: {[MOCK_CONFIG_2.configId]: MOCK_CONFIG_2}
+                }), // Load a different config
                 status: 200,
                 statusText: "OK"
             }));
-            await promptBuilder.build(MOCK_CONFIG_2.modelIdentifier, {instructionContent: "Test"}); // Should trigger fetch again
+            await promptBuilder.build(MOCK_CONFIG_2.configId, {instructionContent: "Test"}); // Should trigger fetch again
 
             expect(fetchSpy).toHaveBeenCalledTimes(2); // Called once for initial load, once after reset
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
@@ -276,7 +309,6 @@ describe('PromptBuilder', () => {
 
             const invalidConfig = {configId: "no_model_id"}; // Missing modelIdentifier and other required fields
             promptBuilder.addOrUpdateConfigs([invalidConfig, MOCK_CONFIG_1]);
-            // FIX: Updated expected warning message
             expect(logger.warn).toHaveBeenCalledWith('PromptBuilder.addOrUpdateConfigs: Skipping invalid configuration object.', {config: invalidConfig});
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(1);
             expect(promptBuilder.getLlmConfigsCacheForTest().has(MOCK_CONFIG_1.configId)).toBe(true);
@@ -287,7 +319,6 @@ describe('PromptBuilder', () => {
             promptBuilder = new PromptBuilder({logger});
             // @ts-ignore
             promptBuilder.addOrUpdateConfigs("not an array");
-            // FIX: Updated expected error message
             expect(logger.error).toHaveBeenCalledWith('PromptBuilder.addOrUpdateConfigs: Input must be an array.');
             expect(promptBuilder.getLlmConfigsCacheForTest().size).toBe(0);
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
@@ -298,7 +329,7 @@ describe('PromptBuilder', () => {
             const result = await promptBuilder.build('some-id', {someContent: 'data'});
             expect(result).toBe("");
             expect(logger.warn).toHaveBeenCalledWith('PromptBuilder.#ensureConfigsLoaded: No configFilePath set and no initial configurations loaded. PromptBuilder may not function correctly.');
-            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configurations available. Cannot build prompt.');
+            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configurations available in cache. Cannot build prompt.');
             expect(promptBuilder.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
         });
     });

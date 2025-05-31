@@ -24,9 +24,8 @@
 
 /**
  * @typedef {object} LLMConfig
- * @description Represents the structure of a single LLM configuration object.
- * These configurations are typically loaded from a JSON file, such as `../../config/llm-configs.json`
- * (the path being relative to the application's structure or explicitly configured).
+ * @description Represents the structure of a single LLM configuration object, as stored internally or passed directly.
+ * These configurations are derived from the `configs` map within the main configuration file (e.g., `llm-configs.json`).
  * Each configuration defines how a prompt should be assembled for a specific LLM or family of LLMs.
  *
  * @property {string} configId - A unique identifier for this specific configuration (e.g., "claude_default_v1").
@@ -38,6 +37,22 @@
  * @property {string[]} promptAssemblyOrder - An array of `key`s from `promptElements`, specifying the order
  * in which these elements should be concatenated to form the final prompt.
  * Special keys like 'perception_log_wrapper' dictate specific assembly logic.
+ * @property {string} [displayName] - A user-friendly name for this configuration.
+ * @property {string} [endpointUrl] - The base API endpoint URL.
+ * @property {string} [apiType] - Identifier for the API type (e.g., 'openrouter').
+ * @property {object} [jsonOutputStrategy] - Defines the strategy for ensuring JSON output.
+ * @property {object} [defaultParameters] - Default parameters for LLM requests.
+ * @property {object} [providerSpecificHeaders] - HTTP headers specific to the provider.
+ * @property {number} [contextTokenLimit] - Maximum context tokens.
+ * @property {object} [promptFrame] - Framing structure for the prompt.
+ * // Other properties as defined in llm-configs.schema.json under definitions.llmConfiguration.properties
+ */
+
+/**
+ * @typedef {object} RootLLMConfigsFile
+ * @description Represents the root structure of the `llm-configs.json` file.
+ * @property {string} defaultConfigId - The ID of the default LLM configuration.
+ * @property {Object<string, LLMConfig>} configs - A map of LLM configurations, where each key is a configId.
  */
 
 /**
@@ -199,16 +214,19 @@ export class PromptBuilder extends IPromptBuilder {
                 throw new Error(`Failed to fetch configuration file: ${response.statusText}`);
             }
 
-            const configsArray = await response.json();
+            /** @type {RootLLMConfigsFile} */
+            const jsonData = await response.json();
 
-            if (!Array.isArray(configsArray)) {
-                this.#logger.error('PromptBuilder: Loaded configuration data is not an array.', {data: configsArray});
-                throw new Error('Configuration data must be an array.');
+            if (typeof jsonData !== 'object' || jsonData === null || typeof jsonData.configs !== 'object' || jsonData.configs === null) {
+                this.#logger.error('PromptBuilder: Loaded configuration data is not in the expected format. It must be an object with a "configs" property, where "configs" is an object map of configurations.', {data: jsonData});
+                throw new Error('Configuration data must be an object with a "configs" property containing configuration objects.');
             }
+
+            const configsObjectMap = jsonData.configs;
 
             this.#llmConfigsCache.clear();
             let loadedCount = 0;
-            for (const config of configsArray) {
+            for (const config of Object.values(configsObjectMap)) {
                 if (config && config.configId && config.modelIdentifier && Array.isArray(config.promptElements) && Array.isArray(config.promptAssemblyOrder)) {
                     this.#llmConfigsCache.set(config.configId, config);
                     loadedCount++;
@@ -220,7 +238,7 @@ export class PromptBuilder extends IPromptBuilder {
             if (loadedCount > 0) {
                 this.#logger.info(`PromptBuilder: Successfully loaded and cached ${loadedCount} configurations from ${this.#configFilePath}.`);
             } else {
-                this.#logger.info(`PromptBuilder: No valid configurations found in ${this.#configFilePath}. Cache remains empty.`);
+                this.#logger.warn(`PromptBuilder: No valid configurations found or loaded from the "configs" map in ${this.#configFilePath}. Cache might be empty.`);
             }
         } catch (error) {
             this.#configsLoadedOrAttempted = true;
@@ -228,7 +246,7 @@ export class PromptBuilder extends IPromptBuilder {
                 path: this.#configFilePath,
                 error
             });
-            this.#llmConfigsCache.clear();
+            this.#llmConfigsCache.clear(); // Ensure cache is cleared on error
         }
     }
 
@@ -242,6 +260,7 @@ export class PromptBuilder extends IPromptBuilder {
             this.#logger.debug('PromptBuilder.#ensureConfigsLoaded: Configurations already loaded or load attempt was made and cache is not empty.');
             return;
         }
+        // If a load was attempted from file and cache is empty, don't re-attempt unless reset.
         if (this.#configsLoadedOrAttempted && this.#llmConfigsCache.size === 0 && this.#configFilePath) {
             this.#logger.debug('PromptBuilder.#ensureConfigsLoaded: Previous load attempt from file resulted in an empty cache. Not re-attempting automatically.');
             return;
@@ -261,7 +280,7 @@ export class PromptBuilder extends IPromptBuilder {
 
     /**
      * Assembles a final prompt string based on the provided LLM identifier and structured prompt data.
-     * @param {string} llmId - A string identifying the target LLM.
+     * @param {string} llmId - A string identifying the target LLM. This is typically the `configId` of an LLM configuration.
      * @param {PromptData} promptData - A structured JavaScript object containing content and flags.
      * @returns {Promise<string>} The fully assembled prompt string, or an empty string if a prompt cannot be built.
      */
@@ -271,7 +290,7 @@ export class PromptBuilder extends IPromptBuilder {
         await this.#ensureConfigsLoaded();
 
         if (this.#llmConfigsCache.size === 0) {
-            this.#logger.error('PromptBuilder.build: No configurations available. Cannot build prompt.');
+            this.#logger.error('PromptBuilder.build: No configurations available in cache. Cannot build prompt.');
             return "";
         }
 
@@ -279,15 +298,16 @@ export class PromptBuilder extends IPromptBuilder {
             this.#logger.error('PromptBuilder.build: llmId is required and must be a string.');
             return "";
         }
-        if (!promptData || typeof promptData !== 'object') {
+        if (!promptData || typeof promptData !== 'object' || promptData === null) {
             this.#logger.error('PromptBuilder.build: promptData is required and must be a non-null object.');
             return "";
         }
 
         const selectedConfig = this._findConfiguration(llmId);
 
+
         if (!selectedConfig) {
-            this.#logger.error(`PromptBuilder.build: No configuration found for llmId "${llmId}". Cannot build prompt.`);
+            this.#logger.error(`PromptBuilder.build: No configuration found for llmId "${llmId}" (searched by configId and modelIdentifier patterns). Cannot build prompt.`);
             return "";
         }
         this.#logger.debug(`PromptBuilder.build: Using configuration: ${selectedConfig.configId} for llmId: ${llmId}`);
@@ -302,7 +322,6 @@ export class PromptBuilder extends IPromptBuilder {
                 continue;
             }
 
-            // --- Conditional Inclusion Check ---
             if (elementConfig.condition) {
                 if (typeof elementConfig.condition.promptDataFlag !== 'string') {
                     this.#logger.warn(`PromptBuilder.build: Conditional part '${key}' has invalid 'promptDataFlag' in its condition. Skipping.`, {condition: elementConfig.condition});
@@ -324,18 +343,18 @@ export class PromptBuilder extends IPromptBuilder {
                 this.#logger.debug(`PromptBuilder.build: Conditional part '${key}' included.`);
             }
 
-            // --- Resolve Prefix & Suffix Early (for placeholder warnings) ---
             const resolvedPrefix = this.#resolvePlaceholders(elementConfig.prefix || "", promptData);
             const resolvedSuffix = this.#resolvePlaceholders(elementConfig.suffix || "", promptData);
 
-            // --- Special Handling for Perception Log ---
             if (key === 'perception_log_wrapper') {
                 const perceptionLogArray = promptData.perceptionLogArray;
+
                 if (perceptionLogArray && Array.isArray(perceptionLogArray) && perceptionLogArray.length > 0) {
                     let assembledLogEntries = "";
                     const perceptionLogEntryConfig = promptElementsMap.get('perception_log_entry');
+
                     if (!perceptionLogEntryConfig) {
-                        this.#logger.warn(`PromptBuilder.build: Missing 'perception_log_entry' for configId "${selectedConfig.configId}".`);
+                        this.#logger.warn(`PromptBuilder.build: Missing 'perception_log_entry' config for perception log in configId "${selectedConfig.configId}". Cannot format entries.`);
                     } else {
                         for (const entry of perceptionLogArray) {
                             if (typeof entry !== 'object' || entry === null) {
@@ -343,23 +362,27 @@ export class PromptBuilder extends IPromptBuilder {
                                 continue;
                             }
                             const entryContent = (entry.content !== null && entry.content !== undefined) ? String(entry.content) : '';
-                            const entryPrefix = this.#resolvePlaceholders(perceptionLogEntryConfig.prefix || "", entry, promptData);
-                            const entrySuffix = this.#resolvePlaceholders(perceptionLogEntryConfig.suffix || "", entry, promptData);
-                            assembledLogEntries += `${entryPrefix}${entryContent}${entrySuffix}`;
+                            const entryPrefixInternal = this.#resolvePlaceholders(perceptionLogEntryConfig.prefix || "", entry, promptData);
+                            const entrySuffixInternal = this.#resolvePlaceholders(perceptionLogEntryConfig.suffix || "", entry, promptData);
+                            assembledLogEntries += `${entryPrefixInternal}${entryContent}${entrySuffixInternal}`;
                         }
                     }
-                    if (assembledLogEntries || (perceptionLogEntryConfig && perceptionLogArray.length > 0)) {
-                        finalPromptString += `${resolvedPrefix}${assembledLogEntries}${resolvedSuffix}`;
-                    } else {
-                        this.#logger.debug(`PromptBuilder.build: Perception log '${key}' resulted in no entries. Skipping wrapper.`);
+
+                    finalPromptString += `${resolvedPrefix}${assembledLogEntries}${resolvedSuffix}`;
+
+                    if (assembledLogEntries === "" && !perceptionLogEntryConfig) {
+                        this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added. Entries were not formatted due to missing 'perception_log_entry' config.`);
+                    } else if (assembledLogEntries === "" && perceptionLogEntryConfig) {
+                        this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added, but all processed log entries resulted in empty strings.`);
+                    } else if (assembledLogEntries !== "") {
+                        this.#logger.debug(`PromptBuilder.build: Perception log wrapper for '${key}' added with formatted entries.`);
                     }
                 } else {
-                    this.#logger.debug(`PromptBuilder.build: Perception log array for '${key}' missing or empty. Skipping.`);
+                    this.#logger.debug(`PromptBuilder.build: Perception log array for '${key}' missing or empty in PromptData. Skipping wrapper element.`);
                 }
                 continue;
             }
 
-            // --- General Content Element Processing ---
             const camelCaseKey = this.#snakeToCamel(key);
             const contentKeyInPromptData = `${camelCaseKey}Content`;
             const rawContent = promptData[contentKeyInPromptData];
@@ -367,45 +390,59 @@ export class PromptBuilder extends IPromptBuilder {
 
             if (rawContent === null || rawContent === undefined) {
                 centralContentString = "";
+                this.#logger.debug(`PromptBuilder.build: Content for '${key}' (from '${contentKeyInPromptData}') is null or undefined. Treating as empty string.`);
             } else if (typeof rawContent === 'string') {
                 centralContentString = rawContent;
             } else {
-                // Invalid content type: not string, not null, not undefined.
-                // Log message tailored to pass the specific test assertion.
-                this.#logger.warn(`Content for '${key}' (from '${contentKeyInPromptData}') is not a string.`);
-                continue; // Skip this element entirely as per test "should skip element..."
+                this.#logger.warn(`PromptBuilder.build: Content for '${key}' (from '${contentKeyInPromptData}') is not a string, null, or undefined. It is of type '${typeof rawContent}'. Skipping this element.`);
+                continue;
             }
 
-            // Assemble if any part is non-empty
             if (resolvedPrefix !== "" || centralContentString !== "" || resolvedSuffix !== "") {
                 finalPromptString += `${resolvedPrefix}${centralContentString}${resolvedSuffix}`;
             } else {
-                this.#logger.debug(`PromptBuilder.build: Element '${key}' for config '${selectedConfig.configId}' is entirely empty. Skipping.`);
+                this.#logger.debug(`PromptBuilder.build: Element '${key}' for config '${selectedConfig.configId}' is entirely empty (prefix, content, suffix). Skipping.`);
             }
         }
 
-        this.#logger.info(`PromptBuilder.build: Successfully assembled prompt for llmId: ${llmId}. Length: ${finalPromptString.length}`);
+        this.#logger.info(`PromptBuilder.build: Successfully assembled prompt for llmId: ${llmId} using config ${selectedConfig.configId}. Length: ${finalPromptString.length}`);
         return finalPromptString;
     }
 
 
     /**
      * Finds a configuration based on the llmId.
-     * @param {string} llmId - The LLM identifier.
+     * It first attempts to find an exact match for `config.configId === llmId`.
+     * If not found, it then searches by `config.modelIdentifier`, supporting exact matches and wildcard patterns (e.g., "provider/*").
+     * When multiple exact `modelIdentifier` matches exist, the first one encountered during iteration is chosen.
+     * @param {string} llmId - The LLM identifier, ideally a `configId`.
      * @returns {LLMConfig | undefined} The selected configuration or undefined.
      * @protected
      */
     _findConfiguration(llmId) {
-        this.#logger.debug(`_findConfiguration: Searching configuration for llmId "${llmId}"`);
-        let exactMatchConfig = undefined;
+        this.#logger.debug(`_findConfiguration: Searching configuration for identifier "${llmId}"`);
+
+        // 1. Attempt direct match by configId (llmId is expected to be a configId primarily)
+        if (this.#llmConfigsCache.has(llmId)) {
+            const config = this.#llmConfigsCache.get(llmId);
+            this.#logger.info(`_findConfiguration: Selected by direct configId match: "${config.configId}" for identifier "${llmId}".`);
+            return config;
+        }
+        this.#logger.debug(`_findConfiguration: No direct match for configId "${llmId}". Trying modelIdentifier matching.`);
+
+        // 2. Fallback to modelIdentifier matching (exact and wildcard)
+        let exactModelMatchConfig = undefined;
         let bestWildcardMatchConfig = undefined;
         let longestWildcardPrefixLength = -1;
 
         for (const config of this.#llmConfigsCache.values()) {
+            // Check for exact modelIdentifier match
             if (config.modelIdentifier === llmId) {
-                exactMatchConfig = config;
-                break;
+                if (!exactModelMatchConfig) { // MODIFICATION: Only set if not already found (first one wins)
+                    exactModelMatchConfig = config;
+                }
             }
+            // Check for wildcard modelIdentifier match
             if (config.modelIdentifier && config.modelIdentifier.endsWith('*')) {
                 const wildcardPrefix = config.modelIdentifier.slice(0, -1);
                 if (llmId.startsWith(wildcardPrefix)) {
@@ -417,15 +454,16 @@ export class PromptBuilder extends IPromptBuilder {
             }
         }
 
-        if (exactMatchConfig) {
-            this.#logger.info(`_findConfiguration: Selected exact match configId "${exactMatchConfig.configId}" for llmId "${llmId}".`);
-            return exactMatchConfig;
+        if (exactModelMatchConfig) {
+            this.#logger.info(`_findConfiguration: Selected by exact modelIdentifier match: configId "${exactModelMatchConfig.configId}" (model: "${exactModelMatchConfig.modelIdentifier}") for identifier "${llmId}".`);
+            return exactModelMatchConfig;
         }
         if (bestWildcardMatchConfig) {
-            this.#logger.info(`_findConfiguration: Selected wildcard match configId "${bestWildcardMatchConfig.configId}" for llmId "${llmId}".`);
+            this.#logger.info(`_findConfiguration: Selected by wildcard modelIdentifier match: configId "${bestWildcardMatchConfig.configId}" (pattern: "${bestWildcardMatchConfig.modelIdentifier}") for identifier "${llmId}".`);
             return bestWildcardMatchConfig;
         }
-        this.#logger.warn(`_findConfiguration: No configuration found for llmId "${llmId}".`);
+
+        this.#logger.warn(`_findConfiguration: No configuration found for identifier "${llmId}" after checking configId, exact modelIdentifier, and wildcard modelIdentifier.`);
         return undefined;
     }
 
@@ -451,13 +489,14 @@ export class PromptBuilder extends IPromptBuilder {
         if (loadedCount > 0 || updatedCount > 0) {
             this.#logger.info(`PromptBuilder.addOrUpdateConfigs: Loaded ${loadedCount} new, updated ${updatedCount} existing configurations.`);
         }
-        if (this.#llmConfigsCache.size > 0) {
+        if (this.#llmConfigsCache.size > 0 && !this.#configsLoadedOrAttempted) {
             this.#configsLoadedOrAttempted = true;
         }
     }
 
     /**
      * Clears the configuration cache and resets the loaded state.
+     * This allows for a fresh load from file on the next call to `build` or `ensureConfigsLoaded`.
      */
     resetConfigurationCache() {
         this.#llmConfigsCache.clear();
@@ -466,12 +505,20 @@ export class PromptBuilder extends IPromptBuilder {
     }
 
     // --- Methods for Testing ---
-    /** @private */
+    /**
+     * @private
+     * Gets the internal LLM configurations cache. For testing purposes only.
+     * @returns {Map<string, LLMConfig>}
+     */
     getLlmConfigsCacheForTest() {
         return this.#llmConfigsCache;
     }
 
-    /** @private */
+    /**
+     * @private
+     * Gets the internal flag indicating if configurations have been loaded or an attempt was made. For testing purposes only.
+     * @returns {boolean}
+     */
     getConfigsLoadedOrAttemptedFlagForTest() {
         return this.#configsLoadedOrAttempted;
     }

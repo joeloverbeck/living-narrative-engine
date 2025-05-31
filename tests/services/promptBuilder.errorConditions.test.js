@@ -132,7 +132,7 @@ describe('PromptBuilder', () => {
         test('should log and return empty string if no configurations are loaded', async () => {
             promptBuilder = new PromptBuilder({logger}); // No configs, no path
             expect(await promptBuilder.build("any/model", {})).toBe("");
-            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configurations available. Cannot build prompt.');
+            expect(logger.error).toHaveBeenCalledWith('PromptBuilder.build: No configurations available in cache. Cannot build prompt.');
         });
     });
 });

@@ -18,8 +18,9 @@ const mockLoggerInstance = () => ({
     debug: jest.fn(),
 });
 
-const MOCK_CONFIG_FILE_PATH = './test-llm-configs.json';
+// const MOCK_CONFIG_FILE_PATH = './test-llm-configs.json'; // Not used in this test suite
 
+// These MOCK_CONFIGs are not directly used by tests in this file but kept for potential context or future use
 /** @type {LLMConfig} */
 const MOCK_CONFIG_1 = {
     configId: "test_config_v1",
@@ -46,17 +47,16 @@ describe('PromptBuilder', () => {
     /** @type {PromptBuilder} */
     let promptBuilder;
     /** @type {jest.SpiedFunction<typeof fetch>} */
-    let fetchSpy;
+    let fetchSpy; // Not used in this suite as initialConfigs are used
 
 
     beforeEach(() => {
         logger = mockLoggerInstance();
-        // Ensure `fetch` is spied on and can be restored.
-        fetchSpy = jest.spyOn(global, 'fetch');
+        fetchSpy = jest.spyOn(global, 'fetch'); // Spy even if not directly used by these tests
     });
 
     afterEach(() => {
-        jest.restoreAllMocks(); // Restores all mocks, including fetchSpy
+        jest.restoreAllMocks();
     });
 
     describe('Special Handling for Perception Log', () => {
@@ -72,7 +72,7 @@ describe('PromptBuilder', () => {
         };
         const noEntryConfig = {
             configId: "no_entry_cfg", modelIdentifier: "log/no_entry",
-            promptElements: [{key: "perception_log_wrapper", prefix: "<WRAP>", suffix: "</WRAP>"}],
+            promptElements: [{key: "perception_log_wrapper", prefix: "<WRAP>", suffix: "</WRAP>"}], // No perception_log_entry
             promptAssemblyOrder: ["perception_log_wrapper"]
         };
 
@@ -82,15 +82,16 @@ describe('PromptBuilder', () => {
 
         test('should correctly assemble perception log with multiple entries, substituting placeholders', async () => {
             const promptData = {
-                // headerContent: "H", // Removed - content is defined by prefix
-                // footerContent: "F", // Removed - content is defined by prefix
-                session_id: "S123", source_system: "CoreAI",
+                session_id: "S123",
+                source_system: "CoreAI", // Global fallback for source_system
+                headerContent: "", // No dynamic content for header, prefix has placeholder
+                footerContent: "", // No dynamic content for footer
                 perceptionLogArray: [
-                    {role: "user", timestamp: "T1", content: "Msg1.", source_system: "UserInput"},
-                    {role: "assistant", timestamp: "T2", content: "Msg2."}, // source_system from promptData
+                    {role: "user", timestamp: "T1", content: "Msg1.", source_system: "UserInput"}, // Entry-specific source_system
+                    {role: "assistant", timestamp: "T2", content: "Msg2."}, // Will use global source_system from promptData
                 ]
             };
-            const result = await promptBuilder.build("log/test", promptData);
+            const result = await promptBuilder.build("p_log_test", promptData);
             const expected = "Conversation Start (ID: S123)\n" +
                 "--- Log ---\n" +
                 "[T1][user (UserInput)]: Msg1.\n" +
@@ -101,43 +102,76 @@ describe('PromptBuilder', () => {
         });
 
         test('should gracefully omit perception log if array is empty, null, or undefined', async () => {
-            // Removed headerContent and footerContent from baseData as their content is defined by prefixes
-            const baseData = {session_id: "S0"};
+            const baseData = {
+                session_id: "S0",
+                headerContent: "",
+                footerContent: ""
+            };
             const expected = "Conversation Start (ID: S0)\nEnd.";
-            expect(await promptBuilder.build("log/test", {...baseData, perceptionLogArray: []})).toBe(expected);
-            expect(await promptBuilder.build("log/test", {...baseData, perceptionLogArray: null})).toBe(expected);
-            expect(await promptBuilder.build("log/test", {...baseData})).toBe(expected); // Undefined
-            // Corrected expected string to match actual log output
-            expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining("Perception log array for 'perception_log_wrapper' missing or empty. Skipping."));
+
+            logger.debug.mockClear();
+            expect(await promptBuilder.build("p_log_test", {...baseData, perceptionLogArray: []})).toBe(expected);
+            expect(logger.debug).toHaveBeenCalledWith(
+                "PromptBuilder.build: Perception log array for 'perception_log_wrapper' missing or empty in PromptData. Skipping wrapper element."
+            );
+
+            logger.debug.mockClear();
+            expect(await promptBuilder.build("p_log_test", {...baseData, perceptionLogArray: null})).toBe(expected);
+            expect(logger.debug).toHaveBeenCalledWith(
+                "PromptBuilder.build: Perception log array for 'perception_log_wrapper' missing or empty in PromptData. Skipping wrapper element."
+            );
+
+            logger.debug.mockClear();
+            const dataWithoutLog = {...baseData};
+            expect(await promptBuilder.build("p_log_test", dataWithoutLog)).toBe(expected);
+            expect(logger.debug).toHaveBeenCalledWith(
+                "PromptBuilder.build: Perception log array for 'perception_log_wrapper' missing or empty in PromptData. Skipping wrapper element."
+            );
         });
 
         test('should skip wrapper if perception_log_entry config is missing', async () => {
             const promptData = {perceptionLogArray: [{role: "user", content: "Message 1"}]};
-            const result = await promptBuilder.build("log/no_entry", promptData);
-            expect(result).toBe("");
-            // Updated expectation to match the actual log message format
-            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("Missing 'perception_log_entry' for configId \"no_entry_cfg\""));
-            // Corrected expected string to match actual log output
-            expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining("Perception log 'perception_log_wrapper' resulted in no entries. Skipping wrapper."));
+            const result = await promptBuilder.build("no_entry_cfg", promptData);
+
+            expect(result).toBe("<WRAP></WRAP>"); // Expect wrapper prefix/suffix with empty content
+
+            expect(logger.warn).toHaveBeenCalledWith(
+                `PromptBuilder.build: Missing 'perception_log_entry' config for perception log in configId "no_entry_cfg". Cannot format entries.`
+            );
+
+            // Updated debug log expectation
+            expect(logger.debug).toHaveBeenCalledWith(
+                "PromptBuilder.build: Perception log wrapper for 'perception_log_wrapper' added. Entries were not formatted due to missing 'perception_log_entry' config."
+            );
         });
 
         test('should skip invalid entries (null, non-object) in perceptionLogArray and log warning', async () => {
             const promptData = {
-                perceptionLogArray: [{role: "user", content: "Valid"}, null, "not an object"],
-                source_system: "S", session_id: "id", // headerContent and footerContent omitted
+                perceptionLogArray: [
+                    {role: "user", timestamp: "T_valid", content: "Valid"},
+                    null,
+                    "not an object"
+                ],
+                source_system: "S_global",
+                session_id: "id_session",
+                headerContent: "",
+                footerContent: ""
             };
-            await promptBuilder.build("log/test", promptData);
-            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("Invalid perception log entry"), {entry: null});
-            expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("Invalid perception log entry"), {entry: "not an object"});
+            await promptBuilder.build("p_log_test", promptData);
+            expect(logger.warn).toHaveBeenCalledWith("PromptBuilder.build: Invalid perception log entry. Skipping.", {entry: null});
+            expect(logger.warn).toHaveBeenCalledWith("PromptBuilder.build: Invalid perception log entry. Skipping.", {entry: "not an object"});
         });
 
         test('should handle entries with missing content (null/undefined) as empty string content', async () => {
             const promptData = {
-                perceptionLogArray: [{role: "user", timestamp: "T", content: null}],
-                source_system: "S", session_id: "id", // headerContent and footerContent omitted
+                perceptionLogArray: [{role: "user", timestamp: "T_missing_content", content: null}],
+                source_system: "S_global_for_missing",
+                session_id: "id_session_missing",
+                headerContent: "",
+                footerContent: ""
             };
-            const result = await promptBuilder.build("log/test", promptData);
-            expect(result).toContain("[T][user (S)]: \n"); // Empty content
+            const result = await promptBuilder.build("p_log_test", promptData);
+            expect(result).toContain("[T_missing_content][user (S_global_for_missing)]: \n");
         });
     });
 });
