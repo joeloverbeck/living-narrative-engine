@@ -11,6 +11,7 @@ import {
 import {jest, describe, beforeEach, test, expect, afterEach} from '@jest/globals';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../src/interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService */
 /** @typedef {import('../../src/turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
 /** @typedef {import('../../src/types/promptData.js').PromptData} PromptData */
 /** @typedef {import('../../src/services/AIPromptContentProvider.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
@@ -31,6 +32,8 @@ describe('AIPromptContentProvider', () => {
     let provider;
     /** @type {jest.Mocked<ILogger>} */
     let mockLoggerInstance;
+    /** @type {jest.Mocked<IPromptStaticContentService>} */
+    let mockPromptStaticContentService;
 
     // Spy for the new instance method
     /** @type {jest.SpyInstance} */
@@ -61,14 +64,31 @@ describe('AIPromptContentProvider', () => {
     const MOCK_FINAL_INSTR = "Mocked Final Instructions";
 
     beforeEach(() => {
-        provider = new AIPromptContentProvider();
         mockLoggerInstance = mockLogger();
+        mockPromptStaticContentService = {
+            getCoreTaskDescriptionText: jest.fn().mockReturnValue(MOCK_TASK_DEF),
+            getCharacterPortrayalGuidelines: jest.fn().mockReturnValue(MOCK_PORTRAYAL),
+            getNc21ContentPolicyText: jest.fn().mockReturnValue(MOCK_POLICY),
+            getFinalLlmInstructionText: jest.fn().mockReturnValue(MOCK_FINAL_INSTR),
+        };
+
+        provider = new AIPromptContentProvider({
+            promptStaticContentService: mockPromptStaticContentService
+        });
+
 
         // Spy on the new instance method and provide a default mock implementation
         validateGameStateForPromptingSpy = jest.spyOn(provider, 'validateGameStateForPrompting')
             .mockReturnValue({isValid: true, errorContent: null});
 
         // Spy on other instance methods called by getPromptData
+        // These methods in AIPromptContentProvider now delegate to promptStaticContentService.
+        // Spying on them directly intercepts the call before delegation, which is suitable
+        // if we want to test getPromptData's assembly logic independently of the
+        // actual content returned by the delegated methods.
+        // The mockPromptStaticContentService above ensures that if these spies were removed
+        // and the actual methods were called, they would delegate to functions returning
+        // the MOCK_ values.
         getTaskDefinitionContentSpy = jest.spyOn(provider, 'getTaskDefinitionContent').mockReturnValue(MOCK_TASK_DEF);
         getCharacterPersonaContentSpy = jest.spyOn(provider, 'getCharacterPersonaContent').mockReturnValue(MOCK_PERSONA);
         getCharacterPortrayalGuidelinesContentSpy = jest.spyOn(provider, 'getCharacterPortrayalGuidelinesContent').mockReturnValue(MOCK_PORTRAYAL);
@@ -131,6 +151,7 @@ describe('AIPromptContentProvider', () => {
                 currentUserInput: undefined,
                 perceptionLog: null,
                 currentLocation: undefined,
+                // availableActions: undefined, // This was missing in original test data, but getAvailableActionsInfoContent is spied
             };
             // Ensure validateGameStateForPrompting is explicitly set to valid for this test case,
             // overriding the default mock if necessary for clarity or specific sub-validation behavior.
@@ -154,25 +175,22 @@ describe('AIPromptContentProvider', () => {
             const testUserInput = 'What is happening?';
             const testLocationName = 'The Eerie Sanctum';
 
-            // --- MODIFICATION FOR TEST ---
-            // 1. Use field names expected by the provider for raw log entries
             /** @type {RawPerceptionLogEntry[]} */
             const testRawPerceptionInput = [{
-                descriptionText: 'A strange noise', // Use descriptionText
-                timestamp: 1,                       // Timestamp is fine
-                perceptionType: 'sight',            // Use perceptionType
-                eventId: 'evt-001',                 // Add other fields to test passthrough
+                descriptionText: 'A strange noise',
+                timestamp: 1, // Corrected: Jest expects number for timestamp if used as such. Assuming it's a number or stringifiable.
+                perceptionType: 'sight',
+                eventId: 'evt-001',
                 actorId: 'act-002',
                 targetId: 'tgt-003'
             }];
-            // --- END MODIFICATION ---
 
             /** @type {AIGameStateDTO} */
             const fullDto = {
                 actorState: {id: 'actorTest'},
                 actorPromptData: {name: testCharName, description: 'A curious adventurer.'},
                 currentUserInput: testUserInput,
-                perceptionLog: testRawPerceptionInput, // Use the modified raw input
+                perceptionLog: testRawPerceptionInput,
                 currentLocation: {
                     name: testLocationName,
                     description: 'A place of mystery.',
@@ -186,17 +204,14 @@ describe('AIPromptContentProvider', () => {
 
             const promptData = await provider.getPromptData(fullDto, mockLoggerInstance);
 
-            // --- MODIFICATION FOR TEST ---
-            // 2. Define the expected structure of the mapped perception log array
             const expectedMappedPerceptionLog = [{
-                content: 'A strange noise',      // Mapped from descriptionText
+                content: 'A strange noise',
                 timestamp: 1,
-                type: 'sight',                   // Mapped from perceptionType
-                eventId: 'evt-001',              // Passed through
-                actorId: 'act-002',              // Passed through
-                targetId: 'tgt-003'              // Passed through
+                type: 'sight',
+                eventId: 'evt-001',
+                actorId: 'act-002',
+                targetId: 'tgt-003'
             }];
-            // --- END MODIFICATION ---
 
 
             expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
@@ -209,7 +224,7 @@ describe('AIPromptContentProvider', () => {
                 availableActionsInfoContent: MOCK_ACTIONS_INFO,
                 userInputContent: testUserInput,
                 finalInstructionsContent: MOCK_FINAL_INSTR,
-                perceptionLogArray: expectedMappedPerceptionLog, // Assert against the transformed structure
+                perceptionLogArray: expectedMappedPerceptionLog,
                 characterName: testCharName,
                 locationName: testLocationName,
             });
@@ -217,7 +232,10 @@ describe('AIPromptContentProvider', () => {
             expect(getTaskDefinitionContentSpy).toHaveBeenCalled();
             expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
             expect(getCharacterPortrayalGuidelinesContentSpy).toHaveBeenCalledWith(testCharName);
-            // ... other getter calls
+            expect(getContentPolicyContentSpy).toHaveBeenCalled();
+            expect(getWorldContextContentSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
+            expect(getAvailableActionsInfoContentSpy).toHaveBeenCalledWith(fullDto, mockLoggerInstance);
+            expect(getFinalInstructionsContentSpy).toHaveBeenCalled();
             expect(mockLoggerInstance.info).toHaveBeenCalledWith("AIPromptContentProvider.getPromptData: PromptData assembled successfully.");
         });
 
@@ -225,10 +243,11 @@ describe('AIPromptContentProvider', () => {
             /** @type {AIGameStateDTO} */
             const dtoWithoutCharName = {
                 actorState: {id: 'actorNoName'},
-                actorPromptData: {description: 'Nameless one'},
+                actorPromptData: {description: 'Nameless one'}, // name is missing
                 currentUserInput: "Input",
                 perceptionLog: [],
                 currentLocation: {name: "Someplace", description: '', exits: [], characters: []},
+                // availableActions: [], // This was missing, ensure it's covered if needed
             };
             validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null});
 
@@ -240,6 +259,7 @@ describe('AIPromptContentProvider', () => {
         test('should use empty string if currentUserInput is null or undefined', async () => {
             /** @type {AIGameStateDTO} */
             const dtoNullInput = {actorState: {}, actorPromptData: {name: 'Char'}, currentUserInput: null};
+            /** @type {AIGameStateDTO} */
             const dtoUndefinedInput = {actorState: {}, actorPromptData: {name: 'Char'}, currentUserInput: undefined};
 
             validateGameStateForPromptingSpy.mockReturnValue({isValid: true, errorContent: null});
@@ -257,6 +277,7 @@ describe('AIPromptContentProvider', () => {
         test('should use empty array if perceptionLog is null or undefined', async () => {
             /** @type {AIGameStateDTO} */
             const dtoNullLog = {actorState: {}, actorPromptData: {name: 'Char'}, perceptionLog: null};
+            /** @type {AIGameStateDTO} */
             const dtoUndefinedLog = {actorState: {}, actorPromptData: {name: 'Char'}, perceptionLog: undefined};
             validateGameStateForPromptingSpy.mockReturnValue({isValid: true, errorContent: null});
 
@@ -270,7 +291,9 @@ describe('AIPromptContentProvider', () => {
         test('should use "an unknown place" if currentLocation or its name is missing', async () => {
             /** @type {AIGameStateDTO} */
             const dtoNullLocation = {actorState: {}, actorPromptData: {name: 'Char'}, currentLocation: null};
+            /** @type {AIGameStateDTO} */
             const dtoUndefinedLocation = {actorState: {}, actorPromptData: {name: 'Char'}, currentLocation: undefined};
+            /** @type {AIGameStateDTO} */
             const dtoLocationNoName = {
                 actorState: {},
                 actorPromptData: {name: 'Char'},
@@ -295,6 +318,7 @@ describe('AIPromptContentProvider', () => {
             const internalErrorMsg = "Internal persona generation failed";
 
             validateGameStateForPromptingSpy.mockReturnValueOnce({isValid: true, errorContent: null});
+            // Simulate an error from one of the content gathering methods
             getCharacterPersonaContentSpy.mockImplementationOnce(() => {
                 throw new Error(internalErrorMsg);
             });
@@ -312,10 +336,19 @@ describe('AIPromptContentProvider', () => {
     });
 
     describe('validateGameStateForPrompting', () => {
+        // This `beforeEach` is specific to the 'validateGameStateForPrompting' describe block.
+        // The provider instance created in the outer `beforeEach` is used.
+        // We need to ensure 'validateGameStateForPromptingSpy' is restored if it was spied on
+        // provider from the outer scope, to test its actual implementation here.
         beforeEach(() => {
+            // Restore the spy on the actual method to test its own logic
             if (validateGameStateForPromptingSpy) {
                 validateGameStateForPromptingSpy.mockRestore();
             }
+            // Ensure other spies that might interfere are also restored or not active if not needed
+            if (getTaskDefinitionContentSpy) getTaskDefinitionContentSpy.mockRestore();
+            if (getCharacterPersonaContentSpy) getCharacterPersonaContentSpy.mockRestore();
+            // etc. for other spies if they could be called by validateGameStateForPrompting (though unlikely)
         });
 
         test('should return isValid: false and specific error if gameStateDto is null', () => {
@@ -325,30 +358,32 @@ describe('AIPromptContentProvider', () => {
         });
 
         test('should return isValid: true but log error if actorState is missing (current logic)', () => {
-            const gameState = {actorPromptData: {name: "Test"}};
-            // @ts-ignore
+            const gameState = {actorPromptData: {name: "Test"}}; // Missing actorState
+            // @ts-ignore - Intentionally passing incomplete DTO for testing
             const result = provider.validateGameStateForPrompting(gameState, mockLoggerInstance);
-            expect(result.isValid).toBe(true);
+            expect(result.isValid).toBe(true); // As per current logic in AIPromptContentProvider
             expect(result.errorContent).toBeNull();
             expect(mockLoggerInstance.error).toHaveBeenCalledWith("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly.");
         });
 
         test('should return isValid: true but log warning if actorPromptData is missing (current logic)', () => {
-            const gameState = {actorState: {id: "test"}};
-            // @ts-ignore
+            const gameState = {actorState: {id: "test"}}; // Missing actorPromptData
+            // @ts-ignore - Intentionally passing incomplete DTO for testing
             const result = provider.validateGameStateForPrompting(gameState, mockLoggerInstance);
-            expect(result.isValid).toBe(true);
+            expect(result.isValid).toBe(true); // As per current logic
             expect(result.errorContent).toBeNull();
             expect(mockLoggerInstance.warn).toHaveBeenCalledWith("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks.");
         });
 
         test('should return isValid: true for a valid gameStateDto', () => {
+            /** @type {AIGameStateDTO} */
             const gameState = {
                 actorState: {id: "actor1"},
                 actorPromptData: {name: "Valid Actor"},
                 currentLocation: {name: "Valid Location", description: "", exits: [], characters: []},
                 perceptionLog: [],
-                availableActions: []
+                availableActions: [],
+                currentUserInput: ""
             };
             const result = provider.validateGameStateForPrompting(gameState, mockLoggerInstance);
             expect(result).toEqual({isValid: true, errorContent: null});

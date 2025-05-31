@@ -1,11 +1,10 @@
 // src/services/promptElementAssemblers/StandardElementAssembler.js
-// --- FILE START ---
-
 /**
  * @fileoverview Implements the StandardElementAssembler for generic prompt elements.
  */
 
 import {IPromptElementAssembler} from '../../interfaces/IPromptElementAssembler.js';
+import {snakeToCamel} from '../../utils/textUtils.js'; // Import the shared utility
 
 // JSDoc Typedefs for dependency contracts and data structures
 /**
@@ -40,20 +39,7 @@ export class StandardElementAssembler extends IPromptElementAssembler {
      */
     #logger;
 
-    /**
-     * Converts a snake_case string to camelCase.
-     * Example: "system_prompt" -> "systemPrompt"
-     * @private
-     * @static
-     * @param {string} str - The string to convert.
-     * @returns {string} The camelCased string. Returns an empty string if the input is falsy.
-     */
-    static #snakeToCamel(str) {
-        if (!str) {
-            return '';
-        }
-        return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
-    }
+    // #snakeToCamel method has been removed from here and moved to stringUtils.js
 
     /**
      * Initializes a new instance of the StandardElementAssembler.
@@ -101,7 +87,7 @@ export class StandardElementAssembler extends IPromptElementAssembler {
         const resolvedPrefix = placeholderResolver.resolve(prefix, promptData);
         const resolvedSuffix = placeholderResolver.resolve(suffix, promptData);
 
-        const camelCaseKey = StandardElementAssembler.#snakeToCamel(key);
+        const camelCaseKey = snakeToCamel(key); // Use the imported utility
         const contentKeyInPromptData = `${camelCaseKey}Content`;
 
         const rawContent = promptData[contentKeyInPromptData];
@@ -127,5 +113,3 @@ export class StandardElementAssembler extends IPromptElementAssembler {
         }
     }
 }
-
-// --- FILE END ---

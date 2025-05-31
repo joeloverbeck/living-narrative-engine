@@ -1,5 +1,5 @@
 // src/core/config/registrations/domainServicesRegistrations.js
-// --- FILE START ---
+// ****** MODIFIED FILE ******
 import {tokens} from '../tokens.js';
 import {Registrar} from '../registrarHelpers.js';
 import {TargetResolutionService} from "../../services/targetResolutionService.js";
@@ -31,7 +31,14 @@ import {ConcreteTurnStateFactory} from "../../turns/factories/concreteTurnStateF
 import {LLMResponseProcessor} from "../../turns/services/LLMResponseProcessor.js";
 import {AIPromptContentProvider} from "../../services/AIPromptContentProvider.js";
 import {AIGameStateProvider} from "../../turns/services/AIGameStateProvider.js";
-import {PromptBuilder} from "../../services/promptBuilder.js";
+
+// --- PromptBuilder and its dependencies (NEW IMPORTS) ---
+import {PromptBuilder} from "../../services/promptBuilder.js"; // Corrected path
+import {LLMConfigService} from "../../services/llmConfigService.js"; // Corrected path
+import {HttpConfigurationProvider} from "../../services/httpConfigurationProvider.js"; // Corrected path
+import {PlaceholderResolver} from "../../utils/placeholderResolver.js"; // Corrected path
+import {StandardElementAssembler} from "../../services/promptElementAssemblers/StandardElementAssembler.js"; // Corrected path
+import {PerceptionLogAssembler} from "../../services/promptElementAssemblers/PerceptionLogAssembler.js"; // Corrected path
 
 
 // --- Type Imports for JSDoc ---
@@ -56,8 +63,16 @@ import {PromptBuilder} from "../../services/promptBuilder.js";
 /** @typedef {import('../../services/gamePersistenceService.js').default} GamePersistenceService_Type */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */
-/** @typedef {import('../../../initializers/services/referenceResolver.js').default} ReferenceResolver_Concrete */ // <<< NEW TYPEDEF
-/** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */ // <<< NEW TYPEDEF
+/** @typedef {import('../../../initializers/services/referenceResolver.js').default} ReferenceResolver_Concrete */
+/** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */
+// --- NEW Type Imports for PromptBuilder dependencies ---
+/** @typedef {import('../../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
+/** @typedef {import('../../../services/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
+/** @typedef {import('../../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver_Concrete */
+/** @typedef {import('../../../services/promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
+/** @typedef {import('../../../services/promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
+
+/** @typedef {import('../../../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder_Interface */
 
 
 /**
@@ -261,23 +276,80 @@ export function registerDomainServices(container) {
     log.debug(`Domain Services Registration: Registered ${String(tokens.IReferenceResolver)} implemented by ReferenceResolver.`);
 
 
-    // --- Register Services for AITurnHandler and AIPlayerStrategy ---
+    // --- Services for PromptBuilder, AITurnHandler and AIPlayerStrategy ---
+
+    // Register IConfigurationProvider (implemented by HttpConfigurationProvider)
+    r.singletonFactory(tokens.IConfigurationProvider, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        return new HttpConfigurationProvider({logger});
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IConfigurationProvider)} (HttpConfigurationProvider).`);
+
+    // Register LLMConfigService
+    r.singletonFactory(tokens.LLMConfigService, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        const configurationProvider = /** @type {IConfigurationProvider} */ (c.resolve(tokens.IConfigurationProvider));
+        // This path was previously hardcoded in PromptBuilder's factory.
+        // It's assumed to be a URL if HttpConfigurationProvider is used.
+        const llmConfigsPath = "./config/llm-configs.json";
+        log.info(`${String(tokens.LLMConfigService)} factory: Using configSourceIdentifier: "${llmConfigsPath}"`);
+        return new LLMConfigService({
+            logger,
+            configurationProvider,
+            configSourceIdentifier: llmConfigsPath
+        });
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.LLMConfigService)}.`);
+
+    // Register PlaceholderResolver
+    r.singletonFactory(tokens.PlaceholderResolver, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        return new PlaceholderResolver(logger); // PlaceholderResolver constructor takes logger directly
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.PlaceholderResolver)}.`);
+
+    // Register StandardElementAssembler
+    r.singletonFactory(tokens.StandardElementAssembler, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        return new StandardElementAssembler({logger});
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.StandardElementAssembler)}.`);
+
+    // Register PerceptionLogAssembler
+    r.singletonFactory(tokens.PerceptionLogAssembler, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        return new PerceptionLogAssembler({logger});
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.PerceptionLogAssembler)}.`);
+
+    // UPDATED PromptBuilder registration
     r.singletonFactory(tokens.IPromptBuilder, (c) => {
         const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
-        const llmConfigsPath = "./config/llm-configs.json";
-        log.info(`${String(tokens.IPromptBuilder)} factory: Using fixed configFilePath: "${llmConfigsPath}"`);
-        return new PromptBuilder({logger, configFilePath: llmConfigsPath});
+        const llmConfigService = /** @type {LLMConfigService_Concrete} */ (c.resolve(tokens.LLMConfigService));
+        const placeholderResolver = /** @type {PlaceholderResolver_Concrete} */ (c.resolve(tokens.PlaceholderResolver));
+        const standardElementAssembler = /** @type {StandardElementAssembler_Concrete} */ (c.resolve(tokens.StandardElementAssembler));
+        const perceptionLogAssembler = /** @type {PerceptionLogAssembler_Concrete} */ (c.resolve(tokens.PerceptionLogAssembler));
+
+        log.info(`${String(tokens.IPromptBuilder)} factory: Creating PromptBuilder with new dependencies.`);
+        return new PromptBuilder({
+            logger,
+            llmConfigService,
+            placeholderResolver,
+            standardElementAssembler,
+            perceptionLogAssembler
+        });
     });
-    log.debug(`Domain Services Registration: Registered ${String(tokens.IPromptBuilder)}.`);
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IPromptBuilder)} with new dependencies.`);
+
 
     r.single(tokens.IAIGameStateProvider, AIGameStateProvider);
     log.debug(`Domain Services Registration: Registered ${String(tokens.IAIGameStateProvider)}.`);
 
-    r.single(tokens.IAIPromptContentProvider, AIPromptContentProvider);
+    r.single(tokens.IAIPromptContentProvider, AIPromptContentProvider); // Assuming this doesn't need new dependencies from PB refactor.
     log.debug(`Domain Services Registration: Registered ${String(tokens.IAIPromptContentProvider)}.`);
 
     r.single(tokens.ILLMResponseProcessor, LLMResponseProcessor, [
-        tokens.ISchemaValidator
+        tokens.ISchemaValidator // Assuming this doesn't need new dependencies from PB refactor.
     ]);
     log.debug(`Domain Services Registration: Registered ${String(tokens.ILLMResponseProcessor)}.`);
 
@@ -286,7 +358,7 @@ export function registerDomainServices(container) {
     r.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
     log.debug(`Domain Services Registration: Registered ${String(tokens.ITurnStateFactory)}.`);
 
-    r.single(tokens.IAIPlayerStrategyFactory, ConcreteAIPlayerStrategyFactory);
+    r.single(tokens.IAIPlayerStrategyFactory, ConcreteAIPlayerStrategyFactory); // This factory might need updates if AIPlayerStrategy's direct deps changed significantly due to PromptBuilder
     log.debug(`Domain Services Registration: Registered ${String(tokens.IAIPlayerStrategyFactory)}.`);
 
     r.single(tokens.ITurnContextFactory, ConcreteTurnContextFactory);

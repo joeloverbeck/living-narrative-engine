@@ -29,4 +29,26 @@ export function ensureTerminalPunctuation(text) {
     return trimmedText + '.';
 }
 
+/**
+ * Converts a snake_case string to camelCase.
+ * Example: "system_prompt" -> "systemPrompt"
+ * Handles empty, null, or undefined input by returning an empty string.
+ * Does not transform already camelCased strings if they don't contain underscores.
+ *
+ * @param {string} str - The string to convert.
+ * @returns {string} The camelCased string. Returns an empty string if the input is falsy.
+ */
+export function snakeToCamel(str) {
+    if (!str) {
+        return '';
+    }
+    // Ensure str is a string before calling replace
+    if (typeof str !== 'string') {
+        // Optionally, log a warning or throw an error if the input type is unexpected
+        // console.warn(`snakeToCamel: Expected a string, but received type ${typeof str}. Returning empty string.`);
+        return '';
+    }
+    return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+}
+
 // --- FILE END ---

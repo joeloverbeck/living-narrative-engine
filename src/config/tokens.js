@@ -126,6 +126,14 @@
  * @property {DiToken} QueryComponentHandler - Token for the 'QUERY_COMPONENT' operation handler.
  * @property {DiToken} SetVariableHandler - Token for the 'SET_VARIABLE' operation handler.
  * @property {DiToken} QuerySystemDataHandler - Token for the 'QUERY_SYSTEM_DATA' operation handler.
+ *
+ * // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING START *****
+ * @property {DiToken} IConfigurationProvider - Token for the LLM configuration provider interface.
+ * @property {DiToken} LLMConfigService - Token for the LLM configuration management service.
+ * @property {DiToken} PlaceholderResolver - Token for the placeholder resolution utility.
+ * @property {DiToken} StandardElementAssembler - Token for the standard prompt element assembler.
+ * @property {DiToken} PerceptionLogAssembler - Token for the perception log element assembler.
+ * // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING END *****
  */
 export const tokens = Object.freeze({
     // Core Interfaces/Abstractions & Externals
@@ -260,5 +268,13 @@ export const tokens = Object.freeze({
     AIGameStateProvider: 'AIGameStateProvider', // For ConcreteAIGameStateProvider
     AIPromptContentProvider: 'AIPromptContentProvider', // For ConcreteAIPromptContentProvider
     LLMResponseProcessor: 'LLMResponseProcessor', // For ConcreteLLMResponseProcessor
+
+    // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING START *****
+    IConfigurationProvider: 'IConfigurationProvider',
+    LLMConfigService: 'LLMConfigService',
+    PlaceholderResolver: 'PlaceholderResolver',
+    StandardElementAssembler: 'StandardElementAssembler',
+    PerceptionLogAssembler: 'PerceptionLogAssembler',
+    // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING END *****
 });
 // --- FILE END ---
