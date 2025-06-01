@@ -11,8 +11,8 @@
 #current-turn-actor-panel .actor-visuals {
     width: 90%; /* Occupy 90% of the panel's width */
     max-width: 350px; /* User adjusted: limit maximum size */
-    height: auto;
-    aspect-ratio: 1 / 1;
+    height: auto; /* Allow height to adjust to content */
+    /* aspect-ratio: 1 / 1; */ /* <<< REMOVED THIS LINE */
     margin: 0.5em auto; /* Reduced vertical margin for image container */
     overflow: hidden;
     display: flex;
@@ -30,7 +30,7 @@
     max-height: 100%;
     width: auto;
     height: auto;
-    object-fit: contain;
+    object-fit: contain; /* Ensures the whole image is visible within its bounds */
     border-radius: var(--border-radius-sm); /* CHANGED: was 4px, using --border-radius-sm from theme */
 }
 

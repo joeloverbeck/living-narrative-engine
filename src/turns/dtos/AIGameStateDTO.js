@@ -71,6 +71,7 @@
  * @property {object} [core:likes] - Component data for likes.
  * @property {object} [core:dislikes] - Component data for dislikes.
  * @property {object} [core:secrets] - Component data for secrets.
+ * @property {object} [core:fears] - Component data for fears.
  * @property {object} [core:speech_patterns] - Component data for speech patterns.
  */
 
@@ -99,6 +100,7 @@
  * @property {string} [likes] - Optional. Things the character likes.
  * @property {string} [dislikes] - Optional. Things the character dislikes.
  * @property {string} [secrets] - Optional. Secrets the character might have.
+ * @property {string} [fears] - Optional. Things the character fears.
  * @property {string[]} [speechPatterns] - Optional. An array of trimmed, valid speech patterns. An empty array or undefined if no valid patterns exist.
  */
 

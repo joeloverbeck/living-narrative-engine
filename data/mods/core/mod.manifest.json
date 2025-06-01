@@ -20,6 +20,7 @@
       "likes.component.json",
       "dislikes.component.json",
       "secrets.component.json",
+      "fears.component.json",
       "speech_patterns.component.json",
       "portrait.component.json"
     ],
@@ -57,6 +58,7 @@
       "entity_spoke.event.json",
       "perceptible_event.event.json",
       "ui_request_show_load_game.event.json",
+      "ui_request_show_save_game.event.json",
       "ui_stopped.event.json",
       "game_stopped.event.json",
       "ui_operation_in_progress.event.json",

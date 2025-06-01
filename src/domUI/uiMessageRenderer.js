@@ -6,7 +6,7 @@ import {ACTION_FAILED_ID, DISPLAY_MESSAGE_ID, SYSTEM_ERROR_OCCURRED_ID} from "..
 /**
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
- * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
+ * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription // Added for clarity
  * @typedef {import('../core/interfaces/IEvent').IEvent} IEvent // Added for clarity
  */

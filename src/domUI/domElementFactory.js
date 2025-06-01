@@ -4,7 +4,7 @@
  * Simplifies element creation and ensures testability by abstracting direct document access.
  */
 
-/** @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext */
+/** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 
 /**
  * A utility class for creating standard HTML elements.

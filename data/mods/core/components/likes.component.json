@@ -11,7 +11,7 @@
     "properties": {
       "text": {
         "type": "string",
-        "description": "A string listing likes (e.g., 'mathematics + music + genuine conversation')."
+        "description": "A string listing the character's likes, written from their first-person perspective. For example: 'I absolutely love mathematics, music, and genuine conversation.' or using a delimited list format: 'My favorite things: Mathematics + Music + Genuine conversation'."
       }
     }
   }

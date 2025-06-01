@@ -13,7 +13,7 @@ import DocumentContext from '../../src/domUI/documentContext.js';
 
 // Define Interfaces using JSDoc for clarity in mocks (optional but good practice)
 /** @typedef {import('../../core/interfaces/ILogger').ILogger} ILogger */
-/** @typedef {import('../../src/domUI/IDocumentContext.js').IDocumentContext} IDocumentContext */
+/** @typedef {import('../../src/interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 
 /** @returns {ILogger} */

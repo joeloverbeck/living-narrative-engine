@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:fears",
+  "description": "Stores the character's fears, typically as a detailed string.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "text"
+    ],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "A string detailing the character's fears, written from their first-person perspective. For example: 'What truly scares me is X, and I also have a deep fear of Y.'"
+      }
+    }
+  }
+}

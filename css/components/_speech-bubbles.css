@@ -2,30 +2,33 @@
 
 .speech-entry {
     display: flex;
-    align-items: flex-start;
+    align-items: flex-start; /* Aligns portrait top with bubble top */
     margin-bottom: var(--spacing-sm);
     width: 100%;
 }
 
 .speech-entry .speech-portrait {
-    width: var(--portrait-size-large, 100px); /* USE NEW LARGER SIZE */
-    height: var(--portrait-size-large, 100px); /* USE NEW LARGER SIZE */
-    border-radius: var(--border-radius-lg, 12px); /* USE NEW LARGER RADIUS */
-    margin-right: var(--spacing-md); /* Increased margin for larger portrait */
-    object-fit: cover;
+    width: var(--portrait-size-large, 100px); /* Fixed width for the portrait area */
+    height: auto; /* Height will adjust to maintain aspect ratio based on width */
+    /* max-height: var(--portrait-size-large, 100px); */ /* <<< REMOVED THIS LINE to allow more vertical length */
+    border-radius: var(--border-radius-lg, 12px);
+    margin-right: var(--spacing-md);
+    object-fit: contain; /* Ensures the entire image is visible and scaled correctly within the element's bounds. */
+    /* Since height is auto, this primarily helps if the image's natural width is less than var(--portrait-size-large) */
     border: 1px solid var(--border-color-subtle);
-    flex-shrink: 0;
-    background-color: var(--secondary-bg-color); /* Fallback bg if image is slow/fails */
+    flex-shrink: 0; /* Prevents the portrait from shrinking if the bubble content is too wide */
+    background-color: var(--secondary-bg-color); /* Shows if image is transparent or during loading */
+    display: block; /* Good practice for images to avoid extra space below */
 }
 
 .speech-entry .speech-bubble {
     background-color: var(--speech-bg-color);
-    color: var(--speech-text-color);
+    color: var(--speech-text-color); /* This will now use the updated darker purple */
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--border-radius-standard, var(--border-radius-md));
-    border: 1px solid var(--speech-border-color);
+    border: 1px solid var(--speech-border-color); /* This will also use the updated darker purple */
     flex-grow: 1;
-    /* Adjust max-width based on the new portrait size and margin */
+    /* This max-width calculation should still be fine as it's based on the portrait's width */
     max-width: calc(100% - var(--portrait-size-large, 100px) - var(--spacing-md) - 2px);
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -34,17 +37,23 @@
 
 /* New styles for structured speech text */
 .speech-bubble .speech-speaker-intro {
-    font-weight: bold; /* Make "[Character Name] says:" bold */
-    color: var(--primary-text-color); /* Or a slightly different shade from --speech-text-color if desired */
-    margin-right: var(--spacing-xs); /* Small space before the quote */
+    font-weight: bold;
+    color: var(--primary-text-color);
+    margin-right: var(--spacing-xs);
 }
 
 .speech-bubble .speech-quoted-text {
-    font-style: italic; /* Make the actual speech italic */
-    /* The color will be inherited from .speech-bubble (var(--speech-text-color))
-       or you can specify a different one here if needed. */
+    font-style: italic;
 }
 
+/* --- ADDED: Style for action text within speech bubbles --- */
+.speech-bubble .speech-action-text {
+    color: var(--speech-action-text-color); /* Uses the new variable from _default-theme.css */
+    font-style: normal; /* Override italic style from .speech-quoted-text if action text is part of it */
+    font-weight: bold; /* Make action text bold for emphasis */
+}
+
+/* --- END ADDED --- */
 
 .speech-entry.no-portrait .speech-bubble {
     max-width: 100%;
@@ -67,6 +76,6 @@
 
 .speech-entry.player-speech .speech-bubble .speech-speaker-intro,
 .speech-entry.player-speech .speech-bubble .speech-quoted-text {
-    color: var(--button-text-color); // Ensure text inside player bubble is also readable
+    color: var(--button-text-color);
 }
 */

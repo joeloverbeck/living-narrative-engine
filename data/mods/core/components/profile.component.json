@@ -11,7 +11,7 @@
     "properties": {
       "text": {
         "type": "string",
-        "description": "A comprehensive textual profile of the character."
+        "description": "A comprehensive textual profile or background of the character, written from their first-person perspective, allowing the character to narrate their own history and motivations. For example: 'My story begins in a small village named...'."
       }
     }
   }

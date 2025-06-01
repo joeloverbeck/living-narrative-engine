@@ -228,7 +228,8 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             this._formatOptionalAttribute("Your Profile / Background", actorPromptData.profile),
             this._formatOptionalAttribute("Your Likes", actorPromptData.likes),
             this._formatOptionalAttribute("Your Dislikes", actorPromptData.dislikes),
-            this._formatOptionalAttribute("Your Secrets", actorPromptData.secrets)
+            this._formatOptionalAttribute("Your Secrets", actorPromptData.secrets),
+            this._formatOptionalAttribute("Your Fears", actorPromptData.fears) // <<< Added fears
         ];
         optionalAttributes.forEach(line => {
             if (line !== null) characterInfo.push(line);

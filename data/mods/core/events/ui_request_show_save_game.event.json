@@ -1,0 +1,12 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:ui_request_show_save_game",
+  "description": "Signals a request from the game engine to the UI manager to display the save game interface. This event is typically triggered by a user action, such as clicking a 'Save Game' button. The UI manager is responsible for presenting the appropriate UI elements for saving the game. The event carries no specific data in its payload; its occurrence is the sole signal.",
+  "payloadSchema": {
+    "type": "object",
+    "title": "Request Show Save Game UI Payload",
+    "description": "The payload for this event is an empty object. No additional data is required as the event ID itself conveys the specific request.",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

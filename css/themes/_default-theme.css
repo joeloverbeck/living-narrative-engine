@@ -47,11 +47,12 @@
     --info-text-color: #2980b9; /* Belize Hole Blue (a calm, informative blue) */
     --echo-text-color: var(--secondary-text-color);
 
-    /* --- ADDED: Variables for speech messages --- */
-    --speech-text-color: #8e44ad; /* Wisteria Purple - distinct for speech */
-    --speech-bg-color: #f5eef8; /* Light Purple tint for background */
+    /* --- MODIFIED & ADDED: Variables for speech messages --- */
+    --speech-text-color: #6a1b9a; /* MODIFIED: Darker Wisteria Purple for better contrast */
+    --speech-bg-color: #f5eef8; /* Light Purple tint for background (remains same) */
     --speech-border-color: var(--speech-text-color); /* Border matches text color for emphasis */
-    /* --- END ADDED --- */
+    --speech-action-text-color: #c0392b; /* ADDED: For action text, using a contrasting red */
+    /* --- END MODIFIED & ADDED --- */
 
     /* Fonts */
     --font-narrative: 'Merriweather', serif;

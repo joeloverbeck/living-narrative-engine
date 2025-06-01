@@ -11,7 +11,7 @@
     "properties": {
       "text": {
         "type": "string",
-        "description": "A string listing personality traits (e.g., 'intelligent + witty + candid')."
+        "description": "A string listing the character's key personality traits, written from their first-person perspective as a self-assessment. For example: 'I consider myself to be intelligent, generally witty, and quite candid.' or using a delimited list: 'How I'd describe myself: Intelligent + Witty + Candid'."
       }
     }
   }

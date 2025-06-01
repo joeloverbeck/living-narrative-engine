@@ -2,7 +2,7 @@
 
 // JSDoc Imports
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('./IDocumentContext.js').IDocumentContext} IDocumentContext */
+/** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */

@@ -28,6 +28,7 @@ import {
     LIKES_COMPONENT_ID,
     DISLIKES_COMPONENT_ID,
     SECRETS_COMPONENT_ID,
+    FEARS_COMPONENT_ID, // <<< Added import
     SPEECH_PATTERNS_COMPONENT_ID
 } from "../../constants/componentIds.js";
 import {
@@ -85,6 +86,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
             LIKES_COMPONENT_ID,
             DISLIKES_COMPONENT_ID,
             SECRETS_COMPONENT_ID,
+            FEARS_COMPONENT_ID, // <<< Added fears
         ];
 
         for (const componentId of conditionalTextComponents) {

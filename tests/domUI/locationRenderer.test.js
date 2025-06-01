@@ -34,7 +34,7 @@ const createMockLogger = () => ({
     debug: jest.fn(),
 });
 
-/** @returns {import('../../src/domUI/IDocumentContext.js').IDocumentContext} */
+/** @returns {import('../../src/interfaces/IDocumentContext.js').IDocumentContext} */
 const createMockDocumentContext = () => {
     const mockDocument = {
         createElement: jest.fn(tagName => {

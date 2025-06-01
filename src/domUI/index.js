@@ -3,7 +3,7 @@
 // Export interfaces and base classes
 // --- FILE START ---
 // Export interfaces and base classes
-export * from './IDocumentContext.js';
+export * from '../interfaces/IDocumentContext.js';
 export * from './rendererBase.js'; // Ensure RendererBase export is correct
 
 // Export concrete classes and utilities

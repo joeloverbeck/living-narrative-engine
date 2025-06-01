@@ -9,6 +9,7 @@ import {
     LIKES_COMPONENT_ID,
     DISLIKES_COMPONENT_ID,
     SECRETS_COMPONENT_ID,
+    FEARS_COMPONENT_ID, // <<< Added import
     SPEECH_PATTERNS_COMPONENT_ID
 } from '../../constants/componentIds.js';
 import {ensureTerminalPunctuation} from '../../utils/textUtils.js';
@@ -79,6 +80,7 @@ class ActorDataExtractor {
             {key: 'likes', componentId: LIKES_COMPONENT_ID},
             {key: 'dislikes', componentId: DISLIKES_COMPONENT_ID},
             {key: 'secrets', componentId: SECRETS_COMPONENT_ID},
+            {key: 'fears', componentId: FEARS_COMPONENT_ID},
         ];
 
         for (const attr of optionalTextAttributes) {

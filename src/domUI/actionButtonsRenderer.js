@@ -5,7 +5,7 @@ import {PLAYER_TURN_SUBMITTED_ID} from "../constants/eventIds.js"; // Corrected 
 
 /**
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
- * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
+ * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').UnsubscribeFn} UnsubscribeFn
  * @typedef {import('../core/interfaces/CommonTypes').NamespacedId} NamespacedId

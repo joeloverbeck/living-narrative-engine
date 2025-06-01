@@ -3,7 +3,7 @@
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('./IDocumentContext.js').IDocumentContext} IDocumentContext
+ * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('./domElementFactory.js').DomElementFactory} DomElementFactory
  * @typedef {import('../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter
  */

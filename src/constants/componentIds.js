@@ -19,6 +19,7 @@ export const PROFILE_COMPONENT_ID = 'core:profile';
 export const LIKES_COMPONENT_ID = 'core:likes';
 export const DISLIKES_COMPONENT_ID = 'core:dislikes';
 export const SECRETS_COMPONENT_ID = 'core:secrets';
+export const FEARS_COMPONENT_ID = 'core:fears';
 export const SPEECH_PATTERNS_COMPONENT_ID = 'core:speech_patterns';
 
 export const PORTRAIT_COMPONENT_ID = 'core:portrait';

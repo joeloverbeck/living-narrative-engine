@@ -11,7 +11,7 @@
     "properties": {
       "text": {
         "type": "string",
-        "description": "A string listing dislikes (e.g., 'social pretense + superficial therapy + war')."
+        "description": "A string listing the character's dislikes, written from their first-person perspective. For example: 'I can't stand social pretense, superficial therapy, or war.' or using a delimited list format: 'Things I dislike: Social pretense + Superficial therapy + War'."
       }
     }
   }

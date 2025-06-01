@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/component-definition.schema.json",
   "id": "core:speech_patterns",
-  "description": "Stores examples of the character's typical speech patterns or example phrases.",
+  "description": "Stores distinctive examples of the character's speech patterns and signature phrases. This component aims to define a unique verbal style that reflects their core personality, background, education, and any linguistic idiosyncrasies, enabling an LLM to generate dialogue that is not only in-character but also memorable and individual.",
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -14,7 +14,7 @@
         "items": {
           "type": "string"
         },
-        "description": "An array of strings, where each string is an example of the character's speech."
+        "description": "An array of strings, each providing a concrete example of how the character speaks. These examples should aim to showcase their unique vocabulary (e.g., favorite words, jargon, level of formality), typical sentence structures, cadence, common utterances, catchphrases, verbal tics, or characteristic ways of expressing emotions or reacting to situations. The more these patterns highlight individuality and consistent idiosyncrasies, the better they will serve to make the character's voice distinct."
       }
     }
   }

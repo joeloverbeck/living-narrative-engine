@@ -37,7 +37,7 @@ import {EngineUIManager} from '../../domUI/engineUIManager.js';
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IInputHandler.js').IInputHandler} IInputHandler */
-/** @typedef {import('../../domUI/IDocumentContext.js').IDocumentContext} IDocumentContext */
+/** @typedef {import('../../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */

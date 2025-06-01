@@ -3,14 +3,14 @@
   "components": {
     "core:actor": {},
     "core:name": {
-      "text": "Receptionist"
+      "text": "Fiona Emberfell"
     },
     "core:description": {
-      "text": "The receptionist of the adventurers' guild. She has a lovely smile, and big tits."
+      "text": "A young woman with fair skin and a warm smile. She has auburn hair styled in a side braid over her left shoulder, with bangs framing her face. Her eyes are light gray. She is wearing a fitted, strapless dress in a muted green or grey tone, with darker brown or bronze detailing along the sweetheart neckline, and a decorative metallic emblem on the bodice. A simple black choker necklace with a small, round pendant adorns her neck."
     },
     "core:portrait": {
       "imagePath": "portraits/receptionist.jpg",
-      "altText": "The receptionist at the adventurers' guild."
+      "altText": "Fiona Emberfell, the receptionist at the adventurers' guild."
     },
     "core:position": {
       "locationId": "isekai:adventurers_guild",
@@ -20,6 +20,37 @@
     "core:perception_log": {
       "maxEntries": 50,
       "logEntries": []
+    },
+    "core:likes": {
+      "text": "I enjoy authentic heroic stories (I've heard enough fakes to know the difference!), a perfectly brewed cup of Silverleaf tea, the quiet of the Guild Hall in the early morning before it opens, meticulously kept records, and witnessing genuine kindness between adventurers."
+    },
+    "core:dislikes": {
+      "text": "I strongly dislike arrogance, especially in new adventurers who haven't earned their boasts. Other things on my list: unnecessary paperwork caused by sheer sloppiness, pointless brawls within the Guild Hall, the lingering smell of stale goblin guts after a 'successful' quest, and any form of deliberate cruelty."
+    },
+    "core:personality": {
+      "text": "I see myself as: Efficient + Organized + Outwardly cheerful (it's part of the job!) + Astute (I don't miss much) + Empathetic (I try to be) + Possessing a rather dry wit (which I reserve for special occasions or people) + Protective (especially of the genuine newcomers) + Patient (mostly) + Firm (when necessary)."
+    },
+    "core:fears": {
+      "text": "I live with a few significant fears. The thought of a catastrophic failure or attack on the Guild that I can't help prevent is terrifying. I also deeply fear failing to guide someone away from a fatal mistake – I've seen too much loss. Then there are the dark secrets about the Guild's founding... I worry what might happen if they ever came to light destructively. And yes, on a less grand scale, I absolutely loathe spiders."
+    },
+    "core:profile": {
+      "text": "My name is Fiona Emberfell, though I wasn't born here in this bustling adventurer city. I come from a small village out on the borderlands, a place that no longer exists. It was razed by a monstrous beast when I was just a child – 'Emberfell' is more than just a surname to me; it's a constant reminder of the embers and ashes of my past. I was one of the few survivors, thankfully saved by a kind, if grizzled, adventuring party. They brought me here, to the city, and the Guild Master at the time, a stern but fair woman, took me under her wing. So, I grew up within these very Guild walls, learning every passage, every rule, every whispered story. I chose this role as receptionist, not because I lack ambition, but because from this desk, I see everything. I hear everything. It gives me a unique chance to subtly guide new adventurers, to perhaps steer them away from the kind of recklessness that led to my own home's destruction. I've become a sort of quiet repository of practical knowledge – about local monsters, treacherous quests, and yes, the often-inflated egos of various adventuring parties. My quiet dream? To one day establish a foundation, perhaps an orphanage or a training school, for those displaced by monster attacks or adventuring calamities. I want to help prevent others from suffering the kind of childhood I endured."
+    },
+    "core:secrets": {
+      "text": "Every receptionist has a few secrets, right? Here are some of mine: 1. I keep a hidden journal where I meticulously record the 'true' accounts of famous quests and adventurer deeds – it's quite different from the tall tales you hear in taverns, I assure you. 2. I wear a small, enchanted locket, a gift from one of my rescuers. It warms slightly when powerful magic is used nearby; it's become a sort of crude but reliable early warning system for me. 3. I'm not just sorting papers and smiling politely; I'm also secretly training in basic defensive magic and how to handle a dagger, thanks to a retired adventurer who still visits. I hope I never need those skills, but I'd rather be prepared. 4. There's a supposedly 'retired' and rather infamous assassin who now runs a very quiet flower shop here in the city. I know who they are. Keeping that secret helps maintain a certain... unspoken peace."
+    },
+    "core:speech_patterns": {
+      "patterns": [
+        "Welcome to the Adventurers' Guild, where legends are forged and paperwork is, regrettably, mandatory. I'm Fiona Emberfell. Quest registry, supply requisition, or perhaps you're hoping to dispel a particularly stubborn rumor today?",
+        "*Sighs softly, tapping a quill against a ledger* Another 'epic saga' that will require three separate incident report forms, I presume? Very well, into the annals of 'Potentially Embellished Heroics' it goes.",
+        "Regarding the 'Dire Cabbage Patch Calamity' – the bounty specifically states 'unblemished heads.' Your... creatively pulped specimens, while impressive in their own right, fall under 'compost contributions,' I'm afraid. Next time, perhaps aim for precision over enthusiasm?",
+        "Courage is commendable, truly. But so is a meticulously checked inventory and an awareness that 'there be dragons' is often less a metaphor and more a literal, fire-breathing probability. Do try to come back in one piece; the paperwork for fatalities is simply dreadful.",
+        "*Voice hardening slightly, smile unwavering but eyes sharp, to an overbearing adventurer* Your 'assertiveness' is noted. However, Guild policy, page 7, paragraph 2, clearly outlines the queuing protocol. Even for those who can allegedly arm-wrestle a cyclops.",
+        "A hero of your... stated caliber, you say? Fascinating. The 'Whispering Library Dusting Detail' is open. Requires utmost silence and a delicate touch. Pays modestly, but the inner peace achieved is said to be... quite something.",
+        "(A rare, genuine smile when witnessing an act of true camaraderie or unexpected kindness) Well now, isn't that a welcome change from the usual cacophony of boasts and bartering? Moments like these almost make one believe in the 'noble calling of adventuring.' Almost.",
+        "*Touching her locket subtly as a strange magical pulse is felt* That's... peculiar. Not the usual ambient hum of a city teeming with hedge mages. Something with a bit more 'bite' in the air. Best to make a note.",
+        "Do remember, the most valuable treasure you can bring back isn't always gold or a griffin's feather. Sometimes, it's simply yourselves, and the lessons learned. Though the gold is, of course, also appreciated for Guild upkeep."
+      ]
     }
   }
 }

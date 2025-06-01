@@ -11,7 +11,7 @@ import {
 
 /**
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
- * @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext
+ * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').UnsubscribeFn} UnsubscribeFn
  * @typedef {import('./domElementFactory').default} DomElementFactory

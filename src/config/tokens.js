@@ -163,7 +163,6 @@ export const tokens = Object.freeze({
     TitleRenderer: 'TitleRenderer',
     InputStateController: 'InputStateController',
     LocationRenderer: 'LocationRenderer',
-    InventoryPanel: 'InventoryPanel',
     ActionButtonsRenderer: 'ActionButtonsRenderer',
     PerceptionLogRenderer: 'PerceptionLogRenderer',
     DomUiFacade: 'DomUiFacade',

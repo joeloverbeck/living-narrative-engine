@@ -3,7 +3,7 @@
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../domUI/IDocumentContext').IDocumentContext} IDocumentContext
+ * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../domUI/domElementFactory.js').default} DomElementFactory
  * @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService
  * @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata

@@ -5,7 +5,7 @@
  * facilitating testing by allowing injection of different document contexts (like JSDOM).
  */
 
-/** @typedef {import('./IDocumentContext').IDocumentContext} IDocumentContext */
+/** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 
 /**
  * Provides a consistent way to access document querySelector and createElement,
