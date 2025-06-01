@@ -5,12 +5,12 @@ import {RendererBase} from './rendererBase.js';
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
  */
 
 /**
  * Manages the content of the main H1 title element by subscribing
  * to relevant application events via the ValidatedEventDispatcher.
+ * @extends RendererBase
  */
 export class TitleRenderer extends RendererBase {
     /**
@@ -19,13 +19,6 @@ export class TitleRenderer extends RendererBase {
      * @type {HTMLHeadingElement}
      */
     #titleElement;
-
-    /**
-     * Stores VED subscriptions for later disposal.
-     * @private
-     * @type {Array<IEventSubscription|undefined>}
-     */
-    #subscriptions = [];
 
     /**
      * Creates an instance of TitleRenderer.
@@ -67,33 +60,29 @@ export class TitleRenderer extends RendererBase {
     #subscribeToEvents() {
         const ved = this.validatedEventDispatcher; // Alias for brevity
 
-        // Assuming VED events exist for these. Names might need adjustment
-        // based on actual VED schema definition. Using old EventBus names as placeholders.
-
         // Direct title setting
-        this.#subscriptions.push(ved.subscribe('textUI:set_title', this.#handleSetTitle.bind(this)));
+        this._addSubscription(ved.subscribe('textUI:set_title', this.#handleSetTitle.bind(this)));
 
         // Initialization Events
-        this.#subscriptions.push(ved.subscribe('initialization:initialization_service:completed', this.#handleInitializationCompleted.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:initialization_service:failed', this.#handleInitializationFailed.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:initialization_service:completed', this.#handleInitializationCompleted.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:initialization_service:failed', this.#handleInitializationFailed.bind(this)));
 
         // Initialization Steps Started
-        this.#subscriptions.push(ved.subscribe('initialization:world_loader:started', this.#handleInitializationStepStarted.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:system_initializer:started', this.#handleInitializationStepStarted.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:game_state_initializer:started', this.#handleInitializationStepStarted.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:world_initializer:started', this.#handleInitializationStepStarted.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:input_setup_service:started', this.#handleInitializationStepStarted.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:world_loader:started', this.#handleInitializationStepStarted.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:system_initializer:started', this.#handleInitializationStepStarted.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:game_state_initializer:started', this.#handleInitializationStepStarted.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:world_initializer:started', this.#handleInitializationStepStarted.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:input_setup_service:started', this.#handleInitializationStepStarted.bind(this)));
 
         // Initialization Steps Failed
-        this.#subscriptions.push(ved.subscribe('initialization:world_loader:failed', this.#handleInitializationStepFailed.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:system_initializer:failed', this.#handleInitializationStepFailed.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:game_state_initializer:failed', this.#handleInitializationStepFailed.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:world_initializer:failed', this.#handleInitializationStepFailed.bind(this)));
-        this.#subscriptions.push(ved.subscribe('initialization:input_setup_service:failed', this.#handleInitializationStepFailed.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:world_loader:failed', this.#handleInitializationStepFailed.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:system_initializer:failed', this.#handleInitializationStepFailed.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:game_state_initializer:failed', this.#handleInitializationStepFailed.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:world_initializer:failed', this.#handleInitializationStepFailed.bind(this)));
+        this._addSubscription(ved.subscribe('initialization:input_setup_service:failed', this.#handleInitializationStepFailed.bind(this)));
 
         // System Fatal Error (Could also trigger title change)
-        // Example: If core:system_error_occurred should set title to "System Error"
-        this.#subscriptions.push(ved.subscribe('core:system_error_occurred', this.#handleFatalError.bind(this)));
+        this._addSubscription(ved.subscribe('core:system_error_occurred', this.#handleFatalError.bind(this)));
 
 
         this.logger.debug(`${this._logPrefix} Subscribed to VED events for title updates.`);
@@ -233,16 +222,12 @@ export class TitleRenderer extends RendererBase {
     }
 
     /**
-     * Dispose method for cleanup. Unsubscribes from all VED events.
+     * Dispose method for cleanup. Unsubscribes from all VED events
+     * by calling super.dispose().
      */
     dispose() {
-        this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
-        this.#subscriptions.forEach(sub => {
-            if (sub && typeof sub.unsubscribe === 'function') {
-                sub.unsubscribe();
-            }
-        });
-        this.#subscriptions = []; // Clear the array
-        super.dispose(); // Calls logger.debug in base class
+        // The #subscriptions array and its manual clearing are removed.
+        // All VED unsubscriptions are handled by super.dispose().
+        super.dispose(); // This will call the logger.debug messages from RendererBase
     }
 }

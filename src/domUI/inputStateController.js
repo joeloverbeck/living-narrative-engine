@@ -25,19 +25,8 @@ export class InputStateController extends RendererBase {
      */
     #inputElement;
 
-    /**
-     * Stores VED subscriptions for later disposal.
-     * @private
-     * @type {Array<IEventSubscription|undefined>}
-     */
-    #subscriptions = [];
-
-    /**
-     * Stores the bound event handler for the keydown event on the input element.
-     * @private
-     * @type {((event: KeyboardEvent) => void) | null}
-     */
-    #boundHandleKeydown = null;
+    // #subscriptions array is no longer needed, managed by RendererBase
+    // #boundHandleKeydown is no longer needed as a field
 
     /**
      * Creates an instance of InputStateController.
@@ -69,10 +58,9 @@ export class InputStateController extends RendererBase {
         this.#inputElement = /** @type {HTMLInputElement} */ (inputElement);
         this.logger.debug(`${this._logPrefix} Attached to INPUT element.`);
 
-        // Bind and add the keydown listener to prevent Enter key submissions
-        this.#boundHandleKeydown = this.#handleKeydown.bind(this);
-        // MODIFIED: Add listener in CAPTURING phase
-        this.#inputElement.addEventListener('keydown', this.#boundHandleKeydown, true);
+        // Bind and add the keydown listener using RendererBase's _addDomListener
+        // #handleKeydown uses 'this.logger', so it needs to be bound.
+        this._addDomListener(this.#inputElement, 'keydown', this.#handleKeydown.bind(this), true);
         this.logger.debug(`${this._logPrefix} Added keydown listener in capturing phase to input element to intercept 'Enter' key.`);
 
         // Subscribe to events that affect the input state
@@ -86,11 +74,12 @@ export class InputStateController extends RendererBase {
     #subscribeToEvents() {
         const ved = this.validatedEventDispatcher; // Alias for brevity
 
-        this.#subscriptions.push(
+        // Use _addSubscription from RendererBase
+        this._addSubscription(
             ved.subscribe('textUI:disable_input', this.#handleDisableInput.bind(this))
         );
 
-        this.#subscriptions.push(
+        this._addSubscription(
             ved.subscribe('textUI:enable_input', this.#handleEnableInput.bind(this))
         );
 
@@ -173,23 +162,15 @@ export class InputStateController extends RendererBase {
     }
 
     /**
-     * Dispose method for cleanup. Unsubscribes from all VED events and removes DOM event listeners.
+     * Dispose method for cleanup.
+     * Relies on RendererBase.dispose() to unsubscribe from VED events
+     * and remove managed DOM event listeners.
      */
     dispose() {
-        this.logger.debug(`${this._logPrefix} Disposing subscriptions and event listeners.`);
-        this.#subscriptions.forEach(sub => {
-            if (sub && typeof sub.unsubscribe === 'function') {
-                sub.unsubscribe();
-            }
-        });
-        this.#subscriptions = [];
-
-        if (this.#inputElement && this.#boundHandleKeydown) {
-            // MODIFIED: Ensure correct arguments for removeEventListener (true for capture phase)
-            this.#inputElement.removeEventListener('keydown', this.#boundHandleKeydown, true);
-            this.logger.debug(`${this._logPrefix} Removed keydown listener (capturing phase) from input element.`);
-            this.#boundHandleKeydown = null;
-        }
-        super.dispose();
+        this.logger.debug(`${this._logPrefix} Disposing.`); // Specific log before super
+        // Manual unsubscription from VED events is no longer needed.
+        // Manual removal of DOM event listeners is no longer needed.
+        // Clearing #subscriptions array and #boundHandleKeydown field is no longer needed.
+        super.dispose(); // Handles cleanup of subscriptions and DOM listeners added via _addSubscription and _addDomListener
     }
 }

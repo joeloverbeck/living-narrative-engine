@@ -1,5 +1,4 @@
-// ****** CORRECTED FILE ******
-// src/tests/domUI/RendererBase.test.js
+// tests/domUI/rendererBase.test.js
 /**
  * @fileoverview Unit tests for the RendererBase abstract class.
  * @jest-environment jsdom
@@ -219,7 +218,9 @@ describe('RendererBase', () => {
         it('should log disposal message', () => {
             const instance = new ConcreteRenderer(validDeps);
             instance.dispose();
-            expect(mockLogger.debug).toHaveBeenCalledWith('[ConcreteRenderer] Disposing.');
+            // ****** MODIFIED LINE ******
+            // Check for one of the actual detailed log messages, for example, the final one.
+            expect(mockLogger.debug).toHaveBeenCalledWith('[ConcreteRenderer] Finished automated cleanup. Base dispose complete.');
         });
 
         // Add more tests here if dispose method gains more functionality

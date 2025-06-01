@@ -13,10 +13,14 @@ const mockLogger = {
 const mockDocumentContext = {
     query: jest.fn(),
     create: jest.fn(),
+    document: {
+        // Mock document properties if TitleRenderer's dispose or other methods try to access them
+        // For example, if it tries to remove a global event listener from document
+    }
 };
 
 const mockValidatedEventDispatcher = {
-    subscribe: jest.fn(),
+    subscribe: jest.fn(() => jest.fn()), // Ensure subscribe returns a mock unsubscribe function
     dispatchValidated: jest.fn(),
 };
 
@@ -36,6 +40,9 @@ describe('TitleRenderer', () => {
         jest.clearAllMocks();
         mockH1Element = createMockElement('H1');
         mockH1Element.textContent = 'Initial Title'; // Give it an initial value
+
+        // Reset VED mock to return a new unsubscribe mock for each subscription
+        mockValidatedEventDispatcher.subscribe.mockImplementation(() => jest.fn());
     });
 
     // --- Constructor Tests ---
@@ -168,12 +175,11 @@ describe('TitleRenderer', () => {
         renderer.set(currentTitle); // Set the same title
 
         expect(mockH1Element.textContent).toBe(currentTitle); // Still the same
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[TitleRenderer] Initialized.'));
-        expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[TitleRenderer] Attached to H1 element.'));
         // Check it logged the "skipping update" message
         expect(mockLogger.debug).toHaveBeenCalledWith(`[TitleRenderer] Title already set to: "${currentTitle}", skipping update.`);
-        // Ensure it did NOT log the "Title set to" message again for this call
-        expect(mockLogger.debug).not.toHaveBeenCalledWith(`[TitleRenderer] Title set to: "${currentTitle}"`);
+        // Ensure it did NOT log the "Title set to" message again for this call during the .set() operation
+        const setCalls = mockLogger.debug.mock.calls.filter(call => call[0] === `[TitleRenderer] Title set to: "${currentTitle}"`);
+        expect(setCalls.length).toBe(0); // Or 1 if it was set before and this call didn't re-trigger
     });
 
 
@@ -195,27 +201,9 @@ describe('TitleRenderer', () => {
         expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Title set to: "null"');
     });
 
-    // --- REMOVED Failing Test Case ---
-    // it('should log an error if #titleElement becomes null unexpectedly (edge case)', () => {
-    //     const renderer = new TitleRenderer({
-    //         logger: mockLogger,
-    //         documentContext: mockDocumentContext,
-    //         validatedEventDispatcher: mockValidatedEventDispatcher,
-    //         titleElement: mockH1Element,
-    //     });
-    //     // Simulate the element reference being lost after construction
-    //     // This doesn't work for # private fields:
-    //     // renderer['_TitleRenderer__titleElement'] = null;
-    //
-    //     renderer.set('Trying to set title');
-    //
-    //     // This assertion would fail because the private field isn't actually modified
-    //     expect(mockLogger.error).toHaveBeenCalledWith('[TitleRenderer] Cannot set title, internal #titleElement reference is lost.');
-    // });
-
     // --- dispose() Tests ---
 
-    it('should call super.dispose and log disposal', () => {
+    it('should call super.dispose and log appropriate messages from RendererBase', () => {
         const renderer = new TitleRenderer({
             logger: mockLogger,
             documentContext: mockDocumentContext,
@@ -223,7 +211,9 @@ describe('TitleRenderer', () => {
             titleElement: mockH1Element,
         });
         renderer.dispose();
-        // RendererBase's dispose calls logger.debug
-        expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Disposing.');
+        // Check for the initial log message from RendererBase.dispose()
+        expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Starting disposal: Unsubscribing VED events and removing DOM listeners.');
+        // Optionally, check for the final log message from RendererBase.dispose()
+        expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Finished automated cleanup. Base dispose complete.');
     });
 });

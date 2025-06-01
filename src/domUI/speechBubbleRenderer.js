@@ -1,16 +1,15 @@
 // src/domUI/speechBubbleRenderer.js
 
-import {RendererBase} from './rendererBase.js';
-import {DISPLAY_SPEECH_ID} from '../constants/eventIds.js'; // Corrected path
-import {NAME_COMPONENT_ID, PORTRAIT_COMPONENT_ID} from '../constants/componentIds.js'; // Corrected path
+import {BoundDomRendererBase} from './boundDomRendererBase.js'; // Adjusted path
+import {DISPLAY_SPEECH_ID} from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('./IDocumentContext.js').IDocumentContext} IDocumentContext
+ * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
- * @typedef {import('../core/interfaces/IEventSubscription.js').IEventSubscription} IEventSubscription
+ * @typedef {import('../services/EntityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
  * @typedef {import('../core/interfaces/IEvent.js').IEvent} IEvent
  * @typedef {import('../entities/entity.js').default} Entity
  */
@@ -24,40 +23,68 @@ import {NAME_COMPONENT_ID, PORTRAIT_COMPONENT_ID} from '../constants/componentId
 
 const DEFAULT_SPEAKER_NAME = 'Unknown Speaker';
 
-export class SpeechBubbleRenderer extends RendererBase {
-    /** @type {HTMLElement|null} */ #speechContainer = null;
-    /** @type {HTMLElement|null} */ #outputDivElement = null;
-    /** @type {IEntityManager} */ #entityManager;
-    /** @type {DomElementFactory} */ #domElementFactory;
-    /** @type {Array<IEventSubscription|undefined>} */ #subscriptions = [];
+export class SpeechBubbleRenderer extends BoundDomRendererBase {
+    /** @private @type {IEntityManager} */
+    #entityManager; // May still be needed for direct entity checks if EDDP doesn't cover all
+    /** @private @type {DomElementFactory} */
+    #domElementFactory;
+    /** @private @type {EntityDisplayDataProvider} */
+    #entityDisplayDataProvider;
 
+    /**
+     * The actual DOM element where speech bubbles will be appended.
+     * Determined by the presence of #message-list or fallback to #outputDiv.
+     * @private @type {HTMLElement|null}
+     */
+    effectiveSpeechContainer = null;
+
+    /**
+     * @param {object} dependencies
+     * @param {ILogger} dependencies.logger
+     * @param {IDocumentContext} dependencies.documentContext
+     * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher
+     * @param {IEntityManager} dependencies.entityManager
+     * @param {DomElementFactory} dependencies.domElementFactory
+     * @param {EntityDisplayDataProvider} dependencies.entityDisplayDataProvider
+     */
     constructor({
                     logger,
                     documentContext,
                     validatedEventDispatcher,
                     entityManager,
-                    domElementFactory
+                    domElementFactory,
+                    entityDisplayDataProvider
                 }) {
-        super({logger, documentContext, validatedEventDispatcher});
+        const elementsConfig = {
+            outputDivElement: {selector: '#outputDiv', required: true}, // For scrolling
+            speechContainer: {selector: '#message-list', required: false} // Optional, falls back to outputDiv
+        };
+        super({logger, documentContext, validatedEventDispatcher, elementsConfig});
+
+        if (!entityManager) throw new Error(`${this._logPrefix} EntityManager dependency is required.`);
+        if (!domElementFactory) throw new Error(`${this._logPrefix} DomElementFactory dependency is required.`);
+        if (!entityDisplayDataProvider) throw new Error(`${this._logPrefix} EntityDisplayDataProvider dependency is required.`);
+
         this.#entityManager = entityManager;
         this.#domElementFactory = domElementFactory;
-        this._logPrefix = 'SpeechBubbleRenderer:';
+        this.#entityDisplayDataProvider = entityDisplayDataProvider;
+        // this._logPrefix is set by RendererBase, but if we need it specifically:
+        // this._logPrefix = '[SpeechBubbleRenderer]'; // No, it's already set.
 
-        this.#outputDivElement = this.documentContext.query('#outputDiv');
-        if (!this.#outputDivElement) {
-            this.logger.error(`${this._logPrefix} Could not find #outputDiv element!`);
+        if (this.elements.speechContainer) {
+            this.effectiveSpeechContainer = this.elements.speechContainer;
+        } else if (this.elements.outputDivElement) {
+            this.logger.warn(`${this._logPrefix} #message-list not found. Speech will be appended to #outputDiv.`);
+            this.effectiveSpeechContainer = this.elements.outputDivElement;
         } else {
-            this.#speechContainer = this.documentContext.query('#message-list');
-            if (!this.#speechContainer) {
-                this.logger.warn(`${this._logPrefix} #message-list not found. Speech will be appended to #outputDiv.`);
-                this.#speechContainer = this.#outputDivElement;
-            }
-        }
-        if (!this.#speechContainer) { // Final check if #outputDiv also failed
-            this.logger.error(`${this._logPrefix} Critical: Speech container (#message-list or #outputDiv) not found.`);
+            // This case should ideally be prevented if outputDivElement is required and found,
+            // or by BoundDomRendererBase logging an error if outputDivElement (required) isn't found.
+            this.logger.error(`${this._logPrefix} Critical: Effective speech container (#message-list or #outputDiv) could not be determined as #outputDiv was also not found or bound.`);
+            this.effectiveSpeechContainer = null;
         }
 
-        this.#subscriptions.push(
+        // VED subscription using helper from RendererBase
+        this._addSubscription(
             this.validatedEventDispatcher.subscribe(
                 DISPLAY_SPEECH_ID,
                 this.#onDisplaySpeech.bind(this)
@@ -66,6 +93,11 @@ export class SpeechBubbleRenderer extends RendererBase {
         this.logger.debug(`${this._logPrefix} Initialized and subscribed to ${DISPLAY_SPEECH_ID}.`);
     }
 
+    /**
+     * Handles the 'textUI:display_speech' event.
+     * @private
+     * @param {IEvent<DisplaySpeechPayload>} eventObject - The event object.
+     */
     #onDisplaySpeech(eventObject) {
         if (!eventObject || !eventObject.payload) {
             this.logger.warn(`${this._logPrefix} Received invalid 'textUI:display_speech' event object.`, eventObject);
@@ -79,34 +111,28 @@ export class SpeechBubbleRenderer extends RendererBase {
         this.renderSpeech(entityId, speechContent, allowHtml);
     }
 
+    /**
+     * Renders the speech bubble for a given entity and content.
+     * @param {string} entityId - The ID of the entity speaking.
+     * @param {string} speechContent - The content of the speech.
+     * @param {boolean} [allowHtml=false] - Whether to treat speechContent as HTML.
+     */
     renderSpeech(entityId, speechContent, allowHtml = false) {
-        if (!this.#speechContainer || !this.#domElementFactory) {
-            this.logger.error(`${this._logPrefix} Cannot render speech: container or factory missing.`);
+        if (!this.effectiveSpeechContainer || !this.#domElementFactory) {
+            this.logger.error(`${this._logPrefix} Cannot render speech: effectiveSpeechContainer or domElementFactory missing.`);
             return;
         }
 
-        const entity = this.#entityManager.getEntityInstance(entityId);
-        let portraitPath = null;
-        let speakerName = DEFAULT_SPEAKER_NAME; // DEFAULT_SPEAKER_NAME should be defined, e.g., const DEFAULT_SPEAKER_NAME = 'Unknown Speaker';
-
-        if (entity) {
-            const nameComponent = entity.getComponentData(NAME_COMPONENT_ID);
-            speakerName = nameComponent?.text || entity.id;
-            const portraitComponent = entity.getComponentData(PORTRAIT_COMPONENT_ID);
-            if (portraitComponent && portraitComponent.imagePath && typeof portraitComponent.imagePath === 'string') {
-                const modId = this.#getModIdFromDefinitionId(entity.definitionId);
-                if (modId) {
-                    portraitPath = `/data/mods/${modId}/${portraitComponent.imagePath}`;
-                } else {
-                    this.logger.warn(`${this._logPrefix} Could not extract modId for entity '${entity.id}'.`);
-                }
-            }
-        } else {
-            this.logger.warn(`${this._logPrefix} Entity ID '${entityId}' not found.`);
-        }
+        const speakerName = this.#entityDisplayDataProvider.getEntityName(entityId, DEFAULT_SPEAKER_NAME);
+        const portraitPath = this.#entityDisplayDataProvider.getEntityPortraitPath(entityId);
 
         const speechEntryDiv = this.#domElementFactory.create('div', {cls: 'speech-entry'});
         const speechBubbleDiv = this.#domElementFactory.create('div', {cls: 'speech-bubble'});
+
+        if (!speechEntryDiv || !speechBubbleDiv) {
+            this.logger.error(`${this._logPrefix} Failed to create speech entry or bubble div.`);
+            return;
+        }
 
         const speakerIntroSpan = this.#domElementFactory.span('speech-speaker-intro');
         if (speakerIntroSpan) {
@@ -116,31 +142,23 @@ export class SpeechBubbleRenderer extends RendererBase {
 
         const quotedSpeechSpan = this.#domElementFactory.span('speech-quoted-text');
         if (quotedSpeechSpan) {
-            // Corrected logic for parsing speechContent:
             if (speechContent && typeof speechContent === 'string') {
                 const parts = speechContent.split(/(\*.*?\*)/g).filter(part => part.length > 0);
-
-                // Add opening quote
                 quotedSpeechSpan.appendChild(this.documentContext.document.createTextNode('"'));
-
                 parts.forEach(part => {
                     if (part.startsWith('*') && part.endsWith('*')) {
                         const actionSpan = this.#domElementFactory.span('speech-action-text');
                         if (actionSpan) {
-                            actionSpan.textContent = part; // Part includes asterisks
+                            actionSpan.textContent = part;
                             quotedSpeechSpan.appendChild(actionSpan);
                         }
                     } else {
-                        // Handle non-action text
                         if (allowHtml) {
-                            // This part relies on the test's tempSpanMock for detailed parsing,
-                            // or a more robust HTML parsing approach if not in a test.
-                            // The domElementFactory.span() call (without args) is what the test mocks.
-                            const tempSpan = this.#domElementFactory.span();
+                            const tempSpan = this.#domElementFactory.span(); // Create a temporary span
                             if (tempSpan) {
-                                tempSpan.innerHTML = part; // Use innerHTML if part is trusted HTML and factory provides parsing
+                                tempSpan.innerHTML = part; // Let browser parse HTML
                                 while (tempSpan.firstChild) {
-                                    quotedSpeechSpan.appendChild(tempSpan.firstChild);
+                                    quotedSpeechSpan.appendChild(tempSpan.firstChild); // Append parsed nodes
                                 }
                             }
                         } else {
@@ -148,13 +166,9 @@ export class SpeechBubbleRenderer extends RendererBase {
                         }
                     }
                 });
-                // Add closing quote
                 quotedSpeechSpan.appendChild(this.documentContext.document.createTextNode('"'));
-
             } else {
-                // Fallback for empty or non-string speechContent
                 if (allowHtml) {
-                    // Ensure quotes are added even for empty content if it's to be treated as HTML
                     quotedSpeechSpan.innerHTML = `"${speechContent || ''}"`;
                 } else {
                     quotedSpeechSpan.textContent = `"${speechContent || ''}"`;
@@ -171,36 +185,46 @@ export class SpeechBubbleRenderer extends RendererBase {
                 speechEntryDiv.classList.add('has-portrait');
             } else {
                 this.logger.warn(`${this._logPrefix} Failed to create portraitImg element.`);
-                speechEntryDiv.classList.add('no-portrait');
+                speechEntryDiv.classList.add('no-portrait'); // Fallback class
             }
         } else {
             speechEntryDiv.classList.add('no-portrait');
         }
 
         speechEntryDiv.appendChild(speechBubbleDiv);
-        this.#speechContainer.appendChild(speechEntryDiv);
+        this.effectiveSpeechContainer.appendChild(speechEntryDiv);
         this.#scrollToBottom();
         this.logger.debug(`${this._logPrefix} Rendered speech for ${speakerName}.`);
     }
 
-    #getModIdFromDefinitionId(definitionId) {
-        if (!definitionId || typeof definitionId !== 'string') return null;
-        const parts = definitionId.split(':');
-        return (parts.length > 1 && parts[0]) ? parts[0] : null;
-    }
-
+    /**
+     * Scrolls the output/chat panel to the bottom.
+     * Uses this.elements.outputDivElement provided by BoundDomRendererBase.
+     * @private
+     */
     #scrollToBottom() {
-        if (this.#outputDivElement && typeof this.#outputDivElement.scrollTop !== 'undefined') {
-            this.#outputDivElement.scrollTop = this.#outputDivElement.scrollHeight;
+        // Use this.elements.outputDivElement from BoundDomRendererBase
+        if (this.elements.outputDivElement && typeof this.elements.outputDivElement.scrollTop !== 'undefined') {
+            this.elements.outputDivElement.scrollTop = this.elements.outputDivElement.scrollHeight;
+        } else {
+            this.logger.warn(`${this._logPrefix} Could not scroll #outputDiv. Element not found in this.elements or properties missing.`);
         }
     }
 
+    /**
+     * Cleans up resources.
+     * VED subscriptions are handled by super.dispose().
+     * DOM listeners (if any were added via _addDomListener) are also handled by super.dispose().
+     */
     dispose() {
-        this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
-        this.#subscriptions.forEach(sub => sub?.unsubscribe());
-        this.#subscriptions = [];
-        this.#speechContainer = null;
-        this.#outputDivElement = null;
+        this.logger.debug(`${this._logPrefix} Disposing.`);
+        // VED subscriptions and DOM listeners managed by _addSubscription and _addDomListener
+        // are cleaned up by super.dispose().
         super.dispose();
+        this.effectiveSpeechContainer = null; // Clear custom reference
+        // this.#entityManager = null; // Not strictly necessary if base class handles all, but good practice for direct members
+        // this.#domElementFactory = null;
+        // this.#entityDisplayDataProvider = null;
+        this.logger.info(`${this._logPrefix} Disposed.`);
     }
 }

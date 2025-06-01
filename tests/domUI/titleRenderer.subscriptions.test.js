@@ -1,4 +1,4 @@
-// src/tests/domUI/titleRenderer.test.js
+// tests/domUI/titleRenderer.subscriptions.test.js
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {TitleRenderer} from '../../src/domUI/index.js'; // Corrected import path if needed
 import {RendererBase} from '../../src/domUI/index.js'; // Needed for checking super.dispose
@@ -17,66 +17,67 @@ const mockLogger = {
 const mockDocumentContext = {
     query: jest.fn(),
     create: jest.fn(),
+    document: {} // Provide a basic document object for RendererBase.dispose
 };
 
 // Mock IValidatedEventDispatcher and capture subscriptions
 let capturedSubscriptions = {}; // To store { eventType: callback }
 let unsubscribeSpies = []; // To store mock unsubscribe functions
 const mockValidatedEventDispatcher = {
-    // Store the callback associated with the event type
     subscribe: jest.fn((eventType, callback) => {
-        // console.log(`Mock subscribe called for: ${eventType}`); // Debugging line
         capturedSubscriptions[eventType] = callback;
         const mockUnsubscribe = jest.fn(() => {
-            // console.log(`Mock unsubscribe called for: ${eventType}`); // Debugging line
-            delete capturedSubscriptions[eventType]; // Remove on unsubscribe
+            delete capturedSubscriptions[eventType];
         });
         const mockSubscription = {
             unsubscribe: mockUnsubscribe,
         };
-        // Store the unsubscribe spy *before* returning the subscription
         unsubscribeSpies.push(mockUnsubscribe);
         return mockSubscription;
     }),
-    dispatchValidated: jest.fn(), // Not used by TitleRenderer directly, but part of the interface
+    dispatchValidated: jest.fn(),
 };
 
 // --- Helper to create mock elements ---
 const createMockElement = (tagName = 'DIV') => ({
-    nodeType: 1, // ELEMENT_NODE
+    nodeType: 1,
     tagName: tagName.toUpperCase(),
     textContent: '',
-    // Add other properties/methods if needed by tests
 });
 
 // --- Test Suite ---
 
 describe('TitleRenderer', () => {
     let mockH1Element;
-    let renderer; // Instance of TitleRenderer
+    let renderer;
 
-    // Helper to simulate an event dispatch
     const simulateEvent = (eventType, payload = {}) => {
         const handler = capturedSubscriptions[eventType];
         if (handler) {
-            // console.log(`Simulating event: ${eventType} with payload:`, payload); // Debugging line
-            handler(payload, eventType); // Pass payload and event type
+            handler(payload, eventType);
         } else {
-            // console.warn(`No subscription found for event type: ${eventType}`); // Debugging line
-            // Optionally throw an error or log a warning if needed
             throw new Error(`Test setup error: No subscription captured for event type: ${eventType}`);
         }
     };
 
     beforeEach(() => {
-        // Reset mocks and captured state before each test
         jest.clearAllMocks();
-        capturedSubscriptions = {}; // Reset captured subscriptions
-        unsubscribeSpies = []; // Reset spies array
+        capturedSubscriptions = {};
+        unsubscribeSpies = [];
         mockH1Element = createMockElement('H1');
-        mockH1Element.textContent = 'Initial Title'; // Give it an initial value
+        mockH1Element.textContent = 'Initial Title';
 
-        // Clear any potential prototype spy from previous tests
+        // Ensure mock subscribe returns the correct structure for RendererBase
+        mockValidatedEventDispatcher.subscribe.mockImplementation((eventType, callback) => {
+            capturedSubscriptions[eventType] = callback;
+            const mockUnsubscribe = jest.fn(() => {
+                delete capturedSubscriptions[eventType];
+            });
+            const mockSubscriptionObject = {unsubscribe: mockUnsubscribe};
+            unsubscribeSpies.push(mockUnsubscribe); // Push the spy
+            return mockSubscriptionObject; // Return the object for _addSubscription
+        });
+
         if (jest.isMockFunction(RendererBase.prototype.dispose)) {
             RendererBase.prototype.dispose.mockRestore();
         }
@@ -93,12 +94,11 @@ describe('TitleRenderer', () => {
                 titleElement: mockH1Element,
             });
             expect(renderer).toBeInstanceOf(TitleRenderer);
-            expect(renderer).toBeInstanceOf(RendererBase); // Check inheritance
-            expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Initialized.'); // From base
+            expect(renderer).toBeInstanceOf(RendererBase);
+            expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Initialized.');
             expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Attached to H1 element.');
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Subscribed to VED events'));
-            // --- FIX: Correct subscription count ---
-            expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(14); // Check number of subscriptions
+            expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(14);
             expect(mockLogger.error).not.toHaveBeenCalled();
         });
 
@@ -115,7 +115,7 @@ describe('TitleRenderer', () => {
         });
 
         it('should throw if titleElement is not an ELEMENT_NODE', () => {
-            const notAnElement = {nodeType: 3, tagName: 'TEXT'}; // Text node example
+            const notAnElement = {nodeType: 3, tagName: 'TEXT'};
             expect(() => {
                 new TitleRenderer({
                     logger: mockLogger,
@@ -140,7 +140,6 @@ describe('TitleRenderer', () => {
             expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("must be an H1 element"), {element: divElement});
         });
 
-        // Test base class dependency validation (delegated, but good practice to confirm)
         it('should throw if logger is missing', () => {
             expect(() => {
                 new TitleRenderer({
@@ -179,7 +178,6 @@ describe('TitleRenderer', () => {
 
     describe('set(text)', () => {
         beforeEach(() => {
-            // Instantiate for these tests, suppress initial logs if needed for clarity
             mockLogger.debug.mockClear();
             renderer = new TitleRenderer({
                 logger: mockLogger,
@@ -187,7 +185,6 @@ describe('TitleRenderer', () => {
                 validatedEventDispatcher: mockValidatedEventDispatcher,
                 titleElement: mockH1Element,
             });
-            // Clear constructor logs for cleaner assertion in specific set() tests
             mockLogger.debug.mockClear();
         });
 
@@ -208,52 +205,54 @@ describe('TitleRenderer', () => {
 
         it('should not update or log update if the text is the same as the current title', () => {
             const currentTitle = 'Current Title';
-            mockH1Element.textContent = currentTitle; // Set initial state
+            mockH1Element.textContent = currentTitle;
 
-            renderer.set(currentTitle); // Set the same title
+            renderer.set(currentTitle);
 
-            expect(mockH1Element.textContent).toBe(currentTitle); // Still the same
-            // Check it logged the "skipping update" message
+            expect(mockH1Element.textContent).toBe(currentTitle);
             expect(mockLogger.debug).toHaveBeenCalledWith(`[TitleRenderer] Title already set to: "${currentTitle}", skipping update.`);
-            // Ensure it did NOT log the "Title set to" message again for this call
-            expect(mockLogger.debug).not.toHaveBeenCalledWith(`[TitleRenderer] Title set to: "${currentTitle}"`);
+
+            const callsToSetTitle = mockLogger.debug.mock.calls.filter(
+                call => call[0] === `[TitleRenderer] Title set to: "${currentTitle}"`
+            );
+            expect(callsToSetTitle.length).toBe(0);
         });
 
         it('should coerce non-string input to string and log a warning', () => {
-            renderer.set(123); // Pass a number
-            expect(mockH1Element.textContent).toBe('123'); // Coerced
+            renderer.set(123);
+            expect(mockH1Element.textContent).toBe('123');
             expect(mockLogger.warn).toHaveBeenCalledWith('[TitleRenderer] Received non-string value in set():', 123);
-            expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Title set to: "123"'); // Logged the update
+            expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Title set to: "123"');
 
             mockLogger.warn.mockClear();
             mockLogger.debug.mockClear();
 
-            renderer.set(null); // Pass null
-            expect(mockH1Element.textContent).toBe('null'); // Coerced
+            renderer.set(null);
+            expect(mockH1Element.textContent).toBe('null');
             expect(mockLogger.warn).toHaveBeenCalledWith('[TitleRenderer] Received non-string value in set():', null);
             expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Title set to: "null"');
         });
 
-        // --- REMOVED Test Case ---
-        // it('should log an error if #titleElement becomes null unexpectedly (internal state error)', () => { ... });
-        // Reason: Reliably testing mutation of private fields post-construction is brittle.
-        // The constructor validation and the check within set() are sufficient.
-
         it('should not affect scroll position or window properties', () => {
-            // Define mock scroll properties
             const initialScrollTop = 100;
             const initialScrollHeight = 500;
-            Object.defineProperty(mockH1Element, 'scrollTop', {value: initialScrollTop, writable: true});
-            Object.defineProperty(mockH1Element, 'scrollHeight', {value: initialScrollHeight, writable: true});
-            // Mock relevant window properties if needed (though TitleRenderer shouldn't touch them)
+            Object.defineProperty(mockH1Element, 'scrollTop', {
+                value: initialScrollTop,
+                writable: true,
+                configurable: true
+            });
+            Object.defineProperty(mockH1Element, 'scrollHeight', {
+                value: initialScrollHeight,
+                writable: true,
+                configurable: true
+            });
             const windowScrollY = window.scrollY;
 
             renderer.set('A New Title That Changes Content');
 
-            // Assert that scroll properties remain unchanged
             expect(mockH1Element.scrollTop).toBe(initialScrollTop);
-            expect(mockH1Element.scrollHeight).toBe(initialScrollHeight); // scrollHeight might change if content wraps, but scrollTop shouldn't be forced
-            expect(window.scrollY).toBe(windowScrollY); // Check global scroll
+            expect(mockH1Element.scrollHeight).toBe(initialScrollHeight);
+            expect(window.scrollY).toBe(windowScrollY);
         });
     });
 
@@ -261,20 +260,17 @@ describe('TitleRenderer', () => {
 
     describe('Event Handlers', () => {
         beforeEach(() => {
-            // Instantiate the renderer to register subscriptions
             renderer = new TitleRenderer({
                 logger: mockLogger,
                 documentContext: mockDocumentContext,
                 validatedEventDispatcher: mockValidatedEventDispatcher,
                 titleElement: mockH1Element,
             });
-            // Spy on the 'set' method to verify it's called by handlers
             jest.spyOn(renderer, 'set');
-            // Clear constructor/setup logs and mocks
             mockLogger.debug.mockClear();
             mockLogger.warn.mockClear();
             mockLogger.error.mockClear();
-            renderer.set.mockClear(); // Clear spy calls
+            renderer.set.mockClear();
         });
 
         it('should handle "textUI:set_title" event', () => {
@@ -347,26 +343,18 @@ describe('TitleRenderer', () => {
     // --- dispose() Tests ---
 
     describe('dispose()', () => {
-        // Note: unsubscribeSpies are captured globally within the VED mock setup
-
         beforeEach(() => {
-            // Instantiate to ensure subscriptions are made and spies are populated
             renderer = new TitleRenderer({
                 logger: mockLogger,
                 documentContext: mockDocumentContext,
                 validatedEventDispatcher: mockValidatedEventDispatcher,
                 titleElement: mockH1Element,
             });
-
-            // Spy on RendererBase.dispose AFTER instantiation
             jest.spyOn(RendererBase.prototype, 'dispose');
-
-            // Clear setup logs/mocks
             mockLogger.debug.mockClear();
         });
 
         afterEach(() => {
-            // Restore base class prototype spy
             if (jest.isMockFunction(RendererBase.prototype.dispose)) {
                 RendererBase.prototype.dispose.mockRestore();
             }
@@ -374,34 +362,29 @@ describe('TitleRenderer', () => {
 
         it('should call unsubscribe on all active subscriptions', () => {
             const initialSubscriptionCount = unsubscribeSpies.length;
-            // --- FIX: Correct subscription count ---
-            expect(initialSubscriptionCount).toBe(14); // Ensure subscriptions were made
+            expect(initialSubscriptionCount).toBe(14);
 
             renderer.dispose();
 
-            // Check that each captured unsubscribe function was called
-            expect(unsubscribeSpies).toHaveLength(initialSubscriptionCount); // Ensure spies array wasn't modified unexpectedly
+            expect(unsubscribeSpies).toHaveLength(initialSubscriptionCount);
             unsubscribeSpies.forEach(spy => {
                 expect(spy).toHaveBeenCalledTimes(1);
             });
         });
 
-        // --- REMOVED Test Case ---
-        // it('should clear the internal subscriptions array', () => { ... });
-        // Reason: Testing private field state is brittle. Verifying unsubscribe calls is sufficient.
-
-        it('should call super.dispose()', () => {
+        it('should call super.dispose() and log appropriate messages from RendererBase', () => {
             renderer.dispose();
             expect(RendererBase.prototype.dispose).toHaveBeenCalledTimes(1);
-            // Base class dispose logs, so we expect the log message via the spy
-            // This indirectly confirms super.dispose() was called if the base class logs
-            expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Disposing.'); // Log from base class dispose
+            // Check for the actual log messages from RendererBase.dispose()
+            expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Starting disposal: Unsubscribing VED events and removing DOM listeners.');
+            expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Finished automated cleanup. Base dispose complete.');
         });
 
-        it('should log disposal start', () => {
-            renderer.dispose();
-            // This specific log comes from TitleRenderer's dispose method itself
-            expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Disposing subscriptions.');
-        });
+        // REMOVED: This test is no longer valid as TitleRenderer.dispose() only calls super.dispose()
+        // and does not have its own direct logging of "Disposing subscriptions."
+        // it('should log disposal start', () => {
+        //     renderer.dispose();
+        //     expect(mockLogger.debug).toHaveBeenCalledWith('[TitleRenderer] Disposing subscriptions.');
+        // });
     });
 });

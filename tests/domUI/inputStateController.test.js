@@ -1,4 +1,4 @@
-// src/tests/domUI/inputStateController.test.js
+// tests/domUI/inputStateController.test.js
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
 import {InputStateController} from '../../src/domUI'; // Assuming index exports it
@@ -78,8 +78,9 @@ describe('InputStateController', () => {
             expect(controller).toBeInstanceOf(InputStateController);
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Initialized.'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Attached to INPUT element.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Added keydown listener in capturing phase to input element to intercept \'Enter\' key.'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Subscribed to VED events'));
-            expect(mockLogger.debug).toHaveBeenCalledTimes(4);
+            expect(mockLogger.debug).toHaveBeenCalledTimes(5); // Adjusted from 4 to 5
         });
 
         it('should throw error if inputElement is missing or null', () => {
@@ -472,9 +473,12 @@ describe('InputStateController', () => {
 
             expect(mockSubscriptions[0].unsubscribe).toHaveBeenCalledTimes(1);
             expect(mockSubscriptions[1].unsubscribe).toHaveBeenCalledTimes(1);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions'));
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Disposing.'));
-            expect(mockLogger.debug).toHaveBeenCalledTimes(3);
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Starting disposal: Unsubscribing VED events and removing DOM listeners.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Unsubscribing 2 VED event subscriptions.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Removing 1 DOM event listeners.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Finished automated cleanup. Base dispose complete.'));
+            expect(mockLogger.debug).toHaveBeenCalledTimes(5); // Adjusted
         });
 
         it('should be safe to call dispose multiple times', () => {
@@ -485,9 +489,13 @@ describe('InputStateController', () => {
             controller.dispose();
             expect(mockSubscriptions[0].unsubscribe).toHaveBeenCalledTimes(1);
             expect(mockSubscriptions[1].unsubscribe).toHaveBeenCalledTimes(1);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions'));
+            // Check all 5 expected logs for the first dispose call
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Disposing.'));
-            expect(mockLogger.debug).toHaveBeenCalledTimes(3);
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Starting disposal: Unsubscribing VED events and removing DOM listeners.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Unsubscribing 2 VED event subscriptions.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Removing 1 DOM event listeners.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Finished automated cleanup. Base dispose complete.'));
+            expect(mockLogger.debug).toHaveBeenCalledTimes(5); // Adjusted
 
             mockSubscriptions[0].unsubscribe.mockClear();
             mockSubscriptions[1].unsubscribe.mockClear();
@@ -497,9 +505,13 @@ describe('InputStateController', () => {
 
             expect(mockSubscriptions[0].unsubscribe).not.toHaveBeenCalled();
             expect(mockSubscriptions[1].unsubscribe).not.toHaveBeenCalled();
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions'));
+            // Check logs for the second dispose call
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[InputStateController] Disposing.'));
-            expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Starting disposal: Unsubscribing VED events and removing DOM listeners.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('No VED event subscriptions to unsubscribe.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('No DOM event listeners to remove.'));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Finished automated cleanup. Base dispose complete.'));
+            expect(mockLogger.debug).toHaveBeenCalledTimes(5); // Adjusted
         });
     });
 });
