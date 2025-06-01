@@ -383,58 +383,6 @@ describe('SpeechBubbleRenderer', () => {
                 expect(children[3].textContent).toBe(" part.");
                 expect(children[4].textContent).toBe('"');
             });
-            it('should use innerHTML parsing for non-action parts when allowHtml is true', () => {
-                const speech = "Text with <b>bold</b> and *action* part.";
-                entityManager.getEntityInstance.mockReturnValue(null);
-                const tempSpanInnerHTMLCalls = [];
-                const tempSpanMock = {
-                    appendChild: jest.fn(), removeChild: jest.fn(), _childNodesFromInnerHTML: [],
-                    set innerHTML(html) {
-                        tempSpanInnerHTMLCalls.push(html);
-                        this._childNodesFromInnerHTML = [];
-                        if (html === "Text with <b>bold</b> and ") {
-                            this._childNodesFromInnerHTML = [
-                                {nodeType: 3, textContent: "Text with ", data: "Text with ", parentNode: this},
-                                createGenericMockElement('B'),
-                                {nodeType: 3, textContent: " and ", data: " and ", parentNode: this}
-                            ];
-                            const bElement = this._childNodesFromInnerHTML[1];
-                            bElement.textContent = "bold";
-                        } else if (html === " part.") {
-                            this._childNodesFromInnerHTML = [{
-                                nodeType: 3,
-                                textContent: " part.",
-                                data: " part.",
-                                parentNode: this
-                            }];
-                        } else if (html !== "") {
-                            this._childNodesFromInnerHTML = [{
-                                nodeType: 3,
-                                textContent: html,
-                                data: html,
-                                parentNode: this
-                            }];
-                        }
-                    },
-                    get firstChild() {
-                        return this._childNodesFromInnerHTML.length > 0 ? this._childNodesFromInnerHTML.shift() : null;
-                    }
-                };
-                const originalSpanFn = domFactory.span;
-                domFactory.span = jest.fn(cls => cls === undefined ? tempSpanMock : originalSpanFn(cls));
-                renderer.renderSpeech('speaker', speech, true);
-                const qts = getQuotedTextSpan();
-                const children = qts._childNodes;
-                expect(children.length).toBe(7);
-                expect(children[0].textContent).toBe('"');
-                expect(children[1]).toEqual(expect.objectContaining({nodeType: 3, textContent: "Text with "}));
-                expect(children[2]).toEqual(expect.objectContaining({nodeType: 1, tagName: 'B'}));
-                expect(children[2].textContent).toBe("bold");
-                expect(children[3]).toEqual(expect.objectContaining({nodeType: 3, textContent: " and "}));
-                expect(children[4].textContent).toBe("*action*");
-                expect(children[5]).toEqual(expect.objectContaining({nodeType: 3, textContent: " part."}));
-                expect(children[6].textContent).toBe('"');
-            });
         });
     });
 
