@@ -1,4 +1,4 @@
-// src/services/promptElementAssemblers/StandardElementAssembler.test.js
+// src/services/promptElementAssemblers/standardElementAssembler.test.js
 // --- FILE START ---
 import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
 import {StandardElementAssembler} from '../../../src/services/promptElementAssemblers/standardElementAssembler.js'; // Adjust path as needed

@@ -6,6 +6,8 @@
 /** @typedef {import('../turns/dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
 /** @typedef {import('../types/promptData.js').PromptData} PromptData */
 /** @typedef {import('../interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService */
+/** @typedef {import('../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
+/** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /**
  * @typedef {object} RawPerceptionLogEntry
  * @description Represents a single entry as it might come from the game state or entity component.
@@ -48,19 +50,34 @@ import {
  * This class is responsible for preparing the raw text for different sections of a prompt.
  */
 export class AIPromptContentProvider extends IAIPromptContentProvider {
+    /** @type {ILogger} */
+    #logger;
     /** @type {IPromptStaticContentService} */
     #promptStaticContentService;
+    /** @type {IPerceptionLogFormatter} */
+    #perceptionLogFormatter;
+    /** @type {IGameStateValidationServiceForPrompting} */
+    #gameStateValidationService;
 
     /**
      * @param {object} dependencies
-     * @param {IPromptStaticContentService} dependencies.promptStaticContentService - Service for static prompt content.
+     * @param {ILogger} dependencies.logger
+     * @param {IPromptStaticContentService} dependencies.promptStaticContentService
+     * @param {IPerceptionLogFormatter} dependencies.perceptionLogFormatter
+     * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService
      */
-    constructor({promptStaticContentService}) {
+    constructor({logger, promptStaticContentService, perceptionLogFormatter, gameStateValidationService}) {
         super();
-        if (!promptStaticContentService) {
-            throw new Error("AIPromptContentProvider: promptStaticContentService dependency is required.");
-        }
+        if (!logger) throw new Error("AIPromptContentProvider: Logger is required.");
+        if (!promptStaticContentService) throw new Error("AIPromptContentProvider: PromptStaticContentService is required.");
+        if (!perceptionLogFormatter) throw new Error("AIPromptContentProvider: PerceptionLogFormatter is required.");
+        if (!gameStateValidationService) throw new Error("AIPromptContentProvider: GameStateValidationServiceForPrompting is required.");
+
+        this.#logger = logger;
         this.#promptStaticContentService = promptStaticContentService;
+        this.#perceptionLogFormatter = perceptionLogFormatter;
+        this.#gameStateValidationService = gameStateValidationService;
+        this.#logger.debug("AIPromptContentProvider initialized with new services.");
     }
 
     /**
@@ -70,10 +87,11 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
      * @param {Array<*>} items - The array of items to format.
      * @param {function(*): string} itemFormatter - A function that formats a single item into a string.
      * @param {string} emptyMessage - The message to use if the items array is empty.
-     * @param {ILogger | undefined} logger - Optional logger instance.
+     * @param {ILogger} logger - Logger instance (expected to be this.#logger from calling methods).
      * @returns {string} The formatted string segment.
      */
     _formatListSegment(title, items, itemFormatter, emptyMessage, logger) {
+        // logger parameter is expected to be this.#logger and thus defined.
         const cleanedTitle = title.replace(/[:\n]*$/, '');
         const lines = [cleanedTitle + ":"];
 
@@ -81,10 +99,10 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             items.forEach(item => {
                 lines.push(itemFormatter(item));
             });
-            logger?.debug(`AIPromptContentProvider: Formatted ${items.length} items for section "${cleanedTitle}".`);
+            logger.debug(`AIPromptContentProvider: Formatted ${items.length} items for section "${cleanedTitle}".`);
         } else {
             lines.push(emptyMessage);
-            logger?.debug(`AIPromptContentProvider: Section "${cleanedTitle}" is empty, using empty message.`);
+            logger.debug(`AIPromptContentProvider: Section "${cleanedTitle}" is empty, using empty message.`);
         }
         return lines.join('\n');
     }
@@ -110,92 +128,62 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
      * Validates if the provided AIGameStateDTO contains the critical information
      * necessary for generating prompt data.
      * @param {AIGameStateDTO | null | undefined} gameStateDto - The game state DTO to validate.
-     * @param {ILogger} logger - Logger instance for logging validation issues.
+     * @param {ILogger} logger - Logger instance for logging validation issues (as per interface).
      * @returns {{isValid: boolean, errorContent: string | null}} An object indicating if the state is valid
      * and an error message if not.
      */
-    validateGameStateForPrompting(gameStateDto, logger) {
-        if (!gameStateDto) {
-            logger?.error("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is null or undefined.");
-            return {isValid: false, errorContent: ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING};
-        }
-        if (!gameStateDto.actorState) {
-            logger?.error("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly.");
-        }
-        if (!gameStateDto.actorPromptData) {
-            logger?.warn("AIPromptContentProvider.validateGameStateForPrompting: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks.");
-        }
-        return {isValid: true, errorContent: null};
+    validateGameStateForPrompting(gameStateDto, logger) { // eslint-disable-line no-unused-vars
+        // The `logger` argument is part of the IAIPromptContentProvider interface.
+        // This method's own operational logging uses this.#logger.
+        // The actual detailed validation logging will be done by the #gameStateValidationService, which uses its own logger.
+        // The `logger` parameter is not passed to `this.#gameStateValidationService.validate` as the service manages its own logging.
+        this.#logger.debug(`AIPromptContentProvider.validateGameStateForPrompting: Delegating to GameStateValidationServiceForPrompting.`);
+        return this.#gameStateValidationService.validate(gameStateDto);
     }
 
     /**
      * Assembles the complete PromptData object required for constructing an LLM prompt.
      * @param {AIGameStateDTO} gameStateDto - The comprehensive game state for the current AI actor.
-     * @param {ILogger} logger - Logger instance for logging during the assembly process.
+     * @param {ILogger} logger - Logger instance for logging during the assembly process. (Note: this method will use the class's instance logger for its own operations)
      * @returns {Promise<PromptData>} A promise that resolves to the fully assembled PromptData object.
      * @throws {Error} If critical information is missing (e.g., gameStateDto is null or validation fails)
      * and PromptData cannot be safely constructed.
      */
-    async getPromptData(gameStateDto, logger) {
-        logger.debug("AIPromptContentProvider: Starting assembly of PromptData.");
+    async getPromptData(gameStateDto, logger) { // `logger` here is from IAIPromptContentProvider interface, // eslint-disable-line no-unused-vars
+        this.#logger.debug("AIPromptContentProvider: Starting assembly of PromptData.");
 
+        // Pass `logger` (the parameter from getPromptData) as per interface for the validation call
         const validationResult = this.validateGameStateForPrompting(gameStateDto, logger);
         if (!validationResult.isValid) {
             const errorMessage = validationResult.errorContent || ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING;
-            logger.error(`AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${errorMessage}`);
+            this.#logger.error(`AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${errorMessage}`);
             throw new Error(errorMessage);
         }
 
         const characterName = gameStateDto.actorPromptData?.name || DEFAULT_FALLBACK_CHARACTER_NAME;
-        logger.debug(`AIPromptContentProvider.getPromptData: Character name resolved to: "${characterName}".`);
+        this.#logger.debug(`AIPromptContentProvider.getPromptData: Character name resolved to: "${characterName}".`);
 
         const currentUserInput = gameStateDto.currentUserInput || "";
-        logger.debug(`AIPromptContentProvider.getPromptData: Current user input resolved to: "${currentUserInput || "empty"}"`);
+        this.#logger.debug(`AIPromptContentProvider.getPromptData: Current user input resolved to: "${currentUserInput || "empty"}"`);
 
         const rawPerceptionLog = /** @type {RawPerceptionLogEntry[]} */ (gameStateDto.perceptionLog || []);
-        const perceptionLogArray = rawPerceptionLog.map(rawEntry => {
-            if (!rawEntry || typeof rawEntry !== 'object') {
-                logger?.warn(`AIPromptContentProvider: Invalid raw perception log entry skipped: ${JSON.stringify(rawEntry)}`);
-                return null;
-            }
-
-            const mappedEntry = {
-                content: rawEntry.descriptionText || "",
-                timestamp: rawEntry.timestamp,
-                type: rawEntry.perceptionType,
-                eventId: rawEntry.eventId,
-                actorId: rawEntry.actorId,
-                targetId: rawEntry.targetId
-            };
-
-            if (typeof mappedEntry.timestamp === 'undefined') {
-                logger?.warn(`AIPromptContentProvider: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) missing 'timestamp'. Placeholder {timestamp} may not resolve correctly. Original entry: ${JSON.stringify(rawEntry)}`);
-            }
-            if (typeof mappedEntry.type === 'undefined') {
-                logger?.warn(`AIPromptContentProvider: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) missing 'perceptionType' (for 'type'). Placeholder {type} may not resolve correctly. Original entry: ${JSON.stringify(rawEntry)}`);
-            }
-            if (mappedEntry.content === "") {
-                logger?.debug(`AIPromptContentProvider: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) resulted in empty 'content' after mapping from 'descriptionText'. Original entry: ${JSON.stringify(rawEntry)}`);
-            }
-            return mappedEntry;
-        }).filter(entry => entry !== null);
-
-        logger.debug(`AIPromptContentProvider.getPromptData: Processed perception log. Original count: ${rawPerceptionLog.length}, Mapped count for PromptBuilder: ${perceptionLogArray.length}.`);
+        const perceptionLogArray = this.#perceptionLogFormatter.format(rawPerceptionLog);
+        this.#logger.debug(`AIPromptContentProvider.getPromptData: Processed perception log. Original count: ${rawPerceptionLog.length}, Mapped count for PromptBuilder: ${perceptionLogArray.length}.`);
         if (perceptionLogArray.length > 0) {
-            logger.debug(`AIPromptContentProvider.getPromptData: First mapped perception log entry for PromptBuilder: ${JSON.stringify(perceptionLogArray[0])}`);
+            this.#logger.debug(`AIPromptContentProvider.getPromptData: First mapped perception log entry for PromptBuilder: ${JSON.stringify(perceptionLogArray[0])}`);
         }
 
-        const locationName = gameStateDto.currentLocation?.name || "an unknown place";
-        logger.debug(`AIPromptContentProvider.getPromptData: Location name resolved to: "${locationName}".`);
+        const locationName = gameStateDto.currentLocation?.name || "an unknown place"; // Fallback to literal string as per test expectations
+        this.#logger.debug(`AIPromptContentProvider.getPromptData: Location name resolved to: "${locationName}".`);
 
         try {
             const promptData = {
                 taskDefinitionContent: this.getTaskDefinitionContent(),
-                characterPersonaContent: this.getCharacterPersonaContent(gameStateDto, logger),
+                characterPersonaContent: this.getCharacterPersonaContent(gameStateDto, this.#logger), // Pass instance logger
                 portrayalGuidelinesContent: this.getCharacterPortrayalGuidelinesContent(characterName),
                 contentPolicyContent: this.getContentPolicyContent(),
-                worldContextContent: this.getWorldContextContent(gameStateDto, logger),
-                availableActionsInfoContent: this.getAvailableActionsInfoContent(gameStateDto, logger),
+                worldContextContent: this.getWorldContextContent(gameStateDto, this.#logger), // Pass instance logger
+                availableActionsInfoContent: this.getAvailableActionsInfoContent(gameStateDto, this.#logger), // Pass instance logger
                 userInputContent: currentUserInput,
                 finalInstructionsContent: this.getFinalInstructionsContent(),
                 perceptionLogArray: perceptionLogArray,
@@ -203,28 +191,29 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
                 locationName: locationName,
             };
 
-            logger.info("AIPromptContentProvider.getPromptData: PromptData assembled successfully.");
-            logger.debug(`AIPromptContentProvider.getPromptData: Assembled PromptData keys: ${Object.keys(promptData).join(', ')}`);
+            this.#logger.info("AIPromptContentProvider.getPromptData: PromptData assembled successfully.");
+            this.#logger.debug(`AIPromptContentProvider.getPromptData: Assembled PromptData keys: ${Object.keys(promptData).join(', ')}`);
 
             return promptData;
         } catch (error) {
-            logger.error(`AIPromptContentProvider.getPromptData: Error during assembly of PromptData components: ${error.message}`, {error});
-            throw new Error(`AIPromptContentProvider.getPromptData: Failed to assemble PromptData due to internal error: ${error.message}`);
+            const err = /** @type {Error} */ (error);
+            this.#logger.error(`AIPromptContentProvider.getPromptData: Error during assembly of PromptData components: ${err.message}`, {error: err});
+            throw new Error(`AIPromptContentProvider.getPromptData: Failed to assemble PromptData due to internal error: ${err.message}`);
         }
     }
 
     /**
      * Generates the character definition content.
      * @param {AIGameStateDTO} gameState - The game state DTO.
-     * @param {ILogger | undefined} logger - Optional logger instance.
+     * @param {ILogger | undefined} logger - Optional logger instance. (Note: This method uses this.#logger for its own logging)
      * @returns {string} The formatted character segment.
      */
-    getCharacterPersonaContent(gameState, logger) {
-        logger?.debug("AIPromptContentProvider: Formatting character persona content.");
+    getCharacterPersonaContent(gameState, logger) { // eslint-disable-line no-unused-vars
+        this.#logger.debug("AIPromptContentProvider: Formatting character persona content.");
         const {actorPromptData} = gameState;
 
         if (!actorPromptData) {
-            logger?.warn("AIPromptContentProvider: actorPromptData is missing. Using fallback.");
+            this.#logger.warn("AIPromptContentProvider: actorPromptData is missing in getCharacterPersonaContent. Using fallback.");
             return gameState.actorState ? PROMPT_FALLBACK_ACTOR_PROMPT_DATA_UNAVAILABLE : PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS;
         }
 
@@ -250,6 +239,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         }
 
         if (characterInfo.length <= 1 && (!actorPromptData.name || actorPromptData.name === DEFAULT_FALLBACK_CHARACTER_NAME)) {
+            this.#logger.debug("AIPromptContentProvider: Character details are minimal or name is default. Using PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS.");
             return PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS;
         }
         return characterInfo.join('\n');
@@ -258,14 +248,15 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     /**
      * Generates the world context content (location, exits, other characters).
      * @param {AIGameStateDTO} gameState - The game state DTO.
-     * @param {ILogger | undefined} logger - Optional logger instance.
+     * @param {ILogger | undefined} logger - Optional logger instance. (Note: This method uses this.#logger for its own logging)
      * @returns {string} The formatted world context segment.
      */
-    getWorldContextContent(gameState, logger) {
-        logger?.debug("AIPromptContentProvider: Formatting world context content.");
+    getWorldContextContent(gameState, logger) { // eslint-disable-line no-unused-vars
+        this.#logger.debug("AIPromptContentProvider: Formatting world context content.");
         const {currentLocation} = gameState;
 
         if (!currentLocation) {
+            this.#logger.warn("AIPromptContentProvider: currentLocation is missing in getWorldContextContent. Using fallback.");
             return PROMPT_FALLBACK_UNKNOWN_LOCATION;
         }
 
@@ -282,7 +273,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             currentLocation.exits,
             (exit) => `- Towards ${exit.direction} leads to ${exit.targetLocationName || exit.targetLocationId || DEFAULT_FALLBACK_LOCATION_NAME}.`,
             PROMPT_FALLBACK_NO_EXITS,
-            logger
+            this.#logger // Pass this.#logger to the helper
         ));
 
         segments.push(this._formatListSegment(
@@ -295,7 +286,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
                 return `- ${namePart} - Description: ${descriptionText}`;
             },
             PROMPT_FALLBACK_ALONE_IN_LOCATION,
-            logger
+            this.#logger // Pass this.#logger to the helper
         ));
         return segments.join('\n\n');
     }
@@ -303,30 +294,33 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     /**
      * Generates the available actions content.
      * @param {AIGameStateDTO} gameState - The game state DTO.
-     * @param {ILogger | undefined} logger - Optional logger instance.
+     * @param {ILogger | undefined} logger - Optional logger instance. (Note: This method uses this.#logger for its own logging)
      * @returns {string} The formatted actions segment.
      */
-    getAvailableActionsInfoContent(gameState, logger) {
-        logger?.debug("AIPromptContentProvider: Formatting available actions info content.");
-        let noActionsMessage = PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE;
+    getAvailableActionsInfoContent(gameState, logger) { // eslint-disable-line no-unused-vars
+        this.#logger.debug("AIPromptContentProvider: Formatting available actions info content.");
+        const noActionsMessage = PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE;
 
         if (!gameState.availableActions || gameState.availableActions.length === 0) {
-            logger?.warn("AIPromptContentProvider: No available actions provided.");
+            this.#logger.warn("AIPromptContentProvider: No available actions provided. Using fallback message for list segment.");
+            // The _formatListSegment will handle logging the use of the empty message.
         }
 
         return this._formatListSegment(
             "Consider these available actions when deciding what to do",
             gameState.availableActions,
             (action) => {
-                const systemId = action.id || DEFAULT_FALLBACK_ACTION_ID;
-                const baseCommand = action.command || DEFAULT_FALLBACK_ACTION_COMMAND;
+                const systemId = action.id || DEFAULT_FALLBACK_ACTION_ID; // Corresponds to actionDefinitionId
+                const baseCommand = action.command || DEFAULT_FALLBACK_ACTION_COMMAND; // Corresponds to commandString
                 const nameDisplay = action.name || DEFAULT_FALLBACK_ACTION_NAME;
                 let description = action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
                 description = ensureTerminalPunctuation(description);
-                return `- "${nameDisplay}" (Reference ID: ${systemId}). Description: ${description} (If you choose this, you might think of it as performing: '${baseCommand}'.)`;
+
+                // MODIFIED LINE:
+                return `- "${nameDisplay}" (actionDefinitionId: "${systemId}", commandString: "${baseCommand}"). Description: ${description}`;
             },
             noActionsMessage,
-            logger
+            this.#logger // Pass this.#logger to the helper
         );
     }
 
@@ -336,6 +330,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
      * @returns {string}
      */
     getTaskDefinitionContent() {
+        // Formerly: return CORE_TASK_DESCRIPTION_TEXT;
         return this.#promptStaticContentService.getCoreTaskDescriptionText();
     }
 
@@ -346,6 +341,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
      * @returns {string}
      */
     getCharacterPortrayalGuidelinesContent(characterName) {
+        // Formerly: return CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE(characterName);
         return this.#promptStaticContentService.getCharacterPortrayalGuidelines(characterName);
     }
 
@@ -355,6 +351,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
      * @returns {string}
      */
     getContentPolicyContent() {
+        // Formerly: return NC_21_CONTENT_POLICY_TEXT;
         return this.#promptStaticContentService.getNc21ContentPolicyText();
     }
 
@@ -364,6 +361,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
      * @returns {string}
      */
     getFinalInstructionsContent() {
+        // Formerly: return FINAL_LLM_INSTRUCTION_TEXT;
         return this.#promptStaticContentService.getFinalLlmInstructionText();
     }
 }

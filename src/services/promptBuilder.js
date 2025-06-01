@@ -18,11 +18,11 @@
  */
 
 /**
- * @typedef {import('./promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler
+ * @typedef {import('./promptElementAssemblers/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler
  */
 
 /**
- * @typedef {import('./promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler
+ * @typedef {import('./promptElementAssemblers/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler
  */
 
 /**
@@ -73,8 +73,8 @@
  */
 
 import {IPromptBuilder} from "../interfaces/IPromptBuilder.js";
-import {StandardElementAssembler} from './promptElementAssemblers/StandardElementAssembler.js';
-import {PerceptionLogAssembler} from './promptElementAssemblers/PerceptionLogAssembler.js';
+import {StandardElementAssembler} from './promptElementAssemblers/standardElementAssembler.js';
+import {PerceptionLogAssembler} from './promptElementAssemblers/perceptionLogAssembler.js';
 
 // Define constants for special element keys
 const PERCEPTION_LOG_WRAPPER_KEY = 'perception_log_wrapper';

@@ -25,7 +25,6 @@ export const DEFAULT_FALLBACK_ACTION_NAME = "Unnamed Action";
 export const PROMPT_FALLBACK_UNKNOWN_LOCATION = "Your current location is unknown.";
 export const PROMPT_FALLBACK_NO_EXITS = "There are no obvious exits.";
 export const PROMPT_FALLBACK_ALONE_IN_LOCATION = "You are alone here.";
-export const PROMPT_FALLBACK_NO_RECENT_EVENTS = "Nothing noteworthy has happened recently.";
 export const PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE = "You have no specific actions immediately apparent. Consider what your character would do in this situation; you might wait, observe, or reflect.";
 
 // --- AIPromptFormatter: Character Segment Specific Messages (typically fully punctuated) ---
@@ -35,7 +34,6 @@ export const PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS = "Your character details
 
 // --- AIPromptFormatter: Error Messages (typically fully punctuated) ---
 export const ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING = "Error: Critical game state information is missing. Cannot generate LLM prompt.";
-export const ERROR_FALLBACK_ACTOR_STATE_MISSING = "Error: Actor state information is missing. Cannot generate LLM prompt.";
 
 // --- AIGameStateProvider: Default for _getComponentText if no specific fallback applies ---
 // This is more for internal robust data fetching before specific DTO fallbacks are applied.

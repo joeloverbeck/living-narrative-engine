@@ -1,4 +1,4 @@
-// src/config/tokens.js
+// src/core/config/tokens.js
 // --- FILE START ---
 /**
  * @fileoverview Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -134,6 +134,8 @@
  * @property {DiToken} StandardElementAssembler - Token for the standard prompt element assembler.
  * @property {DiToken} PerceptionLogAssembler - Token for the perception log element assembler.
  * // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING END *****
+ * @property {DiToken} IPromptStaticContentService - Token for the service providing static prompt content.
+ +* @property {DiToken} IPerceptionLogFormatter - Token for the perception log formatting service.
  */
 export const tokens = Object.freeze({
     // Core Interfaces/Abstractions & Externals
@@ -269,12 +271,13 @@ export const tokens = Object.freeze({
     AIPromptContentProvider: 'AIPromptContentProvider', // For ConcreteAIPromptContentProvider
     LLMResponseProcessor: 'LLMResponseProcessor', // For ConcreteLLMResponseProcessor
 
-    // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING START *****
     IConfigurationProvider: 'IConfigurationProvider',
     LLMConfigService: 'LLMConfigService',
     PlaceholderResolver: 'PlaceholderResolver',
     StandardElementAssembler: 'StandardElementAssembler',
     PerceptionLogAssembler: 'PerceptionLogAssembler',
-    // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING END *****
+    IPromptStaticContentService: 'IPromptStaticContentService',
+    IPerceptionLogFormatter: 'IPerceptionLogFormatter',
+    IGameStateValidationServiceForPrompting: 'IGameStateValidationServiceForPrompting',
 });
 // --- FILE END ---

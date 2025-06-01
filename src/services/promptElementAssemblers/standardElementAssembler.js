@@ -1,4 +1,4 @@
-// src/services/promptElementAssemblers/StandardElementAssembler.js
+// src/services/promptElementAssemblers/standardElementAssembler.js
 /**
  * @fileoverview Implements the StandardElementAssembler for generic prompt elements.
  */

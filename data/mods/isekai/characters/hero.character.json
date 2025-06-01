@@ -4,10 +4,10 @@
     "core:actor": {},
     "core:player": {},
     "core:name": {
-      "text": "Hero"
+      "text": "Joel Overberus"
     },
     "core:description": {
-      "text": "A big, powerful hero, ready to take over this isekai world."
+      "text": "A rugged-looking man, likely in his late 30s to 40s, with a stern and focused expression. He has dark, medium-length hair that is somewhat unkempt, and a full, dark beard and mustache, with some hints of grey, particularly in the beard. His dark eyes are intense and gaze directly forward. His complexion is weathered, and he has strong, defined facial features, including a prominent brow and nose. He is clad in practical, warrior-like attire. This includes a dark blue or black leather cuirass or jerkin, possibly with some metallic buckles or embellishments, worn over a dark, long-sleeved undergarment. A thick, fur-lined (or possibly entirely fur) mantle or cloak, in shades of brown, is draped over his shoulders and fastened with leather straps. His overall appearance is that of a seasoned warrior or adventurer."
     },
     "core:portrait": {
       "imagePath": "portraits/hero.png",

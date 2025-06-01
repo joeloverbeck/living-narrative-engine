@@ -1,4 +1,5 @@
 // src/core/config/registrations/uiRegistrations.js
+
 /**
  * @fileoverview Registers UI-related services and dependencies with the AppContainer.
  * This version reflects the refactoring of DomRenderer into individual components
@@ -17,7 +18,7 @@ import {
     TitleRenderer,
     InputStateController,
     LocationRenderer,
-    InventoryPanel,
+    // InventoryPanel, // Removed InventoryPanel import
     ActionButtonsRenderer,
     PerceptionLogRenderer,
     DomUiFacade,
@@ -148,23 +149,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     });
     logger.debug(`UI Registrations: Registered ${tokens.LocationRenderer} with IEntityManager and IDataRegistry.`);
 
-    // InventoryPanel
-    registrar.singletonFactory(tokens.InventoryPanel, c => {
-        const docContext = c.resolve(tokens.IDocumentContext);
-        const resolvedLogger = c.resolve(tokens.ILogger);
-        const inventoryWidgetContainer = docContext.query('#inventory-widget');
-        if (!inventoryWidgetContainer) {
-            resolvedLogger.warn(`UI Registrations: Could not find '#inventory-widget' element for InventoryPanel. Panel might not attach correctly.`);
-        }
-        return new InventoryPanel({
-            logger: resolvedLogger,
-            documentContext: docContext,
-            validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-            domElementFactory: c.resolve(tokens.DomElementFactory),
-            containerElement: inventoryWidgetContainer
-        });
-    });
-    logger.debug(`UI Registrations: Registered ${tokens.InventoryPanel}.`);
+    // InventoryPanel registration removed
 
     // ActionButtonsRenderer
     registrar.singletonFactory(tokens.ActionButtonsRenderer, c => {
@@ -240,12 +225,12 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     // --- 3. Register Facade ---
     registrar.single(tokens.DomUiFacade, DomUiFacade, [
         tokens.ActionButtonsRenderer,
-        tokens.InventoryPanel,
+        // tokens.InventoryPanel, // Removed from facade dependencies
         tokens.LocationRenderer,
         tokens.TitleRenderer,
         tokens.InputStateController,
         tokens.UiMessageRenderer,
-        tokens.SpeechBubbleRenderer, // <<< ADDED to facade dependencies (optional, but good for consistency)
+        tokens.SpeechBubbleRenderer,
         tokens.PerceptionLogRenderer,
         tokens.SaveGameUI,
         tokens.LoadGameUI,

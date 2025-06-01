@@ -1,10 +1,10 @@
 // src/domUI/domUiFacade.js
+
 /**
  * @fileoverview Facade providing access to all UI rendering components.
  */
 
 /** @typedef {import('./actionButtonsRenderer').ActionButtonsRenderer} ActionButtonsRenderer */
-/** @typedef {import('./inventoryPanel').InventoryPanel} InventoryPanel */
 /** @typedef {import('./locationRenderer').LocationRenderer} LocationRenderer */
 /** @typedef {import('./titleRenderer').TitleRenderer} TitleRenderer */
 /** @typedef {import('./inputStateController').InputStateController} InputStateController */
@@ -23,7 +23,6 @@
  */
 export class DomUiFacade {
     /** @private @type {ActionButtonsRenderer} */ #actionButtonsRenderer;
-    /** @private @type {InventoryPanel} */ #inventoryPanel;
     /** @private @type {LocationRenderer} */ #locationRenderer;
     /** @private @type {TitleRenderer} */ #titleRenderer;
     /** @private @type {InputStateController} */ #inputStateController;
@@ -38,7 +37,6 @@ export class DomUiFacade {
      *
      * @param {object} deps - Dependencies object containing all required renderers/controllers.
      * @param {ActionButtonsRenderer} deps.actionButtonsRenderer - Renderer for action buttons.
-     * @param {InventoryPanel} deps.inventoryPanel - Controller/Renderer for the inventory panel.
      * @param {LocationRenderer} deps.locationRenderer - Renderer for location details.
      * @param {TitleRenderer} deps.titleRenderer - Renderer for the main game title.
      * @param {InputStateController} deps.inputStateController - Controller for the player input element's state.
@@ -51,7 +49,6 @@ export class DomUiFacade {
      */
     constructor({
                     actionButtonsRenderer,
-                    inventoryPanel,
                     locationRenderer,
                     titleRenderer,
                     inputStateController,
@@ -63,7 +60,6 @@ export class DomUiFacade {
                 }) {
         // Basic validation to ensure all renderers are provided
         if (!actionButtonsRenderer || typeof actionButtonsRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
-        if (!inventoryPanel || typeof inventoryPanel.toggle !== 'function') throw new Error('DomUiFacade: Missing or invalid inventoryPanel dependency.');
         if (!locationRenderer || typeof locationRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid locationRenderer dependency.');
         if (!titleRenderer || typeof titleRenderer.set !== 'function') throw new Error('DomUiFacade: Missing or invalid titleRenderer dependency.');
         if (!inputStateController || typeof inputStateController.setEnabled !== 'function') throw new Error('DomUiFacade: Missing or invalid inputStateController dependency.');
@@ -74,7 +70,6 @@ export class DomUiFacade {
         if (!llmSelectionModal || typeof llmSelectionModal.show !== 'function') throw new Error('DomUiFacade: Missing or invalid llmSelectionModal dependency.');
 
         this.#actionButtonsRenderer = actionButtonsRenderer;
-        this.#inventoryPanel = inventoryPanel;
         this.#locationRenderer = locationRenderer;
         this.#titleRenderer = titleRenderer;
         this.#inputStateController = inputStateController;
@@ -88,11 +83,6 @@ export class DomUiFacade {
     /** @returns {ActionButtonsRenderer} */
     get actionButtons() {
         return this.#actionButtonsRenderer;
-    }
-
-    /** @returns {InventoryPanel} */
-    get inventory() {
-        return this.#inventoryPanel;
     }
 
     /** @returns {LocationRenderer} */
@@ -141,7 +131,6 @@ export class DomUiFacade {
      */
     dispose() {
         this.#actionButtonsRenderer?.dispose?.();
-        this.#inventoryPanel?.dispose?.();
         this.#locationRenderer?.dispose?.();
         this.#titleRenderer?.dispose?.();
         this.#inputStateController?.dispose?.();

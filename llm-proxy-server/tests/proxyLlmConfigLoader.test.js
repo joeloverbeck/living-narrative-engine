@@ -50,14 +50,9 @@ describe('loadProxyLlmConfigs', () => {
         // due to jest.mock('node:path') at the top of the file).
         // This makes the mocked path.resolve behave like the real one for the SUT,
         // while still allowing us to track its calls.
-        // Important: Ensure path.resolve is actually a mock function here.
-        // If path is imported before jest.mock completes its work, this might not be the mock.
-        // However, jest.mock is hoisted, so 'import * as path' should get the mock.
         if (typeof path.resolve.mockImplementation === 'function') {
             path.resolve.mockImplementation((...args) => actualPath.resolve(...args));
         } else {
-            // This case should ideally not happen if jest.mock works as expected for ES modules.
-            // Fallback or error if path.resolve is not a mock function as expected.
             console.error("Warning: path.resolve is not a mock function in beforeEach. Spying might not work as expected.");
         }
 
@@ -77,18 +72,19 @@ describe('loadProxyLlmConfigs', () => {
     afterEach(() => {
         // With jest.mock at the top level, mocks persist for the file.
         // jest.clearAllMocks() in beforeEach is the primary mechanism for resetting state between tests.
+        Object.values(consoleSpies).forEach(spy => spy.mockRestore());
     });
 
     describe('Successful Configuration Loading', () => {
         test('should load and parse valid JSON configuration with a default LLM ID', async () => {
-            const mockLlmConfigs = {
-                defaultLlmId: 'gpt-4',
-                llms: {
+            const mockLlmConfigsFileContent = { // Renamed to reflect it's file content
+                defaultConfigId: 'gpt-4', // Changed from defaultLlmId to defaultConfigId
+                configs: { // Changed from llms to configs
                     'gpt-4': {model: 'gpt-4', apiKey: 'dummy_api_key_gpt4'},
                     'claude-2': {model: 'claude-2', apiKey: 'dummy_api_key_claude2'},
                 },
             };
-            mockFileSystemReader.readFile.mockResolvedValue(JSON.stringify(mockLlmConfigs));
+            mockFileSystemReader.readFile.mockResolvedValue(JSON.stringify(mockLlmConfigsFileContent));
 
             const result = await loadProxyLlmConfigs(MOCK_CONFIG_FILE_PATH, logger, mockFileSystemReader);
 
@@ -98,33 +94,35 @@ describe('loadProxyLlmConfigs', () => {
             expect(logger.info).toHaveBeenCalledWith(`Attempting to load LLM configurations from: ${MOCK_RESOLVED_CONFIG_FILE_PATH}`);
             expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining(`Successfully read file content from ${MOCK_RESOLVED_CONFIG_FILE_PATH}`));
             expect(logger.debug).toHaveBeenCalledWith(`Successfully parsed JSON content from ${MOCK_RESOLVED_CONFIG_FILE_PATH}.`);
+            // This log message correctly refers to the number of keys in the 'configs' object.
             expect(logger.info).toHaveBeenCalledWith(`LLM configurations loaded and validated successfully from ${MOCK_RESOLVED_CONFIG_FILE_PATH}. Found 2 LLM configurations.`);
             expect(result).toEqual({
                 error: false,
-                llmConfigs: mockLlmConfigs,
+                llmConfigs: mockLlmConfigsFileContent, // SUT returns the entire parsed object
             });
             expect(logger.error).not.toHaveBeenCalled();
         });
 
         test('should load and parse valid JSON configuration without a default LLM ID', async () => {
-            const mockLlmConfigs = {
-                llms: {
+            const mockLlmConfigsFileContent = { // Renamed
+                configs: { // Changed from llms to configs
                     'gpt-3.5': {model: 'gpt-3.5-turbo', apiKeyVariable: 'OPENAI_API_KEY'},
                 },
             };
-            mockFileSystemReader.readFile.mockResolvedValue(JSON.stringify(mockLlmConfigs));
+            mockFileSystemReader.readFile.mockResolvedValue(JSON.stringify(mockLlmConfigsFileContent));
             const result = await loadProxyLlmConfigs(MOCK_CONFIG_FILE_PATH, logger, mockFileSystemReader);
             expect(result).toEqual({
                 error: false,
-                llmConfigs: mockLlmConfigs,
+                llmConfigs: mockLlmConfigsFileContent, // SUT returns the entire parsed object
             });
+            // This log message correctly refers to the number of keys in the 'configs' object.
             expect(logger.info).toHaveBeenCalledWith(`LLM configurations loaded and validated successfully from ${MOCK_RESOLVED_CONFIG_FILE_PATH}. Found 1 LLM configurations.`);
             expect(logger.error).not.toHaveBeenCalled();
         });
 
         test('should use fallback logger if provided logger is null', async () => {
-            const mockLlmConfigs = {llms: {'test-llm': {model: 'test'}}};
-            mockFileSystemReader.readFile.mockResolvedValue(JSON.stringify(mockLlmConfigs));
+            const mockLlmConfigsFileContent = {configs: {'test-llm': {model: 'test'}}}; // Changed llms to configs
+            mockFileSystemReader.readFile.mockResolvedValue(JSON.stringify(mockLlmConfigsFileContent));
             await loadProxyLlmConfigs(MOCK_CONFIG_FILE_PATH, null, mockFileSystemReader);
 
             expect(consoleSpies.info).toHaveBeenCalledWith('ProxyLlmConfigLoader: ', `Attempting to load LLM configurations from: ${MOCK_RESOLVED_CONFIG_FILE_PATH}`);
@@ -134,8 +132,8 @@ describe('loadProxyLlmConfigs', () => {
         });
 
         test('should use fallback logger if provided logger is invalid (e.g., missing methods)', async () => {
-            const mockLlmConfigs = {llms: {'test-llm': {model: 'test'}}};
-            mockFileSystemReader.readFile.mockResolvedValue(JSON.stringify(mockLlmConfigs));
+            const mockLlmConfigsFileContent = {configs: {'test-llm': {model: 'test'}}}; // Changed llms to configs
+            mockFileSystemReader.readFile.mockResolvedValue(JSON.stringify(mockLlmConfigsFileContent));
             const invalidLogger = {
                 infoCall: "not a function", debugCall: () => {
                 }
@@ -296,26 +294,27 @@ describe('loadProxyLlmConfigs', () => {
             },
             {name: 'parsed content is null', content: 'null', preview: 'null'},
             {
-                name: 'llms property is missing entirely',
-                content: JSON.stringify({defaultLlmId: 'some-id', otherProperty: 'value'}),
-                preview: '{"defaultLlmId":"some-id","otherProperty":"value"}'
+                name: 'configs property is missing entirely', // Updated name for clarity
+                content: JSON.stringify({defaultConfigId: 'some-id', otherProperty: 'value'}), // This content correctly tests missing 'configs'
+                preview: '{"defaultConfigId":"some-id","otherProperty":"value"}'
             },
             {
-                name: 'llms property is present but is null',
-                content: JSON.stringify({llms: null}),
-                preview: '{"llms":null}'
+                name: 'configs property is present but is null', // Updated name for clarity
+                content: JSON.stringify({configs: null}), // Changed from llms to configs
+                preview: '{"configs":null}' // Changed from llms to configs
             },
             {
-                name: 'llms property is not an object (e.g., a string)',
-                content: JSON.stringify({llms: "this should be an object"}),
-                preview: '{"llms":"this should be an object"}'
+                name: 'configs property is not an object (e.g., a string)', // Updated name for clarity
+                content: JSON.stringify({configs: "this should be an object"}), // Changed from llms to configs
+                preview: '{"configs":"this should be an object"}' // Changed from llms to configs
             },
         ];
 
         malformedTestCases.forEach(tc => {
             test(`should handle malformed configuration: ${tc.name}`, async () => {
                 mockFileSystemReader.readFile.mockResolvedValue(tc.content);
-                const expectedRawErrorMsg = `Configuration file from ${MOCK_RESOLVED_CONFIG_FILE_PATH} is malformed or missing 'llms' object.`;
+                // Updated error message to refer to 'configs' object
+                const expectedRawErrorMsg = `Configuration file from ${MOCK_RESOLVED_CONFIG_FILE_PATH} is malformed or missing 'configs' object.`;
                 const result = await loadProxyLlmConfigs(MOCK_CONFIG_FILE_PATH, logger, mockFileSystemReader);
 
                 expect(logger.error).toHaveBeenCalledWith(expectedRawErrorMsg, {
@@ -325,7 +324,7 @@ describe('loadProxyLlmConfigs', () => {
                 expect(result).toEqual({
                     error: true,
                     message: `ProxyLlmConfigLoader: ${expectedRawErrorMsg}`,
-                    stage: 'validation_malformed_or_missing_llms',
+                    stage: 'validation_malformed_or_missing_configs_map', // Updated stage name
                     pathAttempted: MOCK_RESOLVED_CONFIG_FILE_PATH,
                 });
             });

@@ -37,13 +37,25 @@ import {PromptBuilder} from "../../services/promptBuilder.js"; // Corrected path
 import {LLMConfigService} from "../../services/llmConfigService.js"; // Corrected path
 import {HttpConfigurationProvider} from "../../services/httpConfigurationProvider.js"; // Corrected path
 import {PlaceholderResolver} from "../../utils/placeholderResolver.js"; // Corrected path
-import {StandardElementAssembler} from "../../services/promptElementAssemblers/StandardElementAssembler.js"; // Corrected path
-import {PerceptionLogAssembler} from "../../services/promptElementAssemblers/PerceptionLogAssembler.js"; // Corrected path
+import {StandardElementAssembler} from "../../services/promptElementAssemblers/standardElementAssembler.js"; // Corrected path
+import {PerceptionLogAssembler} from "../../services/promptElementAssemblers/perceptionLogAssembler.js";
+import {PromptStaticContentService} from "../../services/promptStaticContentService.js"; // Corrected path
+
+// +++ TICKET 7 IMPORTS START +++
+import {PerceptionLogFormatter} from '../../services/perceptionLogFormatter.js';
+// +++ TICKET 7 IMPORTS END +++
+
+// +++ TICKET 11 IMPORTS START +++
+import {GameStateValidationServiceForPrompting} from '../../services/gameStateValidationServiceForPrompting.js';
+// +++ TICKET 11 IMPORTS END +++
 
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService */
+/** @typedef {import('../../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
+/** @typedef {import('../../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
@@ -63,16 +75,16 @@ import {PerceptionLogAssembler} from "../../services/promptElementAssemblers/Per
 /** @typedef {import('../../services/gamePersistenceService.js').default} GamePersistenceService_Type */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */
-/** @typedef {import('../../../initializers/services/referenceResolver.js').default} ReferenceResolver_Concrete */
+/** @typedef {import('../../../initializers/services/referenceResolver.js').default} ReferenceResolver_Concrete */ // Note: path might be '../../initializers/services/referenceResolver.js'
 /** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */
 // --- NEW Type Imports for PromptBuilder dependencies ---
-/** @typedef {import('../../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
-/** @typedef {import('../../../services/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
-/** @typedef {import('../../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver_Concrete */
-/** @typedef {import('../../../services/promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
-/** @typedef {import('../../../services/promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
+/** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */ // Note: path might be '../../interfaces/IConfigurationProvider.js'
+/** @typedef {import('../../services/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
+/** @typedef {import('../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver_Concrete */
+/** @typedef {import('../../services/promptElementAssemblers/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
+/** @typedef {import('../../services/promptElementAssemblers/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
 
-/** @typedef {import('../../../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder_Interface */
+/** @typedef {import('../../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder_Interface */
 
 
 /**
@@ -84,7 +96,38 @@ export function registerDomainServices(container) {
     const r = new Registrar(container);
     /** @type {ILogger} */
     const log = container.resolve(tokens.ILogger);
-    log.debug('Domain-services Registration: starting…');
+    log.debug('Domain-services Registration: starting...');
+
+    // ------------------------------------------------------------------
+    // NEW -- PromptStaticContentService
+    // ------------------------------------------------------------------
+    r.singletonFactory(tokens.IPromptStaticContentService, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        return new PromptStaticContentService({logger});
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IPromptStaticContentService)}.`);
+    // ------------------------------------------------------------------
+
+    // +++ TICKET 7 REGISTRATION START +++
+    r.singletonFactory(tokens.IPerceptionLogFormatter, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        return new PerceptionLogFormatter({logger});
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IPerceptionLogFormatter)}.`);
+    // +++ TICKET 7 REGISTRATION END +++
+
+    // +++ TICKET 11 REGISTRATION START +++
+    r.singletonFactory(tokens.IGameStateValidationServiceForPrompting, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        if (!logger) {
+            const errorMsg = `Domain-services Registration: Factory for ${String(tokens.IGameStateValidationServiceForPrompting)} FAILED to resolve dependency "logger".`;
+            log.error(errorMsg); // Use the main log instance for this error
+            throw new Error(errorMsg);
+        }
+        return new GameStateValidationServiceForPrompting({logger});
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IGameStateValidationServiceForPrompting)}.`);
+    // +++ TICKET 11 REGISTRATION END +++
 
     r.singletonFactory(tokens.TargetResolutionService, (c) => {
         log.debug(`Domain-services Registration: Factory creating ${String(tokens.TargetResolutionService)}...`);
@@ -345,8 +388,22 @@ export function registerDomainServices(container) {
     r.single(tokens.IAIGameStateProvider, AIGameStateProvider);
     log.debug(`Domain Services Registration: Registered ${String(tokens.IAIGameStateProvider)}.`);
 
-    r.single(tokens.IAIPromptContentProvider, AIPromptContentProvider); // Assuming this doesn't need new dependencies from PB refactor.
-    log.debug(`Domain Services Registration: Registered ${String(tokens.IAIPromptContentProvider)}.`);
+    // MODIFIED IAIPromptContentProvider registration
+    r.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        const promptStaticContentService = /** @type {IPromptStaticContentService} */ (c.resolve(tokens.IPromptStaticContentService));
+        const perceptionLogFormatter = /** @type {IPerceptionLogFormatter} */ (c.resolve(tokens.IPerceptionLogFormatter));
+        const gameStateValidationService = /** @type {IGameStateValidationServiceForPrompting} */ (c.resolve(tokens.IGameStateValidationServiceForPrompting));
+
+        return new AIPromptContentProvider({
+            logger,
+            promptStaticContentService,
+            perceptionLogFormatter,
+            gameStateValidationService
+        });
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.IAIPromptContentProvider)} with new dependencies.`);
+
 
     r.single(tokens.ILLMResponseProcessor, LLMResponseProcessor, [
         tokens.ISchemaValidator // Assuming this doesn't need new dependencies from PB refactor.

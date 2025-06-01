@@ -1,6 +1,8 @@
 // src/domUI/index.js
 // --- FILE START ---
 // Export interfaces and base classes
+// --- FILE START ---
+// Export interfaces and base classes
 export * from './IDocumentContext.js';
 export * from './rendererBase.js'; // Ensure RendererBase export is correct
 
@@ -11,7 +13,6 @@ export * from './uiMessageRenderer.js';
 export * from './titleRenderer.js';
 export * from './inputStateController.js';
 export * from './locationRenderer.js';
-export * from './inventoryPanel.js';
 export * from './actionButtonsRenderer.js';
 export * from './perceptionLogRenderer.js';
 export {LlmSelectionModal} from './llmSelectionModal.js'; // <<< ADDED EXPORT
@@ -22,3 +23,4 @@ export {DomUiFacade} from './domUiFacade.js'; // Use named export
 export {CurrentTurnActorRenderer} from './currentTurnActorRenderer.js';
 
 export {SpeechBubbleRenderer} from './speechBubbleRenderer.js';
+// --- FILE END ---

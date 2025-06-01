@@ -27,10 +27,10 @@ import {
     TitleRenderer,
     InputStateController,
     LocationRenderer,
-    InventoryPanel,
+    // InventoryPanel, // Removed InventoryPanel import
     ActionButtonsRenderer,
     PerceptionLogRenderer,
-    LlmSelectionModal // <<< ADDED
+    LlmSelectionModal
 } from '../../../src/domUI/index.js';
 import SaveGameUI from '../../../src/domUI/saveGameUI.js'; // Added
 import LoadGameUI from '../../../src/domUI/loadGameUI.js'; // Added
@@ -74,11 +74,11 @@ let mockPlayerConfirmTurnButton;
 let mockPerceptionLogList;
 let mockOpenSaveGameButton;
 let mockOpenLoadGameButton;
-let mockChangeLlmButton; // <<< ADDED
-let mockLlmSelectionModalElement; // <<< ADDED
-let mockLlmSelectionListElement; // <<< ADDED
-let mockLlmSelectionModalCloseButton; // <<< ADDED
-let mockLlmSelectionStatusMessageElement; // <<< ADDED
+let mockChangeLlmButton;
+let mockLlmSelectionModalElement;
+let mockLlmSelectionListElement;
+let mockLlmSelectionModalCloseButton;
+let mockLlmSelectionStatusMessageElement;
 
 
 const setupDomMocks = () => {
@@ -111,15 +111,15 @@ const setupDomMocks = () => {
     mockLlmSelectionStatusMessageElement = mockDocument.createElement('div');
 
     // give them the IDs the production code looks for
-    mockInputElement.id = 'input-element';
-    mockOutputDiv.id = 'output-div';
-    mockTitleElement.id = 'title-element';
+    mockInputElement.id = 'input-element'; // Corresponds to tokens.inputElement in registrations
+    mockOutputDiv.id = 'output-div'; // Corresponds to tokens.outputDiv
+    mockTitleElement.id = 'title-element'; // Corresponds to tokens.titleElement
     mockGameContainer.id = 'game-container';
-    mockActionButtonsContainer.id = 'action-buttons';
-    mockLocationInfoContainer.id = 'location-info-container';
-    mockInventoryWidget.id = 'inventory-widget';
-    mockPlayerConfirmTurnButton.id = 'player-confirm-turn-button';
-    mockPerceptionLogList.id = 'perception-log-list';
+    mockActionButtonsContainer.id = 'action-buttons'; // Used by ActionButtonsRenderer
+    mockLocationInfoContainer.id = 'location-info-container'; // Used by LocationRenderer
+    mockInventoryWidget.id = 'inventory-widget'; // No longer directly used by a registered component in these tests
+    mockPlayerConfirmTurnButton.id = 'player-confirm-turn-button'; // Used by ActionButtonsRenderer
+    mockPerceptionLogList.id = 'perception-log-list'; // Used by PerceptionLogRenderer's constructor
     mockOpenSaveGameButton.id = 'open-save-game-button';
     mockOpenLoadGameButton.id = 'open-load-game-button';
     mockChangeLlmButton.id = 'change-llm-button';
@@ -127,6 +127,7 @@ const setupDomMocks = () => {
     mockLlmSelectionListElement.id = 'llm-selection-list';
     mockLlmSelectionModalCloseButton.id = 'llm-selection-modal-close-button';
     mockLlmSelectionStatusMessageElement.id = 'llm-selection-status-message';
+
 
     // stitch them into the DOM
     mockDocument.body.appendChild(mockGameContainer);
@@ -137,7 +138,7 @@ const setupDomMocks = () => {
         mockTitleElement,
         mockInputElement,
         mockLocationInfoContainer,
-        mockInventoryWidget,
+        mockInventoryWidget, // Still in DOM for completeness, though its JS class is removed from DI
         mockPlayerConfirmTurnButton,
         mockPerceptionLogList,
         mockOpenSaveGameButton,
@@ -179,7 +180,7 @@ const setupDomMocks = () => {
                     return mockLlmSelectionStatusMessageElement;
                 case '#location-info-container':
                     return mockLocationInfoContainer;
-                case '#inventory-widget':
+                case '#inventory-widget': // This will still be called if code tries to find it
                     return mockInventoryWidget;
                 case '#action-buttons':
                     return mockActionButtonsContainer;
@@ -188,6 +189,8 @@ const setupDomMocks = () => {
                 case '#perception-log-list':
                     return mockPerceptionLogList;
                 default:
+                    // Fallback to the original querySelector for other selectors
+                    // This is important for other DOM interactions that might occur.
                     return nativeQuerySelector.call(this, selector);
             }
         });
@@ -198,106 +201,106 @@ const setupDomMocks = () => {
 const createMockContainer = () => {
     const registrations = new Map();
     const instances = new Map();
-    let containerInstance;
+    let containerInstance; // To be assigned the object itself for internal .resolve calls
 
+    // Spy on the register method
     const registerSpy = jest.fn((token, factoryOrValueOrClass, options = {}) => {
         if (!token) throw new Error('Mock Register Error: Token is required.');
         registrations.set(token, {factoryOrValue: factoryOrValueOrClass, options: options});
+        // If it's a singleton and already instantiated, clear the old instance
         if (options?.lifecycle?.startsWith('singleton') && instances.has(token)) {
             instances.delete(token);
         }
     });
 
     const resolveSpy = jest.fn((token) => {
-        const tokenString = String(token); // Use String() for Symbols
+        const tokenString = String(token); // For debugging, convert Symbol to string
+
         if (instances.has(token)) return instances.get(token);
 
         const registration = registrations.get(token);
         if (registration) {
             const {factoryOrValue, options} = registration;
-            const lifecycle = options?.lifecycle || 'transient';
+            const lifecycle = options?.lifecycle || 'transient'; // Default to transient
             let instance;
 
+            // Determine if it's a class constructor for 'single' or a factory function
             const isClassForSingle = typeof factoryOrValue === 'function'
-                && options?.dependencies
+                && options?.dependencies // 'single' expects dependencies array
                 && Array.isArray(options.dependencies)
-                // && options?.lifecycle === 'singleton'; // Modified to allow 'single' as well
-                && (options?.lifecycle === 'singleton' || options?.lifecycle === 'single');
-
+                && (options?.lifecycle === 'singleton' || options?.lifecycle === 'single'); // Registrar.single uses 'singleton'
 
             const isFactoryFunction = typeof factoryOrValue === 'function' && !isClassForSingle;
 
 
             if (isClassForSingle) {
                 const ClassConstructor = factoryOrValue;
+                // Resolve dependencies first
                 const resolvedDeps = options.dependencies.map(depToken => {
                     try {
-                        return containerInstance.resolve(depToken);
+                        return containerInstance.resolve(depToken); // Use the containerInstance for resolution
                     } catch (resolveError) {
                         console.error(`[Mock Resolve - isClassForSingle] Failed to resolve dependency '${String(depToken)}' for '${ClassConstructor.name}'`);
-                        throw resolveError;
+                        throw resolveError; // Re-throw to fail test if a dep is missing
                     }
                 });
                 try {
-                    // The 'single' registration in Registrar.js passes an array of resolved dependencies.
-                    // The mock container should mimic this for classes registered with 'single'.
-                    // For 'singletonFactory' which passes the container itself, that's handled by `isFactoryFunction`.
-                    // The DomUiFacade is registered with `registrar.single(Token, Class, [depTokens])`
-                    // which should result in ClassConstructor(...resolvedDepsArray)
-                    // However, our current DomUiFacade constructor expects a single object with named properties.
-                    // The `Registrar.js` handles this by creating an object from the resolved deps.
-                    // This mock needs to simulate that specific behavior if the test is for `registrar.single`.
-
-                    // If the ClassConstructor expects an object of dependencies:
+                    // The actual Registrar.js for 'single' prepares a dependency object
+                    // where keys are derived from token names. This mock needs to simulate that.
                     const depsObject = {};
                     options.dependencies.forEach((depToken, index) => {
-                        // Simplistic conversion of token name to property name.
-                        // This needs to be robust or match how the actual Registrar creates the dep object.
-                        // For example, tokens.ActionButtonsRenderer becomes actionButtonsRenderer.
-                        let propName = String(depToken).replace('Symbol(', '').replace(')', ''); // Basic symbol cleanup
+                        let propName = String(depToken).replace(/^Symbol\((.+)\)$/, '$1'); // Extract name from Symbol
                         if (propName.startsWith('I') && propName.length > 1 && propName[1] === propName[1].toUpperCase()) {
-                            propName = propName.substring(1); // Remove 'I' if it's like ILogger -> Logger
+                            propName = propName.substring(1);
                         }
                         propName = propName.charAt(0).toLowerCase() + propName.slice(1);
                         depsObject[propName] = resolvedDeps[index];
                     });
                     instance = new ClassConstructor(depsObject);
-
                 } catch (constructorError) {
-                    console.error(`[Mock Resolve - isClassForSingle] Error constructing '${ClassConstructor.name}' with deps:`, resolvedDeps, constructorError);
+                    console.error(`[Mock Resolve - isClassForSingle] Error constructing '${ClassConstructor.name}' with deps object:`, constructorError);
                     throw constructorError;
                 }
+
             } else if (isFactoryFunction) {
+                // This is for singletonFactory or transient factories
                 try {
-                    instance = factoryOrValue(containerInstance);
+                    instance = factoryOrValue(containerInstance); // Pass the container to the factory
                 } catch (factoryError) {
                     console.error(`[Mock Resolve - Factory] Error executing factory for token ${tokenString}:`, factoryError);
-                    throw factoryError;
+                    throw factoryError; // Re-throw
                 }
             } else {
+                // This is for direct instance registration (value)
                 instance = factoryOrValue;
             }
 
+            // Cache instance if it's a singleton type
             if ((lifecycle === 'singleton' || lifecycle === 'singletonFactory' || lifecycle === 'single' || (options.isInstance && lifecycle === 'singleton')) && instance !== undefined) {
                 instances.set(token, instance);
             }
             return instance;
         }
 
+        // Fallback for tokens not in registrations map but might be directly mocked
         if (token === tokens.ILogger) return mockLogger;
         if (token === tokens.IValidatedEventDispatcher) return mockValidatedEventDispatcher;
-        if (token === tokens.EventBus) return mockEventBus;
+        if (token === tokens.EventBus) return mockEventBus; // Though likely registered above
         if (token === tokens.IEntityManager) return mockEntityManagerService;
         if (token === tokens.IDataRegistry) return mockDataRegistryService;
         if (token === tokens.ISaveLoadService) return mockSaveLoadService;
-        if (token === tokens.ILLMAdapter) return mockLlmAdapter; // <<< ADDED
+        if (token === tokens.ILLMAdapter) return mockLlmAdapter;
+
 
         throw new Error(`Mock Resolve Error: Token not registered or explicitly mocked: ${tokenString}`);
     });
 
+    // Assign the container methods to the containerInstance so factories can use c.resolve()
     containerInstance = {
-        _registrations: registrations, _instances: instances,
-        register: registerSpy, resolve: resolveSpy,
+        _registrations: registrations, // For inspection in tests
+        _instances: instances,       // For inspection in tests
+        register: registerSpy,
+        resolve: resolveSpy,
     };
     return containerInstance;
 };
@@ -310,25 +313,30 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
 
     beforeEach(() => {
         jest.clearAllMocks();
-        setupDomMocks();
+        setupDomMocks(); // Sets up mockDocument, mockInputElement, etc.
         mockContainer = createMockContainer();
 
+        // Prepare the uiElements object passed to registerUI
         mockUiArgs = {
             inputElement: mockInputElement,
             document: mockDocument,
             outputDiv: mockOutputDiv,
             titleElement: mockTitleElement,
+            // other elements if needed by bootstrap logic not covered here
         };
 
+        // Pre-register common services that registerUI itself doesn't register
+        // but factories within it might try to resolve.
         mockContainer.register(tokens.ILogger, mockLogger, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IValidatedEventDispatcher, mockValidatedEventDispatcher, {lifecycle: 'singleton'});
         mockContainer.register(tokens.EventBus, mockEventBus, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IEntityManager, mockEntityManagerService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.IDataRegistry, mockDataRegistryService, {lifecycle: 'singleton'});
         mockContainer.register(tokens.ISaveLoadService, mockSaveLoadService, {lifecycle: 'singleton'});
-        mockContainer.register(tokens.ILLMAdapter, mockLlmAdapter, {lifecycle: 'singleton'}); // <<< ADDED
+        mockContainer.register(tokens.ILLMAdapter, mockLlmAdapter, {lifecycle: 'singleton'});
 
 
+        // Clear mocks on the container itself from pre-registration
         mockContainer.register.mockClear();
         mockContainer.resolve.mockClear();
         mockLogger.info.mockClear();
@@ -338,8 +346,8 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
-        if (document && document.body) document.body.innerHTML = '';
+        jest.restoreAllMocks(); // Restores original implementations if any were spied on globally
+        if (document && document.body) document.body.innerHTML = ''; // Clean JSDOM
     });
 
     it('should register essential external dependencies (document, elements) as singleton instances', () => {
@@ -368,8 +376,11 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         const iDocContextReg = mockContainer._registrations.get(tokens.IDocumentContext);
         expect(iDocContextReg).toBeDefined();
         expect(iDocContextReg.options.lifecycle).toBe('singletonFactory');
+
+        // Resolve it to ensure the factory works as expected
         const instance = mockContainer.resolve(tokens.IDocumentContext);
         expect(instance).toBeInstanceOf(DocumentContext);
+        // Check that the factory, when called, resolves its dependency (WindowDocument)
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.WindowDocument);
     });
 
@@ -384,8 +395,6 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         registerUI(mockContainer, mockUiArgs);
         const instance = mockContainer.resolve(tokens.UiMessageRenderer);
         expect(instance).toBeInstanceOf(UiMessageRenderer);
-        // Check constructor arguments by spying on the class constructor or checking properties
-        // For `single`, the container resolves deps and passes them as an object.
         const regCall = mockContainer.register.mock.calls.find(call => call[0] === tokens.UiMessageRenderer);
         expect(regCall[2].dependencies).toEqual([
             tokens.ILogger,
@@ -399,11 +408,8 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         registerUI(mockContainer, mockUiArgs);
         const instance = mockContainer.resolve(tokens.TitleRenderer);
         expect(instance).toBeInstanceOf(TitleRenderer);
-        // Factory function is called with the container. Ensure titleElement is resolved within it.
-        // The mock resolve will be called for tokens.titleElement.
-        // We can check if the factory, when called, resolves the correct token.
         const factoryFn = mockContainer._registrations.get(tokens.TitleRenderer).factoryOrValue;
-        factoryFn(mockContainer); // Execute factory to trigger internal resolves
+        factoryFn(mockContainer);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.titleElement);
     });
 
@@ -418,33 +424,20 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
 
     it('should register LocationRenderer via singletonFactory querying for its container', () => {
         registerUI(mockContainer, mockUiArgs);
-
-        // The original mockDocument.querySelector is already spied on in setupDomMocks
-        // and set to return specific elements or call the original.
-        // We just need to ensure it's called with the right selector.
-
         const instance = mockContainer.resolve(tokens.LocationRenderer);
-
         expect(instance).toBeInstanceOf(LocationRenderer);
         expect(mockDocument.querySelector).toHaveBeenCalledWith('#location-info-container');
         expect(mockLogger.warn).not.toHaveBeenCalledWith(
             expect.stringContaining("Could not find '#location-info-container' element for LocationRenderer")
         );
-        // Check other resolved dependencies within the factory
         const factoryFn = mockContainer._registrations.get(tokens.LocationRenderer).factoryOrValue;
-        factoryFn(mockContainer); // to trigger resolves inside factory
+        factoryFn(mockContainer);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDataRegistry);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomElementFactory);
     });
 
-    it('should register InventoryPanel via singletonFactory querying for its container', () => {
-        registerUI(mockContainer, mockUiArgs);
-        const instance = mockContainer.resolve(tokens.InventoryPanel);
-        expect(instance).toBeInstanceOf(InventoryPanel);
-        expect(mockDocument.querySelector).toHaveBeenCalledWith('#inventory-widget');
-        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining("Could not find '#inventory-widget' element for InventoryPanel"));
-    });
+    // Removed test for InventoryPanel registration
 
     it('should register ActionButtonsRenderer via singletonFactory querying for container', () => {
         registerUI(mockContainer, mockUiArgs);
@@ -459,32 +452,25 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         registerUI(mockContainer, mockUiArgs);
         const instance = mockContainer.resolve(tokens.PerceptionLogRenderer);
         expect(instance).toBeInstanceOf(PerceptionLogRenderer);
-        // Check factory dependencies
         const factoryFn = mockContainer._registrations.get(tokens.PerceptionLogRenderer).factoryOrValue;
-        factoryFn(mockContainer); // to trigger resolves
+        factoryFn(mockContainer);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomElementFactory);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-        // PerceptionLogRenderer's constructor now queries for '#perception-log-list' itself
-        // So the test for querySpy is better placed in its own unit test.
-        // Here we just ensure the factory resolves what it needs.
     });
 
-    // <<< ADDED TEST FOR LlmSelectionModal
     it('should register LlmSelectionModal via singletonFactory', () => {
         registerUI(mockContainer, mockUiArgs);
         const instance = mockContainer.resolve(tokens.LlmSelectionModal);
         expect(instance).toBeInstanceOf(LlmSelectionModal);
         const factoryFn = mockContainer._registrations.get(tokens.LlmSelectionModal).factoryOrValue;
-        factoryFn(mockContainer); // to trigger resolves
+        factoryFn(mockContainer);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomElementFactory);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILLMAdapter);
-
-        // Check that DOM elements are queried for LlmSelectionModal
         expect(mockDocument.querySelector).toHaveBeenCalledWith('#change-llm-button');
         expect(mockDocument.querySelector).toHaveBeenCalledWith('#llm-selection-modal');
         expect(mockDocument.querySelector).toHaveBeenCalledWith('#llm-selection-list');
@@ -501,7 +487,7 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
 
         const expectedDeps = [
             tokens.ActionButtonsRenderer,
-            tokens.InventoryPanel,
+            // tokens.InventoryPanel, // Removed
             tokens.LocationRenderer,
             tokens.TitleRenderer,
             tokens.InputStateController,
@@ -512,15 +498,8 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
             tokens.LoadGameUI,
             tokens.LlmSelectionModal
         ];
-        // regCall[2] is the options object: { lifecycle: 'single', dependencies: [...] }
-        // The actual registrar maps `single` to `lifecycle: 'singleton'` and passes dependencies.
-        // For a direct `container.register` call for `single`, the options might differ.
-        // The `Registrar` helper class standardizes this.
-        // The mock container's `registerSpy` gets `options`.
-        // The `Registrar.single` translates to:
-        // `this.container.register(token, ConcreteClass, { lifecycle: 'singleton', dependencies: depTokens });`
         expect(regCall[2]).toEqual({
-            lifecycle: 'singleton', // registrar.single uses 'singleton' as lifecycle for the container
+            lifecycle: 'singleton',
             dependencies: expectedDeps
         });
     });
@@ -529,7 +508,6 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         registerUI(mockContainer, mockUiArgs);
         const instance = mockContainer.resolve(tokens.IInputHandler);
         expect(instance).toBeInstanceOf(InputHandler);
-        // Check factory resolves
         const factoryFn = mockContainer._registrations.get(tokens.IInputHandler).factoryOrValue;
         factoryFn(mockContainer);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.inputElement);

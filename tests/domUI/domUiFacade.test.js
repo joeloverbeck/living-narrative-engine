@@ -1,4 +1,5 @@
 // tests/domUI/domUiFacade.test.js
+
 /**
  * @fileoverview Unit tests for the DomUiFacade class.
  */
@@ -8,7 +9,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 /* -------- mock components -------- */
 const mockActionButtonsRenderer = {render: jest.fn(), dispose: jest.fn()};
-const mockInventoryPanel = {toggle: jest.fn(), dispose: jest.fn()};
+// Removed mockInventoryPanel as it's no longer a dependency
 const mockLocationRenderer = {render: jest.fn(), dispose: jest.fn()};
 const mockTitleRenderer = {set: jest.fn(), dispose: jest.fn()};
 const mockInputStateController = {setEnabled: jest.fn(), dispose: jest.fn()};
@@ -16,7 +17,7 @@ const mockUiMessageRenderer = {render: jest.fn(), dispose: jest.fn()};
 const mockPerceptionLogRenderer = {render: jest.fn(), dispose: jest.fn()};
 const mockSaveGameUI = {show: jest.fn(), dispose: jest.fn()};
 const mockLoadGameUI = {show: jest.fn(), dispose: jest.fn()};
-const mockLlmSelectionModal = {show: jest.fn(), dispose: jest.fn()};   // ← NEW
+const mockLlmSelectionModal = {show: jest.fn(), dispose: jest.fn()};
 
 describe('DomUiFacade', () => {
     let validDeps;
@@ -26,7 +27,7 @@ describe('DomUiFacade', () => {
 
         validDeps = {
             actionButtonsRenderer: mockActionButtonsRenderer,
-            inventoryPanel: mockInventoryPanel,
+            // inventoryPanel: mockInventoryPanel, // Removed
             locationRenderer: mockLocationRenderer,
             titleRenderer: mockTitleRenderer,
             inputStateController: mockInputStateController,
@@ -34,7 +35,7 @@ describe('DomUiFacade', () => {
             perceptionLogRenderer: mockPerceptionLogRenderer,
             saveGameUI: mockSaveGameUI,
             loadGameUI: mockLoadGameUI,
-            llmSelectionModal: mockLlmSelectionModal,            // ← NEW
+            llmSelectionModal: mockLlmSelectionModal,
         };
     });
 
@@ -51,12 +52,7 @@ describe('DomUiFacade', () => {
             .toThrow('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
     });
 
-    it('should throw an error if inventoryPanel is missing', () => {
-        const deps = {...validDeps};
-        delete deps.inventoryPanel;
-        expect(() => new DomUiFacade(deps))
-            .toThrow('DomUiFacade: Missing or invalid inventoryPanel dependency.');
-    });
+    // Removed test: 'should throw an error if inventoryPanel is missing'
 
     it('should throw an error if locationRenderer is missing', () => {
         const deps = {...validDeps};
@@ -120,10 +116,7 @@ describe('DomUiFacade', () => {
         expect(facade.actionButtons).toBe(mockActionButtonsRenderer);
     });
 
-    it('should provide a getter for inventoryPanel', () => {
-        const facade = new DomUiFacade(validDeps);
-        expect(facade.inventory).toBe(mockInventoryPanel);
-    });
+    // Removed test: 'should provide a getter for inventoryPanel'
 
     it('should provide a getter for locationRenderer', () => {
         const facade = new DomUiFacade(validDeps);
@@ -171,7 +164,7 @@ describe('DomUiFacade', () => {
         facade.dispose();
 
         expect(mockActionButtonsRenderer.dispose).toHaveBeenCalledTimes(1);
-        expect(mockInventoryPanel.dispose).toHaveBeenCalledTimes(1);
+        // expect(mockInventoryPanel.dispose).toHaveBeenCalledTimes(1); // Removed
         expect(mockLocationRenderer.dispose).toHaveBeenCalledTimes(1);
         expect(mockTitleRenderer.dispose).toHaveBeenCalledTimes(1);
         expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
@@ -188,13 +181,23 @@ describe('DomUiFacade', () => {
             actionButtonsRenderer: {render: jest.fn()}, // no dispose
             saveGameUI: {show: jest.fn()},   // no dispose
         };
+        // mockInventoryPanel is already removed from validDeps, so no need to mock it here specifically for this test
 
         const facade = new DomUiFacade(incompleteDeps);
         expect(() => facade.dispose()).not.toThrow();
 
-        expect(mockInventoryPanel.dispose).toHaveBeenCalledTimes(1);
+        // Check dispose for other mocks that do have it and are included in incompleteDeps
+        expect(mockLocationRenderer.dispose).toHaveBeenCalledTimes(1); // Example, assuming it's in incompleteDeps via ...validDeps
+        expect(mockTitleRenderer.dispose).toHaveBeenCalledTimes(1);
+        expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
+        expect(mockUiMessageRenderer.dispose).toHaveBeenCalledTimes(1);
+        // expect(mockInventoryPanel.dispose).toHaveBeenCalledTimes(1); // Removed
         expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
         expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1);
         expect(mockLlmSelectionModal.dispose).toHaveBeenCalledTimes(1);
+
+        // Verify that the mocks without dispose were not attempted to be called (implicitly)
+        // Jest's toHaveBeenCalledTimes(0) could be used if we had a spy on a potentially undefined property
+        // but the optional chaining `?.dispose?.()` handles this gracefully.
     });
 });
