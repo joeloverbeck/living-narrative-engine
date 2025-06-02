@@ -1,4 +1,4 @@
-// src/services/EntityDisplayDataProvider.js
+// src/services/entityDisplayDataProvider.js
 
 import {
     NAME_COMPONENT_ID,
@@ -20,6 +20,12 @@ import {
  * @property {string} description - The direction or description of the exit (e.g., "north", "a shimmering portal").
  * @property {NamespacedId | string | undefined} target - The identifier of the target location (instance ID or definition ID).
  * @property {NamespacedId | string | undefined} [id] - Alias for target, for compatibility.
+ */
+
+/**
+ * @typedef {object} PortraitData
+ * @property {string} imagePath - The full, resolved path to the portrait image.
+ * @property {string | null} altText - The alternative text for the image.
  */
 
 
@@ -56,14 +62,12 @@ export class EntityDisplayDataProvider {
      */
     constructor({entityManager, logger}) {
         if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-            // Logger might not be available yet if it's also a problem, so console.error as fallback.
             const errMsg = `${this._logPrefix} 'entityManager' dependency is missing or invalid.`;
             (logger || console).error(errMsg);
             throw new Error(errMsg);
         }
         if (!logger || typeof logger.debug !== 'function') {
             const errMsg = `${this._logPrefix} 'logger' dependency is missing or invalid.`;
-            // console.error as logger itself is invalid.
             console.error(errMsg);
             throw new Error(errMsg);
         }
@@ -99,7 +103,7 @@ export class EntityDisplayDataProvider {
         }
 
         this.#logger.debug(`${this._logPrefix} getEntityName: Entity '${entityId}' found, but no valid NAME_COMPONENT_ID data. Returning entity ID as name.`);
-        return entity.id || defaultName; // Fallback to entity.id if name component text is empty/missing
+        return entity.id || defaultName;
     }
 
     /**
@@ -134,6 +138,8 @@ export class EntityDisplayDataProvider {
         }
 
         const imagePath = portraitComponent.imagePath.trim();
+        // This path construction assumes a specific mod structure.
+        // Consider making this more flexible or configurable if mods can have different asset structures.
         const fullPath = `/data/mods/${modId}/${imagePath}`;
         this.#logger.debug(`${this._logPrefix} getEntityPortraitPath: Constructed portrait path for '${entityId}': ${fullPath}`);
         return fullPath;
@@ -214,8 +220,8 @@ export class EntityDisplayDataProvider {
         }
 
         return {
-            id: entity.id, // Use entity.id to ensure we have the canonical ID string
-            name: this.getEntityName(entityId, entity.id), // Fallback name to entity.id
+            id: entity.id,
+            name: this.getEntityName(entityId, entity.id),
             description: this.getEntityDescription(entityId),
             portraitPath: this.getEntityPortraitPath(entityId),
         };
@@ -253,17 +259,15 @@ export class EntityDisplayDataProvider {
                     this.#logger.warn(`${this._logPrefix} getLocationDetails: Invalid exit item in exits component for location '${locationEntityId}'. Skipping.`, {exit});
                     return null;
                 }
-                // 'direction' usually holds the displayable text like "north", "a dark passage"
                 const exitDescription = (typeof exit.direction === 'string' && exit.direction.trim()) ? exit.direction.trim() : 'Unspecified Exit';
-                // 'target' should be the instance ID of the target location entity
                 const exitTarget = (typeof exit.target === 'string' && exit.target.trim()) ? exit.target.trim() : undefined;
 
                 return {
                     description: exitDescription,
                     target: exitTarget,
-                    id: exitTarget // often used as 'id' in some contexts, providing both for flexibility
+                    id: exitTarget
                 };
-            }).filter(exit => exit !== null); // Remove any nulls from invalid items
+            }).filter(exit => exit !== null);
         } else if (exitsComponentData) {
             this.#logger.warn(`${this._logPrefix} getLocationDetails: Exits component data for location '${locationEntityId}' is present but not an array.`, {exitsComponentData});
         }
@@ -274,6 +278,54 @@ export class EntityDisplayDataProvider {
             exits: processedExits,
         };
     }
+
+    /**
+     * NEW METHOD
+     * Retrieves portrait data (image path and alt text) for a given location entity.
+     * A location entity must have a "core:portrait" component for this to return data.
+     *
+     * @param {NamespacedId | string} locationEntityId - The ID of the location entity.
+     * @returns {PortraitData | null} Portrait data { imagePath: string, altText: string | null } or null if not found/applicable.
+     */
+    getLocationPortraitData(locationEntityId) {
+        if (!locationEntityId) {
+            this.#logger.warn(`${this._logPrefix} getLocationPortraitData called with null or empty locationEntityId.`);
+            return null;
+        }
+
+        const entity = this.#entityManager.getEntityInstance(locationEntityId);
+        if (!entity) {
+            this.#logger.debug(`${this._logPrefix} getLocationPortraitData: Location entity with ID '${locationEntityId}' not found.`);
+            return null;
+        }
+
+        const portraitComponent = entity.getComponentData(PORTRAIT_COMPONENT_ID);
+        if (!portraitComponent || typeof portraitComponent.imagePath !== 'string' || !portraitComponent.imagePath.trim()) {
+            this.#logger.debug(`${this._logPrefix} getLocationPortraitData: Location entity '${locationEntityId}' has no valid PORTRAIT_COMPONENT_ID data or imagePath.`);
+            return null;
+        }
+
+        const modId = this._getModIdFromDefinitionId(entity.definitionId);
+        if (!modId) {
+            this.#logger.warn(`${this._logPrefix} getLocationPortraitData: Could not extract modId from definitionId '${entity.definitionId}' for location '${locationEntityId}'. Cannot construct portrait path.`);
+            return null;
+        }
+
+        const imagePath = portraitComponent.imagePath.trim();
+        // This path construction assumes a specific mod structure.
+        // You might need to adjust this based on your actual asset loading strategy.
+        const fullPath = `/data/mods/${modId}/${imagePath}`;
+        const altText = (typeof portraitComponent.altText === 'string' && portraitComponent.altText.trim())
+            ? portraitComponent.altText.trim()
+            : null; // Return null if altText is not provided or empty
+
+        this.#logger.debug(`${this._logPrefix} getLocationPortraitData: Constructed portrait path for location '${locationEntityId}': ${fullPath}`);
+        return {
+            imagePath: fullPath,
+            altText: altText
+        };
+    }
+
 
     /**
      * Extracts the mod ID from an entity's definitionId.

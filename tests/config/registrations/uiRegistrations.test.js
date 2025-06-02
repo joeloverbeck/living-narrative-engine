@@ -69,6 +69,7 @@ const mockEntityDisplayDataProviderService = {
     getCharacterDisplayInfo: jest.fn(),
     getEntityName: jest.fn(),
     getEntityPortraitPath: jest.fn(),
+    getLocationPortraitData: jest.fn(),
     // Add other methods if any constructors being tested call them directly
 };
 

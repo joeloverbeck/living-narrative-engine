@@ -45,3 +45,34 @@
     margin-top: var(--spacing-xs); /* Small space between the character's name and their description */
     line-height: 1.5; /* Adjust line height specifically for the description if needed */
 }
+
+/* NEW: Styles for Location Portrait */
+#location-portrait-visuals {
+    width: 100%; /* Occupy full width of its container within the panel */
+    max-width: 400px; /* Adjust as desired, similar to actor's max-width or based on panel constraints */
+    height: auto; /* Allow height to adjust to content */
+    margin: var(--spacing-md) auto; /* Center it and provide some vertical spacing */
+    overflow: hidden;
+    display: flex; /* To center the image if its aspect ratio doesn't fill the width */
+    justify-content: center;
+    align-items: center;
+    border: 1px solid var(--panel-border-color);
+    background-color: var(--secondary-bg-color); /* Fallback background */
+    border-radius: var(--border-radius-md); /* Consistent border radius */
+    padding: var(--spacing-xs); /* Small padding around the image */
+}
+
+#location-portrait-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100%; /* Ensure it doesn't overflow the container's calculated height */
+    width: auto; /* Maintain aspect ratio */
+    height: auto; /* Maintain aspect ratio */
+    object-fit: contain; /* Scales the image to fit within the content box, preserving aspect ratio */
+    border-radius: var(--border-radius-sm);
+}
+
+/* Ensure the portrait container is also cleared or handled in responsive views if necessary,
+   though current pane/widget styling might already cover stacking appropriately.
+   This primarily focuses on the direct styling of the new portrait elements.
+*/
