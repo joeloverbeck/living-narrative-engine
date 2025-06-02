@@ -96,8 +96,20 @@ export class BrowserStorageProvider extends IStorageProvider {
             try {
                 currentHandle = await currentHandle.getDirectoryHandle(part, options);
             } catch (error) {
-                this.#logger.error(`Failed to get/create directory handle for "${part}" in path "${normalizedDirectoryPath}":`, error);
-                throw error;
+                // Determine if 'create' was effectively false.
+                // The 'options' parameter of #getRelativeDirectoryHandle itself defaults to {create: false}.
+                // The options object passed to FileSystemDirectoryHandle.getDirectoryHandle() also defaults create to false.
+                const isCreateTrue = options && options.create === true;
+
+                if (error.name === 'NotFoundError' && !isCreateTrue) {
+                    // Log as debug if NotFoundError occurs and we were not trying to create.
+                    // This is an expected situation for existence checks or listing by listFiles.
+                    this.#logger.debug(`Directory part "${part}" not found in path "${normalizedDirectoryPath}" (and create was false). This is expected by some callers. Error: ${error.message}`);
+                } else {
+                    // Log as error for other types of errors, or if create was true and it still failed.
+                    this.#logger.error(`Failed to get/create directory handle for "${part}" in path "${normalizedDirectoryPath}" (options.create: ${isCreateTrue}):`, error);
+                }
+                throw error; // Re-throw for the caller to handle.
             }
         }
         return currentHandle;

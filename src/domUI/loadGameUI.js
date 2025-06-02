@@ -2,7 +2,7 @@
 
 import {BaseModalRenderer} from './baseModalRenderer.js';
 import {DomUtils} from './domUtils.js';
-import {FormatUtils} from '../utils/FormatUtils.js';
+import {FormatUtils} from '../utils/formatUtils.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine

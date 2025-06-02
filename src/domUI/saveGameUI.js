@@ -2,7 +2,7 @@
 
 import {BaseModalRenderer} from './baseModalRenderer.js';
 import {DomUtils} from './domUtils.js';
-import {FormatUtils} from '../utils/FormatUtils.js';
+import {FormatUtils} from '../utils/formatUtils.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -38,7 +38,7 @@ const SAVE_GAME_UI_ELEMENTS_CONFIG = {
  * @extends BaseModalRenderer
  * @description Manages the modal dialog for saving the game.
  */
-class SaveGameUI extends BaseModalRenderer {
+export class SaveGameUI extends BaseModalRenderer {
     /** @private @type {ISaveLoadService} */
     saveLoadService;
     /** @private @type {GameEngine | null} */
@@ -52,6 +52,16 @@ class SaveGameUI extends BaseModalRenderer {
     currentSlotsDisplayData = [];
 
     // isSavingInProgress is managed by BaseModalRenderer's _setOperationInProgress
+
+    /**
+     * @override
+     * @protected
+     * @description Specifies the actual element keys from `elementsConfig`
+     * that should be affected by the `_setOperationInProgress` method.
+     * `closeButton` is used here as the "cancel" action for the save modal.
+     * @type {string[]}
+     */
+    _operationInProgressAffectedElements = ['confirmSaveButtonEl', 'closeButton'];
 
     /**
      * @param {object} deps - Dependencies
@@ -501,45 +511,80 @@ class SaveGameUI extends BaseModalRenderer {
         }
 
         this._setOperationInProgress(true);
-        this._displayStatusMessage(`Saving game as "${currentSaveName}"...`, 'info');
+        this._displayStatusMessage(`Saving game as "${currentSaveName}"...`, 'info'); // Initial "Saving..." message
+
+        let saveSucceeded = false; // Flag to track save status
+        let finalMessage = '';
+        let finalMessageType = 'info';
 
         try {
             this.logger.info(`${this._logPrefix} Calling gameEngine.triggerManualSave with name: "${currentSaveName}". Selected slot conceptual ID: ${this.selectedSlotData.slotId}, actual identifier if exists: ${this.selectedSlotData.identifier}`);
             const result = await this.gameEngine.triggerManualSave(currentSaveName, this.selectedSlotData.identifier);
 
-
             if (result && result.success) {
-                this._displayStatusMessage(`Game saved as "${currentSaveName}".`, 'success');
+                // Don't display final success message yet. It will be cleared by _populateSaveSlotsList.
+                // Set flags to display it after list population.
+                saveSucceeded = true;
+                finalMessage = `Game saved as "${currentSaveName}".`;
+                finalMessageType = 'success';
                 this.logger.info(`${this._logPrefix} Game saved successfully: ${result.message || `Saved as "${currentSaveName}"`}`);
+
                 await this._populateSaveSlotsList(); // Refresh slots
 
-                // Try to re-select the slot that was just saved.
+                const returnedIdentifier = result.filePath;
+                if (!returnedIdentifier) {
+                    this.logger.error(`${this._logPrefix} Save operation succeeded but did not return a valid filePath/identifier. Result object:`, result);
+                    // If this happens, re-selection will fail, but the save itself was "successful" at engine level.
+                    // Keep finalMessage as the game saved message, but re-selection might fail.
+                }
+
                 const newlySavedSlotData = this.currentSlotsDisplayData.find(
-                    s => s.saveName === currentSaveName && s.identifier === result.identifier && !s.isEmpty && !s.isCorrupted
+                    s => s.saveName === currentSaveName &&
+                        s.identifier === returnedIdentifier &&
+                        !s.isEmpty &&
+                        !s.isCorrupted
                 );
 
                 if (newlySavedSlotData && this.elements.listContainerElement) {
                     const slotElement = /** @type {HTMLElement | null} */ (this.elements.listContainerElement.querySelector(`.save-slot[data-slot-id="${newlySavedSlotData.slotId}"]`));
-                    if (slotElement) this._handleSlotSelection(slotElement, newlySavedSlotData);
-                    else this.logger.warn(`${this._logPrefix} Could not find DOM element for newly saved slot ID ${newlySavedSlotData.slotId} to re-select.`);
+                    if (slotElement) {
+                        this._handleSlotSelection(slotElement, newlySavedSlotData);
+                    } else {
+                        this.logger.warn(`${this._logPrefix} Could not find DOM element for newly saved slot ID ${newlySavedSlotData.slotId} to re-select.`);
+                    }
                 } else {
-                    this.logger.warn(`${this._logPrefix} Could not find metadata for newly saved slot named "${currentSaveName}" to re-select.`);
-                    this.selectedSlotData = null; // Clear selection
+                    this.logger.warn(`${this._logPrefix} Could not find metadata for newly saved slot named "${currentSaveName}" to re-select. Searched with ID: ${String(returnedIdentifier)}.`);
+                    this.currentSlotsDisplayData.forEach(slot => {
+                        this.logger.debug(`Available slot for re-select check - Name: ${slot.saveName}, ID: ${slot.identifier}`);
+                    });
+                    this.selectedSlotData = null;
                     if (this.elements.saveNameInputEl) this.elements.saveNameInputEl.value = '';
-                    this._handleSaveNameInput(); // Update button states
+                    this._handleSaveNameInput();
                 }
 
-            } else {
-                const errorMsg = result?.error || 'An unknown error occurred while saving.';
-                this._displayStatusMessage(`Save failed: ${errorMsg}`, 'error');
-                this.logger.error(`${this._logPrefix} Save failed: ${errorMsg}`);
+            } else { // Save operation failed (result.success is false)
+                finalMessage = `Save failed: ${result?.error || 'An unknown error occurred while saving.'}`;
+                finalMessageType = 'error';
+                this.logger.error(`${this._logPrefix} Save failed: ${finalMessage}`);
             }
-        } catch (error) {
+        } catch (error) { // Exception during the save process
             const exceptionMsg = (error instanceof Error) ? error.message : String(error);
+            finalMessage = `Save failed: ${exceptionMsg || 'An unexpected error occurred.'}`;
+            finalMessageType = 'error';
             this.logger.error(`${this._logPrefix} Exception during save operation:`, error);
-            this._displayStatusMessage(`Save failed: ${exceptionMsg || 'An unexpected error occurred.'}`, 'error');
         } finally {
             this._setOperationInProgress(false);
+            // Now display the final status message, after _populateSaveSlotsList might have cleared it
+            if (finalMessage) {
+                this._displayStatusMessage(finalMessage, finalMessageType);
+            } else if (!saveSucceeded) {
+                // If finalMessage is empty and save didn't succeed (e.g. unexpected path), ensure some error.
+                this._displayStatusMessage('An unspecified error occurred during the save operation.', 'error');
+            }
+            // If saveSucceeded and finalMessage is empty, it means success message was intended.
+            // This state implies we want the "Loading..." from _populateSaveSlotsList to be cleared,
+            // and the new state (selected slot, etc.) is the main feedback.
+            // However, for a save action, there should always be a clear "saved" or "failed" message.
         }
     }
 

@@ -264,7 +264,7 @@ describe('LocationRenderer', () => {
 
         it('should throw if domElementFactory is missing', () => {
             rendererDeps.domElementFactory = null;
-            expect(() => new LocationRenderer(rendererDeps)).toThrow("'domElementFactory' dependency is missing or invalid.");
+            expect(() => new LocationRenderer(rendererDeps)).toThrow("[LocationRenderer] 'domElementFactory' dependency is missing or invalid (must have a 'create' method).");
         });
 
         it('should throw if entityManager is missing', () => {

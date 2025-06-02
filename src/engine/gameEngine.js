@@ -615,12 +615,15 @@ class GameEngine {
 
         if (this.#gamePersistenceService.isSavingAllowed(this.#isEngineInitialized)) {
             this.#logger.info("GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.");
-            this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_SAVE_GAME_UI);
+            // --- FIX START ---
+            // Provide an empty object as the payload to satisfy the schema.
+            this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_SAVE_GAME_UI, {});
+            // --- FIX END ---
         } else {
             this.#logger.warn("GameEngine.showSaveGameUI: Saving is not currently allowed.");
             // As per ticket: "Dispatch the CANNOT_SAVE_GAME_INFO event (or ENGINE_MESSAGE_DISPLAY_REQUESTED with the specific message: "Cannot save at this moment...")."
             // Sticking with CANNOT_SAVE_GAME_INFO as it's more specific.
-            this.#safeEventDispatcher.dispatchSafely(CANNOT_SAVE_GAME_INFO);
+            this.#safeEventDispatcher.dispatchSafely(CANNOT_SAVE_GAME_INFO); // Assuming CANNOT_SAVE_GAME_INFO also expects an empty payload or handles undefined gracefully. If it also has a schema requiring an object, it should also be {}.
         }
     }
 

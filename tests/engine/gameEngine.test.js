@@ -730,7 +730,7 @@ describe('GameEngine', () => {
 
             expect(mockLogger.info).toHaveBeenCalledWith("GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.");
             expect(mockGamePersistenceService.isSavingAllowed).toHaveBeenCalledWith(true); // engine is initialized
-            expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(REQUEST_SHOW_SAVE_GAME_UI);
+            expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledWith(REQUEST_SHOW_SAVE_GAME_UI, {});
             expect(mockSafeEventDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
         });
 

@@ -23,4 +23,6 @@ export {DomUiFacade} from './domUiFacade.js'; // Use named export
 export {CurrentTurnActorRenderer} from './currentTurnActorRenderer.js';
 
 export {SpeechBubbleRenderer} from './speechBubbleRenderer.js';
+
+export {SaveGameUI} from './saveGameUI.js';
 // --- FILE END ---

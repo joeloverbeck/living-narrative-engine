@@ -97,8 +97,11 @@ export class LocationRenderer extends BoundDomRendererBase {
 
         super({logger, documentContext, validatedEventDispatcher, elementsConfig});
 
+        // Note: This validation only checks for 'create'. If you rely on other specific methods
+        // like .p(), .ul(), etc., you might want to enhance this validation or ensure through
+        // DI that the correct factory type is always provided.
         if (!domElementFactory || typeof domElementFactory.create !== 'function') {
-            const errMsg = `${this._logPrefix} 'domElementFactory' dependency is missing or invalid.`;
+            const errMsg = `${this._logPrefix} 'domElementFactory' dependency is missing or invalid (must have a 'create' method).`;
             this.logger.error(errMsg);
             throw new Error(errMsg);
         }
@@ -234,6 +237,7 @@ export class LocationRenderer extends BoundDomRendererBase {
             if (element) {
                 DomUtils.clearElement(element);
                 const text = (key === 'descriptionDisplay') ? message : defaultText;
+                // Uses the existing .p() method from DomElementFactory which is available
                 const pError = this.domElementFactory.p('error-message', text);
                 if (pError) {
                     element.appendChild(pError);
@@ -259,30 +263,44 @@ export class LocationRenderer extends BoundDomRendererBase {
      */
     _renderList(dataArray, targetElement, title, itemTextProperty, emptyText, itemClassName = 'list-item') {
         DomUtils.clearElement(targetElement);
-        const titleEl = this.domElementFactory.h4(undefined, `${title}:`); // Updated to use h4 from factory
+
+        // Corrected: DomElementFactory does not have a specific .h4() method.
+        // Using the generic .create() method instead.
+        // The original call was: this.domElementFactory.h4(undefined, `${title}:`);
+        const titleEl = this.domElementFactory.create('h4', {text: `${title}:`});
         if (titleEl) {
             targetElement.appendChild(titleEl);
         } else {
-            this.logger.warn(`${this._logPrefix} Failed to create title element for ${title}.`);
+            this.logger.warn(`${this._logPrefix} Failed to create title element for ${title} using domElementFactory.create('h4', ...).`);
             targetElement.appendChild(this.documentContext.document.createTextNode(`${title}: `)); // Fallback
         }
 
         if (!dataArray || dataArray.length === 0) {
+            // This uses the existing .p() method from DomElementFactory, which is available
             const pEmpty = this.domElementFactory.p('empty-list-message', emptyText);
             if (pEmpty) {
                 targetElement.appendChild(pEmpty);
             } else {
+                this.logger.warn(`${this._logPrefix} Failed to create empty list message P for ${title}.`);
                 targetElement.appendChild(this.documentContext.document.createTextNode(emptyText)); // Fallback
             }
         } else {
+            // This uses the existing .ul() method from DomElementFactory, which is available
             const ul = this.domElementFactory.ul(undefined, 'location-detail-list');
             if (!ul) {
                 this.logger.error(`${this._logPrefix} Failed to create UL element for ${title}. Rendering as paragraphs.`);
                 // Fallback rendering (simplified)
                 dataArray.forEach(item => {
                     const primaryText = item && typeof item === 'object' && itemTextProperty in item ? String(item[itemTextProperty]) : `(Invalid item for ${title})`;
+                    // This uses the existing .p() method from DomElementFactory
                     const pItem = this.domElementFactory.p(itemClassName, primaryText);
-                    if (pItem) targetElement.appendChild(pItem);
+                    if (pItem) {
+                        targetElement.appendChild(pItem);
+                    } else {
+                        // Ultimate fallback if even creating a p fails
+                        const textNode = this.documentContext.document.createTextNode(primaryText);
+                        targetElement.appendChild(textNode);
+                    }
                 });
                 return;
             }
@@ -291,26 +309,34 @@ export class LocationRenderer extends BoundDomRendererBase {
                 const primaryTextValue = item && typeof item === 'object' && itemTextProperty in item ? item[itemTextProperty] : null;
                 const primaryText = primaryTextValue !== null ? String(primaryTextValue) : `(Invalid ${itemTextProperty} for ${title})`;
 
-                const li = this.domElementFactory.li(itemClassName);
+                // This uses the existing .li() method from DomElementFactory, which is available
+                const li = this.domElementFactory.li(itemClassName); // text is optional for .li(cls, text)
                 if (!li) {
                     this.logger.warn(`${this._logPrefix} Failed to create LI element for item in ${title}.`);
-                    ul.appendChild(this.documentContext.document.createTextNode(primaryText)); // Fallback
-                    return;
+                    ul.appendChild(this.documentContext.document.createTextNode(primaryText)); // Fallback: directly append text to UL
+                    return; // Continue to next item
                 }
 
-                const nameSpan = this.domElementFactory.span(undefined, primaryText); // Updated to use span from factory
+                // This uses the existing .span() method from DomElementFactory, which is available
+                const nameSpan = this.domElementFactory.span(undefined, primaryText);
                 if (nameSpan) {
                     li.appendChild(nameSpan);
                 } else {
-                    li.appendChild(this.documentContext.document.createTextNode(primaryText)); // Fallback
+                    this.logger.warn(`${this._logPrefix} Failed to create name SPAN for item in ${title}.`);
+                    li.appendChild(this.documentContext.document.createTextNode(primaryText)); // Fallback: append text directly to LI
                 }
-
 
                 // Special handling for character descriptions
                 if (title === 'Characters' && item && typeof item === 'object' && 'description' in item && typeof item.description === 'string' && item.description.trim() !== '') {
+                    // This uses the existing .p() method from DomElementFactory
                     const descP = this.domElementFactory.p('character-description', item.description);
                     if (descP) {
                         li.appendChild(descP);
+                    } else {
+                        this.logger.warn(`${this._logPrefix} Failed to create description P for character in ${title}.`);
+                        // Fallback: append description text directly to LI
+                        if (nameSpan) li.appendChild(this.documentContext.document.createTextNode(` (${item.description})`));
+                        else li.appendChild(this.documentContext.document.createTextNode(item.description));
                     }
                 }
                 ul.appendChild(li);
@@ -346,16 +372,24 @@ export class LocationRenderer extends BoundDomRendererBase {
         this.logger.debug(`${this._logPrefix} Rendering location: "${locationDto.name}" into sub-elements.`);
 
         DomUtils.clearElement(this.elements.nameDisplay);
+        // This uses the existing .h3() method from DomElementFactory, which is available
         const h3Name = this.domElementFactory.h3(undefined, locationDto.name || 'Unnamed Location');
-        if (h3Name) this.elements.nameDisplay.appendChild(h3Name);
-        else this.elements.nameDisplay.textContent = locationDto.name || 'Unnamed Location';
-
+        if (h3Name) {
+            this.elements.nameDisplay.appendChild(h3Name);
+        } else {
+            this.logger.warn(`${this._logPrefix} Failed to create H3 name element.`);
+            this.elements.nameDisplay.textContent = locationDto.name || 'Unnamed Location'; // Fallback
+        }
 
         DomUtils.clearElement(this.elements.descriptionDisplay);
+        // This uses the existing .p() method from DomElementFactory, which is available
         const pDesc = this.domElementFactory.p(undefined, locationDto.description || 'You see nothing remarkable.');
-        if (pDesc) this.elements.descriptionDisplay.appendChild(pDesc);
-        else this.elements.descriptionDisplay.textContent = locationDto.description || 'You see nothing remarkable.';
-
+        if (pDesc) {
+            this.elements.descriptionDisplay.appendChild(pDesc);
+        } else {
+            this.logger.warn(`${this._logPrefix} Failed to create P description element.`);
+            this.elements.descriptionDisplay.textContent = locationDto.description || 'You see nothing remarkable.'; // Fallback
+        }
 
         this._renderList(locationDto.exits, this.elements.exitsDisplay, 'Exits', 'description', '(None visible)');
         this._renderList(locationDto.characters, this.elements.charactersDisplay, 'Characters', 'name', '(None else here)');
