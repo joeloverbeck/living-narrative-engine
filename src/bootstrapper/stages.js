@@ -1,9 +1,9 @@
 // src/bootstrapper/stages.js
 // --- FILE START ---
 import {UIBootstrapper} from './UIBootstrapper.js';
-import AppContainer from '../config/appContainer.js';
+import AppContainer from '../config/appContainer.js'; // Corrected path assuming appContainer.js is in ../config/
 import GameEngine from '../engine/gameEngine.js';
-import {tokens} from '../config/tokens.js';
+import {tokens} from '../config/tokens.js'; // Corrected path assuming tokens.js is in ../config/
 
 /**
  * @typedef {import('./UIBootstrapper.js').EssentialUIElements} EssentialUIElements
@@ -136,7 +136,7 @@ export async function initializeGameEngineStage(container, logger) {
 }
 
 /**
- * Bootstrap Stage: Initializes auxiliary services like EngineUIManager, SaveGameUI, LoadGameUI, LlmSelectionModal, CurrentTurnActorRenderer, and SpeechBubbleRenderer.
+ * Bootstrap Stage: Initializes auxiliary services like EngineUIManager, SaveGameUI, LoadGameUI, LlmSelectionModal, CurrentTurnActorRenderer, SpeechBubbleRenderer, and ProcessingIndicatorController.
  *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
@@ -199,7 +199,7 @@ export async function initializeAuxiliaryServicesStage(container, gameEngine, lo
         logger.error(`${stageName}: Error resolving or initializing LoadGameUI. Load functionality may be impaired.`, lgUiError);
     }
 
-    // LlmSelectionModal Initialization (Resolution is enough as constructor sets up listeners)
+    // LlmSelectionModal Initialization
     try {
         logger.info(`${stageName}: Resolving LlmSelectionModal...`);
         const llmSelectionModalInstance = container.resolve(diTokens.LlmSelectionModal);
@@ -212,7 +212,7 @@ export async function initializeAuxiliaryServicesStage(container, gameEngine, lo
         logger.error(`${stageName}: Error resolving LlmSelectionModal. 'Change LLM' functionality may be impaired.`, llmModalError);
     }
 
-    // CurrentTurnActorRenderer Initialization (Resolution is enough as constructor sets up listeners)
+    // CurrentTurnActorRenderer Initialization
     try {
         logger.info(`${stageName}: Resolving CurrentTurnActorRenderer...`);
         const currentTurnActorRendererInstance = container.resolve(diTokens.CurrentTurnActorRenderer);
@@ -225,7 +225,7 @@ export async function initializeAuxiliaryServicesStage(container, gameEngine, lo
         logger.error(`${stageName}: Error resolving CurrentTurnActorRenderer. 'Current Turn' panel may be impaired.`, ctarError);
     }
 
-    // SpeechBubbleRenderer Initialization (Resolution is enough as constructor sets up listeners) // <<< NEW
+    // SpeechBubbleRenderer Initialization
     try {
         logger.info(`${stageName}: Resolving SpeechBubbleRenderer...`);
         const speechBubbleRendererInstance = container.resolve(diTokens.SpeechBubbleRenderer);
@@ -236,6 +236,19 @@ export async function initializeAuxiliaryServicesStage(container, gameEngine, lo
         }
     } catch (sbrError) {
         logger.error(`${stageName}: Error resolving SpeechBubbleRenderer. Speech bubble display may be impaired.`, sbrError);
+    }
+
+    // ProcessingIndicatorController Initialization // <<< ADDED
+    try {
+        logger.info(`${stageName}: Resolving ProcessingIndicatorController...`);
+        const processingIndicatorControllerInstance = container.resolve(diTokens.ProcessingIndicatorController);
+        if (processingIndicatorControllerInstance) {
+            logger.info(`${stageName}: ProcessingIndicatorController resolved and initialized successfully (via constructor).`);
+        } else {
+            logger.warn(`${stageName}: ProcessingIndicatorController instance could not be resolved. Processing indicator will not function.`);
+        }
+    } catch (picError) {
+        logger.error(`${stageName}: Error resolving ProcessingIndicatorController. Processing indicator may be impaired.`, picError);
     }
 
 
@@ -279,8 +292,6 @@ export async function setupMenuButtonListenersStage(gameEngine, logger, document
             if (!openLoadGameButton) logger.warn(`${stageName}: Could not find #open-load-game-button. Load listener not attached.`);
             if (!gameEngine) logger.warn(`${stageName}: GameEngine not available for #open-load-game-button listener.`);
         }
-        // Note: The LlmSelectionModal sets up its own listener for #change-llm-button in its constructor.
-        // So, no explicit listener setup is needed here for that button if the modal is resolved.
         logger.info(`Bootstrap Stage: ${stageName} completed successfully.`);
     } catch (error) {
         logger.error(`Bootstrap Stage: ${stageName} encountered an unexpected error during listener setup.`, error);

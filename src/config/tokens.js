@@ -1,4 +1,4 @@
-// src/core/config/tokens.js
+// src/config/tokens.js
 // --- FILE START ---
 /**
  * @fileoverview Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -20,7 +20,7 @@
  * @property {DiToken} ISchemaValidator - Token for validating data against schemas.
  * @property {DiToken} IDataRegistry - Token for storing loaded game data.
  * @property {DiToken} ISpatialIndexManager - Token for managing the spatial index.
- * @property {DiToken} IReferenceResolver - Token for the reference resolution service. // <<< NEW TOKEN
+ * @property {DiToken} IReferenceResolver - Token for the reference resolution service.
  *
  * --- External Dependencies / Environment ---
  * @property {DiToken} WindowDocument - Token for the browser's global `document` object.
@@ -46,6 +46,7 @@
  * @property {DiToken} EngineUIManager - Token for the service managing UI updates from GameEngine events.
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
  * @property {DiToken} CurrentTurnActorRenderer - Token for the component displaying the current turn actor's portrait and name.
+ * @property {DiToken} ProcessingIndicatorController - Token for the component managing the processing/thinking indicator.
  *
  * --- Loaders ---
  * @property {DiToken} SchemaLoader - Token for the schema loading service.
@@ -63,7 +64,7 @@
  * @property {DiToken} GameDataRepository - Token for accessing registered game data (implementation).
  * @property {DiToken} EntityManager - Token for managing game entities and components (implementation).
  * @property {DiToken} TargetResolutionService - Token for resolving action targets.
- * @property {DiToken} ReferenceResolver - Token for the reference resolution service (implementation). // <<< NEW TOKEN
+ * @property {DiToken} ReferenceResolver - Token for the reference resolution service (implementation).
  * @property {DiToken} JsonLogicEvaluationService - Token for evaluating JsonLogic rules.
  * @property {DiToken} ActionValidationContextBuilder - Token for building action validation contexts.
  * @property {DiToken} PrerequisiteEvaluationService - Token for evaluating action/quest prerequisites.
@@ -81,7 +82,7 @@
  * @property {DiToken} PerceptionUpdateService - Token for the service updating perception logs.
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
  * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
- * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data. // <<< ADDED TOKEN
+ * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data.
  *
  * --- Core Service Interfaces ---
  * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
@@ -94,6 +95,7 @@
  * @property {DiToken} IInputHandler - Token for handling player input interface.
  * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
  * @property {DiToken} ITurnManager - Token for the turn management service interface.
+ * @property {DiToken} ITurnContext - Token for accessing context specific to the current turn. // <<< ENSURED THIS IS PRESENT AND NOT COMMENTED
  * @property {DiToken} ICommandInputPort - Token for the command input port interface.
  * @property {DiToken} IPromptOutputPort - Token for the prompt output port interface.
  * @property {DiToken} ITurnEndPort - Token for the turn end port interface.
@@ -104,7 +106,8 @@
  * @property {DiToken} ISaveLoadService - Token for the save/load service interface.
  * @property {DiToken} IStorageProvider - Token for the storage provider interface.
  * @property {DiToken} IInitializationService - Token for the game initialization service interface.
- * @property {DiToken} ILLMAdapter - Token for the LLM adapter service interface. *
+ * @property {DiToken} ILLMAdapter - Token for the LLM adapter service interface.
+ *
  * --- Initialization & Orchestration ---
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
  * @property {DiToken} SystemInitializer - Token for initializing tagged systems.
@@ -148,7 +151,7 @@ export const tokens = Object.freeze({
     ISchemaValidator: 'ISchemaValidator',
     IDataRegistry: 'IDataRegistry',
     ISpatialIndexManager: 'ISpatialIndexManager',
-    IReferenceResolver: 'IReferenceResolver', // <<< NEW TOKEN
+    IReferenceResolver: 'IReferenceResolver',
 
     // --- External Dependencies / Environment ---
     WindowDocument: 'WindowDocument',
@@ -172,10 +175,10 @@ export const tokens = Object.freeze({
     LlmSelectionModal: 'LlmSelectionModal',
     EngineUIManager: 'EngineUIManager',
     CurrentTurnActorRenderer: 'CurrentTurnActorRenderer',
+    ProcessingIndicatorController: 'ProcessingIndicatorController',
 
     // Loaders
     SchemaLoader: 'SchemaLoader',
-    // ManifestLoader: 'ManifestLoader', // Assuming deprecated as per comment in definition
     RuleLoader: 'RuleLoader',
     ComponentDefinitionLoader: 'ComponentDefinitionLoader',
     ActionLoader: 'ActionLoader',
@@ -186,28 +189,27 @@ export const tokens = Object.freeze({
     ModManifestLoader: 'ModManifestLoader',
 
     // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
-    GameDataRepository: 'GameDataRepository', // Concrete class token
-    EntityManager: 'EntityManager',           // Concrete class token
-    ReferenceResolver: 'ReferenceResolver',   // <<< NEW TOKEN (Implementation)
+    GameDataRepository: 'GameDataRepository',
+    EntityManager: 'EntityManager',
+    ReferenceResolver: 'ReferenceResolver',
     TargetResolutionService: 'TargetResolutionService',
     JsonLogicEvaluationService: 'JsonLogicEvaluationService',
     ActionValidationContextBuilder: 'ActionValidationContextBuilder',
     PrerequisiteEvaluationService: 'PrerequisiteEvaluationService',
     DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
     ActionValidationService: 'ActionValidationService',
-    // PayloadValueResolverService: 'PayloadValueResolverService', // Removed as per definition comment
     TurnHandlerResolver: 'TurnHandlerResolver',
     PlayerTurnHandler: 'PlayerTurnHandler',
     AITurnHandler: 'AITurnHandler',
     SystemServiceRegistry: 'SystemServiceRegistry',
     SystemDataRegistry: 'SystemDataRegistry',
-    PlayerPromptService: 'PlayerPromptService',         // Concrete class token
-    CommandOutcomeInterpreter: 'CommandOutcomeInterpreter', // Concrete class token
-    SubscriptionLifecycleManager: 'SubscriptionLifecycleManager', // Concrete class token
+    PlayerPromptService: 'PlayerPromptService',
+    CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',
+    SubscriptionLifecycleManager: 'SubscriptionLifecycleManager',
     PerceptionUpdateService: 'PerceptionUpdateService',
-    PlaytimeTracker: 'PlaytimeTracker', // Concrete class token
-    GamePersistenceService: 'GamePersistenceService', // Concrete class token
-    EntityDisplayDataProvider: 'EntityDisplayDataProvider', // <<< ADDED TOKEN
+    PlaytimeTracker: 'PlaytimeTracker',
+    GamePersistenceService: 'GamePersistenceService',
+    EntityDisplayDataProvider: 'EntityDisplayDataProvider',
 
     // Core Service Interfaces
     ISafeEventDispatcher: 'ISafeEventDispatcher',
@@ -217,17 +219,17 @@ export const tokens = Object.freeze({
     ICommandParser: 'ICommandParser',
     ICommandProcessor: 'ICommandProcessor',
     IActionDiscoverySystem: 'IActionDiscoverySystem',
-    IInputHandler: 'IInputHandler', // May become obsolete
+    IInputHandler: 'IInputHandler',
     ITurnOrderService: 'ITurnOrderService',
     ITurnManager: 'ITurnManager',
-    ITurnContext: 'ITurnContext', // Removed as per definition comment
+    ITurnContext: 'ITurnContext', // <<< ENSURED THIS IS PRESENT AND NOT COMMENTED
     ICommandInputPort: 'ICommandInputPort',
     IPromptOutputPort: 'IPromptOutputPort',
     ITurnEndPort: 'ITurnEndPort',
-    IPlayerPromptService: 'IPlayerPromptService',             // Interface token
-    ICommandOutcomeInterpreter: 'ICommandOutcomeInterpreter', // Interface token
-    IEntityManager: 'IEntityManager',                         // Interface token
-    IGameDataRepository: 'IGameDataRepository',             // Interface token
+    IPlayerPromptService: 'IPlayerPromptService',
+    ICommandOutcomeInterpreter: 'ICommandOutcomeInterpreter',
+    IEntityManager: 'IEntityManager',
+    IGameDataRepository: 'IGameDataRepository',
     ISaveLoadService: 'ISaveLoadService',
     IStorageProvider: 'IStorageProvider',
     IInitializationService: 'IInitializationService',
@@ -267,10 +269,10 @@ export const tokens = Object.freeze({
     ILLMResponseProcessor: 'ILLMResponseProcessor',
 
     // --- Concrete Service Tokens (if needed for direct registration before interface mapping) ---
-    PromptBuilder: 'PromptBuilder', // Assuming ConcretePromptBuilder might be registered directly
-    AIGameStateProvider: 'AIGameStateProvider', // For ConcreteAIGameStateProvider
-    AIPromptContentProvider: 'AIPromptContentProvider', // For ConcreteAIPromptContentProvider
-    LLMResponseProcessor: 'LLMResponseProcessor', // For ConcreteLLMResponseProcessor
+    PromptBuilder: 'PromptBuilder',
+    AIGameStateProvider: 'AIGameStateProvider',
+    AIPromptContentProvider: 'AIPromptContentProvider',
+    LLMResponseProcessor: 'LLMResponseProcessor',
 
     IConfigurationProvider: 'IConfigurationProvider',
     LLMConfigService: 'LLMConfigService',

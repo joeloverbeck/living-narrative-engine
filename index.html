@@ -18,8 +18,7 @@
             <div class="actor-visuals">
                 <img id="current-actor-image" src="" alt="Current Actor Portrait" style="display: none;">
             </div>
-            <p id="current-actor-name" class="actor-name-display">N/A</p>
-        </div>
+            <p id="current-actor-name" class="actor-name-display">N/A</p></div>
         <div id="perception-log-widget" role="region" aria-labelledby="perception-log-heading" aria-live="polite">
             <h3 id="perception-log-heading">Perception Log</h3>
             <ul id="perception-log-list">
@@ -30,6 +29,9 @@
     <main id="center-pane" class="panel" role="main" aria-label="Main content area">
         <div id="outputDiv">
             <ul id="message-list" aria-live="polite"></ul>
+            <div id="processing-indicator" class="processing-indicator" aria-live="polite" aria-label="Processing turn">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
         </div>
         <div id="actions-widget" role="region" aria-labelledby="actions-heading">
             <h3 id="actions-heading">Actions</h3>
@@ -43,8 +45,9 @@
              aria-atomic="true">
             <h2 id="location-name-display"></h2>
 
-            <div id="location-portrait-visuals" class="location-visuals">
-                <img id="location-portrait-image" src="" alt="Location Image" style="display: none;">
+            <div id="location-portrait-visuals" class="location-visuals"><img id="location-portrait-image" src=""
+                                                                              alt="Location Image"
+                                                                              style="display: none;">
             </div>
             <p id="location-description-display"></p>
             <div id="location-exits-display"></div>
@@ -120,7 +123,8 @@
         <h2 id="llm-selection-modal-title" class="modal-title">Select Language Model</h2>
         <div id="llm-selection-list-container" role="radiogroup" aria-labelledby="llm-selection-list-label">
             <p id="llm-selection-list-label" class="visually-hidden">Available Language Models</p>
-            <ul id="llm-selection-list"></ul>
+            <ul id="llm-selection-list">
+            </ul>
         </div>
         <div id="llm-selection-status-message" class="status-message-area" role="status" aria-live="polite">
         </div>

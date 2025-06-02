@@ -1,4 +1,4 @@
-// src/core/config/registrations/coreSystemsRegistrations.js
+// src/config/registrations/coreSystemsRegistrations.js
 // --- FILE START ---
 
 /**
@@ -13,9 +13,7 @@
 /** @typedef {import('../../turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-// EventBus typedef might not be needed if not directly used.
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-// IActionExecutor typedef might not be needed if not directly used.
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem_Interface */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
@@ -27,21 +25,16 @@
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
-// ICommandInputPort typedef might not be needed if not directly used.
 /** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
-// ITurnHandler typedef might not be needed if not directly used.
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter_Interface */
-// ISchemaValidator_Interface typedef removed as AITurnHandler no longer directly depends on it here.
-
-// --- NEW JSDoc IMPORTS ---
 /** @typedef {import('../../turns/interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
 /** @typedef {import('../../turns/interfaces/factories/IAIPlayerStrategyFactory.js').IAIPlayerStrategyFactory} IAIPlayerStrategyFactory */
 /** @typedef {import('../../turns/interfaces/factories/ITurnContextFactory.js').ITurnContextFactory} ITurnContextFactory */
 /** @typedef {import('../../turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
-/** @typedef {import('../../services/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */
+/** @typedef {import('../../services/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */ // Assuming this is the concrete class for the interface
 /** @typedef {import('../../turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
-/** @typedef {import('../../services/promptBuilder.js').PromptBuilder} IPromptBuilder */
+/** @typedef {import('../../services/promptBuilder.js').PromptBuilder} IPromptBuilder */ // Assuming this is the concrete class for the interface
 
 
 // --- System Imports ---
@@ -81,14 +74,13 @@ export function registerCoreSystems(container) {
     registrar.tagged(SHUTDOWNABLE).singletonFactory(tokens.PlayerTurnHandler, (c) =>
         new PlayerTurnHandler({
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)), // MODIFIED
+            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)),
             commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
             turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
             playerPromptService: /** @type {IPlayerPromptService} */ (c.resolve(tokens.IPlayerPromptService)),
             commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
             safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
             subscriptionLifecycleManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
-            // gameWorldAccess can be added if PlayerTurnHandler needs it and it's defined in tokens
         })
     );
     logger.debug(`Core Systems Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`);
@@ -97,7 +89,7 @@ export function registerCoreSystems(container) {
     registrar.singletonFactory(tokens.AITurnHandler, (c) => {
         return new AITurnHandler({
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)), // MODIFIED
+            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)),
             gameWorldAccess: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
             turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
             illmAdapter: /** @type {ILLMAdapter_Interface} */ (c.resolve(tokens.ILLMAdapter)),
@@ -121,7 +113,7 @@ export function registerCoreSystems(container) {
     registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => {
         const createPlayerHandlerFactory = () => new PlayerTurnHandler({
             logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)), // MODIFIED
+            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)),
             commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
             turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
             playerPromptService: /** @type {IPlayerPromptService} */ (c.resolve(tokens.IPlayerPromptService)),
@@ -133,7 +125,7 @@ export function registerCoreSystems(container) {
         const createAiHandlerFactory = () => {
             return new AITurnHandler({
                 logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-                turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)), // MODIFIED
+                turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)),
                 gameWorldAccess: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
                 turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
                 illmAdapter: /** @type {ILLMAdapter_Interface} */ (c.resolve(tokens.ILLMAdapter)),
@@ -171,28 +163,25 @@ export function registerCoreSystems(container) {
     logger.debug(`Core Systems Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`);
     registrationCount++;
 
-    container.register(
-        tokens.ITurnContext,
-        (c) => {
-            const localLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
-            const turnManager = /** @type {ITurnManager | null} */ (c.resolve(tokens.ITurnManager));
+    // Use registrar for ITurnContext for consistency
+    registrar.transientFactory(tokens.ITurnContext, (c) => {
+        const localLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        const turnManager = /** @type {ITurnManager | null} */ (c.resolve(tokens.ITurnManager));
 
-            if (!turnManager) {
-                localLogger.warn(`ITurnContext Factory: ${String(tokens.ITurnManager)} could not be resolved. Returning null.`);
-                return null;
-            }
-
-            const activeHandler = turnManager.getActiveTurnHandler();
-            if (activeHandler && typeof activeHandler.getTurnContext === 'function') {
-                const context = activeHandler.getTurnContext();
-                return context;
-            } else if (activeHandler) {
-                localLogger.warn(`ITurnContext Factory: Active handler (${activeHandler.constructor.name}) found, but getTurnContext is not a function. Returning null.`);
-            }
+        if (!turnManager) {
+            localLogger.warn(`ITurnContext Factory: ${String(tokens.ITurnManager)} could not be resolved. Returning null.`);
             return null;
-        },
-        {lifecycle: 'transient'}
-    );
+        }
+
+        const activeHandler = turnManager.getActiveTurnHandler();
+        if (activeHandler && typeof activeHandler.getTurnContext === 'function') {
+            const context = activeHandler.getTurnContext();
+            return context;
+        } else if (activeHandler) {
+            localLogger.warn(`ITurnContext Factory: Active handler (${activeHandler.constructor.name}) found, but getTurnContext is not a function. Returning null.`);
+        }
+        return null;
+    });
     logger.debug(`Core Systems Registration: Registered transient factory for ${String(tokens.ITurnContext)}.`);
     registrationCount++;
 

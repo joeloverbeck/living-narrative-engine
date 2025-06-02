@@ -1,0 +1,47 @@
+/* css/components/_processing-indicator.css */
+.processing-indicator {
+    display: none; /* Hidden by default, shown by adding .visible class */
+    align-items: center;
+    justify-content: center; /* Or flex-start if preferred */
+    padding: var(--spacing-sm) 0;
+    margin-top: var(--spacing-xs);
+    /* Optional: Add a min-height if needed when visible */
+}
+
+.processing-indicator.visible {
+    display: flex; /* Show the indicator */
+}
+
+.processing-indicator .dot {
+    width: 8px;
+    height: 8px;
+    margin: 0 3px;
+    background-color: var(--secondary-text-color); /* Uses theme variable */
+    border-radius: 50%;
+    opacity: 0.3; /* Start with some opacity for the animation base state */
+    animation: processingDotsAnimation 1.4s infinite ease-in-out;
+}
+
+/* Stagger animation delays for the dots */
+.processing-indicator .dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.processing-indicator .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.processing-indicator .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes processingDotsAnimation {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(0.7);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

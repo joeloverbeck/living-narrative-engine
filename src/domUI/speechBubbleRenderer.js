@@ -2,6 +2,7 @@
 
 import {BoundDomRendererBase} from './boundDomRendererBase.js'; // Adjusted path
 import {DISPLAY_SPEECH_ID} from '../constants/eventIds.js';
+import {PLAYER_COMPONENT_ID} from '../constants/componentIds.js'; // Added import
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -25,7 +26,7 @@ const DEFAULT_SPEAKER_NAME = 'Unknown Speaker';
 
 export class SpeechBubbleRenderer extends BoundDomRendererBase {
     /** @private @type {IEntityManager} */
-    #entityManager; // May still be needed for direct entity checks if EDDP doesn't cover all
+    #entityManager;
     /** @private @type {DomElementFactory} */
     #domElementFactory;
     /** @private @type {EntityDisplayDataProvider} */
@@ -68,8 +69,6 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
         this.#entityManager = entityManager;
         this.#domElementFactory = domElementFactory;
         this.#entityDisplayDataProvider = entityDisplayDataProvider;
-        // this._logPrefix is set by RendererBase, but if we need it specifically:
-        // this._logPrefix = '[SpeechBubbleRenderer]'; // No, it's already set.
 
         if (this.elements.speechContainer) {
             this.effectiveSpeechContainer = this.elements.speechContainer;
@@ -77,13 +76,10 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
             this.logger.warn(`${this._logPrefix} #message-list not found. Speech will be appended to #outputDiv.`);
             this.effectiveSpeechContainer = this.elements.outputDivElement;
         } else {
-            // This case should ideally be prevented if outputDivElement is required and found,
-            // or by BoundDomRendererBase logging an error if outputDivElement (required) isn't found.
             this.logger.error(`${this._logPrefix} Critical: Effective speech container (#message-list or #outputDiv) could not be determined as #outputDiv was also not found or bound.`);
             this.effectiveSpeechContainer = null;
         }
 
-        // VED subscription using helper from RendererBase
         this._addSubscription(
             this.validatedEventDispatcher.subscribe(
                 DISPLAY_SPEECH_ID,
@@ -118,8 +114,8 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
      * @param {boolean} [allowHtml=false] - Whether to treat speechContent as HTML.
      */
     renderSpeech(entityId, speechContent, allowHtml = false) {
-        if (!this.effectiveSpeechContainer || !this.#domElementFactory) {
-            this.logger.error(`${this._logPrefix} Cannot render speech: effectiveSpeechContainer or domElementFactory missing.`);
+        if (!this.effectiveSpeechContainer || !this.#domElementFactory || !this.#entityManager) {
+            this.logger.error(`${this._logPrefix} Cannot render speech: effectiveSpeechContainer, domElementFactory, or entityManager missing.`);
             return;
         }
 
@@ -132,6 +128,20 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
         if (!speechEntryDiv || !speechBubbleDiv) {
             this.logger.error(`${this._logPrefix} Failed to create speech entry or bubble div.`);
             return;
+        }
+
+        // Determine if the speaker is the player
+        let isPlayer = false;
+        const speakerEntity = this.#entityManager.getEntityInstance(entityId);
+        if (speakerEntity && speakerEntity.hasComponent(PLAYER_COMPONENT_ID)) {
+            isPlayer = true;
+        } else if (speakerEntity === null) {
+            this.logger.debug(`${this._logPrefix} Speaker entity with ID '${entityId}' not found for player check.`);
+        }
+
+
+        if (isPlayer) {
+            speechEntryDiv.classList.add('player-speech');
         }
 
         const speakerIntroSpan = this.#domElementFactory.span('speech-speaker-intro');
@@ -154,11 +164,11 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
                         }
                     } else {
                         if (allowHtml) {
-                            const tempSpan = this.#domElementFactory.span(); // Create a temporary span
+                            const tempSpan = this.#domElementFactory.span();
                             if (tempSpan) {
-                                tempSpan.innerHTML = part; // Let browser parse HTML
+                                tempSpan.innerHTML = part;
                                 while (tempSpan.firstChild) {
-                                    quotedSpeechSpan.appendChild(tempSpan.firstChild); // Append parsed nodes
+                                    quotedSpeechSpan.appendChild(tempSpan.firstChild);
                                 }
                             }
                         } else {
@@ -194,7 +204,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
         speechEntryDiv.appendChild(speechBubbleDiv);
         this.effectiveSpeechContainer.appendChild(speechEntryDiv);
         this.#scrollToBottom();
-        this.logger.debug(`${this._logPrefix} Rendered speech for ${speakerName}.`);
+        this.logger.debug(`${this._logPrefix} Rendered speech for ${speakerName}${isPlayer ? ' (Player)' : ''}.`);
     }
 
     /**
@@ -203,7 +213,6 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
      * @private
      */
     #scrollToBottom() {
-        // Use this.elements.outputDivElement from BoundDomRendererBase
         if (this.elements.outputDivElement && typeof this.elements.outputDivElement.scrollTop !== 'undefined') {
             this.elements.outputDivElement.scrollTop = this.elements.outputDivElement.scrollHeight;
         } else {
@@ -213,18 +222,11 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
     /**
      * Cleans up resources.
-     * VED subscriptions are handled by super.dispose().
-     * DOM listeners (if any were added via _addDomListener) are also handled by super.dispose().
      */
     dispose() {
         this.logger.debug(`${this._logPrefix} Disposing.`);
-        // VED subscriptions and DOM listeners managed by _addSubscription and _addDomListener
-        // are cleaned up by super.dispose().
         super.dispose();
-        this.effectiveSpeechContainer = null; // Clear custom reference
-        // this.#entityManager = null; // Not strictly necessary if base class handles all, but good practice for direct members
-        // this.#domElementFactory = null;
-        // this.#entityDisplayDataProvider = null;
+        this.effectiveSpeechContainer = null;
         this.logger.info(`${this._logPrefix} Disposed.`);
     }
 }

@@ -1,4 +1,4 @@
-// src/tests/core/config/registrations/coreSystemsRegistrations.test.js
+// tests/config/registrations/coreSystemsRegistrations.test.js
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */

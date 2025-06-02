@@ -14,6 +14,8 @@ export const PLAYER_TURN_SUBMITTED_ID = 'core:player_turn_submitted';
 export const ENTITY_SPOKE_ID = 'core:entity_spoke';
 export const DISPLAY_MESSAGE_ID = 'textUI:display_message';
 export const DISPLAY_SPEECH_ID = 'textUI:display_speech';
+export const AI_TURN_PROCESSING_STARTED = 'core:ai_turn_processing_started';
+export const AI_TURN_PROCESSING_ENDED = 'core:ai_turn_processing_ended';
 
 // New Event IDs for GameEngine to UI communication (GE-REFAC-006)
 

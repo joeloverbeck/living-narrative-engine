@@ -22,6 +22,8 @@
 @import url('components/_messages.css');
 @import url('components/_speech-bubbles.css');
 /* <<< ADDED IMPORT for speech bubbles */
+@import url('components/_processing-indicator.css');
+/* <<< ADDED THIS IMPORT */
 @import url('components/_modals.css');
 @import url('components/_llm-selection-modal.css');
 /* Added new import */

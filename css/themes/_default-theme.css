@@ -54,6 +54,13 @@
     --speech-action-text-color: #c0392b; /* ADDED: For action text, using a contrasting red */
     /* --- END MODIFIED & ADDED --- */
 
+    /* NEW: Variables for Player Speech Bubbles */
+    --player-speech-bg-color: var(--accent-color-secondary); /* Example: Use the theme's orange accent */
+    --player-speech-text-color: #FFFFFF; /* Example: White text for good contrast on orange */
+    --player-speech-border-color: #c0392b; /* Example: A darker orange/red, or var(--accent-color-secondary) */
+    /* Ensures action text within player bubble also has good contrast if it needs a specific color */
+    --player-speech-action-text-color: var(--player-speech-text-color); /* Default to same as main player text color */
+
     /* Fonts */
     --font-narrative: 'Merriweather', serif;
     --font-ui: 'Open Sans', sans-serif;
@@ -88,6 +95,9 @@
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06); /* Slightly more noticeable for small elements */
     --shadow-md: 0 5px 10px rgba(0, 0, 0, 0.1); /* Deeper shadow for panels, cards, etc. */
     --shadow-lg: 0 15px 25px rgba(0, 0, 0, 0.15); /* More prominent shadow for modals or elevated elements */
+
+    /* NEW: Specific shadow for speech bubbles */
+    --shadow-speech-bubble: 0 3px 6px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
 
     --portrait-size-medium: 60px; /* For consistent portrait sizes across UI */
     --portrait-size-large: 200px;
