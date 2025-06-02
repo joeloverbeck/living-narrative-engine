@@ -7,6 +7,10 @@
     "core:description": {
       "text": "The local adventurers' guild."
     },
+    "core:portrait": {
+      "imagePath": "portraits/adventurers_guild.png",
+      "altText": "Interior of the adventurers' guild."
+    },
     "core:exits": [
       {
         "direction": "out to town",
