@@ -1,5 +1,5 @@
 /** @jest-environment node */
-// src/tests/domUI/documentContext.node.test.js
+// tests/domUI/documentContext.node.test.js
 
 /**
  * These tests run in the raw Node environment where neither `window`

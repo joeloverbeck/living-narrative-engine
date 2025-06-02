@@ -47,6 +47,7 @@ import {PerceptionLogFormatter} from '../../services/perceptionLogFormatter.js';
 
 // +++ TICKET 11 IMPORTS START +++
 import {GameStateValidationServiceForPrompting} from '../../services/gameStateValidationServiceForPrompting.js';
+import {EntityDisplayDataProvider} from "../../services/entityDisplayDataProvider.js";
 // +++ TICKET 11 IMPORTS END +++
 
 
@@ -128,6 +129,22 @@ export function registerDomainServices(container) {
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.IGameStateValidationServiceForPrompting)}.`);
     // +++ TICKET 11 REGISTRATION END +++
+
+    r.singletonFactory(tokens.EntityDisplayDataProvider, c => {
+        log.debug(`Domain-services Registration: Factory creating ${String(tokens.EntityDisplayDataProvider)}...`);
+        const eddpDeps = {
+            entityManager: /** @type {IEntityManager} */ (c.resolve(tokens.IEntityManager)),
+            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger))
+        };
+        if (!eddpDeps.entityManager || !eddpDeps.logger) {
+            const errorMsg = `Domain-services Registration: Factory for ${String(tokens.EntityDisplayDataProvider)} FAILED to resolve dependencies. EntityManager: ${!!eddpDeps.entityManager}, Logger: ${!!eddpDeps.logger}`;
+            log.error(errorMsg);
+            throw new Error(errorMsg);
+        }
+        log.debug(`Domain-services Registration: Dependencies for ${String(tokens.EntityDisplayDataProvider)} resolved, creating instance.`);
+        return new EntityDisplayDataProvider(eddpDeps);
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.EntityDisplayDataProvider)} factory.`);
 
     r.singletonFactory(tokens.TargetResolutionService, (c) => {
         log.debug(`Domain-services Registration: Factory creating ${String(tokens.TargetResolutionService)}...`);
@@ -365,7 +382,7 @@ export function registerDomainServices(container) {
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.PerceptionLogAssembler)}.`);
 
-    // UPDATED PromptBuilder registration
+    // PromptBuilder registration
     r.singletonFactory(tokens.IPromptBuilder, (c) => {
         const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
         const llmConfigService = /** @type {LLMConfigService_Concrete} */ (c.resolve(tokens.LLMConfigService));

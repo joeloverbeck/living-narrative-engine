@@ -2,7 +2,7 @@
 
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
-import {ActionButtonsRenderer} from '../../src/domUI/index.js';
+import {ActionButtonsRenderer} from '../../src/domUI';
 import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../src/services/consoleLogger.js';
@@ -20,12 +20,12 @@ describe('ActionButtonsRenderer', () => {
     let mockLogger;
     let mockVed;
     let mockDomElementFactoryInstance;
-    let actionButtonsContainer;
+    let actionButtonsContainer; // This is the actual HTMLElement
     let globalMockSendButton;
     let commandInputElement;
 
     const CLASS_PREFIX = '[ActionButtonsRenderer]';
-    const MOCK_ACTOR_ID = 'test-actor-id'; // Define a consistent mock actor ID
+    const MOCK_ACTOR_ID = 'test-actor-id';
 
     const createTestAction = (id, name, command, description) => ({
         id,
@@ -121,6 +121,18 @@ describe('ActionButtonsRenderer', () => {
         return element;
     };
 
+    // Define createRendererUnderTest in the scope of the outer 'describe'
+    const createRendererUnderTest = (rendererConfig = {}, customDocContext) => {
+        const defaults = {
+            logger: mockLogger,
+            documentContext: customDocContext || docContext,
+            validatedEventDispatcher: mockVed,
+            domElementFactory: mockDomElementFactoryInstance,
+            actionButtonsContainerSelector: '#action-buttons',
+        };
+        return new ActionButtonsRenderer({...defaults, ...rendererConfig});
+    };
+
     beforeEach(() => {
         dom = new JSDOM(`<!DOCTYPE html><html><body>
             <div id="game-container">
@@ -135,24 +147,31 @@ describe('ActionButtonsRenderer', () => {
         global.HTMLElement = dom.window.HTMLElement;
         global.HTMLButtonElement = dom.window.HTMLButtonElement;
         global.HTMLInputElement = dom.window.HTMLInputElement;
-        jest.clearAllMocks();
+
+        jest.clearAllMocks(); // Clear all mocks at the beginning
+
+        // Initialize mocks that createRendererUnderTest might depend on
         docContext = new DocumentContext(currentDocument);
-        mockLogger = new ConsoleLogger();
-        mockVed = new ValidatedEventDispatcher({});
-        mockDomElementFactoryInstance = new DomElementFactory(docContext);
+        mockLogger = new ConsoleLogger(); // New instance for each test
+        mockVed = new ValidatedEventDispatcher({}); // New instance for each test
+        mockDomElementFactoryInstance = new DomElementFactory(docContext); // New instance
+
+        // Mock implementations for factory and VED
         mockVed.subscribe.mockReturnValue({unsubscribe: jest.fn()});
-        mockVed.dispatchValidated.mockResolvedValue(true);
+        mockVed.dispatchValidated.mockResolvedValue(true); // Default to success
         mockDomElementFactoryInstance.button.mockImplementation((text, cls) => {
             const classesArray = Array.isArray(cls) ? cls : (cls ? cls.split(' ').filter(c => c) : []);
             return createMockElement(currentDocument, 'button', '', classesArray, text);
         });
         mockDomElementFactoryInstance.create.mockImplementation(tagName => currentDocument.createElement(tagName));
+
         actionButtonsContainer = currentDocument.getElementById('action-buttons');
         if (!actionButtonsContainer) {
             throw new Error("Critical Test Setup Failed: #action-buttons container not found in JSDOM.");
         }
         jest.spyOn(actionButtonsContainer, 'appendChild');
         jest.spyOn(actionButtonsContainer, 'removeChild');
+
         const sendButtonOriginal = currentDocument.getElementById('player-confirm-turn-button');
         globalMockSendButton = createMockElement(currentDocument, 'button', 'player-confirm-turn-button');
         if (sendButtonOriginal && sendButtonOriginal.parentNode) {
@@ -160,6 +179,7 @@ describe('ActionButtonsRenderer', () => {
         } else {
             currentDocument.body.appendChild(globalMockSendButton);
         }
+
         const commandInputOriginal = currentDocument.getElementById('speech-input');
         commandInputElement = createMockElement(currentDocument, 'input', 'speech-input', [], '');
         commandInputElement.type = 'text';
@@ -178,17 +198,6 @@ describe('ActionButtonsRenderer', () => {
         currentDocument = null;
     });
 
-    const createRendererUnderTest = (rendererConfig = {}, customDocContext) => {
-        const defaults = {
-            logger: mockLogger,
-            documentContext: customDocContext || docContext,
-            validatedEventDispatcher: mockVed,
-            domElementFactory: mockDomElementFactoryInstance,
-            actionButtonsContainer: actionButtonsContainer,
-            sendButtonElement: globalMockSendButton,
-        };
-        return new ActionButtonsRenderer({...defaults, ...rendererConfig});
-    };
 
     describe('Confirm Action Button (#handleSendAction)', () => {
         const actionToSubmit = createTestAction(
@@ -208,9 +217,16 @@ describe('ActionButtonsRenderer', () => {
                 ...docContext,
                 query: jest.fn(selector => {
                     if (selector === '#speech-input') return commandInputElement;
+                    if (selector === '#player-confirm-turn-button') return globalMockSendButton;
+                    if (selector === '#action-buttons') return actionButtonsContainer;
                     return currentDocument.querySelector(selector);
                 }),
-                getElementById: jest.fn(id => currentDocument.getElementById(id)),
+                getElementById: jest.fn(id => {
+                    if (id === 'speech-input') return commandInputElement;
+                    if (id === 'player-confirm-turn-button') return globalMockSendButton;
+                    if (id === 'action-buttons') return actionButtonsContainer;
+                    return currentDocument.getElementById(id);
+                }),
                 create: jest.fn(tagName => currentDocument.createElement(tagName)),
             };
 
@@ -228,13 +244,22 @@ describe('ActionButtonsRenderer', () => {
             });
 
             rendererForDescribeBlock = createRendererUnderTest({}, specificTestDocContext);
-            // Use the test-specific setter for #currentActorId
-            rendererForDescribeBlock._setTestCurrentActorId(MOCK_ACTOR_ID);
-            rendererForDescribeBlock.render(actions);
 
+            if (typeof rendererForDescribeBlock._setTestCurrentActorId === 'function') {
+                rendererForDescribeBlock._setTestCurrentActorId(MOCK_ACTOR_ID);
+            } else {
+                const updatePayload = { actorId: MOCK_ACTOR_ID, actions: actions };
+                await rendererForDescribeBlock._handleUpdateActions({ type: 'textUI:update_available_actions', payload: updatePayload });
+            }
+
+            if (!rendererForDescribeBlock.availableActions || rendererForDescribeBlock.availableActions.length === 0) {
+                rendererForDescribeBlock.availableActions = actions;
+                await rendererForDescribeBlock.refreshList();
+            }
 
             if (!actionButtonInstance) {
-                throw new Error(`Test setup error: actionButtonInstance for command '${actionToSubmit.command}' was not created. Ensure the action passes validation in #handleUpdateActions.`);
+                console.error("Action button instance for command", actionToSubmit.command, "was not created. Check renderer logic and action data.", actions);
+                throw new Error(`Test setup error: actionButtonInstance for command '${actionToSubmit.command}' was not created. Ensure the action passes validation in #handleUpdateActions and is rendered.`);
             }
 
             ['info', 'error', 'debug', 'warn'].forEach(level => mockLogger[level].mockClear());
@@ -269,7 +294,12 @@ describe('ActionButtonsRenderer', () => {
                 PLAYER_TURN_SUBMITTED_ID,
                 {submittedByActorId: MOCK_ACTOR_ID, actionId: actionToSubmit.id, speech: 'Player says this'}
             );
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched successfully for action ID '${actionToSubmit.id}' by actor '${MOCK_ACTOR_ID}'.`));
+
+            // SUT log: `${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched for action '${actionId}' by actor '${this.#currentActorId}'.`
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                // Ensuring the test matches the actual log format from SUT
+                `${CLASS_PREFIX} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched for action '${actionToSubmit.id}' by actor '${MOCK_ACTOR_ID}'.`
+            );
             expect(commandInputElement.value).toBe('');
             expect(rendererForDescribeBlock.selectedAction).toBeNull();
             expect(globalMockSendButton.disabled).toBe(true);
@@ -293,26 +323,44 @@ describe('ActionButtonsRenderer', () => {
         });
 
         it('should dispatch event with speech: null and log warning if speech input element is missing post-construction', async () => {
+            const testSpecificSendButtonId = 'test-send-button-for-missing-speech';
+            const testSpecificSendButton = createMockElement(currentDocument, 'button', testSpecificSendButtonId);
+            currentDocument.body.appendChild(testSpecificSendButton);
+
             const localDocContextNoSpeech = {
                 ...specificTestDocContext,
                 query: (selector) => {
                     if (selector === '#speech-input') return null;
+                    if (selector === `#${testSpecificSendButtonId}`) return testSpecificSendButton;
+                    if (selector === '#action-buttons') return actionButtonsContainer;
                     return currentDocument.querySelector(selector);
                 },
+                getElementById: (id) => {
+                    if (id === 'speech-input') return null;
+                    if (id === testSpecificSendButtonId) return testSpecificSendButton;
+                    return currentDocument.getElementById(id);
+                }
             };
 
-            const testSpecificSendButton = createMockElement(currentDocument, 'button', 'test-send-button');
             const rendererForThisTest = createRendererUnderTest({
-                sendButtonElement: testSpecificSendButton
+                sendButtonSelector: `#${testSpecificSendButtonId}`
             }, localDocContextNoSpeech);
 
-            // Use the test-specific setter for #currentActorId for this specific renderer instance
-            rendererForThisTest._setTestCurrentActorId(MOCK_ACTOR_ID);
-
+            if (typeof rendererForThisTest._setTestCurrentActorId === 'function') {
+                rendererForThisTest._setTestCurrentActorId(MOCK_ACTOR_ID);
+            } else {
+                await rendererForThisTest._handleUpdateActions({ type: 'textUI:update_available_actions', payload: { actorId: MOCK_ACTOR_ID, actions: [] }});
+            }
             rendererForThisTest.selectedAction = actionToSubmit;
-            testSpecificSendButton.disabled = false;
+
+            if (rendererForThisTest.elements.sendButtonElement) {
+                rendererForThisTest.elements.sendButtonElement.disabled = false;
+            } else {
+                throw new Error(`Test setup error: rendererForThisTest.elements.sendButtonElement not found using selector #${testSpecificSendButtonId}`);
+            }
 
             mockLogger.warn.mockClear();
+            mockLogger.debug.mockClear(); // Clear debug as well
             mockVed.dispatchValidated.mockClear().mockResolvedValue(true);
 
             await testSpecificSendButton.click();
@@ -321,28 +369,45 @@ describe('ActionButtonsRenderer', () => {
                 PLAYER_TURN_SUBMITTED_ID,
                 {submittedByActorId: MOCK_ACTOR_ID, actionId: actionToSubmit.id, speech: null}
             );
-            expect(mockLogger.warn).not.toHaveBeenCalledWith(
-                expect.stringContaining("Could not find/deselect the selected action button"),
-                expect.anything()
+
+            // SUT logs a debug message when speech input is not found:
+            // this.logger.debug(`${this._logPrefix} No speech input element available.`);
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `${CLASS_PREFIX} No speech input element available.`
             );
+            // Ensure no unexpected warnings related to speech input are logged
+            expect(mockLogger.warn).not.toHaveBeenCalledWith(
+                expect.stringContaining("Speech input element (selector: '#speech-input') not found")
+            );
+
+            currentDocument.body.removeChild(testSpecificSendButton);
         });
 
 
         it('should log error and not change UI state if dispatchValidated returns false', async () => {
             commandInputElement.value = 'Test speech';
             mockVed.dispatchValidated.mockResolvedValue(false);
+
             if (actionButtonInstance && actionButtonInstance.classList && actionButtonInstance.classList.remove) {
                 actionButtonInstance.classList.remove.mockClear();
+            } else if (!actionButtonInstance) {
+                throw new Error("actionButtonInstance is not defined. Check test setup.");
             }
+
             await globalMockSendButton.click();
+
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
+
+            // SUT log: `${this._logPrefix} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action '${actionId}'.`
+            const expectedErrorPayload = {payload: {submittedByActorId: MOCK_ACTOR_ID, actionId: actionToSubmit.id, speech: 'Test speech'}};
             expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action ID '${actionToSubmit.id}'. dispatchValidated returned false.`),
-                {payload: {submittedByActorId: MOCK_ACTOR_ID, actionId: actionToSubmit.id, speech: 'Test speech'}}
+                `${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action '${actionToSubmit.id}'.`,
+                expectedErrorPayload
             );
             expect(commandInputElement.value).toBe('Test speech');
             expect(rendererForDescribeBlock.selectedAction).toEqual(actionToSubmit);
             expect(globalMockSendButton.disabled).toBe(false);
+
             if (actionButtonInstance && actionButtonInstance.classList && actionButtonInstance.classList.remove) {
                 expect(actionButtonInstance.classList.remove).not.toHaveBeenCalled();
             }
@@ -352,25 +417,33 @@ describe('ActionButtonsRenderer', () => {
             commandInputElement.value = 'Test speech again';
             const dispatchError = new Error('Network Error');
             mockVed.dispatchValidated.mockRejectedValue(dispatchError);
+
             if (actionButtonInstance && actionButtonInstance.classList && actionButtonInstance.classList.remove) {
                 actionButtonInstance.classList.remove.mockClear();
+            } else if (!actionButtonInstance) {
+                throw new Error("actionButtonInstance is not defined. Check test setup.");
             }
+
             await globalMockSendButton.click();
+
             expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                expect.stringContaining(`${CLASS_PREFIX} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_ID}' (Action ID: ${actionToSubmit.id}).`),
-                {
-                    error: dispatchError,
-                    payload: {
-                        submittedByActorId: MOCK_ACTOR_ID,
-                        actionId: actionToSubmit.id,
-                        speech: 'Test speech again'
-                    }
+            // SUT log: `${this._logPrefix} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_ID}'.`
+            const expectedErrorContext = {
+                error: dispatchError,
+                payload: {
+                    submittedByActorId: MOCK_ACTOR_ID,
+                    actionId: actionToSubmit.id,
+                    speech: 'Test speech again'
                 }
+            };
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `${CLASS_PREFIX} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_ID}'.`,
+                expectedErrorContext
             );
             expect(commandInputElement.value).toBe('Test speech again');
             expect(rendererForDescribeBlock.selectedAction).toEqual(actionToSubmit);
             expect(globalMockSendButton.disabled).toBe(false);
+
             if (actionButtonInstance && actionButtonInstance.classList && actionButtonInstance.classList.remove) {
                 expect(actionButtonInstance.classList.remove).not.toHaveBeenCalled();
             }
@@ -378,22 +451,26 @@ describe('ActionButtonsRenderer', () => {
 
         it('should do nothing and log warning if no action is selected when send button clicked', async () => {
             rendererForDescribeBlock.selectedAction = null;
-            // Note: rendererForDescribeBlock._getTestCurrentActorId() would still be MOCK_ACTOR_ID from beforeEach
             globalMockSendButton.disabled = false;
+
             await globalMockSendButton.click();
+
             expect(mockVed.dispatchValidated).not.toHaveBeenCalled();
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} 'Confirm Action' clicked, but no action is selected.`));
+            // SUT log: `${this._logPrefix} 'Confirm Action' clicked, but no action is selected.`
+            expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} 'Confirm Action' clicked, but no action is selected.`);
             expect(globalMockSendButton.disabled).toBe(true);
         });
 
         it('should log error if sendButtonElement is somehow null during #handleSendAction', async () => {
-            // Note: rendererForDescribeBlock._getTestCurrentActorId() would still be MOCK_ACTOR_ID
             expect(rendererForDescribeBlock.selectedAction).toEqual(actionToSubmit);
-            rendererForDescribeBlock.sendButtonElement = null;
+            globalMockSendButton.disabled = false;
+
+            rendererForDescribeBlock.elements.sendButtonElement = null;
 
             await globalMockSendButton.click();
 
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} #handleSendAction called, but sendButtonElement is null.`));
+            // SUT log: `${this._logPrefix} #handleSendAction called, but sendButtonElement is null.`
+            expect(mockLogger.error).toHaveBeenCalledWith(`${CLASS_PREFIX} #handleSendAction called, but sendButtonElement is null.`);
             expect(mockVed.dispatchValidated).not.toHaveBeenCalled();
         });
     });

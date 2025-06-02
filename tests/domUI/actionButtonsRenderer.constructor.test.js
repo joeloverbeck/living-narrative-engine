@@ -1,8 +1,8 @@
-// src/tests/domUI/actionButtonsRenderer.constructor.test.js
+// tests/domUI/actionButtonsRenderer.constructor.test.js
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
 // Import from specific file for clarity
-import {ActionButtonsRenderer} from '../../src/domUI/index.js'; // Using index import
+import {ActionButtonsRenderer} from '../../src/domUI'; // Using index import
 import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../src/services/consoleLogger.js';
@@ -22,7 +22,8 @@ describe('ActionButtonsRenderer', () => {
     let mockLogger;
     let mockVed;
     let mockDomElementFactoryInstance; // To hold instance used in most tests
-    let actionButtonsContainer; // The specific container for this renderer
+    let actionButtonsContainer; // The specific container element for this renderer
+    const ACTION_BUTTONS_CONTAINER_SELECTOR = '#action-buttons';
 
     // --- Mock Elements ---
     // Creates a mock element with spied methods, letting JSDOM handle implementation
@@ -64,142 +65,131 @@ describe('ActionButtonsRenderer', () => {
 
     beforeEach(() => {
         // Reset DOM with the *correct* ID for the container
-        dom = new JSDOM(`<!DOCTYPE html><html><body><div id="game-container"><div id="action-buttons"></div></div></body></html>`);
+        dom = new JSDOM(`<!DOCTYPE html><html><body><div id="game-container"><div id="${ACTION_BUTTONS_CONTAINER_SELECTOR.substring(1)}"></div></div></body></html>`);
         document = dom.window.document;
         global.document = document; // Ensure global document is set for DocumentContext
         global.HTMLElement = dom.window.HTMLElement; // Ensure global HTMLElement is set
+        global.HTMLButtonElement = dom.window.HTMLButtonElement;
+        global.HTMLInputElement = dom.window.HTMLInputElement;
+        // Note: global.Document is not explicitly set here from dom.window.Document,
+        // but DocumentContext tries to grab it from global or use a fallback if needed.
+
 
         docContext = new DocumentContext(); // Let it pick up global.document
 
         mockLogger = new ConsoleLogger();
-        // Ensure VED mock has necessary methods if not fully mocked elsewhere
         mockVed = new ValidatedEventDispatcher({
-            eventBus: {subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn().mockResolvedValue(undefined)}, // Basic EventBus mock
-            gameDataRepository: {getEventDefinition: jest.fn()}, // Mock needed methods
+            eventBus: {subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn().mockResolvedValue(undefined)},
+            gameDataRepository: {getEventDefinition: jest.fn()},
             schemaValidator: {
                 isSchemaLoaded: jest.fn().mockReturnValue(true),
                 validate: jest.fn().mockReturnValue({isValid: true})
-            }, // Mock needed methods
-            logger: mockLogger // Use the mocked logger
+            },
+            logger: mockLogger
         });
 
         // Create an *actual* factory instance for most tests, using the real constructor
-        // Keep the module mock for the specific constructor failure test
         mockDomElementFactoryInstance = new DomElementFactory(docContext);
-        // Spy on the 'button' method of this *instance* for render tests
         jest.spyOn(mockDomElementFactoryInstance, 'button').mockImplementation((text, cls) => {
             const classes = cls ? (Array.isArray(cls) ? cls : cls.split(' ').filter(c => c)) : [];
-            // Use our extended mock creator to get elements with spied methods
             return createMockElement('button', '', classes, text);
         });
 
 
-        actionButtonsContainer = document.getElementById('action-buttons'); // Get the correct element
+        actionButtonsContainer = document.getElementById(ACTION_BUTTONS_CONTAINER_SELECTOR.substring(1));
 
-        // Ensure container exists before spying
         if (!actionButtonsContainer) {
-            throw new Error("Test setup failed: #action-buttons container not found in JSDOM.");
+            throw new Error(`Test setup failed: ${ACTION_BUTTONS_CONTAINER_SELECTOR} container not found in JSDOM.`);
         }
 
         // Logger spies
-        jest.spyOn(mockLogger, 'info').mockImplementation(() => {
-        });
-        jest.spyOn(mockLogger, 'warn').mockImplementation(() => {
-        });
-        jest.spyOn(mockLogger, 'error').mockImplementation(() => {
-        });
-        jest.spyOn(mockLogger, 'debug').mockImplementation(() => {
-        });
+        jest.spyOn(mockLogger, 'info').mockImplementation(() => {});
+        jest.spyOn(mockLogger, 'warn').mockImplementation(() => {});
+        jest.spyOn(mockLogger, 'error').mockImplementation(() => {});
+        jest.spyOn(mockLogger, 'debug').mockImplementation(() => {});
 
-        // VED spies (re-apply spies on the potentially new mock instance)
-        // MODIFIED: mockVed.subscribe should return a jest.fn() directly (the UnsubscribeFn)
-        jest.spyOn(mockVed, 'subscribe').mockReturnValue(jest.fn());
+        // VED spies
+        jest.spyOn(mockVed, 'subscribe').mockReturnValue(jest.fn()); // Returns the unsubscribe function
         jest.spyOn(mockVed, 'dispatchValidated').mockResolvedValue(true);
-        jest.spyOn(mockVed, 'unsubscribe'); // Spy on unsubscribe as well
+        jest.spyOn(mockVed, 'unsubscribe');
 
 
-        // Spy on container's methods we want to track calls for, but DO NOT mock implementation
+        // Spy on container's methods
         jest.spyOn(actionButtonsContainer, 'appendChild');
-        jest.spyOn(actionButtonsContainer, 'removeChild'); // Spy only, let JSDOM handle removal
+        jest.spyOn(actionButtonsContainer, 'removeChild');
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
-        // Clean up JSDOM globals if necessary
         delete global.document;
         delete global.HTMLElement;
+        delete global.HTMLButtonElement;
+        delete global.HTMLInputElement;
         if (document && document.body) {
-            document.body.innerHTML = ''; // Clear body
+            document.body.innerHTML = '';
         }
     });
 
-    // Helper to create renderer
-    const createRenderer = (containerOverride = actionButtonsContainer, factoryOverride = mockDomElementFactoryInstance) => {
-        // Default to the spied instance, allow overriding for specific tests
-        return new ActionButtonsRenderer({
+    // Helper to create renderer with overridable parameters
+    const createRenderer = (options = {}) => {
+        const defaultParams = {
             logger: mockLogger,
             documentContext: docContext,
             validatedEventDispatcher: mockVed,
-            domElementFactory: factoryOverride,
-            actionButtonsContainer: containerOverride,
-        });
+            domElementFactory: mockDomElementFactoryInstance,
+            actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
+            sendButtonSelector: '#player-confirm-turn-button',
+            speechInputSelector: '#speech-input',
+        };
+        return new ActionButtonsRenderer({ ...defaultParams, ...options });
     };
 
     // --- Test Scenarios ---
 
     describe('Constructor', () => {
-        it('should create successfully with valid dependencies', () => {
-            expect(() => createRenderer()).not.toThrow();
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[ActionButtonsRenderer] Initialized.'));
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Attached to action buttons container element:'), actionButtonsContainer);
-        });
+        it('should throw if actionButtonsContainerSelector is missing (null) or not a string', () => {
+            // FIXED: Updated expectedErrorMsg to match the SUT's actual error message
+            const expectedErrorMsg = "[ActionButtonsRenderer] 'actionButtonsContainerSelector' is required and must be a non-empty string.";
 
-        it('should throw if actionButtonsContainer is missing (null) or not a valid DOM element', () => {
-            expect(() => createRenderer(null)).toThrow(/'actionButtonsContainer' dependency is missing or not a valid DOM element/);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("[ActionButtonsRenderer] 'actionButtonsContainer' dependency is missing or not a valid DOM element."), {receivedElement: null});
-            mockLogger.error.mockClear(); // Clear mock for the next assertion on the same mock
+            // Test with null selector
+            expect(() => createRenderer({ actionButtonsContainerSelector: null }))
+                .toThrow(expectedErrorMsg);
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+            mockLogger.error.mockClear();
 
-            const textNode = dom.window.document.createTextNode('text'); // Use current test's JSDOM
-            expect(() => createRenderer(textNode)).toThrow(/'actionButtonsContainer' dependency is missing or not a valid DOM element/);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("[ActionButtonsRenderer] 'actionButtonsContainer' dependency is missing or not a valid DOM element."), {receivedElement: textNode});
+            // Test with a number (not a string)
+            expect(() => createRenderer({ actionButtonsContainerSelector: 123 }))
+                .toThrow(expectedErrorMsg);
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+            mockLogger.error.mockClear();
+
+            // Test with an empty string selector
+            expect(() => createRenderer({ actionButtonsContainerSelector: "" }))
+                .toThrow(expectedErrorMsg);
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
         });
 
         it('should throw if domElementFactory is missing or invalid', () => {
             const expectedErrorMessage = "[ActionButtonsRenderer] 'domElementFactory' dependency is missing or invalid (must have create and button methods).";
 
             // Test passing null directly as the factory dependency
-            expect(() => createRenderer(actionButtonsContainer, null))
+            expect(() => createRenderer({ domElementFactory: null }))
                 .toThrow(expectedErrorMessage);
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage, {receivedFactory: null});
+            mockLogger.error.mockClear();
 
             // Test passing an empty object directly (which lacks the 'create' and 'button' methods)
-            expect(() => createRenderer(actionButtonsContainer, {}))
+            expect(() => createRenderer({ domElementFactory: {} }))
                 .toThrow(expectedErrorMessage);
-
-            // Ensure the logger was called twice
-            expect(mockLogger.error).toHaveBeenCalledTimes(2);
-
-            // Check the arguments of the first call to mockLogger.error
-            expect(mockLogger.error).toHaveBeenNthCalledWith(
-                1, // Call number
-                expectedErrorMessage, // Expected first argument (the error message string)
-                {receivedFactory: null} // Expected second argument (details object)
-            );
-
-            // Check the arguments of the second call to mockLogger.error
-            expect(mockLogger.error).toHaveBeenNthCalledWith(
-                2, // Call number
-                expectedErrorMessage, // Expected first argument (the error message string)
-                {receivedFactory: {}} // Expected second argument (details object)
-            );
+            expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage, {receivedFactory: {}});
         });
 
 
         it('should subscribe to VED event textUI:update_available_actions', () => {
-            createRenderer(); // This will call the constructor
+            createRenderer();
             expect(mockVed.subscribe).toHaveBeenCalledTimes(1);
             expect(mockVed.subscribe).toHaveBeenCalledWith('textUI:update_available_actions', expect.any(Function));
-            // This assertion should now pass
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Subscribed to VED event 'textUI:update_available_actions'."));
+            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("[ActionButtonsRenderer] Subscribed to VED event 'textUI:update_available_actions' via _addSubscription."));
         });
     }); // End Constructor describe
 
