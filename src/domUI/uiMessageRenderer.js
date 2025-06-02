@@ -1,14 +1,17 @@
 // src/domUI/uiMessageRenderer.js
-import {RendererBase} from './rendererBase.js';
-import DomElementFactory from './domElementFactory.js';
-import {ACTION_FAILED_ID, DISPLAY_MESSAGE_ID, SYSTEM_ERROR_OCCURRED_ID} from "../constants/eventIds.js";   // keep this import
+import {BoundDomRendererBase} from './boundDomRendererBase.js';
+// DomElementFactory is not explicitly imported if only used via this.#domElementFactory,
+// but good practice to keep it if it was there or if type hints are desired.
+// import DomElementFactory from './domElementFactory.js';
+import {ACTION_FAILED_ID, DISPLAY_MESSAGE_ID, SYSTEM_ERROR_OCCURRED_ID} from "../constants/eventIds.js";
 
 /**
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
- * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription // Added for clarity
- * @typedef {import('../core/interfaces/IEvent').IEvent} IEvent // Added for clarity
+ * @typedef {import('./domElementFactory.js').default} DomElementFactory // Ensure this is the correct path for DomElementFactory
+ * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
+ * @typedef {import('../core/interfaces/IEvent.js').IEvent} IEvent
  */
 
 /**
@@ -25,12 +28,13 @@ import {ACTION_FAILED_ID, DISPLAY_MESSAGE_ID, SYSTEM_ERROR_OCCURRED_ID} from "..
 /**
  * Renders player-facing messages (info, echo, fatal, etc.) and wires
  * itself to the VED so tests can invoke the same code paths.
+ * @extends BoundDomRendererBase
  */
-export class UiMessageRenderer extends RendererBase {
-    /** @type {HTMLElement|null}                 */ #messageList = null;
-    /** @type {HTMLElement|null}                 */ #outputDivElement = null; // For scrolling
-    /** @type {DomElementFactory|null}           */ #domElementFactory;
-    /** @type {Array<IEventSubscription|undefined>} */ #subscriptions = [];
+export class UiMessageRenderer extends BoundDomRendererBase {
+    /** @type {DomElementFactory|null}           */
+    #domElementFactory;
+    // #subscriptions array is removed, _addSubscription from RendererBase is used.
+    // #messageList and #outputDivElement private caches are removed, use this.elements.
 
     /**
      * @param {object}  deps
@@ -45,7 +49,12 @@ export class UiMessageRenderer extends RendererBase {
                     validatedEventDispatcher,
                     domElementFactory = null
                 }) {
-        super({logger, documentContext, validatedEventDispatcher});
+        const elementsConfig = {
+            outputDivElement: {selector: '#outputDiv', required: true}, // Used for scrolling and as potential parent
+            messageList: {selector: '#message-list', required: false} // Will be created if not found
+        };
+
+        super({logger, documentContext, validatedEventDispatcher, elementsConfig});
 
         if (!domElementFactory || typeof domElementFactory.create !== 'function') {
             this.logger.error(`${this._logPrefix} DomElementFactory dependency is missing or invalid.`);
@@ -54,134 +63,82 @@ export class UiMessageRenderer extends RendererBase {
             this.#domElementFactory = domElementFactory;
         }
 
-        // Cache #outputDiv for scrolling
-        this.#outputDivElement = this.documentContext.query('#outputDiv');
-        if (!this.#outputDivElement) {
-            this.logger.error(`${this._logPrefix} Could not find #outputDiv element! Automatic scrolling of chat panel may not work.`);
-        } else {
-            this.logger.debug(`${this._logPrefix} Cached #outputDiv element for scrolling.`);
+        // Logic from #ensureMessageList moved here, after this.elements is populated by super()
+        if (!this.elements.messageList && this.elements.outputDivElement && this.#domElementFactory) {
+            this.logger.info(`${this._logPrefix} #message-list element not found by selector. Attempting to create it inside #outputDivElement.`);
+            const createdMessageList = this.#domElementFactory.create('ul', {
+                id: 'message-list',
+                attrs: {'aria-live': 'polite'}
+            });
+
+            if (createdMessageList) {
+                this.elements.outputDivElement.appendChild(createdMessageList);
+                this.elements.messageList = createdMessageList; // Assign to this.elements
+                this.logger.info(`${this._logPrefix} #message-list created dynamically inside #outputDivElement and assigned to this.elements.messageList.`);
+            } else {
+                this.logger.error(`${this._logPrefix} Failed to create #message-list element dynamically using #domElementFactory.`);
+                // this.elements.messageList remains null
+            }
+        } else if (!this.elements.messageList && !this.elements.outputDivElement) {
+            this.logger.error(`${this._logPrefix} Cannot ensure #message-list exists: #outputDivElement (required container) also not found in this.elements.`);
+        } else if (this.elements.messageList) {
+            this.logger.debug(`${this._logPrefix} #message-list element found and bound via BoundDomRendererBase.`);
+            // Ensure outputDivElement is correctly associated if messageList was found independently
+            if (this.elements.outputDivElement && this.elements.messageList.parentElement !== this.elements.outputDivElement) {
+                this.logger.warn(`${this._logPrefix} Found #message-list is not a child of the bound #outputDivElement. Scrolling behavior might be unexpected if #outputDivElement is not the intended scroll container for #message-list.`);
+            } else if (!this.elements.outputDivElement && this.elements.messageList.parentElement) {
+                // If outputDivElement wasn't found by its specific selector, but messageList has a parent,
+                // we might infer the scroll container. However, outputDivElement is 'required: true',
+                // so BoundDomRendererBase would have logged an error if it wasn't found.
+                // This scenario implies #outputDiv has a different ID or structure.
+                this.logger.debug(`${this._logPrefix} #outputDivElement not initially bound, but #message-list has a parent. Primary scroll target will be this.elements.outputDivElement if it later becomes available through other means, or fallback to messageList's parent/body.`);
+            }
         }
 
-        this.#ensureMessageList(); // This ensures #messageList exists, possibly creating it inside #outputDiv
 
-        // ------------------------------------------------------------
-        // VED subscriptions
-        // ------------------------------------------------------------
-        this.#subscriptions.push(
+        // VED subscriptions using _addSubscription from RendererBase
+        this._addSubscription(
             this.validatedEventDispatcher.subscribe(
                 DISPLAY_MESSAGE_ID,
                 this.#onShow.bind(this)
             )
         );
-        this.#subscriptions.push(
+        this._addSubscription(
             this.validatedEventDispatcher.subscribe(
                 SYSTEM_ERROR_OCCURRED_ID,
                 this.#onShowFatal.bind(this)
             )
         );
-        this.#subscriptions.push(
+        this._addSubscription(
             this.validatedEventDispatcher.subscribe(
-                ACTION_FAILED_ID,
+                ACTION_FAILED_ID, // Assuming this is the correct event for echoing failed actions.
                 this.#onCommandEcho.bind(this)
             )
         );
 
         this.logger.debug(`${this._logPrefix} Subscribed to VED events.`);
 
-        // ------------------------------------------------------------
-        // *** Test hooks ***
-        // ------------------------------------------------------------
-        Object.defineProperty(this, '_UiMessageRenderer__messageList', {
-            configurable: true,
-            enumerable: false,
-            get: () => this.#messageList,
-            set: v => {
-                this.#messageList = v;
-            }
-        });
-        Object.defineProperty(this, '_UiMessageRenderer__outputDivElement', {
-            configurable: true,
-            enumerable: false,
-            get: () => this.#outputDivElement,
-            set: v => {
-                this.#outputDivElement = v;
-            }
-        });
-        this['_UiMessageRenderer__onShowFatal'] = this.#onShowFatal.bind(this);
-        this['_UiMessageRenderer__onCommandEcho'] = this.#onCommandEcho.bind(this);
+        // Test hooks are removed as direct access to private members is bad practice.
+        // Tests should verify behavior through public methods or by checking VED subscriptions.
     }
 
     //----------------------------------------------------------------------
     // Private helpers
     //----------------------------------------------------------------------
 
-    /** Ensure the <ul id="message-list"> exists (or create it). */
-    #ensureMessageList() {
-        if (this.#messageList) {
-            if (this.#outputDivElement && this.#messageList.parentElement !== this.#outputDivElement) {
-                this.logger.warn(`${this._logPrefix} #message-list's parent is not the cached #outputDiv. Scrolling might be affected.`);
-            }
-            return;
-        }
+    // #ensureMessageList() method is removed. Its logic is in the constructor.
 
-        this.#messageList = this.documentContext.query('#message-list');
-        if (this.#messageList) {
-            if (!this.#outputDivElement && this.#messageList.parentElement) {
-                if (this.#messageList.parentElement.id === 'outputDiv') {
-                    this.#outputDivElement = /** @type {HTMLElement} */ (this.#messageList.parentElement);
-                    this.logger.info(`${this._logPrefix} #outputDiv element was not initially cached but inferred from #message-list parent.`);
-                } else {
-                    this.logger.warn(`${this._logPrefix} #message-list found, but its parent is not #outputDiv. Scrolling might be affected.`);
-                }
-            } else if (this.#outputDivElement && this.#messageList.parentElement !== this.#outputDivElement) {
-                this.logger.warn(`${this._logPrefix} #message-list found, but its parent is not the cached #outputDiv. Scrolling might be affected.`);
-            }
-            return;
-        }
-
-        this.logger.info(`${this._logPrefix} #message-list element not found. Attempting to create it.`);
-
-        if (!this.#outputDivElement) {
-            this.#outputDivElement = this.documentContext.query('#outputDiv');
-            if (!this.#outputDivElement) {
-                this.logger.error(`${this._logPrefix} Cannot create #message-list: #outputDiv container not found. Messages may not display correctly and scrolling will fail.`);
-                return;
-            }
-        }
-
-        if (this.#domElementFactory) {
-            const created = this.#domElementFactory.create('ul', {
-                id: 'message-list',
-                attrs: {'aria-live': 'polite'}
-            });
-
-            if (created) {
-                this.#outputDivElement.appendChild(created);
-                this.#messageList = created;
-                this.logger.info(`${this._logPrefix} #message-list created dynamically inside #outputDiv with aria-live.`);
-            } else {
-                this.logger.error(`${this._logPrefix} Failed to create #message-list element dynamically using .create().`);
-            }
-        } else {
-            this.logger.error(`${this._logPrefix} Cannot create #message-list dynamically: DomElementFactory is missing.`);
-        }
-
-        if (!this.#messageList) {
-            this.logger.error(`${this._logPrefix} Critical: Failed to find or create #message-list. Messages will not be displayed.`);
-        }
-    }
-
-    /** Scroll the #outputDiv (actual scroll container) to bottom. */
+    /** Scroll the #outputDivElement (actual scroll container) to bottom. */
     #scrollToBottom() {
-        if (this.#outputDivElement && typeof this.#outputDivElement.scrollTop !== 'undefined' && typeof this.#outputDivElement.scrollHeight !== 'undefined') {
-            this.#outputDivElement.scrollTop = this.#outputDivElement.scrollHeight;
+        if (this.elements.outputDivElement && typeof this.elements.outputDivElement.scrollTop !== 'undefined' && typeof this.elements.outputDivElement.scrollHeight !== 'undefined') {
+            this.elements.outputDivElement.scrollTop = this.elements.outputDivElement.scrollHeight;
         } else {
-            this.logger.warn(`${this._logPrefix} Could not scroll #outputDiv. Element or properties missing. Attempting fallback scroll on #message-list.`);
-            if (this.#messageList && this.#messageList.lastChild && typeof this.#messageList.lastChild.scrollIntoView === 'function') {
-                this.#messageList.lastChild.scrollIntoView({behavior: 'auto', block: 'end'});
-                this.logger.debug(`${this._logPrefix} Fallback: Scrolled last message in #message-list into view.`);
+            this.logger.warn(`${this._logPrefix} Could not scroll #outputDivElement. Element or properties missing from this.elements. Attempting fallback scroll on #messageList.`);
+            if (this.elements.messageList && this.elements.messageList.lastChild && typeof this.elements.messageList.lastChild.scrollIntoView === 'function') {
+                this.elements.messageList.lastChild.scrollIntoView({behavior: 'auto', block: 'end'});
+                this.logger.debug(`${this._logPrefix} Fallback: Scrolled last message in #messageList into view.`);
             } else {
-                this.logger.warn(`${this._logPrefix} Fallback scroll method also failed for #message-list.`);
+                this.logger.warn(`${this._logPrefix} Fallback scroll method also failed for #messageList or it's empty.`);
             }
         }
     }
@@ -197,18 +154,9 @@ export class UiMessageRenderer extends RendererBase {
      * @param {boolean}      [allowHtml=false]
      */
     render(text, type = 'info', allowHtml = false) {
-        if (!this.#outputDivElement) {
-            this.#outputDivElement = this.documentContext.query('#outputDiv');
-            if (!this.#outputDivElement) {
-                this.logger.error(`${this._logPrefix} #outputDiv element missing. Cannot render message effectively or ensure scrolling.`);
-            }
-        }
-
-        this.#ensureMessageList();
-
-        if (!this.#messageList || typeof this.#messageList.appendChild !== 'function') {
+        if (!this.elements.messageList || typeof this.elements.messageList.appendChild !== 'function') {
             this.logger.error(
-                `${this._logPrefix} Cannot render message: #message-list element is invalid, not found, or unappendable.`
+                `${this._logPrefix} Cannot render message: this.elements.messageList is invalid, not found, or unappendable.`
             );
             return;
         }
@@ -219,13 +167,13 @@ export class UiMessageRenderer extends RendererBase {
             return;
         }
 
-        const li = this.#domElementFactory.li(null);
+        const li = this.#domElementFactory.li(null); // Pass null for cls if no default class needed at creation
         if (!li) {
             this.logger.error(`${this._logPrefix} Failed to create message item (li) element using DomElementFactory.`);
             return;
         }
 
-        li.classList.add('message'); // <<< ADDED THIS LINE BACK
+        li.classList.add('message');
         li.classList.add(`message-${type}`);
 
         if (allowHtml) {
@@ -234,9 +182,8 @@ export class UiMessageRenderer extends RendererBase {
             li.textContent = text;
         }
 
-        this.#messageList.appendChild(li);
+        this.elements.messageList.appendChild(li);
         this.#scrollToBottom();
-        // <<< ADJUSTED LOG FORMAT TO MATCH TEST EXPECTATIONS >>>
         this.logger.debug(`${this._logPrefix} Rendered message: ${type} - ${String(text).substring(0, 50)}`);
     }
 
@@ -272,12 +219,12 @@ export class UiMessageRenderer extends RendererBase {
         }
         let msg = payload.message;
         if (payload.error?.message) msg += `\nDetails: ${payload.error.message}`;
-        this.logger.error(`${this._logPrefix} Fatal error displayed: ${msg}`);
+        this.logger.error(`${this._logPrefix} Fatal error displayed: ${msg}`); // Log before render as render also logs
         this.render(msg, 'fatal');
     }
 
     /**
-     * Handles 'core:action_executed' and 'core:action_failed' for command echo.
+     * Handles 'core:action_failed' for command echo.
      * @param {IEvent<any>} eventObject The full event object.
      */
     #onCommandEcho(eventObject) {
@@ -285,10 +232,11 @@ export class UiMessageRenderer extends RendererBase {
         if (payload && typeof payload.originalInput === 'string' && payload.originalInput.trim()) {
             this.render(`> ${payload.originalInput}`, 'echo');
         } else if (payload && payload.command && typeof payload.command === 'string' && payload.command.trim()) {
-            this.logger.info(`${this._logPrefix} Echoing 'command' field as 'originalInput' was missing or empty.`);
+            // Fallback for events that might use 'command' instead of 'originalInput'
+            this.logger.info(`${this._logPrefix} Echoing 'command' field from event as 'originalInput' was missing or empty.`);
             this.render(`> ${payload.command}`, 'echo');
         } else {
-            this.logger.warn(`${this._logPrefix} Received command echo event without valid originalInput or command.`, eventObject);
+            this.logger.warn(`${this._logPrefix} Received command echo event (e.g., core:action_failed) without valid originalInput or command.`, eventObject);
         }
     }
 
@@ -297,13 +245,12 @@ export class UiMessageRenderer extends RendererBase {
     //----------------------------------------------------------------------
 
     dispose() {
-        this.logger.debug(`${this._logPrefix} Disposing subscriptions.`);
-        this.#subscriptions.forEach(sub => {
-            if (sub && typeof sub.unsubscribe === 'function') sub.unsubscribe();
-        });
-        this.#subscriptions = [];
-        this.#messageList = null;
-        this.#outputDivElement = null;
+        this.logger.debug(`${this._logPrefix} Disposing UiMessageRenderer.`);
+        // VED subscriptions managed by _addSubscription are cleaned up by super.dispose().
+        // DOM elements in this.elements are cleared by BoundDomRendererBase's dispose.
         super.dispose();
+        // No need to nullify #domElementFactory, #messageList, #outputDivElement, or #subscriptions
+        // as they are either constructor-injected and not owned, or managed by the base class.
+        this.logger.info(`${this._logPrefix} UiMessageRenderer disposed.`);
     }
 }

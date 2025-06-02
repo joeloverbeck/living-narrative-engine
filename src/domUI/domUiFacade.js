@@ -12,8 +12,9 @@
 /** @typedef {import('./perceptionLogRenderer').PerceptionLogRenderer} PerceptionLogRenderer */
 /** @typedef {import('./saveGameUI').default} SaveGameUI */
 /** @typedef {import('./loadGameUI').default} LoadGameUI */
-
 /** @typedef {import('./llmSelectionModal').LlmSelectionModal} LlmSelectionModal */
+
+/** @typedef {import('./speechBubbleRenderer').SpeechBubbleRenderer} SpeechBubbleRenderer */
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -31,6 +32,7 @@ export class DomUiFacade {
     /** @private @type {SaveGameUI} */ #saveGameUI;
     /** @private @type {LoadGameUI} */ #loadGameUI;
     /** @private @type {LlmSelectionModal} */ #llmSelectionModal;
+    /** @private @type {SpeechBubbleRenderer} */ #speechBubbleRenderer;
 
     /**
      * Creates an instance of DomUiFacade.
@@ -41,6 +43,7 @@ export class DomUiFacade {
      * @param {TitleRenderer} deps.titleRenderer - Renderer for the main game title.
      * @param {InputStateController} deps.inputStateController - Controller for the player input element's state.
      * @param {UiMessageRenderer} deps.uiMessageRenderer - Renderer for UI messages (echo, info, error).
+     * @param {SpeechBubbleRenderer} deps.speechBubbleRenderer - Renderer for speech bubbles.
      * @param {PerceptionLogRenderer} deps.perceptionLogRenderer - Renderer for perception logs.
      * @param {SaveGameUI} deps.saveGameUI - The Save Game UI component.
      * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component.
@@ -53,18 +56,20 @@ export class DomUiFacade {
                     titleRenderer,
                     inputStateController,
                     uiMessageRenderer,
+                    speechBubbleRenderer,
                     perceptionLogRenderer,
                     saveGameUI,
                     loadGameUI,
                     llmSelectionModal
                 }) {
         // Basic validation to ensure all renderers are provided
-        if (!actionButtonsRenderer || typeof actionButtonsRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.');
+        if (!actionButtonsRenderer || typeof actionButtonsRenderer.refreshList !== 'function') throw new Error('DomUiFacade: Missing or invalid actionButtonsRenderer dependency.'); // Changed to refreshList
         if (!locationRenderer || typeof locationRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid locationRenderer dependency.');
         if (!titleRenderer || typeof titleRenderer.set !== 'function') throw new Error('DomUiFacade: Missing or invalid titleRenderer dependency.');
         if (!inputStateController || typeof inputStateController.setEnabled !== 'function') throw new Error('DomUiFacade: Missing or invalid inputStateController dependency.');
         if (!uiMessageRenderer || typeof uiMessageRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid uiMessageRenderer dependency.');
-        if (!perceptionLogRenderer || typeof perceptionLogRenderer.render !== 'function') throw new Error('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.');
+        if (!speechBubbleRenderer || typeof speechBubbleRenderer.renderSpeech !== 'function') throw new Error('DomUiFacade: Missing or invalid speechBubbleRenderer dependency.');
+        if (!perceptionLogRenderer || typeof perceptionLogRenderer.refreshList !== 'function') throw new Error('DomUiFacade: Missing or invalid perceptionLogRenderer dependency.'); // Changed to refreshList
         if (!saveGameUI || typeof saveGameUI.show !== 'function') throw new Error('DomUiFacade: Missing or invalid saveGameUI dependency.');
         if (!loadGameUI || typeof loadGameUI.show !== 'function') throw new Error('DomUiFacade: Missing or invalid loadGameUI dependency.');
         if (!llmSelectionModal || typeof llmSelectionModal.show !== 'function') throw new Error('DomUiFacade: Missing or invalid llmSelectionModal dependency.');
@@ -74,6 +79,7 @@ export class DomUiFacade {
         this.#titleRenderer = titleRenderer;
         this.#inputStateController = inputStateController;
         this.#uiMessageRenderer = uiMessageRenderer;
+        this.#speechBubbleRenderer = speechBubbleRenderer;
         this.#perceptionLogRenderer = perceptionLogRenderer;
         this.#saveGameUI = saveGameUI;
         this.#loadGameUI = loadGameUI;
@@ -103,6 +109,11 @@ export class DomUiFacade {
     /** @returns {UiMessageRenderer} */
     get messages() {
         return this.#uiMessageRenderer;
+    }
+
+    /** @returns {SpeechBubbleRenderer} */
+    get speechBubble() {
+        return this.#speechBubbleRenderer;
     }
 
     /** @returns {PerceptionLogRenderer} */
@@ -135,6 +146,7 @@ export class DomUiFacade {
         this.#titleRenderer?.dispose?.();
         this.#inputStateController?.dispose?.();
         this.#uiMessageRenderer?.dispose?.();
+        this.#speechBubbleRenderer?.dispose?.();
         this.#perceptionLogRenderer?.dispose?.();
         this.#saveGameUI?.dispose?.();
         this.#loadGameUI?.dispose?.();

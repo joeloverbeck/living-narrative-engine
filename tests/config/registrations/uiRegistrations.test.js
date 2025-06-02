@@ -533,12 +533,14 @@ describe('registerUI (with Mock Pure JS DI Container and Mocked Dependencies)', 
         const instance = mockContainer.resolve(tokens.LlmSelectionModal);
         expect(instance).toBeInstanceOf(LlmSelectionModal);
         const factoryFn = mockContainer._registrations.get(tokens.LlmSelectionModal).factoryOrValue;
-        factoryFn(mockContainer);
+        factoryFn(mockContainer); // Execute the factory to check resolutions
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomElementFactory);
         expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILLMAdapter);
-        // LlmSelectionModal constructor calls querySelector internally
+        expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher); // <<< --- ADDED THIS LINE ---
+        // LlmSelectionModal constructor calls querySelector internally for '#change-llm-button'
+        // This check is more about the factory resolving dependencies, internal queries are tested in LlmSelectionModal's own tests.
         // expect(mockDocument.querySelector).toHaveBeenCalledWith('#change-llm-button');
     });
 

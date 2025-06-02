@@ -93,6 +93,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     // --- 2. Register Individual Renderers / Controllers / Services ---
 
     // UiMessageRenderer
+    // elementsConfig is defined internally by UiMessageRenderer
     registrar.single(tokens.UiMessageRenderer, UiMessageRenderer, [
         tokens.ILogger,
         tokens.IDocumentContext,
@@ -102,18 +103,20 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.UiMessageRenderer}.`);
 
     // SpeechBubbleRenderer
+    // elementsConfig is defined internally by SpeechBubbleRenderer
     registrar.single(tokens.SpeechBubbleRenderer, SpeechBubbleRenderer, [
         tokens.ILogger,
         tokens.IDocumentContext,
         tokens.IValidatedEventDispatcher,
         tokens.IEntityManager,
         tokens.DomElementFactory,
-        tokens.EntityDisplayDataProvider // Added EDDP
+        tokens.EntityDisplayDataProvider
     ]);
     logger.debug(`UI Registrations: Registered ${tokens.SpeechBubbleRenderer}.`);
 
 
     // TitleRenderer
+    // Directly passes titleElement, does not use elementsConfig for this main element.
     registrar.singletonFactory(tokens.TitleRenderer, c => new TitleRenderer({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
@@ -123,6 +126,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.TitleRenderer}.`);
 
     // InputStateController
+    // Directly passes inputElement, does not use elementsConfig for this main element.
     registrar.singletonFactory(tokens.InputStateController, c => new InputStateController({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
@@ -132,6 +136,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
 
     // LocationRenderer
+    // Passes containerElement directly; sub-element selectors are in its internal elementsConfig.
     registrar.singletonFactory(tokens.LocationRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
         const resolvedLogger = c.resolve(tokens.ILogger);
@@ -145,7 +150,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
             entityManager: c.resolve(tokens.IEntityManager),
-            entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider), // <<< ADDED
+            entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
             dataRegistry: c.resolve(tokens.IDataRegistry),
             containerElement: locationContainer
         });
@@ -155,6 +160,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     // InventoryPanel registration removed
 
     // ActionButtonsRenderer
+    // Constructor takes specific selectors, then builds elementsConfig internally.
     registrar.singletonFactory(tokens.ActionButtonsRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
         const resolvedLogger = c.resolve(tokens.ILogger);
@@ -164,13 +170,15 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            actionButtonsContainerSelector: '#action-buttons',
+            actionButtonsContainerSelector: '#action-buttons', // Selector for listContainerElement
             sendButtonSelector: '#player-confirm-turn-button',
+            // speechInputSelector uses its default in the component
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
 
     // PerceptionLogRenderer
+    // elementsConfig is defined internally by PerceptionLogRenderer.
     registrar.singletonFactory(tokens.PerceptionLogRenderer, c => {
         const resolvedLogger = c.resolve(tokens.ILogger);
         return new PerceptionLogRenderer({
@@ -184,50 +192,60 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     logger.debug(`UI Registrations: Registered ${tokens.PerceptionLogRenderer}.`);
 
     // SaveGameUI
+    // elementsConfig is defined internally. BaseModalRenderer needs validatedEventDispatcher.
     registrar.singletonFactory(tokens.SaveGameUI, c => new SaveGameUI({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-        saveLoadService: c.resolve(tokens.ISaveLoadService)
+        saveLoadService: c.resolve(tokens.ISaveLoadService),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher) // Ensured
     }));
     logger.debug(`UI Registrations: Registered ${tokens.SaveGameUI}.`);
 
     // LoadGameUI
+    // elementsConfig is defined internally. BaseModalRenderer needs validatedEventDispatcher.
     registrar.singletonFactory(tokens.LoadGameUI, c => new LoadGameUI({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-        saveLoadService: c.resolve(tokens.ISaveLoadService)
+        saveLoadService: c.resolve(tokens.ISaveLoadService),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher) // Ensured
     }));
     logger.debug(`UI Registrations: Registered ${tokens.LoadGameUI}.`);
 
     // LlmSelectionModal
+    // elementsConfig is defined internally. BaseModalRenderer needs validatedEventDispatcher.
     registrar.singletonFactory(tokens.LlmSelectionModal, c => new LlmSelectionModal({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-        llmAdapter: c.resolve(tokens.ILLMAdapter)
+        llmAdapter: c.resolve(tokens.ILLMAdapter),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher)
     }));
     logger.debug(`UI Registrations: Registered ${tokens.LlmSelectionModal}.`);
 
     // CurrentTurnActorRenderer
+    // elementsConfig is defined internally by CurrentTurnActorRenderer.
     registrar.singletonFactory(tokens.CurrentTurnActorRenderer, c => new CurrentTurnActorRenderer({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         entityManager: c.resolve(tokens.IEntityManager),
-        entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider) // <<< ADDED
+        entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider)
     }));
     logger.debug(`UI Registrations: Registered ${tokens.CurrentTurnActorRenderer}.`);
 
     // --- 3. Register Facade ---
+    // DomUiFacade constructor takes an object. The registrar.single helper needs to correctly map
+    // the resolved tokens to the properties of that object.
+    // SpeechBubbleRenderer IS included as per test expectation.
     registrar.single(tokens.DomUiFacade, DomUiFacade, [
         tokens.ActionButtonsRenderer,
         tokens.LocationRenderer,
         tokens.TitleRenderer,
         tokens.InputStateController,
         tokens.UiMessageRenderer,
-        tokens.SpeechBubbleRenderer,
+        tokens.SpeechBubbleRenderer, // Included to match test expectation
         tokens.PerceptionLogRenderer,
         tokens.SaveGameUI,
         tokens.LoadGameUI,
@@ -249,7 +267,7 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     // --- 5. Legacy Input Handler (Dependency Updated) ---
     registrar.singletonFactory(tokens.IInputHandler, (c) => new InputHandler(
         c.resolve(tokens.inputElement),
-        undefined,
+        undefined, // textParser (presumably TextParserService)
         c.resolve(tokens.IValidatedEventDispatcher)
     ));
     logger.debug(`UI Registrations: Registered ${tokens.IInputHandler} (legacy) with VED.`);
