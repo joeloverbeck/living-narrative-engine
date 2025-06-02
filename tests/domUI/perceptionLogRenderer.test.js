@@ -1,46 +1,18 @@
-// src/tests/domUI/perceptionLogRenderer.test.js
+// tests/domUI/perceptionLogRenderer.test.js
 
-import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
-import {JSDOM} from 'jsdom';
-import {PerceptionLogRenderer} from '../../src/domUI/index.js'; // Ensure this path is correct
-import DocumentContext from '../../src/domUI/documentContext.js';
-import DomElementFactory from '../../src/domUI/domElementFactory.js';
-import ConsoleLogger from '../../src/services/consoleLogger.js';
-import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
-import {PERCEPTION_LOG_COMPONENT_ID} from '../../src/constants/componentIds.js';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { JSDOM } from 'jsdom';
+import { PerceptionLogRenderer } from '../../src/domUI/perceptionLogRenderer.js';
+import { PERCEPTION_LOG_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { TURN_STARTED_ID } from '../../src/constants/eventIds.js';
 
 jest.mock('../../src/services/consoleLogger.js');
 jest.mock('../../src/events/validatedEventDispatcher.js');
 
-const PERCEPTION_LOG_LIST_ID = 'perception-log-list';
+const PERCEPTION_LOG_LIST_SELECTOR = '#perception-log-list';
 const CLASS_PREFIX = '[PerceptionLogRenderer]';
-const CORE_TURN_STARTED_EVENT = 'core:turn_started';
 
-const createMockHtmlElement = (doc, tagName = 'div', id = '') => {
-    const element = doc.createElement(tagName);
-    if (id) element.id = id;
-
-    element.appendChild = jest.fn(element.appendChild.bind(element));
-    element.removeChild = jest.fn(element.removeChild.bind(element));
-
-    const originalSetAttribute = element.setAttribute.bind(element);
-    element._attributes = {};
-    element.setAttribute = jest.fn((name, value) => {
-        originalSetAttribute(name, value);
-        element._attributes[name] = value;
-    });
-    Object.defineProperty(element, 'title', {
-        get: () => element.getAttribute('title') || '',
-        set: (value) => element.setAttribute('title', value),
-        configurable: true
-    });
-
-    element.classList.add = jest.fn();
-    element.classList.remove = jest.fn();
-    Object.defineProperty(element, 'scrollHeight', {value: 100, writable: true, configurable: true});
-    Object.defineProperty(element, 'scrollTop', {value: 0, writable: true, configurable: true});
-    return element;
-};
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
 
 describe('PerceptionLogRenderer', () => {
     let dom;
@@ -50,325 +22,375 @@ describe('PerceptionLogRenderer', () => {
     let mockDomElementFactoryInstance;
     let mockEntityManager;
     let mockDocumentContext;
-    let logListElementInDom; // Actual DOM element
+    let listContainerElementInDom;
     let turnStartedHandler;
 
+    const setInternalCurrentActorId = (rendererInstance, actorId) => {
+        rendererInstance['#currentActorId'] = actorId;
+    };
+
     beforeEach(() => {
-        dom = new JSDOM(`<!DOCTYPE html><html><body><ul id="${PERCEPTION_LOG_LIST_ID}"></ul></body></html>`);
+        dom = new JSDOM(`<!DOCTYPE html><html><body><ul id="perception-log-list"></ul></body></html>`);
         document = dom.window.document;
+
         global.document = document;
         global.window = dom.window;
         global.HTMLElement = dom.window.HTMLElement;
         global.HTMLUListElement = dom.window.HTMLUListElement;
+        global.HTMLParagraphElement = dom.window.HTMLParagraphElement;
+
+        const ConsoleLogger = require('../../src/services/consoleLogger.js').default;
+        const ValidatedEventDispatcher = require('../../src/events/validatedEventDispatcher.js').default;
 
         mockLogger = new ConsoleLogger();
         mockVed = new ValidatedEventDispatcher({});
         mockVed.subscribe.mockImplementation((eventName, handler) => {
-            if (eventName === CORE_TURN_STARTED_EVENT) {
+            if (eventName === TURN_STARTED_ID) {
                 turnStartedHandler = handler;
             }
-            return jest.fn(); // Unsubscribe function
+            return jest.fn();
         });
+
+        listContainerElementInDom = document.querySelector(PERCEPTION_LOG_LIST_SELECTOR);
+        if (listContainerElementInDom) {
+            // Spy on methods; these will be restored by jest.restoreAllMocks()
+            jest.spyOn(listContainerElementInDom, 'appendChild');
+            jest.spyOn(listContainerElementInDom, 'removeChild');
+            Object.defineProperty(listContainerElementInDom, 'scrollHeight', { value: 200, writable: true, configurable: true });
+            Object.defineProperty(listContainerElementInDom, 'clientHeight', { value: 100, writable: true, configurable: true });
+            Object.defineProperty(listContainerElementInDom, 'scrollTop', { value: 0, writable: true, configurable: true });
+        }
 
         mockDocumentContext = {
             query: jest.fn(selector => {
-                if (selector === `#${PERCEPTION_LOG_LIST_ID}`) {
-                    logListElementInDom = document.getElementById(PERCEPTION_LOG_LIST_ID);
-                    // Spy on the actual DOM element's methods if they are called directly by the renderer
-                    // (though usually it's via domElementFactory or documentContext itself)
-                    if (logListElementInDom && !jest.isMockFunction(logListElementInDom.appendChild)) {
-                        jest.spyOn(logListElementInDom, 'appendChild');
-                        jest.spyOn(logListElementInDom, 'removeChild');
-                    }
-                    return logListElementInDom;
+                if (selector === PERCEPTION_LOG_LIST_SELECTOR) {
+                    return listContainerElementInDom;
                 }
-                return null;
+                return document.querySelector(selector);
             }),
-            create: jest.fn(tagName => createMockHtmlElement(document, tagName)),
+            create: jest.fn((tagName) => document.createElement(tagName)),
             document: document,
         };
 
-        mockDomElementFactoryInstance = new DomElementFactory(mockDocumentContext);
-        mockDomElementFactoryInstance.li = jest.fn((className, textContent) => {
-            const li = createMockHtmlElement(document, 'li');
-            li.textContent = textContent || '';
-            if (className) className.split(' ').forEach(c => li.classList.add(c));
-            return li;
-        });
+        mockDomElementFactoryInstance = {
+            li: jest.fn((className, textContent) => {
+                const li = document.createElement('li');
+                if (textContent !== undefined) li.textContent = textContent;
+                if (className) li.className = className;
+                const originalSetAttribute = li.setAttribute.bind(li);
+                li.setAttribute = jest.fn((name, value) => originalSetAttribute(name,value));
+                Object.defineProperty(li, 'title', {
+                    get: () => li.getAttribute('title') || '',
+                    set: (value) => li.setAttribute('title', value),configurable: true
+                });
+                return li;
+            }),
+            p: jest.fn((className, textContent) => {
+                const p = document.createElement('p');
+                if (textContent !== undefined) p.textContent = textContent;
+                if (className) p.className = className;
+                return p;
+            }),
+        };
 
-        mockEntityManager = {getEntityInstance: jest.fn()};
+        mockEntityManager = {
+            getEntityInstance: jest.fn(),
+        };
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        jest.restoreAllMocks(); // Restores all spies and mocks
         turnStartedHandler = undefined;
     });
 
-    const createRendererInstance = (config = {}) => {
+    const createRenderer = (options = {}) => {
         return new PerceptionLogRenderer({
             logger: mockLogger,
             documentContext: mockDocumentContext,
             validatedEventDispatcher: mockVed,
             domElementFactory: mockDomElementFactoryInstance,
             entityManager: mockEntityManager,
-            ...config,
+            ...options,
         });
     };
 
     describe('Constructor', () => {
-        it('should initialize, find element, subscribe, and render initial empty message', () => {
-            createRendererInstance();
-            expect(mockDocumentContext.query).toHaveBeenCalledWith(`#${PERCEPTION_LOG_LIST_ID}`);
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Attached to log list element:`), expect.any(dom.window.HTMLUListElement));
-            expect(mockVed.subscribe).toHaveBeenCalledWith(CORE_TURN_STARTED_EVENT, expect.any(Function));
+        it('should initialize, bind listContainerElement, subscribe, and call refreshList', () => {
+            const refreshListSpy = jest.spyOn(PerceptionLogRenderer.prototype, 'refreshList').mockResolvedValue();
+            createRenderer();
+            expect(mockDocumentContext.query).toHaveBeenCalledWith(PERCEPTION_LOG_LIST_SELECTOR);
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `${CLASS_PREFIX} Successfully bound element 'listContainerElement' to selector '${PERCEPTION_LOG_LIST_SELECTOR}'.`
+            );
+            expect(mockLogger.debug).toHaveBeenCalledWith(
+                `${CLASS_PREFIX} List container element successfully bound:`,
+                listContainerElementInDom
+            );
+            expect(mockVed.subscribe).toHaveBeenCalledWith(TURN_STARTED_ID, expect.any(Function));
             expect(turnStartedHandler).toBeDefined();
-
-            // Check effect of constructor's this.render([]) -> this.renderMessage('No actor selected.')
-            expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith('empty-log-message', 'No actor selected.');
-            const initialLi = mockDomElementFactoryInstance.li.mock.results[mockDomElementFactoryInstance.li.mock.calls.length - 1].value;
-            expect(logListElementInDom.appendChild).toHaveBeenCalledWith(initialLi);
+            expect(refreshListSpy).toHaveBeenCalled();
+            refreshListSpy.mockRestore();
         });
 
-        it('should log an error if log list element is not found', () => {
-            mockDocumentContext.query.mockReturnValueOnce(null);
-            createRendererInstance();
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(`${CLASS_PREFIX} Could not find '#${PERCEPTION_LOG_LIST_ID}' element.`));
+        it('should throw if listContainerElement is not found (by BaseListDisplayComponent)', () => {
+            mockDocumentContext.query.mockImplementationOnce(selector => {
+                if (selector === PERCEPTION_LOG_LIST_SELECTOR) return null;
+                return document.querySelector(selector);
+            });
+            const expectedErrorMessage = `${CLASS_PREFIX} 'listContainerElement' is not defined or not found in the DOM. This element is required for BaseListDisplayComponent. Ensure it's specified in elementsConfig.`;
+            expect(() => createRenderer()).toThrow(expectedErrorMessage);
+        });
+    });
+
+    describe('_getListItemsData', () => {
+        let renderer;
+        const actorId = 'player:hero';
+
+        beforeEach(() => {
+            // Create renderer, its constructor WILL call refreshList -> _getListItemsData
+            // So, clear mocks before each specific _getListItemsData test if needed.
+            renderer = createRenderer();
+            mockLogger.warn.mockClear(); // Clear logs from constructor's refreshList
+            mockLogger.info.mockClear();
+            mockLogger.error.mockClear();
+        });
+
+        it('should return [] if no currentActorId', () => {
+            setInternalCurrentActorId(renderer, null);
+            expect(renderer._getListItemsData()).toEqual([]);
+        });
+
+        it('should return [] and log if actor entity not found', () => {
+            setInternalCurrentActorId(renderer, actorId);
+            mockEntityManager.getEntityInstance.mockReturnValue(null);
+            expect(renderer._getListItemsData()).toEqual([]);
+            expect(mockLogger.warn).toHaveBeenCalledWith(`${CLASS_PREFIX} Actor entity '${actorId}' not found in _getListItemsData.`);
+        });
+
+        it('should return [] and log if actor has no perception log component', () => {
+            setInternalCurrentActorId(renderer, actorId);
+            const mockActor = { id: actorId, hasComponent: jest.fn().mockReturnValue(false), getComponentData: jest.fn() };
+            mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+            expect(renderer._getListItemsData()).toEqual([]);
+            expect(mockLogger.info).toHaveBeenCalledWith(`${CLASS_PREFIX} Actor '${actorId}' does not have a '${PERCEPTION_LOG_COMPONENT_ID}' component.`);
+        });
+
+        it('should return [] and log if logEntries are empty or malformed', () => {
+            setInternalCurrentActorId(renderer, actorId);
+            const mockActor = { id: actorId, hasComponent: jest.fn().mockReturnValue(true), getComponentData: jest.fn() };
+            mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+
+            mockActor.getComponentData.mockReturnValueOnce({ logEntries: [] });
+            expect(renderer._getListItemsData()).toEqual([]);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("logEntries' are empty or malformed"));
+        });
+
+        it('should return logEntries if valid', () => {
+            setInternalCurrentActorId(renderer, actorId);
+            const entries = [{ descriptionText: 'Entry 1', timestamp: 'ts', perceptionType: 'type', actorId: 'a1' }];
+            const mockActor = {
+                id: actorId,
+                hasComponent: jest.fn().mockReturnValue(true),
+                getComponentData: jest.fn().mockReturnValue({ logEntries: entries, maxEntries: 10 })
+            };
+            mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+            expect(renderer._getListItemsData()).toEqual(entries);
+        });
+
+        it('should return [] and log on generic error', () => {
+            setInternalCurrentActorId(renderer, actorId);
+            mockEntityManager.getEntityInstance.mockImplementation(() => { throw new Error("Fetch Error"); });
+            expect(renderer._getListItemsData()).toEqual([]);
+            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Error fetching perception log data"), expect.any(Error));
+        });
+    });
+
+    describe('_renderListItem', () => {
+        let renderer;
+        beforeEach(() => { renderer = createRenderer(); });
+
+        it('should create an LI with descriptionText and title', () => {
+            const logEntry = { descriptionText: 'Test Log', timestamp: '12:00', perceptionType: 'Sight', actorId: 'npc:1', targetId: 'item:A' };
+            const li = renderer._renderListItem(logEntry, 0, [logEntry]);
+            expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(undefined, 'Test Log');
+            expect(li.textContent).toBe('Test Log');
+            expect(li.setAttribute).toHaveBeenCalledWith('title', expect.stringContaining('Time: 12:00'));
+        });
+
+        it('should return null and log warning for malformed log entry', () => {
+            const malformedEntry = { timestamp: '12:01' };
+            expect(renderer._renderListItem(malformedEntry, 0, [malformedEntry])).toBeNull();
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Malformed log entry"), expect.any(Object));
+        });
+    });
+
+    describe('_getEmptyListMessage', () => {
+        let renderer;
+        const actorId = 'player:hero';
+        beforeEach(() => { renderer = createRenderer(); });
+
+        it('should return "No actor selected." if no currentActorId', () => {
+            setInternalCurrentActorId(renderer, null);
+            expect(renderer._getEmptyListMessage()).toBe('No actor selected.');
+        });
+
+        it('should return actor not found message if entity not found for currentActorId', () => {
+            setInternalCurrentActorId(renderer, actorId);
+            mockEntityManager.getEntityInstance.mockReturnValue(null);
+            expect(renderer._getEmptyListMessage()).toBe(`Actor '${actorId}' not found. Cannot display perception log.`);
+        });
+
+        it('should return "No perception log component..." if actor has no component', () => {
+            setInternalCurrentActorId(renderer, actorId);
+            const mockActor = { id: actorId, hasComponent: jest.fn().mockReturnValue(false) };
+            mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+            expect(renderer._getEmptyListMessage()).toBe('No perception log component for this actor.');
+        });
+
+        it('should return "Perception log is empty." if component data is empty', () => {
+            setInternalCurrentActorId(renderer, actorId);
+            const mockActor = { id: actorId, hasComponent: jest.fn().mockReturnValue(true), getComponentData: jest.fn().mockReturnValue({ logEntries: [] }) };
+            mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
+            expect(renderer._getEmptyListMessage()).toBe('Perception log is empty.');
+        });
+    });
+
+    describe('_onListRendered', () => {
+        it('should effectively call #scrollToBottom (test by effect)', () => {
+            const renderer = createRenderer();
+            renderer.elements.listContainerElement = listContainerElementInDom; // Ensure it's set
+            Object.defineProperty(listContainerElementInDom, 'scrollHeight', { value: 200, configurable: true });
+            Object.defineProperty(listContainerElementInDom, 'clientHeight', { value: 100, configurable: true });
+            listContainerElementInDom.scrollTop = 0; // Reset
+
+            renderer._onListRendered([], listContainerElementInDom);
+            expect(listContainerElementInDom.scrollTop).toBe(200); // Check effect of scroll
         });
     });
 
     describe('#handleTurnStarted', () => {
+        let renderer;
         const actorId = 'player:hero';
-        const mockEntity = {id: actorId, hasComponent: jest.fn(), getComponentData: jest.fn()};
-        let renderer;
 
         beforeEach(() => {
-            mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
-            mockEntity.hasComponent.mockReset().mockReturnValue(true);
-            mockEntity.getComponentData.mockReset();
-            // Clear factory mock calls from constructor before each #handleTurnStarted test
-            mockDomElementFactoryInstance.li.mockClear();
-            if (logListElementInDom) { // if it was found
-                jest.spyOn(logListElementInDom, 'appendChild').mockClear();
-                jest.spyOn(logListElementInDom, 'removeChild').mockClear();
+            renderer = createRenderer();
+            // Restore real refreshList for these tests, then spy on it
+            if (jest.isMockFunction(renderer.refreshList)) renderer.refreshList.mockRestore();
+            jest.spyOn(renderer, 'refreshList').mockResolvedValue(); // Spy for call tracking
+        });
+
+        it('should set currentActorId and call refreshList on valid event', async () => {
+            await turnStartedHandler({ type: TURN_STARTED_ID, payload: { entityId: actorId, entityType: 'player' } });
+            expect(renderer['#currentActorId']).toBe(actorId);
+            expect(renderer.refreshList).toHaveBeenCalledTimes(1);
+        });
+
+        it('should set currentActorId to null and call refreshList if entityId is missing', async () => {
+            await turnStartedHandler({ type: TURN_STARTED_ID, payload: { entityType: 'player' } });
+            expect(renderer['#currentActorId']).toBeNull();
+            expect(renderer.refreshList).toHaveBeenCalledTimes(1);
+        });
+
+        it('should log error and attempt to update DOM if refreshList fails', async () => {
+            const errorRenderer = createRenderer(); // Use a fresh instance
+            // Make this instance's refreshList reject
+            jest.spyOn(errorRenderer, 'refreshList').mockRejectedValue(new Error("Simulated refreshList failure"));
+
+            mockLogger.error.mockClear(); // Clear previous logs
+            mockDomElementFactoryInstance.p.mockClear();
+            if (listContainerElementInDom) listContainerElementInDom.appendChild.mockClear();
+
+            // Need to get the handler bound to *this specific instance* if it's different
+            // However, turnStartedHandler is captured globally from the last `createRenderer` in `beforeEach`.
+            // For this test, it's better to call the method directly or re-capture the handler.
+            // Let's call the method directly on errorRenderer for clarity.
+            await errorRenderer["#handleTurnStarted"]({ type: TURN_STARTED_ID, payload: { entityId: actorId } });
+
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                expect.stringContaining(`${CLASS_PREFIX} Error during refreshList in #handleTurnStarted`),
+                expect.objectContaining({ message: "Simulated refreshList failure" })
+            );
+            expect(mockDomElementFactoryInstance.p).toHaveBeenCalledWith('error-message', 'Error updating perception log.');
+            if (listContainerElementInDom && mockDomElementFactoryInstance.p.mock.results[0]) {
+                expect(listContainerElementInDom.appendChild).toHaveBeenCalledWith(
+                    mockDomElementFactoryInstance.p.mock.results[0].value
+                );
             }
-            renderer = createRendererInstance(); // Spies on render/renderMessage are NOT on this instance
-            // We will test the effects or spy on demand.
-        });
-
-        it('should render logs if actor has component with valid logEntries', () => {
-            const logEntries = [{
-                descriptionText: 'Test log',
-                timestamp: 'ts',
-                perceptionType: 'test',
-                actorId: 'testActor'
-            }];
-            mockEntity.getComponentData.mockReturnValue({logEntries, maxEntries: 10});
-            jest.spyOn(renderer, 'render'); // Spy before call
-
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: actorId}});
-
-            expect(renderer.render).toHaveBeenCalledWith(logEntries);
-            // Check that render correctly created an LI
-            expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(undefined, 'Test log');
-        });
-
-        it('should display "Perception log is empty" if logEntries is present but empty', () => {
-            mockEntity.getComponentData.mockReturnValue({logEntries: [], maxEntries: 10});
-            jest.spyOn(renderer, 'renderMessage');
-
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: actorId}});
-            expect(renderer.renderMessage).toHaveBeenCalledWith('Perception log is empty.');
-        });
-
-        it('should display "Perception log is empty" on old "entries" data structure', () => {
-            mockEntity.getComponentData.mockReturnValue({entries: [{text: "Old"}], maxEntries: 10});
-            jest.spyOn(renderer, 'renderMessage');
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: actorId}});
-            expect(renderer.renderMessage).toHaveBeenCalledWith('Perception log is empty.');
-        });
-
-        it('should display "Perception log is empty" if logEntries is not an array', () => {
-            mockEntity.getComponentData.mockReturnValue({logEntries: "not-an-array", maxEntries: 10});
-            jest.spyOn(renderer, 'renderMessage');
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: actorId}});
-            expect(renderer.renderMessage).toHaveBeenCalledWith('Perception log is empty.');
-        });
-
-        it('should display "No perception log for this actor" if no component', () => {
-            mockEntity.hasComponent.mockReturnValue(false);
-            jest.spyOn(renderer, 'renderMessage');
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: actorId}});
-            expect(renderer.renderMessage).toHaveBeenCalledWith('No perception log for this actor.');
-        });
-
-        it('should display "Actor not found" if no entity', () => {
-            mockEntityManager.getEntityInstance.mockReturnValue(null);
-            jest.spyOn(renderer, 'renderMessage');
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: 'unknown'}});
-            expect(renderer.renderMessage).toHaveBeenCalledWith("Actor 'unknown' not found.");
-        });
-
-        it('should display "No current actor specified" if no entityId in payload', () => {
-            jest.spyOn(renderer, 'renderMessage');
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {}});
-            expect(renderer.renderMessage).toHaveBeenCalledWith('No current actor specified.');
-        });
-
-        it('should display error message on generic error', () => {
-            mockEntityManager.getEntityInstance.mockImplementation(() => {
-                throw new Error("DB Fail");
-            });
-            jest.spyOn(renderer, 'renderMessage');
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: actorId}});
-            expect(renderer.renderMessage).toHaveBeenCalledWith('Error retrieving perception logs.');
         });
     });
 
-    describe('render method (direct invocation)', () => {
-        let renderer;
-        const sampleLogEntries = [
-            {
-                eventId: "evt1",
-                descriptionText: 'Log entry 1',
-                timestamp: 'ts1',
-                perceptionType: 'sight',
-                actorId: 'npc:1',
-                targetId: 'item:A'
-            },
-            {
-                eventId: "evt2",
-                descriptionText: 'Log entry 2',
-                timestamp: 'ts2',
-                perceptionType: 'sound',
-                actorId: 'env:B'
-            },
-        ];
-
-        beforeEach(() => {
-            renderer = createRendererInstance();
-            mockDomElementFactoryInstance.li.mockClear(); // Clear calls from constructor
-            if (logListElementInDom) {
-                jest.spyOn(logListElementInDom, 'appendChild').mockClear();
-                jest.spyOn(logListElementInDom, 'removeChild').mockClear();
-            }
-        });
-
-        it('should clear previous logs and render new log entries as LIs', () => {
-            // Simulate current actor being set by a previous turn_started event
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: 'player:hero'}});
-            mockDomElementFactoryInstance.li.mockClear(); // Clear li calls from #handleTurnStarted if any
-            if (logListElementInDom) logListElementInDom.appendChild.mockClear();
-
-
-            const dummyChild = document.createElement('li');
-            if (logListElementInDom) logListElementInDom.appendChild(dummyChild); // Add a child to check clearList
-
-            renderer.render(sampleLogEntries);
-
-            if (logListElementInDom) expect(logListElementInDom.removeChild).toHaveBeenCalledWith(dummyChild);
-            expect(mockDomElementFactoryInstance.li).toHaveBeenCalledTimes(sampleLogEntries.length);
-            expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(undefined, 'Log entry 1');
-
-            const createdLi1 = mockDomElementFactoryInstance.li.mock.results[0].value;
-            if (logListElementInDom) expect(logListElementInDom.appendChild).toHaveBeenCalledWith(createdLi1);
-            expect(createdLi1.title).toContain('Time: ts1');
-        });
-
-        it('should render "Perception log is empty" if logEntries is empty and actor is selected', () => {
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: 'player:hero'}}); // Set currentActorId
-            mockDomElementFactoryInstance.li.mockClear(); // Clear constructor/turn_handler LI call
-
-            jest.spyOn(renderer, 'renderMessage');
-            renderer.render([]);
-            expect(renderer.renderMessage).toHaveBeenCalledWith('Perception log is empty.');
-        });
-
-        it('should render "No actor selected." if logEntries is empty and no current actor', () => {
-            renderer = createRendererInstance(); // Fresh instance, currentActorId is null
-            mockDomElementFactoryInstance.li.mockClear(); // Clear constructor LI call
-
-            jest.spyOn(renderer, 'renderMessage');
-            renderer.render([]);
-            expect(renderer.renderMessage).toHaveBeenCalledWith('No actor selected.');
-        });
-
-        it('should handle malformed log entries gracefully', () => {
-            turnStartedHandler({type: CORE_TURN_STARTED_EVENT, payload: {entityId: 'player:hero'}});
-            mockDomElementFactoryInstance.li.mockClear();
-
-            const malformedEntries = [null, {ts: 'ts3'}, "a string"];
-            renderer.render(malformedEntries);
-
-            expect(mockDomElementFactoryInstance.li).toHaveBeenCalledTimes(1); // Only for "a string"
-            expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(undefined, "a string");
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Skipping malformed log entry object:"), null);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Skipping malformed log entry object:"), {ts: 'ts3'});
-        });
-
-        it('should log error if logListElement is not available during render', () => {
-            // To test this, documentContext.query needs to return null when renderer is constructed
-            const rendererWithNoElement = new PerceptionLogRenderer({
-                logger: mockLogger,
-                documentContext: {...mockDocumentContext, query: () => null}, // Force query to return null
-                validatedEventDispatcher: mockVed,
-                domElementFactory: mockDomElementFactoryInstance,
-                entityManager: mockEntityManager,
-            });
-            rendererWithNoElement.render(sampleLogEntries);
-            expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining("Cannot render logs, #logListElement is not available."));
-        });
-    });
-
-    describe('renderMessage', () => {
+    describe('#scrollToBottom', () => {
         let renderer;
         beforeEach(() => {
-            renderer = createRendererInstance();
-            mockDomElementFactoryInstance.li.mockClear();
-            if (logListElementInDom) {
-                jest.spyOn(logListElementInDom, 'appendChild').mockClear();
-                jest.spyOn(logListElementInDom, 'removeChild').mockClear();
-            }
+            renderer = createRenderer();
+            renderer.elements.listContainerElement = listContainerElementInDom;
         });
 
-        it('should clear the list and append a new LI with the message', () => {
-            const message = "Test Message";
-            if (logListElementInDom) {
-                const dummyChild = document.createElement('li');
-                logListElementInDom.appendChild(dummyChild); // Add a child
-                logListElementInDom.appendChild.mockClear(); // Clear this call
-                logListElementInDom.removeChild.mockClear();
-            }
+        it('should set scrollTop if scrollHeight > clientHeight', () => {
+            Object.defineProperty(listContainerElementInDom, 'scrollHeight', { value: 200, configurable: true });
+            Object.defineProperty(listContainerElementInDom, 'clientHeight', { value: 100, configurable: true });
+            listContainerElementInDom.scrollTop = 0;
+            renderer["#scrollToBottom"]();
+            expect(listContainerElementInDom.scrollTop).toBe(200);
+        });
 
-
-            renderer.renderMessage(message);
-
-            if (logListElementInDom) expect(logListElementInDom.removeChild).toHaveBeenCalled();
-            expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith('empty-log-message', message);
-            const messageLi = mockDomElementFactoryInstance.li.mock.results[0].value;
-            if (logListElementInDom) expect(logListElementInDom.appendChild).toHaveBeenCalledWith(messageLi);
+        it('should not set scrollTop if not scrollable', () => {
+            Object.defineProperty(listContainerElementInDom, 'scrollHeight', { value: 100, configurable: true });
+            Object.defineProperty(listContainerElementInDom, 'clientHeight', { value: 100, configurable: true });
+            listContainerElementInDom.scrollTop = 0;
+            renderer["#scrollToBottom"]();
+            expect(listContainerElementInDom.scrollTop).toBe(0);
         });
     });
 
     describe('dispose', () => {
-        it('should call unsubscribe for all subscriptions', () => {
-            const mockUnsubscribe1 = jest.fn();
-            mockVed.subscribe.mockReset().mockReturnValue(mockUnsubscribe1);
+        it('should call VED unsubscribe, clear currentActorId, and clear elements', () => {
+            const mockUnsubscribe = jest.fn();
+            const localMockVed = new (require('../../src/events/validatedEventDispatcher.js').default)({});
+            localMockVed.subscribe = jest.fn().mockReturnValue(mockUnsubscribe);
 
-            const renderer = createRendererInstance(); // Subscribes once
+            const renderer = new PerceptionLogRenderer({
+                logger: mockLogger, documentContext: mockDocumentContext,
+                validatedEventDispatcher: localMockVed, // Use the locally controlled mock
+                domElementFactory: mockDomElementFactoryInstance, entityManager: mockEntityManager,
+            });
+            setInternalCurrentActorId(renderer, 'some-actor');
 
-            // If PerceptionLogRenderer internally could add more subscriptions to #subscriptions
-            // we would test that here. Since it only subscribes once in constructor:
             renderer.dispose();
 
-            expect(mockUnsubscribe1).toHaveBeenCalledTimes(1);
-            // Accessing #subscriptions directly is not possible.
-            // We trust that dispose clears its internal array and nulls out #logListElement.
-            // We can check if #logListElement is attempted to be used after dispose.
-            expect(renderer["#logListElement"] === undefined || renderer["#logListElement"] === null); // This won't work for native private
-            // Test behavior: e.g., calling render after dispose might log an error or do nothing gracefully.
-            renderer.render([]); // Should ideally not throw, might log error due to null #logListElement
-            expect(mockLogger.error).toHaveBeenLastCalledWith(expect.stringContaining("Cannot render logs, #logListElement is not available."));
+            expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+            expect(renderer['#currentActorId']).toBeNull();
+            expect(renderer.elements).toEqual({});
+        });
 
+        it('refreshList after dispose should log error due to missing listContainerElement', async () => {
+            const renderer = createRenderer();
+            renderer.dispose();
+            await renderer.refreshList(); // Will call renderList
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                `${CLASS_PREFIX} Cannot render list: 'listContainerElement' is not available.`
+            );
+        });
+    });
+
+    describe('Initial Display State (after constructor)', () => {
+        it('should display "No actor selected." message initially', async () => {
+            // Constructor calls refreshList -> renderList
+            // _getListItemsData returns [] (actorId is null)
+            // _getEmptyListMessage returns "No actor selected."
+            // renderList appends a <p> with this message
+            createRenderer();
+            await flushPromises();
+
+            expect(mockDomElementFactoryInstance.p).toHaveBeenCalledWith(
+                'empty-list-message',
+                'No actor selected.'
+            );
+            if (listContainerElementInDom && mockDomElementFactoryInstance.p.mock.results[0]) {
+                expect(listContainerElementInDom.appendChild).toHaveBeenCalledWith(
+                    mockDomElementFactoryInstance.p.mock.results[0].value
+                );
+            }
         });
     });
 });

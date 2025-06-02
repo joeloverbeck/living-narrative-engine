@@ -1,5 +1,5 @@
-// src/core/config/registrations/uiRegistrations.js
-
+// src/config/registrations/uiRegistrations.js
+// --- FILE START ---
 /**
  * @fileoverview Registers UI-related services and dependencies with the AppContainer.
  * This version reflects the refactoring of DomRenderer into individual components
@@ -41,6 +41,7 @@ import {EngineUIManager} from '../../domUI/engineUIManager.js';
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
+/** @typedef {import('../../services/EntityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
 
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
@@ -100,13 +101,14 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     ]);
     logger.debug(`UI Registrations: Registered ${tokens.UiMessageRenderer}.`);
 
-    // SpeechBubbleRenderer // <<< NEW REGISTRATION
+    // SpeechBubbleRenderer
     registrar.single(tokens.SpeechBubbleRenderer, SpeechBubbleRenderer, [
         tokens.ILogger,
         tokens.IDocumentContext,
         tokens.IValidatedEventDispatcher,
         tokens.IEntityManager,
-        tokens.DomElementFactory
+        tokens.DomElementFactory,
+        tokens.EntityDisplayDataProvider // Added EDDP
     ]);
     logger.debug(`UI Registrations: Registered ${tokens.SpeechBubbleRenderer}.`);
 
@@ -143,11 +145,12 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
             entityManager: c.resolve(tokens.IEntityManager),
+            entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider), // <<< ADDED
             dataRegistry: c.resolve(tokens.IDataRegistry),
             containerElement: locationContainer
         });
     });
-    logger.debug(`UI Registrations: Registered ${tokens.LocationRenderer} with IEntityManager and IDataRegistry.`);
+    logger.debug(`UI Registrations: Registered ${tokens.LocationRenderer} with IEntityManager, IDataRegistry, and EntityDisplayDataProvider.`);
 
     // InventoryPanel registration removed
 
@@ -155,20 +158,14 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
     registrar.singletonFactory(tokens.ActionButtonsRenderer, c => {
         const docContext = c.resolve(tokens.IDocumentContext);
         const resolvedLogger = c.resolve(tokens.ILogger);
-        const buttonsContainer = docContext.query('#action-buttons');
-        const sendButton = docContext.query('#player-confirm-turn-button');
-
-        if (!buttonsContainer) {
-            resolvedLogger.warn(`UI Registrations: Could not find '#action-buttons' element for ActionButtonsRenderer. Buttons will not be rendered.`);
-        }
 
         return new ActionButtonsRenderer({
             logger: resolvedLogger,
             documentContext: docContext,
             validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
             domElementFactory: c.resolve(tokens.DomElementFactory),
-            actionButtonsContainer: buttonsContainer,
-            sendButtonElement: sendButton
+            actionButtonsContainerSelector: '#action-buttons',
+            sendButtonSelector: '#player-confirm-turn-button',
         });
     });
     logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
@@ -218,14 +215,14 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        entityManager: c.resolve(tokens.IEntityManager)
+        entityManager: c.resolve(tokens.IEntityManager),
+        entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider) // <<< ADDED
     }));
     logger.debug(`UI Registrations: Registered ${tokens.CurrentTurnActorRenderer}.`);
 
     // --- 3. Register Facade ---
     registrar.single(tokens.DomUiFacade, DomUiFacade, [
         tokens.ActionButtonsRenderer,
-        // tokens.InventoryPanel, // Removed from facade dependencies
         tokens.LocationRenderer,
         tokens.TitleRenderer,
         tokens.InputStateController,
@@ -234,7 +231,9 @@ export function registerUI(container, {outputDiv, inputElement, titleElement, do
         tokens.PerceptionLogRenderer,
         tokens.SaveGameUI,
         tokens.LoadGameUI,
-        tokens.LlmSelectionModal
+        tokens.LlmSelectionModal,
+        // CurrentTurnActorRenderer is not typically part of the main facade for direct external use,
+        // but could be added if needed. For now, assuming it's self-managing or used internally.
     ]);
     logger.info(`UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`);
 

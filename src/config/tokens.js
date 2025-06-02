@@ -81,6 +81,7 @@
  * @property {DiToken} PerceptionUpdateService - Token for the service updating perception logs.
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
  * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
+ * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data. // <<< ADDED TOKEN
  *
  * --- Core Service Interfaces ---
  * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
@@ -135,7 +136,7 @@
  * @property {DiToken} PerceptionLogAssembler - Token for the perception log element assembler.
  * // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING END *****
  * @property {DiToken} IPromptStaticContentService - Token for the service providing static prompt content.
- +* @property {DiToken} IPerceptionLogFormatter - Token for the perception log formatting service.
+ * @property {DiToken} IPerceptionLogFormatter - Token for the perception log formatting service.
  */
 export const tokens = Object.freeze({
     // Core Interfaces/Abstractions & Externals
@@ -206,6 +207,7 @@ export const tokens = Object.freeze({
     PerceptionUpdateService: 'PerceptionUpdateService',
     PlaytimeTracker: 'PlaytimeTracker', // Concrete class token
     GamePersistenceService: 'GamePersistenceService', // Concrete class token
+    EntityDisplayDataProvider: 'EntityDisplayDataProvider', // <<< ADDED TOKEN
 
     // Core Service Interfaces
     ISafeEventDispatcher: 'ISafeEventDispatcher',

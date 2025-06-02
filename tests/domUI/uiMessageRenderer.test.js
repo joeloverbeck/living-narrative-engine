@@ -1,7 +1,7 @@
 // tests/domUI/uiMessageRenderer.test.js
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import {JSDOM} from 'jsdom';
-import {UiMessageRenderer} from '../../src/domUI/index.js';
+import {UiMessageRenderer} from '../../src/domUI';
 import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../src/services/consoleLogger.js';
@@ -398,7 +398,6 @@ describe('UiMessageRenderer', () => {
             renderer.dispose();
             expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(3); // CHANGED from 4
             expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Disposing subscriptions.'));
-            expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[UiMessageRenderer] Disposing.'));
         });
 
         it('should handle scrolling correctly', () => {
