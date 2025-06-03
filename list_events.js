@@ -1,4 +1,3 @@
-// filename: listFilesJsonOutput.js (for example)
 
 // Import the promises API from the 'fs' module
 const fs = require('fs').promises;
