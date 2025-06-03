@@ -1,6 +1,6 @@
 // tests/services/ThoughtPersistenceHook.test.js
 
-import {processTurnAction} from '../../src/services/thoughtPersistenceHook.js';
+import {persistThoughts} from '../../src/services/thoughtPersistenceHook.js';
 import ShortTermMemoryService from '../../src/services/ShortTermMemoryService.js';
 import {describe, test, expect, jest} from '@jest/globals';
 
@@ -10,7 +10,7 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
         const fakeActor = {}; // actorEntity not used in this case
 
         expect(() => {
-            processTurnAction({}, fakeActor, mockedLogger);
+            persistThoughts({}, fakeActor, mockedLogger);
         }).not.toThrow();
 
         expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
@@ -22,7 +22,7 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
         const fakeActor = {};
 
         expect(() => {
-            processTurnAction({thoughts: '   '}, fakeActor, mockedLogger);
+            persistThoughts({thoughts: '   '}, fakeActor, mockedLogger);
         }).not.toThrow();
 
         expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
@@ -34,7 +34,7 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
         const fakeActor = {components: {}};
 
         expect(() => {
-            processTurnAction({thoughts: 'Anything'}, fakeActor, mockedLogger);
+            persistThoughts({thoughts: 'Anything'}, fakeActor, mockedLogger);
         }).not.toThrow();
 
         expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
@@ -53,7 +53,7 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
         const mockedLogger = {warn: jest.fn()};
 
         expect(() => {
-            processTurnAction({thoughts: 'Test Thought'}, fakeActor, mockedLogger);
+            persistThoughts({thoughts: 'Test Thought'}, fakeActor, mockedLogger);
         }).not.toThrow();
 
         const mem = fakeActor.components['core:short_term_memory'];
@@ -79,7 +79,7 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
 
         // Call with a duplicate in different case and with trailing space
         expect(() => {
-            processTurnAction({thoughts: 'Duplicate '}, fakeActor, mockedLogger);
+            persistThoughts({thoughts: 'Duplicate '}, fakeActor, mockedLogger);
         }).not.toThrow();
 
         const mem = fakeActor.components['core:short_term_memory'];
@@ -104,11 +104,11 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
         const mockedLogger = {warn: jest.fn()};
 
         // First thought
-        processTurnAction({thoughts: 'First'}, fakeActor, mockedLogger);
+        persistThoughts({thoughts: 'First'}, fakeActor, mockedLogger);
         // Second thought
-        processTurnAction({thoughts: 'Second'}, fakeActor, mockedLogger);
+        persistThoughts({thoughts: 'Second'}, fakeActor, mockedLogger);
         // Third thought—should trim the first
-        processTurnAction({thoughts: 'Third'}, fakeActor, mockedLogger);
+        persistThoughts({thoughts: 'Third'}, fakeActor, mockedLogger);
 
         const mem = fakeActor.components['core:short_term_memory'];
         expect(mem.thoughts.length).toBe(2);
@@ -129,7 +129,7 @@ describe('ThoughtPersistenceHook.processTurnAction', () => {
         };
         const mockedLogger = {warn: jest.fn()};
 
-        processTurnAction({thoughts: 'Inspect'}, fakeActor, mockedLogger);
+        persistThoughts({thoughts: 'Inspect'}, fakeActor, mockedLogger);
 
         expect(addThoughtSpy).toHaveBeenCalledTimes(1);
 

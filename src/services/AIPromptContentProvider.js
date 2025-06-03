@@ -40,6 +40,7 @@ import {
     PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS,
     ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
 } from '../constants/textDefaults.js';
+import {SHORT_TERM_MEMORY_COMPONENT_ID} from "../constants/componentIds.js";
 
 // Static constants and templates have been moved to PromptStaticContentService.js
 
@@ -191,17 +192,15 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             };
 
             // ------------------------------------------------------------------
-            // 4. NEW: Pull short-term memory → thoughtsArray  (oldest-first)
+            // 4.  Pull short-term memory → thoughtsArray (oldest-first)
             // ------------------------------------------------------------------
-            /*  The AIGameStateDTO carries the live actor entity (or at least its
-                component map) under actorState.  Fall back to a top-level components
-                map if the DTO shape differs.  Nothing throws if the component
-                (or its thoughts array) is absent. */
-            const componentsMap = gameStateDto?.actorState?.components || gameStateDto?.components;
-            const memoryComp = componentsMap?.["core:short_term_memory"];
-            promptData.thoughtsArray = Array.isArray(memoryComp?.thoughts)
-                ? memoryComp.thoughts.map(t => t.text)
-                : [];
+            const componentsMap = gameStateDto?.actorState?.components        // preferred new location
+                ?? gameStateDto?.components                 // legacy fall-back
+                ?? gameStateDto?.actorState                 // very old code path
+                ?? {};
+
+            const memoryComp = componentsMap[SHORT_TERM_MEMORY_COMPONENT_ID];
+            promptData.thoughtsArray = Array.isArray(memoryComp?.thoughts) ? memoryComp.thoughts.map(t => t.text).filter(Boolean) : [];
 
             // ------------------------------------------------------------------
             // 5. Wrap-up / logging
@@ -239,13 +238,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         if (actorPromptData.description) {
             characterInfo.push(`Your Description: ${actorPromptData.description}`);
         }
-        const optionalAttributes = [
-            this._formatOptionalAttribute("Your Personality", actorPromptData.personality),
-            this._formatOptionalAttribute("Your Profile / Background", actorPromptData.profile),
-            this._formatOptionalAttribute("Your Likes", actorPromptData.likes),
-            this._formatOptionalAttribute("Your Dislikes", actorPromptData.dislikes),
-            this._formatOptionalAttribute("Your Secrets", actorPromptData.secrets),
-            this._formatOptionalAttribute("Your Fears", actorPromptData.fears) // <<< Added fears
+        const optionalAttributes = [this._formatOptionalAttribute("Your Personality", actorPromptData.personality), this._formatOptionalAttribute("Your Profile / Background", actorPromptData.profile), this._formatOptionalAttribute("Your Likes", actorPromptData.likes), this._formatOptionalAttribute("Your Dislikes", actorPromptData.dislikes), this._formatOptionalAttribute("Your Secrets", actorPromptData.secrets), this._formatOptionalAttribute("Your Fears", actorPromptData.fears) // <<< Added fears
         ];
         optionalAttributes.forEach(line => {
             if (line !== null) characterInfo.push(line);
@@ -285,25 +278,15 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
         const segments = [locationDescriptionLines.join('\n')];
 
-        segments.push(this._formatListSegment(
-            "Exits from your current location",
-            currentLocation.exits,
-            (exit) => `- Towards ${exit.direction} leads to ${exit.targetLocationName || exit.targetLocationId || DEFAULT_FALLBACK_LOCATION_NAME}.`,
-            PROMPT_FALLBACK_NO_EXITS,
-            this.#logger // Pass this.#logger to the helper
+        segments.push(this._formatListSegment("Exits from your current location", currentLocation.exits, (exit) => `- Towards ${exit.direction} leads to ${exit.targetLocationName || exit.targetLocationId || DEFAULT_FALLBACK_LOCATION_NAME}.`, PROMPT_FALLBACK_NO_EXITS, this.#logger // Pass this.#logger to the helper
         ));
 
-        segments.push(this._formatListSegment(
-            "Other characters present in this location (you cannot speak as them)",
-            currentLocation.characters,
-            (char) => {
+        segments.push(this._formatListSegment("Other characters present in this location (you cannot speak as them)", currentLocation.characters, (char) => {
                 const namePart = char.name || DEFAULT_FALLBACK_CHARACTER_NAME;
                 let descriptionText = char.description || DEFAULT_FALLBACK_DESCRIPTION_RAW;
                 descriptionText = ensureTerminalPunctuation(descriptionText);
                 return `- ${namePart} - Description: ${descriptionText}`;
-            },
-            PROMPT_FALLBACK_ALONE_IN_LOCATION,
-            this.#logger // Pass this.#logger to the helper
+            }, PROMPT_FALLBACK_ALONE_IN_LOCATION, this.#logger // Pass this.#logger to the helper
         ));
         return segments.join('\n\n');
     }
@@ -323,10 +306,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             // The _formatListSegment will handle logging the use of the empty message.
         }
 
-        return this._formatListSegment(
-            "Consider these available actions when deciding what to do",
-            gameState.availableActions,
-            (action) => {
+        return this._formatListSegment("Consider these available actions when deciding what to do", gameState.availableActions, (action) => {
                 const systemId = action.id || DEFAULT_FALLBACK_ACTION_ID; // Corresponds to actionDefinitionId
                 const baseCommand = action.command || DEFAULT_FALLBACK_ACTION_COMMAND; // Corresponds to commandString
                 const nameDisplay = action.name || DEFAULT_FALLBACK_ACTION_NAME;
@@ -335,9 +315,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
                 // MODIFIED LINE:
                 return `- "${nameDisplay}" (actionDefinitionId: "${systemId}", commandString: "${baseCommand}"). Description: ${description}`;
-            },
-            noActionsMessage,
-            this.#logger // Pass this.#logger to the helper
+            }, noActionsMessage, this.#logger // Pass this.#logger to the helper
         );
     }
 

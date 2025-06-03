@@ -14,6 +14,7 @@
 
 import {ILLMResponseProcessor} from '../interfaces/ILLMResponseProcessor.js';
 import {parseAndRepairJson} from '../../utils/llmUtils.js';
+import {persistThoughts} from "../../services/thoughtPersistenceHook.js";
 
 import {
     LLM_TURN_ACTION_SCHEMA_ID,
@@ -53,11 +54,13 @@ const BASE_FALLBACK_WAIT_ACTION = {
 export class LLMResponseProcessor extends ILLMResponseProcessor {
     /** @type {ISchemaValidator} */
     #schemaValidator;
+    /** @type {IEntityManager}  */           // <- optional, see below
+    #entityManager;
 
     /**
      * @param {{schemaValidator: ISchemaValidator}} deps
      */
-    constructor({schemaValidator}) {
+    constructor({schemaValidator, entityManager = null}) {
         super();
 
         if (
@@ -71,6 +74,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         }
 
         this.#schemaValidator = schemaValidator;
+        this.#entityManager = entityManager;   // may be null in tests
 
         // Unit tests spy on this warning:
         if (!this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_SCHEMA_ID)) {
@@ -210,6 +214,18 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         );
 
         if (v1Result.isValid) {
+            // ──────────────────────────────────────────────────────────────────
+            // Persist STM if we can resolve the entity
+            // ──────────────────────────────────────────────────────────────────
+            const actorEntity = this.#entityManager?.getEntityInstance?.(actorId);
+
+            if (actorEntity) {
+                try {
+                    persistThoughts(parsedJson, actorEntity, logger);
+                } catch (e) {
+                    logger.warn('STM persist failed', {actorId, err: e});
+                }
+            }
             const {actionDefinitionId, commandString, speech} = parsedJson;
             const finalAction = {
                 actionDefinitionId: actionDefinitionId.trim(),
@@ -243,6 +259,16 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
             );
 
             if (v2Result.isValid) {
+                const actorEntity = this.#entityManager?.getEntityInstance?.(actorId);
+                
+                if (actorEntity) {
+                    try {
+                        persistThoughts(parsedJson, actorEntity, logger);
+                    } catch (e) {
+                        logger.warn('STM persist failed', {actorId, err: e});
+                    }
+                }
+
                 const {actionDefinitionId, commandString, speech} = parsedJson;
                 const finalAction = {
                     actionDefinitionId: actionDefinitionId.trim(),

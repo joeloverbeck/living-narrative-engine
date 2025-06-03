@@ -57,6 +57,16 @@
           "suffix": "\n</entry>\n"
         },
         {
+          "key": "thoughts_wrapper",
+          "prefix": "<thoughts>\n",
+          "suffix": "\n</thoughts>\n"
+        },
+        {
+          "key": "thoughts_entry",
+          "prefix": "<thought type=\"{type}\">\n",
+          "suffix": "\n</thought>\n"
+        },
+        {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
           "suffix": "\n</available_actions_info>\n"
@@ -84,6 +94,7 @@
         "content_policy",
         "world_context",
         "perception_log_wrapper",
+        "thoughts_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -147,6 +158,16 @@
           "suffix": "\n</entry>\n"
         },
         {
+          "key": "thoughts_wrapper",
+          "prefix": "<thoughts>\n",
+          "suffix": "\n</thoughts>\n"
+        },
+        {
+          "key": "thoughts_entry",
+          "prefix": "<thought type=\"{type}\">\n",
+          "suffix": "\n</thought>\n"
+        },
+        {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
           "suffix": "\n</available_actions_info>\n"
@@ -174,6 +195,7 @@
         "content_policy",
         "world_context",
         "perception_log_wrapper",
+        "thoughts_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -236,6 +258,16 @@
           "suffix": "\n</entry>\n"
         },
         {
+          "key": "thoughts_wrapper",
+          "prefix": "<thoughts>\n",
+          "suffix": "\n</thoughts>\n"
+        },
+        {
+          "key": "thoughts_entry",
+          "prefix": "<thought type=\"{type}\">\n",
+          "suffix": "\n</thought>\n"
+        },
+        {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
           "suffix": "\n</available_actions_info>\n"
@@ -263,6 +295,7 @@
         "content_policy",
         "world_context",
         "perception_log_wrapper",
+        "thoughts_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -325,6 +358,16 @@
           "suffix": "\n</entry>\n"
         },
         {
+          "key": "thoughts_wrapper",
+          "prefix": "<thoughts>\n",
+          "suffix": "\n</thoughts>\n"
+        },
+        {
+          "key": "thoughts_entry",
+          "prefix": "<thought type=\"{type}\">\n",
+          "suffix": "\n</thought>\n"
+        },
+        {
           "key": "available_actions_info",
           "prefix": "<available_actions_info>\n",
           "suffix": "\n</available_actions_info>\n"
@@ -352,6 +395,7 @@
         "content_policy",
         "world_context",
         "perception_log_wrapper",
+        "thoughts_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",

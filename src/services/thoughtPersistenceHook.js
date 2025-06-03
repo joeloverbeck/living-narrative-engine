@@ -1,52 +1,52 @@
 /* eslint-disable no-unused-vars */
 import ShortTermMemoryService from './shortTermMemoryService.js';
+import {SHORT_TERM_MEMORY_COMPONENT_ID} from '../constants/componentIds.js';
 
-/* eslint-enable no-unused-vars */
+/* eslint-enable  no-unused-vars */
 
 /**
  * Persist the “thoughts” produced during an LLM turn into the actor’s
  * short-term-memory component.
  *
- * @param {object}  action       – The structured action returned by the LLM.
- * @param {object}  actorEntity  – The Entity instance (or plain-object pseudo-entity) that generated the action.
- * @param {object}  logger       – Application-wide logger (expects .warn()).
+ * Works with a full Entity instance *or* a plain-object pseudo-entity.
+ *
+ * @param {object} action       – The structured action returned by the LLM.
+ * @param {object} actorEntity  – Entity instance (or test double) that generated the action.
+ * @param {object} logger       – Application-wide logger (expects .warn()).
  */
-export function processTurnAction(action, actorEntity, logger) {
-    // ──────────────────────────────────────────────────────────────
-    // STEP 1 – Extract and validate thoughts
-    // ──────────────────────────────────────────────────────────────
+export function persistThoughts(action, actorEntity, logger) {
+    /* ── 1. Validate thoughts ───────────────────────────────────────────── */
     const rawThoughts = action?.thoughts;
-
     if (rawThoughts == null || String(rawThoughts).trim() === '') {
         logger.warn('STM-001 Missing thoughts');
-        return;                                     // Nothing worth doing
+        return;
     }
+    const thoughtText = String(rawThoughts).trim();
 
-    const newThoughtText = String(rawThoughts);
+    /* ── 2. Retrieve STM component via the public API ───────────────────── */
+    const hasGetter = typeof actorEntity?.getComponentData === 'function';
+    let memoryComp = hasGetter
+        ? actorEntity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID)
+        : actorEntity?.components?.[SHORT_TERM_MEMORY_COMPONENT_ID];
 
-    // ──────────────────────────────────────────────────────────────
-    // STEP 2 – Persist to short-term memory
-    // ──────────────────────────────────────────────────────────────
-    const memoryComp = actorEntity?.components?.['core:short_term_memory'];
-
-    // NEW — graceful handling when the component is absent
     if (!memoryComp) {
         logger.warn('STM-002 Missing component');
-        return;                                     // Backward compatibility
+        return;                                // nothing to persist
     }
 
-    // Service is stateless and cheap to construct
+    /* ── 3. Mutate in place using the service ───────────────────────────── */
     const stmService = new ShortTermMemoryService();
+    const updatedMem = stmService.addThought(memoryComp, thoughtText, new Date());
 
-    const updatedMem = stmService.addThought(
-        memoryComp,
-        newThoughtText,
-        new Date()
-    );
-
-    // addThought mutates in place, but re-assign for clarity
-    actorEntity.components['core:short_term_memory'] = updatedMem;
+    /* ── 4. Push the mutation back to the entity ────────────────────────── */
+    if (typeof actorEntity?.addComponent === 'function') {
+        // Ensures validation & internal bookkeeping
+        actorEntity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, updatedMem);
+    } else if (actorEntity?.components) {
+        // Plain-object pseudo-entity – just re-assign
+        actorEntity.components[SHORT_TERM_MEMORY_COMPONENT_ID] = updatedMem;
+    }
 }
 
 // Convenience default export
-export default {processTurnAction};
+export default {processTurnAction: persistThoughts};

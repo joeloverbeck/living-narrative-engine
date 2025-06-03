@@ -9,7 +9,6 @@ import {
     POSITION_COMPONENT_ID,
     EXITS_COMPONENT_ID,
     PERCEPTION_LOG_COMPONENT_ID,
-    // Import other component IDs if tests for them are added to actorState
     PERSONALITY_COMPONENT_ID,
     PROFILE_COMPONENT_ID,
     LIKES_COMPONENT_ID,
@@ -18,12 +17,13 @@ import {
     SPEECH_PATTERNS_COMPONENT_ID
 } from '../../../src/constants/componentIds.js';
 import {
-    DEFAULT_FALLBACK_LOCATION_NAME as DEFAULT_LOCATION_NAME_CONST, // alias to avoid conflict
-    DEFAULT_FALLBACK_EXIT_DIRECTION as DEFAULT_EXIT_DIRECTION_CONST // alias
+    DEFAULT_FALLBACK_LOCATION_NAME as DEFAULT_LOCATION_NAME_CONST,
+    DEFAULT_FALLBACK_EXIT_DIRECTION as DEFAULT_EXIT_DIRECTION_CONST
 } from '../../../src/constants/textDefaults.js';
 
-
-// --- Mock Implementations ---
+// -----------------------------------------------------------------------------
+// Mock implementations
+// -----------------------------------------------------------------------------
 
 /**
  * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').ILogger>}
@@ -36,22 +36,34 @@ const mockLogger = () => ({
 });
 
 class MockEntity {
-    constructor(id = `mock-entity-${Math.random().toString(36).substring(2, 9)}`, componentsData = {}, presentComponents = []) {
+    constructor(
+        id = `mock-entity-${Math.random().toString(36).substring(2, 9)}`,
+        componentsData = {},
+        presentComponents = []
+    ) {
         this.id = id;
         this._componentsData = componentsData;
         this._presentComponents = new Set(presentComponents);
-        Object.keys(componentsData).forEach(key => this._presentComponents.add(key));
+        Object.keys(componentsData).forEach(k => this._presentComponents.add(k));
 
-        this.getComponentData = jest.fn((componentId) => {
-            if (componentId in this._componentsData) {
-                return this._componentsData[componentId];
-            }
-            return undefined;
-        });
-        this.hasComponent = jest.fn((componentId) => {
-            return this._presentComponents.has(componentId);
-        });
+        this.getComponentData = jest.fn(compId =>
+            compId in this._componentsData ? this._componentsData[compId] : undefined
+        );
+        this.hasComponent = jest.fn(compId => this._presentComponents.has(compId));
     }
+
+    // ----------------------------- NEW ---------------------------------------
+    /** Mimic Entity.componentEntries – iterable of [id, data] pairs */
+    get componentEntries() {
+        return Object.entries(this._componentsData);
+    }
+
+    /** Optional parity helper (not strictly required for the tests) */
+    get componentTypeIds() {
+        return Object.keys(this._componentsData);
+    }
+
+    // ------------------------------------------------------------------------
 
     setComponentData(componentId, data) {
         this._componentsData[componentId] = data;
@@ -69,7 +81,7 @@ class MockEntity {
  */
 const mockEntityManager = () => ({
     getEntityInstance: jest.fn(),
-    getEntitiesInLocation: jest.fn(), // This will return a Set
+    getEntitiesInLocation: jest.fn(),
 });
 
 /**
@@ -85,44 +97,44 @@ const mockActionDiscoverySystem = () => ({
 const mockTurnContext = () => {
     const loggerInstance = mockLogger();
     const entityManagerInstance = mockEntityManager();
-    const actionDiscoverySystemInstance = mockActionDiscoverySystem();
+    const actionDiscoverySystemInst = mockActionDiscoverySystem();
 
     return {
         getLogger: jest.fn(() => loggerInstance),
         getActor: jest.fn(),
         getEntityManager: jest.fn(() => entityManagerInstance),
-        getActionDiscoverySystem: jest.fn(() => actionDiscoverySystemInstance),
+        getActionDiscoverySystem: jest.fn(() => actionDiscoverySystemInst),
         game: {},
+        // Expose for convenience in tests
         mockLoggerInstance: loggerInstance,
         mockEntityManagerInstance: entityManagerInstance,
-        mockActionDiscoverySystemInstance: actionDiscoverySystemInstance,
+        mockActionDiscoverySystemInstance: actionDiscoverySystemInst,
     };
 };
 
+// -----------------------------------------------------------------------------
+// Actual test cases
+// -----------------------------------------------------------------------------
 
 describe('AIGameStateProvider', () => {
-    /** @type {AIGameStateProvider} */
     let provider;
-    /** @type {ReturnType<typeof mockLogger>} */
     let logger;
-    /** @type {ReturnType<typeof mockTurnContext>} */
     let turnContext;
-    /** @type {ReturnType<typeof mockEntityManager>} */
     let entityManager;
-    /** @type {ReturnType<typeof mockActionDiscoverySystem>} */
     let actionDiscoverySystem;
-    /** @type {MockEntity} */
     let mockActor;
 
-    // Expected default values based on recent refactoring (AIPF-REFACTOR-009)
+    // Import-aliased constants
     const DEFAULT_CHARACTER_NAME = "Unnamed Character";
-    const DEFAULT_DESCRIPTION = "No description available"; // No period
-    const DEFAULT_LOCATION_NAME = DEFAULT_LOCATION_NAME_CONST; // Use aliased import
+    const DEFAULT_DESCRIPTION = "No description available";
+    const DEFAULT_LOCATION_NAME = DEFAULT_LOCATION_NAME_CONST;
     const DEFAULT_ACTION_NAME = "Unnamed Action";
-    const DEFAULT_ACTION_DESCRIPTION = "No specific description";
-    const DEFAULT_EXIT_DIRECTION = DEFAULT_EXIT_DIRECTION_CONST; // Use aliased import
+    const DEFAULT_ACTION_DESC = "No specific description";
+    const DEFAULT_EXIT_DIRECTION = DEFAULT_EXIT_DIRECTION_CONST;
 
-
+    // -------------------------------------------------------------------------
+    // Global before/after
+    // -------------------------------------------------------------------------
     beforeEach(() => {
         turnContext = mockTurnContext();
         logger = turnContext.mockLoggerInstance;
@@ -131,16 +143,19 @@ describe('AIGameStateProvider', () => {
 
         mockActor = new MockEntity('actor1');
         mockActor.setComponentData(POSITION_COMPONENT_ID, {locationId: 'loc1'});
+
         turnContext.getActor.mockReturnValue(mockActor);
         turnContext.game = {worldId: 'test-world', someOtherData: 'data'};
 
         provider = new AIGameStateProvider();
 
+        // basic location stub
         const minimalLocationEntity = new MockEntity('loc1', {
             [NAME_COMPONENT_ID]: {text: 'A Room'},
             [DESCRIPTION_COMPONENT_ID]: {text: 'Just a room.'},
         });
-        entityManager.getEntityInstance.mockImplementation(async (id) => {
+
+        entityManager.getEntityInstance.mockImplementation(async id => {
             if (id === 'loc1') return minimalLocationEntity;
             return null;
         });
@@ -154,6 +169,9 @@ describe('AIGameStateProvider', () => {
         jest.restoreAllMocks();
     });
 
+    // -------------------------------------------------------------------------
+    // Constructor sanity
+    // -------------------------------------------------------------------------
     describe('constructor', () => {
         test('should create an instance', () => {
             expect(new AIGameStateProvider()).toBeInstanceOf(AIGameStateProvider);
@@ -190,6 +208,9 @@ describe('AIGameStateProvider', () => {
             });
         });
 
+        // ---------------------------------------------------------------------
+        // _getComponentText related tests
+        // ---------------------------------------------------------------------
         describe('_getComponentText (implicitly and explicitly)', () => {
             test('should populate AIActorStateDTO with name and description if components exist', async () => {
                 const actor = new MockEntity('actorTest');
@@ -197,25 +218,30 @@ describe('AIGameStateProvider', () => {
                 actor.setComponentData(DESCRIPTION_COMPONENT_ID, {text: 'A brave test actor.'});
                 actor.setComponentData(POSITION_COMPONENT_ID, {locationId: 'loc1'});
 
-                const gameState = await provider.buildGameState(actor, turnContext, logger);
-                expect(gameState.actorState).toEqual({
-                    id: 'actorTest',
-                    [NAME_COMPONENT_ID]: {text: 'Test Actor Name'},
-                    [DESCRIPTION_COMPONENT_ID]: {text: 'A brave test actor.'},
-                });
+                const {actorState} = await provider.buildGameState(actor, turnContext, logger);
+
+                expect(actorState).toEqual(
+                    expect.objectContaining({
+                        id: 'actorTest',
+                        [NAME_COMPONENT_ID]: {text: 'Test Actor Name'},
+                        [DESCRIPTION_COMPONENT_ID]: {text: 'A brave test actor.'},
+                    })
+                );
             });
 
             test('should use default name and description if components are missing data', async () => {
                 const actor = new MockEntity('actorNoName');
                 actor.setComponentData(POSITION_COMPONENT_ID, {locationId: 'loc1'});
-                // NAME_COMPONENT_ID and DESCRIPTION_COMPONENT_ID are missing
 
-                const gameState = await provider.buildGameState(actor, turnContext, logger);
-                expect(gameState.actorState).toEqual({
-                    id: 'actorNoName',
-                    [NAME_COMPONENT_ID]: {text: DEFAULT_CHARACTER_NAME},
-                    [DESCRIPTION_COMPONENT_ID]: {text: DEFAULT_DESCRIPTION},
-                });
+                const {actorState} = await provider.buildGameState(actor, turnContext, logger);
+
+                expect(actorState).toEqual(
+                    expect.objectContaining({
+                        id: 'actorNoName',
+                        [NAME_COMPONENT_ID]: {text: DEFAULT_CHARACTER_NAME},
+                        [DESCRIPTION_COMPONENT_ID]: {text: DEFAULT_DESCRIPTION},
+                    })
+                );
             });
 
             test('should use default name/description if component data exists but propertyPath is missing', async () => {
@@ -224,12 +250,15 @@ describe('AIGameStateProvider', () => {
                 actor.setComponentData(DESCRIPTION_COMPONENT_ID, {otherProp: 'Some Desc'});
                 actor.setComponentData(POSITION_COMPONENT_ID, {locationId: 'loc1'});
 
-                const gameState = await provider.buildGameState(actor, turnContext, logger);
-                expect(gameState.actorState).toEqual({
-                    id: 'actorBadData',
-                    [NAME_COMPONENT_ID]: {text: DEFAULT_CHARACTER_NAME},
-                    [DESCRIPTION_COMPONENT_ID]: {text: DEFAULT_DESCRIPTION},
-                });
+                const {actorState} = await provider.buildGameState(actor, turnContext, logger);
+
+                expect(actorState).toEqual(
+                    expect.objectContaining({
+                        id: 'actorBadData',
+                        [NAME_COMPONENT_ID]: {text: DEFAULT_CHARACTER_NAME},
+                        [DESCRIPTION_COMPONENT_ID]: {text: DEFAULT_DESCRIPTION},
+                    })
+                );
             });
 
             test('should use default name/description if component data property is an empty string', async () => {
@@ -238,12 +267,15 @@ describe('AIGameStateProvider', () => {
                 actor.setComponentData(DESCRIPTION_COMPONENT_ID, {text: ''});
                 actor.setComponentData(POSITION_COMPONENT_ID, {locationId: 'loc1'});
 
-                const gameState = await provider.buildGameState(actor, turnContext, logger);
-                expect(gameState.actorState).toEqual({
-                    id: 'actorEmptyData',
-                    [NAME_COMPONENT_ID]: {text: DEFAULT_CHARACTER_NAME}, // Because '  ' trims to empty, then defaults
-                    [DESCRIPTION_COMPONENT_ID]: {text: DEFAULT_DESCRIPTION}, // Because '' is empty, then defaults
-                });
+                const {actorState} = await provider.buildGameState(actor, turnContext, logger);
+
+                expect(actorState).toEqual(
+                    expect.objectContaining({
+                        id: 'actorEmptyData',
+                        [NAME_COMPONENT_ID]: {text: DEFAULT_CHARACTER_NAME},
+                        [DESCRIPTION_COMPONENT_ID]: {text: DEFAULT_DESCRIPTION},
+                    })
+                );
             });
 
             test('should correctly trim name and description if they have leading/trailing spaces', async () => {
@@ -252,23 +284,28 @@ describe('AIGameStateProvider', () => {
                 actor.setComponentData(DESCRIPTION_COMPONENT_ID, {text: '  Spaced Description  '});
                 actor.setComponentData(POSITION_COMPONENT_ID, {locationId: 'loc1'});
 
-                const gameState = await provider.buildGameState(actor, turnContext, logger);
-                expect(gameState.actorState).toEqual({
-                    id: 'actorSpacedData',
-                    [NAME_COMPONENT_ID]: {text: 'Spaced Name'},
-                    [DESCRIPTION_COMPONENT_ID]: {text: 'Spaced Description'},
-                });
+                const {actorState} = await provider.buildGameState(actor, turnContext, logger);
+
+                expect(actorState).toEqual(
+                    expect.objectContaining({
+                        id: 'actorSpacedData',
+                        [NAME_COMPONENT_ID]: {text: 'Spaced Name'},
+                        [DESCRIPTION_COMPONENT_ID]: {text: 'Spaced Description'},
+                    })
+                );
             });
 
+            // the two direct _getComponentText unit tests stay unchanged
             test('_getComponentText: should return default if entity is null', () => {
-                const result = provider._getComponentText(null, NAME_COMPONENT_ID, 'Default Value');
-                expect(result).toBe('Default Value');
+                expect(
+                    provider._getComponentText(null, NAME_COMPONENT_ID, 'Default')
+                ).toBe('Default');
             });
 
             test('_getComponentText: should return default if getComponentData is not a function', () => {
-                const faultyEntity = {id: 'faulty'}; // No getComponentData method
-                const result = provider._getComponentText(faultyEntity, NAME_COMPONENT_ID, 'Default Value');
-                expect(result).toBe('Default Value');
+                expect(
+                    provider._getComponentText({id: 'bad'}, NAME_COMPONENT_ID, 'Default')
+                ).toBe('Default');
             });
         });
 
@@ -502,20 +539,17 @@ describe('AIGameStateProvider', () => {
             });
 
             test('should populate actions with defaults for missing optional fields', async () => {
-                const rawActions = [
+                const raw = [
                     {id: 'action1', command: 'cmd1', name: 'Action One', description: 'Desc One'},
-                    {id: 'action2', command: 'cmd2'}, // Missing name and description
+                    {id: 'action2', command: 'cmd2'}, // missing name & desc
                 ];
-                actionDiscoverySystem.getValidActions.mockResolvedValue(rawActions);
-                const gameState = await provider.buildGameState(mockActor, turnContext, logger);
-                expect(gameState.availableActions).toEqual([
+                actionDiscoverySystem.getValidActions.mockResolvedValue(raw);
+
+                const {availableActions} = await provider.buildGameState(mockActor, turnContext, logger);
+
+                expect(availableActions).toEqual([
                     {id: 'action1', command: 'cmd1', name: 'Action One', description: 'Desc One'},
-                    {
-                        id: 'action2',
-                        command: 'cmd2',
-                        name: DEFAULT_ACTION_NAME, // Expect default
-                        description: DEFAULT_ACTION_DESCRIPTION // Expect default
-                    },
+                    {id: 'action2', command: 'cmd2', name: DEFAULT_ACTION_NAME, description: DEFAULT_ACTION_DESC},
                 ]);
             });
 

@@ -48,6 +48,7 @@ import {PerceptionLogFormatter} from '../../services/perceptionLogFormatter.js';
 // +++ TICKET 11 IMPORTS START +++
 import {GameStateValidationServiceForPrompting} from '../../services/gameStateValidationServiceForPrompting.js';
 import {EntityDisplayDataProvider} from "../../services/entityDisplayDataProvider.js";
+import ThoughtsSectionAssembler from "../../services/promptElementAssemblers/thoughtsSectionAssembler.js";
 // +++ TICKET 11 IMPORTS END +++
 
 
@@ -382,6 +383,13 @@ export function registerDomainServices(container) {
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.PerceptionLogAssembler)}.`);
 
+    // Register ThoughtsSectionAssembler
+    r.singletonFactory(tokens.ThoughtsSectionAssembler, (c) => {
+        const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+        return new ThoughtsSectionAssembler({logger});
+    });
+    log.debug(`Domain Services Registration: Registered ${String(tokens.ThoughtsSectionAssembler)}.`);
+
     // PromptBuilder registration
     r.singletonFactory(tokens.IPromptBuilder, (c) => {
         const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
@@ -389,6 +397,7 @@ export function registerDomainServices(container) {
         const placeholderResolver = /** @type {PlaceholderResolver_Concrete} */ (c.resolve(tokens.PlaceholderResolver));
         const standardElementAssembler = /** @type {StandardElementAssembler_Concrete} */ (c.resolve(tokens.StandardElementAssembler));
         const perceptionLogAssembler = /** @type {PerceptionLogAssembler_Concrete} */ (c.resolve(tokens.PerceptionLogAssembler));
+        const thoughtsSectionAssembler = c.resolve(tokens.ThoughtsSectionAssembler);
 
         log.info(`${String(tokens.IPromptBuilder)} factory: Creating PromptBuilder with new dependencies.`);
         return new PromptBuilder({
@@ -396,7 +405,8 @@ export function registerDomainServices(container) {
             llmConfigService,
             placeholderResolver,
             standardElementAssembler,
-            perceptionLogAssembler
+            perceptionLogAssembler,
+            thoughtsSectionAssembler,
         });
     });
     log.debug(`Domain Services Registration: Registered ${String(tokens.IPromptBuilder)} with new dependencies.`);
@@ -422,9 +432,12 @@ export function registerDomainServices(container) {
     log.debug(`Domain Services Registration: Registered ${String(tokens.IAIPromptContentProvider)} with new dependencies.`);
 
 
-    r.single(tokens.ILLMResponseProcessor, LLMResponseProcessor, [
-        tokens.ISchemaValidator // Assuming this doesn't need new dependencies from PB refactor.
-    ]);
+    r.singletonFactory(tokens.ILLMResponseProcessor, c => {
+        return new LLMResponseProcessor({
+            schemaValidator: c.resolve(tokens.ISchemaValidator),
+            entityManager: c.resolve(tokens.IEntityManager),   // new
+        });
+    });
     log.debug(`Domain Services Registration: Registered ${String(tokens.ILLMResponseProcessor)}.`);
 
 

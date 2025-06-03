@@ -40,6 +40,5 @@
     ],
     "additionalProperties": false
   },
-  "resolveFields": [],
-  "additionalProperties": false
+  "resolveFields": []
 }

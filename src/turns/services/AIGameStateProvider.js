@@ -66,54 +66,72 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         return defaultValue;
     }
 
+    /**
+     * Build an AI-friendly snapshot of the actor’s own components.
+     * **CHANGELOG**
+     * • captures **every** component on the entity – no more hard-coded whitelist
+     * • stores them in a dedicated  `components`  object, so other code can rely on
+     *   `actorState.components[COMP_ID]`
+     * • still surfaces the handful of text-based components at the top level for
+     *   backward compatibility
+     * • now copies  core:short_term_memory  verbatim
+     */
     _buildActorState(actor, logger) {
         logger.debug(`AIGameStateProvider: Building actor state for ${actor.id}`);
-        /** @type {AIActorStateDTO} */
-        const actorState = {
-            id: actor.id,
+
+        /** @type {AIActorStateDTO & {components: Record<string, any>}} */
+        const actorState = {id: actor.id, components: {}};
+
+        // ------------------------------------------------------------------
+        // 1.  Copy EVERY component the entity currently has
+        // ------------------------------------------------------------------
+        for (const [compId, compData] of actor.componentEntries) {
+            // Deep-clone to avoid accidental mutation later on
+            actorState.components[compId] = JSON.parse(JSON.stringify(compData));
+        }
+
+        // ------------------------------------------------------------------
+        // 2.  Surface the main “text” components for legacy callers
+        // ------------------------------------------------------------------
+        const surface = (compId, fallback = "") => {
+            const txt = actorState.components[compId]?.text;
+            actorState[compId] =
+                typeof txt === "string" && txt.trim() !== "" ? {text: txt.trim()} : {text: fallback};
         };
 
-        actorState[NAME_COMPONENT_ID] = {
-            text: this._getComponentText(actor, NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME)
-        };
-        actorState[DESCRIPTION_COMPONENT_ID] = {
-            text: this._getComponentText(actor, DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW)
-        };
-
-        const conditionalTextComponents = [
+        surface(NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME);
+        surface(DESCRIPTION_COMPONENT_ID, DEFAULT_FALLBACK_DESCRIPTION_RAW);
+        [
             PERSONALITY_COMPONENT_ID,
             PROFILE_COMPONENT_ID,
             LIKES_COMPONENT_ID,
             DISLIKES_COMPONENT_ID,
             SECRETS_COMPONENT_ID,
-            FEARS_COMPONENT_ID, // <<< Added fears
-        ];
-
-        for (const componentId of conditionalTextComponents) {
-            const textValue = this._getComponentText(actor, componentId, null);
-            if (textValue !== null) {
-                actorState[componentId] = {text: textValue};
-                logger.debug(`AIGameStateProvider: Added component '${componentId}' to actor state for ${actor.id}.`);
-            } else {
-                logger.debug(`AIGameStateProvider: Component '${componentId}' not found or has no text for actor ${actor.id}. Not adding to actor state.`);
+            FEARS_COMPONENT_ID,
+        ].forEach(id => {
+            const txt = actorState.components[id]?.text;
+            if (typeof txt === "string" && txt.trim() !== "") {
+                actorState[id] = {text: txt.trim()};
+                logger.debug(
+                    `AIGameStateProvider: Added component '${id}' to actor state for ${actor.id}.`
+                );
             }
-        }
+        });
 
+        // ------------------------------------------------------------------
+        // 3.  Speech patterns (kept exactly as before)
+        // ------------------------------------------------------------------
         if (actor.hasComponent(SPEECH_PATTERNS_COMPONENT_ID)) {
-            const speechData = actor.getComponentData(SPEECH_PATTERNS_COMPONENT_ID);
-            if (speechData && Array.isArray(speechData.patterns) && speechData.patterns.length > 0) {
-                const validPatterns = speechData.patterns.filter(p => typeof p === 'string' && p.trim() !== '');
-                if (validPatterns.length > 0) {
-                    actorState[SPEECH_PATTERNS_COMPONENT_ID] = {...speechData, patterns: validPatterns};
-                    logger.debug(`AIGameStateProvider: Added component '${SPEECH_PATTERNS_COMPONENT_ID}' with ${validPatterns.length} valid patterns to actor state for ${actor.id}.`);
-                } else {
-                    logger.debug(`AIGameStateProvider: Component '${SPEECH_PATTERNS_COMPONENT_ID}' found for actor ${actor.id}, but it has no valid, non-empty string patterns. Not adding to actor state.`);
-                }
-            } else {
-                logger.debug(`AIGameStateProvider: Component '${SPEECH_PATTERNS_COMPONENT_ID}' data for actor ${actor.id} is missing 'patterns' array or it's empty. Not adding to actor state.`);
+            const speechData = actorState.components[SPEECH_PATTERNS_COMPONENT_ID];
+            const patterns = Array.isArray(speechData?.patterns)
+                ? speechData.patterns.filter(p => typeof p === "string" && p.trim() !== "")
+                : [];
+            if (patterns.length) {
+                actorState[SPEECH_PATTERNS_COMPONENT_ID] = {...speechData, patterns};
+                logger.debug(
+                    `AIGameStateProvider: Added component '${SPEECH_PATTERNS_COMPONENT_ID}' with ${patterns.length} valid patterns to actor state for ${actor.id}.`
+                );
             }
-        } else {
-            logger.debug(`AIGameStateProvider: Component '${SPEECH_PATTERNS_COMPONENT_ID}' not found for actor ${actor.id}. Not adding to actor state.`);
         }
 
         return actorState;

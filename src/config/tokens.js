@@ -279,6 +279,7 @@ export const tokens = Object.freeze({
     PlaceholderResolver: 'PlaceholderResolver',
     StandardElementAssembler: 'StandardElementAssembler',
     PerceptionLogAssembler: 'PerceptionLogAssembler',
+    ThoughtsSectionAssembler: 'ThoughtsSectionAssembler',
     IPromptStaticContentService: 'IPromptStaticContentService',
     IPerceptionLogFormatter: 'IPerceptionLogFormatter',
     IGameStateValidationServiceForPrompting: 'IGameStateValidationServiceForPrompting',

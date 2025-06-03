@@ -32,7 +32,7 @@ export * from './engineUIManager.js'; // Assuming this file exists and exports r
 
 
 // *** ADDED: Export the new ProcessingIndicatorController ***
-export {ProcessingIndicatorController} from './ProcessingIndicatorController.js';
+export {ProcessingIndicatorController} from './processingIndicatorController.js';
 
 // Facade
 export {DomUiFacade} from './domUiFacade.js';

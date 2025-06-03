@@ -119,20 +119,11 @@ class EntityManager extends IEntityManager {
                 !entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)
             ) {
                 const defaultStm = {thoughts: [], maxEntries: 10};
-                const validationResult = this.#validator.validate(
-                    SHORT_TERM_MEMORY_COMPONENT_ID,
-                    defaultStm
+
+                entity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, defaultStm);
+                this.#logger.debug(
+                    `EntityManager.createEntityInstance: Added default short_term_memory to actor entity ${actualInstanceId}.`
                 );
-                if (!validationResult.isValid) {
-                    this.#logger.error(
-                        `EntityManager.createEntityInstance: Default short_term_memory failed schema validation for entity ${actualInstanceId}. Errors: ${JSON.stringify(validationResult.errors)}`
-                    );
-                } else {
-                    entity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, defaultStm);
-                    this.#logger.debug(
-                        `EntityManager.createEntityInstance: Added default short_term_memory to actor entity ${actualInstanceId}.`
-                    );
-                }
             }
 
             if (!forceNew) {

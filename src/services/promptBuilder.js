@@ -75,7 +75,7 @@
 import {IPromptBuilder} from "../interfaces/IPromptBuilder.js";
 import {StandardElementAssembler} from './promptElementAssemblers/standardElementAssembler.js';
 import {PerceptionLogAssembler} from './promptElementAssemblers/perceptionLogAssembler.js';
-import {ThoughtsSectionAssembler} from './promptElementAssemblers/ThoughtsSectionAssembler.js';   // NEW ⬅️
+import {ThoughtsSectionAssembler} from './promptElementAssemblers/thoughtsSectionAssembler.js';   // NEW ⬅️
 
 
 // Define constants for special element keys

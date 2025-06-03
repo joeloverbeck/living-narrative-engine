@@ -6,17 +6,10 @@
 // Import both v1 and v2 schema IDs if needed (we’ll only export v2 here)
 import {
     LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA,
-    LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID,
 } from '../../turns/schemas/llmOutputSchemas.js';
 
 // Strip the `$id` off the imported v1 schema so downstream tools can embed it without re‐exposing `$id`.
 const {$id: _, ...LLM_PROVIDER_TURN_ACTION_SCHEMA} = LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA;
-
-/**
- * The new schema ID (v2) that includes `thoughts` for short‐term memory.
- * All modules retrieving “turn action” schema IDs should now import this.
- */
-export const TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID = LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID;
 
 /**
  * Default fallback action if the LLM cannot produce a valid structured response.
