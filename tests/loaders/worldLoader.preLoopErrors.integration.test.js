@@ -391,7 +391,6 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
         expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(componentSchemaId); // Pass
         expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(manifestSchemaId); // Pass
         expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(entitySchemaId); // Fail
-        // *** FIX: Correct typo isSChemaLoaded -> isSchemaLoaded ***
         expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(actionsSchemaId);
         expect(mockValidator.isSchemaLoaded).not.toHaveBeenCalledWith(eventsSchemaId);
     });
