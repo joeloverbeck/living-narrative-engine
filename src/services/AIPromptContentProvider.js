@@ -152,7 +152,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     async getPromptData(gameStateDto, logger) { // `logger` here is from IAIPromptContentProvider interface, // eslint-disable-line no-unused-vars
         this.#logger.debug("AIPromptContentProvider: Starting assembly of PromptData.");
 
-        // Pass `logger` (the parameter from getPromptData) as per interface for the validation call
+        // ------------------------------------------------------------------
+        // 1. Validate incoming DTO
+        // ------------------------------------------------------------------
         const validationResult = this.validateGameStateForPrompting(gameStateDto, logger);
         if (!validationResult.isValid) {
             const errorMessage = validationResult.errorContent || ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING;
@@ -160,30 +162,27 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             throw new Error(errorMessage);
         }
 
+        // ------------------------------------------------------------------
+        // 2. Extract commonly-used values
+        // ------------------------------------------------------------------
         const characterName = gameStateDto.actorPromptData?.name || DEFAULT_FALLBACK_CHARACTER_NAME;
-        this.#logger.debug(`AIPromptContentProvider.getPromptData: Character name resolved to: "${characterName}".`);
-
         const currentUserInput = gameStateDto.currentUserInput || "";
-        this.#logger.debug(`AIPromptContentProvider.getPromptData: Current user input resolved to: "${currentUserInput || "empty"}"`);
-
         const rawPerceptionLog = /** @type {RawPerceptionLogEntry[]} */ (gameStateDto.perceptionLog || []);
         const perceptionLogArray = this.#perceptionLogFormatter.format(rawPerceptionLog);
-        this.#logger.debug(`AIPromptContentProvider.getPromptData: Processed perception log. Original count: ${rawPerceptionLog.length}, Mapped count for PromptBuilder: ${perceptionLogArray.length}.`);
-        if (perceptionLogArray.length > 0) {
-            this.#logger.debug(`AIPromptContentProvider.getPromptData: First mapped perception log entry for PromptBuilder: ${JSON.stringify(perceptionLogArray[0])}`);
-        }
+        const locationName = gameStateDto.currentLocation?.name || "an unknown place"; // literal fallback string used in tests
 
-        const locationName = gameStateDto.currentLocation?.name || "an unknown place"; // Fallback to literal string as per test expectations
-        this.#logger.debug(`AIPromptContentProvider.getPromptData: Location name resolved to: "${locationName}".`);
-
+        // ------------------------------------------------------------------
+        // 3. Assemble base PromptData (everything that already existed)
+        // ------------------------------------------------------------------
+        let promptData;
         try {
-            const promptData = {
+            promptData = {
                 taskDefinitionContent: this.getTaskDefinitionContent(),
-                characterPersonaContent: this.getCharacterPersonaContent(gameStateDto, this.#logger), // Pass instance logger
+                characterPersonaContent: this.getCharacterPersonaContent(gameStateDto, this.#logger),
                 portrayalGuidelinesContent: this.getCharacterPortrayalGuidelinesContent(characterName),
                 contentPolicyContent: this.getContentPolicyContent(),
-                worldContextContent: this.getWorldContextContent(gameStateDto, this.#logger), // Pass instance logger
-                availableActionsInfoContent: this.getAvailableActionsInfoContent(gameStateDto, this.#logger), // Pass instance logger
+                worldContextContent: this.getWorldContextContent(gameStateDto, this.#logger),
+                availableActionsInfoContent: this.getAvailableActionsInfoContent(gameStateDto, this.#logger),
                 userInputContent: currentUserInput,
                 finalInstructionsContent: this.getFinalInstructionsContent(),
                 perceptionLogArray: perceptionLogArray,
@@ -191,8 +190,25 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
                 locationName: locationName,
             };
 
+            // ------------------------------------------------------------------
+            // 4. NEW: Pull short-term memory → thoughtsArray  (oldest-first)
+            // ------------------------------------------------------------------
+            /*  The AIGameStateDTO carries the live actor entity (or at least its
+                component map) under actorState.  Fall back to a top-level components
+                map if the DTO shape differs.  Nothing throws if the component
+                (or its thoughts array) is absent. */
+            const componentsMap = gameStateDto?.actorState?.components || gameStateDto?.components;
+            const memoryComp = componentsMap?.["core:short_term_memory"];
+            promptData.thoughtsArray = Array.isArray(memoryComp?.thoughts)
+                ? memoryComp.thoughts.map(t => t.text)
+                : [];
+
+            // ------------------------------------------------------------------
+            // 5. Wrap-up / logging
+            // ------------------------------------------------------------------
             this.#logger.info("AIPromptContentProvider.getPromptData: PromptData assembled successfully.");
             this.#logger.debug(`AIPromptContentProvider.getPromptData: Assembled PromptData keys: ${Object.keys(promptData).join(', ')}`);
+            this.#logger.debug(`AIPromptContentProvider.getPromptData: thoughtsArray contains ${promptData.thoughtsArray.length} entries.`);
 
             return promptData;
         } catch (error) {

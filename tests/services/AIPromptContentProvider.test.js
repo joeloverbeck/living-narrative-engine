@@ -33,7 +33,7 @@ import {jest, describe, beforeEach, test, expect, afterEach} from '@jest/globals
 /**
  * @returns {jest.Mocked<ILogger>}
  */
-const mockLoggerFn = () => ({ // Renamed to avoid conflict with variable name
+const mockLoggerFn = () => ({
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
@@ -105,8 +105,6 @@ describe('AIPromptContentProvider', () => {
         });
 
         // Spy on the provider's own methods that are either delegating or complex internal logic
-        // These are primarily used to verify that getPromptData calls them.
-        // For testing these methods themselves, the spies will be restored or the methods called directly.
         validateGameStateForPromptingSpy = jest.spyOn(provider, 'validateGameStateForPrompting');
         getTaskDefinitionContentSpy = jest.spyOn(provider, 'getTaskDefinitionContent');
         getCharacterPersonaContentSpy = jest.spyOn(provider, 'getCharacterPersonaContent');
@@ -181,7 +179,6 @@ describe('AIPromptContentProvider', () => {
     describe('Static Content Getter Methods (Delegation)', () => {
         beforeEach(() => {
             // Restore spies on these specific methods to test their actual implementation (delegation)
-            // The spies set up in the main beforeEach are for getPromptData's benefit.
             if (getTaskDefinitionContentSpy) getTaskDefinitionContentSpy.mockRestore();
             if (getCharacterPortrayalGuidelinesContentSpy) getCharacterPortrayalGuidelinesContentSpy.mockRestore();
             if (getContentPolicyContentSpy) getContentPolicyContentSpy.mockRestore();
@@ -380,6 +377,7 @@ describe('AIPromptContentProvider', () => {
             expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(fullDto, passedLogger);
             expect(mockPerceptionLogFormatterInstance.format).toHaveBeenCalledWith(testRawPerceptionInput);
 
+            // Now include thoughtsArray: [] in the expected object:
             expect(promptData).toEqual({
                 taskDefinitionContent: MOCK_TASK_DEF,
                 characterPersonaContent: MOCK_PERSONA,
@@ -392,6 +390,7 @@ describe('AIPromptContentProvider', () => {
                 perceptionLogArray: formattedPerceptions,
                 characterName: testCharName,
                 locationName: testLocationName,
+                thoughtsArray: []
             });
 
             // Verify that the internal (spied) getter methods were called correctly
@@ -468,7 +467,7 @@ describe('AIPromptContentProvider', () => {
                         speechPatterns: ["Verily!", "Forsooth!"]
                     }
                 };
-                const result = provider.getCharacterPersonaContent(dto, mockLoggerInstance); // Pass logger though it's unused by SUT for this param
+                const result = provider.getCharacterPersonaContent(dto, mockLoggerInstance);
 
                 expect(result).toContain("YOU ARE Sir Reginald.");
                 expect(result).toContain("Your Description: A brave knight.");
@@ -495,7 +494,6 @@ describe('AIPromptContentProvider', () => {
                 expect(mockLoggerInstance.warn).toHaveBeenCalledWith("AIPromptContentProvider: actorPromptData is missing in getCharacterPersonaContent. Using fallback.");
             });
 
-
             test('should use DEFAULT_FALLBACK_CHARACTER_NAME if name is missing', () => {
                 const dto = {...minimalGameStateDto, actorPromptData: {description: "A wanderer."}};
                 const result = provider.getCharacterPersonaContent(dto, mockLoggerInstance);
@@ -512,9 +510,7 @@ describe('AIPromptContentProvider', () => {
 
                 const dtoNoDetails = {...minimalGameStateDto, actorPromptData: {}}; // only empty object
                 result = provider.getCharacterPersonaContent(dtoNoDetails, mockLoggerInstance);
-                // For this specific case, the SUT returns the fallback string directly.
                 expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
-
 
                 const dtoNullNameAndRest = {
                     ...minimalGameStateDto,
@@ -522,7 +518,6 @@ describe('AIPromptContentProvider', () => {
                 };
                 result = provider.getCharacterPersonaContent(dtoNullNameAndRest, mockLoggerInstance);
                 expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
-
             });
 
             test('should correctly format optional attributes, skipping empty ones', () => {
@@ -531,7 +526,7 @@ describe('AIPromptContentProvider', () => {
                     actorPromptData: {
                         name: "Test Character",
                         description: "Desc.",
-                        personality: "  Friendly  ", // with spaces
+                        personality: "  Friendly  ",
                         profile: "", // empty
                         likes: null, // null
                         secrets: "A big one."
@@ -570,9 +565,8 @@ describe('AIPromptContentProvider', () => {
 
                 expect(result).toContain("Exits from your current location:");
                 expect(result).toContain("- Towards north leads to The Library.");
-                expect(result).toContain(`- Towards south leads to loc_throne_room.`); // Uses ID if name missing
+                expect(result).toContain(`- Towards south leads to loc_throne_room.`);
                 expect(mockLoggerInstance.debug).toHaveBeenCalledWith(expect.stringContaining('Formatted 2 items for section "Exits from your current location"'));
-
 
                 expect(result).toContain("Other characters present in this location (you cannot speak as them):");
                 expect(result).toContain("- Guard Captain - Description: Stern and watchful.");
@@ -603,15 +597,12 @@ describe('AIPromptContentProvider', () => {
 
                 expect(result).toContain(`Location: ${DEFAULT_FALLBACK_LOCATION_NAME}.`);
                 // If description is "  ", it becomes "" after ensureTerminalPunctuation.
-                // So the line in SUT is `Description: ${""}` which is "Description: "
                 expect(result).toContain(`Description: `);
                 expect(result).not.toContain(`Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_DESCRIPTION_RAW)}`);
-
 
                 expect(result).toContain("Exits from your current location:");
                 expect(result).toContain(PROMPT_FALLBACK_NO_EXITS);
                 expect(mockLoggerInstance.debug).toHaveBeenCalledWith(expect.stringContaining('Section "Exits from your current location" is empty'));
-
 
                 expect(result).toContain("Other characters present in this location (you cannot speak as them):");
                 expect(result).toContain(PROMPT_FALLBACK_ALONE_IN_LOCATION);
@@ -624,8 +615,8 @@ describe('AIPromptContentProvider', () => {
                     currentLocation: {
                         name: "Crossroads", description: "Many paths.",
                         exits: [
-                            {direction: "east", targetLocationId: "village_east_gate"}, // No name
-                            {direction: "west"} // No name, no ID
+                            {direction: "east", targetLocationId: "village_east_gate"},
+                            {direction: "west"}
                         ],
                         characters: []
                     }
@@ -658,7 +649,6 @@ describe('AIPromptContentProvider', () => {
                 const result = provider.getAvailableActionsInfoContent(dto, mockLoggerInstance);
 
                 expect(result).toContain("Consider these available actions when deciding what to do:");
-                // Corrected expectations:
                 expect(result).toContain('- "Look Around" (actionDefinitionId: "act_look", commandString: "look_around"). Description: Observe your surroundings.');
                 expect(result).toContain('- "Talk to NPC" (actionDefinitionId: "act_talk", commandString: "talk_to_npc"). Description: Engage in conversation.');
                 expect(mockLoggerInstance.debug).toHaveBeenCalledWith("AIPromptContentProvider: Formatting available actions info content.");
@@ -671,20 +661,15 @@ describe('AIPromptContentProvider', () => {
                 expect(result).toContain("Consider these available actions when deciding what to do:");
                 expect(result).toContain(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
                 expect(mockLoggerInstance.warn).toHaveBeenCalledWith("AIPromptContentProvider: No available actions provided. Using fallback message for list segment.");
-                // The _formatListSegment will log the "is empty" message
                 expect(mockLoggerInstance.debug).toHaveBeenCalledWith(expect.stringContaining('Section "Consider these available actions when deciding what to do" is empty, using empty message.'));
 
-
-                mockLoggerInstance.warn.mockClear(); // Clear for next check
-                mockLoggerInstance.debug.mockClear(); // Clear debug calls for the next assertion block
+                mockLoggerInstance.warn.mockClear();
+                mockLoggerInstance.debug.mockClear();
                 const dtoEmpty = {...minimalGameStateDto, availableActions: []};
                 result = provider.getAvailableActionsInfoContent(dtoEmpty, mockLoggerInstance);
                 expect(result).toContain(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
-                // Warn IS called again if array is empty, based on SUT logic
                 expect(mockLoggerInstance.warn).toHaveBeenCalledWith("AIPromptContentProvider: No available actions provided. Using fallback message for list segment.");
-                // Check the specific debug log for the empty list case
                 expect(mockLoggerInstance.debug).toHaveBeenCalledWith(expect.stringContaining('Section "Consider these available actions when deciding what to do" is empty, using empty message.'));
-
             });
 
             test('should use fallbacks for missing action details', () => {
@@ -697,7 +682,6 @@ describe('AIPromptContentProvider', () => {
                 };
                 const result = provider.getAvailableActionsInfoContent(dto, mockLoggerInstance);
 
-                // Corrected expectations:
                 const expectedAction1 = `- "${DEFAULT_FALLBACK_ACTION_NAME}" (actionDefinitionId: "act1", commandString: "${DEFAULT_FALLBACK_ACTION_COMMAND}"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
                 const expectedAction2 = `- "Action Two" (actionDefinitionId: "${DEFAULT_FALLBACK_ACTION_ID}", commandString: "cmd2"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
 
