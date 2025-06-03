@@ -22,7 +22,8 @@
       "secrets.component.json",
       "fears.component.json",
       "speech_patterns.component.json",
-      "portrait.component.json"
+      "portrait.component.json",
+      "short_term_memory.component.json"
     ],
     "characters": [
     ],

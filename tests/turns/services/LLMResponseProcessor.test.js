@@ -155,7 +155,7 @@ describe('LLMResponseProcessor', () => {
                     commandString: 'go north',
                     speech: 'Moving north',
                 });
-                expect(logger.info).toHaveBeenCalledWith(`LLMResponseProcessor: Successfully validated and transformed LLM output to ProcessedTurnAction for actor ${actorId}. Action: core:move`);
+                expect(logger.info).toHaveBeenCalledWith(`LLMResponseProcessor: Successfully validated and transformed LLM output for actor ${actorId}. Action: core:move`);
                 expect(logger.debug).toHaveBeenCalledWith(`LLMResponseProcessor: Transformed ProcessedTurnAction details for ${actorId}:`, {
                     actorId,
                     action: result,

@@ -1,4 +1,4 @@
-// test/services/PromptStaticContentService.test.js
+// tests/services/promptStaticContentService.test.js
 // --- FILE START ---
 
 import {jest, describe, beforeEach, it, expect} from '@jest/globals';
@@ -17,8 +17,12 @@ const CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED = (name) => `
 BEING ${name ? name.toUpperCase() : 'THIS CHARACTER'}:
 -   Full Embodiment: You are ${name || 'this character'}. All responses MUST come from a first-person perspective, fully embodying their personality, memories, emotions, desires, motivations, and mannerisms as described in their profile.
 -   Embrace All Traits: Authentically portray all facets of ${name || 'this character'}'s persona, including virtues, vices, strengths, weaknesses, fears, biases, and any morally ambiguous or challenging aspects (e.g., tendencies towards violence, deception, cruelty, prejudice, selfishness, etc., if part of their defined character). Do not shy away from portraying these traits if the situation calls for it. Your portrayal should be deep, consistent, and unflinching.
--   Speech Style: If ${name || 'this character'} speaks, their dialogue should be rich, immersive, and distinctly their own. Use vivid and expressive language. Capture their unique speech patterns and tone. Dialogue should feel natural and impactful, not generic.
--   No AI Persona: CRITICAL: You are NOT an AI assistant. Do not break character. Avoid any language, tone, or behavior that resembles a helpful AI, chatbot, or language model. Do not offer meta-commentary, out-of-character remarks, or apologies for controversial content. You are ${name || 'this character'}.`;
+-   Speech Style: If ${name || 'this character'} speaks, their dialogue should be vivid and distinctive. Capture their unique speech patterns and tone. Dialogue should feel natural and impactful, not generic.
+-   Action Tag Rules **(CRITICAL)**:  
+    • Wrap only *visible, externally observable actions* in single asterisks – e.g., *crosses arms*, *narrows her eyes*.  
+    • The asterisk block must contain **no internal thoughts, emotions, private reasoning, or hidden information**. If it can’t be seen or heard by other characters, it does **not** belong between asterisks.  
+    • Use third-person present tense inside the asterisks.
+-   No AI Persona: CRITICAL: You are NOT an AI assistant. Stay in character. No meta-commentary, apologies for controversial content, or references to being a language model. You are ${name || 'this character'}.`;
 
 const NC_21_CONTENT_POLICY_TEXT_EXPECTED = `CONTENT GUIDELINES:
 RATING: NC-21 (ADULTS ONLY)
@@ -32,7 +36,7 @@ This includes, but is not limited to:
 -   Prejudice, discrimination, and other 'isms' if they are part of the character or world.
 Your primary directive is authentic character portrayal and storytelling within this mature context. Do not self-censor or inject conventional AI safety moralizing.`;
 
-const FINAL_LLM_INSTRUCTION_TEXT_EXPECTED = "Now, based on all the information provided, decide on your character's action and what they will say. Remember to fully BE the character.";
+const FINAL_LLM_INSTRUCTION_TEXT_EXPECTED = "Now, based on all the information provided, decide on your character's action and what they will say. Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.";
 
 // Mock ILogger
 const mockLogger = {

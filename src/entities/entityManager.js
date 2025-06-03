@@ -3,7 +3,7 @@
 
 import {v4 as uuidv4} from 'uuid'; // Import the UUID library
 import Entity from './entity.js';
-import {POSITION_COMPONENT_ID} from "../constants/componentIds.js";
+import {ACTOR_COMPONENT_ID, POSITION_COMPONENT_ID, SHORT_TERM_MEMORY_COMPONENT_ID} from "../constants/componentIds.js";
 import {IEntityManager} from "../interfaces/IEntityManager.js";
 
 // --- JSDoc Imports for Type Hinting ---
@@ -111,25 +111,40 @@ class EntityManager extends IEntityManager {
             }
             this.#logger.debug(`EntityManager.createEntityInstance: Populated components for entity ${actualInstanceId} from definition ${definitionId}.`);
 
+            // ------------------------------------------------------------------
+            // Inject default short-term memory for actors (core:actor)
+            // ------------------------------------------------------------------
+            if (
+                entity.hasComponent(ACTOR_COMPONENT_ID) &&
+                !entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)
+            ) {
+                const defaultStm = {thoughts: [], maxEntries: 10};
+                const validationResult = this.#validator.validate(
+                    SHORT_TERM_MEMORY_COMPONENT_ID,
+                    defaultStm
+                );
+                if (!validationResult.isValid) {
+                    this.#logger.error(
+                        `EntityManager.createEntityInstance: Default short_term_memory failed schema validation for entity ${actualInstanceId}. Errors: ${JSON.stringify(validationResult.errors)}`
+                    );
+                } else {
+                    entity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, defaultStm);
+                    this.#logger.debug(
+                        `EntityManager.createEntityInstance: Added default short_term_memory to actor entity ${actualInstanceId}.`
+                    );
+                }
+            }
+
             if (!forceNew) {
                 this.activeEntities.set(actualInstanceId, entity);
                 // Map the definitionId to this new instanceId.
-                // If a definitionId is instantiated multiple times (and forceNew=false), this will map to the *last* one created.
-                // For unique entities like locations, this is usually fine as they are instantiated once.
                 if (!this.#definitionToPrimaryInstanceMap.has(definitionId)) {
                     this.#definitionToPrimaryInstanceMap.set(definitionId, actualInstanceId);
                     this.#logger.debug(`EntityManager.createEntityInstance: Mapped definitionId '${definitionId}' to primary instanceId '${actualInstanceId}'.`);
                 } else {
-                    this.#logger.debug(`EntityManager.createEntityInstance: DefinitionId '${definitionId}' already mapped to an instance. Not overwriting primary map for instance '${actualInstanceId}'.`);
+                    this.#logger.debug(`EntityManager.createEntityInstance: DefinitionId '${definitionId}' already mapped to an instance. Not overwriting primary map.`);
                 }
-                this.#logger.debug(`EntityManager.createEntityInstance: Added new entity ${actualInstanceId} to activeEntities map.`);
-            } else {
-                this.#logger.debug(`EntityManager.createEntityInstance: Created entity ${actualInstanceId} (forceNew=true). Not added to activeEntities or definition map.`);
             }
-
-            // REMOVED: Spatial index addition. This will be handled by WorldInitializer.
-            // const positionData = entity.getComponentData(POSITION_COMPONENT_ID);
-            // if (positionData) { ... this.#spatialIndexManager.addEntity ... }
 
             this.#logger.info(`EntityManager.createEntityInstance: Successfully created instance ${actualInstanceId} (from definition ${definitionId}, forceNew=${forceNew}). Spatial indexing deferred.`);
             return entity;
@@ -138,11 +153,9 @@ class EntityManager extends IEntityManager {
             this.#logger.error(`EntityManager.createEntityInstance: Failed to create entity (Instance ID: ${actualInstanceId}, Definition ID: ${definitionId}, forceNew=${forceNew}):`, error);
             if (!forceNew && entity && this.activeEntities.get(actualInstanceId) === entity) {
                 this.activeEntities.delete(actualInstanceId);
-                // Also consider if the entry in #definitionToPrimaryInstanceMap should be removed if it was just added for this failed instance.
                 if (this.#definitionToPrimaryInstanceMap.get(definitionId) === actualInstanceId) {
                     this.#definitionToPrimaryInstanceMap.delete(definitionId);
                 }
-                this.#logger.debug(`EntityManager.createEntityInstance: Cleaned up entity ${actualInstanceId} from activeEntities and definitionMap due to creation error.`);
             }
             return null;
         }
@@ -399,7 +412,7 @@ class EntityManager extends IEntityManager {
         }
         return this.#spatialIndexManager.getEntitiesInLocation(locationInstanceId);
     }
-    
+
     clearAll() {
         this.activeEntities.clear();
         this.#definitionToPrimaryInstanceMap.clear(); // Clear the new map as well

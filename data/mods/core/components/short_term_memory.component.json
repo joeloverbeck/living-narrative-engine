@@ -1,0 +1,45 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:short_term_memory",
+  "description": "Short-term private thoughts.",
+  "dataSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "thoughts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "text",
+            "timestamp"
+          ],
+          "additionalProperties": false
+        },
+        "default": [],
+        "minItems": 0
+      },
+      "maxEntries": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 10
+      }
+    },
+    "required": [
+      "thoughts",
+      "maxEntries"
+    ],
+    "additionalProperties": false
+  },
+  "resolveFields": [],
+  "additionalProperties": false
+}
