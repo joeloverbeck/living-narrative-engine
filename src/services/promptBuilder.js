@@ -75,9 +75,12 @@
 import {IPromptBuilder} from "../interfaces/IPromptBuilder.js";
 import {StandardElementAssembler} from './promptElementAssemblers/standardElementAssembler.js';
 import {PerceptionLogAssembler} from './promptElementAssemblers/perceptionLogAssembler.js';
+import {ThoughtsSectionAssembler} from './promptElementAssemblers/ThoughtsSectionAssembler.js';   // NEW ⬅️
+
 
 // Define constants for special element keys
 const PERCEPTION_LOG_WRAPPER_KEY = 'perception_log_wrapper';
+const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';
 
 // const PERCEPTION_LOG_ENTRY_KEY = 'perception_log_entry'; // No longer needed directly by PromptBuilder
 
@@ -128,6 +131,8 @@ export class PromptBuilder extends IPromptBuilder {
      */
     #perceptionLogAssembler;
 
+    #thoughtsSectionAssembler;
+
 
     /**
      * Initializes a new instance of the PromptBuilder.
@@ -143,7 +148,8 @@ export class PromptBuilder extends IPromptBuilder {
                     llmConfigService,
                     placeholderResolver,
                     standardElementAssembler,
-                    perceptionLogAssembler
+                    perceptionLogAssembler,
+                    thoughtsSectionAssembler,
                 }) {
         super();
         this.#logger = logger;
@@ -176,7 +182,14 @@ export class PromptBuilder extends IPromptBuilder {
         }
         this.#perceptionLogAssembler = perceptionLogAssembler;
 
-        this.#logger.info('PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers.');
+        // ThoughtsSectionAssembler – if none supplied, create a default instance
+        if (!thoughtsSectionAssembler) {
+            this.#thoughtsSectionAssembler = new ThoughtsSectionAssembler({logger});
+        } else {
+            this.#thoughtsSectionAssembler = thoughtsSectionAssembler;
+        }
+
+        this.#logger.info('PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers (standard, perception-log, thoughts).');
     }
 
     /**
@@ -273,6 +286,8 @@ export class PromptBuilder extends IPromptBuilder {
 
             if (key === PERCEPTION_LOG_WRAPPER_KEY) {
                 assemblerToUse = this.#perceptionLogAssembler;
+            } else if (key === THOUGHTS_WRAPPER_KEY) {                                           // NEW ⬅️
+                assemblerToUse = this.#thoughtsSectionAssembler;                                 // NEW ⬅️
             } else {
                 assemblerToUse = this.#standardElementAssembler;
             }
