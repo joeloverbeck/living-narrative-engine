@@ -25,8 +25,16 @@ export const getDisplayName = (entity, fallback = 'unknown entity') => {
     // AC: Data is accessed using entity.getComponentData(entityId, "core:name") (via entity instance)
     const nameComponentData = entity.getComponentData(NAME_COMPONENT_ID);
     // AC: Default values or fallback logic are handled appropriately if components are missing.
-    // Assumes the name component data structure is { value: "Entity Name" }
-    return nameComponentData?.value ?? entity.id ?? fallback;
+    // Support both { text: "Entity Name" } and legacy { value: "Entity Name" } structures.
+    if (nameComponentData) {
+        if (typeof nameComponentData.text === 'string' && nameComponentData.text.trim() !== '') {
+            return nameComponentData.text;
+        }
+        if (typeof nameComponentData.value === 'string' && nameComponentData.value.trim() !== '') {
+            return nameComponentData.value;
+        }
+    }
+    return entity.id ?? fallback;
 };
 // --- END TICKET 4.4 REFACTOR ---
 
