@@ -506,6 +506,94 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         return this.#currentActiveLlmId;
     }
 
+    /**
+     * @private
+     * Validates a single LLM configuration object.
+     * @param {LLMModelConfig} config
+     * @returns {Array<{field: string, reason: string}>}
+     */
+    #validateConfig(config) {
+        const errors = [];
+        if (!config.configId || typeof config.configId !== 'string' || config.configId.trim() === '') {
+            errors.push({field: 'configId', reason: 'Missing or invalid'});
+        }
+        if (!config.endpointUrl || typeof config.endpointUrl !== 'string' || config.endpointUrl.trim() === '') {
+            errors.push({field: 'endpointUrl', reason: 'Missing or invalid'});
+        }
+        if (!config.modelIdentifier || typeof config.modelIdentifier !== 'string' || config.modelIdentifier.trim() === '') {
+            errors.push({field: 'modelIdentifier', reason: 'Missing or invalid'});
+        }
+        if (!config.apiType || typeof config.apiType !== 'string' || config.apiType.trim() === '') {
+            errors.push({field: 'apiType', reason: 'Missing or invalid'});
+        }
+
+        const jos = config.jsonOutputStrategy;
+        if (typeof jos !== 'object' || jos === null) {
+            errors.push({field: 'jsonOutputStrategy', reason: 'Is required and must be an object.'});
+        } else if (typeof jos.method !== 'string' || jos.method.trim() === '') {
+            errors.push({field: 'jsonOutputStrategy.method', reason: 'Is required and must be a non-empty string.'});
+        } else {
+            const method = jos.method;
+            if (method === 'tool_calling' && (typeof jos.toolName !== 'string' || jos.toolName.trim() === '')) {
+                errors.push({field: 'jsonOutputStrategy.toolName', reason: 'Required when jsonOutputStrategy.method is "tool_calling".'});
+            } else if (method === 'gbnf_grammar' && (typeof jos.grammar !== 'string' || jos.grammar.trim() === '')) {
+                errors.push({field: 'jsonOutputStrategy.grammar', reason: 'Required when jsonOutputStrategy.method is "gbnf_grammar".'});
+            } else if (method === 'openrouter_json_schema' && (typeof jos.jsonSchema !== 'object' || jos.jsonSchema === null)) {
+                errors.push({field: 'jsonOutputStrategy.jsonSchema', reason: 'Required when jsonOutputStrategy.method is "openrouter_json_schema".'});
+            }
+        }
+
+        return errors;
+    }
+
+    /**
+     * @private
+     * Retrieves an API key for the given config, enforcing required logic.
+     * @param {LLMModelConfig} config
+     * @returns {Promise<string | undefined>}
+     */
+    async #getApiKeyForConfig(config) {
+        this.#logger.debug(`Attempting to retrieve API key for LLM '${config.configId}'.`);
+        const apiKey = await this.#apiKeyProvider.getKey(config, this.#environmentContext);
+        const isCloudApi = CLOUD_API_TYPES.includes(config.apiType);
+        const requiresApiKey = isCloudApi && this.#environmentContext.isServer();
+
+        if (requiresApiKey && !apiKey) {
+            const msg = `API key missing for server-side cloud LLM '${config.configId}'. Key is required in this context.`;
+            throw new ConfigurationError(msg, {llmId: config.configId, problematicField: 'apiKey'});
+        }
+
+        if (apiKey) {
+            this.#logger.info(`API key retrieved for LLM '${config.configId}'.`);
+        } else if (requiresApiKey) {
+            throw new ConfigurationError(`Critical: API key for LLM '${config.configId}' required but unavailable.`, {
+                llmId: config.configId,
+                problematicField: 'apiKey'
+            });
+        } else {
+            this.#logger.info(`API key not required or not found for LLM '${config.configId}', proceeding. (Is Cloud API: ${isCloudApi}, Is Server: ${this.#environmentContext.isServer()})`);
+        }
+
+        return apiKey;
+    }
+
+    /**
+     * @private
+     * Creates an LLM strategy instance for the provided config.
+     * @param {LLMModelConfig} config
+     * @returns {ILLMStrategy}
+     */
+    #createStrategy(config) {
+        try {
+            return this.#llmStrategyFactory.getStrategy(config);
+        } catch (factoryError) {
+            throw new ConfigurationError(`Failed to get strategy from factory for LLM '${config.configId}': ${factoryError.message}`, {
+                llmId: config.configId,
+                originalError: factoryError
+            });
+        }
+    }
+
 
     /**
      * Generates an action and speech based on the provided game summary using a configured LLM.
@@ -533,111 +621,23 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         }
 
         try {
-            // Validate critical fields of the active LLM configuration.
-            // Property names must match the new LLMModelConfig schema (e.g., configId).
-            const validationErrors = [];
-            // Check activeConfig.configId instead of activeConfig.id
-            if (!activeConfig.configId || typeof activeConfig.configId !== 'string' || activeConfig.configId.trim() === '') {
-                validationErrors.push({field: 'configId', reason: 'Missing or invalid'});
-            }
-            if (!activeConfig.endpointUrl || typeof activeConfig.endpointUrl !== 'string' || activeConfig.endpointUrl.trim() === '') {
-                validationErrors.push({field: 'endpointUrl', reason: 'Missing or invalid'});
-            }
-            // modelIdentifier is correct as per schema
-            if (!activeConfig.modelIdentifier || typeof activeConfig.modelIdentifier !== 'string' || activeConfig.modelIdentifier.trim() === '') {
-                validationErrors.push({field: 'modelIdentifier', reason: 'Missing or invalid'});
-            }
-            if (!activeConfig.apiType || typeof activeConfig.apiType !== 'string' || activeConfig.apiType.trim() === '') {
-                validationErrors.push({field: 'apiType', reason: 'Missing or invalid'});
-            }
-
-            if (typeof activeConfig.jsonOutputStrategy !== 'object' || activeConfig.jsonOutputStrategy === null) {
-                validationErrors.push({field: 'jsonOutputStrategy', reason: 'Is required and must be an object.'});
-            } else {
-                if (typeof activeConfig.jsonOutputStrategy.method !== 'string' || activeConfig.jsonOutputStrategy.method.trim() === '') {
-                    validationErrors.push({
-                        field: 'jsonOutputStrategy.method',
-                        reason: 'Is required and must be a non-empty string.'
-                    });
-                } else {
-                    const method = activeConfig.jsonOutputStrategy.method;
-                    if (method === "tool_calling" && (typeof activeConfig.jsonOutputStrategy.toolName !== 'string' || activeConfig.jsonOutputStrategy.toolName.trim() === '')) {
-                        validationErrors.push({
-                            field: 'jsonOutputStrategy.toolName',
-                            reason: 'Is required and must be a non-empty string when jsonOutputStrategy.method is "tool_calling".'
-                        });
-                    } else if (method === "gbnf_grammar" && (typeof activeConfig.jsonOutputStrategy.grammar !== 'string' || activeConfig.jsonOutputStrategy.grammar.trim() === '')) {
-                        validationErrors.push({
-                            field: 'jsonOutputStrategy.grammar',
-                            reason: 'Is required and must be a non-empty string (representing grammar content or a path) when jsonOutputStrategy.method is "gbnf_grammar".'
-                        });
-                    }
-                        // Note: The schema also conditionally requires jsonSchema for "openrouter_json_schema".
-                    // Adding validation for that as per schema structure for completeness, if not already covered implicitly.
-                    else if (method === "openrouter_json_schema" && (typeof activeConfig.jsonOutputStrategy.jsonSchema !== 'object' || activeConfig.jsonOutputStrategy.jsonSchema === null)) {
-                        validationErrors.push({
-                            field: 'jsonOutputStrategy.jsonSchema',
-                            reason: 'Is required and must be an object when jsonOutputStrategy.method is "openrouter_json_schema".'
-                        });
-                    }
-                }
-            }
-
+            const validationErrors = this.#validateConfig(activeConfig);
             if (validationErrors.length > 0) {
                 const errorDetailsMessage = validationErrors.map(err => `${err.field}: ${err.reason}`).join('; ');
-                // Use activeConfig.configId for the message
                 const msg = `Active LLM config '${activeConfig.configId || 'unknown'}' is invalid: ${errorDetailsMessage}`;
                 throw new ConfigurationError(msg, {llmId: activeConfig.configId, problematicFields: validationErrors});
             }
 
-            this.#logger.debug(`Attempting to retrieve API key for LLM '${activeConfig.configId}'.`); // Use configId
-            const apiKey = await this.#apiKeyProvider.getKey(activeConfig, this.#environmentContext);
-            const isCloudApi = CLOUD_API_TYPES.includes(activeConfig.apiType);
-
-            const requiresApiKey = isCloudApi && this.#environmentContext.isServer();
-
-            if (requiresApiKey && !apiKey) {
-                const msg = `API key missing for server-side cloud LLM '${activeConfig.configId}'. Key is required in this context.`; // Use configId
-                throw new ConfigurationError(msg, {llmId: activeConfig.configId, problematicField: 'apiKey'}); // Use configId
-            }
-
-            if (apiKey) {
-                this.#logger.info(`API key retrieved for LLM '${activeConfig.configId}'.`); // Use configId
-            } else if (requiresApiKey) {
-                throw new ConfigurationError(`Critical: API key for LLM '${activeConfig.configId}' required but unavailable.`, { // Use configId
-                    llmId: activeConfig.configId, // Use configId
-                    problematicField: 'apiKey'
-                });
-            } else {
-                this.#logger.info(`API key not required or not found for LLM '${activeConfig.configId}', proceeding. (Is Cloud API: ${isCloudApi}, Is Server: ${this.#environmentContext.isServer()})`); // Use configId
-            }
-
-
-            let strategy;
-            try {
-                strategy = this.#llmStrategyFactory.getStrategy(activeConfig);
-            } catch (factoryError) {
-                // MODIFICATION START: Comment out or remove the logger call below (already present in original code)
-                /*
-                this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: Failed to get strategy from factory for LLM '${activeConfig.configId}'. Error: ${factoryError.message}`, { // Use configId
-                    llmId: activeConfig.configId, // Use configId
-                    factoryError
-                });
-                */
-                // MODIFICATION END
-                throw new ConfigurationError(`Failed to get strategy from factory for LLM '${activeConfig.configId}': ${factoryError.message}`, { // Use configId
-                    llmId: activeConfig.configId, // Use configId
-                    originalError: factoryError
-                });
-            }
+            const apiKey = await this.#getApiKeyForConfig(activeConfig);
+            const strategy = this.#createStrategy(activeConfig);
 
             if (!strategy) {
-                const msg = `No suitable LLM strategy could be created for the active configuration '${activeConfig.configId}'. Check factory logic and LLM config apiType.`; // Use configId
-                this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`, {llmId: activeConfig.configId}); // Use configId
-                throw new ConfigurationError(msg, {llmId: activeConfig.configId}); // Use configId
+                const msg = `No suitable LLM strategy could be created for the active configuration '${activeConfig.configId}'. Check factory logic and LLM config apiType.`;
+                this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`, {llmId: activeConfig.configId});
+                throw new ConfigurationError(msg, {llmId: activeConfig.configId});
             }
 
-            this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: Executing strategy for LLM '${activeConfig.configId}'.`); // Use configId
+            this.#logger.info(`ConfigurableLLMAdapter.getAIDecision: Executing strategy for LLM '${activeConfig.configId}'.`);
             return await strategy.execute({
                 gameSummary,
                 llmConfig: activeConfig,
