@@ -141,6 +141,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
     /**
      * Validates if the provided AIGameStateDTO contains the critical information.
+     *
      * @param {AIGameStateDTO | null | undefined} gameStateDto
      * @param {ILogger} logger
      * @returns {{isValid: boolean, errorContent: string | null}}
@@ -154,6 +155,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
     /**
      * Assembles the complete PromptData object required for constructing an LLM prompt.
+     *
      * @param {AIGameStateDTO} gameStateDto
      * @param {ILogger} logger
      * @returns {Promise<PromptData>}
