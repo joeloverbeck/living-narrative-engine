@@ -1,8 +1,11 @@
 // src/logic/jsonLogicEvaluationService.test.js
 
+/* eslint-disable jsdoc/check-tag-names */
 /**
  * @jest-environment node
  */
+/* eslint-enable jsdoc/check-tag-names */
+/* eslint-disable no-unused-vars */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 // --- Task 1: Import necessary modules (Ticket 2.6.3) ---
@@ -120,6 +123,7 @@ describe('JsonLogicEvaluationService', () => {
   // (logging, error handling around apply), assuming apply IS mocked.
   // We might rename the describe block slightly for clarity.
   describe('evaluate() method (Unit Tests with Mocked Apply)', () => {
+    // eslint-disable-next-line jsdoc/no-undefined-types
     /** @type {JSONLogicRule} */
     const sampleRule = { '==': [{ var: 'event.type' }, 'TEST_EVENT'] };
     /** @type {JsonLogicEvaluationContext} */

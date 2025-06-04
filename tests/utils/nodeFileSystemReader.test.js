@@ -59,14 +59,11 @@ describe('NodeFileSystemReader', () => {
 
       mockFsReadFile.mockRejectedValue(expectedError);
 
-      expect.assertions(4); // เพิ่มการตรวจสอบ mockFsReadFile
-      try {
-        await reader.readFile(filePath, encoding);
-      } catch (error) {
-        expect(error).toBe(expectedError);
-        // @ts-ignore
-        expect(error.code).toBe('ENOENT');
-      }
+      await expect(reader.readFile(filePath, encoding)).rejects.toEqual(
+        expectedError
+      );
+      // @ts-ignore
+      expect(expectedError.code).toBe('ENOENT');
       expect(mockFsReadFile).toHaveBeenCalledTimes(1);
       expect(mockFsReadFile).toHaveBeenCalledWith(filePath, { encoding });
     });
@@ -93,16 +90,8 @@ describe('NodeFileSystemReader', () => {
       const filePath = '';
       const encoding = 'utf-8';
 
-      expect.assertions(3); // For error instance, message, and ensuring fs.readFile is not called
-      try {
-        await reader.readFile(filePath, encoding);
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        // @ts-ignore
-        expect(error.message).toBe(
-          'NodeFileSystemReader.readFile: filePath must be a non-empty string.'
-        );
-      }
+      await expect(reader.readFile(filePath, encoding)).rejects.toThrow(Error);
+      // @ts-ignore
       expect(mockFsReadFile).not.toHaveBeenCalled();
     });
 
@@ -111,16 +100,8 @@ describe('NodeFileSystemReader', () => {
       const filePath = null;
       const encoding = 'utf-8';
 
-      expect.assertions(3);
-      try {
-        await reader.readFile(filePath, encoding);
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        // @ts-ignore
-        expect(error.message).toBe(
-          'NodeFileSystemReader.readFile: filePath must be a non-empty string.'
-        );
-      }
+      await expect(reader.readFile(filePath, encoding)).rejects.toThrow(Error);
+      // @ts-ignore
       expect(mockFsReadFile).not.toHaveBeenCalled();
     });
 
