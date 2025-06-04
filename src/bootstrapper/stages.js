@@ -1,8 +1,11 @@
 // src/bootstrapper/stages.js
+/* eslint-disable no-console */
 // --- FILE START ---
 import { UIBootstrapper } from './UIBootstrapper.js';
 import AppContainer from '../config/appContainer.js'; // Corrected path assuming appContainer.js is in ../config/
 import GameEngine from '../engine/gameEngine.js';
+
+// eslint-disable-next-line no-unused-vars
 import { tokens } from '../config/tokens.js'; // Corrected path assuming tokens.js is in ../config/
 
 /**

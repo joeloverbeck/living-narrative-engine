@@ -1,4 +1,5 @@
 // src/bootstrapper/errorUtils.js
+/* eslint-disable no-console */
 
 /**
  * @typedef {object} FatalErrorUIElements

@@ -12,7 +12,7 @@ try {
   if (jsonLogic?.operations?.not === undefined) {
     jsonLogic.add_operation('not', (a) => !a);
   }
-} catch (_) {
+} catch (_e) {
   // In the unlikely event `add_operation` throws because the op already exists
   // or the library structure is different, we silently ignore – the goal is
   // simply to guarantee that a "not" alias is present.
@@ -63,10 +63,9 @@ class JsonLogicEvaluationService {
    * Evaluates a JSON Logic rule against a given data context using json-logic-js,
    * returning a strict boolean based on the truthiness of the result.
    *
-   * @param {JSONLogicRule} rule - The JSON Logic rule object to evaluate.
+   * @param {object} rule - The JSON Logic rule object to evaluate.
    * @param {JsonLogicEvaluationContext} context - The data context against which the rule is evaluated.
    * @returns {boolean} - The boolean result derived from the rule evaluation's truthiness. Returns false on error.
-   * @implements {AC.3}
    */
   evaluate(rule, context) {
     // ── Vacuous truth / falsity for empty composites ───────────────────

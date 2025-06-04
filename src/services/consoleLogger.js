@@ -1,4 +1,5 @@
 // src/core/services/consoleLogger.js
+/* eslint-disable no-console */
 
 /**
  * @file Basic ILogger implementation that directs output to the browser/Node console.
@@ -28,7 +29,7 @@ export const LogLevel = {
  * Maps string representations of log levels to their numerical LogLevel enum values.
  *
  * @private
- * @type {Object<string, number>}
+ * @type {{[key: string]: number}}
  */
 const LOG_LEVEL_MAP = {
   DEBUG: LogLevel.DEBUG,

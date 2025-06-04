@@ -1,5 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
+/* eslint-disable no-console */
+
 import StaticConfiguration from '../src/services/staticConfiguration.js';
 import DefaultPathResolver from '../src/services/defaultPathResolver.js';
 import AjvSchemaValidator from '../src/services/ajvSchemaValidator.js';
@@ -44,9 +46,11 @@ const manifestLoader = new ModManifestLoader(
 );
 
 /**
+ * Validate content files for a specific mod manifest against their schemas.
  *
- * @param modId
- * @param manifest
+ * @param {string} modId - The identifier of the mod being validated.
+ * @param {object} manifest - Parsed manifest data for the mod.
+ * @returns {Promise<string[]>} A list of human readable error messages.
  */
 async function validateContent(modId, manifest) {
   if (!manifest.content) return [];
@@ -85,7 +89,10 @@ async function validateContent(modId, manifest) {
 }
 
 /**
+ * Entry point for the mod validation script.
+ * Loads schemas and manifests then validates all discovered mods.
  *
+ * @returns {Promise<void>} Resolves when validation is complete.
  */
 async function run() {
   try {
@@ -125,7 +132,7 @@ async function run() {
     }
 
     const contentErrors = [];
-    for (const [lcId, manifest] of manifestMap.entries()) {
+    for (const manifest of manifestMap.values()) {
       const errs = await validateContent(manifest.id, manifest);
       contentErrors.push(...errs);
     }

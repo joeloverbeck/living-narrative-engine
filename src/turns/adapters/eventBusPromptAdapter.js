@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { IPromptOutputPort } from '../ports/IPromptOutputPort.js';
+/* eslint-disable no-console */
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
