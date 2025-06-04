@@ -30,8 +30,7 @@ function _calculateRetryDelay(currentAttempt, baseDelayMs, maxDelayMs) {
 /**
  * @async
  * @function Workspace_retry
- * @description
- * Wraps a fetch API call to provide automatic retries for transient network
+ * @description Wraps a fetch API call to provide automatic retries for transient network
  * errors and specific HTTP status codes. It implements an exponential backoff
  * strategy with added jitter.
  *
@@ -69,8 +68,10 @@ export async function Workspace_retry(
   const currentLogger = ensureValidLogger(logger, 'Workspace_retry');
 
   /**
+   * Performs a single fetch attempt and recursively retries on failure.
    *
-   * @param currentAttempt
+   * @param {number} currentAttempt - The current attempt number.
+   * @returns {Promise<any>} The parsed JSON response if successful.
    */
   async function attemptFetchRecursive(currentAttempt) {
     // currentLogger is already defined in the outer scope and is valid
@@ -90,6 +91,9 @@ export async function Workspace_retry(
             `Attempt ${currentAttempt} for ${url} - Error response body (JSON): ${errorBodyText.substring(0, 500)}`
           );
         } catch (e_json) {
+          currentLogger.debug(
+            `Attempt ${currentAttempt} for ${url} - Failed to parse error body as JSON: ${e_json.message}`
+          );
           try {
             errorBodyText = await response.text();
             currentLogger.debug(

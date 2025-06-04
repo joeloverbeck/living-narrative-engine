@@ -110,6 +110,18 @@ export default [
     },
   },
 
+  // 5a. Configuration for root configuration files using CommonJS
+  {
+    files: ['babel.config.js', 'jest.config.js', 'jest.setup.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+
   // 5b. Configuration for the LLM Proxy Server (Node.js environment)
   // This configuration will apply ONLY to files within 'llm-proxy-server/'
   // assuming the global ignores do NOT include 'llm-proxy-server/'
@@ -130,6 +142,10 @@ export default [
     rules: {
       // Node.js specific rules for your proxy server
       'no-console': 'off', // Often enabled for server logs
+      'no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       // Add any other rules specific to this server environment
     },
   },
