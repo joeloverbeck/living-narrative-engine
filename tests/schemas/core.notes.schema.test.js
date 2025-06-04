@@ -1,7 +1,6 @@
 // tests/schemas/core.notes.schema.test.js
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import {beforeAll, describe, expect, test} from '@jest/globals';
 
 import coreNotesComponent from '../../data/mods/core/components/notes.component.json';
 
