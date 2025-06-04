@@ -31,10 +31,7 @@
         "additionalProperties": true
       }
     },
-    "required": [
-      "entityId",
-      "success"
-    ],
+    "required": ["entityId", "success"],
     "additionalProperties": false
   }
 }

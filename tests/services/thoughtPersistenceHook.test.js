@@ -1,143 +1,146 @@
 // tests/services/ThoughtPersistenceHook.test.js
 
-import {persistThoughts} from '../../src/services/thoughtPersistenceHook.js';
+import { persistThoughts } from '../../src/services/thoughtPersistenceHook.js';
 import ShortTermMemoryService from '../../src/services/ShortTermMemoryService.js';
-import {describe, test, expect, jest} from '@jest/globals';
+import { describe, test, expect, jest } from '@jest/globals';
 
 describe('ThoughtPersistenceHook.processTurnAction', () => {
-    test('logs STM-001 and returns early when thoughts field is absent', () => {
-        const mockedLogger = {warn: jest.fn()};
-        const fakeActor = {}; // actorEntity not used in this case
+  test('logs STM-001 and returns early when thoughts field is absent', () => {
+    const mockedLogger = { warn: jest.fn() };
+    const fakeActor = {}; // actorEntity not used in this case
 
-        expect(() => {
-            persistThoughts({}, fakeActor, mockedLogger);
-        }).not.toThrow();
+    expect(() => {
+      persistThoughts({}, fakeActor, mockedLogger);
+    }).not.toThrow();
 
-        expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockedLogger.warn).toHaveBeenCalledWith('STM-001 Missing thoughts');
-    });
+    expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockedLogger.warn).toHaveBeenCalledWith('STM-001 Missing thoughts');
+  });
 
-    test('logs STM-001 and returns early when thoughts field is empty or whitespace', () => {
-        const mockedLogger = {warn: jest.fn()};
-        const fakeActor = {};
+  test('logs STM-001 and returns early when thoughts field is empty or whitespace', () => {
+    const mockedLogger = { warn: jest.fn() };
+    const fakeActor = {};
 
-        expect(() => {
-            persistThoughts({thoughts: '   '}, fakeActor, mockedLogger);
-        }).not.toThrow();
+    expect(() => {
+      persistThoughts({ thoughts: '   ' }, fakeActor, mockedLogger);
+    }).not.toThrow();
 
-        expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockedLogger.warn).toHaveBeenCalledWith('STM-001 Missing thoughts');
-    });
+    expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockedLogger.warn).toHaveBeenCalledWith('STM-001 Missing thoughts');
+  });
 
-    test('logs STM-002 and returns early when memory component is absent', () => {
-        const mockedLogger = {warn: jest.fn()};
-        const fakeActor = {components: {}};
+  test('logs STM-002 and returns early when memory component is absent', () => {
+    const mockedLogger = { warn: jest.fn() };
+    const fakeActor = { components: {} };
 
-        expect(() => {
-            persistThoughts({thoughts: 'Anything'}, fakeActor, mockedLogger);
-        }).not.toThrow();
+    expect(() => {
+      persistThoughts({ thoughts: 'Anything' }, fakeActor, mockedLogger);
+    }).not.toThrow();
 
-        expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
-        expect(mockedLogger.warn).toHaveBeenCalledWith('STM-002 Missing component');
-    });
+    expect(mockedLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockedLogger.warn).toHaveBeenCalledWith('STM-002 Missing component');
+  });
 
-    test('adds a thought to short-term memory when none exist', () => {
-        const fakeActor = {
-            components: {
-                'core:short_term_memory': {
-                    thoughts: [],
-                    maxEntries: 5,
-                },
-            },
-        };
-        const mockedLogger = {warn: jest.fn()};
+  test('adds a thought to short-term memory when none exist', () => {
+    const fakeActor = {
+      components: {
+        'core:short_term_memory': {
+          thoughts: [],
+          maxEntries: 5,
+        },
+      },
+    };
+    const mockedLogger = { warn: jest.fn() };
 
-        expect(() => {
-            persistThoughts({thoughts: 'Test Thought'}, fakeActor, mockedLogger);
-        }).not.toThrow();
+    expect(() => {
+      persistThoughts({ thoughts: 'Test Thought' }, fakeActor, mockedLogger);
+    }).not.toThrow();
 
-        const mem = fakeActor.components['core:short_term_memory'];
-        expect(mem.thoughts.length).toBe(1);
-        expect(mem.thoughts[0].text).toBe('Test Thought');
-        expect(typeof mem.thoughts[0].timestamp).toBe('string');
-    });
+    const mem = fakeActor.components['core:short_term_memory'];
+    expect(mem.thoughts.length).toBe(1);
+    expect(mem.thoughts[0].text).toBe('Test Thought');
+    expect(typeof mem.thoughts[0].timestamp).toBe('string');
+  });
 
-    test('ignores duplicate thought (case-insensitive, trimmed) and does not add', () => {
-        // Prepare an existing thought
-        const existingTimestamp = new Date('2025-06-01T12:00:00.000Z').toISOString();
-        const fakeActor = {
-            components: {
-                'core:short_term_memory': {
-                    thoughts: [
-                        {text: 'duplicate', timestamp: existingTimestamp},
-                    ],
-                    maxEntries: 5,
-                },
-            },
-        };
-        const mockedLogger = {warn: jest.fn()};
+  test('ignores duplicate thought (case-insensitive, trimmed) and does not add', () => {
+    // Prepare an existing thought
+    const existingTimestamp = new Date(
+      '2025-06-01T12:00:00.000Z'
+    ).toISOString();
+    const fakeActor = {
+      components: {
+        'core:short_term_memory': {
+          thoughts: [{ text: 'duplicate', timestamp: existingTimestamp }],
+          maxEntries: 5,
+        },
+      },
+    };
+    const mockedLogger = { warn: jest.fn() };
 
-        // Call with a duplicate in different case and with trailing space
-        expect(() => {
-            persistThoughts({thoughts: 'Duplicate '}, fakeActor, mockedLogger);
-        }).not.toThrow();
+    // Call with a duplicate in different case and with trailing space
+    expect(() => {
+      persistThoughts({ thoughts: 'Duplicate ' }, fakeActor, mockedLogger);
+    }).not.toThrow();
 
-        const mem = fakeActor.components['core:short_term_memory'];
-        // Should remain exactly one entry, the original
-        expect(mem.thoughts.length).toBe(1);
-        expect(mem.thoughts[0].text).toBe('duplicate');
-        expect(mem.thoughts[0].timestamp).toBe(existingTimestamp);
-    });
+    const mem = fakeActor.components['core:short_term_memory'];
+    // Should remain exactly one entry, the original
+    expect(mem.thoughts.length).toBe(1);
+    expect(mem.thoughts[0].text).toBe('duplicate');
+    expect(mem.thoughts[0].timestamp).toBe(existingTimestamp);
+  });
 
-    test('respects maxEntries by trimming oldest thoughts when limit exceeded', () => {
-        // Use the real ShortTermMemoryService to test trimming behavior
-        const realService = new ShortTermMemoryService();
-        const initialThoughts = [];
-        const fakeActor = {
-            components: {
-                'core:short_term_memory': {
-                    thoughts: initialThoughts,
-                    maxEntries: 2,
-                },
-            },
-        };
-        const mockedLogger = {warn: jest.fn()};
+  test('respects maxEntries by trimming oldest thoughts when limit exceeded', () => {
+    // Use the real ShortTermMemoryService to test trimming behavior
+    const realService = new ShortTermMemoryService();
+    const initialThoughts = [];
+    const fakeActor = {
+      components: {
+        'core:short_term_memory': {
+          thoughts: initialThoughts,
+          maxEntries: 2,
+        },
+      },
+    };
+    const mockedLogger = { warn: jest.fn() };
 
-        // First thought
-        persistThoughts({thoughts: 'First'}, fakeActor, mockedLogger);
-        // Second thought
-        persistThoughts({thoughts: 'Second'}, fakeActor, mockedLogger);
-        // Third thought—should trim the first
-        persistThoughts({thoughts: 'Third'}, fakeActor, mockedLogger);
+    // First thought
+    persistThoughts({ thoughts: 'First' }, fakeActor, mockedLogger);
+    // Second thought
+    persistThoughts({ thoughts: 'Second' }, fakeActor, mockedLogger);
+    // Third thought—should trim the first
+    persistThoughts({ thoughts: 'Third' }, fakeActor, mockedLogger);
 
-        const mem = fakeActor.components['core:short_term_memory'];
-        expect(mem.thoughts.length).toBe(2);
-        expect(mem.thoughts[0].text).toBe('Second');
-        expect(mem.thoughts[1].text).toBe('Third');
-    });
+    const mem = fakeActor.components['core:short_term_memory'];
+    expect(mem.thoughts.length).toBe(2);
+    expect(mem.thoughts[0].text).toBe('Second');
+    expect(mem.thoughts[1].text).toBe('Third');
+  });
 
-    test('invokes ShortTermMemoryService.addThought with correct arguments', () => {
-        // Spy on the service class and its addThought method
-        const addThoughtSpy = jest.spyOn(ShortTermMemoryService.prototype, 'addThought');
-        const fakeActor = {
-            components: {
-                'core:short_term_memory': {
-                    thoughts: [],
-                    maxEntries: 3,
-                },
-            },
-        };
-        const mockedLogger = {warn: jest.fn()};
+  test('invokes ShortTermMemoryService.addThought with correct arguments', () => {
+    // Spy on the service class and its addThought method
+    const addThoughtSpy = jest.spyOn(
+      ShortTermMemoryService.prototype,
+      'addThought'
+    );
+    const fakeActor = {
+      components: {
+        'core:short_term_memory': {
+          thoughts: [],
+          maxEntries: 3,
+        },
+      },
+    };
+    const mockedLogger = { warn: jest.fn() };
 
-        persistThoughts({thoughts: 'Inspect'}, fakeActor, mockedLogger);
+    persistThoughts({ thoughts: 'Inspect' }, fakeActor, mockedLogger);
 
-        expect(addThoughtSpy).toHaveBeenCalledTimes(1);
+    expect(addThoughtSpy).toHaveBeenCalledTimes(1);
 
-        const [passedMem, passedText, passedDate] = addThoughtSpy.mock.calls[0];
-        expect(passedMem).toBe(fakeActor.components['core:short_term_memory']);
-        expect(passedText).toBe('Inspect');
-        expect(passedDate instanceof Date).toBe(true);
+    const [passedMem, passedText, passedDate] = addThoughtSpy.mock.calls[0];
+    expect(passedMem).toBe(fakeActor.components['core:short_term_memory']);
+    expect(passedText).toBe('Inspect');
+    expect(passedDate instanceof Date).toBe(true);
 
-        addThoughtSpy.mockRestore();
-    });
+    addThoughtSpy.mockRestore();
+  });
 });

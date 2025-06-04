@@ -1,6 +1,13 @@
 // src/tests/core/services/workspaceDataFetcher.test.js
 
-import {describe, it, expect, jest, beforeEach, afterEach} from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import WorkspaceDataFetcher from '../../src/services/workspaceDataFetcher.js'; // Adjust path as needed
 
 describe('WorkspaceDataFetcher', () => {
@@ -23,7 +30,7 @@ describe('WorkspaceDataFetcher', () => {
 
   // Task 2: Test `Workspace` Success
   it('should fetch and parse JSON data successfully when response is ok', async () => {
-    const mockData = {data: 'test-value'};
+    const mockData = { data: 'test-value' };
     const identifier = '/api/data/success';
 
     // Mock the Response object that fetch resolves with
@@ -91,7 +98,6 @@ describe('WorkspaceDataFetcher', () => {
     });
   });
 
-
   // Task 4: Test `Workspace` Network Error
   it('should reject with an error for network failures', async () => {
     const identifier = '/api/data/networkfail';
@@ -101,7 +107,9 @@ describe('WorkspaceDataFetcher', () => {
     fetchSpy.mockRejectedValue(networkError);
 
     // Assert that the promise rejects with the specific network error
-    await expect(fetcher.fetch(identifier)).rejects.toThrow('WorkspaceDataFetcher failed for /api/data/networkfail: Failed to fetch');
+    await expect(fetcher.fetch(identifier)).rejects.toThrow(
+      'WorkspaceDataFetcher failed for /api/data/networkfail: Failed to fetch'
+    );
 
     // Verify fetch was called
     expect(fetchSpy).toHaveBeenCalledTimes(1);
@@ -116,23 +124,28 @@ describe('WorkspaceDataFetcher', () => {
       undefined,
       '', // Empty string
       123, // Number
-      {},  // Object
-      [],  // Array
-    ])('should reject with an error for invalid identifier: %p', async (invalidIdentifier) => {
-      // Use rejects.toThrow because the function is async, even if the error is synchronous
-      await expect(fetcher.fetch(invalidIdentifier)).rejects.toThrow(
-        'WorkspaceDataFetcher: fetch requires a valid non-empty string identifier (URL or path).'
-      );
+      {}, // Object
+      [], // Array
+    ])(
+      'should reject with an error for invalid identifier: %p',
+      async (invalidIdentifier) => {
+        // Use rejects.toThrow because the function is async, even if the error is synchronous
+        await expect(fetcher.fetch(invalidIdentifier)).rejects.toThrow(
+          'WorkspaceDataFetcher: fetch requires a valid non-empty string identifier (URL or path).'
+        );
 
-      // Crucially, ensure fetch itself was never called
-      expect(fetchSpy).not.toHaveBeenCalled();
-    });
+        // Crucially, ensure fetch itself was never called
+        expect(fetchSpy).not.toHaveBeenCalled();
+      }
+    );
   });
 
   // Task 6: Test `Workspace` JSON Parsing Error
   it('should reject with an error if JSON parsing fails', async () => {
     const identifier = '/api/data/badjson';
-    const jsonParseError = new SyntaxError('Unexpected token < in JSON at position 0');
+    const jsonParseError = new SyntaxError(
+      'Unexpected token < in JSON at position 0'
+    );
 
     // Mock a successful HTTP response
     const mockResponse = {

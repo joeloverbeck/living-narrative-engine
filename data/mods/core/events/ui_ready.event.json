@@ -22,10 +22,7 @@
         "type": "string"
       }
     },
-    "required": [
-      "activeWorld",
-      "message"
-    ],
+    "required": ["activeWorld", "message"],
     "additionalProperties": false
   }
 }

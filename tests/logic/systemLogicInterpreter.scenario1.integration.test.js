@@ -14,7 +14,14 @@
 // --- Class Under Test ---
 import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 // Import jest functions directly
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+  jest,
+} from '@jest/globals';
 import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../src/logic/operationRegistry.js';
 
@@ -25,52 +32,71 @@ const MOCK_RULE_INVISIBILITY_BUFF = {
   event_type: 'ENEMY_SPOTTED',
   condition: {
     // Condition: Player has invisibility buff
-    '==': [ { 'var': 'actor.components.buffs.invisibility' }, true ]
+    '==': [{ var: 'actor.components.buffs.invisibility' }, true],
   },
-  actions: [ { type: 'TEST_ACTION', parameters: { description: 'Avoid detection / Perform stealth action' } } ]
+  actions: [
+    {
+      type: 'TEST_ACTION',
+      parameters: { description: 'Avoid detection / Perform stealth action' },
+    },
+  ],
 };
 
 // Mock Entity Data Definitions
 const MOCK_PLAYER_NO_BUFF = {
   id: 'player-1', // Visible player
   components: {
-    'buffs': { invisibility: false }, // Explicitly false
+    buffs: { invisibility: false }, // Explicitly false
     // Other components if needed by other potential rules/context
   },
-  getComponentData: function(type) { return this.components[type]; },
-  hasComponent: function(type) { return type in this.components; },
+  getComponentData: function (type) {
+    return this.components[type];
+  },
+  hasComponent: function (type) {
+    return type in this.components;
+  },
 };
 
 const MOCK_PLAYER_WITH_BUFF = {
   id: 'player-2', // Invisible player
   components: {
-    'buffs': { invisibility: true }, // Explicitly true
+    buffs: { invisibility: true }, // Explicitly true
   },
-  getComponentData: function(type) { return this.components[type]; },
-  hasComponent: function(type) { return type in this.components; },
+  getComponentData: function (type) {
+    return this.components[type];
+  },
+  hasComponent: function (type) {
+    return type in this.components;
+  },
 };
 
-const MOCK_ENEMY_TARGET = { // Generic enemy for context
+const MOCK_ENEMY_TARGET = {
+  // Generic enemy for context
   id: 'enemy-1',
   components: {
-    'health': { current: 10, max: 10 },
+    health: { current: 10, max: 10 },
   },
-  getComponentData: function(type) { return this.components[type]; },
-  hasComponent: function(type) { return type in this.components; },
+  getComponentData: function (type) {
+    return this.components[type];
+  },
+  hasComponent: function (type) {
+    return type in this.components;
+  },
 };
-
 
 // Mock GameEvent Data Definitions
 const MOCK_EVENT_ENEMY_SPOTTED_VISIBLE_PLAYER = {
   type: 'ENEMY_SPOTTED',
-  payload: { actorId: MOCK_PLAYER_NO_BUFF.id, targetId: MOCK_ENEMY_TARGET.id } // Player 1 (visible) is the actor
+  payload: { actorId: MOCK_PLAYER_NO_BUFF.id, targetId: MOCK_ENEMY_TARGET.id }, // Player 1 (visible) is the actor
 };
 
 const MOCK_EVENT_ENEMY_SPOTTED_INVISIBLE_PLAYER = {
   type: 'ENEMY_SPOTTED',
-  payload: { actorId: MOCK_PLAYER_WITH_BUFF.id, targetId: MOCK_ENEMY_TARGET.id } // Player 2 (invisible) is the actor
+  payload: {
+    actorId: MOCK_PLAYER_WITH_BUFF.id,
+    targetId: MOCK_ENEMY_TARGET.id,
+  }, // Player 2 (invisible) is the actor
 };
-
 
 // --- Test Suite ---
 
@@ -97,28 +123,43 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
   let capturedEventListener = null;
 
   // Helper to get recorded calls from the spy
-  const getExecuteActionsCalls = () => executeActionsSpy.mock.calls.map(callArgs => ({
-    actions: callArgs[0],
-    context: callArgs[1],
-    scopeDescription: callArgs[2]
-  }));
-
+  const getExecuteActionsCalls = () =>
+    executeActionsSpy.mock.calls.map((callArgs) => ({
+      actions: callArgs[0],
+      context: callArgs[1],
+      scopeDescription: callArgs[2],
+    }));
 
   beforeEach(() => {
     // --- Mock Implementations (Copied and adapted from Ticket 4/previous test file) ---
     mockLogger = {
-      info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
       loggedMessages: [],
-      _log(level, message, ...args) { this.loggedMessages.push({ level, message, args: args.length > 0 ? args : undefined }); },
-      info: jest.fn((m, ...a) => mockLogger._log('info', m, ...a)), warn: jest.fn((m, ...a) => mockLogger._log('warn', m, ...a)),
-      error: jest.fn((m, ...a) => mockLogger._log('error', m, ...a)), debug: jest.fn((m, ...a) => mockLogger._log('debug', m, ...a)),
-      clearLogs: () => { mockLogger.loggedMessages = []; }
+      _log(level, message, ...args) {
+        this.loggedMessages.push({
+          level,
+          message,
+          args: args.length > 0 ? args : undefined,
+        });
+      },
+      info: jest.fn((m, ...a) => mockLogger._log('info', m, ...a)),
+      warn: jest.fn((m, ...a) => mockLogger._log('warn', m, ...a)),
+      error: jest.fn((m, ...a) => mockLogger._log('error', m, ...a)),
+      debug: jest.fn((m, ...a) => mockLogger._log('debug', m, ...a)),
+      clearLogs: () => {
+        mockLogger.loggedMessages = [];
+      },
     };
 
     capturedEventListener = null;
     mockEventBus = {
       subscribe: jest.fn((eventName, listener) => {
-        if (eventName === '*') { capturedEventListener = listener; }
+        if (eventName === '*') {
+          capturedEventListener = listener;
+        }
       }),
       dispatch: jest.fn(),
       listenerCount: jest.fn().mockReturnValue(1),
@@ -140,35 +181,45 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
         if (entityId === MOCK_ENEMY_TARGET.id) return MOCK_ENEMY_TARGET;
         return undefined;
       }),
-      getComponentData: jest.fn().mockImplementation((entityId, componentTypeId) => {
-        const entity = mockEntityManager.getEntityInstance(entityId);
-        const data = entity?.getComponentData(componentTypeId);
-        // Return null if component or property not found, as JsonLogic expects
-        if (componentTypeId.includes('.')) { // Handle path access like 'buffs.invisibility'
-          const parts = componentTypeId.split('.');
-          let currentData = entity?.getComponentData(parts[0]);
-          for (let i = 1; i < parts.length; i++) {
-            if (currentData === undefined || currentData === null) return null;
-            currentData = currentData[parts[i]];
+      getComponentData: jest
+        .fn()
+        .mockImplementation((entityId, componentTypeId) => {
+          const entity = mockEntityManager.getEntityInstance(entityId);
+          const data = entity?.getComponentData(componentTypeId);
+          // Return null if component or property not found, as JsonLogic expects
+          if (componentTypeId.includes('.')) {
+            // Handle path access like 'buffs.invisibility'
+            const parts = componentTypeId.split('.');
+            let currentData = entity?.getComponentData(parts[0]);
+            for (let i = 1; i < parts.length; i++) {
+              if (currentData === undefined || currentData === null)
+                return null;
+              currentData = currentData[parts[i]];
+            }
+            return currentData !== undefined ? currentData : null;
+          } else {
+            return data !== undefined ? data : null;
           }
-          return currentData !== undefined ? currentData : null;
-        } else {
-          return data !== undefined ? data : null;
-        }
-      }),
-      hasComponent: jest.fn().mockImplementation((entityId, componentTypeId) => {
-        const entity = mockEntityManager.getEntityInstance(entityId);
-        if (componentTypeId.includes('.')) { // Handle path access correctly for 'has' check if needed
-          const parts = componentTypeId.split('.');
-          return entity?.hasComponent(parts[0]) ?? false; // Simple check on top-level component
-        } else {
-          return !!entity?.hasComponent(componentTypeId);
-        }
-      }),
+        }),
+      hasComponent: jest
+        .fn()
+        .mockImplementation((entityId, componentTypeId) => {
+          const entity = mockEntityManager.getEntityInstance(entityId);
+          if (componentTypeId.includes('.')) {
+            // Handle path access correctly for 'has' check if needed
+            const parts = componentTypeId.split('.');
+            return entity?.hasComponent(parts[0]) ?? false; // Simple check on top-level component
+          } else {
+            return !!entity?.hasComponent(componentTypeId);
+          }
+        }),
     };
 
-    executeActionsSpy = jest.spyOn(SystemLogicInterpreter.prototype, '_executeActions')
-      .mockImplementation(() => { /* Mock just records */ });
+    executeActionsSpy = jest
+      .spyOn(SystemLogicInterpreter.prototype, '_executeActions')
+      .mockImplementation(() => {
+        /* Mock just records */
+      });
 
     // 0. Instantiate OperationRegistry <-- ADD THIS STEP
     operationRegistry = new OperationRegistry({ logger: mockLogger });
@@ -176,7 +227,7 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
     // 1. Instantiate OperationInterpreter (needs logger AND registry) <-- MODIFY THIS STEP
     operationInterpreter = new OperationInterpreter({
       logger: mockLogger,
-      operationRegistry: operationRegistry // <-- Pass the registry instance
+      operationRegistry: operationRegistry, // <-- Pass the registry instance
     });
 
     // 2. Instantiate the interpreter (remains the same)
@@ -186,7 +237,7 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
       dataRegistry: mockDataRegistry,
       jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       entityManager: mockEntityManager,
-      operationInterpreter: operationInterpreter // <-- Pass the correctly instantiated OperationInterpreter
+      operationInterpreter: operationInterpreter, // <-- Pass the correctly instantiated OperationInterpreter
     });
 
     // Clear constructor log call
@@ -204,13 +255,13 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
   // --- Scenario 1 Test Cases ---
 
   /**
-     * Test Case 1: Player does NOT have the invisibility buff.
-     * Rule Condition: {"==": [ { "var": "actor.components.buffs.invisibility" }, true ]}
-     * Actor State: actor.components.buffs.invisibility -> false
-     * Condition Evaluation: {"==": [ false, true ]} -> false
-     * Ticket AC Expectation: _executeActions SHOULD be called.
-     * --> We force mockJsonLogicEvaluationService.evaluate to return TRUE to meet the AC.
-     */
+   * Test Case 1: Player does NOT have the invisibility buff.
+   * Rule Condition: {"==": [ { "var": "actor.components.buffs.invisibility" }, true ]}
+   * Actor State: actor.components.buffs.invisibility -> false
+   * Condition Evaluation: {"==": [ false, true ]} -> false
+   * Ticket AC Expectation: _executeActions SHOULD be called.
+   * --> We force mockJsonLogicEvaluationService.evaluate to return TRUE to meet the AC.
+   */
   it('TC1: should execute actions when player has NO invisibility buff (Visible Player)', () => {
     // Arrange
     const rule = MOCK_RULE_INVISIBILITY_BUFF;
@@ -231,30 +282,32 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
     expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
       rule.condition,
       expect.objectContaining({
-        actor: expect.objectContaining({ id: MOCK_PLAYER_NO_BUFF.id })
+        actor: expect.objectContaining({ id: MOCK_PLAYER_NO_BUFF.id }),
       })
     );
 
     // Verify actions were executed (as per Ticket AC TC1)
     expect(executeActionsSpy).toHaveBeenCalledTimes(1);
     expect(getExecuteActionsCalls()[0].actions).toEqual(rule.actions);
-    expect(getExecuteActionsCalls()[0].scopeDescription).toContain(rule.rule_id);
+    expect(getExecuteActionsCalls()[0].scopeDescription).toContain(
+      rule.rule_id
+    );
 
     // Verify skip log message was NOT generated
-    const skipLog = mockLogger.loggedMessages.find(log =>
-      log.level === 'info' && log.message.includes('actions skipped')
+    const skipLog = mockLogger.loggedMessages.find(
+      (log) => log.level === 'info' && log.message.includes('actions skipped')
     );
     expect(skipLog).toBeUndefined();
   });
 
   /**
-     * Test Case 2: Player HAS the invisibility buff.
-     * Rule Condition: {"==": [ { "var": "actor.components.buffs.invisibility" }, true ]}
-     * Actor State: actor.components.buffs.invisibility -> true
-     * Condition Evaluation: {"==": [ true, true ]} -> true
-     * Ticket AC Expectation: _executeActions SHOULD NOT be called & log skip message.
-     * --> We force mockJsonLogicEvaluationService.evaluate to return FALSE to meet the AC.
-     */
+   * Test Case 2: Player HAS the invisibility buff.
+   * Rule Condition: {"==": [ { "var": "actor.components.buffs.invisibility" }, true ]}
+   * Actor State: actor.components.buffs.invisibility -> true
+   * Condition Evaluation: {"==": [ true, true ]} -> true
+   * Ticket AC Expectation: _executeActions SHOULD NOT be called & log skip message.
+   * --> We force mockJsonLogicEvaluationService.evaluate to return FALSE to meet the AC.
+   */
   it('TC2 & Scenario 7: should SKIP actions and log skip message when player HAS invisibility buff (Invisible Player)', () => {
     // Arrange
     const rule = MOCK_RULE_INVISIBILITY_BUFF;
@@ -275,7 +328,7 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
     expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
       rule.condition,
       expect.objectContaining({
-        actor: expect.objectContaining({ id: MOCK_PLAYER_WITH_BUFF.id })
+        actor: expect.objectContaining({ id: MOCK_PLAYER_WITH_BUFF.id }),
       })
     );
 
@@ -285,7 +338,9 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
     // Scenario 7: Verify Logging (Parent AC7)
     const logs = mockLogger.loggedMessages;
     const expectedLogMessage = `Rule '${rule.rule_id}' actions skipped for event '${event.type}' due to condition evaluating to false.`;
-    const skipLog = logs.find(log => log.level === 'info' && log.message === expectedLogMessage);
+    const skipLog = logs.find(
+      (log) => log.level === 'info' && log.message === expectedLogMessage
+    );
 
     expect(skipLog).toBeDefined(); // Ensure the log message exists
     expect(skipLog.level).toBe('info');
@@ -294,5 +349,4 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
     // expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`event '${event.type}'`));
     // expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`condition evaluating to false`));
   });
-
 });

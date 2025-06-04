@@ -14,10 +14,7 @@
         "description": "Message to show when disabling input, explaining why."
       }
     },
-    "required": [
-      "titleMessage",
-      "inputDisabledMessage"
-    ],
+    "required": ["titleMessage", "inputDisabledMessage"],
     "additionalProperties": false
   }
 }

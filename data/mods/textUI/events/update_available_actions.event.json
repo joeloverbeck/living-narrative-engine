@@ -38,21 +38,13 @@
               "minLength": 1
             }
           },
-          "required": [
-            "id",
-            "name",
-            "command",
-            "description"
-          ],
+          "required": ["id", "name", "command", "description"],
           "additionalProperties": false
         },
         "uniqueItems": false
       }
     },
-    "required": [
-      "actorId",
-      "actions"
-    ],
+    "required": ["actorId", "actions"],
     "additionalProperties": false
   }
 }

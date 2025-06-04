@@ -1,7 +1,7 @@
 // src/core/constants/turnDirectives.js
 // --- FILE START ---
 /**
- * @fileoverview Defines constants for turn directives used by CommandOutcomeInterpreter.
+ * @file Defines constants for turn directives used by CommandOutcomeInterpreter.
  */
 
 /**
@@ -12,17 +12,17 @@
  * or wait for an external event.
  */
 const TurnDirective = {
-    /** Indicates the turn ended successfully after the command. */
-    END_TURN_SUCCESS: 'END_TURN_SUCCESS',
+  /** Indicates the turn ended successfully after the command. */
+  END_TURN_SUCCESS: 'END_TURN_SUCCESS',
 
-    /** Indicates the turn ended due to a failure/error in the command. */
-    END_TURN_FAILURE: 'END_TURN_FAILURE',
+  /** Indicates the turn ended due to a failure/error in the command. */
+  END_TURN_FAILURE: 'END_TURN_FAILURE',
 
-    /** Indicates the command completed, but the turn should continue (prompt again). */
-    RE_PROMPT: 'RE_PROMPT',
+  /** Indicates the command completed, but the turn should continue (prompt again). */
+  RE_PROMPT: 'RE_PROMPT',
 
-    /** Indicates the handler must wait for a `core:turn_ended` event before ending the turn. */
-    WAIT_FOR_EVENT: 'WAIT_FOR_EVENT'
+  /** Indicates the handler must wait for a `core:turn_ended` event before ending the turn. */
+  WAIT_FOR_EVENT: 'WAIT_FOR_EVENT',
 };
 
 // Freeze the object to prevent modification.

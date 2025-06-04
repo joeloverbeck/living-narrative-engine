@@ -6,4 +6,4 @@
  * @type {string[]}
  */
 export const INITIALIZABLE = ['initializableSystem'];
-export const SHUTDOWNABLE = ['shutdownable']
+export const SHUTDOWNABLE = ['shutdownable'];
