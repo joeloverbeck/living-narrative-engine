@@ -21,6 +21,7 @@
 import ModDependencyValidator from '../modding/modDependencyValidator.js';
 import validateModEngineVersions from '../modding/modVersionValidator.js';
 import ModDependencyError from '../errors/modDependencyError.js'; // Ensure this path is correct
+import WorldLoaderError from '../errors/worldLoaderError.js';
 // import {ENGINE_VERSION} from '../engineVersion.js'; // Not directly used in this logic, commented out
 import { resolveOrder } from '../modding/modLoadOrderResolver.js';
 
@@ -579,13 +580,16 @@ class WorldLoader {
         // This condition should now primarily catch the error thrown if the flag was set in Step 3
         const finalMessage = `WorldLoader failed: Essential schema '${missingSchemaId || 'unknown'}' missing or check failed – aborting world load. Original error: ${err.message}`;
         this.#logger.error(finalMessage, err); // Log the combined info
-        throw new Error(finalMessage, { cause: err }); // Throw a new error, preserving the original cause
+        throw new WorldLoaderError(finalMessage, err); // Throw a new error, preserving the original cause
       } else {
         // Re-throw any other unexpected error encountered during the try block
         this.#logger.debug(
           'Caught an unexpected error type, re-throwing original error.'
         );
-        throw err;
+        throw new WorldLoaderError(
+          `WorldLoader unexpected error: ${err.message}`,
+          err
+        );
       }
       // --- END REVISED CATCH BLOCK ---
     }
