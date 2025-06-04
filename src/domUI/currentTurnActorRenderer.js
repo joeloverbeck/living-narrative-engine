@@ -16,8 +16,6 @@ import { TURN_STARTED_ID } from '../constants/eventIds.js';
 const DEFAULT_ACTOR_NAME = 'N/A';
 
 export class CurrentTurnActorRenderer extends BoundDomRendererBase {
-  /** @type {IEntityManager} */ // Kept for now, but aim to remove direct use
-  #entityManager;
   /** @type {EntityDisplayDataProvider} */
   #entityDisplayDataProvider;
 
@@ -27,18 +25,21 @@ export class CurrentTurnActorRenderer extends BoundDomRendererBase {
   // #actorNameElement;
 
   /**
-   * @param {object} dependencies
-   * @param {ILogger} dependencies.logger
-   * @param {IDocumentContext} dependencies.documentContext
-   * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher
-   * @param {IEntityManager} dependencies.entityManager
-   * @param {EntityDisplayDataProvider} dependencies.entityDisplayDataProvider
+   * Creates a renderer that updates the UI with information about the actor
+   * whose turn is currently active.
+   *
+   * @param {object} dependencies - Runtime dependencies for this renderer.
+   * @param {ILogger} dependencies.logger - Logging utility for diagnostics.
+   * @param {IDocumentContext} dependencies.documentContext - Abstraction over the DOM.
+   * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - Dispatcher for validated events.
+   * @param {IEntityManager} dependencies._entityManager - Manager used for entity lookups.
+   * @param {EntityDisplayDataProvider} dependencies.entityDisplayDataProvider - Provides display data such as names and portraits.
    */
   constructor({
     logger,
     documentContext,
     validatedEventDispatcher,
-    entityManager,
+    _entityManager,
     entityDisplayDataProvider,
   }) {
     const elementsConfig = {
@@ -64,7 +65,6 @@ export class CurrentTurnActorRenderer extends BoundDomRendererBase {
       elementsConfig,
     }); // Call super with elementsConfig
 
-    this.#entityManager = entityManager; // Still store, though direct use should be minimized
     if (!entityDisplayDataProvider) {
       this.logger.error(
         `${this._logPrefix} EntityDisplayDataProvider dependency is missing.`

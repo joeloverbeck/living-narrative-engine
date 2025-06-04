@@ -1,4 +1,5 @@
 // src/domUI/documentContext.js
+/* eslint-disable no-console */
 /**
  * @file Implements DocumentContext for abstracting DOM access.
  * Provides a consistent interface for querying and creating DOM elements,
@@ -38,15 +39,15 @@ class DocumentContext {
     // Define the relevant constructors for the current environment dynamically AT INSTANTIATION TIME.
     // This avoids issues with stale constructors captured at module load time in test environments.
     const CurrentEnvDocument =
-      typeof global !== 'undefined' && global.Document
-        ? global.Document
+      typeof globalThis !== 'undefined' && globalThis.Document
+        ? globalThis.Document
         : typeof Document !== 'undefined'
           ? Document
           : undefined;
 
     const CurrentEnvHTMLElement =
-      typeof global !== 'undefined' && global.HTMLElement
-        ? global.HTMLElement
+      typeof globalThis !== 'undefined' && globalThis.HTMLElement
+        ? globalThis.HTMLElement
         : typeof HTMLElement !== 'undefined'
           ? HTMLElement
           : undefined;
@@ -87,12 +88,15 @@ class DocumentContext {
     // 3. If no context yet from `root`, explicitly try using the global document
     if (
       !contextFound &&
-      typeof global !== 'undefined' &&
-      typeof global.document !== 'undefined'
+      typeof globalThis !== 'undefined' &&
+      typeof globalThis.document !== 'undefined'
     ) {
       // Ensure the global document itself is usable
-      if (global.document.querySelector && global.document.createElement) {
-        this.#docContext = global.document;
+      if (
+        globalThis.document.querySelector &&
+        globalThis.document.createElement
+      ) {
+        this.#docContext = globalThis.document;
         contextFound = true;
       }
     }
@@ -137,10 +141,9 @@ class DocumentContext {
    * Creates the HTML element specified by tagName within the context.
    * Corresponds to `document.createElement`. Logs a warning if the context is unavailable.
    *
-   * @template {keyof HTMLElementTagNameMap} K - Ensures the tag name is a valid HTML tag.
-   * @param {K} tagName - The tag name for the element to create (e.g., 'div', 'span', 'button').
-   * @returns {HTMLElementTagNameMap[K] | null} The newly created HTML element, or null if the
-   * document context is missing. The return type matches the specific HTML element interface (e.g., HTMLDivElement).
+   * @param {string} tagName - The tag name for the element to create (e.g., 'div', 'span', 'button').
+   * @returns {HTMLElement | null} The newly created HTML element, or null if the
+   * document context is missing.
    */
   create(tagName) {
     if (!this.#docContext) {

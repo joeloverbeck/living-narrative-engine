@@ -88,7 +88,11 @@ class WorldContext extends IWorldContext {
 
     const errorMessage = `WorldContext: Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found ${actorCount}.`;
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (
+      typeof globalThis !== 'undefined' &&
+      globalThis.process &&
+      globalThis.process.env.NODE_ENV !== 'production'
+    ) {
       this.#logger.error(errorMessage + ' (Throwing in dev mode)');
       throw new Error(errorMessage);
     } else {
@@ -101,7 +105,6 @@ class WorldContext extends IWorldContext {
    * Retrieves the primary entity currently marked as the active actor.
    *
    * @returns {Entity | null} The current actor entity instance, or null if none or multiple are found.
-   * @implements {IWorldContext.getCurrentActor}
    */
   getCurrentActor() {
     const actors = this.#entityManager.getEntitiesWithComponent(
@@ -119,7 +122,6 @@ class WorldContext extends IWorldContext {
    * The locationId in the actor's position component should be an instance ID.
    *
    * @returns {Entity | null} The entity instance representing the current location, or null if it cannot be determined.
-   * @implements {IWorldContext.getCurrentLocation}
    */
   getCurrentLocation() {
     const actor = this.getCurrentActor();
@@ -164,7 +166,6 @@ class WorldContext extends IWorldContext {
    *
    * @param {string} entityId - The unique ID of the entity whose location is requested.
    * @returns {Entity | null} The location entity instance where the specified entity resides.
-   * @implements {IWorldContext.getLocationOfEntity}
    */
   getLocationOfEntity(entityId) {
     if (typeof entityId !== 'string' || !entityId) {
@@ -319,7 +320,6 @@ class WorldContext extends IWorldContext {
    * Retrieves the current timestamp in ISO 8601 format.
    *
    * @returns {string} The current ISO 8601 timestamp (e.g., "YYYY-MM-DDTHH:mm:ss.sssZ").
-   * @implements {IWorldContext.getCurrentISOTimestamp}
    */
   getCurrentISOTimestamp() {
     return new Date().toISOString();
@@ -332,7 +332,6 @@ class WorldContext extends IWorldContext {
    * Can be a simple string (e.g., "getCurrentISOTimestamp")
    * or an object (e.g., { action: "getCurrentISOTimestamp" } or { query_type: "..."}).
    * @returns {any | undefined} The result of the query or undefined if not supported.
-   * @implements {IWorldContext.handleQuery}
    */
   handleQuery(queryDetails) {
     this.#logger.debug(
@@ -350,14 +349,14 @@ class WorldContext extends IWorldContext {
         queryDetails.action.trim() !== ''
       ) {
         actionToPerform = queryDetails.action;
-        const { action, ...rest } = queryDetails;
+        const { action: _unusedAction, ...rest } = queryDetails;
         queryParams = rest;
       } else if (
         typeof queryDetails.query_type === 'string' &&
         queryDetails.query_type.trim() !== ''
       ) {
         actionToPerform = queryDetails.query_type;
-        const { query_type, ...rest } = queryDetails;
+        const { query_type: _unusedQueryType, ...rest } = queryDetails;
         queryParams = rest;
       }
     }

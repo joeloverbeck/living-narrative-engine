@@ -1,5 +1,7 @@
 // src/core/config/appContainer.js
 // ****** CORRECTED FILE ******
+/* eslint-disable no-console */
+/** @typedef {import('./tokens.js').DiToken} DiToken */
 
 /**
  * @typedef {'singleton' | 'transient' | 'singletonFactory'} Lifecycle
@@ -61,7 +63,7 @@ class AppContainer {
         : '';
     // Only log deps info if the key actually exists in the effective options
     const depsInfo =
-      effectiveOptions.hasOwnProperty('dependencies') &&
+      Object.prototype.hasOwnProperty.call(effectiveOptions, 'dependencies') &&
       Array.isArray(effectiveOptions.dependencies) &&
       effectiveOptions.dependencies.length > 0
         ? ` Deps: [${effectiveOptions.dependencies.join(', ')}]`
@@ -167,7 +169,7 @@ class AppContainer {
     // (Registrar.single/transient always add this key, even if empty array).
     const isClassRegistration =
       typeof factoryOrValueOrClass === 'function' &&
-      options?.hasOwnProperty('dependencies'); // Check for key presence
+      Object.prototype.hasOwnProperty.call(options || {}, 'dependencies');
 
     const isFactoryFunction =
       typeof factoryOrValueOrClass === 'function' && !isClassRegistration;
