@@ -20,6 +20,7 @@ import ComponentLoader from '../../src/loaders/componentLoader.js';
 
 /**
  * Creates a mock IConfiguration service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../src/core/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
@@ -55,6 +56,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 /**
  * Creates a mock IPathResolver service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../src/core/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
  */
@@ -80,6 +82,7 @@ const createMockPathResolver = (overrides = {}) => ({
 /**
  * Creates a mock IDataFetcher service.
  * Allows configuring responses and errors based on fetched paths.
+ *
  * @param {object} [pathToResponse] - Map of path strings to successful response data.
  * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
  * @returns {import('../../../src/core/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
@@ -104,6 +107,7 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
 /**
  * Creates a mock ISchemaValidator service.
  * Allows tracking calls and configuring return values/errors.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../src/core/interfaces/coreServices.js').ISchemaValidator} Mocked schema validator service.
  */
@@ -189,6 +193,7 @@ const createMockSchemaValidator = (overrides = {}) => {
 /**
  * Creates a mock IDataRegistry service.
  * Allows tracking calls and simulating existing data for overrides.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../src/core/interfaces/coreServices.js').IDataRegistry} Mocked data registry service.
  */
@@ -262,6 +267,7 @@ const createMockDataRegistry = (overrides = {}) => {
 /**
  * Creates a mock ILogger service.
  * All methods are jest.fn() for tracking calls.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../src/core/interfaces/coreServices.js').ILogger} Mocked logger service.
  */
@@ -277,6 +283,7 @@ const createMockLogger = (overrides = {}) => ({
 // [Utility functions createMockComponentDefinition, createMockModManifest omitted for brevity]
 /**
  * Creates a basic valid mock component definition object.
+ *
  * @param {string} id - The component ID (e.g., 'core:health').
  * @param {object} [dataSchema] - The data schema object.
  * @param {string} [description] - Optional description.
@@ -294,6 +301,7 @@ const createMockComponentDefinition = (
 
 /**
  * Creates a basic mock Mod Manifest object containing component files.
+ *
  * @param {string} modId - The ID of the mod.
  * @param {string[]} componentFiles - Array of component definition filenames.
  * @returns {object} A mock mod manifest object.

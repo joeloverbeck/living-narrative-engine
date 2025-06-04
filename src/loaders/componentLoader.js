@@ -19,12 +19,14 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
  * extracts metadata, registers the component's `dataSchema` with the validator, and stores
  * the definition metadata in the registry using a prefixed ID. It extends {@link BaseManifestItemLoader}
  * and implements the component-definition-specific processing logic in `_processFetchedItem`.
+ *
  * @class ComponentLoader
  * @augments BaseManifestItemLoader
  */
 class ComponentLoader extends BaseManifestItemLoader {
   /**
    * Initializes the ComponentLoader by calling the parent constructor with the specific type name 'components'.
+   *
    * @param {IConfiguration} config - The configuration service.
    * @param {IPathResolver} pathResolver - The path resolver service.
    * @param {IDataFetcher} dataFetcher - The data fetcher service.
@@ -60,6 +62,7 @@ class ComponentLoader extends BaseManifestItemLoader {
    * constructs the **final, prefixed** `finalItemId` (`modId:baseComponentId`),
    * delegates storage to the base class helper `_storeItemInRegistry`, and returns an object
    * containing the **final registry key** (`finalItemId`) and a flag indicating if an overwrite occurred.
+   *
    * @param {string} modId - The ID of the mod the item belongs to.
    * @param {string} filename - The original filename from the manifest.
    * @param {string} resolvedPath - The fully resolved path used to fetch the file.

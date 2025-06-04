@@ -29,7 +29,6 @@ import { TURN_ENDED_ID } from '../../constants/eventIds.js'; // Constant import
  * including event subscription, managing awaiting status, and ending the turn.
  */
 export class AwaitingExternalTurnEndState extends AbstractTurnState {
-     * @private
   #unsubscribeTurnEndedFn;
 
   /**
@@ -327,6 +326,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
   /**
    * Helper to unsubscribe if needed, e.g. in error paths or unexpected situations.
+   *
    * @private
    * @param {ILogger} logger
    * @param {string} reasonForLog

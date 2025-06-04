@@ -31,6 +31,7 @@ export class ActionValidationService {
    * on a given target, checking domain compatibility and prerequisites.
    * Relies on PrerequisiteEvaluationService to handle prerequisite rule evaluation
    * (including the necessary context building).
+   *
    * @param {{
    * entityManager: EntityManager,
    * logger: ILogger,
@@ -94,6 +95,7 @@ export class ActionValidationService {
    * Performs initial structural sanity checks on the inputs for isValid.
    * Throws an error if inputs are fundamentally invalid (e.g., missing required IDs, wrong context type).
    * Corresponds to "Step 0" in the validation process.
+   *
    * @private
    * @param {ActionDefinition} actionDefinition - The definition of the action.
    * @param {Entity} actorEntity - The entity attempting the action.
@@ -118,6 +120,7 @@ export class ActionValidationService {
    * Checks if the action's domain requirements are compatible with the target context.
    * Includes calling the domainContextCompatibilityChecker and checking for 'self' target mismatches.
    * Corresponds to "Step 1" in the validation process.
+   *
    * @private
    * @param {ActionDefinition} actionDefinition - The definition of the action.
    * @param {Entity} actorEntity - The entity attempting the action.
@@ -169,6 +172,7 @@ export class ActionValidationService {
    * Checks if a target entity specified in the context exists in the EntityManager and logs a warning if not.
    * This check is primarily informational for prerequisite evaluation and doesn't directly fail validation.
    * Part of Step 2 in the validation process.
+   *
    * @private
    * @param {ActionTargetContext} targetContext - The context of the action's target.
    * @param {string} actionId - The ID of the action being validated (for logging).
@@ -202,6 +206,7 @@ export class ActionValidationService {
    * Collects and validates the format of the prerequisites array from an action definition.
    * Logs a warning if the 'prerequisites' property exists but is not a valid array.
    * Corresponds to Step 3 in the validation process.
+   *
    * @private
    * @param {ActionDefinition} actionDefinition - The definition of the action.
    * @returns {object[]} The prerequisites array (empty if none defined or if format is invalid).
@@ -234,6 +239,7 @@ export class ActionValidationService {
    * 3. Collect Prerequisites: Get prerequisites array from action definition.
    * 4. Evaluate Prerequisites: If prerequisites exist, delegate to PrerequisiteEvaluationService.
    * (Note: Context building for evaluation now happens *inside* PES).
+   *
    * @param {ActionDefinition} actionDefinition - The definition of the action.
    * @param {Entity} actorEntity - The entity attempting the action.
    * @param {ActionTargetContext} targetContext - The context of the action's target.

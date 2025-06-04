@@ -44,6 +44,7 @@ const mockEntityManager = {
 // Mock Entity (Helper Function)
 /**
  * Creates a mock Entity object.
+ *
  * @param {string} id - The entity ID.
  * @param {object | null} [componentsData] - Optional components data object.
  * @returns {jest.Mocked<import('../../src/entities/entity.js').default>}

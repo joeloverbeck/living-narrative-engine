@@ -64,6 +64,7 @@ export class BaseLLMStrategy extends ILLMStrategyBase {
 
   /**
    * Constructs a new BaseLLMStrategy.
+   *
    * @param {ILogger} logger - The logger instance.
    * @throws {Error} If a valid logger instance (compliant with ILogger, having at least an 'info' method) is not provided.
    * This constructor ensures that `this.logger` is always a valid, functional logger.
@@ -83,6 +84,7 @@ export class BaseLLMStrategy extends ILLMStrategyBase {
   /**
    * Abstract method for constructing the prompt-specific part of the payload.
    * To be implemented by subclasses (BaseChatLLMStrategy, BaseCompletionLLMStrategy).
+   *
    * @protected
    * @param {string} gameSummary - The detailed textual representation of the game state.
    * @param {LLMModelConfig} llmConfig - The full LLM configuration.

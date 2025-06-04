@@ -23,6 +23,7 @@
 /**
  * A lightweight Dependency Injection (DI) container.
  * Manages instantiation and lifecycle of registered services/systems.
+ *
  * @implements {import('../core/interfaces/container.js').IServiceResolver}
  */
 class AppContainer {
@@ -33,6 +34,7 @@ class AppContainer {
 
   /**
    * Registers a service/system with the container.
+   *
    * @param {DiToken} key - A unique identifier for the service.
    * @param {FactoryFunction | ClassConstructor | any} factoryOrValueOrClass - The factory, class constructor, or value to register.
    * @param {RegistrationOptions} [options] - Registration options.
@@ -83,6 +85,7 @@ class AppContainer {
 
   /**
    * Resolves (retrieves or creates) an instance of a registered service.
+   *
    * @template T
    * @param {DiToken} key - The unique identifier of the service to resolve.
    * @returns {T} The resolved service instance.
@@ -150,6 +153,7 @@ class AppContainer {
 
   /**
    * Internal helper to create an instance based on registration info.
+   *
    * @private
    * @param {string} key - The registration key (for logging).
    * @param {FactoryFunction | ClassConstructor | any} factoryOrValueOrClass - The registered item.
@@ -219,6 +223,7 @@ class AppContainer {
 
   /**
    * Resolves all registered services that have the specified tag.
+   *
    * @template T
    * @param {string} tag - The tag to search for.
    * @returns {Array<T>} An array of resolved service instances associated with the tag.

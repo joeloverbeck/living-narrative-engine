@@ -16,6 +16,7 @@ import { BaseLLMStrategy } from './baseLLMStrategy.js';
 export class BaseCompletionLLMStrategy extends BaseLLMStrategy {
   /**
    * Constructs a new BaseCompletionLLMStrategy.
+   *
    * @param {ILogger} logger - The logger instance.
    */
   constructor(logger) {
@@ -27,6 +28,7 @@ export class BaseCompletionLLMStrategy extends BaseLLMStrategy {
    * The `gameSummary` parameter is now the `finalPromptString` produced by `PromptBuilder`.
    * The `promptFrame` from `llmConfig` (adapter's config) is ignored for completion models,
    * as `PromptBuilder` is responsible for the entire prompt structure.
+   *
    * @protected
    * @param {string} gameSummary - The `finalPromptString` from `PromptBuilder`.
    * @param {object | string | undefined} promptFrame - The promptFrame object from the LLM configuration (ignored).

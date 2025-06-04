@@ -8,6 +8,7 @@ import ComponentLoader from '../../src/loaders/componentLoader.js'; // Adjusted 
 // --- Mock Service Factories (Keep these as they are, they are utility functions) ---
 /**
  * Creates a mock IConfiguration service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../src/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
@@ -35,6 +36,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 /**
  * Creates a mock IPathResolver service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../src/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
  */
@@ -60,6 +62,7 @@ const createMockPathResolver = (overrides = {}) => ({
 
 /**
  * Creates a mock IDataFetcher service.
+ *
  * @param {object} [pathToResponse] - Map of path strings to successful response data.
  * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
  * @returns {import('../../src/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
@@ -83,6 +86,7 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
 
 /**
  * Creates a mock ISchemaValidator service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../src/interfaces/coreServices.js').ISchemaValidator} Mocked schema validator service.
  */
@@ -163,6 +167,7 @@ const createMockSchemaValidator = (overrides = {}) => {
 
 /**
  * Creates a mock IDataRegistry service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../src/interfaces/coreServices.js').IDataRegistry} Mocked data registry service.
  */
@@ -220,6 +225,7 @@ const createMockDataRegistry = (overrides = {}) => {
 
 /**
  * Creates a mock ILogger service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../src/interfaces/coreServices.js').ILogger} Mocked logger service.
  */
@@ -233,6 +239,7 @@ const createMockLogger = (overrides = {}) => ({
 
 /**
  * Creates a basic mock Mod Manifest object.
+ *
  * @param {string} modId
  * @param {string[]} [componentFiles]
  * @returns {object}

@@ -37,6 +37,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
 
   /**
    * Constructs a BaseListDisplayComponent instance.
+   *
    * @param {object} params - The parameters object.
    * @param {ILogger} params.logger - The logger instance.
    * @param {IDocumentContext} params.documentContext - The document context abstraction.
@@ -85,6 +86,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * Abstract method to be implemented by subclasses.
    * It should return (or promise to return) an array of data items to be rendered in the list.
    * This allows for both synchronous and asynchronous data fetching.
+   *
    * @abstract
    * @protected
    * @returns {Promise<Array<any>> | Array<any>} An array of items, or a Promise resolving to an array of items.
@@ -102,6 +104,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * It takes a single data item and returns a fully formed DOM element (e.g., HTMLLIElement, HTMLDivElement)
    * that represents this item in the list.
    * Return `null` to skip rendering this specific item without error.
+   *
    * @abstract
    * @protected
    * @param {any} itemData - The data for the current item to render.
@@ -120,6 +123,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * Abstract method to be implemented by subclasses.
    * It should return a string message or a pre-constructed DOM element to be displayed
    * in the `listContainerElement` when `_getListItemsData()` results in an empty list (null or empty array).
+   *
    * @abstract
    * @protected
    * @returns {string | HTMLElement} The message or element to display for an empty list.
@@ -137,6 +141,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * with all list items (or the empty message).
    * Subclasses can use this hook to attach event listeners to newly rendered items,
    * perform other post-render setup, or trigger further UI updates.
+   *
    * @protected
    * @abstract
    * @param {Array<any> | null} listData - The array of data items that were rendered, or `null` if the list was empty or data fetching failed.
@@ -155,6 +160,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * It fetches data using `_getListItemsData`, clears the `listContainerElement`,
    * handles empty states by calling `_getEmptyListMessage`, or populates the list
    * by calling `_renderListItem` for each item. Finally, it calls `_onListRendered`.
+   *
    * @async
    * @returns {Promise<void>} A promise that resolves when the list rendering is complete.
    */
@@ -280,6 +286,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
   /**
    * Public method to trigger a re-rendering of the list.
    * This is a convenience method that simply calls `renderList()`.
+   *
    * @async
    * @returns {Promise<void>} A promise that resolves when the list rendering is complete.
    */

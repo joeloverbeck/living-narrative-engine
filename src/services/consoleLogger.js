@@ -13,6 +13,7 @@
 /**
  * Defines the available log levels and their severity.
  * Lower numbers are more verbose.
+ *
  * @enum {number}
  */
 export const LogLevel = {
@@ -25,6 +26,7 @@ export const LogLevel = {
 
 /**
  * Maps string representations of log levels to their numerical LogLevel enum values.
+ *
  * @private
  * @type {Object<string, number>}
  */
@@ -40,6 +42,7 @@ const LOG_LEVEL_MAP = {
  * Implements the ILogger interface using the standard console object.
  * Provides basic logging levels (info, warn, error, debug) that map directly
  * to the corresponding console methods, filtered by a configured log level.
+ *
  * @implements {ILogger}
  */
 class ConsoleLogger {
@@ -51,6 +54,7 @@ class ConsoleLogger {
 
   /**
    * Creates an instance of ConsoleLogger.
+   *
    * @param {string | number} [logLevelInput] - The desired initial log level.
    * Can be a string (e.g., "DEBUG", "INFO", "WARN", "ERROR", "NONE")
    * or a number corresponding to LogLevel enum (0-4).
@@ -73,6 +77,7 @@ class ConsoleLogger {
 
   /**
    * Sets the current log level.
+   *
    * @param {string | number} logLevelInput - The desired log level (string or number).
    */
   setLogLevel(logLevelInput) {
@@ -121,6 +126,7 @@ class ConsoleLogger {
 
   /**
    * Gets the string name of a numerical log level.
+   *
    * @private
    * @param {number} levelValue - The numerical value of the log level.
    * @returns {string} The string name of the log level (e.g., "INFO").
@@ -136,6 +142,7 @@ class ConsoleLogger {
 
   /**
    * Logs an informational message to the console if the current log level allows INFO.
+   *
    * @param {string} message - The primary message string to log.
    * @param {...any} args - Additional arguments or objects to include in the log output.
    */
@@ -147,6 +154,7 @@ class ConsoleLogger {
 
   /**
    * Logs a warning message to the console if the current log level allows WARN.
+   *
    * @param {string} message - The primary warning message string.
    * @param {...any} args - Additional arguments or objects to include in the warning output.
    */
@@ -158,6 +166,7 @@ class ConsoleLogger {
 
   /**
    * Logs an error message to the console if the current log level allows ERROR.
+   *
    * @param {string} message - The primary error message string.
    * @param {...any} args - Additional arguments or objects, typically including an Error object, to log.
    */
@@ -169,6 +178,7 @@ class ConsoleLogger {
 
   /**
    * Logs a debug message to the console if the current log level allows DEBUG.
+   *
    * @param {string} message - The primary debug message string.
    * @param {...any} args - Additional arguments or objects to include in the debug output.
    */

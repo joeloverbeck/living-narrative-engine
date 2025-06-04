@@ -11,6 +11,7 @@ import { getDisplayName } from '../utils/messages.js'; // Assuming path is corre
 
 /**
  * Formats a validated action and target into a user-facing command string.
+ *
  * @param {ActionDefinition} actionDefinition - The validated action's definition. Must not be null/undefined.
  * @param {ActionTargetContext} validatedTargetContext - The validated target context. Must not be null/undefined.
  * @param {EntityManager} entityManager - The entity manager for lookups. Must not be null/undefined.

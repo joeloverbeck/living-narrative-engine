@@ -32,21 +32,16 @@ import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
  * based on the current game state and loaded action definitions.
  */
 export class ActionDiscoverySystem extends IActionDiscoverySystem {
-     * @private
   #gameDataRepository;
-     * @private
   #entityManager;
-     * @private
   #actionValidationService;
-     * @private
   #getEntityIdsForScopesFn;
-     * @private
   #formatActionCommandFn;
-     * @private
   #logger;
 
   /**
    * Creates an instance of ActionDiscoverySystem.
+   *
    * @param {object} dependencies - The required dependencies injected by the container.
    * @param {GameDataRepository} dependencies.gameDataRepository
    * @param {EntityManager} dependencies.entityManager
@@ -97,6 +92,7 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
 
   /**
    * Discovers all valid actions available to the actor, including their IDs, names, descriptions, and formatted command strings.
+   *
    * @param {Entity} actorEntity - The entity for whom to discover actions.
    * @param {ActionContext} context - The broader ActionContext including currentLocation etc.
    * @returns {Promise<DiscoveredActionInfo[]>} A promise resolving to an array of objects, each containing the action ID, name, description and formatted command string.

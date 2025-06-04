@@ -14,12 +14,14 @@
  * Implements the ILogger interface using the standard console object.
  * Provides basic logging levels (info, warn, error, debug) that map directly
  * to the corresponding console methods.
+ *
  * @implements {ILogger}
  */
 export class ConsoleLogger {
   /**
    * Logs an informational message to the console.
    * Uses console.info if available, otherwise console.log acts similarly in most environments.
+   *
    * @param {string} message - The primary message string to log.
    * @param {...any} args - Additional arguments or objects to include in the log output.
    */
@@ -32,6 +34,7 @@ export class ConsoleLogger {
   /**
    * Logs a warning message to the console.
    * Uses console.warn.
+   *
    * @param {string} message - The primary warning message string.
    * @param {...any} args - Additional arguments or objects to include in the warning output.
    */
@@ -43,6 +46,7 @@ export class ConsoleLogger {
   /**
    * Logs an error message to the console.
    * Uses console.error. This often includes stack traces in developer consoles.
+   *
    * @param {string} message - The primary error message string.
    * @param {...any} args - Additional arguments or objects, typically including an Error object, to log.
    */
@@ -57,6 +61,7 @@ export class ConsoleLogger {
    * by default; ensure the 'Verbose' or 'Debug' level is enabled to see them.
    * The ticket allows for future conditional logging based on flags or environment,
    * but the initial implementation logs directly.
+   *
    * @param {string} message - The primary debug message string.
    * @param {...any} args - Additional arguments or objects to include in the debug output.
    */

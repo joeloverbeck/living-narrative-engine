@@ -42,6 +42,9 @@ import {
  * @property {string} source - A string indicating the source of the API key or status.
  */
 
+/**
+ *
+ */
 export class ApiKeyService {
   /** @type {ILogger} */
   #logger;
@@ -59,6 +62,7 @@ export class ApiKeyService {
 
   /**
    * Constructs an ApiKeyService instance.
+   *
    * @param {ILogger} logger - An ILogger instance.
    * @param {IFileSystemReader} fileSystemReader - An IFileSystemReader instance.
    * @param {AppConfigService} appConfigService - An AppConfigService instance.
@@ -83,6 +87,7 @@ export class ApiKeyService {
 
   /**
    * Creates a standardized error object.
+   *
    * @private
    * @param {string} message - The primary error message.
    * @param {string} stage - The stage code for the error.
@@ -126,6 +131,7 @@ export class ApiKeyService {
 
   /**
    * Checks if an API key is required for the given LLM configuration.
+   *
    * @param {LLMModelConfig | null | undefined} llmModelConfig - The LLM model configuration.
    * @returns {boolean} True if an API key is required, false otherwise.
    */
@@ -149,6 +155,7 @@ export class ApiKeyService {
 
   /**
    * Reads an API key from a specified file.
+   *
    * @private
    * @param {string} fileName - The name of the file (e.g., "api_key.txt").
    * @param {string} projectRootPath - The root path where the key file is located.
@@ -251,6 +258,7 @@ export class ApiKeyService {
 
   /**
    * Retrieves the API key for a given LLM configuration and ID.
+   *
    * @param {LLMModelConfig} llmModelConfig - The configuration for the LLM.
    * @param {string} llmId - The ID of the LLM.
    * @returns {Promise<ApiKeyResult>} An object containing the API key, error details (if any), and the source of the key.

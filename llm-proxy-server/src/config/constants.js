@@ -10,6 +10,7 @@
  * An array of local API types that do not require a proxy-managed API key.
  * These typically refer to models running locally or on infrastructure that
  * handles authentication differently (e.g., Ollama, local TGI instances).
+ *
  * @type {string[]}
  */
 export const LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY = [
@@ -20,18 +21,21 @@ export const LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY = [
 
 /**
  * Standard Content-Type value for JSON payloads.
+ *
  * @type {string}
  */
 export const CONTENT_TYPE_JSON = 'application/json';
 
 /**
  * HTTP 'Content-Type' header name.
+ *
  * @type {string}
  */
 export const HTTP_HEADER_CONTENT_TYPE = 'Content-Type';
 
 /**
  * HTTP 'Authorization' header name.
+ *
  * @type {string}
  */
 export const HTTP_HEADER_AUTHORIZATION = 'Authorization';
@@ -39,24 +43,28 @@ export const HTTP_HEADER_AUTHORIZATION = 'Authorization';
 /**
  * The prefix for Bearer token authentication scheme.
  * Includes the trailing space.
+ *
  * @type {string}
  */
 export const AUTH_SCHEME_BEARER_PREFIX = 'Bearer ';
 
 /**
  * Default character encoding 'utf-8'.
+ *
  * @type {string}
  */
 export const DEFAULT_ENCODING_UTF8 = 'utf-8';
 
 /**
  * HTTP 'POST' method.
+ *
  * @type {string}
  */
 export const HTTP_METHOD_POST = 'POST';
 
 /**
  * HTTP 'OPTIONS' method.
+ *
  * @type {string}
  */
 export const HTTP_METHOD_OPTIONS = 'OPTIONS';
@@ -64,6 +72,7 @@ export const HTTP_METHOD_OPTIONS = 'OPTIONS';
 /**
  * An array of HTTP status codes that are considered retryable for idempotent operations
  * or when the server indicates a temporary overload or unavailability.
+ *
  * @type {number[]}
  */
 export const RETRYABLE_HTTP_STATUS_CODES = [
@@ -77,24 +86,28 @@ export const RETRYABLE_HTTP_STATUS_CODES = [
 
 /**
  * Placeholder string for LLM ID in logs when the ID is not applicable or unavailable.
+ *
  * @type {string}
  */
 export const LOG_LLM_ID_NOT_APPLICABLE = 'N/A';
 
 /**
  * Placeholder string for LLM ID in logs for unhandled errors.
+ *
  * @type {string}
  */
 export const LOG_LLM_ID_UNHANDLED_ERROR = 'N/A_UNHANDLED';
 
 /**
  * Placeholder string for LLM ID in logs when proxy is not operational.
+ *
  * @type {string}
  */
 export const LOG_LLM_ID_PROXY_NOT_OPERATIONAL = 'N/A_PROXY_NOT_OPERATIONAL';
 
 /**
  * Placeholder string for LLM ID in logs when request validation fails.
+ *
  * @type {string}
  */
 export const LOG_LLM_ID_REQUEST_VALIDATION_FAILED = 'N/A_VALIDATION';

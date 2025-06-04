@@ -91,6 +91,7 @@ class MockEntity {
 
 /**
  * Creates a mock actor instance.
+ *
  * @param {string} [id]
  * @returns {MockEntity}
  */

@@ -22,23 +22,16 @@ import { DEFAULT_FALLBACK_ACTION } from '../../llms/constants/llmConstants.js';
  * @description Implements the IActorTurnStrategy for AI-controlled actors.
  */
 export class AIPlayerStrategy extends IActorTurnStrategy {
-     * @private
   #llmAdapter;
-     * @private
   #gameStateProvider;
-  // MODIFICATION: Updated type to IAIPromptContentProvider
-     * @private
   #promptContentProvider;
-  // MODIFICATION: Updated type to IPromptBuilder
-     * @private
   #promptBuilder;
-     * @private
   #llmResponseProcessor;
-     * @private
   #logger;
 
   /**
    * Creates an instance of AIPlayerStrategy.
+   *
    * @param {object} dependencies - The dependencies for this strategy.
    * @param {ILLMAdapter} dependencies.llmAdapter - Adapter for LLM communication.
    * @param {IAIGameStateProvider} dependencies.gameStateProvider - Provider for AI game state.

@@ -21,6 +21,7 @@ const FULL_STRING_PLACEHOLDER_REGEX = /^{\s*([^}\s]+)\s*}$/; // Only matches {..
  * Special handling for paths starting with "context.": These are resolved against
  * executionContext.evaluationContext.context, which is the standard variable store.
  * Other paths (e.g., "event.type", "actor.id") are resolved from the root of executionContext.
+ *
  * @param {*} input - The data structure (object, array, string, primitive) containing potential placeholders.
  * @param {object} executionContext - The top-level context object (e.g., finalNestedExecutionContext) to resolve paths against.
  * @param {ILogger} [logger] - Optional logger for warnings.

@@ -14,6 +14,7 @@
 
 /**
  * Parameters accepted by {@link AddComponentHandler#execute}.
+ *
  * @typedef {object} AddComponentOperationParams
  * @property {'actor'|'target'|string|EntityRefObject} entity_ref     - Required. Reference to the entity to add the component to.
  * @property {string}  component_type - Required. The namespaced type ID of the component to add.
@@ -29,6 +30,7 @@ class AddComponentHandler {
 
   /**
    * Creates an instance of AddComponentHandler.
+   *
    * @param {object} dependencies - Dependencies object.
    * @param {EntityManager} dependencies.entityManager - The entity management service.
    * @param {ILogger} dependencies.logger - The logging service instance.
@@ -56,6 +58,7 @@ class AddComponentHandler {
   /**
    * Resolves entity_ref -> entityId or null.
    * (Copied directly from ModifyComponentHandler as the logic is identical)
+   *
    * @private
    * @param {AddComponentOperationParams['entity_ref']} ref - The entity reference from parameters.
    * @param {ExecutionContext} ctx - The execution context.
@@ -84,6 +87,7 @@ class AddComponentHandler {
   /**
    * Executes the ADD_COMPONENT operation.
    * Adds a new component instance (or replaces an existing one) on the specified entity.
+   *
    * @param {AddComponentOperationParams | null | undefined} params - The parameters for the operation.
    * @param {ExecutionContext} executionContext - The execution context.
    * @returns {void}

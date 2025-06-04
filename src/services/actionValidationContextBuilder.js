@@ -26,13 +26,12 @@ import {
  * Separates context creation logic from the main validation service.
  */
 export class ActionValidationContextBuilder {
-     * @private
   #entityManager;
-     * @private
   #logger;
 
   /**
    * Creates an instance of ActionValidationContextBuilder.
+   *
    * @param {{entityManager: EntityManager, logger: ILogger}} deps - The required services.
    * @throws {Error} If dependencies are missing or invalid (e.g., missing required methods).
    */
@@ -63,6 +62,7 @@ export class ActionValidationContextBuilder {
    * attempts to fetch the target entity's component data using the EntityManager.
    * For direction targets, it resolves exit details including the blocker.
    * Logs a warning if a target entity is specified but not found, or if exit details cannot be resolved.
+   *
    * @param {ActionDefinition} actionDefinition - The definition of the action being attempted. Must have a valid `id` property.
    * @param {Entity} actor - The entity performing the action. Must have a valid `id` property.
    * @param {ActionTargetContext} targetContext - The context of the action's target (entity, direction, or none). Must have a valid `type` property.

@@ -23,6 +23,7 @@ import { AIPlayerStrategy } from '../strategies/aiPlayerStrategy.js';
 export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
   /**
    * Creates an AIPlayerStrategy instance.
+   *
    * @param {object} dependencies - The dependencies required by the AI player strategy.
    * @param {ILLMAdapter} dependencies.llmAdapter
    * @param {IAIGameStateProvider} dependencies.gameStateProvider

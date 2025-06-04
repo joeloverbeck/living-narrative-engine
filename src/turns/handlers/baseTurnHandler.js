@@ -23,19 +23,12 @@ import { TurnEndingState as ConcreteTurnEndingState } from '../states/turnEnding
  * Abstract base class for all turn handlers.
  */
 export class BaseTurnHandler {
-     * @protected
   _logger;
-     * @protected // NEW
-  _turnStateFactory; // NEW
-     * @protected
+  _turnStateFactory;
   _currentState;
-     * @protected
   _currentTurnContext = null;
-     * @protected
   _isDestroyed = false;
-     * @protected
   _isDestroying = false;
-     * @protected
   _currentActor = null;
 
   /**

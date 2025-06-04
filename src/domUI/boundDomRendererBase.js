@@ -40,6 +40,7 @@ import { RendererBase } from './rendererBase.js';
 export class BoundDomRendererBase extends RendererBase {
   /**
    * Stores the bound DOM elements.
+   *
    * @protected
    * @type {Object.<string, HTMLElement|null>}
    */
@@ -47,6 +48,7 @@ export class BoundDomRendererBase extends RendererBase {
 
   /**
    * Initializes the base renderer and binds DOM elements.
+   *
    * @param {object} params - The parameters object.
    * @param {ILogger} params.logger - The logger instance.
    * @param {IDocumentContext} params.documentContext - The document context abstraction.
@@ -74,6 +76,7 @@ export class BoundDomRendererBase extends RendererBase {
 
   /**
    * Processes the elementsConfig to query and store DOM elements.
+   *
    * @private
    * @param {ElementsConfig} elementsConfig - The configuration object for elements.
    */

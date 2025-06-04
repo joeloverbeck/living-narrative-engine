@@ -23,42 +23,49 @@
  * Provides common logic for discovering, fetching, validating against the primary schema,
  * and processing files via subclass implementation.
  * Subclasses must implement the `_processFetchedItem` method.
+ *
  * @abstract
  * @class BaseManifestItemLoader
  */
 export class BaseManifestItemLoader {
   /**
    * Protected reference to the configuration service.
+   *
    * @protected
    * @type {IConfiguration}
    */
   _config;
   /**
    * Protected reference to the path resolver service.
+   *
    * @protected
    * @type {IPathResolver}
    */
   _pathResolver;
   /**
    * Protected reference to the data fetcher service.
+   *
    * @protected
    * @type {IDataFetcher}
    */
   _dataFetcher;
   /**
    * Protected reference to the schema validator service.
+   *
    * @protected
    * @type {ISchemaValidator}
    */
   _schemaValidator;
   /**
    * Protected reference to the data registry service.
+   *
    * @protected
    * @type {IDataRegistry}
    */
   _dataRegistry;
   /**
    * Protected reference to the logger service.
+   *
    * @protected
    * @type {ILogger}
    */
@@ -68,6 +75,7 @@ export class BaseManifestItemLoader {
    * The primary schema ID used for validation by this loader instance.
    * Determined by the contentType passed to the constructor via configuration.
    * If null, primary validation might be skipped.
+   *
    * @protected
    * @type {string | null}
    */
@@ -75,6 +83,7 @@ export class BaseManifestItemLoader {
 
   /**
    * Creates an instance of BaseManifestItemLoader.
+   *
    * @param {string} contentType - The logical name of the content type this loader handles (e.g., 'actions', 'components'). Used to find the primary schema.
    * @param {IConfiguration} config - Configuration service instance.
    * @param {IPathResolver} pathResolver - Path resolution service instance.
@@ -259,6 +268,7 @@ export class BaseManifestItemLoader {
    * It handles cases where the primary schema ID is missing or the schema isn't loaded.
    * Errors are logged in detail, and an exception is thrown on validation failure.
    * If the schema ID is present but the schema is not loaded, a warning is logged, and validation is skipped.
+   *
    * @protected
    * @param {any} data - The data object to validate.
    * @param {string} filename - The original filename (for context in logs/errors).
@@ -318,6 +328,7 @@ export class BaseManifestItemLoader {
   /**
    * Retrieves the schema ID for a given content type from the configuration.
    * Logs a warning if the schema ID is not found.
+   *
    * @protected
    * @param {string} contentType - The logical name of the content type (e.g., 'actions', 'components').
    * @returns {string | null} The schema ID string if found, otherwise null.
@@ -344,6 +355,7 @@ export class BaseManifestItemLoader {
    * 2.  **Further Validation/Processing:** Perform any additional type-specific validation (e.g., component `dataSchema` validation) or data transformation.
    * 3.  **Store Item:** Delegate storage to `this._storeItemInRegistry`, passing the required parameters including the **base** item ID. **Crucially, `_storeItemInRegistry` must now return a boolean indicating if an overwrite occurred.**
    * 4.  **Return Result Object:** The implementation MUST return an object `{ qualifiedId: string, didOverride: boolean }` where `qualifiedId` is the fully qualified item ID (e.g., `modId:baseItemId`) and `didOverride` is the boolean returned by `_storeItemInRegistry`.
+   *
    * @abstract
    * @protected
    * @async
@@ -366,6 +378,7 @@ export class BaseManifestItemLoader {
   /**
    * Safely extracts and validates filenames from the manifest for a given content key.
    * Filters out non-string and empty string entries, logging warnings.
+   *
    * @protected
    * @param {object | null | undefined} manifest - The parsed mod manifest object.
    * @param {string} contentKey - The key within `manifest.content` (e.g., 'components', 'rules').
@@ -413,6 +426,7 @@ export class BaseManifestItemLoader {
    * fetching, primary schema validation, calling the abstract processing method,
    * and central error logging.
    * Ensures errors are caught and logged centrally.
+   *
    * @protected
    * @async
    * @param {string} modId - The ID of the mod owning the file.
@@ -480,6 +494,7 @@ export class BaseManifestItemLoader {
    * Orchestrates the loading of all items for a specific content type from a mod manifest.
    * Uses `_extractValidFilenames` and `_processFileWrapper`, handling results via `Promise.allSettled`.
    * Logs a summary of the results and returns detailed counts.
+   *
    * @protected
    * @async
    * @param {string} modId - The ID of the mod being processed.
@@ -565,6 +580,7 @@ export class BaseManifestItemLoader {
    * exists in the specified category, logs a warning if it does, prepares the final data object
    * (including the final prefixed `id`, `modId`, and `_sourceFile`), and attempts to store it in the registry.
    * It wraps registry interactions in a try/catch block for robust error handling.
+   *
    * @protected
    * @param {string} category - The data registry category (e.g., 'items', 'actions', 'entities').
    * @param {string} modId - The ID of the mod providing the item.
@@ -629,6 +645,7 @@ export class BaseManifestItemLoader {
    * This method encapsulates the common logic for validating inputs and delegating
    * the actual loading process to the internal `_loadItemsInternal` method.
    * Subclasses should call this public method instead of directly calling `_loadItemsInternal`.
+   *
    * @public
    * @async
    * @param {string} modId - The ID of the mod. Must be a non-empty string.

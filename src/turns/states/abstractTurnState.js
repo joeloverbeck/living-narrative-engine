@@ -27,6 +27,7 @@ export class AbstractTurnState extends ITurnState {
   /**
    * The BaseTurnHandler (acting as the state machine's context) in which this state operates.
    * Provides access to state transition methods (_transitionToState) and the current ITurnContext.
+   *
    * @protected
    * @readonly
    * @type {BaseTurnHandler}
@@ -35,6 +36,7 @@ export class AbstractTurnState extends ITurnState {
 
   /**
    * Creates an instance of AbstractTurnState.
+   *
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance that manages this state.
    * @throws {Error} If the handler is not provided.
    */
@@ -56,6 +58,7 @@ export class AbstractTurnState extends ITurnState {
   /**
    * Retrieves the current ITurnContext from the stored handler.
    * This is the primary way concrete states should access actor, logger, services, etc.
+   *
    * @protected
    * @returns {ITurnContext | null} The current ITurnContext, or null if no turn is active.
    */

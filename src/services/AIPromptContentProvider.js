@@ -148,13 +148,13 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * Validates if the provided AIGameStateDTO contains the critical information
    * necessary for generating prompt data.
+   *
    * @param {AIGameStateDTO | null | undefined} gameStateDto - The game state DTO to validate.
    * @param {ILogger} logger - Logger instance for logging validation issues (as per interface).
    * @returns {{isValid: boolean, errorContent: string | null}} An object indicating if the state is valid
    * and an error message if not.
    */
   validateGameStateForPrompting(gameStateDto, logger) {
-     
     // The `logger` argument is part of the IAIPromptContentProvider interface.
     // This method's own operational logging uses this.#logger.
     // The actual detailed validation logging will be done by the #gameStateValidationService, which uses its own logger.
@@ -167,6 +167,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * Assembles the complete PromptData object required for constructing an LLM prompt.
+   *
    * @param {AIGameStateDTO} gameStateDto - The comprehensive game state for the current AI actor.
    * @param {ILogger} logger - Logger instance for logging during the assembly process. (Note: this method will use the class's instance logger for its own operations)
    * @returns {Promise<PromptData>} A promise that resolves to the fully assembled PromptData object.
@@ -281,12 +282,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * Generates the character definition content.
+   *
    * @param {AIGameStateDTO} gameState - The game state DTO.
    * @param {ILogger | undefined} logger - Optional logger instance. (Note: This method uses this.#logger for its own logging)
    * @returns {string} The formatted character segment.
    */
   getCharacterPersonaContent(gameState, logger) {
-     
     this.#logger.debug(
       'AIPromptContentProvider: Formatting character persona content.'
     );
@@ -351,12 +352,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * Generates the world context content (location, exits, other characters).
+   *
    * @param {AIGameStateDTO} gameState - The game state DTO.
    * @param {ILogger | undefined} logger - Optional logger instance. (Note: This method uses this.#logger for its own logging)
    * @returns {string} The formatted world context segment.
    */
   getWorldContextContent(gameState, logger) {
-     
     this.#logger.debug(
       'AIPromptContentProvider: Formatting world context content.'
     );
@@ -411,12 +412,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * Generates the available actions content.
+   *
    * @param {AIGameStateDTO} gameState - The game state DTO.
    * @param {ILogger | undefined} logger - Optional logger instance. (Note: This method uses this.#logger for its own logging)
    * @returns {string} The formatted actions segment.
    */
   getAvailableActionsInfoContent(gameState, logger) {
-     
     this.#logger.debug(
       'AIPromptContentProvider: Formatting available actions info content.'
     );
@@ -454,6 +455,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * Returns the core task description text.
    * Delegates to PromptStaticContentService.
+   *
    * @returns {string}
    */
   getTaskDefinitionContent() {
@@ -464,6 +466,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * Returns character portrayal guidelines.
    * Delegates to PromptStaticContentService.
+   *
    * @param {string} characterName - The name of the character.
    * @returns {string}
    */
@@ -477,6 +480,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * Returns the NC-21 content policy text.
    * Delegates to PromptStaticContentService.
+   *
    * @returns {string}
    */
   getContentPolicyContent() {
@@ -487,6 +491,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * Returns the final LLM instruction text.
    * Delegates to PromptStaticContentService.
+   *
    * @returns {string}
    */
   getFinalInstructionsContent() {

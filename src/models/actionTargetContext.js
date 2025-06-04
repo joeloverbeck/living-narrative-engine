@@ -19,6 +19,7 @@ export class ActionTargetContext {
 
   /**
    * Creates an instance of ActionTargetContext.
+   *
    * @param {ActionTargetType} type - The type of the target.
    * @param {object} [options] - Additional options based on type.
    * @param {string} [options.entityId] - Required if type is 'entity'. Must be a non-empty string.
@@ -61,6 +62,7 @@ export class ActionTargetContext {
 
   /**
    * Static factory for creating a context targeting an entity.
+   *
    * @param entityId
    */
   static forEntity(entityId) {
@@ -70,6 +72,7 @@ export class ActionTargetContext {
 
   /**
    * Static factory for creating a context targeting a direction.
+   *
    * @param direction
    */
   static forDirection(direction) {

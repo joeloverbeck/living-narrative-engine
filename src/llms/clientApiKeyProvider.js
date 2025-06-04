@@ -33,6 +33,7 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
 
   /**
    * Creates an instance of ClientApiKeyProvider.
+   *
    * @param {object} params - The parameters for the ClientApiKeyProvider.
    * @param {ILogger} params.logger - An instance conforming to ILogger for internal logging.
    * @throws {Error} If logger is invalid.
@@ -65,6 +66,7 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
    * Its primary purpose is to check if cloud service LLM configurations
    * contain the necessary pointers (apiKeyEnvVar or apiKeyFileName)
    * for a backend proxy to retrieve the actual key.
+   *
    * @async
    * @param {LLMModelConfig} llmConfig - Configuration for the LLM.
    * @param {EnvironmentContext} environmentContext - Context about the execution environment.

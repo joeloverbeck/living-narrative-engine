@@ -16,6 +16,7 @@ import { BaseLLMStrategy } from './baseLLMStrategy.js';
 export class BaseChatLLMStrategy extends BaseLLMStrategy {
   /**
    * Constructs a new BaseChatLLMStrategy.
+   *
    * @param {ILogger} logger - The logger instance.
    */
   constructor(logger) {
@@ -25,6 +26,7 @@ export class BaseChatLLMStrategy extends BaseLLMStrategy {
   /**
    * Constructs the prompt payload for chat-based LLM APIs.
    * The `gameSummary` (the `finalPromptString` from `PromptBuilder`) is the primary content.
+   *
    * @protected
    * @param {string} gameSummary - The `finalPromptString` from `PromptBuilder`.
    * @param {LLMModelConfig} llmConfig - The full LLM configuration.

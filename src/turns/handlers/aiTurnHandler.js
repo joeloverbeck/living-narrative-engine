@@ -68,13 +68,12 @@ export class AITurnHandler extends BaseTurnHandler {
   /** @type {ILLMResponseProcessor} */
   #llmResponseProcessor;
 
-     * @private
   #aiIsAwaitingExternalEvent = false;
-     * @private
   #aiAwaitingExternalEventForActorId = null;
 
   /**
    * Creates an instance of AITurnHandler.
+   *
    * @param {object} dependencies - The dependencies required by the handler.
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {ITurnStateFactory} dependencies.turnStateFactory - Factory for creating turn states.

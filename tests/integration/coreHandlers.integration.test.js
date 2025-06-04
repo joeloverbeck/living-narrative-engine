@@ -38,6 +38,7 @@ class SimpleEntityManager {
 
   /**
    * Utility used only by the test harness
+   *
    * @param id
    */
   _createEntity(id) {

@@ -15,6 +15,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
 
 /**
  * Represents an individual action available to the player.
+ *
  * @typedef {object} AvailableAction
  * @property {NamespacedId} id - The unique ID of the action definition (e.g., 'core:wait').
  * @property {string} name - The human-readable name of the action (e.g., "Wait", "Go"). Used for tooltip titles.
@@ -24,6 +25,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
 
 /**
  * Represents the *inner* payload for 'textUI:update_available_actions'.
+ *
  * @typedef {object} UIUpdateActionsInnerPayload
  * @property {string} actorId - The ID of the actor these actions are for.
  * @property {AvailableAction[]} actions - An array of action objects available to the player.
@@ -31,6 +33,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
 
 /**
  * Represents the *full event object* received by the subscriber for 'textUI:update_available_actions'.
+ *
  * @typedef {object} UIUpdateActionsEventObject
  * @property {string} type - The event type name (e.g., 'textUI:update_available_actions').
  * @property {UIUpdateActionsInnerPayload} payload - The inner payload containing the actorId and actions.
@@ -38,6 +41,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
 
 /**
  * Payload for core:player_turn_submitted.
+ *
  * @typedef {object} CorePlayerTurnSubmittedPayload
  * @property {string} submittedByActorId - The instance ID of the actor who submitted this turn.
  * @property {NamespacedId} actionId - The unique identifier of the selected AvailableAction.
@@ -48,23 +52,22 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  * Renders available actions as buttons for player interaction.
  * Handles action selection and dispatches the chosen action.
  * Extends BaseListDisplayComponent to manage the rendering of action buttons.
+ *
  * @augments {BaseListDisplayComponent<AvailableAction>}
  */
 export class ActionButtonsRenderer extends BaseListDisplayComponent {
-     * @private
   _EVENT_TYPE_SUBSCRIBED = 'textUI:update_available_actions';
 
   /** @type {AvailableAction | null} */
   selectedAction = null;
   /** @type {AvailableAction[]} */
   availableActions = [];
-     * @private
   #currentActorId = null;
-     * @private
   #isDisposed = false;
 
   /**
    * Constructs an ActionButtonsRenderer instance.
+   *
    * @param {object} params - The parameters object.
    * @param {ILogger} params.logger - The logger instance.
    * @param {IDocumentContext} params.documentContext - The document context abstraction.
@@ -72,7 +75,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
    * @param {DomElementFactoryType} params.domElementFactory - Factory for creating DOM elements.
    * @param {string} params.actionButtonsContainerSelector - CSS selector for the action buttons container. This is mandatory.
    * @param {string} [params.sendButtonSelector] - CSS selector for the send button.
-   * @param {string} [params.speechInputSelector='#speech-input'] - CSS selector for the speech input.
+   * @param {string} [params.speechInputSelector] - CSS selector for the speech input.
    */
   constructor({
     logger,

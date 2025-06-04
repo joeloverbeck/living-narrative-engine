@@ -40,6 +40,7 @@ class AppConfigService {
   /**
    * Initializes the AppConfigService. It's recommended to use the getAppConfigService
    * factory function to ensure a singleton instance.
+   *
    * @param {ILogger} logger - An ILogger instance.
    */
   constructor(logger) {
@@ -72,6 +73,7 @@ class AppConfigService {
 
   /**
    * Helper to log the status of a string-based configuration value.
+   *
    * @private
    * @param {string} envVarName - The name of the environment variable (e.g., "LLM_CONFIG_PATH").
    * @param {string | undefined} envVarValue - The direct value from process.env.
@@ -104,6 +106,7 @@ class AppConfigService {
 
   /**
    * Loads environment variables, applies defaults, and logs them.
+   *
    * @private
    */
   _loadAndLogConfigs() {
@@ -177,6 +180,7 @@ class AppConfigService {
 
   /**
    * Gets the port number for the proxy server.
+   *
    * @returns {number} The proxy port.
    */
   getProxyPort() {
@@ -185,6 +189,7 @@ class AppConfigService {
 
   /**
    * Checks if the PROXY_PORT was defaulted (i.e., not set or invalid in environment).
+   *
    * @returns {boolean} True if the default port is being used.
    */
   isProxyPortDefaulted() {
@@ -195,6 +200,7 @@ class AppConfigService {
    * Gets the path to the LLM configuration file as specified by environment variable.
    * Returns null if the environment variable was not set.
    * An empty string means the environment variable was set to an empty string.
+   *
    * @returns {string | null} The LLM configuration path from env, or null if not set.
    */
   getLlmConfigPath() {
@@ -205,6 +211,7 @@ class AppConfigService {
    * Gets the configured PROXY_ALLOWED_ORIGIN string from environment variable.
    * Returns null if the environment variable was not set.
    * An empty string means the environment variable was set to an empty string.
+   *
    * @returns {string | null} The allowed origin string from env, or null if not set.
    */
   getProxyAllowedOrigin() {
@@ -214,6 +221,7 @@ class AppConfigService {
   /**
    * Gets an array of allowed origins for CORS.
    * Parses PROXY_ALLOWED_ORIGIN if set and non-empty, returns an empty array otherwise.
+   *
    * @returns {string[]} An array of allowed origins.
    */
   getAllowedOriginsArray() {
@@ -227,6 +235,7 @@ class AppConfigService {
    * Gets the project root path for API key files as specified by environment variable.
    * Returns null if the environment variable was not set.
    * An empty string means the environment variable was set to an empty string.
+   *
    * @returns {string | null} The path from env, or null if not set.
    */
   getProxyProjectRootPathForApiKeyFiles() {
@@ -237,6 +246,7 @@ class AppConfigService {
 /**
  * Gets the singleton instance of the AppConfigService.
  * Initializes the service on first call.
+ *
  * @param {ILogger} logger - An ILogger instance, required for the first initialization.
  * @returns {AppConfigService} The singleton AppConfigService instance.
  * @throws {Error} if logger is not provided during the first call.

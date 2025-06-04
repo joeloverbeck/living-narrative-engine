@@ -37,9 +37,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
  * @implements {ICommandOutcomeInterpreterType}
  */
 class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
-     * @private
   #dispatcher;
-     * @private
   #logger;
 
   constructor({ dispatcher, logger }) {

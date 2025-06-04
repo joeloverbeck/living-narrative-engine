@@ -26,6 +26,7 @@ import { TurnContext } from '../context/turnContext.js';
 export class ConcreteTurnContextFactory extends ITurnContextFactory {
   /**
    * Creates a TurnContext instance.
+   *
    * @param {object} params - The parameters required to create the turn context.
    * @param {Entity} params.actor
    * @param {ILogger} params.logger

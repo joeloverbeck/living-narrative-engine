@@ -15,6 +15,7 @@ import { ICommandParser } from './interfaces/ICommandParser.js';
 
 /**
  * Defines the list of prepositions recognized by the parser. (No changes needed)
+ *
  * @type {ReadonlyArray<string>}
  */
 const SUPPORTED_PREPOSITIONS = Object.freeze([
@@ -35,6 +36,7 @@ class CommandParser extends ICommandParser {
 
   /**
    * // *** [REFACTOR-014-SUB-11] Updated Constructor Signature ***
+   *
    * @param {GameDataRepository} repository - The game data repository instance.
    */
   constructor(repository) {
@@ -62,6 +64,7 @@ class CommandParser extends ICommandParser {
    * based on matching the first word against ActionDefinition.commandVerb.
    * // *** [REFACTOR-014-SUB-11] Updated to use GameDataRepository ***
    * // *** Task 2.1: Refactored parse method ***
+   *
    * @param {string} commandString
    * @returns {ParsedCommand}
    */

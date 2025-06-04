@@ -47,6 +47,7 @@ import { LLMStrategyFactory } from '../../llms/LLMStrategyFactory.js';
 /**
  * Registers the default port adapters and the ConfigurableLLMAdapter with its dependencies
  * for a client-side environment.
+ *
  * @export
  * @param {AppContainer} container - The application's DI container.
  */

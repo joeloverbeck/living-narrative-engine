@@ -32,6 +32,7 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
 /**
  * Reusable set of mock ActionDefinition objects for testing the parse method.
  * Includes actions needed for the preposition edge case tests (Ticket 7).
+ *
  * @type {ReadonlyArray<ActionDefinition>}
  */
 const MOCK_ACTIONS = Object.freeze([

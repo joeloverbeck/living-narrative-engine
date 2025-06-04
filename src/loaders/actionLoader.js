@@ -22,6 +22,7 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Correct
  * Loads action definitions from mods.
  * Extends {@link BaseManifestItemLoader} to leverage common file processing logic.
  * The content type managed by this loader is 'actions'.
+ *
  * @class ActionLoader
  * @augments BaseManifestItemLoader
  */
@@ -31,6 +32,7 @@ class ActionLoader extends BaseManifestItemLoader {
   /**
    * Creates an instance of ActionLoader.
    * Passes dependencies and the specific contentType 'actions' to the base class constructor.
+   *
    * @param {IConfiguration} config - Configuration service instance.
    * @param {IPathResolver} pathResolver - Path resolution service instance.
    * @param {IDataFetcher} dataFetcher - Data fetching service instance.
@@ -67,6 +69,7 @@ class ActionLoader extends BaseManifestItemLoader {
    * base class's `_storeItemInRegistry` helper using the **base** action ID,
    * and returns an object containing the **final registry key** (`modId:baseActionId`)
    * and a flag indicating if an overwrite occurred.
+   *
    * @override
    * @protected
    * @async

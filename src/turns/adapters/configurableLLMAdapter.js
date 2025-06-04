@@ -58,6 +58,7 @@ import {
 export class ConfigurationError extends Error {
   /**
    * Creates an instance of ConfigurationError.
+   *
    * @param {string} message - The error message.
    * @param {object} [details] - Additional details about the error.
    * @param {string} [details.llmId] - The ID of the LLM configuration that caused the error.
@@ -86,34 +87,21 @@ export class ConfigurationError extends Error {
  */
 export class ConfigurableLLMAdapter extends ILLMAdapter {
   // --- Private Fields ---
-     * @private
   #logger;
-     * @private
   #environmentContext;
-     * @private
   #apiKeyProvider;
-     * @private
   #llmStrategyFactory;
-     * @private
   #configLoader = null;
 
-     * @private
   #llmRootConfig = null; // Renamed from #llmConfigs to reflect it holds the root object
 
-     * @private
   #defaultConfigIdFromFile = null;
-     * @private
   #allConfigsMap = null;
 
-     * @private
   #isInitialized = false; // Tracks if init attempt has been made and core logic run
-     * @private
   #isOperational = false;
-     * @private
   #currentActiveLlmId = null;
-     * @private
   #currentActiveLlmConfig = null;
-     * @private
   #initialLlmIdFromConstructor = null;
 
   /**
@@ -125,6 +113,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * Creates an instance of ConfigurableLLMAdapter.
+   *
    * @param {object} dependencies - The dependencies for this adapter.
    * @param {ILogger} dependencies.logger - A logger instance.
    * @param {EnvironmentContext} dependencies.environmentContext - An EnvironmentContext instance.
@@ -313,6 +302,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
    * This method is idempotent and manages an internal promise for the async initialization process.
    * It loads LLM configurations using the provided LlmConfigLoader
    * and sets the initial active LLM based on constructor parameter and config file default.
+   *
    * @param {object} initParams - Parameters for initialization.
    * @param {LlmConfigLoader} initParams.llmConfigLoader - An instance of LlmConfigLoader.
    * @returns {Promise<void>} A promise that resolves when initialization is complete,
@@ -482,6 +472,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
    * Sets the active LLM configuration by its ID.
    * This method allows changing the currently active LLM configuration at runtime.
    * It validates the provided llmId against the loaded configurations and updates the adapter's internal state.
+   *
    * @param {string} llmId - The ID of the LLM configuration to set as active.
    * @returns {Promise<boolean>} True if the LLM configuration was successfully set as active, false otherwise.
    * @throws {Error} If the adapter is not initialized or not operational (propagated from #ensureInitialized).
@@ -531,6 +522,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * Retrieves the full configuration object for the currently active LLM.
    * The object returned is of type LLMModelConfig.
+   *
    * @returns {Promise<LLMModelConfig | null>} The active LLMModelConfig object, or null if no LLM is active.
    * @throws {Error} If the adapter is not initialized or not operational (propagated from #ensureInitialized).
    */
@@ -554,6 +546,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * Retrieves a list of available LLM configurations for UI selection.
+   *
    * @public
    * @async
    * @returns {Promise<Array<{configId: string, displayName: string}>>} A promise that resolves to an array of LLM options.
@@ -599,6 +592,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * Retrieves the ID of the currently active LLM.
+   *
    * @public
    * @async
    * @returns {Promise<string | null>} A promise that resolves to the active LLM ID (string) or null if no LLM is active or adapter is not operational.
@@ -765,6 +759,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * Generates an action and speech based on the provided game summary using a configured LLM.
+   *
    * @async
    * @param {string} gameSummary - A string providing a summarized representation of the game state.
    * @returns {Promise<string>} A Promise that resolves to a JSON string representing the LLM's decision.
@@ -871,6 +866,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   // --- Methods for Testing ---
   /**
    * FOR TESTING ONLY: Retrieves the loaded LLM configurations (the root object).
+   *
    * @returns {LLMConfigurationFile | null}
    */
   getLoadedConfigs_FOR_TESTING_ONLY() {
@@ -880,6 +876,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * FOR TESTING ONLY: Retrieves the ID of the currently active LLM.
+   *
    * @returns {string | null}
    */
   getActiveLlmId_FOR_TESTING_ONLY() {
@@ -888,6 +885,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * FOR TESTING ONLY: Retrieves the execution environment string.
+   *
    * @returns {string}
    */
   getExecutionEnvironment_FOR_TESTING_ONLY() {
@@ -898,6 +896,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * FOR TESTING ONLY: Retrieves the project root path from environment context.
+   *
    * @returns {string | null}
    */
   getProjectRootPath_FOR_TESTING_ONLY() {
@@ -908,6 +907,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * FOR TESTING ONLY: Retrieves the proxy server URL from environment context.
+   *
    * @returns {string}
    */
   getProxyServerUrl_FOR_TESTING_ONLY() {
@@ -918,6 +918,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * FOR TESTING ONLY: Retrieves the EnvironmentContext instance.
+   *
    * @returns {EnvironmentContext | null}
    */
   getEnvironmentContext_FOR_TESTING_ONLY() {
@@ -926,6 +927,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * FOR TESTING ONLY: Retrieves the IApiKeyProvider instance.
+   *
    * @returns {IApiKeyProvider | null}
    */
   getApiKeyProvider_FOR_TESTING_ONLY() {
@@ -934,6 +936,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
   /**
    * FOR TESTING ONLY: Retrieves the LLMStrategyFactory instance.
+   *
    * @returns {LLMStrategyFactory | null}
    */
   getLlmStrategyFactory_FOR_TESTING_ONLY() {

@@ -4,9 +4,7 @@ import { IStorageProvider } from '../interfaces/IStorageProvider.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 export class BrowserStorageProvider extends IStorageProvider {
-     * @private
   #logger;
-     * @private
   #rootHandle = null;
 
   /**
@@ -30,6 +28,7 @@ export class BrowserStorageProvider extends IStorageProvider {
   /**
    * Lazily initializes and returns the root directory handle.
    * Prompts the user for directory selection if the handle is not already available or permissions are lost.
+   *
    * @private
    * @param {boolean} promptIfMissing - If true, will prompt the user if handle is missing.
    * @returns {Promise<FileSystemDirectoryHandle>} The root directory handle.

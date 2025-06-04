@@ -34,6 +34,7 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
 // --- Define Mock Action Definitions for These Tests ---
 /**
  * Reusable set of mock ActionDefinition objects, including target_domain.
+ *
  * @type {ReadonlyArray<ActionDefinition>}
  */
 const MOCK_ACTIONS_DIRECTION_HANDLING = Object.freeze([

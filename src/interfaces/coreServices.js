@@ -10,6 +10,7 @@
 
 /**
  * Interface for fetching raw data from a source (e.g., file system, network).
+ *
  * @typedef {object} IDataFetcher
  * @property {(identifier: string) => Promise<any>} fetch
  * Fetches data identified by the given string (e.g., path, URL).
@@ -21,6 +22,7 @@
 
 /**
  * Represents the result of a data validation against a schema.
+ *
  * @typedef {object} ValidationResult
  * @property {boolean} isValid Indicates if the data passed validation.
  * @property {any[] | null} errors An array of validation error objects if `isValid` is false, otherwise null.
@@ -28,6 +30,7 @@
 
 /**
  * Interface for managing and using JSON schemas for validation.
+ *
  * @typedef {object} ISchemaValidator
  * @property {(schemaData: object, schemaId: string) => Promise<void>} addSchema
  * Adds a JSON schema object to the validator instance, associating it with the given schema ID (typically the `$id`).
@@ -50,6 +53,7 @@
  * **Note on Keys:** For definitions loaded via mods (using loaders like ComponentLoader, ActionLoader, etc.),
  * the `id` used with `store` and `get` methods is expected to be in the fully qualified format: `modId:itemId`.
  * The specific loader implementations are responsible for constructing this key before storing.
+ *
  * @typedef {object} IDataRegistry
  * @property {(type: string, id: string, data: object) => void} store
  * Stores a data object under a specific category (`type`) and unique identifier (`id`).
@@ -82,6 +86,7 @@
 /**
  * Interface for a logging service, providing different levels for messages.
  * Allows decoupling the core logic from specific console or file logging implementations.
+ *
  * @typedef {object} ILogger
  * @property {(message: string, ...args: any[]) => void} info
  * Logs an informational message.
@@ -98,6 +103,7 @@
 /**
  * Interface for accessing configuration values related to data loading and structure.
  * This isolates the core logic from hardcoded paths and settings.
+ *
  * @typedef {object} IConfiguration
  * @property {() => string} getBaseDataPath
  * Returns the root path where all game data is located.
@@ -124,6 +130,7 @@
 
 /**
  * Interface for managing a spatial index of entities based on their location.
+ *
  * @typedef {object} ISpatialIndexManager
  * @property {(entityId: string, locationId: string | null | undefined) => void} addEntity
  * Adds or updates an entity's presence in the index for a given location.

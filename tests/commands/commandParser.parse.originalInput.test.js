@@ -32,6 +32,7 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
 /**
  * Reusable set of mock ActionDefinition objects for testing the parse method.
  * Includes actions relevant to the originalInput tests (look, take, put).
+ *
  * @type {ReadonlyArray<ActionDefinition>}
  */
 const MOCK_ACTIONS = Object.freeze([

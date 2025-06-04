@@ -9,6 +9,7 @@
 
 /**
  * Purpose: Represents a single exit from a location.
+ *
  * @typedef {object} AILocationExitDTO
  * @property {string} direction - The direction of the exit (e.g., "north", "south-east").
  * @property {string} targetLocationId - The instance ID of the location this exit leads to.
@@ -19,6 +20,7 @@
 
 /**
  * Purpose: Represents another character present in the same location as the AI actor.
+ *
  * @typedef {object} AICharacterInLocationDTO
  * @property {string} id - The unique ID of the character.
  * @property {string} name - The name of the character.
@@ -28,6 +30,7 @@
 
 /**
  * Purpose: Summarizes the AI actor's current location.
+ *
  * @typedef {object} AILocationSummaryDTO
  * @property {string} name - The name of the location.
  * @property {string} description - A textual description of the location.
@@ -38,6 +41,7 @@
 
 /**
  * Purpose: Represents a single entry from the AI actor's perception log.
+ *
  * @typedef {object} AIPerceptionLogEntryDTO
  * @property {string} description - The textual description of the perceived event.
  * @property {number} timestamp - The game timestamp of the perception (could be relative time later).
@@ -46,6 +50,7 @@
 
 /**
  * Purpose: Represents an action available to the AI actor.
+ *
  * @typedef {object} AIAvailableActionDTO
  * @property {string} id - The definition ID of the action (e.g., "core:move", "skill:attack").
  * @property {string} command - The command string the AI would use (e.g., "move north", "attack goblin").
@@ -59,6 +64,7 @@
  * Purpose: Represents the raw AI actor's state relevant for decision making,
  * mirroring the component data structure expected by the current AIPromptFormatter._formatCharacterSegment.
  * This will be refined or replaced by ActorPromptDataDTO in later refactoring stages.
+ *
  * @typedef {object} AIActorStateDTO
  * @property {string} id - The AI actor's unique ID.
  * // Other properties are dynamic, based on component IDs like NAME_COMPONENT_ID,
@@ -81,6 +87,7 @@
 /**
  * Purpose: The top-level DTO that aggregates all other AI-relevant state information.
  * This is the primary object passed to the prompt formatter.
+ *
  * @typedef {object} AIGameStateDTO
  * @property {AIActorStateDTO} actorState - The AI actor's own raw state (still needed for other systems potentially).
  * @property {ActorPromptDataDTO} actorPromptData - Pre-processed character data for prompt generation.

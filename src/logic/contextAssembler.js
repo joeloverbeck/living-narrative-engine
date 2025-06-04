@@ -22,6 +22,7 @@
  * dynamic lookup described in the JsonLogicEntityContext JSDoc without needing
  * a full ES6 Proxy (which might be overkill or have compatibility concerns).
  * JSON Logic typically accesses specific, known properties, making this approach viable.
+ *
  * @param {string | number} entityId - The ID of the entity whose components are accessed.
  * @param {EntityManager} entityManager - The EntityManager instance to use for data fetching.
  * @param {ILogger} logger - Logger instance for diagnostics.
@@ -135,6 +136,7 @@ export function createComponentAccessor(entityId, entityManager, logger) {
 /**
  * Assembles the data context object (`JsonLogicEvaluationContext`) needed for
  * evaluating JSON Logic rules within the system.
+ *
  * @param {GameEvent} event - The triggering game event object.
  * @param {EntityId} actorId - The ID of the entity considered the 'actor' for this event, if applicable.
  * @param {EntityId} targetId - The ID of the entity considered the 'target' for this event, if applicable.

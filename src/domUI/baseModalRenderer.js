@@ -44,6 +44,7 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js';
 export class BaseModalRenderer extends BoundDomRendererBase {
   /**
    * Indicates whether the modal is currently visible.
+   *
    * @type {boolean}
    * @protected
    */
@@ -51,6 +52,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
 
   /**
    * Stores the element that had focus before the modal was shown, to return focus on hide.
+   *
    * @type {HTMLElement | null}
    * @private
    */
@@ -59,6 +61,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
   /**
    * Defines the keys of elements within `this.elements` that should be disabled/enabled
    * by `_setOperationInProgress`. Subclasses can override this or extend it.
+   *
    * @type {string[]}
    * @protected
    */
@@ -67,6 +70,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
   /**
    * Duration in milliseconds for the hide animation.
    * Used to delay setting display: none.
+   *
    * @type {number}
    * @protected
    */
@@ -75,6 +79,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
   /**
    * Stores the currently applied CSS class for the status message type (e.g., 'status-message-error').
    * Used to easily remove the previous type class when displaying a new message.
+   *
    * @type {string | null}
    * @private
    */
@@ -82,6 +87,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
 
   /**
    * Constructs a BaseModalRenderer instance.
+   *
    * @param {object} dependencies - The dependencies for the renderer.
    * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger - The logger instance.
    * @param {import('../interfaces/IDocumentContext.js').IDocumentContext} dependencies.documentContext - The document context abstraction.
@@ -149,6 +155,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
 
   /**
    * Binds core event listeners for the modal (e.g., close button, Escape key).
+   *
    * @private
    */
   _bindCoreModalEvents() {
@@ -332,6 +339,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
    * Protected lifecycle hook called by show() after the modal is made visible
    * and ARIA attributes are set, but before focus is managed.
    * Subclasses should implement this to populate content, fetch data, etc.
+   *
    * @protected
    */
   _onShow() {
@@ -342,6 +350,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
    * Protected lifecycle hook called by hide() just before the modal is
    * visually hidden (or starts its hide animation).
    * Subclasses should implement this for cleanup, saving state, etc.
+   *
    * @protected
    */
   _onHide() {
@@ -351,6 +360,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
   /**
    * Protected method for subclasses to specify which element should receive focus
    * when the modal opens.
+   *
    * @protected
    * @returns {HTMLElement | null} The element to focus, or null if no specific element.
    */
@@ -377,6 +387,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
   /**
    * (Optional) Protected method for subclasses to specify where focus should
    * return when the modal closes.
+   *
    * @protected
    * @returns {HTMLElement | null} The element to focus, or null.
    */
@@ -392,6 +403,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
    *
    * The `statusMessageElement` must be defined in `elementsConfig` during construction
    * for this method to have any effect.
+   *
    * @param {string} message - The message text to display.
    * @param {string} [type] - The type of message (e.g., 'info', 'error', 'success', 'warning').
    * This will be used to apply a CSS class `status-message-${type}`. A base class
@@ -440,6 +452,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
    * This method should be used by subclasses to clear local feedback.
    *
    * The `statusMessageElement` must be defined in `elementsConfig` for this method to work.
+   *
    * @protected
    */
   _clearStatusMessage() {
@@ -474,6 +487,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
   /**
    * Sets the disabled state of predefined operational elements (e.g., confirm/cancel buttons)
    * to indicate that an operation is in progress.
+   *
    * @param {boolean} inProgress - True to disable elements, false to enable them.
    * @protected
    */

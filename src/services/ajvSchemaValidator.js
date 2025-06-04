@@ -112,6 +112,7 @@ class AjvSchemaValidator {
 
   /**
    * Adds a JSON schema object to the validator instance.
+   *
    * @param {object} schemaData
    * @param {string} schemaId
    * @returns {Promise<void>}
@@ -181,6 +182,7 @@ class AjvSchemaValidator {
 
   /**
    * Removes a schema from Ajv by its ID.
+   *
    * @param {string} schemaId
    * @returns {boolean}
    */
@@ -236,6 +238,7 @@ class AjvSchemaValidator {
 
   /**
    * Retrieves a validation function for a given schema ID.
+   *
    * @param {string} schemaId
    * @returns {((data: any) => ValidationResult) | undefined}
    */
@@ -305,6 +308,7 @@ class AjvSchemaValidator {
 
   /**
    * Checks if a schema is loaded/compiled.
+   *
    * @param {string} schemaId
    * @returns {boolean}
    */
@@ -333,6 +337,7 @@ class AjvSchemaValidator {
 
   /**
    * Validates data against the specified schema ID.
+   *
    * @param {string} schemaId
    * @param {any} data
    * @returns {ValidationResult}

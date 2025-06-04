@@ -32,6 +32,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
 
   /**
    * Constructs an instance of BaseOpenRouterStrategy.
+   *
    * @param {object} deps - The dependencies object.
    * @param {IHttpClient} deps.httpClient - The HTTP client for making API requests.
    * @param {ILogger} deps.logger - The logger instance.
@@ -55,6 +56,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * Abstract method to construct the provider-specific parts of the request payload
    * that are unique to the OpenRouter strategy variant (e.g., JSON schema or tool calling).
    * Subclasses MUST override this method.
+   *
    * @protected
    * @abstract
    * @param {object} baseMessagesPayload - The payload containing the 'messages' array,
@@ -77,6 +79,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * Abstract method to extract the JSON string from the LLM's response based on
    * the specific OpenRouter strategy's expectations (e.g., from message.content or tool_calls).
    * Subclasses MUST override this method.
+   *
    * @protected
    * @abstract
    * @async
@@ -97,6 +100,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
 
   /**
    * Executes the OpenRouter strategy.
+   *
    * @param {LLMStrategyExecuteParams} params - The parameters for LLM execution.
    * @returns {Promise<string>} A promise that resolves to the extracted JSON string.
    * @throws {ConfigurationError} If there's a configuration issue.

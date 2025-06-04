@@ -47,6 +47,7 @@ import { registerAdapters } from './registrations/adapterRegistrations.js';
 
 /**
  * Configures the application's dependency‑injection container.
+ *
  * @param {AppContainer} container
  * @param {EssentialUIElements} uiElements – external DOM references.
  */
