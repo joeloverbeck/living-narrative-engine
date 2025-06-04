@@ -6,12 +6,12 @@
 #actions-widget,
 #inventory-widget,
 #perception-log-widget {
-    margin-bottom: var(--spacing-lg);
-    padding: var(--spacing-md);
-    border: var(--border-width) solid var(--border-color-subtle);
-    border-radius: var(--border-radius-md);
-    background-color: var(--panel-bg-color);
-    flex-shrink: 0;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  border: var(--border-width) solid var(--border-color-subtle);
+  border-radius: var(--border-radius-md);
+  background-color: var(--panel-bg-color);
+  flex-shrink: 0;
 }
 
 /* Base styles for widget headings */
@@ -20,39 +20,42 @@
 #actions-widget h3,
 #inventory-widget h3,
 #perception-log-widget h3 {
-    margin-top: 0;
-    margin-bottom: var(--spacing-sm);
-    color: var(--primary-text-color);
-    font-weight: 600;
-    border-bottom: var(--border-width) solid var(--border-color-subtle);
-    padding-bottom: var(--spacing-sm);
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+  color: var(--primary-text-color);
+  font-weight: 600;
+  border-bottom: var(--border-width) solid var(--border-color-subtle);
+  padding-bottom: var(--spacing-sm);
 }
 
 /* Last-child margin adjustment for widgets within panels */
-.panel > div[id$="-widget"]:last-child,
-.panel > div[id$="-container"]:last-child {
-    margin-bottom: 0;
+.panel > div[id$='-widget']:last-child,
+.panel > div[id$='-container']:last-child {
+  margin-bottom: 0;
 }
 
 /* Styles for generic .clickable-list-item elements often found in widgets */
 .clickable-list-item {
-    cursor: pointer;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    margin: 0 calc(-1 * var(--spacing-sm));
-    border-radius: var(--border-radius-sm);
-    transition: background-color 0.15s ease-out, color 0.15s ease-out, box-shadow 0.15s ease-out;
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: 0 calc(-1 * var(--spacing-sm));
+  border-radius: var(--border-radius-sm);
+  transition:
+    background-color 0.15s ease-out,
+    color 0.15s ease-out,
+    box-shadow 0.15s ease-out;
 }
 
 .clickable-list-item:hover {
-    background-color: var(--secondary-bg-color);
-    color: var(--accent-color-primary);
+  background-color: var(--secondary-bg-color);
+  color: var(--accent-color-primary);
 }
 
 /* The :focus-visible part for .clickable-list-item was handled for outline in Ticket 13. */
 /* Specific box-shadow/background focus style for .clickable-list-item: */
 .clickable-list-item:focus-visible {
-    /* outline: none; is already set from utilities/_accessibility.css */
-    background-color: var(--accent-color-focus-ring);
-    color: var(--primary-text-color);
-    box-shadow: inset 0 0 0 2px var(--accent-color-primary);
+  /* outline: none; is already set from utilities/_accessibility.css */
+  background-color: var(--accent-color-focus-ring);
+  color: var(--primary-text-color);
+  box-shadow: inset 0 0 0 2px var(--accent-color-primary);
 }

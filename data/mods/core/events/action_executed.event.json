@@ -24,11 +24,7 @@
         "description": "Optional. The original command string that led to this action."
       }
     },
-    "required": [
-      "actorId",
-      "actionId",
-      "result"
-    ],
+    "required": ["actorId", "actionId", "result"],
     "additionalProperties": false
   }
 }

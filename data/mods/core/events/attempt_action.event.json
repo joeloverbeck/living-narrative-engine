@@ -5,12 +5,7 @@
   "payloadSchema": {
     "description": "Defines the structure of the data payload for the 'core:attempt_action' event.",
     "type": "object",
-    "required": [
-      "eventName",
-      "actorId",
-      "actionId",
-      "originalInput"
-    ],
+    "required": ["eventName", "actorId", "actionId", "originalInput"],
     "properties": {
       "eventName": {
         "description": "Confirms the type of event.",
@@ -29,10 +24,7 @@
         "description": "The ID of the target entity for the action, if applicable."
       },
       "direction": {
-        "type": [
-          "string",
-          "null"
-        ],
+        "type": ["string", "null"],
         "description": "The direction associated with the action, if any (e.g., 'north', 'west')."
       },
       "originalInput": {

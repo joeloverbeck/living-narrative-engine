@@ -3,73 +3,77 @@
 /* Styles specific to the Location Info widget content */
 
 #location-name-display {
-    font-family: var(--font-ui);
-    font-size: var(--font-size-h2);
-    color: var(--primary-text-color);
-    border-bottom: none; /* Overrides potential generic h2 styling if needed */
-    padding-bottom: 0; /* Overrides potential generic h2 styling if needed */
-    margin-bottom: var(--spacing-md);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-h2);
+  color: var(--primary-text-color);
+  border-bottom: none; /* Overrides potential generic h2 styling if needed */
+  padding-bottom: 0; /* Overrides potential generic h2 styling if needed */
+  margin-bottom: var(--spacing-md);
 }
 
 #location-description-display {
-    font-family: var(--font-narrative);
-    color: var(--primary-text-color);
-    line-height: 1.7;
-    margin-bottom: var(--spacing-md);
+  font-family: var(--font-narrative);
+  color: var(--primary-text-color);
+  line-height: 1.7;
+  margin-bottom: var(--spacing-md);
 }
 
 #location-exits-display ul,
 #location-characters-display ul {
-    list-style-type: none;
-    padding-left: 0; /* Resets browser default padding */
-    margin-top: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
+  list-style-type: none;
+  padding-left: 0; /* Resets browser default padding */
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 #location-exits-display li,
 #location-characters-display li {
-    font-family: var(--font-narrative);
-    color: var(--secondary-text-color); /* This will apply to the name part of character, and exit */
-    line-height: 1.7; /* Applied to the whole li for consistent spacing */
-    margin-bottom: var(--spacing-xs);
-    padding: var(--spacing-xs) 0; /* Vertical padding, no horizontal by default */
+  font-family: var(--font-narrative);
+  color: var(
+    --secondary-text-color
+  ); /* This will apply to the name part of character, and exit */
+  line-height: 1.7; /* Applied to the whole li for consistent spacing */
+  margin-bottom: var(--spacing-xs);
+  padding: var(--spacing-xs) 0; /* Vertical padding, no horizontal by default */
 }
 
 /* Styling for character descriptions within the character list */
 #location-characters-display li .character-description {
-    font-size: 0.9em; /* Slightly smaller than the character's name */
-    /* color: var(--secondary-text-color); */ /* Typically inherited, can be overridden if a more distinct color is needed */
-    margin-left: 1em; /* Indent description under the character's name */
-    font-style: italic;
-    display: block; /* Ensures it takes its own line if the description is long */
-    margin-top: var(--spacing-xs); /* Small space between the character's name and their description */
-    line-height: 1.5; /* Adjust line height specifically for the description if needed */
+  font-size: 0.9em; /* Slightly smaller than the character's name */
+  /* color: var(--secondary-text-color); */ /* Typically inherited, can be overridden if a more distinct color is needed */
+  margin-left: 1em; /* Indent description under the character's name */
+  font-style: italic;
+  display: block; /* Ensures it takes its own line if the description is long */
+  margin-top: var(
+    --spacing-xs
+  ); /* Small space between the character's name and their description */
+  line-height: 1.5; /* Adjust line height specifically for the description if needed */
 }
 
 /* NEW: Styles for Location Portrait */
 #location-portrait-visuals {
-    width: 100%; /* Occupy full width of its container within the panel */
-    max-width: 400px; /* Adjust as desired, similar to actor's max-width or based on panel constraints */
-    height: auto; /* Allow height to adjust to content */
-    margin: var(--spacing-md) auto; /* Center it and provide some vertical spacing */
-    overflow: hidden;
-    display: flex; /* To center the image if its aspect ratio doesn't fill the width */
-    justify-content: center;
-    align-items: center;
-    border: 1px solid var(--panel-border-color);
-    background-color: var(--secondary-bg-color); /* Fallback background */
-    border-radius: var(--border-radius-md); /* Consistent border radius */
-    padding: var(--spacing-xs); /* Small padding around the image */
+  width: 100%; /* Occupy full width of its container within the panel */
+  max-width: 400px; /* Adjust as desired, similar to actor's max-width or based on panel constraints */
+  height: auto; /* Allow height to adjust to content */
+  margin: var(--spacing-md) auto; /* Center it and provide some vertical spacing */
+  overflow: hidden;
+  display: flex; /* To center the image if its aspect ratio doesn't fill the width */
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--panel-border-color);
+  background-color: var(--secondary-bg-color); /* Fallback background */
+  border-radius: var(--border-radius-md); /* Consistent border radius */
+  padding: var(--spacing-xs); /* Small padding around the image */
 }
 
 #location-portrait-image {
-    display: block;
-    max-width: 100%;
-    max-height: 100%; /* Ensure it doesn't overflow the container's calculated height */
-    width: auto; /* Maintain aspect ratio */
-    height: auto; /* Maintain aspect ratio */
-    object-fit: contain; /* Scales the image to fit within the content box, preserving aspect ratio */
-    border-radius: var(--border-radius-sm);
+  display: block;
+  max-width: 100%;
+  max-height: 100%; /* Ensure it doesn't overflow the container's calculated height */
+  width: auto; /* Maintain aspect ratio */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: contain; /* Scales the image to fit within the content box, preserving aspect ratio */
+  border-radius: var(--border-radius-sm);
 }
 
 /* Ensure the portrait container is also cleared or handled in responsive views if necessary,

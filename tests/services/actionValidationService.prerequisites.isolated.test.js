@@ -6,17 +6,25 @@
 /**
  * @jest-environment node
  */
-import {ActionValidationService} from '../../src/services/actionValidationService.js';
-import {ActionTargetContext} from '../../src/models/actionTargetContext.js';
-import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from '@jest/globals';
+import { ActionValidationService } from '../../src/services/actionValidationService.js';
+import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 
 // --- Service and Function Imports ---
 // REMOVED: import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // No longer directly used/mocked here
 // ADDED: Import the service ActionValidationService now delegates to
-import {PrerequisiteEvaluationService} from '../../src/services/prerequisiteEvaluationService.js';
+import { PrerequisiteEvaluationService } from '../../src/services/prerequisiteEvaluationService.js';
 // REMOVED: import {createActionValidationContext} from '../../logic/createActionValidationContext.js'; // AVS no longer takes this directly
 // --- Import the checker ACTUALLY used by ActionValidationService ---
-import {DomainContextCompatibilityChecker} from '../../src/validation/domainContextCompatibilityChecker.js';
+import { DomainContextCompatibilityChecker } from '../../src/validation/domainContextCompatibilityChecker.js';
 
 // Assuming a simple mock logger, replace with your actual logger/mocking library if needed
 const mockLogger = {
@@ -29,38 +37,27 @@ const mockLogger = {
 
 // --- Mock Component Classes ---
 // (Component class mocks remain the same)
-class MockComponentA {
-}
+class MockComponentA {}
 
-class MockComponentB {
-}
+class MockComponentB {}
 
-class MockComponentC {
-}
+class MockComponentC {}
 
-class MockComponentRequired {
-}
+class MockComponentRequired {}
 
-class MockComponentForbidden {
-}
+class MockComponentForbidden {}
 
-class MockTargetComponentRequired {
-}
+class MockTargetComponentRequired {}
 
-class MockTargetComponentForbidden {
-}
+class MockTargetComponentForbidden {}
 
-class MockHealthComponent {
-}
+class MockHealthComponent {}
 
-class MockComponentX {
-}
+class MockComponentX {}
 
-class MockComponentSome {
-}
+class MockComponentSome {}
 
-class MockComponentOther {
-}
+class MockComponentOther {}
 
 // --- Mock EntityManager ---
 // (EntityManager mock remains the same)
@@ -102,13 +99,12 @@ const mockEntityManager = {
 
 // --- Mock Entity Factory ---
 // (Entity factory mock remains the same)
-const createMockEntity = (
-  id,
-  components = [],
-  componentDataOverrides = {}
-) => {
+const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
   const classToIdMap = new Map();
-  for (const [compId, compClass] of mockEntityManager.componentRegistry.entries()) {
+  for (const [
+    compId,
+    compClass,
+  ] of mockEntityManager.componentRegistry.entries()) {
     classToIdMap.set(compClass, compId);
   }
 
@@ -119,7 +115,10 @@ const createMockEntity = (
     const compId = classToIdMap.get(CompClass);
     if (compId) {
       componentIdSet.add(compId);
-      internalComponentDataMap.set(compId, componentDataOverrides[compId] || {});
+      internalComponentDataMap.set(
+        compId,
+        componentDataOverrides[compId] || {}
+      );
     }
   }
 
@@ -127,7 +126,10 @@ const createMockEntity = (
     if (!internalComponentDataMap.has(compId)) {
       internalComponentDataMap.set(compId, componentDataOverrides[compId]);
       let foundClass = false;
-      for (const [regId, regClass] of mockEntityManager.componentRegistry.entries()) {
+      for (const [
+        regId,
+        regClass,
+      ] of mockEntityManager.componentRegistry.entries()) {
         if (regId === compId) {
           componentIdSet.add(regId);
           foundClass = true;
@@ -143,7 +145,9 @@ const createMockEntity = (
   const entity = {
     id: id,
     hasComponent: jest.fn((componentId) => componentIdSet.has(componentId)),
-    getComponent: jest.fn((componentId) => internalComponentDataMap.get(componentId)),
+    getComponent: jest.fn((componentId) =>
+      internalComponentDataMap.get(componentId)
+    ),
     // Adding getAllComponentsData mock, assuming it exists on Entity, as PES/AVCB uses it
     getAllComponentsData: jest.fn(() => {
       const data = {};
@@ -176,11 +180,20 @@ beforeAll(() => {
   mockEntityManager.registerComponent('core:x', MockComponentX);
   mockEntityManager.registerComponent('test:required', MockComponentRequired);
   mockEntityManager.registerComponent('test:forbidden', MockComponentForbidden);
-  mockEntityManager.registerComponent('target:required', MockTargetComponentRequired);
-  mockEntityManager.registerComponent('target:forbidden', MockTargetComponentForbidden);
+  mockEntityManager.registerComponent(
+    'target:required',
+    MockTargetComponentRequired
+  );
+  mockEntityManager.registerComponent(
+    'target:forbidden',
+    MockTargetComponentForbidden
+  );
   mockEntityManager.registerComponent('Position', {});
   mockEntityManager.registerComponent('core:someComponent', MockComponentSome);
-  mockEntityManager.registerComponent('core:otherComponent', MockComponentOther);
+  mockEntityManager.registerComponent(
+    'core:otherComponent',
+    MockComponentOther
+  );
   mockEntityManager.registerComponent('Health', MockHealthComponent);
 });
 
@@ -209,21 +222,28 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
 
     // --- CORRECTED MOCK SETUP FOR PES ---
     // Instantiate the mocked PrerequisiteEvaluationService using the auto-mocked constructor
-    mockPrerequisiteEvaluationServiceInstance = new PrerequisiteEvaluationService();
+    mockPrerequisiteEvaluationServiceInstance =
+      new PrerequisiteEvaluationService();
 
     // Ensure the 'evaluate' property exists and is a mock function.
     // (Jest's auto-mock usually ensures this, but being explicit is safe)
-    if (!mockPrerequisiteEvaluationServiceInstance.evaluate || !jest.isMockFunction(mockPrerequisiteEvaluationServiceInstance.evaluate)) {
+    if (
+      !mockPrerequisiteEvaluationServiceInstance.evaluate ||
+      !jest.isMockFunction(mockPrerequisiteEvaluationServiceInstance.evaluate)
+    ) {
       mockPrerequisiteEvaluationServiceInstance.evaluate = jest.fn();
     }
 
     // *** MANUALLY set the 'length' property to satisfy the constructor's check ***
-    Object.defineProperty(mockPrerequisiteEvaluationServiceInstance.evaluate, 'length', {
-      value: 4, // The expected number of arguments for the real evaluate method
-      writable: false // Keep it non-writable like a real function's length
-    });
+    Object.defineProperty(
+      mockPrerequisiteEvaluationServiceInstance.evaluate,
+      'length',
+      {
+        value: 4, // The expected number of arguments for the real evaluate method
+        writable: false, // Keep it non-writable like a real function's length
+      }
+    );
     // --- END CORRECTION ---
-
 
     // Instantiate checker (dependency of AVS)
     domainContextCompatibilityChecker = new DomainContextCompatibilityChecker({
@@ -242,13 +262,13 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     mockActor = createMockEntity(
       ACTOR_ID,
       [MockComponentA, MockHealthComponent],
-      { /* ... data overrides ... */}
+      {
+        /* ... data overrides ... */
+      }
     );
-    mockTarget = createMockEntity(
-      TARGET_ID,
-      [MockComponentX],
-      { /* ... data overrides ... */}
-    );
+    mockTarget = createMockEntity(TARGET_ID, [MockComponentX], {
+      /* ... data overrides ... */
+    });
 
     // Clear specific mock calls AFTER AVS is instantiated
     // mockClear() only affects call history and return values, not the .length property.
@@ -262,8 +282,8 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
   // == Test Case for Prerequisite Success (via Mocked PES) ================
   // ========================================================================
   test('Success: Calls PES with correct signature when prerequisites exist and PES mock returns true', () => {
-    const ruleLogic = {'==': [1, 1]}; // Example logic inside prereq
-    const prerequisitesArray = [{condition_type: 'test', logic: ruleLogic}];
+    const ruleLogic = { '==': [1, 1] }; // Example logic inside prereq
+    const prerequisitesArray = [{ condition_type: 'test', logic: ruleLogic }];
     const actionDef = {
       id: 'test:pes-delegation-pass',
       prerequisites: prerequisitesArray,
@@ -272,7 +292,9 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     const targetContext = ActionTargetContext.forEntity(TARGET_ID);
 
     // Configure Mock: Make the mocked PES evaluate method return true for this test
-    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(true);
+    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
+      true
+    );
 
     // Execute the method under test
     const isValid = service.isValid(actionDef, mockActor, targetContext);
@@ -281,14 +303,18 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     expect(isValid).toBe(true);
 
     // Verify Call: Check if PES.evaluate was called
-    expect(mockPrerequisiteEvaluationServiceInstance.evaluate).toHaveBeenCalledTimes(1);
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).toHaveBeenCalledTimes(1);
 
     // Verify Arguments: Check if PES.evaluate was called with the correct arguments (NEW SIGNATURE)
-    expect(mockPrerequisiteEvaluationServiceInstance.evaluate).toHaveBeenCalledWith(
-      prerequisitesArray,   // 1. The prerequisite rules array
-      actionDef,            // 2. The full action definition object
-      mockActor,            // 3. The actor entity instance
-      targetContext         // 4. The action target context instance
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).toHaveBeenCalledWith(
+      prerequisitesArray, // 1. The prerequisite rules array
+      actionDef, // 2. The full action definition object
+      mockActor, // 3. The actor entity instance
+      targetContext // 4. The action target context instance
     );
     // REMOVED: Old assertion checking for (prereqs, contextObject, actionId)
     // expect(mockPrerequisiteEvaluationServiceInstance.evaluate).toHaveBeenCalledWith(
@@ -303,13 +329,12 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
   // == End Prerequisite Success Test =======================================
   // ========================================================================
 
-
   // ========================================================================
   // == Test Case for Prerequisite Failure (via Mocked PES) ================
   // ========================================================================
   test('Failure: Calls PES with correct signature when prerequisites exist and PES mock returns false', () => {
-    const ruleLogic = {'==': [1, 0]}; // Example logic inside prereq
-    const prerequisitesArray = [{condition_type: 'test', logic: ruleLogic}];
+    const ruleLogic = { '==': [1, 0] }; // Example logic inside prereq
+    const prerequisitesArray = [{ condition_type: 'test', logic: ruleLogic }];
     const actionDef = {
       id: 'test:pes-delegation-fail',
       prerequisites: prerequisitesArray,
@@ -318,7 +343,9 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     const targetContext = ActionTargetContext.forEntity(TARGET_ID);
 
     // Configure Mock: Make the mocked PES evaluate method return false
-    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(false);
+    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
+      false
+    );
 
     // Execute
     const isValid = service.isValid(actionDef, mockActor, targetContext);
@@ -327,14 +354,18 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     expect(isValid).toBe(false);
 
     // Verify Call: PES should still be called
-    expect(mockPrerequisiteEvaluationServiceInstance.evaluate).toHaveBeenCalledTimes(1);
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).toHaveBeenCalledTimes(1);
 
     // Verify Arguments: Check arguments passed to PES (NEW SIGNATURE)
-    expect(mockPrerequisiteEvaluationServiceInstance.evaluate).toHaveBeenCalledWith(
-      prerequisitesArray,   // 1. The prerequisite rules array
-      actionDef,            // 2. The full action definition object
-      mockActor,            // 3. The actor entity instance
-      targetContext         // 4. The action target context instance
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).toHaveBeenCalledWith(
+      prerequisitesArray, // 1. The prerequisite rules array
+      actionDef, // 2. The full action definition object
+      mockActor, // 3. The actor entity instance
+      targetContext // 4. The action target context instance
     );
     // REMOVED: Old assertion checking for (prereqs, contextObject, actionId)
     // expect(mockPrerequisiteEvaluationServiceInstance.evaluate).toHaveBeenCalledWith(
@@ -350,7 +381,6 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
   // ========================================================================
   // == End Prerequisite Failure Test =======================================
   // ========================================================================
-
 
   // ========================================================================
   // == Test Case: PES Not Called (No Prerequisites) ========================
@@ -370,7 +400,9 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     expect(isValid).toBe(true);
 
     // Verify Call: PES evaluate should NOT have been called
-    expect(mockPrerequisiteEvaluationServiceInstance.evaluate).not.toHaveBeenCalled();
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
@@ -389,13 +421,14 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     expect(isValid).toBe(true);
 
     // Verify Call: PES evaluate should NOT have been called
-    expect(mockPrerequisiteEvaluationServiceInstance.evaluate).not.toHaveBeenCalled();
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
   // ========================================================================
   // == End PES Not Called Tests ============================================
   // ========================================================================
-
 
   // ========================================================================
   // == Test Case: Correct Arguments Passed to PES ==========================
@@ -407,18 +440,20 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     const mockActorForThisTest = createMockEntity(
       actorContextId,
       [MockComponentSome, MockComponentA],
-      {'core:a': {data: 'actor_a_data'}}
+      { 'core:a': { data: 'actor_a_data' } }
     );
     const targetContextId = 'target-context-test';
     // Create the target entity instance so targetContext can potentially resolve it (though PES mock skips this)
     const mockTargetEntityForThisTest = createMockEntity(
       targetContextId,
       [MockComponentOther],
-      {'core:otherComponent': {data: 'target_other_data'}}
+      { 'core:otherComponent': { data: 'target_other_data' } }
     );
 
-    const ruleLogic = {if: [{var: 'actor.id'}, true, false]}; // Simple logic example
-    const prerequisitesArray = [{condition_type: 'context-test-rule', logic: ruleLogic}];
+    const ruleLogic = { if: [{ var: 'actor.id' }, true, false] }; // Simple logic example
+    const prerequisitesArray = [
+      { condition_type: 'context-test-rule', logic: ruleLogic },
+    ];
     const actionDef = {
       id: 'test:action-args-check-pes',
       actor_required_components: [], // Assuming other validation steps pass
@@ -431,23 +466,33 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     const targetContext = ActionTargetContext.forEntity(targetContextId);
 
     // Configure Mock: Assume PES passes for this test
-    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(true);
+    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
+      true
+    );
 
     // Execute
-    const isValid = service.isValid(actionDef, mockActorForThisTest, targetContext);
+    const isValid = service.isValid(
+      actionDef,
+      mockActorForThisTest,
+      targetContext
+    );
 
     // Verify Outcome
     expect(isValid).toBe(true);
 
     // Verify Call
-    expect(mockPrerequisiteEvaluationServiceInstance.evaluate).toHaveBeenCalledTimes(1);
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).toHaveBeenCalledTimes(1);
 
     // Verify Arguments: Check PES was called with the exact arguments AVS received/used.
-    expect(mockPrerequisiteEvaluationServiceInstance.evaluate).toHaveBeenCalledWith(
-      prerequisitesArray,       // 1. The prerequisites array
-      actionDef,                // 2. The action definition object itself
-      mockActorForThisTest,     // 3. The specific actor entity passed to isValid
-      targetContext             // 4. The specific target context passed to isValid
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).toHaveBeenCalledWith(
+      prerequisitesArray, // 1. The prerequisites array
+      actionDef, // 2. The action definition object itself
+      mockActorForThisTest, // 3. The specific actor entity passed to isValid
+      targetContext // 4. The specific target context passed to isValid
     );
 
     // REMOVED: Old assertion checking for (prereqs, contextObject, actionId)
@@ -463,13 +508,14 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
     // );
 
     // Verify that AVS still tried to look up the target entity (for Step 2 check), even though PES call is mocked
-    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(targetContextId);
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+      targetContextId
+    );
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
   // ========================================================================
   // == End Correct Arguments Test ==========================================
   // ========================================================================
-
 
   // REMOVED TEST: 'Failure: Prerequisite definition is missing the "logic" property'
   // Reason: Structural validation of prerequisite objects is now handled *inside* PES. AVS only passes the array.
@@ -478,6 +524,4 @@ describe('ActionValidationService - Prerequisite Delegation Checks (Mocked PES)'
   // Reason: This relied on JsonLogic evaluation happening within the AVS test. Now, PES is mocked,
   // and we only care that AVS passes the correct *inputs* (actionDef, actor, targetCtx) to PES.
   // The test 'isValid passes correct arguments...' covers verifying these inputs.
-
-
 }); // End describe block

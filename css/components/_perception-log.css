@@ -3,58 +3,60 @@
 /* Styles specific to the "Perception Log" widget */
 
 #perception-log-widget {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 100px; /* Specific to this widget, base provides others */
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 100px; /* Specific to this widget, base provides others */
 }
 
 #perception-log-widget h3 {
-    flex-shrink: 0; /* Specific to this widget's h3 */
-    /* Common h3 styles are from _widgets-base.css */
+  flex-shrink: 0; /* Specific to this widget's h3 */
+  /* Common h3 styles are from _widgets-base.css */
 }
 
 #perception-log-list {
-    list-style-type: none;
-    padding: 0; /* Resetting default list padding */
-    margin: 0; /* Resetting default list margin */
-    overflow-y: auto;
-    flex-grow: 1;
-    font-family: var(--font-narrative);
-    font-size: var(--font-size-small);
-    color: var(--secondary-text-color);
-    border: var(--border-width) solid var(--border-color-subtle);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-xs); /* Inner padding for content */
-    background-color: var(--primary-bg-color); /* Distinct background for the log itself */
+  list-style-type: none;
+  padding: 0; /* Resetting default list padding */
+  margin: 0; /* Resetting default list margin */
+  overflow-y: auto;
+  flex-grow: 1;
+  font-family: var(--font-narrative);
+  font-size: var(--font-size-small);
+  color: var(--secondary-text-color);
+  border: var(--border-width) solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs); /* Inner padding for content */
+  background-color: var(
+    --primary-bg-color
+  ); /* Distinct background for the log itself */
 }
 
 #perception-log-list li {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-bottom: var(--border-width) dashed var(--border-color-subtle);
-    line-height: 1.5;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: var(--border-width) dashed var(--border-color-subtle);
+  line-height: 1.5;
 }
 
 #perception-log-list li:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 #perception-log-list li.empty-log-message {
-    font-style: italic;
-    text-align: center;
-    color: var(--input-placeholder-color);
+  font-style: italic;
+  text-align: center;
+  color: var(--input-placeholder-color);
 }
 
 /* Responsive adjustments for #perception-log-list max-height */
 @media (max-width: 768px) {
-    #perception-log-list {
-        max-height: 150px;
-    }
+  #perception-log-list {
+    max-height: 150px;
+  }
 }
 
 @media (max-width: 480px) {
-    #perception-log-list {
-        max-height: 120px;
-    }
+  #perception-log-list {
+    max-height: 120px;
+  }
 }

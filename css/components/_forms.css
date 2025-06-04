@@ -2,51 +2,57 @@
 
 /* Styles for Speech Input / Command Input */
 #speech-input {
-    width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-family: var(--font-ui);
-    font-size: var(--font-size-base);
-    background-color: var(--input-bg-color);
-    color: var(--input-text-color);
-    border: var(--border-width) solid var(--input-border-color);
-    border-radius: var(--border-radius-md);
-    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-base);
+  background-color: var(--input-bg-color);
+  color: var(--input-text-color);
+  border: var(--border-width) solid var(--input-border-color);
+  border-radius: var(--border-radius-md);
+  transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 }
 
 #speech-input::placeholder {
-    color: var(--input-placeholder-color);
-    opacity: 0.8;
+  color: var(--input-placeholder-color);
+  opacity: 0.8;
 }
 
 /* Specific Focus for Command Input (uses :focus-visible) */
 #speech-input:focus-visible {
-    border-color: var(--accent-color-secondary); /* CHANGED to secondary accent for border */
-    box-shadow: 0 0 0 0.2rem var(--button-selected-glow-color); /* CHANGED to orange glow */
+  border-color: var(
+    --accent-color-secondary
+  ); /* CHANGED to secondary accent for border */
+  box-shadow: 0 0 0 0.2rem var(--button-selected-glow-color); /* CHANGED to orange glow */
 }
 
 /* Fallback focus style if :focus-visible is not supported */
 #speech-input:focus {
-    border-color: var(--accent-color-secondary); /* CHANGED to secondary accent for border */
-    box-shadow: 0 0 0 0.2rem var(--button-selected-glow-color); /* CHANGED to orange glow */
+  border-color: var(
+    --accent-color-secondary
+  ); /* CHANGED to secondary accent for border */
+  box-shadow: 0 0 0 0.2rem var(--button-selected-glow-color); /* CHANGED to orange glow */
 }
 
 /* Responsive padding adjustments for #speech-input */
 @media (max-width: 1024px) {
-    #speech-input {
-        padding: var(--spacing-sm) var(--spacing-md); /* Note: same as base, potential redundancy */
-    }
+  #speech-input {
+    padding: var(--spacing-sm) var(--spacing-md); /* Note: same as base, potential redundancy */
+  }
 }
 
 @media (max-width: 768px) {
-    #speech-input {
-        padding: var(--spacing-sm) var(--spacing-md); /* Note: same as base */
-    }
+  #speech-input {
+    padding: var(--spacing-sm) var(--spacing-md); /* Note: same as base */
+  }
 }
 
 @media (max-width: 480px) {
-    #speech-input {
-        padding: var(--spacing-sm);
-    }
+  #speech-input {
+    padding: var(--spacing-sm);
+  }
 }
 
 /* Styles for Save Name Input (from save game modal) */

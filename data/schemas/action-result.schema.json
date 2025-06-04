@@ -18,9 +18,7 @@
       "default": []
     }
   },
-  "required": [
-    "success"
-  ],
+  "required": ["success"],
   "additionalProperties": false,
   "definitions": {
     "actionMessage": {
@@ -45,9 +43,7 @@
           "default": "info"
         }
       },
-      "required": [
-        "text"
-      ],
+      "required": ["text"],
       "additionalProperties": false
     }
   }

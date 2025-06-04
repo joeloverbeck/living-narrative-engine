@@ -23,9 +23,7 @@
         ]
       }
     },
-    "required": [
-      "entityId"
-    ],
+    "required": ["entityId"],
     "additionalProperties": false
   }
 }

@@ -14,17 +14,19 @@
 */
 
 #game-actions-widget h3 {
-    /*
+  /*
       Base widget h3 styles (e.g., margin-top, color, font-weight, border-bottom, padding-bottom)
       are assumed to be inherited from the general widget h3 styles defined in _widgets-base.css.
       The margin-bottom is overridden here for better visual spacing above the menu buttons
       within this specific widget, increased from a typical var(--spacing-sm) to var(--spacing-md).
     */
-    margin-bottom: var(--spacing-md); /* Increased from sm (base widget h3) to md for better spacing */
+  margin-bottom: var(
+    --spacing-md
+  ); /* Increased from sm (base widget h3) to md for better spacing */
 }
 
 #game-actions-widget .menu-button {
-    /*
+  /*
       These styles control the layout of .menu-button elements specifically within
       the #game-actions-widget. They ensure the buttons stack vertically and
       take up the full available width of the widget's content area.
@@ -33,17 +35,17 @@
       should come from general .menu-button rules (expected in _buttons.css)
       or base button styles if .menu-button is primarily a layout class here.
     */
-    display: block; /* Make buttons stack vertically and take full width */
-    width: 100%; /* Ensure buttons span the full width of the widget */
-    margin-left: 0; /* Override default button side margins to align with widget padding */
-    margin-right: 0; /* Override default button side margins to align with widget padding */
-    margin-bottom: var(--spacing-sm); /* Space between stacked menu buttons */
+  display: block; /* Make buttons stack vertically and take full width */
+  width: 100%; /* Ensure buttons span the full width of the widget */
+  margin-left: 0; /* Override default button side margins to align with widget padding */
+  margin-right: 0; /* Override default button side margins to align with widget padding */
+  margin-bottom: var(--spacing-sm); /* Space between stacked menu buttons */
 }
 
 #game-actions-widget .menu-button:last-child {
-    /*
+  /*
       Removes the bottom margin from the last menu button in the list to prevent
       double spacing if the widget itself has padding-bottom.
     */
-    margin-bottom: 0;
+  margin-bottom: 0;
 }

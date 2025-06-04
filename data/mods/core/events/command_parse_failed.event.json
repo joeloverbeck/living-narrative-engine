@@ -20,11 +20,7 @@
         "description": "A user-friendly message describing the parsing error (e.g., 'Unknown command', 'Missing target', 'Invalid syntax')."
       }
     },
-    "required": [
-      "actorId",
-      "commandString",
-      "error"
-    ],
+    "required": ["actorId", "commandString", "error"],
     "additionalProperties": false
   }
 }

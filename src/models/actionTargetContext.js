@@ -18,14 +18,14 @@ export class ActionTargetContext {
   direction;
 
   /**
-     * Creates an instance of ActionTargetContext.
-     * @param {ActionTargetType} type - The type of the target.
-     * @param {object} [options={}] - Additional options based on type.
-     * @param {string} [options.entityId] - Required if type is 'entity'. Must be a non-empty string.
-     * @param {string} [options.direction] - Required if type is 'direction'. Must be a non-empty string.
-     * @throws {Error} If required options for the given type are missing or invalid.
-     */
-  constructor(type, {entityId = null, direction = null} = {}) {
+   * Creates an instance of ActionTargetContext.
+   * @param {ActionTargetType} type - The type of the target.
+   * @param {object} [options] - Additional options based on type.
+   * @param {string} [options.entityId] - Required if type is 'entity'. Must be a non-empty string.
+   * @param {string} [options.direction] - Required if type is 'direction'. Must be a non-empty string.
+   * @throws {Error} If required options for the given type are missing or invalid.
+   */
+  constructor(type, { entityId = null, direction = null } = {}) {
     if (!['entity', 'direction', 'none'].includes(type)) {
       throw new Error(`ActionTargetContext: Invalid type specified: ${type}`);
     }
@@ -33,11 +33,21 @@ export class ActionTargetContext {
     this.entityId = entityId;
     this.direction = direction;
 
-    if (type === 'entity' && (typeof entityId !== 'string' || !entityId.trim())) {
-      throw new Error("ActionTargetContext: entityId (non-empty string) is required for type 'entity'.");
+    if (
+      type === 'entity' &&
+      (typeof entityId !== 'string' || !entityId.trim())
+    ) {
+      throw new Error(
+        "ActionTargetContext: entityId (non-empty string) is required for type 'entity'."
+      );
     }
-    if (type === 'direction' && (typeof direction !== 'string' || !direction.trim())) {
-      throw new Error("ActionTargetContext: direction (non-empty string) is required for type 'direction'.");
+    if (
+      type === 'direction' &&
+      (typeof direction !== 'string' || !direction.trim())
+    ) {
+      throw new Error(
+        "ActionTargetContext: direction (non-empty string) is required for type 'direction'."
+      );
     }
     // Ensure properties are null if not applicable to the type
     if (type !== 'entity') this.entityId = null;
@@ -49,16 +59,22 @@ export class ActionTargetContext {
     return new ActionTargetContext('none');
   }
 
-  /** Static factory for creating a context targeting an entity. */
+  /**
+   * Static factory for creating a context targeting an entity.
+   * @param entityId
+   */
   static forEntity(entityId) {
     // Validation is handled by the constructor
-    return new ActionTargetContext('entity', {entityId});
+    return new ActionTargetContext('entity', { entityId });
   }
 
-  /** Static factory for creating a context targeting a direction. */
+  /**
+   * Static factory for creating a context targeting a direction.
+   * @param direction
+   */
   static forDirection(direction) {
     // Validation is handled by the constructor
-    return new ActionTargetContext('direction', {direction});
+    return new ActionTargetContext('direction', { direction });
   }
 }
 

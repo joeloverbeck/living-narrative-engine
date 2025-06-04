@@ -4,8 +4,7 @@
   "title": "Action Definition Schema",
   "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies targeting and JSON Logic prerequisites, and output format. Prerequisites are now handled solely by JSON Logic.",
   "type": "object",
-  "definitions": {
-  },
+  "definitions": {},
   "properties": {
     "id": {
       "$ref": "./common.schema.json#/definitions/namespacedId",
@@ -16,14 +15,7 @@
       "description": "Required. The single, canonical, lowercase command verb associated with this action (e.g., 'go', 'take', 'look', 'use'). Used for UI generation and potentially mapping. Should not contain spaces.",
       "minLength": 1,
       "pattern": "^[a-z]+$",
-      "examples": [
-        "go",
-        "take",
-        "look",
-        "inventory",
-        "wait",
-        "attack"
-      ]
+      "examples": ["go", "take", "look", "inventory", "wait", "attack"]
     },
     "name": {
       "type": "string",
@@ -51,9 +43,7 @@
       "$comment": "This 'prerequisites' array, using objects with a 'logic' key for JSON Logic, replaces the deprecated actor_required_components, actor_forbidden_components, target_required_components, and target_forbidden_components fields.",
       "items": {
         "type": "object",
-        "required": [
-          "logic"
-        ],
+        "required": ["logic"],
         "properties": {
           "logic": {
             "$ref": "./json-logic.schema.json#",

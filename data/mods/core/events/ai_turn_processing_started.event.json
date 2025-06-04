@@ -12,9 +12,7 @@
         "description": "The unique ID of the AI entity whose turn processing is starting."
       }
     },
-    "required": [
-      "entityId"
-    ],
+    "required": ["entityId"],
     "additionalProperties": false
   }
 }

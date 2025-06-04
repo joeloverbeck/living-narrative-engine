@@ -2,129 +2,146 @@
 
 /* Output Division (for messages) */
 #outputDiv {
-    flex-grow: 1;
-    overflow-y: auto;
-    background-color: var(--panel-bg-color);
-    padding: var(--spacing-md);
-    border: var(--border-width) solid var(--border-color-subtle);
-    border-radius: var(--border-radius-md);
-    margin-bottom: var(--spacing-md);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: var(--panel-bg-color);
+  padding: var(--spacing-md);
+  border: var(--border-width) solid var(--border-color-subtle);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 @media (max-width: 768px) {
-    #outputDiv {
-        padding: var(--spacing-sm);
-        margin-bottom: var(--spacing-sm);
-    }
+  #outputDiv {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
 }
 
 @media (max-width: 480px) {
-    #outputDiv {
-        padding: var(--spacing-sm);
-    }
+  #outputDiv {
+    padding: var(--spacing-sm);
+  }
 }
 
 /* --- Message List Styling (Moved from style.css) --- */
-#message-list { /* Simplified from #center-pane #message-list */
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
+#message-list {
+  /* Simplified from #center-pane #message-list */
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
-#message-list li { /* Simplified from #center-pane #message-list li */
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-bottom: var(--border-width) solid var(--border-color-subtle);
-    color: var(--primary-text-color);
-    font-family: var(--font-narrative);
-    line-height: 1.7;
+#message-list li {
+  /* Simplified from #center-pane #message-list li */
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--border-color-subtle);
+  color: var(--primary-text-color);
+  font-family: var(--font-narrative);
+  line-height: 1.7;
 }
 
-#message-list li:last-child { /* Simplified from #center-pane #message-list li:last-child */
-    border-bottom: none;
+#message-list li:last-child {
+  /* Simplified from #center-pane #message-list li:last-child */
+  border-bottom: none;
 }
 
 /* Specific Message Type Styling - Uses new contrast-checked colors */
-#message-list li.message-echo { /* Simplified from #center-pane #message-list li.message-echo */
-    color: var(--echo-text-color);
-    font-style: italic;
+#message-list li.message-echo {
+  /* Simplified from #center-pane #message-list li.message-echo */
+  color: var(--echo-text-color);
+  font-style: italic;
 }
 
-#message-list li.message-info { /* Simplified from #center-pane #message-list li.message-info */
-    color: var(--info-text-color);
+#message-list li.message-info {
+  /* Simplified from #center-pane #message-list li.message-info */
+  color: var(--info-text-color);
 }
 
-#message-list li.message-error { /* Simplified from #center-pane #message-list li.message-error */
-    color: var(--error-text-color);
-    font-weight: 600;
+#message-list li.message-error {
+  /* Simplified from #center-pane #message-list li.message-error */
+  color: var(--error-text-color);
+  font-weight: 600;
 }
 
-#message-list li.message-success { /* Simplified from #center-pane #message-list li.message-success */
-    color: var(--success-text-color);
+#message-list li.message-success {
+  /* Simplified from #center-pane #message-list li.message-success */
+  color: var(--success-text-color);
 }
 
-#message-list li.message-speech { /* Simplified from #center-pane #message-list li.message-speech */
-    font-family: var(--font-narrative);
-    font-style: italic;
-    font-weight: 600;
-    color: var(--speech-text-color);
-    background-color: var(--speech-bg-color);
-    padding-top: var(--spacing-sm);
-    padding-bottom: var(--spacing-sm);
-    padding-right: var(--spacing-md);
-    padding-left: calc(var(--spacing-md) - 3px); /* Accommodates the border-left */
-    border-left: 3px solid var(--speech-border-color);
+#message-list li.message-speech {
+  /* Simplified from #center-pane #message-list li.message-speech */
+  font-family: var(--font-narrative);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--speech-text-color);
+  background-color: var(--speech-bg-color);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  padding-right: var(--spacing-md);
+  padding-left: calc(
+    var(--spacing-md) - 3px
+  ); /* Accommodates the border-left */
+  border-left: 3px solid var(--speech-border-color);
 
-    /* Speech Bubble Enhancements */
-    border-radius: var(--border-radius-lg, 12px); /* More rounded corners, fallback to 12px */
-    margin-top: var(--spacing-sm); /* Increased top margin */
-    margin-bottom: var(--spacing-sm); /* Increased bottom margin */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    position: relative; /* Good for potential future pseudo-elements like tails */
+  /* Speech Bubble Enhancements */
+  border-radius: var(
+    --border-radius-lg,
+    12px
+  ); /* More rounded corners, fallback to 12px */
+  margin-top: var(--spacing-sm); /* Increased top margin */
+  margin-bottom: var(--spacing-sm); /* Increased bottom margin */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  position: relative; /* Good for potential future pseudo-elements like tails */
 }
 
 /* --- Responsive Adjustments for Message List (Moved from style.css) --- */
 @media (max-width: 768px) {
-    #message-list li { /* Simplified from #center-pane #message-list li */
-        padding: var(--spacing-xs) var(--spacing-sm);
-    }
+  #message-list li {
+    /* Simplified from #center-pane #message-list li */
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
 
-    #message-list li.message-speech { /* Simplified from #center-pane #message-list li.message-speech */
-        /* Adjust padding to be consistent with other messages at this breakpoint */
-        padding-top: var(--spacing-xs);
-        padding-bottom: var(--spacing-xs);
-        padding-right: var(--spacing-sm);
-        padding-left: calc(var(--spacing-sm) - 3px); /* Keep border accommodation */
-        /* Margins for speech can also be adjusted if needed */
-        margin-top: var(--spacing-xs);
-        margin-bottom: var(--spacing-xs);
-    }
+  #message-list li.message-speech {
+    /* Simplified from #center-pane #message-list li.message-speech */
+    /* Adjust padding to be consistent with other messages at this breakpoint */
+    padding-top: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
+    padding-right: var(--spacing-sm);
+    padding-left: calc(var(--spacing-sm) - 3px); /* Keep border accommodation */
+    /* Margins for speech can also be adjusted if needed */
+    margin-top: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+  }
 }
 
 @media (max-width: 480px) {
-    #message-list li { /* Simplified from #center-pane #message-list li */
-        /* Padding already var(--spacing-xs) var(--spacing-sm) from 768px breakpoint */
-    }
+  #message-list li {
+    /* Simplified from #center-pane #message-list li */
+    /* Padding already var(--spacing-xs) var(--spacing-sm) from 768px breakpoint */
+  }
 
-    #message-list li.message-speech { /* Simplified from #center-pane #message-list li.message-speech */
-        /* Padding already adjusted from 768px breakpoint */
-        /* No additional changes needed here unless finer control is desired */
-    }
+  #message-list li.message-speech {
+    /* Simplified from #center-pane #message-list li.message-speech */
+    /* Padding already adjusted from 768px breakpoint */
+    /* No additional changes needed here unless finer control is desired */
+  }
 }
 
 /* --- Fatal Error Output Area Styles (Moved from style.css) --- */
 #error-output.error {
-    padding: var(--spacing-md);
-    background-color: var(--error-bg-color);
-    color: var(--error-text-color);
-    border: var(--border-width) solid var(--error-text-color);
-    border-radius: var(--border-radius-sm);
-    text-align: center;
-    margin: var(--spacing-md) auto;
-    display: none; /* Initially hidden */
-    max-width: 800px;
+  padding: var(--spacing-md);
+  background-color: var(--error-bg-color);
+  color: var(--error-text-color);
+  border: var(--border-width) solid var(--error-text-color);
+  border-radius: var(--border-radius-sm);
+  text-align: center;
+  margin: var(--spacing-md) auto;
+  display: none; /* Initially hidden */
+  max-width: 800px;
 }
 
 #error-output.error:not(:empty) {
-    display: block;
+  display: block;
 }

@@ -1,22 +1,22 @@
 /* css/layout/_grid.css */
 
 #app-layout-container {
-    display: flex;
-    flex-grow: 1;
-    overflow: hidden;
-    background-color: var(--primary-bg-color);
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden;
+  background-color: var(--primary-bg-color);
 }
 
 @media (max-width: 1024px) {
-    #app-layout-container {
-        flex-wrap: wrap;
-    }
+  #app-layout-container {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 768px) {
-    #app-layout-container {
-        flex-direction: column;
-        flex-wrap: nowrap; /* Note: this overrides the previous flex-wrap */
-        height: auto;
-    }
+  #app-layout-container {
+    flex-direction: column;
+    flex-wrap: nowrap; /* Note: this overrides the previous flex-wrap */
+    height: auto;
+  }
 }

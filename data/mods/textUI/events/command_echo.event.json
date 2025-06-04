@@ -11,9 +11,7 @@
         "description": "The raw command string exactly as entered by the user."
       }
     },
-    "required": [
-      "command"
-    ],
+    "required": ["command"],
     "additionalProperties": false
   }
 }

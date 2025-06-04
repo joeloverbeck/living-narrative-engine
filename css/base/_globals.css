@@ -1,40 +1,40 @@
 /* css/base/_globals.css */
 
 body {
-    font-family: var(--font-ui);
-    color: var(--primary-text-color);
-    background-color: var(--primary-bg-color);
-    font-size: var(--font-size-base);
-    line-height: 1.6;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+  font-family: var(--font-ui);
+  color: var(--primary-text-color);
+  background-color: var(--primary-bg-color);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
 @media (max-width: 1024px) {
-    body {
-        font-size: var(--font-size-base);
-        /* Note: This rule was moved from style.css.
+  body {
+    font-size: var(--font-size-base);
+    /* Note: This rule was moved from style.css.
            If --font-size-base is responsive (Ticket 6) and this rule
            is solely for that purpose, it might be redundant.
            Kept as per Ticket 10 instructions for now. */
-    }
+  }
 
-    /* Other non-body rules from this media query in style.css
+  /* Other non-body rules from this media query in style.css
        will be moved in later tickets */
 }
 
 @media (max-width: 768px) {
-    body {
-        overflow-y: auto;
-        height: auto;
-        font-size: var(--font-size-base); /* Moved from style.css */
-        /* Note: The font-size rule might be redundant if --font-size-base
+  body {
+    overflow-y: auto;
+    height: auto;
+    font-size: var(--font-size-base); /* Moved from style.css */
+    /* Note: The font-size rule might be redundant if --font-size-base
            is responsive (Ticket 6). Kept as per Ticket 10 instructions. */
-    }
+  }
 
-    /* Other non-body rules from this media query in style.css
+  /* Other non-body rules from this media query in style.css
        will be moved in later tickets */
 }

@@ -18,13 +18,13 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
   const MockGameDataRepository = jest.fn().mockImplementation(() => {
     // This is what the mock constructor will return when called with 'new'
     return {
-      getAllActionDefinitions: mockGetAllActionDefinitions
+      getAllActionDefinitions: mockGetAllActionDefinitions,
       // Add mocks for other methods if CommandParser constructor or other tests need them
     };
   });
-    // The factory function MUST return an object mapping named exports to their mocks
+  // The factory function MUST return an object mapping named exports to their mocks
   return {
-    GameDataRepository: MockGameDataRepository // Map the named export
+    GameDataRepository: MockGameDataRepository, // Map the named export
   };
 });
 

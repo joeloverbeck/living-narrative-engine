@@ -10,15 +10,15 @@
 */
 
 #action-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start; /* Aligns buttons to the start of the container */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start; /* Aligns buttons to the start of the container */
 }
 
 /* Context-specific button sizing/margin within the actions widget */
 #action-buttons button {
-    width: auto; /* Allow buttons to size based on their content */
-    margin: var(--spacing-xs); /* Consistent small margin around each button */
+  width: auto; /* Allow buttons to size based on their content */
+  margin: var(--spacing-xs); /* Consistent small margin around each button */
 }
 
 /* Note: Styles for specific button states within #action-buttons

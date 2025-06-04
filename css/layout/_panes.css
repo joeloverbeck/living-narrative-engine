@@ -2,159 +2,162 @@
 
 /* Common styling for all panes */
 .panel {
-    padding: var(--spacing-lg);
-    overflow-y: auto;
-    border: var(--border-width) solid var(--panel-border-color);
-    background-color: var(--panel-bg-color);
-    box-shadow: var(--shadow-sm);
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  border: var(--border-width) solid var(--panel-border-color);
+  background-color: var(--panel-bg-color);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Border adjustments for adjacent panels */
 #app-layout-container > .panel + .panel {
-    border-left-width: 0;
+  border-left-width: 0;
 }
 
 #app-layout-container > .panel:first-child {
-    border-left-width: var(--border-width);
+  border-left-width: var(--border-width);
 }
 
 #app-layout-container > .panel:last-child {
-    border-right-width: var(--border-width);
+  border-right-width: var(--border-width);
 }
 
 /* Consistent Paragraph Spacing within Panels */
 .panel p {
-    margin-top: 0;
-    margin-bottom: var(--spacing-md);
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
 }
 
 .panel p:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 /* Left Pane Styling */
 #left-pane {
-    flex: 0 0 25%;
-    max-width: 320px;
-    min-width: 280px;
-    display: flex;
-    flex-direction: column;
+  flex: 0 0 25%;
+  max-width: 320px;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Styles for #center-pane */
 #center-pane {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Right Pane Styling */
 #right-pane {
-    flex: 0 0 30%; /* MODIFIED: was 25% */
-    max-width: 450px; /* MODIFIED: was 300px */
-    min-width: 320px; /* MODIFIED: was 260px */
+  flex: 0 0 30%; /* MODIFIED: was 25% */
+  max-width: 450px; /* MODIFIED: was 300px */
+  min-width: 320px; /* MODIFIED: was 260px */
 }
-
 
 /* --- Responsive Adjustments for Panes --- */
 
 @media (max-width: 1024px) {
-    .panel {
-        padding: var(--spacing-md);
-    }
+  .panel {
+    padding: var(--spacing-md);
+  }
 
-    #left-pane {
-        flex: 1 1 30%;
-        order: 1;
-        min-width: 220px;
-        max-width: none;
-    }
+  #left-pane {
+    flex: 1 1 30%;
+    order: 1;
+    min-width: 220px;
+    max-width: none;
+  }
 
-    #center-pane {
-        flex: 1 1 70%;
-        order: 2;
-        min-width: 280px;
-    }
+  #center-pane {
+    flex: 1 1 70%;
+    order: 2;
+    min-width: 280px;
+  }
 
-    #right-pane {
-        flex: 1 1 100%;
-        order: 3;
-        max-width: 100%;
-        min-width: initial; /* This remains appropriate as it stacks */
-        margin-top: var(--spacing-lg);
-        border-left-width: var(--border-width); /* Overrides .panel + .panel behavior at this breakpoint */
-    }
+  #right-pane {
+    flex: 1 1 100%;
+    order: 3;
+    max-width: 100%;
+    min-width: initial; /* This remains appropriate as it stacks */
+    margin-top: var(--spacing-lg);
+    border-left-width: var(
+      --border-width
+    ); /* Overrides .panel + .panel behavior at this breakpoint */
+  }
 }
 
 @media (max-width: 768px) {
-    .panel {
-        padding: var(--spacing-sm);
-    }
+  .panel {
+    padding: var(--spacing-sm);
+  }
 
-    #left-pane {
-        flex: 1 0 auto;
-        width: 100%;
-        max-width: 100%;
-        min-width: 100% !important; /* Note the !important */
-        margin-left: 0;
-        margin-right: 0;
-        margin-top: 0;
-        box-shadow: none;
-        border-left-width: var(--border-width);
-        border-right-width: var(--border-width);
-        border-top-width: 0; /* Base is handled by general panel rules, this might be specific */
-        border-bottom-width: var(--border-width);
-        order: 1;
-    }
+  #left-pane {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100% !important; /* Note the !important */
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    box-shadow: none;
+    border-left-width: var(--border-width);
+    border-right-width: var(--border-width);
+    border-top-width: 0; /* Base is handled by general panel rules, this might be specific */
+    border-bottom-width: var(--border-width);
+    order: 1;
+  }
 
-    #center-pane {
-        flex: 1 0 auto;
-        width: 100%;
-        max-width: 100%;
-        min-width: 100% !important;
-        margin-left: 0;
-        margin-right: 0;
-        margin-top: 0;
-        box-shadow: none;
-        border-left-width: var(--border-width);
-        border-right-width: var(--border-width);
-        border-top-width: 0;
-        border-bottom-width: var(--border-width);
-        order: 2;
-    }
+  #center-pane {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100% !important;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    box-shadow: none;
+    border-left-width: var(--border-width);
+    border-right-width: var(--border-width);
+    border-top-width: 0;
+    border-bottom-width: var(--border-width);
+    order: 2;
+  }
 
-    #right-pane {
-        flex: 1 0 auto;
-        width: 100%;
-        max-width: 100%;
-        min-width: 100% !important;
-        margin-left: 0;
-        margin-right: 0;
-        margin-top: 0; /* Overrides 1024px margin-top */
-        box-shadow: none;
-        border-left-width: var(--border-width);
-        border-right-width: var(--border-width);
-        border-top-width: 0; /* Ensure consistency with other panes at this breakpoint */
-        border-bottom-width: var(--border-width);
-        order: 3;
-    }
+  #right-pane {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100% !important;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0; /* Overrides 1024px margin-top */
+    box-shadow: none;
+    border-left-width: var(--border-width);
+    border-right-width: var(--border-width);
+    border-top-width: 0; /* Ensure consistency with other panes at this breakpoint */
+    border-bottom-width: var(--border-width);
+    order: 3;
+  }
 
-    /* General panel border adjustments for this breakpoint */
-    #app-layout-container > .panel:first-child {
-        border-top-width: var(--border-width);
-    }
+  /* General panel border adjustments for this breakpoint */
+  #app-layout-container > .panel:first-child {
+    border-top-width: var(--border-width);
+  }
 
-    #app-layout-container > .panel:last-child {
-        border-bottom-width: var(--border-width);
-        /* This was already specified for individual panes if they are the last child.
+  #app-layout-container > .panel:last-child {
+    border-bottom-width: var(--border-width);
+    /* This was already specified for individual panes if they are the last child.
                                                             If all panes are stacked and full width, this applies to the last one. */
-    }
+  }
 }
 
 @media (max-width: 480px) {
-    .panel {
-        padding: var(--spacing-sm); /* Note: same as 768px in original, verify if intended */
-    }
+  .panel {
+    padding: var(
+      --spacing-sm
+    ); /* Note: same as 768px in original, verify if intended */
+  }
 
-    /* Specific pane adjustments for 480px if needed, inherited from 768px otherwise */
+  /* Specific pane adjustments for 480px if needed, inherited from 768px otherwise */
 }

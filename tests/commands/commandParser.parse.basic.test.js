@@ -18,14 +18,14 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
   const MockGameDataRepository = jest.fn().mockImplementation(() => {
     // This is what the mock constructor will return when called with 'new'
     return {
-      getAllActionDefinitions: mockGetAllActionDefinitions
+      getAllActionDefinitions: mockGetAllActionDefinitions,
       // Add mocks for other methods if CommandParser constructor or other tests need them
       // For this specific test suite, only getAllActionDefinitions seems required by parse()
     };
   });
-    // The factory function MUST return an object mapping named exports to their mocks
+  // The factory function MUST return an object mapping named exports to their mocks
   return {
-    GameDataRepository: MockGameDataRepository // <--- CHANGE: Map the named export
+    GameDataRepository: MockGameDataRepository, // <--- CHANGE: Map the named export
   };
 });
 
@@ -42,7 +42,6 @@ const MOCK_ACTIONS = Object.freeze([
   { id: 'core:put', commandVerb: 'put', name: 'Put' },
   { id: 'core:go', commandVerb: 'go', name: 'Go' },
 ]);
-
 
 // --- Test Suite for Parse Method (Basic & Whitespace) ---
 describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
@@ -82,7 +81,7 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -102,7 +101,7 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -121,7 +120,7 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -140,7 +139,7 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -159,7 +158,7 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -178,7 +177,7 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -197,7 +196,7 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
       preposition: 'on',
       indirectObjectPhrase: 'table',
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -216,7 +215,7 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
       preposition: '>',
       indirectObjectPhrase: 'north',
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -224,5 +223,4 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
     expect(result).toEqual(expectedOutput); // AC2
     expect(mockGetAllActionDefinitions).toHaveBeenCalledTimes(1); // AC3
   });
-
 });

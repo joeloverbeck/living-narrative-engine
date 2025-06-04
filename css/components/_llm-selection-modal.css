@@ -9,54 +9,63 @@
 
 /* LLM Selection Modal Overlay */
 #llm-selection-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent backdrop, consistent with other modals */
-    display: none; /* Hidden by default */
-    justify-content: center;
-    align-items: center;
-    z-index: 1050; /* Ensure it's above other modals if necessary, or same level like 1000 */
-    padding: var(--spacing-md);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.6
+  ); /* Semi-transparent backdrop, consistent with other modals */
+  display: none; /* Hidden by default */
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; /* Ensure it's above other modals if necessary, or same level like 1000 */
+  padding: var(--spacing-md);
 
-    /* --- Transition Additions (mirroring _modals.css) --- */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.25s ease-in-out, visibility 0s linear 0.25s;
+  /* --- Transition Additions (mirroring _modals.css) --- */
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.25s ease-in-out,
+    visibility 0s linear 0.25s;
 }
 
 #llm-selection-modal.visible {
-    display: flex; /* Make it visible by changing display */
-    opacity: 1;
-    visibility: visible;
-    transition-delay: 0s, 0s;
+  display: flex; /* Make it visible by changing display */
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s, 0s;
 }
 
 /* LLM Modal Content Area */
 #llm-selection-modal .modal-content {
-    background-color: var(--panel-bg-color);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 500px; /* Max width of the LLM modal, can be adjusted */
-    max-height: 80vh; /* Max height */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* For internal scrolling of LLM list */
-    align-items: center; /* <<< ADD THIS LINE TO CENTER FLEX ITEMS HORIZONTALLY */
+  background-color: var(--panel-bg-color);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 500px; /* Max width of the LLM modal, can be adjusted */
+  max-height: 80vh; /* Max height */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* For internal scrolling of LLM list */
+  align-items: center; /* <<< ADD THIS LINE TO CENTER FLEX ITEMS HORIZONTALLY */
 
-    /* --- Transition Additions (mirroring _modals.css) --- */
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-    transition: opacity 0.25s ease-in-out 0.05s, transform 0.25s ease-in-out 0.05s;
+  /* --- Transition Additions (mirroring _modals.css) --- */
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+  transition:
+    opacity 0.25s ease-in-out 0.05s,
+    transform 0.25s ease-in-out 0.05s;
 }
 
 #llm-selection-modal.visible .modal-content {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 /* LLM Modal Title (if not using generic .modal-title, or to override) */
@@ -65,83 +74,93 @@
 
 /* LLM List Container */
 #llm-selection-list-container {
-    overflow-y: auto;
-    margin-bottom: var(--spacing-lg);
-    flex-grow: 1; /* This is for its role as a flex item in .modal-content */
-    /* padding-right: var(--spacing-sm); */ /* We might not need this if the UL is centered and has its own padding if necessary for scrollbar */
-    border: var(--border-width) solid var(--border-color-subtle);
-    border-radius: var(--border-radius-sm);
-    background-color: var(--secondary-bg-color);
-    /* list-style: none; /* This on a div doesn't affect child ul markers directly */
-    /* padding: 0; */ /* Let's manage padding more carefully */
-    /* margin: 0; /* margin-bottom is set above */
+  overflow-y: auto;
+  margin-bottom: var(--spacing-lg);
+  flex-grow: 1; /* This is for its role as a flex item in .modal-content */
+  /* padding-right: var(--spacing-sm); */ /* We might not need this if the UL is centered and has its own padding if necessary for scrollbar */
+  border: var(--border-width) solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--secondary-bg-color);
+  /* list-style: none; /* This on a div doesn't affect child ul markers directly */
+  /* padding: 0; */ /* Let's manage padding more carefully */
+  /* margin: 0; /* margin-bottom is set above */
 
-    /* --- Add these lines --- */
-    display: flex;
-    justify-content: center; /* This will center the child UL horizontally */
-    /* You can remove padding:0 and padding-right from here,
+  /* --- Add these lines --- */
+  display: flex;
+  justify-content: center; /* This will center the child UL horizontally */
+  /* You can remove padding:0 and padding-right from here,
        or adjust if the scrollbar needs specific spacing relative to the centered UL.
        For now, let's assume the UL itself will manage its padding. */
-    padding: 0; /* Resetting all paddings on container for now */
-
+  padding: 0; /* Resetting all paddings on container for now */
 }
 
 /* Individual LLM Items */
 /* Assuming LLM items will be <button> or <li> elements with a class like .llm-item */
 .llm-item {
-    padding: var(--spacing-md);
-    border-bottom: var(--border-width) solid var(--panel-border-color);
-    cursor: pointer;
-    user-select: none; /* Standard */
-    transition: background-color 0.2s ease-in-out, border-left-color 0.2s ease-in-out;
-    background-color: var(--panel-bg-color);
-    color: var(--primary-text-color);
-    display: block; /* Make it take full width */
-    text-align: left; /* Align text to the left if it's a button */
-    width: 100%; /* Ensure full width */
-    font-family: var(--font-ui);
-    font-size: var(--font-size-base);
-    border-left: 4px solid transparent; /* For selected state indication */
+  padding: var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--panel-border-color);
+  cursor: pointer;
+  user-select: none; /* Standard */
+  transition:
+    background-color 0.2s ease-in-out,
+    border-left-color 0.2s ease-in-out;
+  background-color: var(--panel-bg-color);
+  color: var(--primary-text-color);
+  display: block; /* Make it take full width */
+  text-align: left; /* Align text to the left if it's a button */
+  width: 100%; /* Ensure full width */
+  font-family: var(--font-ui);
+  font-size: var(--font-size-base);
+  border-left: 4px solid transparent; /* For selected state indication */
 }
 
 .llm-item:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .llm-item:hover {
-    background-color: var(--accent-color-focus-ring); /* Consistent hover with save/load slots */
-    color: var(--primary-text-color); /* Ensure text color contrasts on hover */
+  background-color: var(
+    --accent-color-focus-ring
+  ); /* Consistent hover with save/load slots */
+  color: var(--primary-text-color); /* Ensure text color contrasts on hover */
 }
 
 /* Selected/Active LLM Item */
 .llm-item.selected,
-.llm-item.active { /* .active might be used if it's a toggle, .selected if it's radio-like */
-    background-color: var(--accent-color-primary);
-    color: var(--button-text-color); /* White text on blue background */
-    font-weight: 600;
-    border-left-color: var(--button-bg-color); /* Darker blue accent, similar to save slots */
-    padding-left: calc(var(--spacing-md) - 4px); /* Adjust padding to account for border */
+.llm-item.active {
+  /* .active might be used if it's a toggle, .selected if it's radio-like */
+  background-color: var(--accent-color-primary);
+  color: var(--button-text-color); /* White text on blue background */
+  font-weight: 600;
+  border-left-color: var(
+    --button-bg-color
+  ); /* Darker blue accent, similar to save slots */
+  padding-left: calc(
+    var(--spacing-md) - 4px
+  ); /* Adjust padding to account for border */
 }
 
 .llm-item.selected .llm-item-details, /* If there are sub-elements that need color change */
 .llm-item.active .llm-item-details {
-    color: var(--button-text-color);
+  color: var(--button-text-color);
 }
 
 /* Focus style for LLM items if they are focusable (e.g., buttons or <li tabindex="0">) */
 .llm-item:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 2px var(--panel-bg-color), inset 0 0 0 4px var(--accent-color-secondary);
+  outline: none;
+  box-shadow:
+    inset 0 0 0 2px var(--panel-bg-color),
+    inset 0 0 0 4px var(--accent-color-secondary);
 }
 
 /* Add these new rules for the UL itself */
 #llm-selection-list {
-    width: -moz-fit-content; /* Shrink-wrap to content for Firefox */
-    width: fit-content; /* Shrink-wrap to content */
-    max-width: 100%; /* Ensure it doesn't overflow its flex parent if content is very wide */
-    list-style-type: none; /* Explicitly remove list markers */
-    padding: 0; /* Remove default user-agent padding for UL */
-    margin: 0; /* Remove default user-agent margin for UL */
+  width: -moz-fit-content; /* Shrink-wrap to content for Firefox */
+  width: fit-content; /* Shrink-wrap to content */
+  max-width: 100%; /* Ensure it doesn't overflow its flex parent if content is very wide */
+  list-style-type: none; /* Explicitly remove list markers */
+  padding: 0; /* Remove default user-agent padding for UL */
+  margin: 0; /* Remove default user-agent margin for UL */
 }
 
 /* LLM Modal Close/Cancel Button */
@@ -152,31 +171,31 @@
 /* Assuming .modal-actions from _modals.css is sufficient. */
 /* #llm-selection-modal .modal-actions {} */
 
-
 /* --- Responsive Adjustments for LLM Selection Modal --- */
 
 @media (max-width: 768px) {
-    #llm-selection-modal .modal-content {
-        padding: var(--spacing-md);
-        max-width: 90%; /* Allow modal to be wider on smaller screens */
-    }
+  #llm-selection-modal .modal-content {
+    padding: var(--spacing-md);
+    max-width: 90%; /* Allow modal to be wider on smaller screens */
+  }
 
-    .llm-item {
-        padding: var(--spacing-sm) var(--spacing-md);
-    }
+  .llm-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
 
-    .llm-item.selected,
-    .llm-item.active {
-        padding-left: calc(var(--spacing-md) - 4px);
-    }
+  .llm-item.selected,
+  .llm-item.active {
+    padding-left: calc(var(--spacing-md) - 4px);
+  }
 }
 
 @media (max-width: 480px) {
-    #llm-selection-modal .modal-title { /* Assuming .modal-title is used */
-        font-size: 1.3rem; /* Adjust title size if needed */
-    }
+  #llm-selection-modal .modal-title {
+    /* Assuming .modal-title is used */
+    font-size: 1.3rem; /* Adjust title size if needed */
+  }
 
-    .llm-item {
-        font-size: var(--font-size-small); /* Smaller font for items */
-    }
+  .llm-item {
+    font-size: var(--font-size-small); /* Smaller font for items */
+  }
 }

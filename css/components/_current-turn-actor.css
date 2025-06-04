@@ -1,52 +1,60 @@
 /* css/components/_current-turn-actor.css */
 #current-turn-actor-panel {
-    /* Assuming .widget common styles provide padding, border, etc. from _widgets-base.css */
-    margin-bottom: 1em; /* Space it out from the next widget */
-    text-align: center; /* Center align heading, image container, and name */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  /* Assuming .widget common styles provide padding, border, etc. from _widgets-base.css */
+  margin-bottom: 1em; /* Space it out from the next widget */
+  text-align: center; /* Center align heading, image container, and name */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #current-turn-actor-panel .actor-visuals {
-    width: 90%; /* Occupy 90% of the panel's width */
-    max-width: 350px; /* User adjusted: limit maximum size */
-    height: auto; /* Allow height to adjust to content */
-    /* aspect-ratio: 1 / 1; */ /* <<< REMOVED THIS LINE */
-    margin: 0.5em auto; /* Reduced vertical margin for image container */
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid var(--panel-border-color); /* Uses existing theme variable */
-    background-color: var(--secondary-bg-color); /* CHANGED: Was --control-bg-color, using --secondary-bg-color */
-    border-radius: 8px; /* Static value, consider var(--border-radius-md) or var(--border-radius-lg) if you add lg */
-    padding: 5px; /* Static value, consider var(--spacing-xs) or var(--spacing-sm) */
+  width: 90%; /* Occupy 90% of the panel's width */
+  max-width: 350px; /* User adjusted: limit maximum size */
+  height: auto; /* Allow height to adjust to content */
+  /* aspect-ratio: 1 / 1; */ /* <<< REMOVED THIS LINE */
+  margin: 0.5em auto; /* Reduced vertical margin for image container */
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--panel-border-color); /* Uses existing theme variable */
+  background-color: var(
+    --secondary-bg-color
+  ); /* CHANGED: Was --control-bg-color, using --secondary-bg-color */
+  border-radius: 8px; /* Static value, consider var(--border-radius-md) or var(--border-radius-lg) if you add lg */
+  padding: 5px; /* Static value, consider var(--spacing-xs) or var(--spacing-sm) */
 }
 
 #current-turn-actor-panel #current-actor-image {
-    display: block;
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain; /* Ensures the whole image is visible within its bounds */
-    border-radius: var(--border-radius-sm); /* CHANGED: was 4px, using --border-radius-sm from theme */
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain; /* Ensures the whole image is visible within its bounds */
+  border-radius: var(
+    --border-radius-sm
+  ); /* CHANGED: was 4px, using --border-radius-sm from theme */
 }
 
 #current-turn-actor-panel .actor-name-display {
-    font-weight: bold;
-    font-size: 1.2em; /* Slightly increased for more prominence */
-    margin-top: 0.35em; /* Reduced margin-top */
-    color: var(--primary-text-color); /* CHANGED: Was --text-color, using --primary-text-color */
+  font-weight: bold;
+  font-size: 1.2em; /* Slightly increased for more prominence */
+  margin-top: 0.35em; /* Reduced margin-top */
+  color: var(
+    --primary-text-color
+  ); /* CHANGED: Was --text-color, using --primary-text-color */
 }
 
 #current-turn-actor-panel #current-turn-actor-heading {
-    font-size: 0.9em; /* Made smaller to act as a label */
-    font-weight: normal; /* Standard weight for less emphasis than name */
-    text-transform: uppercase; /* Differentiates from the name */
-    letter-spacing: 0.05em; /* Adds a bit of spacing, typical for uppercase labels */
-    color: var(--secondary-text-color); /* CHANGED: Was --text-color-secondary, using --secondary-text-color */
-    margin-bottom: 0.35em; /* Reduced margin-bottom */
-    opacity: 0.85; /* Slightly less opaque to reduce prominence */
+  font-size: 0.9em; /* Made smaller to act as a label */
+  font-weight: normal; /* Standard weight for less emphasis than name */
+  text-transform: uppercase; /* Differentiates from the name */
+  letter-spacing: 0.05em; /* Adds a bit of spacing, typical for uppercase labels */
+  color: var(
+    --secondary-text-color
+  ); /* CHANGED: Was --text-color-secondary, using --secondary-text-color */
+  margin-bottom: 0.35em; /* Reduced margin-bottom */
+  opacity: 0.85; /* Slightly less opaque to reduce prominence */
 }

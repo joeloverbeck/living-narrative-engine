@@ -3,12 +3,20 @@
 /**
  * @jest-environment node
  */
-import {ActionValidationService} from '../../src/services/actionValidationService.js';
-import {ActionTargetContext} from '../../src/models/actionTargetContext.js';
-import {afterAll, beforeAll, beforeEach, describe, expect, jest, test} from '@jest/globals';
+import { ActionValidationService } from '../../src/services/actionValidationService.js';
+import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 // --- Import Checkers ---
-import {DomainContextCompatibilityChecker} from '../../src/validation/domainContextCompatibilityChecker.js';
-import {createMockPrerequisiteEvaluationService} from '../testUtils.js';
+import { DomainContextCompatibilityChecker } from '../../src/validation/domainContextCompatibilityChecker.js';
+import { createMockPrerequisiteEvaluationService } from '../testUtils.js';
 // --- Type Imports for Mocks (Optional but good practice) ---
 /** @typedef {import('../../src/services/prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 
@@ -23,29 +31,21 @@ const mockLogger = {
 
 // --- Mock Component Classes ---
 // (Keep existing mock component classes: MockComponentA, B, C, Required, Forbidden, etc.)
-class MockComponentA {
-}
+class MockComponentA {}
 
-class MockComponentB {
-}
+class MockComponentB {}
 
-class MockComponentC {
-}
+class MockComponentC {}
 
-class MockComponentRequired {
-}
+class MockComponentRequired {}
 
-class MockComponentForbidden {
-}
+class MockComponentForbidden {}
 
-class MockTargetComponentRequired {
-}
+class MockTargetComponentRequired {}
 
-class MockTargetComponentForbidden {
-}
+class MockTargetComponentForbidden {}
 
-class MockComponentX {
-}
+class MockComponentX {}
 
 // --- Mock EntityManager ---
 // (Keep existing mock EntityManager setup)
@@ -86,13 +86,16 @@ const mockEntityManager = {
 // (Keep existing createMockEntity factory)
 const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
   const classToIdMap = new Map();
-  for (const [compId, compClass] of mockEntityManager.componentRegistry.entries()) {
+  for (const [
+    compId,
+    compClass,
+  ] of mockEntityManager.componentRegistry.entries()) {
     classToIdMap.set(compClass, compId);
   }
   const componentIdSet = new Set(
     components
-      .map(CompClass => classToIdMap.get(CompClass))
-      .filter(compId => compId !== undefined)
+      .map((CompClass) => classToIdMap.get(CompClass))
+      .filter((compId) => compId !== undefined)
   );
   const internalComponentDataMap = new Map();
   for (const compId of componentIdSet) {
@@ -101,10 +104,12 @@ const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
   const entity = {
     id: id,
     hasComponent: jest.fn((componentId) => componentIdSet.has(componentId)),
-    getComponent: jest.fn((componentId) => internalComponentDataMap.get(componentId)),
+    getComponent: jest.fn((componentId) =>
+      internalComponentDataMap.get(componentId)
+    ),
     addComponent: jest.fn(),
     removeComponent: jest.fn(),
-    components: internalComponentDataMap
+    components: internalComponentDataMap,
   };
   mockEntityManager.addMockEntityForLookup(entity);
   return entity;
@@ -117,8 +122,8 @@ const mockCreateActionValidationContext = jest.fn();
 // --- Mock PrerequisiteEvaluationService (NEW - Replaces JLES mock here) ---
 // This service is now the direct dependency for prerequisite evaluation
 /** @type {jest.Mocked<PrerequisiteEvaluationService>} */
-const mockPrerequisiteEvaluationService = createMockPrerequisiteEvaluationService();
-
+const mockPrerequisiteEvaluationService =
+  createMockPrerequisiteEvaluationService();
 
 // --- Global Setup ---
 beforeAll(() => {
@@ -129,8 +134,14 @@ beforeAll(() => {
   mockEntityManager.registerComponent('core:x', MockComponentX);
   mockEntityManager.registerComponent('test:required', MockComponentRequired);
   mockEntityManager.registerComponent('test:forbidden', MockComponentForbidden);
-  mockEntityManager.registerComponent('target:required', MockTargetComponentRequired);
-  mockEntityManager.registerComponent('target:forbidden', MockTargetComponentForbidden);
+  mockEntityManager.registerComponent(
+    'target:required',
+    MockTargetComponentRequired
+  );
+  mockEntityManager.registerComponent(
+    'target:forbidden',
+    MockTargetComponentForbidden
+  );
   mockEntityManager.registerComponent('Position', {});
   mockEntityManager.registerComponent('Health', {});
 });
@@ -148,15 +159,18 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     // Reset mocks and state before each test
     jest.clearAllMocks();
     mockEntityManager.activeEntities.clear();
-    mockEntityManager.getEntityInstance.mockImplementation((id) => mockEntityManager.activeEntities.get(id));
+    mockEntityManager.getEntityInstance.mockImplementation((id) =>
+      mockEntityManager.activeEntities.get(id)
+    );
     // Clear mock function history
     mockCreateActionValidationContext.mockClear();
     // ** Clear the NEW PrerequisiteEvaluationService mock history **
     mockPrerequisiteEvaluationService.evaluate.mockClear();
 
-
     // --- Instantiate Dependencies NEEDED by ActionValidationService ---
-    domainContextCompatibilityChecker = new DomainContextCompatibilityChecker({logger: mockLogger});
+    domainContextCompatibilityChecker = new DomainContextCompatibilityChecker({
+      logger: mockLogger,
+    });
 
     // --- CORRECTED ActionValidationService Instantiation ---
     // Reflects the constructor change: uses PrerequisiteEvaluationService
@@ -178,30 +192,46 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     mockPrerequisiteEvaluationService.evaluate.mockReturnValue(true);
     // Default context creation mock
     mockCreateActionValidationContext.mockReturnValue({
-      actor: {id: mockActor.id, components: jest.fn()},
+      actor: { id: mockActor.id, components: jest.fn() },
       target: null,
-      event: { /* ... */},
+      event: {
+        /* ... */
+      },
       context: {},
       globals: {},
-      entities: {}
+      entities: {},
     });
   });
-
 
   test('isValid throws Error if missing or invalid actionDefinition', () => {
     const context = ActionTargetContext.noTarget();
     // Error message comes from _checkStructuralSanity
-    const expectedErrorMsg = 'ActionValidationService.isValid: invalid actionDefinition';
+    const expectedErrorMsg =
+      'ActionValidationService.isValid: invalid actionDefinition';
 
     // Test cases for invalid actionDefinition
-    expect(() => service.isValid(null, mockActor, context)).toThrow(expectedErrorMsg);
-    expect(() => service.isValid(undefined, mockActor, context)).toThrow(expectedErrorMsg);
-    expect(() => service.isValid({}, mockActor, context)).toThrow(expectedErrorMsg); // Missing id
-    expect(() => service.isValid({id: null}, mockActor, context)).toThrow(expectedErrorMsg);
-    expect(() => service.isValid({id: ''}, mockActor, context)).toThrow(expectedErrorMsg); // Empty id
-    expect(() => service.isValid({id: '   '}, mockActor, context)).toThrow(expectedErrorMsg); // Whitespace id
+    expect(() => service.isValid(null, mockActor, context)).toThrow(
+      expectedErrorMsg
+    );
+    expect(() => service.isValid(undefined, mockActor, context)).toThrow(
+      expectedErrorMsg
+    );
+    expect(() => service.isValid({}, mockActor, context)).toThrow(
+      expectedErrorMsg
+    ); // Missing id
+    expect(() => service.isValid({ id: null }, mockActor, context)).toThrow(
+      expectedErrorMsg
+    );
+    expect(() => service.isValid({ id: '' }, mockActor, context)).toThrow(
+      expectedErrorMsg
+    ); // Empty id
+    expect(() => service.isValid({ id: '   ' }, mockActor, context)).toThrow(
+      expectedErrorMsg
+    ); // Whitespace id
     // Test non-string id causing .trim() error
-    expect(() => service.isValid({id: 123}, mockActor, context)).toThrow('actionDefinition?.id?.trim is not a function');
+    expect(() => service.isValid({ id: 123 }, mockActor, context)).toThrow(
+      'actionDefinition?.id?.trim is not a function'
+    );
 
     // Verify downstream logic (context creation, prerequisite evaluation) was NOT reached
     // ** Check the CORRECT service mock **
@@ -213,22 +243,43 @@ describe('ActionValidationService - Input Validation and Errors', () => {
 
   test('isValid throws Error if missing or invalid actorEntity', () => {
     // A minimal valid action definition for this test
-    const actionDef = {id: 'test:action-basic', target_domain: 'none', template: 't'};
+    const actionDef = {
+      id: 'test:action-basic',
+      target_domain: 'none',
+      template: 't',
+    };
     const context = ActionTargetContext.noTarget();
     // Error message comes from _checkStructuralSanity
-    const expectedErrorMsg = 'ActionValidationService.isValid: invalid actorEntity';
+    const expectedErrorMsg =
+      'ActionValidationService.isValid: invalid actorEntity';
 
     // Test cases for invalid actorEntity
-    expect(() => service.isValid(actionDef, null, context)).toThrow(expectedErrorMsg);
-    expect(() => service.isValid(actionDef, undefined, context)).toThrow(expectedErrorMsg);
-    expect(() => service.isValid(actionDef, {}, context)).toThrow(expectedErrorMsg); // Missing id
-    expect(() => service.isValid(actionDef, {id: null}, context)).toThrow(expectedErrorMsg);
-    expect(() => service.isValid(actionDef, {id: ''}, context)).toThrow(expectedErrorMsg); // Empty id
-    expect(() => service.isValid(actionDef, {id: '  '}, context)).toThrow(expectedErrorMsg); // Whitespace id
+    expect(() => service.isValid(actionDef, null, context)).toThrow(
+      expectedErrorMsg
+    );
+    expect(() => service.isValid(actionDef, undefined, context)).toThrow(
+      expectedErrorMsg
+    );
+    expect(() => service.isValid(actionDef, {}, context)).toThrow(
+      expectedErrorMsg
+    ); // Missing id
+    expect(() => service.isValid(actionDef, { id: null }, context)).toThrow(
+      expectedErrorMsg
+    );
+    expect(() => service.isValid(actionDef, { id: '' }, context)).toThrow(
+      expectedErrorMsg
+    ); // Empty id
+    expect(() => service.isValid(actionDef, { id: '  ' }, context)).toThrow(
+      expectedErrorMsg
+    ); // Whitespace id
     // Test non-string id causing .trim() error
-    expect(() => service.isValid(actionDef, {id: 456}, context)).toThrow('actorEntity?.id?.trim is not a function');
+    expect(() => service.isValid(actionDef, { id: 456 }, context)).toThrow(
+      'actorEntity?.id?.trim is not a function'
+    );
     // Test non-object
-    expect(() => service.isValid(actionDef, 'not an object', context)).toThrow(expectedErrorMsg);
+    expect(() => service.isValid(actionDef, 'not an object', context)).toThrow(
+      expectedErrorMsg
+    );
 
     // Verify downstream logic (context creation, prerequisite evaluation) was NOT reached
     // ** Check the CORRECT service mock **
@@ -240,21 +291,36 @@ describe('ActionValidationService - Input Validation and Errors', () => {
 
   test('isValid throws Error if missing or invalid targetContext', () => {
     // A minimal valid action definition for this test
-    const actionDef = {id: 'test:action-basic', target_domain: 'none', template: 't'};
+    const actionDef = {
+      id: 'test:action-basic',
+      target_domain: 'none',
+      template: 't',
+    };
     // Error message comes from _checkStructuralSanity
-    const expectedErrorMsg = 'ActionValidationService.isValid: targetContext must be ActionTargetContext';
+    const expectedErrorMsg =
+      'ActionValidationService.isValid: targetContext must be ActionTargetContext';
 
     // Test cases for invalid targetContext
-    expect(() => service.isValid(actionDef, mockActor, null)).toThrow(expectedErrorMsg);
-    expect(() => service.isValid(actionDef, mockActor, undefined)).toThrow(expectedErrorMsg);
+    expect(() => service.isValid(actionDef, mockActor, null)).toThrow(
+      expectedErrorMsg
+    );
+    expect(() => service.isValid(actionDef, mockActor, undefined)).toThrow(
+      expectedErrorMsg
+    );
 
     // Check invalid targetContext structure (plain object, not an instance of ActionTargetContext)
-    const invalidContextObject = {type: 'entity', entityId: 'some-id'};
-    expect(() => service.isValid(actionDef, mockActor, invalidContextObject)).toThrow(expectedErrorMsg);
+    const invalidContextObject = { type: 'entity', entityId: 'some-id' };
+    expect(() =>
+      service.isValid(actionDef, mockActor, invalidContextObject)
+    ).toThrow(expectedErrorMsg);
 
     // Check other non-instance values
-    expect(() => service.isValid(actionDef, mockActor, 'not a context')).toThrow(expectedErrorMsg);
-    expect(() => service.isValid(actionDef, mockActor, 123)).toThrow(expectedErrorMsg);
+    expect(() =>
+      service.isValid(actionDef, mockActor, 'not a context')
+    ).toThrow(expectedErrorMsg);
+    expect(() => service.isValid(actionDef, mockActor, 123)).toThrow(
+      expectedErrorMsg
+    );
 
     // Verify downstream logic (context creation, prerequisite evaluation) was NOT reached
     // ** Check the CORRECT service mock **
@@ -263,5 +329,4 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     // Optional: Check logger call
     // expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(expectedErrorMsg), expect.any(Object));
   });
-
 }); // End describe block

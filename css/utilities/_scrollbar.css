@@ -1,26 +1,26 @@
 /* css/utilities/_scrollbar.css */
 
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--secondary-bg-color);
-    border-radius: var(--border-radius-sm);
+  background: var(--secondary-bg-color);
+  border-radius: var(--border-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--accent-color-secondary);
-    border-radius: var(--border-radius-sm);
-    border: 2px solid var(--secondary-bg-color);
+  background: var(--accent-color-secondary);
+  border-radius: var(--border-radius-sm);
+  border: 2px solid var(--secondary-bg-color);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-color-primary);
+  background: var(--accent-color-primary);
 }
 
 * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-color-secondary) var(--secondary-bg-color);
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-color-secondary) var(--secondary-bg-color);
 }
