@@ -39,8 +39,8 @@
     "yargs": "^17.7.2"
   },
   "scripts": {
-    "test": "jest --env=jsdom --updateSnapshot",
-    "coverage": "jest --coverage --env=jsdom",
+    "test": "jest --env=jsdom --updateSnapshot --silent",
+    "coverage": "jest --coverage --env=jsdom --silent",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
     "build": "esbuild main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html dist && cpy css dist && cpy data dist && cpy config dist && cpy favicon.ico dist",
