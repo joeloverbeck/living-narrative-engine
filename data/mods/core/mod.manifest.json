@@ -23,7 +23,8 @@
       "fears.component.json",
       "speech_patterns.component.json",
       "portrait.component.json",
-      "short_term_memory.component.json"
+      "short_term_memory.component.json",
+      "notes.component.json"
     ],
     "characters": [],
     "items": [],

@@ -25,5 +25,6 @@ export const SPEECH_PATTERNS_COMPONENT_ID = 'core:speech_patterns';
 
 export const PORTRAIT_COMPONENT_ID = 'core:portrait';
 
-// *** NEW: Short-Term Memory ***
 export const SHORT_TERM_MEMORY_COMPONENT_ID = 'core:short_term_memory';
+
+export const NOTES_COMPONENT_ID = 'core:notes';
