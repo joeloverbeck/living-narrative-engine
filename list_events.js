@@ -1,3 +1,6 @@
+/* eslint-env node */
+/* eslint-disable no-console */
+
 // Import the promises API from the 'fs' module
 const fs = require('fs').promises;
 // Import the 'path' module
@@ -9,9 +12,9 @@ const relativeDirPath = 'data/events';
 // Construct the absolute path relative to where 'node' is executed
 const directoryPath = path.join(process.cwd(), relativeDirPath);
 
-// Define the asynchronous function to get filenames
 /**
- *
+ * @description Retrieve all filenames in the events data directory.
+ * @returns {Promise<string[]>} Array of filenames or an empty array on error.
  */
 async function getFilenames() {
   try {

@@ -1,3 +1,6 @@
+/* eslint-env node */
+/* eslint-disable no-console */
+
 // jest.setup.js
 
 // --- Polyfills for Jest Node environment ---
