@@ -111,7 +111,8 @@ export class EngineUIManager {
       throw new Error('EngineUIManager: DomUiFacade dependency is required.');
     }
     if (!logger) {
-      // No logger to log with if logger itself is missing.
+      // No logger available; fallback to console for critical error.
+      // eslint-disable-next-line no-console
       console.error(
         'EngineUIManager: ILogger dependency is required at construction.'
       );
@@ -140,9 +141,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Subscribes to various UI-related events dispatched by the GameEngine.
    * Each event is bound to a specific handler method within this class.
+   *
+   * @private
    * @returns {void}
    */
   #subscribeToEvents() {
@@ -189,9 +191,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the ENGINE_INITIALIZING_UI event. Updates the UI to reflect that
    * the game engine is initializing a new world, setting the title and disabling input.
+   *
+   * @private
    * @param {EngineInitializingUIEvent} event - The event object containing payload: { worldName: string }.
    */
   #handleEngineInitializingUI(event) {
@@ -217,9 +220,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the ENGINE_READY_UI event. Sets the UI title to the active world (or a default)
    * and enables player input with a provided prompt message.
+   *
+   * @private
    * @param {EngineReadyUIEvent} event - The event object containing payload: { activeWorld: string | null, message: string }.
    */
   #handleEngineReadyUI(event) {
@@ -241,9 +245,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the ENGINE_OPERATION_IN_PROGRESS_UI event. Updates the UI title
    * and disables input, indicating a background operation is underway.
+   *
+   * @private
    * @param {EngineOperationInProgressUIEvent} event - The event object containing payload: { titleMessage: string, inputDisabledMessage: string }.
    */
   #handleEngineOperationInProgressUI(event) {
@@ -272,9 +277,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the ENGINE_OPERATION_FAILED_UI event. Renders a fatal error message,
    * disables player input, and sets an error title in the UI.
+   *
+   * @private
    * @param {EngineOperationFailedUIEvent} event - The event object containing payload: { errorMessage: string, errorTitle: string }.
    */
   #handleEngineOperationFailedUI(event) {
@@ -304,9 +310,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the ENGINE_STOPPED_UI event. Disables player input with a specific message
    * and optionally sets the title to "Game Stopped".
+   *
+   * @private
    * @param {EngineStoppedUIPayload} event - The event object containing payload: { inputDisabledMessage: string }.
    */
   #handleEngineStoppedUI(event) {
@@ -331,9 +338,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the ENGINE_MESSAGE_DISPLAY_REQUESTED event. Renders a message
    * of a specified type (info, error, etc.) in the UI.
+   *
+   * @private
    * @param {EngineMessageDisplayRequestedEvent} event - The event object containing payload: { message: string, type: 'info' | 'error' | 'fatal' | 'warning' | 'success' }.
    */
   #handleEngineMessageDisplayRequested(event) {
@@ -370,9 +378,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the REQUEST_SHOW_SAVE_GAME_UI event. Attempts to show the Save Game UI
    * component via the DomUiFacade. Logs a warning if the component is not available.
+   *
+   * @private
    * @param {EmptyPayloadEvent} event - The event object (payload is typically empty).
    */
   #handleRequestShowSaveGameUI(event) {
@@ -396,9 +405,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the REQUEST_SHOW_LOAD_GAME_UI event. Attempts to show the Load Game UI
    * component via the DomUiFacade. Logs a warning if the component is not available.
+   *
+   * @private
    * @param {EmptyPayloadEvent} event - The event object (payload is typically empty).
    */
   #handleRequestShowLoadGameUI(event) {
@@ -422,9 +432,10 @@ export class EngineUIManager {
   }
 
   /**
-   * @private
    * Handles the CANNOT_SAVE_GAME_INFO event. Renders an informational message
    * in the UI indicating that saving is not currently possible.
+   *
+   * @private
    * @param {EmptyPayloadEvent} event - The event object (payload is typically empty).
    */
   #handleCannotSaveGameInfo(event) {

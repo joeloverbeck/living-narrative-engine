@@ -13,8 +13,8 @@
  * @typedef {object} ManagedDomListener
  * @property {EventTarget} element - The DOM element the listener is attached to.
  * @property {string} eventType - The event type string.
- * @property {EventListenerOrEventListenerObject} handler - The event handler function.
- * @property {boolean | AddEventListenerOptions} [options] - Optional event listener options.
+ * @property {Function} handler - The event handler function.
+ * @property {boolean | object} [options] - Optional event listener options.
  */
 
 /**
@@ -135,8 +135,8 @@ export class RendererBase {
    * @protected
    * @param {EventTarget} element - The DOM element to attach the listener to.
    * @param {string} eventType - The event type string (e.g., 'click').
-   * @param {EventListenerOrEventListenerObject} handler - The event handler function.
-   * @param {boolean | AddEventListenerOptions} [options] - Optional event listener options (capture, once, passive).
+   * @param {Function} handler - The event handler function.
+   * @param {boolean | object} [options] - Optional event listener options (capture, once, passive).
    */
   _addDomListener(element, eventType, handler, options) {
     if (
@@ -229,8 +229,8 @@ export class RendererBase {
 /**
  * Helper function to get a string path for a DOM element, for logging purposes.
  *
- * @param {EventTarget} el
- * @returns {string}
+ * @param {EventTarget} el - Element to build a path for.
+ * @returns {string} Unique-ish CSS-like path for logging.
  */
 function getElementPath(el) {
   if (!(el instanceof Element)) return 'Non-Element Target';

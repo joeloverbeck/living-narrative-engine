@@ -23,8 +23,8 @@ import {
 
 /**
  * @typedef {object} CoreTurnStartedPayload
- * @property {import('../core/interfaces/CommonTypes').NamespacedId} entityId
- * @property {'player'|'ai'} entityType
+ * @property {import('../core/interfaces/CommonTypes').NamespacedId} entityId - ID of the entity starting the turn.
+ * @property {'player'|'ai'} entityType - Whether the actor is player-controlled or AI.
  */
 
 /**

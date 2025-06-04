@@ -124,52 +124,92 @@ export class DomUiFacade {
     this.#llmSelectionModal = llmSelectionModal;
   }
 
-  /** @returns {ActionButtonsRenderer} */
+  /**
+   * Provides the ActionButtonsRenderer instance.
+   *
+   * @returns {ActionButtonsRenderer} Renderer controlling action buttons.
+   */
   get actionButtons() {
     return this.#actionButtonsRenderer;
   }
 
-  /** @returns {LocationRenderer} */
+  /**
+   * Provides the LocationRenderer instance.
+   *
+   * @returns {LocationRenderer} Renderer for location details.
+   */
   get location() {
     return this.#locationRenderer;
   }
 
-  /** @returns {TitleRenderer} */
+  /**
+   * Provides the TitleRenderer instance.
+   *
+   * @returns {TitleRenderer} Renderer for the main title.
+   */
   get title() {
     return this.#titleRenderer;
   }
 
-  /** @returns {InputStateController} */
+  /**
+   * Provides the InputStateController instance.
+   *
+   * @returns {InputStateController} Controller for the player input element.
+   */
   get input() {
     return this.#inputStateController;
   }
 
-  /** @returns {UiMessageRenderer} */
+  /**
+   * Provides the UiMessageRenderer instance.
+   *
+   * @returns {UiMessageRenderer} Renderer for text messages.
+   */
   get messages() {
     return this.#uiMessageRenderer;
   }
 
-  /** @returns {SpeechBubbleRenderer} */
+  /**
+   * Provides the SpeechBubbleRenderer instance.
+   *
+   * @returns {SpeechBubbleRenderer} Renderer for speech bubbles.
+   */
   get speechBubble() {
     return this.#speechBubbleRenderer;
   }
 
-  /** @returns {PerceptionLogRenderer} */
+  /**
+   * Provides the PerceptionLogRenderer instance.
+   *
+   * @returns {PerceptionLogRenderer} Renderer for the perception log.
+   */
   get perceptionLog() {
     return this.#perceptionLogRenderer;
   }
 
-  /** @returns {SaveGameUI} */
+  /**
+   * Provides the SaveGameUI instance.
+   *
+   * @returns {SaveGameUI} Save game dialog component.
+   */
   get saveGame() {
     return this.#saveGameUI;
   }
 
-  /** @returns {LoadGameUI} */
+  /**
+   * Provides the LoadGameUI instance.
+   *
+   * @returns {LoadGameUI} Load game dialog component.
+   */
   get loadGame() {
     return this.#loadGameUI;
   }
 
-  /** @returns {LlmSelectionModal} */
+  /**
+   * Provides the LlmSelectionModal instance.
+   *
+   * @returns {LlmSelectionModal} Modal for choosing an LLM.
+   */
   get llmSelectionModal() {
     return this.#llmSelectionModal;
   }

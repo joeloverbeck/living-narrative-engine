@@ -57,12 +57,14 @@ class LoadGameUI extends BaseModalRenderer {
   // isOperationInProgress is managed by BaseModalRenderer's _setOperationInProgress
 
   /**
-   * @param {object} deps - Dependencies
-   * @param {ILogger} deps.logger
-   * @param {IDocumentContext} deps.documentContext
-   * @param {DomElementFactory} deps.domElementFactory
-   * @param {ISaveLoadService} deps.saveLoadService
-   * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
+   * Creates the LoadGameUI instance.
+   *
+   * @param {object} deps - Dependencies.
+   * @param {ILogger} deps.logger - Logger for debug output.
+   * @param {IDocumentContext} deps.documentContext - DOM abstraction layer.
+   * @param {DomElementFactory} deps.domElementFactory - Factory for DOM elements.
+   * @param {ISaveLoadService} deps.saveLoadService - Service for loading/saving.
+   * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - Event dispatcher instance.
    */
   constructor({
     logger,
@@ -136,7 +138,11 @@ class LoadGameUI extends BaseModalRenderer {
     );
   }
 
-  /** @private */
+  /**
+   * Sets up all DOM event listeners used by the Load Game UI.
+   *
+   * @private
+   */
   _initEventListeners() {
     // Close button listener is automatically added by BaseModalRenderer if 'closeButton' is in elementsConfig.
     if (this.elements.confirmLoadButtonEl) {
@@ -202,9 +208,11 @@ class LoadGameUI extends BaseModalRenderer {
   }
 
   /**
+   * Determines which element should receive focus when the modal is shown.
+   *
    * @protected
    * @override
-   * @returns {HTMLElement | null}
+   * @returns {HTMLElement | null} Element to focus or null if none.
    */
   _getInitialFocusElement() {
     // Try to focus the first non-corrupted slot, then the close button.
@@ -226,7 +234,7 @@ class LoadGameUI extends BaseModalRenderer {
    *
    * @private
    * @async
-   * @returns {Promise<LoadSlotDisplayData[]>}
+   * @returns {Promise<LoadSlotDisplayData[]>} Resolved slot data for rendering.
    */
   async _getLoadSlotsData() {
     this.logger.debug(`${this._logPrefix} Fetching load slots data...`);
@@ -250,7 +258,7 @@ class LoadGameUI extends BaseModalRenderer {
           return (
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
           );
-        } catch (e) {
+        } catch {
           return 0;
         }
       });
@@ -309,7 +317,7 @@ class LoadGameUI extends BaseModalRenderer {
     ) {
       try {
         timestampText = `Saved: ${new Date(slotData.timestamp).toLocaleString()}`;
-      } catch (e) {
+      } catch {
         this.logger.warn(
           `${this._logPrefix} Invalid timestamp for slot ${slotData.identifier}: ${slotData.timestamp}`
         );
@@ -346,7 +354,7 @@ class LoadGameUI extends BaseModalRenderer {
    * Gets the message to display when the load slots list is empty.
    *
    * @private
-   * @returns {string | HTMLElement}
+   * @returns {string | HTMLElement} Element or text explaining no saves found.
    */
   _getEmptyLoadSlotsMessage() {
     const message = 'No saved games found.';
@@ -414,8 +422,10 @@ class LoadGameUI extends BaseModalRenderer {
   }
 
   /**
-   * @param selectedSlotElement
-   * @param slotData
+   * Handles UI updates when a save slot is selected or deselected.
+   *
+   * @param {HTMLElement | null} selectedSlotElement - The clicked slot element.
+   * @param {LoadSlotDisplayData | null} slotData - Associated slot information.
    * @private
    */
   _handleSlotSelection(selectedSlotElement, slotData) {
@@ -463,7 +473,9 @@ class LoadGameUI extends BaseModalRenderer {
   }
 
   /**
-   * @param event
+   * Keyboard navigation handler for the save slot list.
+   *
+   * @param {KeyboardEvent} event - The key event.
    * @private
    */
   _handleSlotNavigation(event) {
@@ -509,7 +521,7 @@ class LoadGameUI extends BaseModalRenderer {
         nextIndex = slots.length - 1;
         break;
       case 'Enter':
-      case ' ':
+      case ' ': {
         event.preventDefault();
         const slotIdentifier = target.dataset.slotIdentifier;
         const currentSlotData = this.currentSlotsDisplayData.find(
@@ -519,6 +531,7 @@ class LoadGameUI extends BaseModalRenderer {
           this._handleSlotSelection(target, currentSlotData);
         }
         return;
+      }
       default:
         return;
     }

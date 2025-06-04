@@ -10,8 +10,9 @@
 
 /**
  * @typedef {ElementsConfigType & {
- * statusMessageElement?: string // Make it clear statusMessageElement is part of the expected config
+ *   statusMessageElement?: string
  * }} ModalElementsConfig
+ * Configuration object for modal-related DOM elements.
  */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
@@ -94,7 +95,6 @@ export class BaseModalRenderer extends BoundDomRendererBase {
    * @param {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The event dispatcher.
    * @param {ModalElementsConfig} dependencies.elementsConfig - Configuration for DOM elements.
    * Must include `modalElement` and `closeButton`. `statusMessageElement` is optional but recommended for feedback.
-   * @param {...any} otherDeps - Other dependencies that might be passed to BoundDomRendererBase.
    */
   constructor({
     logger,
