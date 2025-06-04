@@ -1,5 +1,5 @@
 // src/tests/integration/sequentialActionsExecutionError.test.js
- 
+
 /**
  * Integration Test — Sub-Ticket 4 (TICKET-12.4)
  * ------------------------------------------------------------

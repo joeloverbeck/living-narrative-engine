@@ -25,16 +25,14 @@ import { PLAYER_COMPONENT_ID } from '../constants/componentIds.js'; // Added imp
 const DEFAULT_SPEAKER_NAME = 'Unknown Speaker';
 
 export class SpeechBubbleRenderer extends BoundDomRendererBase {
-     * @private
   #entityManager;
-     * @private
   #domElementFactory;
-     * @private
   #entityDisplayDataProvider;
 
   /**
    * The actual DOM element where speech bubbles will be appended.
    * Determined by the presence of #message-list or fallback to #outputDiv.
+   *
    * @private
    */
   effectiveSpeechContainer = null;
@@ -111,6 +109,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
   /**
    * Handles the 'textUI:display_speech' event.
+   *
    * @private
    * @param {IEvent<DisplaySpeechPayload>} eventObject - The event object.
    */
@@ -139,6 +138,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
   /**
    * Renders the speech bubble for a given entity and content.
+   *
    * @param {string} entityId - The ID of the entity speaking.
    * @param {string} speechContent - The content of the speech.
    * @param {boolean} [allowHtml] - Whether to treat speechContent as HTML.
@@ -275,6 +275,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
   /**
    * Scrolls the output/chat panel to the bottom.
    * Uses this.elements.outputDivElement provided by BoundDomRendererBase.
+   *
    * @private
    */
   #scrollToBottom() {

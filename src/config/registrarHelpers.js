@@ -9,7 +9,12 @@
 /** @typedef {import('./appContainer.js').FactoryFunction} FactoryFunction */
 /** @typedef {{ lifecycle?: 'singletonFactory' | 'singleton' | 'transient', tags?: string[], dependencies?: DiToken[] }} RegistrationOptions */
 
-/** @template T @typedef {new (...args: any[]) => T} Constructor<T> */
+/**
+ * Represents a constructor for a type T.
+ *
+ * @template T
+ * @typedef {new (...args: any[]) => T} Constructor<T>
+ */
 
 /**
  * Provides a fluent interface for registering services with the DI container,
@@ -22,7 +27,9 @@ export class Registrar {
   #tags = null;
 
   /**
-   * @param {AppContainer} container - The DI container instance.
+   * Creates an instance of the Registrar.
+   *
+   * @param {AppContainer} container - The DI container instance to be used for registrations.
    */
   constructor(container) {
     if (!container || typeof container.register !== 'function') {
@@ -32,12 +39,14 @@ export class Registrar {
   }
 
   /**
-   * Base registration call used by all helpers.
-   * @template T
-   * @param {DiToken} token
-   * @param {FactoryFunction | Constructor<T> | T} factoryOrValueOrClass
-   * @param {RegistrationOptions} [options]
-   * @returns {this}
+   * Base registration call used by all helpers. It allows registering a factory,
+   * a class constructor, or a pre-existing value/instance against a token.
+   *
+   * @template T The type of the service being registered.
+   * @param {DiToken} token - The dependency injection token to register against.
+   * @param {FactoryFunction | Constructor<T> | T} factoryOrValueOrClass - The factory function, class constructor, or direct value/instance to register.
+   * @param {RegistrationOptions} [options] - Optional registration parameters, such as lifecycle, tags, or dependencies.
+   * @returns {this} The registrar instance for fluent chaining.
    */
   register(token, factoryOrValueOrClass, options = {}) {
     const registrationOptions = { ...options };
@@ -55,9 +64,11 @@ export class Registrar {
   }
 
   /**
-   * Tag the next registration.
-   * @param {string|string[]} tagOrTags
-   * @returns {this}
+   * Tag the next registration with one or more tags. These tags can be used
+   * later to resolve multiple services associated with a specific tag.
+   *
+   * @param {string|string[]} tagOrTags - A single tag string or an array of tag strings.
+   * @returns {this} The registrar instance for fluent chaining.
    */
   tagged(tagOrTags) {
     this.#tags = Array.isArray(tagOrTags) ? [...tagOrTags] : [tagOrTags];
@@ -65,12 +76,15 @@ export class Registrar {
   }
 
   /**
-   * Register a class as a singleton.
-   * @template T
-   * @param {DiToken} token
-   * @param {Constructor<T>} Ctor
-   * @param {DiToken[]} [deps]
-   * @returns {this}
+   * Register a class as a singleton. The container will create an instance
+   * of this class the first time it's resolved and reuse that same instance
+   * for all subsequent resolutions.
+   *
+   * @template T The type of the class being registered.
+   * @param {DiToken} token - The dependency injection token to register the class against.
+   * @param {Constructor<T>} Ctor - The class constructor to be registered as a singleton.
+   * @param {DiToken[]} [deps] - An optional array of dependency tokens required by the class constructor.
+   * @returns {this} The registrar instance for fluent chaining.
    */
   single(token, Ctor, deps = []) {
     return this.register(token, Ctor, {
@@ -80,11 +94,13 @@ export class Registrar {
   }
 
   /**
-   * Register an already-built instance.
-   * @template T
-   * @param {DiToken} token
-   * @param {T} instance
-   * @returns {this}
+   * Register an already-built instance as a singleton. The container will
+   * always return this specific instance when the token is resolved.
+   *
+   * @template T The type of the instance being registered.
+   * @param {DiToken} token - The dependency injection token to register the instance against.
+   * @param {T} instance - The pre-existing instance to be registered.
+   * @returns {this} The registrar instance for fluent chaining.
    */
   instance(token, instance) {
     return this.register(token, instance, {
@@ -94,10 +110,13 @@ export class Registrar {
   }
 
   /**
-   * Register a singleton factory.
-   * @param {DiToken} token
-   * @param {FactoryFunction} factoryFn
-   * @returns {this}
+   * Register a factory function as a singleton. The factory function will be
+   * called only once to create the instance, and this instance will be reused
+   * for all subsequent resolutions of the token.
+   *
+   * @param {DiToken} token - The dependency injection token to register the factory against.
+   * @param {FactoryFunction} factoryFn - The factory function that creates the instance.
+   * @returns {this} The registrar instance for fluent chaining.
    */
   singletonFactory(token, factoryFn) {
     if (typeof factoryFn !== 'function') {
@@ -111,12 +130,14 @@ export class Registrar {
   }
 
   /**
-   * Register a transient class.
-   * @template T
-   * @param {DiToken} token
-   * @param {Constructor<T>} Ctor
-   * @param {DiToken[]} [deps]
-   * @returns {this}
+   * Register a class as transient. A new instance of this class will be
+   * created every time the token is resolved.
+   *
+   * @template T The type of the class being registered.
+   * @param {DiToken} token - The dependency injection token to register the class against.
+   * @param {Constructor<T>} Ctor - The class constructor to be registered as transient.
+   * @param {DiToken[]} [deps] - An optional array of dependency tokens required by the class constructor.
+   * @returns {this} The registrar instance for fluent chaining.
    */
   transient(token, Ctor, deps = []) {
     return this.register(token, Ctor, {
@@ -126,10 +147,12 @@ export class Registrar {
   }
 
   /**
-   * Register a transient factory.
-   * @param {DiToken} token
-   * @param {FactoryFunction} factoryFn
-   * @returns {this}
+   * Register a factory function as transient. The factory function will be
+   * called to create a new instance every time the token is resolved.
+   *
+   * @param {DiToken} token - The dependency injection token to register the factory against.
+   * @param {FactoryFunction} factoryFn - The factory function that creates the instance.
+   * @returns {this} The registrar instance for fluent chaining.
    */
   transientFactory(token, factoryFn) {
     if (typeof factoryFn !== 'function') {

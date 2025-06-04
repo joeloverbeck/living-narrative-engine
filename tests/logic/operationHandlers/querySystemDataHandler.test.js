@@ -42,6 +42,7 @@ const createMockSystemDataRegistry = () => ({
 // --- REVISED Mock Builder to create the NESTED ExecutionContext structure ---
 /**
  * Builds a mock NestedExecutionContext.
+ *
  * @param {object} [ruleVariables] - Initial data for evaluationContext.context.
  * @param {ILogger} [specificLoggerForEvalContext] - Logger for evaluationContext.logger.
  * @param {ILogger} [topLevelLogger] - Logger for the top-level executionContext.logger.

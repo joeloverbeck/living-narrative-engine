@@ -43,6 +43,7 @@ export class StandardElementAssembler extends IPromptElementAssembler {
 
   /**
    * Initializes a new instance of the StandardElementAssembler.
+   *
    * @param {object} [options] - Optional parameters.
    * @param {ILogger} [options.logger] - An ILogger instance. Defaults to the global console.
    */
@@ -59,6 +60,7 @@ export class StandardElementAssembler extends IPromptElementAssembler {
    * 2. A central content string retrieved from `PromptData` based on `elementConfig.key`
    * (e.g., `system_prompt` key leads to `promptData.systemPromptContent`).
    * 3. An optional suffix (placeholders resolved).
+   *
    * @param {PromptElement} elementConfig - The configuration for the prompt element.
    * @param {PromptData} promptData - The global prompt data object.
    * @param {PlaceholderResolver} placeholderResolver - Utility for resolving placeholders.

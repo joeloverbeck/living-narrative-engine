@@ -24,13 +24,12 @@ const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/; // Pattern to identify pote
  * @implements {ISaveLoadService}
  */
 class SaveLoadService extends ISaveLoadService {
-     * @private
   #logger;
-     * @private
   #storageProvider;
 
   /**
    * Creates a new SaveLoadService instance.
+   *
    * @param {object} dependencies - The dependencies object.
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {IStorageProvider} dependencies.storageProvider - The storage provider service.
@@ -53,6 +52,7 @@ class SaveLoadService extends ISaveLoadService {
 
   /**
    * Converts an ArrayBuffer to a hexadecimal string.
+   *
    * @param {ArrayBuffer} buffer - The buffer to convert.
    * @returns {string} The hexadecimal string.
    * @private
@@ -66,6 +66,7 @@ class SaveLoadService extends ISaveLoadService {
   /**
    * Generates an SHA256 checksum for the given data using Web Crypto API.
    * For Uint8Array, it hashes directly. Otherwise, it stringifies to JSON then encodes to UTF-8.
+   *
    * @param {any} data - The data to hash.
    * @returns {Promise<string>} The SHA256 hash as a hex string.
    * @private
@@ -101,6 +102,7 @@ class SaveLoadService extends ISaveLoadService {
   /**
    * Deep clones an object using JSON stringify/parse.
    * Suitable for POJOs as used in the save game structure.
+   *
    * @param {object} obj - The object to clone.
    * @returns {object} The cloned object.
    * @private
@@ -121,6 +123,7 @@ class SaveLoadService extends ISaveLoadService {
    * Serializes the game state to MessagePack and then compresses it with Gzip.
    * Calculates and embeds the gameStateChecksum before full serialization.
    * This method is now asynchronous due to #generateChecksum being async.
+   *
    * @param {object} gameStateObject - The full game state object to process.
    * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>}
    * @private
@@ -161,6 +164,7 @@ class SaveLoadService extends ISaveLoadService {
   /**
    * Reads a save file, decompresses Gzip, and deserializes from MessagePack.
    * Implements basic failure handling as per SL-T2.4.
+   *
    * @param {string} filePath - The path to the save file.
    * @returns {Promise<{success: boolean, data?: object, error?: string, userFriendlyError?: string}>}
    * @private

@@ -50,6 +50,7 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
    *
    * Output example (thoughts T1, T2):
    * "\nYour most recent thoughts (oldest first):\n\n- T1\n- T2\n\n"
+   *
    * @param {PromptElement}  elementCfg               – Config for this element.
    * @param {PromptData}     promptData               – Runtime data (expects `thoughtsArray`).
    * @param {PlaceholderResolver} placeholderResolver – Placeholder resolver.
@@ -57,9 +58,7 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
    * @returns {string} Rendered block or "".
    */
 
-   
   assemble(elementCfg, promptData, placeholderResolver, allPromptElementsMap) {
-     
     const arr = promptData?.thoughtsArray;
     if (!Array.isArray(arr) || arr.length === 0) {
       return '';

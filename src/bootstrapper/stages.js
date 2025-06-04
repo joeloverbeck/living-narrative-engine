@@ -23,6 +23,7 @@ import { tokens } from '../config/tokens.js'; // Corrected path assuming tokens.
  * This function utilizes the UIBootstrapper to gather essential elements.
  * If elements are missing, UIBootstrapper's gatherEssentialElements method will throw an error.
  * This stage catches that error and re-throws it with a specific phase.
+ *
  * @async
  * @param {Document} doc - The global document object.
  * @returns {Promise<EssentialUIElements>} A promise that resolves with an object containing references to the DOM elements if found.
@@ -52,6 +53,7 @@ export async function ensureCriticalDOMElementsStage(doc) {
 /**
  * Bootstrap Stage: Sets up the Dependency Injection (DI) container.
  * This function instantiates AppContainer and calls the provided configuration function.
+ *
  * @async
  * @param {EssentialUIElements} uiReferences - The object containing DOM element references.
  * @param {ConfigureContainerFunction} containerConfigFunc - A reference to the configureContainer function.
@@ -81,6 +83,7 @@ export async function setupDIContainerStage(uiReferences, containerConfigFunc) {
 
 /**
  * Bootstrap Stage: Resolves essential core services, particularly the logger.
+ *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
  * @param {TokensObject} diTokens - The DI tokens object.
@@ -116,6 +119,7 @@ export async function resolveCoreServicesStage(container, diTokens) {
 /**
  * Bootstrap Stage: Initializes the GameEngine.
  * This function instantiates the GameEngine, passing it the DI container.
+ *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
  * @param {ILogger} logger - The resolved ILogger instance.
@@ -152,6 +156,7 @@ export async function initializeGameEngineStage(container, logger) {
 
 /**
  * Bootstrap Stage: Initializes auxiliary services like EngineUIManager, SaveGameUI, LoadGameUI, LlmSelectionModal, CurrentTurnActorRenderer, SpeechBubbleRenderer, and ProcessingIndicatorController.
+ *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
@@ -332,6 +337,7 @@ export async function initializeAuxiliaryServicesStage(
 
 /**
  * Bootstrap Stage: Sets up event listeners for main menu buttons like "Open Save Game UI" and "Open Load Game UI".
+ *
  * @async
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
  * @param {ILogger} logger - The resolved ILogger instance.
@@ -407,6 +413,7 @@ export async function setupMenuButtonListenersStage(
 
 /**
  * Bootstrap Stage: Sets up global event listeners, specifically the 'beforeunload' event.
+ *
  * @async
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
  * @param {ILogger} logger - The resolved ILogger instance.
@@ -487,6 +494,7 @@ export async function setupGlobalEventListenersStage(
 /**
  * Bootstrap Stage: Starts the new game via gameEngine.startNewGame().
  * This is typically the final active stage in the bootstrap process.
+ *
  * @async
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
  * @param {string} activeWorldName - The name of the world to start (e.g., from AppConfig.ACTIVE_WORLD).

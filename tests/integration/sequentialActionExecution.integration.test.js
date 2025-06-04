@@ -1,6 +1,5 @@
 // src/tests/integration/sequentialActionExecution.integration.test.js
 
- 
 /**
  * Integration Test — Sub‑Ticket 3 (TICKET‑12.3)
  * ------------------------------------------------------------
@@ -67,6 +66,7 @@ class SimpleEntityManager {
 
   /**
    * Minimal stub for contextAssembler’s getEntityInstance()
+   *
    * @param entityId
    */
   getEntityInstance(entityId) {
@@ -96,6 +96,7 @@ const createMockLogger = () => ({
 /**
  * Build the ExecutionContext object expected by real operation handlers from
  * the *raw* evaluationContext that OperationInterpreter currently passes in.
+ *
  * @param root0
  * @param root0.evaluationContext
  * @param root0.entityManager

@@ -28,6 +28,7 @@ import RuleLoader from '../../src/loaders/ruleLoader.js'; // Adjust path as nece
 
 /**
  * Mocks IConfiguration - Needs all methods required by BaseManifestItemLoader
+ *
  * @param overrides
  */
 const createMockConfiguration = (overrides = {}) => ({
@@ -53,6 +54,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 /**
  * Mocks IPathResolver - focus on resolveModContentPath
+ *
  * @param overrides
  */
 const createMockPathResolver = (overrides = {}) => ({
@@ -158,6 +160,7 @@ const createMockDataRegistry = () => ({
 
 /**
  * Mocks ILogger - focus on error
+ *
  * @param overrides
  */
 const createMockLogger = (overrides = {}) => ({

@@ -12,6 +12,7 @@ class SpatialIndexManager {
      * The core spatial index.
      * Maps locationId (string) to a Set of entityIds (string) present in that location.
      * Location IDs are always non-null, non-empty strings.
+     *
      * @type {Map<string, Set<string>>}
      */
     this.locationIndex = new Map();
@@ -22,6 +23,7 @@ class SpatialIndexManager {
    * Adds an entity to the index for a specific location.
    * If the location doesn't exist in the index, it's created.
    * **Ignores calls if locationId is null, undefined, or not a non-empty string.**
+   *
    * @param {string} entityId - The ID of the entity to add.
    * @param {string | null | undefined} locationId - The location ID where the entity is present. Should be a valid string to be indexed.
    */
@@ -54,6 +56,7 @@ class SpatialIndexManager {
    * Removes an entity from the index for a specific location.
    * If the location's set becomes empty after removal, the location entry is removed from the index.
    * **Handles potentially null/undefined locationId gracefully by doing nothing.**
+   *
    * @param {string} entityId - The ID of the entity to remove.
    * @param {string | null | undefined} locationId - The location ID from which to remove the entity. Should typically be the entity's last valid location.
    */
@@ -88,6 +91,7 @@ class SpatialIndexManager {
   /**
    * Updates an entity's position in the index, moving it from an old location to a new one.
    * Handles cases where old or new location might be null/undefined.
+   *
    * @param {string} entityId - The ID of the entity being moved.
    * @param {string | null | undefined} oldLocationId - The previous location ID (can be null/undefined).
    * @param {string | null | undefined} newLocationId - The new location ID (can be null/undefined).
@@ -129,6 +133,7 @@ class SpatialIndexManager {
   /**
    * Retrieves all entity IDs present in a specific location.
    * Requires a valid, non-null locationId string.
+   *
    * @param {string} locationId - The location ID to query. Must be a non-empty string.
    * @returns {Set<string>} A *copy* of the Set of entity IDs in the location, or an empty Set if the location is not indexed, empty, or the provided locationId is invalid/null.
    */
@@ -150,6 +155,7 @@ class SpatialIndexManager {
    * position data correctly set. Clears the existing index first.
    * Only entities with a valid, non-null `locationId` string in their
    * position data will be indexed.
+   *
    * @param {object} entityManager - The EntityManager instance holding active entities. Expected to have an `activeEntities` Map or similar iterable.
    */
   buildIndex(entityManager) {

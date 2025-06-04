@@ -1,6 +1,7 @@
 // src/utils/resolvePath.js
 /**
  * Safely walks a dotted path inside a plain object.
+ *
  * @param {object|null|undefined} root  – starting object
  * @param {string} dotPath              – e.g. "components.health.current"
  * @returns {*}                         – the value found, or undefined

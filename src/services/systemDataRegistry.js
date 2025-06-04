@@ -11,6 +11,7 @@
 
 /**
  * Interface for data sources that can be queried by SystemDataRegistry.
+ *
  * @typedef {object} IQueryableDataSource
  * @property {(queryDetails: string | object) => any} handleQuery - Method to process a query.
  * @property {ILogger} [logger] - Optional logger instance within the data source.
@@ -24,6 +25,7 @@
 export class SystemDataRegistry {
   /**
    * The logger instance used by the registry itself.
+   *
    * @private
    * @type {ILogger}
    */
@@ -33,6 +35,7 @@ export class SystemDataRegistry {
    * Internal storage for registered data source instances.
    * The key is a unique string identifier for the source, and the value
    * is the source instance itself, expected to conform to IQueryableDataSource.
+   *
    * @private
    * @type {Map<string, IQueryableDataSource>}
    */
@@ -41,6 +44,7 @@ export class SystemDataRegistry {
   /**
    * Creates an instance of the SystemDataRegistry.
    * Requires a valid logger instance for internal operations.
+   *
    * @param {ILogger} logger - An object conforming to the ILogger interface.
    * @throws {TypeError} If the provided logger is missing or invalid.
    */
@@ -64,6 +68,7 @@ export class SystemDataRegistry {
   /**
    * Registers a data source instance with the registry.
    * The source instance should ideally implement a `handleQuery` method.
+   *
    * @param {string} sourceId - A unique, non-empty string identifier for the data source.
    * @param {IQueryableDataSource} sourceInstance - The actual data source instance. Must not be null or undefined
    * and should have a `handleQuery` method.
@@ -113,6 +118,7 @@ export class SystemDataRegistry {
 
   /**
    * Queries a registered data source for specific information by delegating to its 'handleQuery' method.
+   *
    * @param {string} sourceId - The unique identifier of the data source to query.
    * @param {string | object} queryDetails - Details about the query, passed directly to the source's handler.
    * @returns {any | undefined} The result of the query, or undefined if the source is not found,

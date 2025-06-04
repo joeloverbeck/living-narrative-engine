@@ -57,12 +57,14 @@ class TurnManager extends ITurnManager {
   /**
    * Tracks if at least one turn completed successfully within the current round.
    * Reset to false when a new round starts.
+   *
    * @type {boolean}
    */
   #roundHadSuccessfulTurn = false;
   /**
    * Tracks if a round is currently considered in progress (i.e., after startNewRound was called successfully).
    * Reset to false when stopped or before starting the very first round.
+   *
    * @type {boolean}
    */
   #roundInProgress = false;
@@ -71,6 +73,7 @@ class TurnManager extends ITurnManager {
 
   /**
    * Creates an instance of TurnManager.
+   *
    * @param {object} options - The dependencies for the TurnManager.
    * @param {ITurnOrderService} options.turnOrderService - Service for managing turn order within a round.
    * @param {EntityManager} options.entityManager - Service for managing entities.
@@ -157,6 +160,7 @@ class TurnManager extends ITurnManager {
 
   /**
    * Starts the turn management process. Subscribes to turn end events.
+   *
    * @async
    * @returns {Promise<void>} A promise that resolves when the manager has successfully started and the first turn advance is initiated.
    */
@@ -178,6 +182,7 @@ class TurnManager extends ITurnManager {
 
   /**
    * Stops the turn management process. Unsubscribes from turn end events.
+   *
    * @async
    * @returns {Promise<void>} A promise that resolves when the manager has successfully stopped.
    */
@@ -226,6 +231,7 @@ class TurnManager extends ITurnManager {
 
   /**
    * Retrieves the entity instance whose turn it is currently.
+   *
    * @returns {Entity | null} The entity currently taking its turn, or `null`.
    */
   getCurrentActor() {
@@ -234,6 +240,7 @@ class TurnManager extends ITurnManager {
 
   /**
    * Retrieves the turn handler instance that is currently managing the active turn.
+   *
    * @returns {ITurnHandler | null} The currently active turn handler, or `null`.
    */
   getActiveTurnHandler() {
@@ -246,6 +253,7 @@ class TurnManager extends ITurnManager {
    * `core:turn_ended` event before proceeding.
    * Handles system-level errors by dispatching 'core:system_error_occurred'.
    * **Includes logic to stop if a round completes with no successful turns.**
+   *
    * @async
    * @private
    * @returns {Promise<void>} A promise that resolves when the next turn has been *initiated*.
@@ -455,6 +463,7 @@ class TurnManager extends ITurnManager {
 
   /**
    * Subscribes to the event indicating a turn has ended.
+   *
    * @private
    */
   #subscribeToTurnEnd() {
@@ -526,6 +535,7 @@ class TurnManager extends ITurnManager {
 
   /**
    * Unsubscribes from the turn ended event.
+   *
    * @private
    */
   #unsubscribeFromTurnEnd() {
@@ -552,6 +562,7 @@ class TurnManager extends ITurnManager {
    * Handles the received TURN_ENDED_ID event.
    * Checks if it matches the current actor, **updates the round success flag**,
    * and advances the turn if appropriate.
+   *
    * @param {{ type?: typeof TURN_ENDED_ID, payload: SystemEventPayloads[typeof TURN_ENDED_ID] }} event - The full event object or a simulated payload.
    * @private
    */
@@ -651,6 +662,7 @@ class TurnManager extends ITurnManager {
 
   /**
    * Helper to dispatch system errors. Extracts message from Error objects.
+   *
    * @param {string} message - User-friendly message.
    * @param {string | Error} detailsOrError - Technical details string or an Error object.
    * @returns {Promise<void>}

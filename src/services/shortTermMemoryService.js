@@ -17,6 +17,7 @@ export default class ShortTermMemoryService {
 
   /**
    * Add a thought if it isn’t already present.
+   *
    * @param {object}  mem
    * @param {Array<{text:string,timestamp:string}>} mem.thoughts
    * @param {number} mem.maxEntries

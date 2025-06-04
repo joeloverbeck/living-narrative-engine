@@ -20,6 +20,7 @@ import { ITurnOrderQueue } from '../../interfaces/ITurnOrderQueue.js';
 export class SimpleRoundRobinQueue extends ITurnOrderQueue {
   /**
    * The internal array holding the entities in the queue.
+   *
    * @private
    * @type {Array<Entity>}
    */
@@ -35,6 +36,7 @@ export class SimpleRoundRobinQueue extends ITurnOrderQueue {
 
   /**
    * Adds an entity to the end of the queue (FIFO). The priority parameter is ignored.
+   *
    * @override
    * @param {Entity} entity - The entity object to add. Must not be null and should have an 'id' property.
    * @param {number} [priority] - Ignored in this implementation.
@@ -53,6 +55,7 @@ export class SimpleRoundRobinQueue extends ITurnOrderQueue {
 
   /**
    * Removes a specific entity from the queue by its ID.
+   *
    * @override
    * @param {string} entityId - The unique ID of the entity to remove.
    * @returns {Entity | null} The removed entity object, or null if no entity with the given ID was found.
@@ -69,6 +72,7 @@ export class SimpleRoundRobinQueue extends ITurnOrderQueue {
 
   /**
    * Retrieves and removes the entity at the front of the queue (FIFO).
+   *
    * @override
    * @returns {Entity | null} The next entity object, or null if the queue is empty.
    */
@@ -83,6 +87,7 @@ export class SimpleRoundRobinQueue extends ITurnOrderQueue {
 
   /**
    * Returns the entity at the front of the queue without removing it (FIFO).
+   *
    * @override
    * @returns {Entity | null} The next entity object, or null if the queue is empty.
    */
@@ -95,6 +100,7 @@ export class SimpleRoundRobinQueue extends ITurnOrderQueue {
 
   /**
    * Checks if the queue currently contains no entities.
+   *
    * @override
    * @returns {boolean} True if the queue is empty, false otherwise.
    */
@@ -104,6 +110,7 @@ export class SimpleRoundRobinQueue extends ITurnOrderQueue {
 
   /**
    * Removes all entities from the queue.
+   *
    * @override
    * @returns {void}
    */
@@ -113,6 +120,7 @@ export class SimpleRoundRobinQueue extends ITurnOrderQueue {
 
   /**
    * Returns the current number of entities in the queue.
+   *
    * @override
    * @returns {number} The number of entities.
    */
@@ -123,6 +131,7 @@ export class SimpleRoundRobinQueue extends ITurnOrderQueue {
   /**
    * Returns a shallow copy of the array containing all entities currently in the queue,
    * preserving the current FIFO order.
+   *
    * @override
    * @returns {Array<Entity>} An array of the entities in the queue. Returns an empty array `[]` if the queue is empty.
    */

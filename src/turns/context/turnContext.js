@@ -101,6 +101,7 @@ export class TurnContext extends ITurnContext {
   /**
    * The action chosen by the actor for the current turn.
    * Initialized to null and set via `setChosenAction`.
+   *
    * @private
    * @type {ITurnAction | null}
    */
@@ -115,6 +116,7 @@ export class TurnContext extends ITurnContext {
 
   /**
    * Creates an instance of TurnContext.
+   *
    * @param {object} params
    * @param {Entity} params.actor - The current actor whose turn is being processed.
    * @param {ILogger} params.logger - The logger instance for turn-specific logging.
@@ -338,6 +340,7 @@ export class TurnContext extends ITurnContext {
   /**
    * Creates a new TurnContext instance for a different actor, sharing the same logger,
    * services, strategy, and lifecycle callbacks as the original context.
+   *
    * @param {Entity} newActor - The new actor for whom to create the context.
    * @returns {TurnContext} A new TurnContext instance.
    * @deprecated This method might lead to state inconsistencies if services, strategy or callbacks are actor-specific.

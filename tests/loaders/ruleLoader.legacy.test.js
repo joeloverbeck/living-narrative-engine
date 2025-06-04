@@ -26,6 +26,7 @@ import RuleLoader from '../../src/loaders/ruleLoader.js'; // Adjust path as nece
 
 /**
  * Creates a mock IConfiguration service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {IConfiguration} Mocked configuration service.
  */
@@ -56,6 +57,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 /**
  * Creates a mock IPathResolver service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {IPathResolver} Mocked path resolver service.
  */
@@ -82,6 +84,7 @@ const createMockPathResolver = (overrides = {}) => ({
 /**
  * Creates a mock IDataFetcher service.
  * Allows specific path responses and error paths.
+ *
  * @param {object} [pathToResponse] - Map of path strings to successful response data (will be deep cloned).
  * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
  * @returns {IDataFetcher & { mockSuccess: Function, mockFailure: Function, _getPaths: Function }} Mocked data fetcher service.
@@ -144,6 +147,7 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => {
 
 /**
  * Creates a mock ISchemaValidator service with helpers for configuration.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {ISchemaValidator & {_setSchemaLoaded: Function, mockValidatorFunction: Function, resetValidatorFunction: Function}} Mocked schema validator service with test helpers.
  */
@@ -236,6 +240,7 @@ const createMockSchemaValidator = (overrides = {}) => {
 
 /**
  * Creates a mock IDataRegistry service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {IDataRegistry & { _getRawStore: Function }} Mocked data registry service.
  */
@@ -314,6 +319,7 @@ const createMockDataRegistry = (overrides = {}) => {
 
 /**
  * Creates a mock ILogger service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {ILogger} Mocked logger service.
  */

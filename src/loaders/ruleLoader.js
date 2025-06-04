@@ -19,6 +19,7 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
  * for discovering rule files (`content.rules`). It performs primary validation via the
  * base class and implements the rule-specific ID generation and storage logic in
  * the `_processFetchedItem` method.
+ *
  * @augments BaseManifestItemLoader
  */
 class RuleLoader extends BaseManifestItemLoader {
@@ -31,6 +32,7 @@ class RuleLoader extends BaseManifestItemLoader {
   /**
    * Constructs a RuleLoader instance.
    * Calls the parent constructor, specifying the content type 'rules' and passing dependencies.
+   *
    * @param {IConfiguration} config - Configuration service instance.
    * @param {IPathResolver} pathResolver - Path resolution service instance.
    * @param {IDataFetcher} fetcher - Data fetching service instance.
@@ -78,6 +80,7 @@ class RuleLoader extends BaseManifestItemLoader {
    * 1.  **Rule ID Determination:** Extracts the rule ID from `data.rule_id` or derives it from the filename. This is the **un-prefixed** `baseRuleId`.
    * 2.  **Storage:** Delegates storage to `_storeItemInRegistry` using the `baseRuleId`.
    * 3.  **Return Value:** Returns an object containing the **fully qualified, prefixed** rule ID (`modId:baseRuleId`) and whether an overwrite occurred during storage.
+   *
    * @override
    * @protected
    * @async
@@ -181,6 +184,7 @@ class RuleLoader extends BaseManifestItemLoader {
    * NOTE: This method returns only the total count, not the detailed LoadItemsResult object,
    * as its original purpose seemed to be just summing counts. The detailed results per mod
    * are handled by WorldLoader using the updated loadItemsForMod return value.
+   *
    * @param {Array<{modId: string, manifest: ModManifest}>} modsToLoad - An ordered list of mod objects.
    * @returns {Promise<number>} A promise resolving with the total number of rules loaded.
    * @async

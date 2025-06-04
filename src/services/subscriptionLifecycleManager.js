@@ -28,6 +28,7 @@ class SubscriptionLifecycleManager {
 
   /**
    * Manages the lifecycle of subscriptions for command input and turn ended events.
+   *
    * @param {object} dependencies - The dependencies for the manager.
    * @param {ILogger} dependencies.logger - The logger service.
    * @param {ICommandInputPort} dependencies.commandInputPort - The command input port.
@@ -72,6 +73,7 @@ class SubscriptionLifecycleManager {
 
   /**
    * Subscribes to command input. If already subscribed, it unsubscribes first and then re-subscribes.
+   *
    * @param {function(string): void} commandHandler - The function to call when a command is submitted.
    * @returns {UnsubscribeFn | undefined} The unsubscribe function if successful, otherwise undefined.
    */
@@ -167,6 +169,7 @@ class SubscriptionLifecycleManager {
 
   /**
    * Subscribes to the TURN_ENDED_ID event. If already subscribed, it unsubscribes first and then re-subscribes.
+   *
    * @param {function(any): void} turnEndedListener - The function to call when the TURN_ENDED_ID event is dispatched.
    * @returns {UnsubscribeFn | undefined} The unsubscribe function if successful, otherwise undefined.
    */

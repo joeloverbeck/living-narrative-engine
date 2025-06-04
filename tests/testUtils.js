@@ -32,6 +32,7 @@ export function createMockPrerequisiteEvaluationService() {
 // --- Mock Logger ---
 /**
  * Creates a mock logger object with Jest mock functions for standard levels.
+ *
  * @returns {{info: jest.Mock, warn: jest.Mock, error: jest.Mock, debug: jest.Mock}}
  */
 export function createMockLogger() {

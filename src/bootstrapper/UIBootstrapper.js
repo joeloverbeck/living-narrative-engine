@@ -15,6 +15,7 @@ export class UIBootstrapper {
   /**
    * Queries for essential UI elements required for the application to start.
    * It uses DocumentContext for DOM querying.
+   *
    * @param {Document} doc - The global document object.
    * @returns {EssentialUIElements} An object containing references to the found elements and the document.
    * @throws {Error} If any critical elements are missing, with a message listing them.

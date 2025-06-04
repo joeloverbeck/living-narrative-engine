@@ -28,23 +28,14 @@ import { createJsonLogicContext } from './contextAssembler.js';
  * Manages a shared execution context for all rules triggered by a single event.
  */
 class SystemLogicInterpreter {
-     * @private
   #logger;
-     * @private
   #eventBus;
-     * @private
   #dataRegistry;
-     * @private
   #jsonLogicEvaluationService;
-     * @private
   #entityManager;
-     * @private
   #operationInterpreter;
-     * @private
   #ruleCache = new Map();
-     * @private
   #initialized = false;
-     * @private // To store the bound handler for removal
   #boundEventHandler = null;
 
   constructor({

@@ -7,6 +7,7 @@ import { SystemDataRegistry } from '../../src/services/systemDataRegistry.js'; /
 
 /**
  * Creates a mock ILogger object.
+ *
  * @returns {import('../../src/interfaces/coreServices.js').ILogger}
  */
 const createMockLogger = () => ({

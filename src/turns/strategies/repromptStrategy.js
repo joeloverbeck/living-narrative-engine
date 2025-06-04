@@ -20,6 +20,7 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
   /**
    * Executes the re-prompt strategy.
    * The actor is obtained from `turnContext.getActor()`.
+   *
    * @override
    * @async
    * @param {ITurnContext} turnContext - The context for the current turn.

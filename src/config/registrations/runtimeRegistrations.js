@@ -24,6 +24,7 @@ import InputSetupService from '../../setup/inputSetupService.js';
 /**
  * Registers runtime services like TurnManager and input setup.
  * NOTE: GameLoop registration has been removed from this file.
+ *
  * @export
  * @param {AppContainer} container - The application's DI container.
  */

@@ -34,6 +34,7 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
 
   /**
    * Creates an instance of TurnHandlerResolver.
+   *
    * @param {object} dependencies - The dependencies required by the resolver.
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {PlayerTurnHandlerFactory} dependencies.createPlayerTurnHandler - A factory function that returns a new PlayerTurnHandler.
@@ -81,6 +82,7 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
   /**
    * Resolves the correct turn handler implementation for the given actor entity
    * by creating a new instance using the appropriate factory.
+   *
    * @param {Entity} actor - The entity whose turn handler needs to be resolved.
    * @returns {Promise<ITurnHandler | null>} A promise that resolves with a new
    * ITurnHandler instance for the actor, or null if no specific handler is found or the actor is invalid.

@@ -20,6 +20,7 @@
 export class SystemServiceRegistry {
   /**
    * The logger instance used by the registry itself.
+   *
    * @private
    * @type {ILogger}
    */
@@ -29,6 +30,7 @@ export class SystemServiceRegistry {
    * Internal storage for registered service instances.
    * The key is a unique string identifier for the service, and the value
    * is the service instance itself.
+   *
    * @private
    * @type {Map<string, any>}
    */
@@ -38,6 +40,7 @@ export class SystemServiceRegistry {
    * Creates an instance of the SystemServiceRegistry.
    * Requires a valid logger instance for internal logging and potential
    * logging by registered services.
+   *
    * @param {ILogger} logger - An object conforming to the ILogger interface.
    * @throws {TypeError} If the provided logger is missing or invalid (does not have info, warn, error, debug methods).
    */
@@ -65,6 +68,7 @@ export class SystemServiceRegistry {
 
   /**
    * Registers a service instance with the registry under a unique ID.
+   *
    * @param {string} serviceId - A unique, non-empty string identifier for the service.
    * @param {any} serviceInstance - The actual service instance to register. Must not be null or undefined.
    * @returns {void}
@@ -107,6 +111,7 @@ export class SystemServiceRegistry {
 
   /**
    * Retrieves a registered service instance by its ID.
+   *
    * @template T The expected type of the service instance.
    * @param {string} serviceId - The unique, non-empty string identifier for the service.
    * @returns {T | undefined} The registered service instance if found, otherwise undefined.
@@ -146,6 +151,7 @@ export class SystemServiceRegistry {
 
   /**
    * Checks if a service with the specified ID has been registered.
+   *
    * @param {string} serviceId - The unique, non-empty string identifier for the service.
    * @returns {boolean} True if a service with the given ID is registered, false otherwise.
    */

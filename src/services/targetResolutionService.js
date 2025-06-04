@@ -308,6 +308,7 @@ class TargetResolutionService extends ITargetResolutionService {
 
   /**
    * Resolves the target for a given action based on the action definition and context.
+   *
    * @param {ActionDefinition} actionDefinition - The definition of the action being performed.
    * @param {ActionContext} actionContext - The context in which the action is being performed.
    * @returns {Promise<TargetResolutionResult>} A promise that resolves to the target resolution result.

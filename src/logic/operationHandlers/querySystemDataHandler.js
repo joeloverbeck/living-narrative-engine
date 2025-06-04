@@ -18,6 +18,7 @@
 
 /**
  * Parameters expected by the QuerySystemDataHandler#execute method.
+ *
  * @typedef {object} QuerySystemDataParams
  * @property {string} source_id - Required. The unique identifier of the data source.
  * @property {string | object} query_details - Required. Details about the query.

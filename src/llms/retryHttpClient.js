@@ -72,6 +72,7 @@ export class HttpClientError extends Error {
 
   /**
    * Creates an instance of HttpClientError.
+   *
    * @param {string} message - The primary error message.
    * @param {object} details - Additional details about the error.
    * @param {string} details.url - The URL of the request that failed.
@@ -133,6 +134,7 @@ export class RetryHttpClient extends IHttpClient {
 
   /**
    * Creates an instance of RetryHttpClient.
+   *
    * @param {object} params - The parameters for the RetryHttpClient.
    * @param {ILogger} params.logger - An instance conforming to ILogger for logging.
    * @param {number} [params.defaultMaxRetries] - Optional. Max retry attempts.
@@ -257,6 +259,7 @@ export class RetryHttpClient extends IHttpClient {
   /**
    * Asynchronously makes an HTTP request to the specified URL with the given options,
    * applying retry logic for transient errors.
+   *
    * @async
    * @param {string} url - The absolute URL to which the request will be made.
    * @param {HttpClientRequestOptions} options - An object containing the request details.

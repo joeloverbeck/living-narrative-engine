@@ -32,6 +32,7 @@ import {
 /**
  * Renders player-facing messages (info, echo, fatal, etc.) and wires
  * itself to the VED so tests can invoke the same code paths.
+ *
  * @augments BoundDomRendererBase
  */
 export class UiMessageRenderer extends BoundDomRendererBase {
@@ -202,6 +203,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
 
   /**
    * Push a message into the list.
+   *
    * @param {string}       text
    * @param {MessageType}  [type]
    * @param {boolean}      [allowHtml]
@@ -253,6 +255,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
 
   /**
    * Handles the 'textUI:display_message' event.
+   *
    * @param {IEvent<DisplayMessagePayload>} eventObject The full event object delivered by the event bus.
    */
   #onShow(eventObject) {
@@ -275,6 +278,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
 
   /**
    * Handles the 'core:system_error_occurred' event.
+   *
    * @param {IEvent<any>} eventObject The full event object.
    */
   #onShowFatal(eventObject) {
@@ -295,6 +299,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
 
   /**
    * Handles 'core:action_failed' for command echo.
+   *
    * @param {IEvent<any>} eventObject The full event object.
    */
   #onCommandEcho(eventObject) {

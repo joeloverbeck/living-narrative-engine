@@ -20,19 +20,15 @@
  * It focuses solely on processing the schemas listed in the configuration's `schemaFiles`.
  */
 class SchemaLoader {
-     * @private
   #config;
-     * @private
   #resolver;
-     * @private
   #fetcher;
-     * @private
   #validator;
-     * @private
   #logger;
 
   /**
    * Constructs a SchemaLoader instance.
+   *
    * @param {IConfiguration} configuration - Service to provide configuration values (schema paths, filenames).
    * @param {IPathResolver} pathResolver - Service to resolve abstract paths to fetchable paths.
    * @param {IDataFetcher} fetcher - Service to fetch raw schema data.
@@ -93,6 +89,7 @@ class SchemaLoader {
   /**
    * Loads and adds a single schema file to the validator if it's not already loaded.
    * Handles path resolution, data fetching, $id extraction/validation, and error logging.
+   *
    * @private
    * @param {string} filename - The name of the schema file to process (e.g., 'common.schema.json').
    * @returns {Promise<boolean>} Resolves with `true` if the schema was newly added to the validator,
@@ -144,6 +141,7 @@ class SchemaLoader {
    * Loads and compiles all JSON schemas listed in the configuration's `schemaFiles`
    * using the injected services (PathResolver, DataFetcher, SchemaValidator).
    * It delegates the processing of each file to the #loadAndAddSingleSchema helper method.
+   *
    * @returns {Promise<void>} Resolves when all configured schemas are successfully processed
    * (either loaded and added or skipped if already present), rejects if a critical error
    * occurs during fetching or adding any schema listed in the configuration.

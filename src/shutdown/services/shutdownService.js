@@ -12,12 +12,14 @@
 /**
  * Conceptual interface for the Shutdown Service.
  * Defines the contract for orchestrating the orderly shutdown of the game engine.
+ *
  * @interface IShutdownService
  */
 /**
  * Runs the complete asynchronous sequence required to shut down the game engine.
  * This typically includes stopping turn processing via TurnManager, cleaning up resources,
  * calling shutdown methods on relevant systems, and potentially disposing container singletons.
+ *
  * @function
  * @name IShutdownService#runShutdownSequence
  * @returns {Promise<void>} A promise that resolves when the shutdown sequence is complete.
@@ -31,14 +33,12 @@ import { tokens } from '../../config/tokens.js'; // <<< ADDED for resolving Turn
 /**
  * Service responsible for orchestrating the orderly shutdown of the game engine and its components.
  * It coordinates stopping turn processing, cleaning up systems, and releasing resources.
+ *
  * @implements {IShutdownService} // Conceptually implements the defined interface
  */
 class ShutdownService {
-     * @private
   #container;
-     * @private
   #logger;
-     * @private
   #validatedEventDispatcher;
   // REMOVED: GameLoop dependency
   // /** @private @type {GameLoop | null} */
@@ -46,6 +46,7 @@ class ShutdownService {
 
   /**
    * Creates a new ShutdownService instance.
+   *
    * @param {object} dependencies - The required service dependencies.
    * @param {AppContainer} dependencies.container - The application's dependency container.
    * @param {ILogger} dependencies.logger - The logging service.
@@ -107,6 +108,7 @@ class ShutdownService {
   /**
    * Runs the core part of the shutdown sequence: stopping turn processing via TurnManager,
    * shutting down tagged systems, disposing singletons, and logging. Dispatches shutdown events.
+   *
    * @returns {Promise<void>} A promise that resolves when this part of the sequence is complete.
    */
   async runShutdownSequence() {

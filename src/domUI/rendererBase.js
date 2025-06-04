@@ -27,11 +27,8 @@
  * `_addDomListener` to register their event handlers for automated cleanup.
  */
 export class RendererBase {
-     * @protected
   logger;
-     * @protected
   documentContext;
-     * @protected
   validatedEventDispatcher;
   /**
    * @protected
@@ -58,6 +55,7 @@ export class RendererBase {
    * Initializes the base renderer with required dependencies.
    * Throws errors if any dependency is missing.
    * Logs initialization upon successful setup.
+   *
    * @param {object} deps - The dependencies object.
    * @param {ILogger} deps.logger - The logger instance. Must not be null or undefined.
    * @param {IDocumentContext} deps.documentContext - The document context abstraction. Must not be null or undefined.
@@ -109,6 +107,7 @@ export class RendererBase {
 
   /**
    * Adds a VED subscription's unsubscribe function to the managed list for automatic cleanup.
+   *
    * @protected
    * @param {(() => void) | IEventSubscription | undefined} unsubscribeFn - The function returned by `validatedEventDispatcher.subscribe()` or an object with an unsubscribe method.
    */
@@ -132,6 +131,7 @@ export class RendererBase {
   /**
    * Adds a DOM event listener and stores its details for automatic removal on dispose.
    * The component should provide a pre-bound handler if its `this` context is needed.
+   *
    * @protected
    * @param {EventTarget} element - The DOM element to attach the listener to.
    * @param {string} eventType - The event type string (e.g., 'click').
@@ -228,6 +228,7 @@ export class RendererBase {
 
 /**
  * Helper function to get a string path for a DOM element, for logging purposes.
+ *
  * @param {EventTarget} el
  * @returns {string}
  */

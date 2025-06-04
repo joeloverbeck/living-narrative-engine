@@ -24,6 +24,7 @@ import { InitiativePriorityQueue } from './queues/initiativePriorityQueue.js'; /
 export class TurnOrderService extends ITurnOrderService {
   /**
    * The currently active turn order queue instance. Null if no round is active.
+   *
    * @private
    * @type {ITurnOrderQueue | null}
    */
@@ -31,6 +32,7 @@ export class TurnOrderService extends ITurnOrderService {
 
   /**
    * The strategy being used for the current round. Null if no round is active.
+   *
    * @private
    * @type {TurnOrderStrategy | null}
    */
@@ -38,6 +40,7 @@ export class TurnOrderService extends ITurnOrderService {
 
   /**
    * The logger service instance.
+   *
    * @private
    * @type {ILogger}
    */
@@ -47,6 +50,7 @@ export class TurnOrderService extends ITurnOrderService {
 
   /**
    * Creates an instance of TurnOrderService.
+   *
    * @param {object} dependencies - The dependencies for the service.
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @throws {Error} If required dependencies are missing or invalid.
@@ -79,6 +83,7 @@ export class TurnOrderService extends ITurnOrderService {
   /**
    * Checks if the turn order queue for the current round is empty.
    * Returns true if no round is active.
+   *
    * @override
    * @returns {boolean} True if the turn order is complete or empty, false otherwise.
    */
@@ -89,6 +94,7 @@ export class TurnOrderService extends ITurnOrderService {
   /**
    * Returns the next entity in the turn order without advancing the turn.
    * Returns null if no round is active or the queue is empty.
+   *
    * @override
    * @returns {Entity | null} The entity whose turn is next, or null.
    */
@@ -100,6 +106,7 @@ export class TurnOrderService extends ITurnOrderService {
    * Gets a read-only list of entities currently remaining in the turn order for this round.
    * The order reflects the *remaining* turn sequence as determined by the underlying queue.
    * Returns an empty frozen array if no round is active.
+   *
    * @override
    * @returns {ReadonlyArray<Entity>} A read-only array of entities remaining.
    */
@@ -112,6 +119,7 @@ export class TurnOrderService extends ITurnOrderService {
 
   /**
    * Clears the current round's state, including the queue and strategy.
+   *
    * @protected
    * @returns {void}
    */
@@ -129,6 +137,7 @@ export class TurnOrderService extends ITurnOrderService {
 
   /**
    * Initializes and starts a new round of turns. Clears any previous round's state.
+   *
    * @override
    * @param {Array<Entity>} entities - An array of entity objects participating in this round. Must not be empty or contain invalid entities.
    * @param {TurnOrderStrategy} strategy - The strategy to use ('round-robin' or 'initiative').
@@ -237,6 +246,7 @@ export class TurnOrderService extends ITurnOrderService {
   /**
    * Gets the next entity whose turn it is and advances the turn order.
    * Delegates to the underlying queue's getNext method.
+   *
    * @override
    * @returns {Entity | null} The entity whose turn is next, or null if the queue is empty or no round is active.
    */
@@ -263,6 +273,7 @@ export class TurnOrderService extends ITurnOrderService {
   /**
    * Adds an entity to the current round's turn order dynamically.
    * Delegates to the underlying queue's add method.
+   *
    * @override
    * @param {Entity} entity - The entity to add. Must be a valid entity object.
    * @param {number} [initiativeValue] - The initiative score for the entity. Required and used only if the current strategy is 'initiative'. Defaults to 0 if not provided or invalid in initiative mode. Ignored for 'round-robin'.
@@ -325,6 +336,7 @@ export class TurnOrderService extends ITurnOrderService {
   /**
    * Removes an entity from the current round's turn order.
    * Delegates to the underlying queue's remove method.
+   *
    * @override
    * @param {string} entityId - The unique ID of the entity to remove.
    * @returns {void} // Interface specifies void, even though queue might return the entity

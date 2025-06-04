@@ -1,14 +1,12 @@
- 
 import ShortTermMemoryService from './shortTermMemoryService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
-
- 
 
 /**
  * Persist the “thoughts” produced during an LLM turn into the actor’s
  * short-term-memory component.
  *
  * Works with a full Entity instance *or* a plain-object pseudo-entity.
+ *
  * @param {object} action       – The structured action returned by the LLM.
  * @param {object} actorEntity  – Entity instance (or test double) that generated the action.
  * @param {object} logger       – Application-wide logger (expects .warn()).

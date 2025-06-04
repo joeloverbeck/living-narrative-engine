@@ -6,10 +6,10 @@
  * Provides static configuration values for the application.
  * Implements the IConfiguration interface.
  * In a real application, this might load from a file or environment variables.
+ *
  * @implements {IConfiguration}
  */
 class StaticConfiguration {
-     * @private
   #baseDataPath = './data'; // Base path relative to execution
 
   /* ─────────────────────────────── BASE PATHS ────────────────────────────── */
@@ -62,6 +62,7 @@ class StaticConfiguration {
 
   /**
    * Enumerates every JSON-Schema file that must be pre-compiled.
+   *
    * @returns {string[]}
    */
   getSchemaFiles() {
@@ -83,6 +84,7 @@ class StaticConfiguration {
 
   /**
    * Maps logical content-type names to their canonical $id values.
+   *
    * @param   {string} typeName
    * @returns {string|undefined}
    */

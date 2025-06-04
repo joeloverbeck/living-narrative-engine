@@ -25,6 +25,7 @@ class ReferenceResolver {
    * Creates an instance of ReferenceResolver.
    * This service is responsible for resolving definition IDs to instance IDs
    * within component data based on defined resolution strategies.
+   *
    * @param {object} dependencies - The dependencies for this service.
    * @param {EntityManager} dependencies.entityManager - The entity manager service, used to find entity instances by definition IDs.
    * @param {ILogger} dependencies.logger - The logging service, for diagnostic messages.
@@ -45,6 +46,7 @@ class ReferenceResolver {
   /**
    * Resolves definition IDs in component data based on a resolution specification.
    * This is the main public method for this service.
+   *
    * @param {object} componentDataInstance - The data instance of the component.
    * @param {object} spec - The resolution specification from componentDefinition.resolveFields.
    * Expected to have properties like `dataPath`, `dataPathIsSelf`, `resolutionStrategy`.
@@ -145,6 +147,7 @@ class ReferenceResolver {
 
   /**
    * Resolves a direct definition ID to an instance ID.
+   *
    * @param {string} currentValue - The current value, expected to be a definition ID string.
    * @param {string} entityId - ID of the entity being processed (for logging).
    * @param {string} componentTypeId - ID of the component being processed (for logging).
@@ -181,6 +184,7 @@ class ReferenceResolver {
 
   /**
    * Resolves an array of definition IDs to an array of instance IDs.
+   *
    * @param {string[]} currentValue - The array of definition IDs.
    * @param {string} entityId - ID of the entity (for logging).
    * @param {string} componentTypeId - ID of the component (for logging).
@@ -236,6 +240,7 @@ class ReferenceResolver {
 
   /**
    * Resolves definition IDs within a specified field of objects in an array.
+   *
    * @param {object[]} currentValue - The array of objects.
    * @param {object} spec - The resolution specification, containing `resolutionStrategy.idField`.
    * @param {string} entityId - ID of the entity (for logging).

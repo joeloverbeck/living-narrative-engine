@@ -3,6 +3,7 @@
 /**
  * This type is imported from ResolutionStatus.js and represents the status of a target resolution.
  * Make sure ResolutionStatus.js is in the same directory or adjust the path in the import.
+ *
  * @typedef {import('./ResolutionStatus').ResolutionStatus} ResolutionStatus
  */
 

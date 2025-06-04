@@ -14,6 +14,7 @@
 
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.
+ *
  * @typedef {object} RemoveComponentOperationParams
  * @property {'actor'|'target'|string|EntityRefObject} entity_ref     - Required. Reference to the entity to remove the component from.
  * @property {string}  component_type - Required. The namespaced type ID of the component to remove.
@@ -28,6 +29,7 @@ class RemoveComponentHandler {
 
   /**
    * Creates an instance of RemoveComponentHandler.
+   *
    * @param {object} dependencies - Dependencies object.
    * @param {EntityManager} dependencies.entityManager - The entity management service.
    * @param {ILogger} dependencies.logger - The logging service instance.
@@ -58,6 +60,7 @@ class RemoveComponentHandler {
   /**
    * Resolves entity_ref -> entityId or null.
    * (Copied directly from ModifyComponentHandler/AddComponentHandler as the logic is identical)
+   *
    * @private
    * @param {RemoveComponentOperationParams['entity_ref']} ref - The entity reference from parameters.
    * @param {ExecutionContext} ctx - The execution context.
@@ -86,6 +89,7 @@ class RemoveComponentHandler {
   /**
    * Executes the REMOVE_COMPONENT operation.
    * Removes a component instance from the specified entity.
+   *
    * @param {RemoveComponentOperationParams | null | undefined} params - The parameters for the operation.
    * @param {ExecutionContext} executionContext - The execution context.
    * @returns {void}

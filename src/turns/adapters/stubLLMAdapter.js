@@ -19,6 +19,7 @@ import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
 export class StubLLMAdapter extends ILLMAdapter {
   /**
    * Creates an instance of StubLLMAdapter.
+   *
    * @param {object} [dependencies] - Optional dependencies.
    * @param {object} [dependencies.logger] - Optional logger instance.
    */
@@ -32,6 +33,7 @@ export class StubLLMAdapter extends ILLMAdapter {
    * Generates a stubbed "core:wait" action.
    * The gameSummary parameter is ignored in this stub.
    * The output format matches the LLM_TURN_ACTION_SCHEMA.
+   *
    * @async
    * @param {string} gameSummary - A string providing a summarized representation of the game state. (Ignored)
    * @returns {Promise<string>} A Promise that resolves to a JSON string representing

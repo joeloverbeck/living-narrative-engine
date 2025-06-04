@@ -22,6 +22,7 @@ import InMemoryDataRegistry from '../../src/services/inMemoryDataRegistry.js'; /
 
 /**
  * Creates a mock IConfiguration service.
+ *
  * @param overrides
  */
 const createMockConfiguration = (overrides = {}) => ({
@@ -50,6 +51,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 /**
  * Creates a mock IPathResolver service.
+ *
  * @param overrides
  */
 const createMockPathResolver = (overrides = {}) => ({
@@ -115,6 +117,7 @@ const createMockSchemaValidator = () => {
 
 /**
  * Creates a mock ILogger service.
+ *
  * @param overrides
  */
 const createMockLogger = (overrides = {}) => ({

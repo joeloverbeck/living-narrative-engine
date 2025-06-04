@@ -10,11 +10,13 @@ import { RendererBase } from './rendererBase.js';
 /**
  * Manages the content of the main H1 title element by subscribing
  * to relevant application events via the ValidatedEventDispatcher.
+ *
  * @augments RendererBase
  */
 export class TitleRenderer extends RendererBase {
   /**
    * The H1 element whose text content will be managed.
+   *
    * @private
    * @type {HTMLHeadingElement}
    */
@@ -22,6 +24,7 @@ export class TitleRenderer extends RendererBase {
 
   /**
    * Creates an instance of TitleRenderer.
+   *
    * @param {object} deps - Dependencies object.
    * @param {ILogger} deps.logger - The logger instance.
    * @param {IDocumentContext} deps.documentContext - The document context.
@@ -59,6 +62,7 @@ export class TitleRenderer extends RendererBase {
 
   /**
    * Subscribes to VED events relevant for updating the title.
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -164,6 +168,7 @@ export class TitleRenderer extends RendererBase {
 
   /**
    * Handles setting the main title directly via 'textUI:set_title'.
+   *
    * @private
    * @param {object} payload - Expected payload for 'textUI:set_title' (e.g., { text: string }).
    * @param {string} eventType - The name of the triggered event.
@@ -181,6 +186,7 @@ export class TitleRenderer extends RendererBase {
 
   /**
    * Handles various 'initialization:<step>:started' events.
+   *
    * @private
    * @param {object} payload - Expected payload (e.g., { worldName?: string, tag?: string }).
    * @param {string} eventType - The name of the triggered event.
@@ -218,6 +224,7 @@ export class TitleRenderer extends RendererBase {
 
   /**
    * Handles 'initialization:initialization_service:completed'.
+   *
    * @private
    */
   #handleInitializationCompleted() {
@@ -226,6 +233,7 @@ export class TitleRenderer extends RendererBase {
 
   /**
    * Handles 'initialization:initialization_service:failed'.
+   *
    * @private
    * @param {object} payload - Expected payload (e.g., { worldName?: string, error?: string, stack?: string }).
    */
@@ -241,6 +249,7 @@ export class TitleRenderer extends RendererBase {
 
   /**
    * Handles various 'initialization:<step>:failed' events.
+   *
    * @private
    * @param {object} payload - Expected payload (e.g., { error?: string, stack?: string }).
    * @param {string} eventType - The name of the triggered event.
@@ -264,6 +273,7 @@ export class TitleRenderer extends RendererBase {
   /**
    * Handles 'core:system_error_occurred' (example).
    * Sets a generic error title.
+   *
    * @private
    * @param {object} payload - Expected payload (e.g., { message: string, error?: Error }).
    */
@@ -280,6 +290,7 @@ export class TitleRenderer extends RendererBase {
   /**
    * Sets the text content of the managed H1 element.
    * This can be called directly or triggered by subscribed events.
+   *
    * @param {string} text - The text to display in the title.
    */
   set(text) {

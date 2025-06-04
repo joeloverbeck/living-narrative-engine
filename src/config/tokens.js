@@ -9,6 +9,7 @@
  * A frozen object containing all unique keys used for registering and resolving
  * services and dependencies within the application's DI container.
  * Using Object.freeze prevents accidental modification.
+ *
  * @typedef {string} DiToken
  * @property {DiToken} ILogger - Token for the core logging service.
  * @property {DiToken} EventBus - Token for the central event bus (legacy).

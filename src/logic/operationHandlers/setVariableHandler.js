@@ -15,6 +15,7 @@ import jsonLogic from 'json-logic-js';
  * Parameters expected by the SetVariableHandler#execute method.
  * Placeholders in `value` are assumed to be pre-resolved by OperationInterpreter.
  * If the pre-resolved `value` is an object, it may be treated as JsonLogic to be evaluated.
+ *
  * @typedef {object} SetVariableOperationParams
  * @property {string} variable_name - Required. The name of the variable to set or update in the executionContext.evaluationContext.context.
  * @property {*} value - Required. The value to assign (pre-resolved). Can be any valid JSON type, resolved type, or a JsonLogic object to be evaluated against executionContext.evaluationContext.
@@ -34,11 +35,11 @@ import jsonLogic from 'json-logic-js';
  * @implements {OperationHandler}
  */
 class SetVariableHandler {
-     * @private
   #logger;
 
   /**
    * Creates an instance of SetVariableHandler.
+   *
    * @param {object} dependencies - Dependencies object.
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @throws {Error} If dependencies are missing or invalid.
@@ -65,6 +66,7 @@ class SetVariableHandler {
    * using `jsonLogic.apply` with `executionContext.evaluationContext` as the data source.
    * Otherwise, uses the value directly.
    * Sets or updates a variable in `executionContext.evaluationContext.context`.
+   *
    * @param {OperationParams | SetVariableOperationParams | null | undefined} params - Parameters with `value` potentially pre-resolved. Requires `variable_name` (string) and `value` (*).
    * @param {OperationExecutionContext} executionContext - The operation execution context. Expects this to be the nested structure
    * (e.g., finalNestedExecutionContext from SystemLogicInterpreter) containing an `evaluationContext`

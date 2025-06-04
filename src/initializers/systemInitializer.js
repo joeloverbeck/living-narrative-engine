@@ -28,6 +28,7 @@ class SystemInitializer {
 
   /**
    * Creates an instance of SystemInitializer.
+   *
    * @param {object} dependencies
    * @param {IServiceResolver} dependencies.resolver - The service resolver.
    * @param {ILogger} dependencies.logger - The logging service instance.
@@ -76,6 +77,7 @@ class SystemInitializer {
 
   /**
    * Resolves systems tagged for initialization.
+   *
    * @private
    * @async
    * @returns {Promise<Array<any>>} An array of resolved systems.
@@ -116,6 +118,7 @@ class SystemInitializer {
    * Attempts to initialize a single provided system object asynchronously.
    * Logs outcome and dispatches 'system:initialized' or 'system:initialization_failed' event.
    * Does not re-throw initialization errors.
+   *
    * @private
    * @async
    * @param {any} system - The system object.
@@ -179,6 +182,7 @@ class SystemInitializer {
    * Initializes all systems found with the configured tag sequentially.
    * Dispatches overall 'initialization:system_initializer:started/completed/failed' events.
    * Individual system initialization errors are logged but do not halt the process.
+   *
    * @async
    * @returns {Promise<void>} Resolves when all systems have been processed.
    * @rejects {Error} If resolving the systems critically fails.

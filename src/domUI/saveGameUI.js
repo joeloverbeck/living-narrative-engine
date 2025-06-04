@@ -50,16 +50,11 @@ const SAVE_GAME_UI_ELEMENTS_CONFIG = {
  * @description Manages the modal dialog for saving the game.
  */
 export class SaveGameUI extends BaseModalRenderer {
-     * @private
   saveLoadService;
-     * @private
   gameEngine = null;
-     * @private
   domElementFactory; // Keep for direct use in _renderSaveSlotItem
 
-     * @private
   selectedSlotData = null;
-     * @private
   currentSlotsDisplayData = [];
 
   // isSavingInProgress is managed by BaseModalRenderer's _setOperationInProgress
@@ -120,6 +115,7 @@ export class SaveGameUI extends BaseModalRenderer {
   /**
    * Initializes event listeners specific to SaveGameUI functionality.
    * Core modal events (close, Esc) are handled by BaseModalRenderer.
+   *
    * @private
    */
   _initModalEventListeners() {
@@ -153,6 +149,7 @@ export class SaveGameUI extends BaseModalRenderer {
 
   /**
    * Initializes the SaveGameUI with the GameEngine instance.
+   *
    * @param {GameEngine} gameEngineInstance - The main game engine instance.
    */
   init(gameEngineInstance) {
@@ -234,6 +231,7 @@ export class SaveGameUI extends BaseModalRenderer {
 
   /**
    * Fetches and processes save slot data from the service.
+   *
    * @private
    * @async
    * @returns {Promise<SlotDisplayData[]>}
@@ -295,6 +293,7 @@ export class SaveGameUI extends BaseModalRenderer {
 
   /**
    * Renders a single save slot item.
+   *
    * @private
    * @param {SlotDisplayData} slotData - The data for the slot.
    * @param {number} itemIndex - The index of the item.
@@ -374,6 +373,7 @@ export class SaveGameUI extends BaseModalRenderer {
 
   /**
    * Gets the message to display when the save slots list is empty.
+   *
    * @private
    * @returns {string | HTMLElement}
    */
@@ -390,6 +390,7 @@ export class SaveGameUI extends BaseModalRenderer {
   /**
    * Populates the save slots list in the UI.
    * Orchestrates fetching data, clearing container, rendering items or empty message.
+   *
    * @private
    * @async
    */
@@ -599,6 +600,7 @@ export class SaveGameUI extends BaseModalRenderer {
 
   /**
    * Handles the save game operation.
+   *
    * @private
    * @async
    */
@@ -762,6 +764,7 @@ export class SaveGameUI extends BaseModalRenderer {
 
   /**
    * Dispose method. Calls super.dispose() for base class cleanup.
+   *
    * @override
    */
   dispose() {

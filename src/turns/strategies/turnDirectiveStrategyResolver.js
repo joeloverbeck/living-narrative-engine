@@ -42,7 +42,6 @@ const STRATEGY_SINGLETONS = new Map();
 function getOrCreate(strategyClass) {
   const key = strategyClass.name;
   if (!STRATEGY_SINGLETONS.has(key)) {
-     
     STRATEGY_SINGLETONS.set(key, new strategyClass());
   }
   return STRATEGY_SINGLETONS.get(key);
@@ -56,6 +55,7 @@ export default class TurnDirectiveStrategyResolver {
    * Returns the appropriate ITurnDirectiveStrategy instance for the supplied directive.
    * If the directive is null / undefined / unknown it falls back to
    * WaitForTurnEndEventStrategy as a safe default.
+   *
    * @param {TurnDirective|string|null|undefined} directive – The directive to resolve.
    * @returns {ITurnDirectiveStrategy} – Concrete strategy ready to execute.
    */
@@ -77,7 +77,7 @@ export default class TurnDirectiveStrategyResolver {
         // Unknown, null, or undefined directive – choose a safe default.
         // Design choice: We treat it as WAIT_FOR_EVENT because that mirrors
         // the legacy behaviour inside PlayerTurnHandler.
-         
+
         /* istanbul ignore next */
         if (process.env.NODE_ENV !== 'production') {
           // Helpful debug log when running tests or dev builds.
@@ -88,7 +88,7 @@ export default class TurnDirectiveStrategyResolver {
             `${this.name}: Unrecognised TurnDirective (\u201c${directive}\u201d). Falling back to WAIT_FOR_EVENT.`
           );
         }
-         
+
         return getOrCreate(WaitForTurnEndEventStrategy);
       }
     }

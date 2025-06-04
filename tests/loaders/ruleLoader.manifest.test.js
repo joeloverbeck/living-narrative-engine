@@ -27,6 +27,7 @@ import RuleLoader from '../../src/loaders/ruleLoader.js'; // Adjust path as nece
 
 /**
  * Creates a mock IConfiguration service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {IConfiguration} Mocked configuration service.
  */
@@ -55,6 +56,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 /**
  * Creates a mock IPathResolver service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {IPathResolver} Mocked path resolver service.
  */
@@ -160,6 +162,7 @@ const createMockDataRegistry = () => ({
 
 /**
  * Creates a mock ILogger service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {ILogger} Mocked logger service.
  */

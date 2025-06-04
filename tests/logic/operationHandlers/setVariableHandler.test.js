@@ -38,6 +38,7 @@ const createMockLogger = () => ({
 
 /**
  * Builds a mock OperationExecutionContext.
+ *
  * @param {ILogger} loggerInstance - The logger instance to use in the root of the context.
  * @param {object} [variableStoreData]
  * @param {object} [evalContextShellProps]

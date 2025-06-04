@@ -15,11 +15,8 @@ import {
  */
 
 export class ServerApiKeyProvider extends IApiKeyProvider {
-     * @private
   #logger;
-     * @private
   #fileSystemReader;
-     * @private
   #environmentVariableReader;
 
   constructor({ logger, fileSystemReader, environmentVariableReader }) {
