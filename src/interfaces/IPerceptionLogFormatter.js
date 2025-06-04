@@ -32,15 +32,16 @@
  * @description Defines the contract for a service that transforms raw perception log entries.
  */
 export class IPerceptionLogFormatter {
-    /**
-     * Transforms an array of raw perception log entries.
-     * @param {RawPerceptionLogEntry[]} rawLogEntries - The raw perception log entries from game state.
-     * @returns {FormattedPerceptionEntry[]} The formatted perception log entries.
-     * @throws {Error} If the method is not implemented.
-     */
-    format(rawLogEntries) { // eslint-disable-line no-unused-vars
-        throw new Error("Method 'format()' must be implemented.");
-    }
+  /**
+   * Transforms an array of raw perception log entries.
+   * @param {RawPerceptionLogEntry[]} rawLogEntries - The raw perception log entries from game state.
+   * @returns {FormattedPerceptionEntry[]} The formatted perception log entries.
+   * @throws {Error} If the method is not implemented.
+   */
+  format(rawLogEntries) {
+     
+    throw new Error("Method 'format()' must be implemented.");
+  }
 }
 
 // --- FILE END ---

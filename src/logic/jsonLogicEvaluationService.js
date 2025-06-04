@@ -24,6 +24,7 @@ try {
 // Assuming JSONLogicRule is structurally compatible with the schema
 // We avoid a direct schema import in runtime code for cleaner separation
 /** @typedef {object} JSONLogicRule */
+ * @property
 
 /**
  * @class JsonLogicEvaluationService
@@ -35,34 +36,40 @@ try {
  */
 class JsonLogicEvaluationService {
   /**
-     * @private
-     * @type {ILogger}
-     */
+   * @private
+   * @type {ILogger}
+   */
   #logger;
 
   /**
-     * Creates an instance of JsonLogicEvaluationService.
-     * @param {object} dependencies - The required services.
-     * @param {ILogger} dependencies.logger - Logging service.
-     * @throws {Error} If required dependencies are missing or invalid.
-     */
-  constructor({logger}) {
-    if (!logger || typeof logger.info !== 'function' || typeof logger.error !== 'function' || typeof logger.debug !== 'function') {
-      throw new Error('JsonLogicEvaluationService requires a valid ILogger instance.');
+   * Creates an instance of JsonLogicEvaluationService.
+   * @param {object} dependencies - The required services.
+   * @param {ILogger} dependencies.logger - Logging service.
+   * @throws {Error} If required dependencies are missing or invalid.
+   */
+  constructor({ logger }) {
+    if (
+      !logger ||
+      typeof logger.info !== 'function' ||
+      typeof logger.error !== 'function' ||
+      typeof logger.debug !== 'function'
+    ) {
+      throw new Error(
+        'JsonLogicEvaluationService requires a valid ILogger instance.'
+      );
     }
     this.#logger = logger;
     this.#logger.info('JsonLogicEvaluationService initialized.');
   }
 
   /**
-     * Evaluates a JSON Logic rule against a given data context using json-logic-js,
-     * returning a strict boolean based on the truthiness of the result.
-     *
-     * @param {JSONLogicRule} rule - The JSON Logic rule object to evaluate.
-     * @param {JsonLogicEvaluationContext} context - The data context against which the rule is evaluated.
-     * @returns {boolean} - The boolean result derived from the rule evaluation's truthiness. Returns false on error.
-     * @implements {AC.3}
-     */
+   * Evaluates a JSON Logic rule against a given data context using json-logic-js,
+   * returning a strict boolean based on the truthiness of the result.
+   * @param {JSONLogicRule} rule - The JSON Logic rule object to evaluate.
+   * @param {JsonLogicEvaluationContext} context - The data context against which the rule is evaluated.
+   * @returns {boolean} - The boolean result derived from the rule evaluation's truthiness. Returns false on error.
+   * @implements {AC.3}
+   */
   evaluate(rule, context) {
     // ── Vacuous truth / falsity for empty composites ───────────────────
     // Parent-ticket spec: an AND with zero operands is true; an OR with
@@ -81,8 +88,12 @@ class JsonLogicEvaluationService {
       }
     }
 
-    const ruleSummary = JSON.stringify(rule).substring(0, 150) + (JSON.stringify(rule).length > 150 ? '...' : '');
-    this.#logger.debug(`Evaluating rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`);
+    const ruleSummary =
+      JSON.stringify(rule).substring(0, 150) +
+      (JSON.stringify(rule).length > 150 ? '...' : '');
+    this.#logger.debug(
+      `Evaluating rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`
+    );
     // console.log("Context for evaluation:"); // Uncomment for deep debugging if needed
     // console.dir(context, {depth: 5}); // Uncomment for deep debugging if needed
 
@@ -99,28 +110,37 @@ class JsonLogicEvaluationService {
       // based on JavaScript's truthiness rules (0, "", null, undefined, false, [] are falsy).
       const finalBooleanResult = !!rawResult; // <-- FIX APPLIED HERE
 
-      this.#logger.debug(`Rule evaluation raw result: ${JSON.stringify(rawResult)}, Final boolean: ${finalBooleanResult}`);
+      this.#logger.debug(
+        `Rule evaluation raw result: ${JSON.stringify(rawResult)}, Final boolean: ${finalBooleanResult}`
+      );
       return finalBooleanResult;
-
     } catch (error) {
       // Log actual errors from the library execution
-      this.#logger.error(`Error evaluating JSON Logic rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`, error);
+      this.#logger.error(
+        `Error evaluating JSON Logic rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`,
+        error
+      );
       // Return false to prevent actions from running when condition evaluation fails critically
       return false;
     }
   }
 
   /**
-     * Allows adding custom operations to the underlying json-logic-js instance.
-     * @param {string} name - The name of the custom operator (e.g., "hasComponent").
-     * @param {Function} func - The function implementing the operator logic.
-     */
+   * Allows adding custom operations to the underlying json-logic-js instance.
+   * @param {string} name - The name of the custom operator (e.g., "hasComponent").
+   * @param {Function} func - The function implementing the operator logic.
+   */
   addOperation(name, func) {
     try {
       jsonLogic.add_operation(name, func);
-      this.#logger.info(`Custom JSON Logic operation "${name}" added successfully.`);
+      this.#logger.info(
+        `Custom JSON Logic operation "${name}" added successfully.`
+      );
     } catch (error) {
-      this.#logger.error(`Failed to add custom JSON Logic operation "${name}":`, error);
+      this.#logger.error(
+        `Failed to add custom JSON Logic operation "${name}":`,
+        error
+      );
     }
   }
 }

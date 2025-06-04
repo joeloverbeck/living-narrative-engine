@@ -1,6 +1,6 @@
 // src/domUI/IDocumentContext.js
 /**
- * @fileoverview Defines the IDocumentContext interface for abstracting DOM access.
+ * @file Defines the IDocumentContext interface for abstracting DOM access.
  * This allows injecting document-like objects (e.g., from JSDOM) for testing.
  */
 

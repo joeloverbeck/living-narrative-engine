@@ -2,7 +2,6 @@
 
 /**
  * @jest-environment node
- *
  * @fileoverview This file contains unit tests for the JsonLogicEvaluationService.
  * It focuses on testing the service's core functionalities in isolation,
  * such as rule evaluation logic (comparison, logical, truthiness operators),
@@ -12,7 +11,15 @@
  * context assembly and specific rule patterns.
  */
 
-import {describe, expect, test, jest, beforeEach, afterEach, it} from '@jest/globals'; // Added 'it' alias for 'test'
+import {
+  describe,
+  expect,
+  test,
+  jest,
+  beforeEach,
+  afterEach,
+  it,
+} from '@jest/globals'; // Added 'it' alias for 'test'
 
 // --- Class Under Test ---
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
@@ -27,6 +34,7 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */ // Adjust path as needed
 /** @typedef {object} JSONLogicRule */
+ * @property
 
 // --- Mock Dependencies ---
 
@@ -73,7 +81,7 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
     jest.clearAllMocks();
 
     // Task: Instantiate JsonLogicEvaluationService using the mockLogger
-    service = new JsonLogicEvaluationService({logger: mockLogger});
+    service = new JsonLogicEvaluationService({ logger: mockLogger });
 
     // Task: Reset mockEntityManager methods (even if not used directly in *all* tests)
     mockEntityManager.getEntityInstance.mockReset();
@@ -84,16 +92,23 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
     // ... reset other EM mocks if necessary ...
 
     // Set default mock implementations after resetting
-    mockEntityManager.getEntityInstance.mockImplementation((entityId) => undefined);
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentTypeId) => undefined);
-    mockEntityManager.hasComponent.mockImplementation((entityId, componentTypeId) => false);
+    mockEntityManager.getEntityInstance.mockImplementation(
+      (entityId) => undefined
+    );
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentTypeId) => undefined
+    );
+    mockEntityManager.hasComponent.mockImplementation(
+      (entityId, componentTypeId) => false
+    );
 
     // Create a simple default context for tests that don't need complex setup
     mockContext = {
-      event: {type: 'TEST_EVENT', payload: {}},
+      event: { type: 'TEST_EVENT', payload: {} },
       actor: null,
       target: null,
-      context: { // Variables accessed via "context.variableName"
+      context: {
+        // Variables accessed via "context.variableName"
         truthyVar: true,
         falsyVar: false,
         numVar: 1,
@@ -102,7 +117,7 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
         emptyStrVar: '',
         arrayVar: [1, 2],
         emptyArrayVar: [], // Empty array IS truthy in raw JS
-        objVar: {a: 1},
+        objVar: { a: 1 },
         emptyObjVar: {},
       },
       // globals: {}, // If used later
@@ -112,19 +127,28 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
 
   // --- [PARENT_ID].3: Logical and Truthiness Operator Tests ---
   describe('Logical (and, or, !) & Truthiness (!!) Operators', () => {
-
     // Operator: and
     describe('Operator: and', () => {
       // ... other 'and' tests ...
 
       it('should handle truthy/falsy variables', () => {
         // Corrected var paths to use "context." prefix
-        const rule1 = {'and': [{'var': 'context.truthyVar'}, {'var': 'context.numVar'}]}; // true AND 1 -> 1 -> !!1 -> true
-        const rule2 = {'and': [{'var': 'context.truthyVar'}, {'var': 'context.falsyVar'}]}; // true AND false -> false -> !!false -> false
-        const rule3 = {'and': [{'var': 'context.truthyVar'}, {'var': 'context.zeroVar'}]}; // true AND 0 -> 0 -> !!0 -> false
-        const rule4 = {'and': [{'var': 'context.truthyVar'}, {'var': 'context.emptyStrVar'}]}; // true AND "" -> "" -> !!"" -> false
+        const rule1 = {
+          and: [{ var: 'context.truthyVar' }, { var: 'context.numVar' }],
+        }; // true AND 1 -> 1 -> !!1 -> true
+        const rule2 = {
+          and: [{ var: 'context.truthyVar' }, { var: 'context.falsyVar' }],
+        }; // true AND false -> false -> !!false -> false
+        const rule3 = {
+          and: [{ var: 'context.truthyVar' }, { var: 'context.zeroVar' }],
+        }; // true AND 0 -> 0 -> !!0 -> false
+        const rule4 = {
+          and: [{ var: 'context.truthyVar' }, { var: 'context.emptyStrVar' }],
+        }; // true AND "" -> "" -> !!"" -> false
         // Note: Empty array [] is TRUTHY in JavaScript. 'and' returns last value []. !![] is true.
-        const rule5 = {'and': [{'var': 'context.truthyVar'}, {'var': 'context.emptyArrayVar'}]}; // true AND [] -> [] -> !![] -> true
+        const rule5 = {
+          and: [{ var: 'context.truthyVar' }, { var: 'context.emptyArrayVar' }],
+        }; // true AND [] -> [] -> !![] -> true
 
         expect(service.evaluate(rule1, mockContext)).toBe(true);
         expect(service.evaluate(rule2, mockContext)).toBe(false);
@@ -143,54 +167,74 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
       // ... ! tests ...
 
       it('should evaluate !falsy values -> true', () => {
-        expect(service.evaluate({'!': [0]}, mockContext)).toBe(true);
-        expect(service.evaluate({'!': ['']}, mockContext)).toBe(true);
-        expect(service.evaluate({'!': [null]}, mockContext)).toBe(true);
+        expect(service.evaluate({ '!': [0] }, mockContext)).toBe(true);
+        expect(service.evaluate({ '!': [''] }, mockContext)).toBe(true);
+        expect(service.evaluate({ '!': [null] }, mockContext)).toBe(true);
         // Note: json-logic-js specifically treats [] as falsy for its operations like '!'
         // even though raw JS [] is truthy. This aligns with the http://jsonlogic.com/truthy.html examples.
-        expect(service.evaluate({'!': [[]]}, mockContext)).toBe(true); // ! applied to raw []
+        expect(service.evaluate({ '!': [[]] }, mockContext)).toBe(true); // ! applied to raw []
         // Corrected var paths to use "context." prefix
-        expect(service.evaluate({'!': {'var': 'context.falsyVar'}}, mockContext)).toBe(true); // !false -> true
-        expect(service.evaluate({'!': {'var': 'context.zeroVar'}}, mockContext)).toBe(true); // !0 -> true
-        expect(service.evaluate({'!': {'var': 'context.emptyStrVar'}}, mockContext)).toBe(true); // !"" -> true
+        expect(
+          service.evaluate({ '!': { var: 'context.falsyVar' } }, mockContext)
+        ).toBe(true); // !false -> true
+        expect(
+          service.evaluate({ '!': { var: 'context.zeroVar' } }, mockContext)
+        ).toBe(true); // !0 -> true
+        expect(
+          service.evaluate({ '!': { var: 'context.emptyStrVar' } }, mockContext)
+        ).toBe(true); // !"" -> true
         // This tests ! applied to the result of var lookup, which is []
-        expect(service.evaluate({'!': {'var': 'context.emptyArrayVar'}}, mockContext)).toBe(true); // ![] -> true (JSONLogic specific)
+        expect(
+          service.evaluate(
+            { '!': { var: 'context.emptyArrayVar' } },
+            mockContext
+          )
+        ).toBe(true); // ![] -> true (JSONLogic specific)
         expect(mockLogger.error).not.toHaveBeenCalled();
       });
 
       // ... other ! tests ...
     });
 
-
     // Operator: !! (Truthy Check / Boolean Cast)
     describe('Operator: !! (Truthy Check)', () => {
-
       // ... !! tests ...
 
       it('should evaluate !!falsy values -> false', () => {
-        expect(service.evaluate({'!!': [0]}, mockContext)).toBe(false);
-        expect(service.evaluate({'!!': ['']}, mockContext)).toBe(false);
-        expect(service.evaluate({'!!': [null]}, mockContext)).toBe(false);
+        expect(service.evaluate({ '!!': [0] }, mockContext)).toBe(false);
+        expect(service.evaluate({ '!!': [''] }, mockContext)).toBe(false);
+        expect(service.evaluate({ '!!': [null] }, mockContext)).toBe(false);
         // Note: json-logic-js specifically treats [] as falsy for its operations like '!!'
-        expect(service.evaluate({'!!': [[]]}, mockContext)).toBe(false); // !! applied to raw []
-        expect(service.evaluate({'!!': [false]}, mockContext)).toBe(false);
+        expect(service.evaluate({ '!!': [[]] }, mockContext)).toBe(false); // !! applied to raw []
+        expect(service.evaluate({ '!!': [false] }, mockContext)).toBe(false);
         // Corrected var paths to use "context." prefix
-        expect(service.evaluate({'!!': {'var': 'context.falsyVar'}}, mockContext)).toBe(false); // !!false -> false
-        expect(service.evaluate({'!!': {'var': 'context.zeroVar'}}, mockContext)).toBe(false); // !!0 -> false
-        expect(service.evaluate({'!!': {'var': 'context.emptyStrVar'}}, mockContext)).toBe(false); // !!"" -> false
+        expect(
+          service.evaluate({ '!!': { var: 'context.falsyVar' } }, mockContext)
+        ).toBe(false); // !!false -> false
+        expect(
+          service.evaluate({ '!!': { var: 'context.zeroVar' } }, mockContext)
+        ).toBe(false); // !!0 -> false
+        expect(
+          service.evaluate(
+            { '!!': { var: 'context.emptyStrVar' } },
+            mockContext
+          )
+        ).toBe(false); // !!"" -> false
         // This tests !! applied to the result of var lookup, which is []
-        expect(service.evaluate({'!!': {'var': 'context.emptyArrayVar'}}, mockContext)).toBe(false); // !![] -> false (JSONLogic specific)
+        expect(
+          service.evaluate(
+            { '!!': { var: 'context.emptyArrayVar' } },
+            mockContext
+          )
+        ).toBe(false); // !![] -> false (JSONLogic specific)
         expect(mockLogger.error).not.toHaveBeenCalled();
       });
 
       // ... other !! tests ...
     });
-
-
   }); // End describe Logical and Truthiness Operators
 
   // --- Future Tests Will Go Here ---
   // describe('evaluate method', () => { ... });
   // describe('addOperation method', () => { ... });
-
 }); // End describe JsonLogicEvaluationService Unit Tests

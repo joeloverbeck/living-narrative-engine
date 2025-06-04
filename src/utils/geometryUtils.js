@@ -1,14 +1,13 @@
 // src/utils/geometryUtils.js
 
 /**
- * @fileoverview Geometry utility functions.
+ * @file Geometry utility functions.
  */
 
 /**
  * Calculates the squared Euclidean distance between two points in 2D space.
  * Using squared distance avoids the need for Math.sqrt, which can be computationally
  * more expensive and is often unnecessary if only comparing distances.
- *
  * @param {number} x1 - The x-coordinate of the first point.
  * @param {number} y1 - The y-coordinate of the first point.
  * @param {number} x2 - The x-coordinate of the second point.
@@ -18,12 +17,20 @@
  */
 export const calculateDistanceSquaredCoords = (x1, y1, x2, y2) => {
   // Check if any coordinate is not a number OR is NaN
-  if (typeof x1 !== 'number' || Number.isNaN(x1) ||
-        typeof y1 !== 'number' || Number.isNaN(y1) ||
-        typeof x2 !== 'number' || Number.isNaN(x2) ||
-        typeof y2 !== 'number' || Number.isNaN(y2)) {
+  if (
+    typeof x1 !== 'number' ||
+    Number.isNaN(x1) ||
+    typeof y1 !== 'number' ||
+    Number.isNaN(y1) ||
+    typeof x2 !== 'number' ||
+    Number.isNaN(x2) ||
+    typeof y2 !== 'number' ||
+    Number.isNaN(y2)
+  ) {
     // Updated error message slightly for clarity
-    throw new TypeError('All coordinates must be valid numbers (not NaN) for distance calculation.');
+    throw new TypeError(
+      'All coordinates must be valid numbers (not NaN) for distance calculation.'
+    );
   }
   const dx = x1 - x2;
   const dy = y1 - y2;
@@ -33,14 +40,20 @@ export const calculateDistanceSquaredCoords = (x1, y1, x2, y2) => {
 /**
  * Calculates the squared Euclidean distance between two position objects.
  * Assumes position objects have 'x' and 'y' properties. Provides default 0 if missing.
- *
  * @param {{ x?: number, y?: number }} posA - The first position object.
  * @param {{ x?: number, y?: number }} posB - The second position object.
  * @returns {number} The squared distance between the two positions. Returns NaN if inputs are invalid non-objects.
  */
 export const calculateDistanceSquared = (posA, posB) => {
-  if (typeof posA !== 'object' || posA === null || typeof posB !== 'object' || posB === null) {
-    console.warn('Invalid input for calculateDistanceSquared: Expected objects.');
+  if (
+    typeof posA !== 'object' ||
+    posA === null ||
+    typeof posB !== 'object' ||
+    posB === null
+  ) {
+    console.warn(
+      'Invalid input for calculateDistanceSquared: Expected objects.'
+    );
     return NaN; // Indicate error
   }
   const x1 = posA.x ?? 0;

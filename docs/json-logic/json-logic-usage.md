@@ -14,10 +14,10 @@ human-readable and easily processed by machines.
 
 In this game engine, JSON Logic is primarily used to define data-driven conditions for:
 
-* **System Rules:** Determining if a rule's actions should run in response to a game event.
-* **Action Prerequisites:** Validating if an entity can perform a specific action based on the current game state (e.g.,
+- **System Rules:** Determining if a rule's actions should run in response to a game event.
+- **Action Prerequisites:** Validating if an entity can perform a specific action based on the current game state (e.g.,
   Does the player have enough mana to cast a spell? Is the door locked?).
-* **IF Operations:** Implementing conditional branching within the action sequence of a System Rule.
+- **IF Operations:** Implementing conditional branching within the action sequence of a System Rule.
 
 By using JSON Logic, game designers and modders can customize game behavior by modifying data files, without needing to
 write engine code directly.
@@ -27,57 +27,62 @@ write engine code directly.
 JSON Logic rules are JSON objects where the keys are operators and the values are the
 arguments for that operator.
 
-* **Logical (`and`, `or`, `not`, `!`)** – see the dedicated
+- **Logical (`and`, `or`, `not`, `!`)** – see the dedicated
   _Composite Logical Operators_ guide for full behaviour, including the engine-specific
   “vacuous truth/falsity” rules for `{"and":[]}` → `true` and `{"or":[]}` → `false`.
 
-* **`var`**: Retrieves data from the evaluation context. Missing variables typically resolve to `null`.
-    * Syntax: `{ "var": "path.to.data" }`
-    * Example: `{ "var": "actor.id" }` retrieves the actor's ID.
-    * Example: `{ "var": "context.queryResult" }` retrieves data stored by a `QUERY_COMPONENT` operation.
+- **`var`**: Retrieves data from the evaluation context. Missing variables typically resolve to `null`.
 
-* **Comparison (`==`, `!=`, `>`, `<`, `>=`, `<=`)**: Compares two values.
-    * Syntax: `{ "==": [ { "var": "a" }, { "var": "b" } ] }`
-    * Example: `{ ">=": [ { "var": "actor.components.core:health.current" }, 10 ] }` checks if actor's health is 10 or
-      more.
-    * Example: `{ "==": [ { "var": "target.components.game:lockable.state" }, "locked" ] }` checks if the target's
-      lockable state is "locked".
+  - Syntax: `{ "var": "path.to.data" }`
+  - Example: `{ "var": "actor.id" }` retrieves the actor's ID.
+  - Example: `{ "var": "context.queryResult" }` retrieves data stored by a `QUERY_COMPONENT` operation.
 
-* **Logical Operators (`and`, `or`)**: Combine multiple conditions. `and` requires all conditions to be true, `or`
+- **Comparison (`==`, `!=`, `>`, `<`, `>=`, `<=`)**: Compares two values.
+
+  - Syntax: `{ "==": [ { "var": "a" }, { "var": "b" } ] }`
+  - Example: `{ ">=": [ { "var": "actor.components.core:health.current" }, 10 ] }` checks if actor's health is 10 or
+    more.
+  - Example: `{ "==": [ { "var": "target.components.game:lockable.state" }, "locked" ] }` checks if the target's
+    lockable state is "locked".
+
+- **Logical Operators (`and`, `or`)**: Combine multiple conditions. `and` requires all conditions to be true, `or`
   requires at least one to be true.
-    * Syntax: `{ "and": [ { condition1 }, { condition2 }, ... ] }`
-    * Example: `{ "or": [ { "var": "actor.components.effect:poison" }, { "var": "actor.components.effect:disease" } ] }`
-      checks if the actor is poisoned OR diseased (by checking component existence).
 
-* **Negation (`!`, `not`)**: Inverts the boolean result of a condition. `!` is shorthand for `not` with a single
+  - Syntax: `{ "and": [ { condition1 }, { condition2 }, ... ] }`
+  - Example: `{ "or": [ { "var": "actor.components.effect:poison" }, { "var": "actor.components.effect:disease" } ] }`
+    checks if the actor is poisoned OR diseased (by checking component existence).
+
+- **Negation (`!`, `not`)**: Inverts the boolean result of a condition. `!` is shorthand for `not` with a single
   argument.
-    * Syntax: `{ "!": { condition } }` or `{ "not": [ { condition } ]}`
-    * Example: `{ "!": { "var": "actor.components.status:burdened" } }` checks if the actor does NOT have the 'burdened'
-      status component.
-    * Example: `{ "!=": [ { "var": "target.components.game:lockable.state" }, "locked" ] }` (Using `!=` is often clearer
-      than `not` + `==`).
 
-* **Boolean Coercion (`!!`)**: Converts a value to its boolean equivalent (truthy/falsy becomes `true`/`false`). Useful
+  - Syntax: `{ "!": { condition } }` or `{ "not": [ { condition } ]}`
+  - Example: `{ "!": { "var": "actor.components.status:burdened" } }` checks if the actor does NOT have the 'burdened'
+    status component.
+  - Example: `{ "!=": [ { "var": "target.components.game:lockable.state" }, "locked" ] }` (Using `!=` is often clearer
+    than `not` + `==`).
+
+- **Boolean Coercion (`!!`)**: Converts a value to its boolean equivalent (truthy/falsy becomes `true`/`false`). Useful
   for checking existence.
-    * Syntax: `{ "!!": { "var": "optional.property" } }`
-    * Example: `{ "!!": { "var": "actor.components.core:health" } }` returns `true` if the actor has a 'core:health'
-      component, `false` otherwise.
 
-* **`in`**: Checks if a value is present within an array or a substring within a string.
-    * Syntax: `{ "in": [ value_to_find, { "var": "array_or_string_source" } ] }`
-    * Example (Array): `{ "in": [ "quest_id", { "var": "actor.components.quest_log.active" } ] }` checks if `"quest_id"`
-      is in the `active` array (assuming `active` is an array).
-    * Example (String): `{ "in": [ "keyword", { "var": "event.payload.description" } ] }` checks if the string
-      `"keyword"` is present within the value of `event.payload.description`. Returns `true` if found, `false`
-      otherwise.
-    * **Note on Empty String Search (`""`)**: When searching for an empty string within another string, the behavior
-      observed with the underlying `json-logic-js` library is nuanced and crucial to understand:
-        * `{"in": ["", "some string"]}` evaluates to `true`. (An empty string is considered to be "in" any non-empty
-          string).
-        * `{"in": ["", ""]}` evaluates to `false`. (An empty string is considered *not* to be "in" another empty
-          string).
-          This differs slightly from JavaScript's native `string.includes('')` which returns `true` even for
-          `("").includes("")`. Be mindful of this specific edge case when writing rules.
+  - Syntax: `{ "!!": { "var": "optional.property" } }`
+  - Example: `{ "!!": { "var": "actor.components.core:health" } }` returns `true` if the actor has a 'core:health'
+    component, `false` otherwise.
+
+- **`in`**: Checks if a value is present within an array or a substring within a string.
+  - Syntax: `{ "in": [ value_to_find, { "var": "array_or_string_source" } ] }`
+  - Example (Array): `{ "in": [ "quest_id", { "var": "actor.components.quest_log.active" } ] }` checks if `"quest_id"`
+    is in the `active` array (assuming `active` is an array).
+  - Example (String): `{ "in": [ "keyword", { "var": "event.payload.description" } ] }` checks if the string
+    `"keyword"` is present within the value of `event.payload.description`. Returns `true` if found, `false`
+    otherwise.
+  - **Note on Empty String Search (`""`)**: When searching for an empty string within another string, the behavior
+    observed with the underlying `json-logic-js` library is nuanced and crucial to understand:
+    - `{"in": ["", "some string"]}` evaluates to `true`. (An empty string is considered to be "in" any non-empty
+      string).
+    - `{"in": ["", ""]}` evaluates to `false`. (An empty string is considered _not_ to be "in" another empty
+      string).
+      This differs slightly from JavaScript's native `string.includes('')` which returns `true` even for
+      `("").includes("")`. Be mindful of this specific edge case when writing rules.
 
 ## Evaluation Context
 
@@ -87,41 +92,45 @@ accesses data within this context object.
 
 The `JsonLogicEvaluationContext` has the following top-level properties:
 
-* **`event`** (`object`): Contains information about the event that triggered the rule evaluation.
-    * `event.type` (`string`): The namespaced ID of the triggering event (e.g., `"event:action_attempt"`).
-    * `event.payload` (`object`): Data specific to the event (e.g.,
-      `{ "interactionType": "USE", "itemId": "item:key" }`). If the original event had no payload, this will be an empty
-      object `{}`.
+- **`event`** (`object`): Contains information about the event that triggered the rule evaluation.
 
-* **`actor`** (`object | null`): Represents the entity primarily performing or initiating the action/event (e.g., the
+  - `event.type` (`string`): The namespaced ID of the triggering event (e.g., `"event:action_attempt"`).
+  - `event.payload` (`object`): Data specific to the event (e.g.,
+    `{ "interactionType": "USE", "itemId": "item:key" }`). If the original event had no payload, this will be an empty
+    object `{}`.
+
+- **`actor`** (`object | null`): Represents the entity primarily performing or initiating the action/event (e.g., the
   player character, an NPC). This can be `null` if no actor is contextually relevant for the triggering event.
-    * `actor.id` (`string | number`): The unique ID of the actor entity.
-    * `actor.components` (`object`): A special accessor object to retrieve the actor's component data. Use bracket
-      notation for namespaced IDs (e.g., `actor.components['core:health']`) or dot notation for simple IDs. Accessing a
-      component that the entity *does not* possess (e.g., `actor.components['nonexistent:component']`) will return
-      `null`. You can access nested properties directly (e.g., `actor.components.core:health.current`). If the
-      component itself is `null`, further nested access will also result in `null` within JSON Logic.
 
-* **`target`** (`object | null`): Represents the entity being acted upon or targeted by the action/event (e.g., an item
+  - `actor.id` (`string | number`): The unique ID of the actor entity.
+  - `actor.components` (`object`): A special accessor object to retrieve the actor's component data. Use bracket
+    notation for namespaced IDs (e.g., `actor.components['core:health']`) or dot notation for simple IDs. Accessing a
+    component that the entity _does not_ possess (e.g., `actor.components['nonexistent:component']`) will return
+    `null`. You can access nested properties directly (e.g., `actor.components.core:health.current`). If the
+    component itself is `null`, further nested access will also result in `null` within JSON Logic.
+
+- **`target`** (`object | null`): Represents the entity being acted upon or targeted by the action/event (e.g., an item
   being picked up, an NPC being attacked, a door being opened). This can be `null` if no target is contextually
   relevant.
-    * `target.id` (`string | number`): The unique ID of the target entity.
-    * `target.components` (`object`): A special accessor object for the target's components, working identically to
-      `actor.components`. Accessing a non-existent component returns `null`. Example:
-      `target.components.game:lockable.state`.
 
-* **`context`** (`object`): A temporary storage object holding results from previous `QUERY_COMPONENT` operations
-  executed *within the same SystemRule's action sequence*. This allows later actions or `IF` conditions in the sequence
+  - `target.id` (`string | number`): The unique ID of the target entity.
+  - `target.components` (`object`): A special accessor object for the target's components, working identically to
+    `actor.components`. Accessing a non-existent component returns `null`. Example:
+    `target.components.game:lockable.state`.
+
+- **`context`** (`object`): A temporary storage object holding results from previous `QUERY_COMPONENT` operations
+  executed _within the same SystemRule's action sequence_. This allows later actions or `IF` conditions in the sequence
   to use data fetched earlier.
-    * Access variables using the `result_variable` name defined in the `QUERY_COMPONENT` operation (e.g.,
-      `context.targetHealthComponent`).
-    * Accessing a variable that hasn't been set in the current sequence resolves to `undefined`, which JSON Logic
-      typically treats as `null`.
 
-* **`globals`** (`object`, Optional/Future): A placeholder for potential future access to global game state variables (
+  - Access variables using the `result_variable` name defined in the `QUERY_COMPONENT` operation (e.g.,
+    `context.targetHealthComponent`).
+  - Accessing a variable that hasn't been set in the current sequence resolves to `undefined`, which JSON Logic
+    typically treats as `null`.
+
+- **`globals`** (`object`, Optional/Future): A placeholder for potential future access to global game state variables (
   e.g., game time, world flags). Currently initialized as an empty object `{}`.
 
-* **`entities`** (`object`, Optional/Future): A placeholder for potential future direct access to any entity's data by
+- **`entities`** (`object`, Optional/Future): A placeholder for potential future direct access to any entity's data by
   its ID, regardless of the contextual `actor` or `target`. Currently initialized as an empty object `{}`.
 
 Understanding this context object is crucial for writing effective JSON Logic rules, as it defines exactly what data
@@ -141,12 +150,12 @@ If the specified path does not exist or resolves to `undefined` at any point, th
 
 The triggering event's details are available under the top-level `event` key.
 
-* `event.type`: Accesses the namespaced string ID of the event.
+- `event.type`: Accesses the namespaced string ID of the event.
 
         { "var": "event.type" }
         // Example: Returns "event:action_attempt"
 
-* `event.payload`: Accesses the payload object of the event. You can access specific fields within the payload using
+- `event.payload`: Accesses the payload object of the event. You can access specific fields within the payload using
   further dot notation. If the event has no payload, `event.payload` will be an empty object `{}`. Accessing a field on
   an empty payload or a non-existent field will result in `null`.
 
@@ -160,12 +169,12 @@ The triggering event's details are available under the top-level `event` key.
 
 The unique identifiers for the contextual actor and target entities are available if they are relevant to the event.
 
-* `actor.id`: Accesses the ID of the actor entity. Returns `null` if `actor` itself is `null`.
+- `actor.id`: Accesses the ID of the actor entity. Returns `null` if `actor` itself is `null`.
 
         { "var": "actor.id" }
         // Example: Returns "core:player"
 
-* `target.id`: Accesses the ID of the target entity. Returns `null` if `target` itself is `null`.
+- `target.id`: Accesses the ID of the target entity. Returns `null` if `target` itself is `null`.
 
         { "var": "target.id" }
         // Example: Returns "npc:goblin_sentry"
@@ -175,68 +184,70 @@ The unique identifiers for the contextual actor and target entities are availabl
 Accessing component data for the actor or target entity is done via the `components` property on the respective `actor`
 or `target` object.
 
-* **Dynamic Lookup (`createComponentAccessor`)**: It's crucial to understand that `actor.components` and
+- **Dynamic Lookup (`createComponentAccessor`)**: It's crucial to understand that `actor.components` and
   `target.components` are not static objects containing all possible components. Instead, they are dynamic accessor
   proxies (created by `createComponentAccessor`). When you attempt to access a property like
   `actor.components['core:health']` or `actor.components.someSimpleId`, the accessor intercepts this request and uses
   the `EntityManager`'s `getComponentData` method
   to look up the `core:health` or `someSimpleId` component specifically for the `actor.id`.
-  *(Note: While the accessor proxy has multiple traps like 'get' and 'has', standard data retrieval via the
-  JsonLogic `var` operator primarily interacts with the 'get' trap, which uses `getComponentData`).*
+  _(Note: While the accessor proxy has multiple traps like 'get' and 'has', standard data retrieval via the
+  JsonLogic `var` operator primarily interacts with the 'get' trap, which uses `getComponentData`)._
 
-* **Return Value (Component Access)**:
-    * If the entity *has* the specified component, accessing `actor.components.componentId` (or using brackets for
-      namespaced IDs like `actor.components['namespace:id']`) returns the
-      entire raw data object for that component instance when used with operators like `!!`.
-    * If the entity *does not have* the specified component, accessing it returns `null`.
+- **Return Value (Component Access)**:
 
-      // Check existence/truthiness of the actor's 'core:health' component
-      { "!!": { "var": "actor.components.core:health" } }
-      // Example Return (if component exists): true
-      // Example Return (if component doesn't exist): false
+  - If the entity _has_ the specified component, accessing `actor.components.componentId` (or using brackets for
+    namespaced IDs like `actor.components['namespace:id']`) returns the
+    entire raw data object for that component instance when used with operators like `!!`.
+  - If the entity _does not have_ the specified component, accessing it returns `null`.
 
-      // Check existence/truthiness of the target's namespaced 'game:lockable' component
-      { "!!": { "var": "target.components.game:lockable" } } // Note: Dot notation used in var path
-      // Example Return (if component exists): true
-      // Example Return (if component doesn't exist): false
+    // Check existence/truthiness of the actor's 'core:health' component
+    { "!!": { "var": "actor.components.core:health" } }
+    // Example Return (if component exists): true
+    // Example Return (if component doesn't exist): false
 
-* **Nested Access (Component Properties)**: You can directly access properties within a component's data object using
+    // Check existence/truthiness of the target's namespaced 'game:lockable' component
+    { "!!": { "var": "target.components.game:lockable" } } // Note: Dot notation used in var path
+    // Example Return (if component exists): true
+    // Example Return (if component doesn't exist): false
+
+- **Nested Access (Component Properties)**: You can directly access properties within a component's data object using
   further dot notation **within the `var` path string**.
-    * Syntax: `{ "var": "actor.components.componentId.propertyName" }`
-    * Syntax (Namespaced Component): `{ "var": "actor.components.namespace:componentId.propertyName" }`
-    * **Important:** Use dot notation to separate the component ID and its properties within the `var` path string, even
-      if the component ID itself contains special characters (like `:`) that might require bracket notation in
-      JavaScript. The `json-logic-js` `var` operator parses the dot-separated path.
-    * Behavior: If the component itself exists and has the specified property, the value of that property is returned.
-      If the component doesn't exist (the component access part resolves to `null`), accessing a property on it will
-      also result in `null`. If
-      the component exists but the specific property doesn't exist within its data, the result is `undefined`, which
-      JSON Logic also typically treats as `null`.
 
-      // Get the 'current' value from the actor's 'core:health' component
-      { "var": "actor.components.core:health.current" }
-      // Example Return: 85 (if component and property exist)
-      // Example Return: null (if 'core:health' component is missing, or 'current' is missing)
+  - Syntax: `{ "var": "actor.components.componentId.propertyName" }`
+  - Syntax (Namespaced Component): `{ "var": "actor.components.namespace:componentId.propertyName" }`
+  - **Important:** Use dot notation to separate the component ID and its properties within the `var` path string, even
+    if the component ID itself contains special characters (like `:`) that might require bracket notation in
+    JavaScript. The `json-logic-js` `var` operator parses the dot-separated path.
+  - Behavior: If the component itself exists and has the specified property, the value of that property is returned.
+    If the component doesn't exist (the component access part resolves to `null`), accessing a property on it will
+    also result in `null`. If
+    the component exists but the specific property doesn't exist within its data, the result is `undefined`, which
+    JSON Logic also typically treats as `null`.
 
-      // Get the 'state' value from the target's namespaced 'game:lockable' component
-      { "var": "target.components.game:lockable.state" } // Dot notation used for the path
-      // Example Return: "locked" (if component and property exist)
-      // Example Return: null (if 'game:lockable' component is missing, or 'state' is missing)
+    // Get the 'current' value from the actor's 'core:health' component
+    { "var": "actor.components.core:health.current" }
+    // Example Return: 85 (if component and property exist)
+    // Example Return: null (if 'core:health' component is missing, or 'current' is missing)
 
-      // Get the 'prop' value from the actor's namespaced 'ns:compC' component
-      { "var": "actor.components.ns:compC.prop" } // Dot notation used for the path
-      // Example Return: "someValue" (if component and property exist)
-      // Example Return: null (if 'ns:compC' component is missing, or 'prop' is missing)
+    // Get the 'state' value from the target's namespaced 'game:lockable' component
+    { "var": "target.components.game:lockable.state" } // Dot notation used for the path
+    // Example Return: "locked" (if component and property exist)
+    // Example Return: null (if 'game:lockable' component is missing, or 'state' is missing)
+
+    // Get the 'prop' value from the actor's namespaced 'ns:compC' component
+    { "var": "actor.components.ns:compC.prop" } // Dot notation used for the path
+    // Example Return: "someValue" (if component and property exist)
+    // Example Return: null (if 'ns:compC' component is missing, or 'prop' is missing)
 
 ### Accessing Context Variables
 
 The `context` object holds temporary data generated during the execution of a System Rule's action sequence. This is
 primarily populated by `QUERY_COMPONENT` operations.
 
-* Source: Variables stored here correspond directly to the `result_variable` name specified in a preceding
+- Source: Variables stored here correspond directly to the `result_variable` name specified in a preceding
   `QUERY_COMPONENT` operation within the same rule's action sequence.
-* Syntax: `context.variableName` (where `variableName` matches the `result_variable` string).
-* Return Value: Returns the data stored under that variable name (typically, the component data object fetched by the
+- Syntax: `context.variableName` (where `variableName` matches the `result_variable` string).
+- Return Value: Returns the data stored under that variable name (typically, the component data object fetched by the
   query, or `null` if the query found nothing). Accessing a `variableName` that was not set in the current execution
   sequence results in `undefined`, which JSON Logic treats as `null`.
 
@@ -256,12 +267,12 @@ primarily populated by `QUERY_COMPONENT` operations.
 JSON Logic is generally resilient to missing data when using the `var` operator. Attempting to access properties on data
 that resolves to `null` or `undefined` typically results in `null` rather than throwing an error.
 
-* Accessing `actor.id` when `actor` is `null` yields `null`.
-* Accessing `actor.components.some:Component` when the actor lacks that component yields `null`.
-* Accessing `actor.components.some:Component.property` when the component is missing (`null`) yields `null`.
-* Accessing `actor.components.core:health.nonExistentProperty` when the `core:health` component exists but lacks
+- Accessing `actor.id` when `actor` is `null` yields `null`.
+- Accessing `actor.components.some:Component` when the actor lacks that component yields `null`.
+- Accessing `actor.components.some:Component.property` when the component is missing (`null`) yields `null`.
+- Accessing `actor.components.core:health.nonExistentProperty` when the `core:health` component exists but lacks
   `nonExistentProperty` yields `undefined` (treated as `null` by most JSON Logic operations).
-* Accessing `context.someVariableThatWasNeverSet` yields `undefined` (treated as `null`).
+- Accessing `context.someVariableThatWasNeverSet` yields `undefined` (treated as `null`).
 
 This behavior allows conditions to be written safely without excessive explicit `null` checks, as comparisons or logical
 operations involving `null` often evaluate to `false` or are handled predictably by specific operators (like `!!`).
@@ -270,7 +281,7 @@ operations involving `null` often evaluate to `false` or are handled predictably
 
 This section provides concrete examples based on the common patterns identified earlier.
 
-*(Note: Component access examples updated to use dot notation within the `var` path)*
+_(Note: Component access examples updated to use dot notation within the `var` path)_
 
 ### Category: Component Existence & State
 
@@ -576,10 +587,7 @@ Combines conditions with AND - demonstrating interaction with JavaScript truthin
 
 ```json
 {
-  "and": [
-    true,
-    []
-  ]
+  "and": [true, []]
 }
 ```
 

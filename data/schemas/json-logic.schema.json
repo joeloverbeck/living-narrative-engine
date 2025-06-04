@@ -7,12 +7,7 @@
   "definitions": {
     "primitive": {
       "description": "Allowed primitive types in JSON Logic arguments.",
-      "type": [
-        "boolean",
-        "string",
-        "number",
-        "null"
-      ]
+      "type": ["boolean", "string", "number", "null"]
     },
     "rule_logic": {
       "description": "Represents a potential argument or nested rule within JSON Logic. Can be a primitive value, a literal array of arguments, or a nested rule object.",

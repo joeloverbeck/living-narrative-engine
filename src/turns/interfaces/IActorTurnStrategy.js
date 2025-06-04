@@ -25,7 +25,6 @@
  * The `commandString` is considered secondary, useful for logging, debugging, or
  * displaying a human-readable history of commands, but should not be the primary
  * source for action execution logic.
- *
  * @property {string} actionDefinitionId - Cannot be null or undefined. The unique,
  * namespaced identifier for a data-defined action. This ID directly links to an
  * external definition that specifies the action's behavior, prerequisites,
@@ -59,7 +58,6 @@
  * `ExecuteChoiceState`) to function consistently regardless of the actor's type.
  * The turn handler (or the current turn state) will invoke `decideAction` on the
  * actor's current strategy to obtain its intended {@link ITurnAction}.
- *
  * @example
  * // For a human player:
  * class HumanPlayerStrategy extends IActorTurnStrategy {
@@ -79,7 +77,6 @@
  * // };
  * }
  * }
- *
  * @example
  * // For an AI agent (e.g., LLM-based):
  * class LLMAIStrategy extends IActorTurnStrategy {
@@ -103,57 +100,56 @@
  * }
  */
 export class IActorTurnStrategy {
-    /**
-     * Determines the action an actor will take for the current turn.
-     *
-     * This method is the core of the strategy. It must rely entirely on the
-     * provided {@link ITurnContext} to access:
-     * - The current actor (via `context.getActor()`).
-     * - The current game state (via `context.getGame()`).
-     * - Available action definitions (potentially via a service in the context that
-     * allows querying possible actions based on `action-definition.schema.json`).
-     * - Any available services, such as logging (`context.getLogger()`),
-     * player prompting (`context.getPlayerPromptService()`), etc.
-     *
-     * The method is asynchronous (`async`) to robustly accommodate operations
-     * that may not complete synchronously. This is essential for:
-     * - Human-controlled actors: Waiting for input from a user interface.
-     * - AI-controlled actors: Potentially making API calls to external services (like LLMs)
-     * or performing complex, time-consuming computations.
-     *
-     * The strategy is responsible for resolving the player's or AI's intent into a
-     * specific, data-defined action and any necessary parameters for that action's instance.
-     *
-     * @async
-     * @param {ITurnContext} context - The turn context for the current turn. This object
-     * provides all necessary information and capabilities
-     * (e.g., `context.getActor()`, `context.getLogger()`,
-     * `context.getPlayerPromptService()`, `context.getGame()`,
-     * a service to query available/valid actions)
-     * that the strategy might need to make an informed decision.
-     * @returns {Promise<ITurnAction>} A Promise that resolves to an {@link ITurnAction}
-     * object. This object identifies the data-defined action chosen
-     * (e.g., via `actionDefinitionId`) and includes any parameters
-     * resolved for this specific instance (e.g., `resolvedParameters`).
-     * If the actor decides to take no overt action (e.g., a "pass turn"
-     * scenario, often represented by a "core:wait" or "core:pass" action),
-     * the strategy should still resolve with an appropriate
-     * {@link ITurnAction} (e.g., `{ actionDefinitionId: 'core:wait' }`).
-     * @throws {Error} If a decision cannot be formulated due to an internal error,
-     * invalid state, or failure of a dependency. The calling
-     * turn state or handler is expected to catch this error and manage
-     * the turn lifecycle accordingly (e.g., by ending the turn with an error).
-     */
-    async decideAction(context) {
-        // This is an interface method and must be implemented by concrete strategy classes.
-        const actorId = context?.getActor()?.id || 'Unknown Actor';
-        const errorMessage = `IActorTurnStrategy.decideAction(context) called on the abstract class or an incomplete implementation for actor '${actorId}'. Concrete strategies must override this method.`;
+  /**
+   * Determines the action an actor will take for the current turn.
+   *
+   * This method is the core of the strategy. It must rely entirely on the
+   * provided {@link ITurnContext} to access:
+   * - The current actor (via `context.getActor()`).
+   * - The current game state (via `context.getGame()`).
+   * - Available action definitions (potentially via a service in the context that
+   * allows querying possible actions based on `action-definition.schema.json`).
+   * - Any available services, such as logging (`context.getLogger()`),
+   * player prompting (`context.getPlayerPromptService()`), etc.
+   *
+   * The method is asynchronous (`async`) to robustly accommodate operations
+   * that may not complete synchronously. This is essential for:
+   * - Human-controlled actors: Waiting for input from a user interface.
+   * - AI-controlled actors: Potentially making API calls to external services (like LLMs)
+   * or performing complex, time-consuming computations.
+   *
+   * The strategy is responsible for resolving the player's or AI's intent into a
+   * specific, data-defined action and any necessary parameters for that action's instance.
+   * @async
+   * @param {ITurnContext} context - The turn context for the current turn. This object
+   * provides all necessary information and capabilities
+   * (e.g., `context.getActor()`, `context.getLogger()`,
+   * `context.getPlayerPromptService()`, `context.getGame()`,
+   * a service to query available/valid actions)
+   * that the strategy might need to make an informed decision.
+   * @returns {Promise<ITurnAction>} A Promise that resolves to an {@link ITurnAction}
+   * object. This object identifies the data-defined action chosen
+   * (e.g., via `actionDefinitionId`) and includes any parameters
+   * resolved for this specific instance (e.g., `resolvedParameters`).
+   * If the actor decides to take no overt action (e.g., a "pass turn"
+   * scenario, often represented by a "core:wait" or "core:pass" action),
+   * the strategy should still resolve with an appropriate
+   * {@link ITurnAction} (e.g., `{ actionDefinitionId: 'core:wait' }`).
+   * @throws {Error} If a decision cannot be formulated due to an internal error,
+   * invalid state, or failure of a dependency. The calling
+   * turn state or handler is expected to catch this error and manage
+   * the turn lifecycle accordingly (e.g., by ending the turn with an error).
+   */
+  async decideAction(context) {
+    // This is an interface method and must be implemented by concrete strategy classes.
+    const actorId = context?.getActor()?.id || 'Unknown Actor';
+    const errorMessage = `IActorTurnStrategy.decideAction(context) called on the abstract class or an incomplete implementation for actor '${actorId}'. Concrete strategies must override this method.`;
 
-        const logger = context?.getLogger ? context.getLogger() : console;
-        logger.error(errorMessage, {context});
+    const logger = context?.getLogger ? context.getLogger() : console;
+    logger.error(errorMessage, { context });
 
-        throw new Error(errorMessage);
-    }
+    throw new Error(errorMessage);
+  }
 }
 
 // --- FILE END ---

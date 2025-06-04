@@ -15,6 +15,7 @@ import Entity from '../../src/entities/entity.js'; // Adjust path if needed
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */ // Adjusted path
 /** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */ // Adjusted path
 /** @typedef {object} JSONLogicRule */
+ * @property
 
 // --- Mock Dependencies ---
 
@@ -50,7 +51,6 @@ const createMockEntity = (id) => {
   return entity;
 };
 
-
 // --- Test Suite for Isolated Deep Path Evaluation ---
 
 describe('JsonLogicEvaluationService - Isolated Deep Path E2E Test', () => {
@@ -70,16 +70,24 @@ describe('JsonLogicEvaluationService - Isolated Deep Path E2E Test', () => {
     mockEntityManager.hasComponent.mockReset();
 
     // Default mock implementations
-    mockEntityManager.getEntityInstance.mockImplementation((entityId) => undefined);
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentTypeId) => undefined);
-    mockEntityManager.hasComponent.mockImplementation((entityId, componentTypeId) => false);
+    mockEntityManager.getEntityInstance.mockImplementation(
+      (entityId) => undefined
+    );
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentTypeId) => undefined
+    );
+    mockEntityManager.hasComponent.mockImplementation(
+      (entityId, componentTypeId) => false
+    );
   });
 
   // --- Test Case: Deep Data Access (Component Array) ---
   describe('Deep Data Access Rule (Corrected Path): { "==": [ {"var":"target.components.Inventory.items.0.id"}, "item:key" ] }', () => {
     // Constants needed for the test
     // ***** THE CORRECTED RULE *****
-    const rule = { '==': [ {'var':'target.components.Inventory.items.0.id'}, 'item:key' ] };
+    const rule = {
+      '==': [{ var: 'target.components.Inventory.items.0.id' }, 'item:key'],
+    };
     const targetId = 'chest:1';
     const mockTarget = createMockEntity(targetId);
     const inventoryComponentId = 'Inventory';
@@ -105,8 +113,8 @@ describe('JsonLogicEvaluationService - Isolated Deep Path E2E Test', () => {
       const inventoryData = {
         items: [
           { id: 'item:key', name: 'Old Key', quantity: 1 },
-          { id: 'item:coin', name: 'Gold Coin', quantity: 10 }
-        ]
+          { id: 'item:coin', name: 'Gold Coin', quantity: 10 },
+        ],
       };
       // Configure EM to return the specific component data for this test
       // This will be used by the Proxy's 'get' trap inside createComponentAccessor
@@ -120,7 +128,13 @@ describe('JsonLogicEvaluationService - Isolated Deep Path E2E Test', () => {
 
       // --- Context Creation ---
       // Create the context using the original assembler (assuming hack removed & Proxy restored)
-      const context = createJsonLogicContext(event, null, targetId, mockEntityManager, mockLogger);
+      const context = createJsonLogicContext(
+        event,
+        null,
+        targetId,
+        mockEntityManager,
+        mockLogger
+      );
 
       // --- Evaluate the CORRECTED rule ---
       const result = service.evaluate(rule, context);
@@ -130,9 +144,14 @@ describe('JsonLogicEvaluationService - Isolated Deep Path E2E Test', () => {
 
       // --- Verification ---
       // Verify mocks were called as expected by the context creation and evaluation
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(targetId);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        targetId
+      );
       // getComponentData should be called by the Proxy when 'Inventory' is accessed by json-logic-js
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(targetId, inventoryComponentId);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        targetId,
+        inventoryComponentId
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
   });

@@ -1,7 +1,7 @@
 // src/interfaces/IInitializationService.js
 
 /**
- * @fileoverview Defines the interface for the game initialization service.
+ * @file Defines the interface for the game initialization service.
  * This interface decouples game engine logic from concrete initialization implementations.
  */
 
@@ -29,39 +29,40 @@
  * for a given game world.
  */
 class IInitializationService {
-    /**
-     * Runs the complete asynchronous sequence required to initialize the game for a specific world.
-     *
-     * The method is expected to:
-     * 1. Load necessary world data (e.g., maps, entity definitions, game rules) for the given `worldName`.
-     * 2. Initialize core game systems and services.
-     * 3. Instantiate initial game entities and set up the game state.
-     * 4. Configure input handlers and UI components as needed.
-     * 5. Perform any other setup required before the game loop can begin.
-     *
-     * If the initialization process encounters a critical failure at any step,
-     * the promise should resolve with `success: false` and an `Error` object.
-     * The return object can include additional key-value pairs for more detailed reporting.
-     *
-     * @async
-     * @param {string} worldName - The identifier of the world to initialize. Must be a non-empty string.
-     * @returns {Promise<{success: boolean, error?: Error, [key: string]: any}>}
-     * A promise that resolves with an object indicating the outcome of the initialization.
-     * - `success`: `true` if initialization was successful, `false` otherwise.
-     * - `error`: An `Error` object if `success` is `false`, detailing the failure.
-     * - `[key: string]: any`: Allows for additional, arbitrary properties on the result object.
-     * @throws {Error} This abstract method declaration will throw an error if called directly.
-     * Implementations should validate `worldName` and may throw errors for invalid input
-     * or during critical failures not caught and returned in the InitializationResult.
-     * @abstract
-     */
-    async runInitializationSequence(worldName) {
-        // eslint-disable-next-line no-unused-vars
-        const _worldName = worldName; // To satisfy linter if no-unused-vars is enabled
-        throw new Error("IInitializationService.runInitializationSequence: Method not implemented.");
-    }
+  /**
+   * Runs the complete asynchronous sequence required to initialize the game for a specific world.
+   *
+   * The method is expected to:
+   * 1. Load necessary world data (e.g., maps, entity definitions, game rules) for the given `worldName`.
+   * 2. Initialize core game systems and services.
+   * 3. Instantiate initial game entities and set up the game state.
+   * 4. Configure input handlers and UI components as needed.
+   * 5. Perform any other setup required before the game loop can begin.
+   *
+   * If the initialization process encounters a critical failure at any step,
+   * the promise should resolve with `success: false` and an `Error` object.
+   * The return object can include additional key-value pairs for more detailed reporting.
+   * @async
+   * @param {string} worldName - The identifier of the world to initialize. Must be a non-empty string.
+   * @returns {Promise<{success: boolean, error?: Error, [key: string]: any}>}
+   * A promise that resolves with an object indicating the outcome of the initialization.
+   * - `success`: `true` if initialization was successful, `false` otherwise.
+   * - `error`: An `Error` object if `success` is `false`, detailing the failure.
+   * - `[key: string]: any`: Allows for additional, arbitrary properties on the result object.
+   * @throws {Error} This abstract method declaration will throw an error if called directly.
+   * Implementations should validate `worldName` and may throw errors for invalid input
+   * or during critical failures not caught and returned in the InitializationResult.
+   * @abstract
+   */
+  async runInitializationSequence(worldName) {
+    // eslint-disable-next-line no-unused-vars
+    const _worldName = worldName; // To satisfy linter if no-unused-vars is enabled
+    throw new Error(
+      'IInitializationService.runInitializationSequence: Method not implemented.'
+    );
+  }
 }
 
 // Export the "interface" class for JSDoc type checking and @implements.
-export {IInitializationService};
+export { IInitializationService };
 // InitializationResult is a @typedef, it will be available for import in JSDoc using its path.

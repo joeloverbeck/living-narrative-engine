@@ -21,21 +21,23 @@
  * @description Defines the contract for discovering valid actions available to an entity in the current game state.
  */
 export class IActionDiscoverySystem {
-    /**
-     * Determines all valid actions that the specified entity can currently perform.
-     * This typically involves checking action definitions against the entity's state,
-     * components, location, inventory, and the environment.
-     * @function getValidActions
-     * @param {Entity} actingEntity - The entity for whom to discover actions.
-     * @param {ActionContext} context - The current context, including location and potentially other relevant state.
-     * Note: The `parsedCommand` property within this context will likely be undefined during discovery.
-     * @returns {Promise<DiscoveredActionInfo[]>} A promise that resolves to an array of objects,
-     * each containing the action ID, name, description (optional), and the formatted command string
-     * (e.g., [{id: "core:go", name: "Go North", command: "go north", description: "Move to the north."}]).
-     * Returns an empty array if no actions are valid.
-     * @throws {Error} Implementations might throw errors for unexpected issues during discovery.
-     */
-    async getValidActions(actingEntity, context) {
-        throw new Error('IActionDiscoverySystem.getValidActions method not implemented.');
-    }
+  /**
+   * Determines all valid actions that the specified entity can currently perform.
+   * This typically involves checking action definitions against the entity's state,
+   * components, location, inventory, and the environment.
+   * @function getValidActions
+   * @param {Entity} actingEntity - The entity for whom to discover actions.
+   * @param {ActionContext} context - The current context, including location and potentially other relevant state.
+   * Note: The `parsedCommand` property within this context will likely be undefined during discovery.
+   * @returns {Promise<DiscoveredActionInfo[]>} A promise that resolves to an array of objects,
+   * each containing the action ID, name, description (optional), and the formatted command string
+   * (e.g., [{id: "core:go", name: "Go North", command: "go north", description: "Move to the north."}]).
+   * Returns an empty array if no actions are valid.
+   * @throws {Error} Implementations might throw errors for unexpected issues during discovery.
+   */
+  async getValidActions(actingEntity, context) {
+    throw new Error(
+      'IActionDiscoverySystem.getValidActions method not implemented.'
+    );
+  }
 }

@@ -3,9 +3,9 @@
 /**
  * @jest-environment node
  */
-import {describe, expect, test, jest, beforeEach} from '@jest/globals';
+import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
-import {createJsonLogicContext} from '../../src/logic/contextAssembler.js'; // Adjust path
+import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path
 import Entity from '../../src/entities/entity.js'; // Adjust path - Needed for mock setup
 
 // --- JSDoc Imports for Type Hinting ---
@@ -14,6 +14,7 @@ import Entity from '../../src/entities/entity.js'; // Adjust path - Needed for m
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */
 /** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */ // Import type for mocking
 /** @typedef {object} JSONLogicRule */
+ * @property
 
 // --- Mock Dependencies ---
 
@@ -65,14 +66,14 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
   const compBId = 'compB'; // Another generic component
 
   /** @type {GameEvent} */
-  const baseEvent = {type: 'PATTERN_TEST', payload: {}};
+  const baseEvent = { type: 'PATTERN_TEST', payload: {} };
 
   beforeEach(() => {
     jest.clearAllMocks(); // Clear mocks before each test
 
     // Instantiate the service with the mock logger
     // Uses the REAL json-logic-js library and REAL createJsonLogicContext
-    service = new JsonLogicEvaluationService({logger: mockLogger});
+    service = new JsonLogicEvaluationService({ logger: mockLogger });
     mockLogger.info.mockClear(); // Clear constructor log call
 
     // Reset EntityManager mocks
@@ -86,120 +87,194 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
       if (id === targetId) return mockTarget;
       return undefined;
     });
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentTypeId) => undefined);
-    mockEntityManager.hasComponent.mockImplementation((entityId, componentTypeId) => false);
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentTypeId) => undefined
+    );
+    mockEntityManager.hasComponent.mockImplementation(
+      (entityId, componentTypeId) => false
+    );
   });
 
   // --- AC1: Pattern 1 (Component Existence Check) ---
   describe('AC1: Pattern 1 - Existence Check {"!!": {"var": "..."}}', () => {
-    const rule = {'!!': {'var': `actor.components.${compAId}`}};
-    const targetRule = {'!!': {'var': `target.components.${compAId}`}};
+    const rule = { '!!': { var: `actor.components.${compAId}` } };
+    const targetRule = { '!!': { var: `target.components.${compAId}` } };
 
     test('should return true when actor component exists', () => {
-      const compAData = {prop: 'value'};
+      const compAData = { prop: 'value' };
       // Setup: Actor has compA
       mockEntityManager.getComponentData.mockImplementation((id, compId) => {
         if (id === actorId && compId === compAId) return compAData;
         return undefined;
       });
 
-      const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+      const context = createJsonLogicContext(
+        baseEvent,
+        actorId,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
       const result = service.evaluate(rule, context);
 
       expect(result).toBe(true);
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, compAId);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        actorId,
+        compAId
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     test('should return false when actor component is missing', () => {
       // Setup: Actor does NOT have compA (default mock behavior)
-      const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+      const context = createJsonLogicContext(
+        baseEvent,
+        actorId,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
       const result = service.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, compAId);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        actorId,
+        compAId
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     test('should return true when target component exists (Target Example)', () => {
-      const compAData = {prop: 'target value'};
+      const compAData = { prop: 'target value' };
       // Setup: Target has compA
       mockEntityManager.getComponentData.mockImplementation((id, compId) => {
         if (id === targetId && compId === compAId) return compAData;
         return undefined;
       });
 
-      const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+      const context = createJsonLogicContext(
+        baseEvent,
+        null,
+        targetId,
+        mockEntityManager,
+        mockLogger
+      );
       const result = service.evaluate(targetRule, context);
 
       expect(result).toBe(true);
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(targetId, compAId);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        targetId,
+        compAId
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     test('should return false when target component is missing (Target Example)', () => {
       // Setup: Target does NOT have compA (default mock behavior)
-      const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+      const context = createJsonLogicContext(
+        baseEvent,
+        null,
+        targetId,
+        mockEntityManager,
+        mockLogger
+      );
       const result = service.evaluate(targetRule, context);
 
       expect(result).toBe(false);
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(targetId, compAId);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        targetId,
+        compAId
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
   });
 
   // --- AC2: Pattern 2 (Numeric Comparison) ---
   describe('AC2: Pattern 2 - Numeric Comparison', () => {
-
     // Test case: {"<=": [{"var": "target.components.health.current"}, 0]}
     describe('Rule: {"<=": [{"var": "target.components.health.current"}, 0]}', () => {
-      const rule = {'<=': [{'var': 'target.components.health.current'}, 0]};
+      const rule = { '<=': [{ var: 'target.components.health.current' }, 0] };
       const healthCompId = 'health';
       const healthProp = 'current';
 
       test('should return true when value <= 0 (e.g., -10)', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === healthCompId) return {[healthProp]: -10};
+          if (id === targetId && compId === healthCompId)
+            return { [healthProp]: -10 };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return true when value <= 0 (e.g., 0)', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === healthCompId) return {[healthProp]: 0};
+          if (id === targetId && compId === healthCompId)
+            return { [healthProp]: 0 };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when value > 0 (e.g., 100)', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === healthCompId) return {[healthProp]: 100};
+          if (id === targetId && compId === healthCompId)
+            return { [healthProp]: 100 };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       // --- CORRECTED TEST ---
-      test('should return true when property "current" is missing (null <= 0 is true)', () => { // Updated description and expectation
+      test('should return true when property "current" is missing (null <= 0 is true)', () => {
+        // Updated description and expectation
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === healthCompId) return {max: 100}; // Missing 'current'
+          if (id === targetId && compId === healthCompId) return { max: 100 }; // Missing 'current'
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         // JsonLogic 'var' resolves missing property to null.
         // json-logic-js treats null as 0 in <= comparison, so null <= 0 becomes 0 <= 0 -> true.
         expect(service.evaluate(rule, context)).toBe(true); // Changed expectation to true
       });
 
       // --- CORRECTED TEST ---
-      test('should return true when component "health" is missing (null <= 0 is true)', () => { // Updated description and expectation
+      test('should return true when component "health" is missing (null <= 0 is true)', () => {
+        // Updated description and expectation
         // Default mock behavior: getComponentData returns undefined
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         // JsonLogic 'var' resolves missing component path to null.
         // json-logic-js treats null as 0 in <= comparison, so null <= 0 becomes 0 <= 0 -> true.
         expect(service.evaluate(rule, context)).toBe(true); // Changed expectation to true
@@ -208,49 +283,79 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
 
     // Test case: {">": [{"var": "actor.components.inv.gold"}, 5]}
     describe('Rule: {">": [{"var": "actor.components.inv.gold"}, 5]}', () => {
-      const rule = {'>': [{'var': 'actor.components.inv.gold'}, 5]};
+      const rule = { '>': [{ var: 'actor.components.inv.gold' }, 5] };
       const invCompId = 'inv';
       const goldProp = 'gold';
 
       test('should return true when value > 5 (e.g., 10)', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === invCompId) return {[goldProp]: 10};
+          if (id === actorId && compId === invCompId) return { [goldProp]: 10 };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when value = 5', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === invCompId) return {[goldProp]: 5};
+          if (id === actorId && compId === invCompId) return { [goldProp]: 5 };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when value < 5 (e.g., 3)', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === invCompId) return {[goldProp]: 3};
+          if (id === actorId && compId === invCompId) return { [goldProp]: 3 };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when property "gold" is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === invCompId) return {items: {}}; // Missing 'gold'
+          if (id === actorId && compId === invCompId) return { items: {} }; // Missing 'gold'
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // null > 5 is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when component "inv" is missing', () => {
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // null > 5 is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
@@ -258,28 +363,52 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
 
     // Test case: {">=": [{"var": "context.rollResult"}, 10]}
     describe('Rule: {">=": [{"var": "context.rollResult"}, 10]}', () => {
-      const rule = {'>=': [{'var': 'context.rollResult'}, 10]};
+      const rule = { '>=': [{ var: 'context.rollResult' }, 10] };
 
       test('should return true when context value >= 10 (e.g., 15)', () => {
-        const context = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         context.context.rollResult = 15; // Manually add context variable
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return true when context value >= 10 (e.g., 10)', () => {
-        const context = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         context.context.rollResult = 10; // Manually add context variable
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when context value < 10 (e.g., 9)', () => {
-        const context = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         context.context.rollResult = 9; // Manually add context variable
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when context variable is missing', () => {
-        const context = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // context.context.rollResult is not set
         // null >= 10 is false
         expect(service.evaluate(rule, context)).toBe(false);
@@ -289,43 +418,71 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
 
   // --- AC3: Pattern 3 (String Comparison) ---
   describe('AC3: Pattern 3 - String Comparison {"==": [{"var": "..."}, "..."]}', () => {
-
     // Test case: {"==": [{"var": "target.components.lock.state"}, "locked"]}
     describe('Rule: {"==": [{"var": "target.components.lock.state"}, "locked"]}', () => {
-      const rule = {'==': [{'var': 'target.components.lock.state'}, 'locked']};
+      const rule = {
+        '==': [{ var: 'target.components.lock.state' }, 'locked'],
+      };
       const lockCompId = 'lock';
       const stateProp = 'state';
 
       test('should return true when value is "locked"', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === lockCompId) return {[stateProp]: 'locked'};
+          if (id === targetId && compId === lockCompId)
+            return { [stateProp]: 'locked' };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when value is "unlocked"', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === lockCompId) return {[stateProp]: 'unlocked'};
+          if (id === targetId && compId === lockCompId)
+            return { [stateProp]: 'unlocked' };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when property "state" is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === lockCompId) return {keyType: 'iron'}; // Missing 'state'
+          if (id === targetId && compId === lockCompId)
+            return { keyType: 'iron' }; // Missing 'state'
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         // null == "locked" is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when component "lock" is missing', () => {
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         // null == "locked" is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
@@ -333,40 +490,66 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
 
     // Test case: {"==": [{"var": "actor.components.class.id"}, "mage"]}
     describe('Rule: {"==": [{"var": "actor.components.class.id"}, "mage"]}', () => {
-      const rule = {'==': [{'var': 'actor.components.class.id'}, 'mage']};
+      const rule = { '==': [{ var: 'actor.components.class.id' }, 'mage'] };
       const classCompId = 'class';
       const idProp = 'id';
 
       test('should return true when value is "mage"', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === classCompId) return {[idProp]: 'mage', level: 5};
+          if (id === actorId && compId === classCompId)
+            return { [idProp]: 'mage', level: 5 };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when value is "warrior"', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === classCompId) return {[idProp]: 'warrior', level: 5};
+          if (id === actorId && compId === classCompId)
+            return { [idProp]: 'warrior', level: 5 };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when property "id" is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === classCompId) return {level: 5}; // Missing 'id'
+          if (id === actorId && compId === classCompId) return { level: 5 }; // Missing 'id'
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // null == "mage" is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when component "class" is missing', () => {
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // null == "mage" is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
@@ -375,43 +558,69 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
 
   // --- AC4: Pattern 4 (Boolean Check) ---
   describe('AC4: Pattern 4 - Boolean Check', () => {
-
     // Test case: {"==": [{"var": "target.components.door.isOpen"}, true]}
     describe('Rule: {"==": [{"var": "target.components.door.isOpen"}, true]}', () => {
-      const rule = {'==': [{'var': 'target.components.door.isOpen'}, true]};
+      const rule = { '==': [{ var: 'target.components.door.isOpen' }, true] };
       const doorCompId = 'door';
       const isOpenProp = 'isOpen';
 
       test('should return true when value is true', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === doorCompId) return {[isOpenProp]: true};
+          if (id === targetId && compId === doorCompId)
+            return { [isOpenProp]: true };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when value is false', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === doorCompId) return {[isOpenProp]: false};
+          if (id === targetId && compId === doorCompId)
+            return { [isOpenProp]: false };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when property "isOpen" is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === doorCompId) return {color: 'brown'}; // Missing 'isOpen'
+          if (id === targetId && compId === doorCompId)
+            return { color: 'brown' }; // Missing 'isOpen'
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         // null == true is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when component "door" is missing', () => {
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         // null == true is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
@@ -419,40 +628,67 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
 
     // Test case: { "var": "target.components.door.isOpen"} (shorthand)
     describe('Rule: { "var": "target.components.door.isOpen"} (Shorthand)', () => {
-      const rule = {'var': 'target.components.door.isOpen'};
+      const rule = { var: 'target.components.door.isOpen' };
       const doorCompId = 'door';
       const isOpenProp = 'isOpen';
 
       test('should return true when value is true', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === doorCompId) return {[isOpenProp]: true};
+          if (id === targetId && compId === doorCompId)
+            return { [isOpenProp]: true };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when value is false', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === doorCompId) return {[isOpenProp]: false};
+          if (id === targetId && compId === doorCompId)
+            return { [isOpenProp]: false };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when property "isOpen" is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === targetId && compId === doorCompId) return {color: 'brown'}; // Missing 'isOpen'
+          if (id === targetId && compId === doorCompId)
+            return { color: 'brown' }; // Missing 'isOpen'
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         // var resolves to null, which is falsy
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when component "door" is missing', () => {
-        const context = createJsonLogicContext(baseEvent, null, targetId, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          null,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
         // var resolves to null, which is falsy
         expect(service.evaluate(rule, context)).toBe(false);
       });
@@ -460,40 +696,67 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
 
     // Test case: {"var": "actor.components.hidden.isActive"}
     describe('Rule: {"var": "actor.components.hidden.isActive"}', () => {
-      const rule = {'var': 'actor.components.hidden.isActive'};
+      const rule = { var: 'actor.components.hidden.isActive' };
       const hiddenCompId = 'hidden';
       const isActiveProp = 'isActive';
 
       test('should return true when value is true', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === hiddenCompId) return {[isActiveProp]: true};
+          if (id === actorId && compId === hiddenCompId)
+            return { [isActiveProp]: true };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when value is false', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === hiddenCompId) return {[isActiveProp]: false};
+          if (id === actorId && compId === hiddenCompId)
+            return { [isActiveProp]: false };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when property "isActive" is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === hiddenCompId) return {duration: 10}; // Missing 'isActive'
+          if (id === actorId && compId === hiddenCompId)
+            return { duration: 10 }; // Missing 'isActive'
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // var resolves to null, which is falsy
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when component "hidden" is missing', () => {
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // var resolves to null, which is falsy
         expect(service.evaluate(rule, context)).toBe(false);
       });
@@ -502,80 +765,117 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
 
   // --- AC5: Pattern 5 (Simplified Item Check - Component/Property Existence) ---
   describe('AC5: Pattern 5 - Simplified Item Check {"!!": {"var": "..."}}', () => {
-
     // Test case: {"!!": {"var": "actor.components.quest_item_key"}}
     describe('Rule: {"!!": {"var": "actor.components.quest_item_key"}}', () => {
-      const rule = {'!!': {'var': 'actor.components.quest_item_key'}};
+      const rule = { '!!': { var: 'actor.components.quest_item_key' } };
       const questKeyCompId = 'quest_item_key';
 
       test('should return true when component "quest_item_key" exists', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === questKeyCompId) return {uses: 1}; // Data exists
+          if (id === actorId && compId === questKeyCompId) return { uses: 1 }; // Data exists
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when component "quest_item_key" is missing', () => {
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(false);
       });
     });
 
     // Test case: {"!!": {"var": "actor.components.inv.items.orb"}}
     describe('Rule: {"!!": {"var": "actor.components.inv.items.orb"}}', () => {
-      const rule = {'!!': {'var': 'actor.components.inv.items.orb'}};
+      const rule = { '!!': { var: 'actor.components.inv.items.orb' } };
       const invCompId = 'inv';
 
       test('should return true when the full path exists (inv.items.orb)', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === invCompId) return {
-            gold: 50,
-            items: {
-              key: {id: 'key_01'},
-              orb: {id: 'orb_of_light', charges: 3} // Orb exists
-            }
-          };
+          if (id === actorId && compId === invCompId)
+            return {
+              gold: 50,
+              items: {
+                key: { id: 'key_01' },
+                orb: { id: 'orb_of_light', charges: 3 }, // Orb exists
+              },
+            };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         expect(service.evaluate(rule, context)).toBe(true);
       });
 
       test('should return false when the final property ("orb") is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === invCompId) return {
-            gold: 50,
-            items: {
-              key: {id: 'key_01'} // Orb is missing
-            }
-          };
+          if (id === actorId && compId === invCompId)
+            return {
+              gold: 50,
+              items: {
+                key: { id: 'key_01' }, // Orb is missing
+              },
+            };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // var resolves to null, !!null is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when an intermediate property ("items") is missing', () => {
         mockEntityManager.getComponentData.mockImplementation((id, compId) => {
-          if (id === actorId && compId === invCompId) return {
-            gold: 50 // 'items' property is missing
-          };
+          if (id === actorId && compId === invCompId)
+            return {
+              gold: 50, // 'items' property is missing
+            };
           return undefined;
         });
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // var resolves to null, !!null is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
 
       test('should return false when the component ("inv") is missing', () => {
-        const context = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
+        const context = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          null,
+          mockEntityManager,
+          mockLogger
+        );
         // var resolves to null, !!null is false
         expect(service.evaluate(rule, context)).toBe(false);
       });
     });
   });
-
 }); // End describe JsonLogicEvaluationService - Component Patterns (TEST-105)

@@ -17,7 +17,6 @@
  * @typedef {object} HttpClientRequestOptions
  * @description Defines the options for an HTTP request made through an IHttpClient implementation.
  * These options provide a standardized way to specify common request parameters.
- *
  * @property {HttpMethod} method - The HTTP method to be used for the request (e.g., 'GET', 'POST').
  * @property {Record<string, string>} [headers] - Optional. A dictionary of HTTP headers to be sent with the request.
  * Keys are header names and values are header values. For example, `{'Content-Type': 'application/json', 'Authorization': 'Bearer token'}`.
@@ -49,41 +48,39 @@
  * interface (e.g., a `RetryHttpClient`), rather than by every direct implementation.
  */
 export class IHttpClient {
-    /**
-     * Asynchronously makes an HTTP request to the specified URL with the given options.
-     *
-     * @async
-     * @param {string} url - The absolute URL to which the request will be made.
-     * @param {HttpClientRequestOptions} options - An object containing the request details
-     * such as method, headers, body, and timeout.
-     * @returns {Promise<any>} A Promise that resolves with the parsed JSON response body
-     * from the server if the request is successful and the response content type indicates JSON.
-     * For LLM interactions, this is typically the primary need.
-     *
-     * The promise should reject if:
-     * - A network error occurs (e.g., DNS resolution failure, connection refused).
-     * - The request times out based on the `options.timeout` value.
-     * - The server responds with a non-successful HTTP status code (e.g., 4xx or 5xx)
-     * that is not handled by any internal retry logic (if present in the implementation).
-     * - The response is expected to be JSON (common case for LLMs) but cannot be parsed as such.
-     *
-     * Rejections should ideally use a custom error object (e.g., `HttpClientError`) that
-     * includes details like the HTTP status code (if available), a descriptive message,
-     * and potentially the original error or response data for debugging.
-     *
-     * @throws {Error} The promise will reject with an Error (or a custom subclass like HttpClientError).
-     * The error should encapsulate details about the failure.
-     * For example:
-     * `new HttpClientError('Request failed with status 404', { status: 404, url: '...' })`
-     * `new HttpClientError('Network error', { cause: originalNetworkError, url: '...' })`
-     * `new HttpClientError('Request timeout', { url: '...' })`
-     * `new HttpClientError('Failed to parse JSON response', { cause: parsingError, url: '...' })`
-     */
-    async request(url, options) {
-        // This is an interface method and should not be called directly.
-        // Implementations must override this method.
-        throw new Error("IHttpClient.request method not implemented.");
-    }
+  /**
+   * Asynchronously makes an HTTP request to the specified URL with the given options.
+   * @async
+   * @param {string} url - The absolute URL to which the request will be made.
+   * @param {HttpClientRequestOptions} options - An object containing the request details
+   * such as method, headers, body, and timeout.
+   * @returns {Promise<any>} A Promise that resolves with the parsed JSON response body
+   * from the server if the request is successful and the response content type indicates JSON.
+   * For LLM interactions, this is typically the primary need.
+   *
+   * The promise should reject if:
+   * - A network error occurs (e.g., DNS resolution failure, connection refused).
+   * - The request times out based on the `options.timeout` value.
+   * - The server responds with a non-successful HTTP status code (e.g., 4xx or 5xx)
+   * that is not handled by any internal retry logic (if present in the implementation).
+   * - The response is expected to be JSON (common case for LLMs) but cannot be parsed as such.
+   *
+   * Rejections should ideally use a custom error object (e.g., `HttpClientError`) that
+   * includes details like the HTTP status code (if available), a descriptive message,
+   * and potentially the original error or response data for debugging.
+   * @throws {Error} The promise will reject with an Error (or a custom subclass like HttpClientError).
+   * The error should encapsulate details about the failure.
+   * For example:
+   * `new HttpClientError('Request failed with status 404', { status: 404, url: '...' })`
+   * `new HttpClientError('Network error', { cause: originalNetworkError, url: '...' })`
+   * `new HttpClientError('Request timeout', { url: '...' })`
+   * `new HttpClientError('Failed to parse JSON response', { cause: parsingError, url: '...' })`
+   */
+  async request(url, options) {
+    // This is an interface method and should not be called directly.
+    // Implementations must override this method.
+    throw new Error('IHttpClient.request method not implemented.');
+  }
 }
 
 // --- NEW FILE END ---

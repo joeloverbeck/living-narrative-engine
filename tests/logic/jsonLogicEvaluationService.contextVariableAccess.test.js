@@ -2,7 +2,6 @@
 
 /**
  * @jest-environment node
- *
  * @fileoverview This file contains unit tests for the JsonLogicEvaluationService.
  * It focuses specifically on testing access to custom variables added directly
  * to the `context.context` object using the 'var' operator
@@ -12,13 +11,13 @@
  * Corresponds to Ticket: [PARENT_ID].8
  */
 
-import {describe, expect, test, jest, beforeEach, it} from '@jest/globals';
+import { describe, expect, test, jest, beforeEach, it } from '@jest/globals';
 
 // --- Class Under Test ---
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 
 // --- Dependencies for Mocking & Context ---
-import {createJsonLogicContext} from '../../src/logic/contextAssembler.js'; // Adjust path as needed
+import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path as needed
 import Entity from '../../src/entities/entity.js'; // Adjust path as needed - For mock context setup
 
 // --- JSDoc Imports for Type Hinting ---
@@ -27,6 +26,7 @@ import Entity from '../../src/entities/entity.js'; // Adjust path as needed - Fo
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */ // Adjust path as needed
 /** @typedef {object} JSONLogicRule */
+ * @property
 
 // --- Mock Dependencies ---
 
@@ -63,7 +63,7 @@ const createMockEntity = (id) => new Entity(id);
 
 // Define a base event structure for context creation
 /** @type {GameEvent} */
-const baseEvent = {type: 'TEST_EVENT', payload: {}};
+const baseEvent = { type: 'TEST_EVENT', payload: {} };
 
 // Define base actor/target IDs (can be null as they aren't the focus here)
 const actorId = 'actor_for_context';
@@ -81,7 +81,7 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
     jest.clearAllMocks();
 
     // Instantiate JsonLogicEvaluationService using the mockLogger
-    service = new JsonLogicEvaluationService({logger: mockLogger});
+    service = new JsonLogicEvaluationService({ logger: mockLogger });
 
     // Reset mockEntityManager methods (though not directly used for context.* access, needed for context creation)
     mockEntityManager.getEntityInstance.mockReset();
@@ -90,16 +90,23 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
 
     // Set default mock implementations: Assume entities are not found by default
     mockEntityManager.getEntityInstance.mockImplementation((id) => undefined);
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentTypeId) => undefined);
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentTypeId) => undefined
+    );
   });
 
   // --- [PARENT_ID].8: Context Variable Access Tests ---
   describe('Context Variable Access (context.*)', () => {
-
     describe('Existing Variable Access', () => {
       test('should access existing top-level variable (context.weather)', () => {
-        const conditionJson = {'==': [{'var': 'context.weather'}, 'sunny']};
-        const mockContext = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+        const conditionJson = { '==': [{ var: 'context.weather' }, 'sunny'] };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
 
         // Manually add the variable to the context object
         mockContext.context.weather = 'sunny';
@@ -111,11 +118,19 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
       });
 
       test('should access existing nested variable (context.queryResult.value)', () => {
-        const conditionJson = {'==': [{'var': 'context.queryResult.value'}, 100]};
-        const mockContext = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+        const conditionJson = {
+          '==': [{ var: 'context.queryResult.value' }, 100],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
 
         // Manually add the nested structure to the context object
-        mockContext.context.queryResult = {value: 100, status: 'completed'};
+        mockContext.context.queryResult = { value: 100, status: 'completed' };
 
         const result = service.evaluate(conditionJson, mockContext);
 
@@ -124,8 +139,14 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
       });
 
       test('should return false for incorrect value comparison (context.weather)', () => {
-        const conditionJson = {'==': [{'var': 'context.weather'}, 'rainy']};
-        const mockContext = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+        const conditionJson = { '==': [{ var: 'context.weather' }, 'rainy'] };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
 
         // Manually add the variable with a different value
         mockContext.context.weather = 'sunny';
@@ -137,11 +158,19 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
       });
 
       test('should return false for incorrect nested value comparison (context.queryResult.value)', () => {
-        const conditionJson = {'==': [{'var': 'context.queryResult.value'}, 99]};
-        const mockContext = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+        const conditionJson = {
+          '==': [{ var: 'context.queryResult.value' }, 99],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
 
         // Manually add the nested structure
-        mockContext.context.queryResult = {value: 100, status: 'completed'};
+        mockContext.context.queryResult = { value: 100, status: 'completed' };
 
         const result = service.evaluate(conditionJson, mockContext);
 
@@ -153,8 +182,14 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
     describe('Missing Variable Access', () => {
       test('should return null for missing top-level variable (context.missingVar)', () => {
         // Rule checks if the result is null
-        const conditionJson = {'==': [{'var': 'context.missingVar'}, null]};
-        const mockContext = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+        const conditionJson = { '==': [{ var: 'context.missingVar' }, null] };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
 
         // Do NOT add mockContext.context.missingVar
 
@@ -167,8 +202,16 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
 
       test('should return null for nested access when parent variable is missing (context.missingVar.prop)', () => {
         // Rule checks if the result is null
-        const conditionJson = {'==': [{'var': 'context.missingVar.prop'}, null]};
-        const mockContext = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+        const conditionJson = {
+          '==': [{ var: 'context.missingVar.prop' }, null],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
 
         // Do NOT add mockContext.context.missingVar
 
@@ -181,11 +224,19 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
 
       test('should return null for nested access when property is missing on existing parent (context.existingVar.missingProp)', () => {
         // Rule checks if the result is null
-        const conditionJson = {'==': [{'var': 'context.existingVar.missingProp'}, null]};
-        const mockContext = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+        const conditionJson = {
+          '==': [{ var: 'context.existingVar.missingProp' }, null],
+        };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
 
         // Add the parent variable, but not the nested property
-        mockContext.context.existingVar = {someValue: 42};
+        mockContext.context.existingVar = { someValue: 42 };
 
         const result = service.evaluate(conditionJson, mockContext);
 
@@ -196,8 +247,14 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
       });
 
       test('should check truthiness (!!) evaluates to false for missing variable', () => {
-        const conditionJson = {'!!': {'var': 'context.anotherMissingVar'}};
-        const mockContext = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+        const conditionJson = { '!!': { var: 'context.anotherMissingVar' } };
+        const mockContext = createJsonLogicContext(
+          baseEvent,
+          actorId,
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
 
         // Do NOT add mockContext.context.anotherMissingVar
 
@@ -207,9 +264,6 @@ describe('JsonLogicEvaluationService - Context Variable Access Tests ([PARENT_ID
         expect(result).toBe(false);
         expect(mockLogger.error).not.toHaveBeenCalled();
       });
-
     }); // End describe Missing Variable Access
-
   }); // End describe Context Variable Access
-
 }); // End describe JsonLogicEvaluationService

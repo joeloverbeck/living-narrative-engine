@@ -11,17 +11,19 @@
  * handler implementations.
  */
 export class ITurnHandlerResolver {
-    /**
-     * Resolves the correct turn handler implementation for the given actor entity.
-     * @function resolveHandler
-     * @async
-     * @param {Entity} actor - The entity whose turn handler needs to be resolved.
-     * @returns {Promise<ITurnHandler | null>} A promise that resolves with the appropriate
-     * ITurnHandler instance for the actor, or null if no specific handler is found or applicable.
-     * @throws {Error} Implementations might throw if the actor is invalid or a critical
-     * error occurs during resolution.
-     */
-    async resolveHandler(actor) {
-        throw new Error('ITurnHandlerResolver.resolveHandler method not implemented.');
-    }
+  /**
+   * Resolves the correct turn handler implementation for the given actor entity.
+   * @function resolveHandler
+   * @async
+   * @param {Entity} actor - The entity whose turn handler needs to be resolved.
+   * @returns {Promise<ITurnHandler | null>} A promise that resolves with the appropriate
+   * ITurnHandler instance for the actor, or null if no specific handler is found or applicable.
+   * @throws {Error} Implementations might throw if the actor is invalid or a critical
+   * error occurs during resolution.
+   */
+  async resolveHandler(actor) {
+    throw new Error(
+      'ITurnHandlerResolver.resolveHandler method not implemented.'
+    );
+  }
 }

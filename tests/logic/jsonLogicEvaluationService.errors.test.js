@@ -2,7 +2,6 @@
 
 /**
  * @jest-environment node
- *
  * @fileoverview This file contains unit tests for the JsonLogicEvaluationService,
  * specifically focusing on error handling scenarios and the handling of non-boolean
  * results returned by the underlying json-logic-js library.
@@ -10,7 +9,14 @@
  * Corresponds to Ticket: [PARENT_ID].10
  */
 
-import {describe, expect, test, jest, beforeEach, afterEach} from '@jest/globals';
+import {
+  describe,
+  expect,
+  test,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import jsonLogic from 'json-logic-js'; // Import the actual library to spy on
 
 // --- Class Under Test ---
@@ -20,6 +26,7 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
 /** @typedef {object} JSONLogicRule */
+ * @property
 
 // --- Mock Dependencies ---
 
@@ -43,7 +50,7 @@ describe('JsonLogicEvaluationService - Error Handling & Non-Boolean Results ([PA
   // --- Test Setup & Teardown ---
   beforeEach(() => {
     jest.clearAllMocks(); // Clear mocks before each test
-    service = new JsonLogicEvaluationService({logger: mockLogger});
+    service = new JsonLogicEvaluationService({ logger: mockLogger });
 
     // IMPORTANT: Set up the spy on jsonLogic.apply here or within the nested describe
     // Spying here means it applies to all tests in this top-level describe.
@@ -58,14 +65,14 @@ describe('JsonLogicEvaluationService - Error Handling & Non-Boolean Results ([PA
   });
 
   // Define dummy rule and context for reuse
-  const dummyRule = {'var': 'data.value'};
-  const dummyContext = {data: {value: 10}};
-  const ruleSummary = JSON.stringify(dummyRule).substring(0, 150) + (JSON.stringify(dummyRule).length > 150 ? '...' : '');
-
+  const dummyRule = { var: 'data.value' };
+  const dummyContext = { data: { value: 10 } };
+  const ruleSummary =
+    JSON.stringify(dummyRule).substring(0, 150) +
+    (JSON.stringify(dummyRule).length > 150 ? '...' : '');
 
   // --- [PARENT_ID].10: Error Handling Tests ---
   describe('Error Handling during jsonLogic.apply', () => {
-
     test('should return false and log error when jsonLogic.apply throws an exception', () => {
       // Arrange
       const evaluationError = new Error('Evaluation failed!');
@@ -83,11 +90,15 @@ describe('JsonLogicEvaluationService - Error Handling & Non-Boolean Results ([PA
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       // Verify the error message structure and the logged error object
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`Error evaluating JSON Logic rule: ${ruleSummary}`),
+        expect.stringContaining(
+          `Error evaluating JSON Logic rule: ${ruleSummary}`
+        ),
         evaluationError // Check that the original error object is passed
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`Context keys: ${Object.keys(dummyContext || {}).join(', ')}`),
+        expect.stringContaining(
+          `Context keys: ${Object.keys(dummyContext || {}).join(', ')}`
+        ),
         evaluationError
       );
       // More specific check combining parts:
@@ -97,6 +108,4 @@ describe('JsonLogicEvaluationService - Error Handling & Non-Boolean Results ([PA
       );
     });
   }); // End describe Error Handling during jsonLogic.apply
-
-
 }); // End describe JsonLogicEvaluationService

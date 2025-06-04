@@ -3,7 +3,14 @@
 /**
  * @jest-environment node
  */
-import {describe, expect, test, jest, beforeEach, afterEach} from '@jest/globals';
+import {
+  describe,
+  expect,
+  test,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import jsonLogic from 'json-logic-js'; // Import the actual library to spy on
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 
@@ -11,6 +18,7 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {object} JSONLogicRule */
+ * @property
 
 // --- Mock Dependencies ---
 
@@ -53,7 +61,6 @@ const getContextKeysString = (context) => {
   return Object.keys(context).join(', ');
 };
 
-
 // --- Test Suite for Error Handling Scenarios ---
 
 describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
@@ -62,20 +69,22 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
   let applySpy; // To hold the spy for jsonLogic.apply
 
   /** @type {JSONLogicRule} */
-  const dummyRule = {'==': [1, 1]}; // Simple valid rule structure
+  const dummyRule = { '==': [1, 1] }; // Simple valid rule structure
   /** @type {JsonLogicEvaluationContext} */
   const dummyContext = {
-    event: {type: 'DUMMY', payload: {}},
-    actor: null, target: null, context: {turn: 1},
-    globals: {gameVersion: '1.0'}, entities: {}
+    event: { type: 'DUMMY', payload: {} },
+    actor: null,
+    target: null,
+    context: { turn: 1 },
+    globals: { gameVersion: '1.0' },
+    entities: {},
   };
   const expectedRuleSummary = getRuleSummary(dummyRule);
   const expectedContextKeysStr = getContextKeysString(dummyContext);
 
-
   beforeEach(() => {
     jest.clearAllMocks(); // Clear mocks before each test
-    service = new JsonLogicEvaluationService({logger: mockLogger});
+    service = new JsonLogicEvaluationService({ logger: mockLogger });
     mockLogger.info.mockClear();
     applySpy = jest.spyOn(jsonLogic, 'apply');
   });
@@ -125,22 +134,58 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
     // Define test cases including their expected boolean result based on truthiness
     const nonBooleanTestCases = [
       // Truthy values
-      {value: 123, type: 'number', description: 'a number (123)', expectedResult: true},
-      {value: 'unexpected', type: 'string', description: 'a string ("unexpected")', expectedResult: true},
-      {value: {}, type: 'object', description: 'an object ({})', expectedResult: true},
-      {value: [], type: 'object', description: 'an array ([])', expectedResult: true}, // Empty array is truthy
+      {
+        value: 123,
+        type: 'number',
+        description: 'a number (123)',
+        expectedResult: true,
+      },
+      {
+        value: 'unexpected',
+        type: 'string',
+        description: 'a string ("unexpected")',
+        expectedResult: true,
+      },
+      {
+        value: {},
+        type: 'object',
+        description: 'an object ({})',
+        expectedResult: true,
+      },
+      {
+        value: [],
+        type: 'object',
+        description: 'an array ([])',
+        expectedResult: true,
+      }, // Empty array is truthy
       // Falsy values
-      {value: 0, type: 'number', description: 'a number (0)', expectedResult: false},
-      {value: null, type: 'object', description: 'null', expectedResult: false},
-      {value: undefined, type: 'undefined', description: 'undefined', expectedResult: false},
+      {
+        value: 0,
+        type: 'number',
+        description: 'a number (0)',
+        expectedResult: false,
+      },
+      {
+        value: null,
+        type: 'object',
+        description: 'null',
+        expectedResult: false,
+      },
+      {
+        value: undefined,
+        type: 'undefined',
+        description: 'undefined',
+        expectedResult: false,
+      },
       // { value: "",          type: 'string',    description: 'an empty string ("")',   expectedResult: false }, // Optional: Add empty string if relevant
       // { value: NaN,         type: 'number',    description: 'NaN',                     expectedResult: false }, // Optional: Add NaN if relevant
     ];
 
     // Use test.each to run the modified assertions
-    test.each(nonBooleanTestCases)
-    ('should return $expectedResult (truthiness of $description) and NOT log an error when jsonLogic.apply returns $description',
-      ({value, type, description, expectedResult}) => { // Added expectedResult
+    test.each(nonBooleanTestCases)(
+      'should return $expectedResult (truthiness of $description) and NOT log an error when jsonLogic.apply returns $description',
+      ({ value, type, description, expectedResult }) => {
+        // Added expectedResult
         // Configure the mock to return the specific non-boolean value
         applySpy.mockReturnValue(value);
 
@@ -154,14 +199,14 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
 
         expect(mockLogger.error).not.toHaveBeenCalled(); // Assert that error logger was NOT called
         // logger.debug *would* be called by the original code, but we aren't testing debug logs here.
-      });
+      }
+    );
   });
 
   // --- Test Case: Invalid Inputs Passed to Service ---
   // (This suite should remain the same, as it tests the behavior when jsonLogic.apply *throws* due to bad inputs,
   // which is handled by the catch block in the original code)
   describe('when evaluate is called with invalid arguments', () => {
-
     // Test case: Rule is null
     test('should return false and log error if the rule is null (causing jsonLogic.apply to throw)', () => {
       const invalidRule = null;
@@ -195,7 +240,9 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
       let capturedError = null;
 
       applySpy.mockImplementation(() => {
-        const err = new TypeError(`Simulated error: Invalid rule: ${invalidRule}`);
+        const err = new TypeError(
+          `Simulated error: Invalid rule: ${invalidRule}`
+        );
         capturedError = err;
         throw err;
       });
@@ -245,7 +292,9 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
       let capturedError = null;
 
       applySpy.mockImplementation(() => {
-        const err = new TypeError(`Simulated error: Invalid context: ${invalidContext}`);
+        const err = new TypeError(
+          `Simulated error: Invalid context: ${invalidContext}`
+        );
         capturedError = err;
         throw err;
       });
@@ -262,5 +311,4 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
       );
     });
   });
-
 }); // End describe JsonLogicEvaluationService - Error Handling

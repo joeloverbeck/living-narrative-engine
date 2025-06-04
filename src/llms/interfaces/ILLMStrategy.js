@@ -26,7 +26,6 @@
  * @typedef {object} LLMStrategyExecuteParams
  * @description Defines the single parameter object passed to the `execute` method of an `ILLMStrategy`.
  * This object encapsulates all necessary information for a strategy to perform its function.
- *
  * @property {string} gameSummary - The textual representation of the game state or prompt input
  * that will be sent to the Large Language Model.
  * @property {LLMModelConfig} llmConfig - The configuration object for the specific LLM being used.
@@ -57,46 +56,44 @@
  * Concrete classes like `OpenAIToolCallingStrategy` or `OllamaNativeJsonStrategy` will implement this interface.
  */
 export class ILLMStrategy {
-    /**
-     * Executes the LLM communication strategy.
-     * This method is responsible for preparing the request according to the specific LLM provider's API
-     * and the configured `jsonOutputStrategy.method`, making the API call (usually via an IHttpClient
-     * instance provided indirectly or directly), and then extracting the raw JSON string from the
-     * LLM's response.
-     *
-     * @async
-     * @param {LLMStrategyExecuteParams} params - An object containing all necessary parameters for execution,
-     * including the game summary, LLM configuration, API key (if applicable), and environment context.
-     * @returns {Promise<string>} A Promise that resolves to a string. This string is expected to be
-     * the raw, extracted JSON output from the LLM. It should be suitable for further parsing by
-     * an `LLMResponseProcessor` or a similar component that handles the final transformation
-     * into a structured game action (e.g., an `ITurnAction` object).
-     * The content of this string depends heavily on the LLM and the `jsonOutputStrategy.method` used
-     * (e.g., for OpenAI tool calling, it would be the JSON string found in `tool_calls[0].function.arguments`).
-     *
-     * @throws {LLMStrategyError | HttpClientError | ConfigurationError | Error}
-     * The method should throw an appropriate error if any part of the strategy execution fails.
-     * This includes, but is not limited to:
-     * - `ConfigurationError`: If essential configuration is missing or invalid for the strategy to operate
-     * (e.g., `llmConfig` missing a field required by this specific strategy).
-     * - `LLMStrategyError` (or a more specific custom error derived from it): If there's an issue specific
-     * to the strategy's logic, such as an inability to construct a valid payload for the target LLM
-     * based on the provided `gameSummary` and `llmConfig`, or if the LLM's response, while successfully
-     * received, does not conform to the expected structure for the strategy, making it impossible
-     * to reliably extract the JSON content.
-     * - `HttpClientError`: If the underlying HTTP request to the LLM API fails (e.g., network errors,
-     * non-2xx HTTP status codes like 401 Unauthorized, 403 Forbidden, 429 Too Many Requests, 500 Internal Server Error,
-     * or request timeouts) and these errors are propagated from the HTTP client.
-     * - Standard `Error` objects: For any other unexpected issues.
-     *
-     * Callers should be prepared to catch these errors to handle failures gracefully, potentially
-     * falling back to default actions or logging detailed diagnostics.
-     */
-    async execute(params) {
-        // This is an interface method and should not be called directly on ILLMStrategy itself.
-        // Concrete implementations must override this method.
-        throw new Error("ILLMStrategy.execute method not implemented.");
-    }
+  /**
+   * Executes the LLM communication strategy.
+   * This method is responsible for preparing the request according to the specific LLM provider's API
+   * and the configured `jsonOutputStrategy.method`, making the API call (usually via an IHttpClient
+   * instance provided indirectly or directly), and then extracting the raw JSON string from the
+   * LLM's response.
+   * @async
+   * @param {LLMStrategyExecuteParams} params - An object containing all necessary parameters for execution,
+   * including the game summary, LLM configuration, API key (if applicable), and environment context.
+   * @returns {Promise<string>} A Promise that resolves to a string. This string is expected to be
+   * the raw, extracted JSON output from the LLM. It should be suitable for further parsing by
+   * an `LLMResponseProcessor` or a similar component that handles the final transformation
+   * into a structured game action (e.g., an `ITurnAction` object).
+   * The content of this string depends heavily on the LLM and the `jsonOutputStrategy.method` used
+   * (e.g., for OpenAI tool calling, it would be the JSON string found in `tool_calls[0].function.arguments`).
+   * @throws {LLMStrategyError | HttpClientError | ConfigurationError | Error}
+   * The method should throw an appropriate error if any part of the strategy execution fails.
+   * This includes, but is not limited to:
+   * - `ConfigurationError`: If essential configuration is missing or invalid for the strategy to operate
+   * (e.g., `llmConfig` missing a field required by this specific strategy).
+   * - `LLMStrategyError` (or a more specific custom error derived from it): If there's an issue specific
+   * to the strategy's logic, such as an inability to construct a valid payload for the target LLM
+   * based on the provided `gameSummary` and `llmConfig`, or if the LLM's response, while successfully
+   * received, does not conform to the expected structure for the strategy, making it impossible
+   * to reliably extract the JSON content.
+   * - `HttpClientError`: If the underlying HTTP request to the LLM API fails (e.g., network errors,
+   * non-2xx HTTP status codes like 401 Unauthorized, 403 Forbidden, 429 Too Many Requests, 500 Internal Server Error,
+   * or request timeouts) and these errors are propagated from the HTTP client.
+   * - Standard `Error` objects: For any other unexpected issues.
+   *
+   * Callers should be prepared to catch these errors to handle failures gracefully, potentially
+   * falling back to default actions or logging detailed diagnostics.
+   */
+  async execute(params) {
+    // This is an interface method and should not be called directly on ILLMStrategy itself.
+    // Concrete implementations must override this method.
+    throw new Error('ILLMStrategy.execute method not implemented.');
+  }
 }
 
 // --- NEW FILE END ---

@@ -10,13 +10,13 @@
  * interaction, and short-circuit behaviour.
  */
 
-import {describe, test, expect, beforeEach, jest} from '@jest/globals';
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 
 // SUT
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 
 // Context helper
-import {createJsonLogicContext} from '../../src/logic/contextAssembler.js';
+import { createJsonLogicContext } from '../../src/logic/contextAssembler.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared mocks
@@ -46,9 +46,9 @@ const mockEntityManager = {
   activeEntities: new Map(),
 };
 
-const makeEntity = (id) => ({id});   // trivial entity factory
+const makeEntity = (id) => ({ id }); // trivial entity factory
 
-const baseEvent = {type: 'TEST_EVENT', payload: {}};
+const baseEvent = { type: 'TEST_EVENT', payload: {} };
 const actorId = 'player';
 const targetId = 'door';
 
@@ -61,7 +61,7 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new JsonLogicEvaluationService({logger: mockLogger});
+    service = new JsonLogicEvaluationService({ logger: mockLogger });
   });
 
   // =========================================================================
@@ -69,31 +69,49 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
   // =========================================================================
   describe('basic operator truth-tables', () => {
     test.each([
-      {rule: {and: [true, true]}, expected: true},
-      {rule: {and: [true, false]}, expected: false},
-      {rule: {and: [false, false, true]}, expected: false},
-      {rule: {and: [true, true, true]}, expected: true},
-    ])('AND %o → %s', ({rule, expected}) => {
-      const ctx = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+      { rule: { and: [true, true] }, expected: true },
+      { rule: { and: [true, false] }, expected: false },
+      { rule: { and: [false, false, true] }, expected: false },
+      { rule: { and: [true, true, true] }, expected: true },
+    ])('AND %o → %s', ({ rule, expected }) => {
+      const ctx = createJsonLogicContext(
+        baseEvent,
+        null,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
       expect(service.evaluate(rule, ctx)).toBe(expected);
     });
 
     test.each([
-      {rule: {or: [false, false]}, expected: false},
-      {rule: {or: [false, true]}, expected: true},
-      {rule: {or: [true, false, true]}, expected: true},
-    ])('OR  %o → %s', ({rule, expected}) => {
-      const ctx = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+      { rule: { or: [false, false] }, expected: false },
+      { rule: { or: [false, true] }, expected: true },
+      { rule: { or: [true, false, true] }, expected: true },
+    ])('OR  %o → %s', ({ rule, expected }) => {
+      const ctx = createJsonLogicContext(
+        baseEvent,
+        null,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
       expect(service.evaluate(rule, ctx)).toBe(expected);
     });
 
     test.each([
-      {rule: {not: true}, expected: false},
-      {rule: {not: false}, expected: true},
-      {rule: {'!': true}, expected: false},
-      {rule: {'!': false}, expected: true},
-    ])('NOT %o → %s', ({rule, expected}) => {
-      const ctx = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+      { rule: { not: true }, expected: false },
+      { rule: { not: false }, expected: true },
+      { rule: { '!': true }, expected: false },
+      { rule: { '!': false }, expected: true },
+    ])('NOT %o → %s', ({ rule, expected }) => {
+      const ctx = createJsonLogicContext(
+        baseEvent,
+        null,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
       expect(service.evaluate(rule, ctx)).toBe(expected);
     });
   });
@@ -103,24 +121,52 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
   // =========================================================================
   describe('edge-cases', () => {
     test('{and: []} yields true', () => {
-      const ctx = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
-      expect(service.evaluate({and: []}, ctx)).toBe(true);
+      const ctx = createJsonLogicContext(
+        baseEvent,
+        null,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
+      expect(service.evaluate({ and: [] }, ctx)).toBe(true);
     });
 
     test('{or: []} yields false', () => {
-      const ctx = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
-      expect(service.evaluate({or: []}, ctx)).toBe(false);
+      const ctx = createJsonLogicContext(
+        baseEvent,
+        null,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
+      expect(service.evaluate({ or: [] }, ctx)).toBe(false);
     });
 
     test('not applied to truthy / falsy non-boolean values', () => {
       // actor.id is a *truthy* string ⇒ not → false
       mockEntityManager.getEntityInstance.mockReturnValue(makeEntity(actorId));
-      const ctxWithActor = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
-      expect(service.evaluate({not: {var: 'actor.id'}}, ctxWithActor)).toBe(false);
+      const ctxWithActor = createJsonLogicContext(
+        baseEvent,
+        actorId,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
+      expect(service.evaluate({ not: { var: 'actor.id' } }, ctxWithActor)).toBe(
+        false
+      );
 
       // nonexistent path ⇒ null/falsy ⇒ not → true
-      const ctxNoActor = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
-      expect(service.evaluate({not: {var: 'never.there'}}, ctxNoActor)).toBe(true);
+      const ctxNoActor = createJsonLogicContext(
+        baseEvent,
+        null,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
+      expect(
+        service.evaluate({ not: { var: 'never.there' } }, ctxNoActor)
+      ).toBe(true);
     });
   });
 
@@ -128,25 +174,31 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
   // 3. Composite nesting
   // =========================================================================
   describe('operator nesting', () => {
-    const ctx = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+    const ctx = createJsonLogicContext(
+      baseEvent,
+      null,
+      null,
+      mockEntityManager,
+      mockLogger
+    );
 
     test('AND containing OR', () => {
-      const rule = {and: [true, {or: [false, true]}]}; // true && (true) → true
+      const rule = { and: [true, { or: [false, true] }] }; // true && (true) → true
       expect(service.evaluate(rule, ctx)).toBe(true);
     });
 
     test('OR containing AND', () => {
-      const rule = {or: [{and: [true, false]}, false]}; // (false) || false → false
+      const rule = { or: [{ and: [true, false] }, false] }; // (false) || false → false
       expect(service.evaluate(rule, ctx)).toBe(false);
     });
 
     test('NOT applied to AND expression', () => {
-      const rule = {not: {and: [true, false]}}; // not(false) → true
+      const rule = { not: { and: [true, false] } }; // not(false) → true
       expect(service.evaluate(rule, ctx)).toBe(true);
     });
 
     test('NOT applied to OR expression', () => {
-      const rule = {'!': {or: [false, true]}}; // not(true) → false
+      const rule = { '!': { or: [false, true] } }; // not(true) → false
       expect(service.evaluate(rule, ctx)).toBe(false);
     });
 
@@ -155,11 +207,11 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
         and: [
           {
             or: [
-              {'!': false},   // not(false) → true
-              false
-            ]
+              { '!': false }, // not(false) → true
+              false,
+            ],
           },
-          true
+          true,
         ],
       };
       expect(service.evaluate(rule, ctx)).toBe(true);
@@ -172,19 +224,19 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
   describe('parent-ticket complex rule', () => {
     const rule = {
       or: [
-        {'==': [{var: 'target.components.Locked'}, true]},
+        { '==': [{ var: 'target.components.Locked' }, true] },
         {
           and: [
-            {'>=': [{var: 'actor.components.SecurityLevel'}, 3]},
-            {'==': [{var: 'actor.components.Alarm'}, false]},
+            { '>=': [{ var: 'actor.components.SecurityLevel' }, 3] },
+            { '==': [{ var: 'actor.components.Alarm' }, false] },
           ],
         },
       ],
     };
 
     beforeEach(() => {
-      mockEntityManager.getEntityInstance.mockImplementation(
-        (id) => (id === actorId || id === targetId ? makeEntity(id) : undefined),
+      mockEntityManager.getEntityInstance.mockImplementation((id) =>
+        id === actorId || id === targetId ? makeEntity(id) : undefined
       );
     });
 
@@ -193,7 +245,7 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
         name: 'locked=true  →  true (first branch)',
         ctxFn: () => {
           mockEntityManager.getComponentData.mockImplementation((id, comp) =>
-            id === targetId && comp === 'Locked' ? true : undefined,
+            id === targetId && comp === 'Locked' ? true : undefined
           );
         },
         expected: true,
@@ -236,9 +288,15 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
       },
     ];
 
-    test.each(scenarios)('$name', ({ctxFn, expected}) => {
+    test.each(scenarios)('$name', ({ ctxFn, expected }) => {
       ctxFn(); // configure mocked component data
-      const ctx = createJsonLogicContext(baseEvent, actorId, targetId, mockEntityManager, mockLogger);
+      const ctx = createJsonLogicContext(
+        baseEvent,
+        actorId,
+        targetId,
+        mockEntityManager,
+        mockLogger
+      );
       expect(service.evaluate(rule, ctx)).toBe(expected);
     });
   });
@@ -250,18 +308,30 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
     test('event.type used under AND/OR', () => {
       const rule = {
         and: [
-          {'==': [{var: 'event.type'}, 'TEST_EVENT']},
-          {or: [false, true]},
+          { '==': [{ var: 'event.type' }, 'TEST_EVENT'] },
+          { or: [false, true] },
         ],
       };
-      const ctx = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+      const ctx = createJsonLogicContext(
+        baseEvent,
+        null,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
       expect(service.evaluate(rule, ctx)).toBe(true);
     });
 
     test('NOT of actor.id string', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(makeEntity(actorId));
-      const ctx = createJsonLogicContext(baseEvent, actorId, null, mockEntityManager, mockLogger);
-      expect(service.evaluate({'!': {var: 'actor.id'}}, ctx)).toBe(false); // 'player' is truthy; !truthy → false
+      const ctx = createJsonLogicContext(
+        baseEvent,
+        actorId,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
+      expect(service.evaluate({ '!': { var: 'actor.id' } }, ctx)).toBe(false); // 'player' is truthy; !truthy → false
     });
   });
 
@@ -276,14 +346,20 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
       });
     });
 
-    const ctx = createJsonLogicContext(baseEvent, null, null, mockEntityManager, mockLogger);
+    const ctx = createJsonLogicContext(
+      baseEvent,
+      null,
+      null,
+      mockEntityManager,
+      mockLogger
+    );
 
     test('OR short-circuits after first true operand', () => {
       const rule = {
         or: [
-          {'==': [1, 1]},          // true  – should satisfy rule
-          {'throw_error_operator': []}, // would throw if executed
-        ]
+          { '==': [1, 1] }, // true  – should satisfy rule
+          { throw_error_operator: [] }, // would throw if executed
+        ],
       };
       expect(() => service.evaluate(rule, ctx)).not.toThrow();
       expect(service.evaluate(rule, ctx)).toBe(true);
@@ -292,9 +368,9 @@ describe('JsonLogicEvaluationService – composite operator coverage', () => {
     test('AND short-circuits after first false operand', () => {
       const rule = {
         and: [
-          {'==': [1, 2]},          // false – forces short-circuit
-          {'throw_error_operator': []}, // would throw if executed
-        ]
+          { '==': [1, 2] }, // false – forces short-circuit
+          { throw_error_operator: [] }, // would throw if executed
+        ],
       };
       expect(() => service.evaluate(rule, ctx)).not.toThrow();
       expect(service.evaluate(rule, ctx)).toBe(false);

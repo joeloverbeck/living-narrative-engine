@@ -1,10 +1,12 @@
 // src/tests/utils/geometryUtils.test.js (Conceptual Example using Jest syntax)
 
-import {calculateDistanceSquaredCoords, calculateDistanceSquared} from '../../src/utils/geometryUtils.js';
-import {describe, expect, test} from '@jest/globals';
+import {
+  calculateDistanceSquaredCoords,
+  calculateDistanceSquared,
+} from '../../src/utils/geometryUtils.js';
+import { describe, expect, test } from '@jest/globals';
 
 describe('geometryUtils', () => {
-
   describe('calculateDistanceSquaredCoords', () => {
     test('should return 0 for same points', () => {
       expect(calculateDistanceSquaredCoords(10, 20, 10, 20)).toBe(0);
@@ -27,36 +29,47 @@ describe('geometryUtils', () => {
     });
 
     test('should throw TypeError for non-numeric input', () => {
-      expect(() => calculateDistanceSquaredCoords('a', 1, 2, 3)).toThrow(TypeError);
-      expect(() => calculateDistanceSquaredCoords(1, null, 2, 3)).toThrow(TypeError);
-      expect(() => calculateDistanceSquaredCoords(1, 2, undefined, 3)).toThrow(TypeError);
-      expect(() => calculateDistanceSquaredCoords(1, 2, 3, NaN)).toThrow(TypeError); // NaN is technically number, adjust expectation if needed
+      expect(() => calculateDistanceSquaredCoords('a', 1, 2, 3)).toThrow(
+        TypeError
+      );
+      expect(() => calculateDistanceSquaredCoords(1, null, 2, 3)).toThrow(
+        TypeError
+      );
+      expect(() => calculateDistanceSquaredCoords(1, 2, undefined, 3)).toThrow(
+        TypeError
+      );
+      expect(() => calculateDistanceSquaredCoords(1, 2, 3, NaN)).toThrow(
+        TypeError
+      ); // NaN is technically number, adjust expectation if needed
     });
   });
 
   describe('calculateDistanceSquared', () => {
     test('should return 0 for same position objects', () => {
-      expect(calculateDistanceSquared({x: 10, y: 20}, {x: 10, y: 20})).toBe(0);
+      expect(calculateDistanceSquared({ x: 10, y: 20 }, { x: 10, y: 20 })).toBe(
+        0
+      );
     });
 
     test('should calculate correct squared distance for position objects', () => {
-      expect(calculateDistanceSquared({x: 1, y: 1}, {x: 4, y: 5})).toBe(25);
+      expect(calculateDistanceSquared({ x: 1, y: 1 }, { x: 4, y: 5 })).toBe(25);
     });
 
     test('should handle missing coordinates (defaulting to 0)', () => {
-      expect(calculateDistanceSquared({x: 3}, {y: 4})).toBe(25); // (3-0)^2 + (0-4)^2 = 9 + 16 = 25
+      expect(calculateDistanceSquared({ x: 3 }, { y: 4 })).toBe(25); // (3-0)^2 + (0-4)^2 = 9 + 16 = 25
       expect(calculateDistanceSquared({}, {})).toBe(0);
     });
 
     test('should handle null/undefined properties (defaulting to 0)', () => {
-      expect(calculateDistanceSquared({x: 3, y: null}, {x: undefined, y: 4})).toBe(25);
+      expect(
+        calculateDistanceSquared({ x: 3, y: null }, { x: undefined, y: 4 })
+      ).toBe(25);
     });
 
     test('should return NaN for invalid input types', () => {
-      expect(calculateDistanceSquared(null, {x: 1, y: 1})).toBeNaN();
-      expect(calculateDistanceSquared({x: 1, y: 1}, undefined)).toBeNaN();
+      expect(calculateDistanceSquared(null, { x: 1, y: 1 })).toBeNaN();
+      expect(calculateDistanceSquared({ x: 1, y: 1 }, undefined)).toBeNaN();
       expect(calculateDistanceSquared('posA', 'posB')).toBeNaN();
     });
   });
-
 });

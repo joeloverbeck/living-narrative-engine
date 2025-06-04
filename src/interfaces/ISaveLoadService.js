@@ -37,53 +37,52 @@
  * @property {string} [error] - A user-friendly error message, if the operation failed. [cite: 144]
  */
 
-
 /**
  * @interface ISaveLoadService
  * Defines the contract for a service that handles saving and loading game states.
  */
 export class ISaveLoadService {
-    /**
-     * Saves the current game state to a specified manual save slot/name.
-     * @param {string} saveName - The desired name for the save file (e.g., "Chapter1_End").
-     * @param {object} gameStateObject - The complete game state object to be saved. This should conform to SaveGameStructure but without the checksum pre-calculated.
-     * @returns {Promise<{success: boolean, message?: string, error?: string, filePath?: string}>} Feedback object.
-     * @async
-     */
-    async saveManualGame(saveName, gameStateObject) {
-        throw new Error("Not implemented");
-    }
+  /**
+   * Saves the current game state to a specified manual save slot/name.
+   * @param {string} saveName - The desired name for the save file (e.g., "Chapter1_End").
+   * @param {object} gameStateObject - The complete game state object to be saved. This should conform to SaveGameStructure but without the checksum pre-calculated.
+   * @returns {Promise<{success: boolean, message?: string, error?: string, filePath?: string}>} Feedback object.
+   * @async
+   */
+  async saveManualGame(saveName, gameStateObject) {
+    throw new Error('Not implemented');
+  }
 
-    /**
-     * Lists available manual save files and their parsed metadata.
-     * @returns {Promise<Array<SaveFileMetadata>>} A list of metadata objects for discovered manual save files.
-     * @async
-     */
-    async listManualSaveSlots() {
-        throw new Error("Not implemented");
-    }
+  /**
+   * Lists available manual save files and their parsed metadata.
+   * @returns {Promise<Array<SaveFileMetadata>>} A list of metadata objects for discovered manual save files.
+   * @async
+   */
+  async listManualSaveSlots() {
+    throw new Error('Not implemented');
+  }
 
-    /**
-     * Loads game data from a specified save file identifier.
-     * This method handles reading the file, decompression, deserialization, and basic integrity checks.
-     * @param {string} saveIdentifier - The unique identifier for the save file (e.g., full file path).
-     * @returns {Promise<LoadGameResult>} An object containing the success status, loaded data (if successful), or an error message.
-     * @async
-     */
-    async loadGameData(saveIdentifier) { // [cite: 115]
-        throw new Error("Not implemented");
-    }
+  /**
+   * Loads game data from a specified save file identifier.
+   * This method handles reading the file, decompression, deserialization, and basic integrity checks.
+   * @param {string} saveIdentifier - The unique identifier for the save file (e.g., full file path).
+   * @returns {Promise<LoadGameResult>} An object containing the success status, loaded data (if successful), or an error message.
+   * @async
+   */
+  async loadGameData(saveIdentifier) {
+    // [cite: 115]
+    throw new Error('Not implemented');
+  }
 
-    /**
-     * Deletes a manual save file.
-     * @param {string} saveIdentifier - The identifier of the save file to delete (e.g., full filename or path).
-     * @returns {Promise<{success: boolean, error?: string}>}
-     * @async
-     */
-    async deleteManualSave(saveIdentifier) {
-        throw new Error("Not implemented");
-    }
+  /**
+   * Deletes a manual save file.
+   * @param {string} saveIdentifier - The identifier of the save file to delete (e.g., full filename or path).
+   * @returns {Promise<{success: boolean, error?: string}>}
+   * @async
+   */
+  async deleteManualSave(saveIdentifier) {
+    throw new Error('Not implemented');
+  }
 
-
-    // Future methods for auto-saves, quick saves, etc.
+  // Future methods for auto-saves, quick saves, etc.
 }
