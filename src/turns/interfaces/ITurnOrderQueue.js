@@ -11,6 +11,7 @@
 /**
  * Represents an entity in the game (e.g., player, NPC).
  * Implementations will likely use a more concrete class or interface.
+ *
  * @typedef {object} Entity
  * @property {string} id - A unique identifier for the entity.
  */
@@ -23,6 +24,7 @@
 export class ITurnOrderQueue {
   /**
    * Adds an entity to the queue.
+   *
    * @function add
    * @param {Entity} entity - The entity object to add to the queue. Must not be null.
    * @param {number} [priority] - Optional priority value for priority queue implementations.
@@ -36,6 +38,7 @@ export class ITurnOrderQueue {
 
   /**
    * Removes a specific entity from the queue by its ID.
+   *
    * @function remove
    * @param {string} entityId - The unique ID of the entity to remove.
    * @returns {Entity | null} The removed entity object, or null if no entity with the given ID was found in the queue.
@@ -46,6 +49,7 @@ export class ITurnOrderQueue {
 
   /**
    * Retrieves and removes the next entity from the queue based on its ordering rules (e.g., FIFO, highest priority).
+   *
    * @function getNext
    * @returns {Entity | null} The next entity object, or null if the queue is empty.
    */
@@ -55,6 +59,7 @@ export class ITurnOrderQueue {
 
   /**
    * Returns the next entity in the queue without removing it.
+   *
    * @function peek
    * @returns {Entity | null} The next entity object, or null if the queue is empty.
    */
@@ -64,6 +69,7 @@ export class ITurnOrderQueue {
 
   /**
    * Checks if the queue currently contains no entities.
+   *
    * @function isEmpty
    * @returns {boolean} True if the queue is empty, false otherwise.
    */
@@ -73,6 +79,7 @@ export class ITurnOrderQueue {
 
   /**
    * Removes all entities from the queue.
+   *
    * @function clear
    * @returns {void}
    */
@@ -82,6 +89,7 @@ export class ITurnOrderQueue {
 
   /**
    * Returns the current number of entities in the queue.
+   *
    * @function size
    * @returns {number} The number of entities.
    */
@@ -93,6 +101,7 @@ export class ITurnOrderQueue {
    * Returns an array containing all entities currently in the queue.
    * The order of entities in the array might depend on the specific queue implementation
    * and may not necessarily reflect the turn order.
+   *
    * @function toArray
    * @returns {Array<Entity>} An array of the entities in the queue. Returns an empty array `[]` if the queue is empty.
    */

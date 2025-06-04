@@ -120,6 +120,7 @@ export class IActorTurnStrategy {
    *
    * The strategy is responsible for resolving the player's or AI's intent into a
    * specific, data-defined action and any necessary parameters for that action's instance.
+   *
    * @async
    * @param {ITurnContext} context - The turn context for the current turn. This object
    * provides all necessary information and capabilities

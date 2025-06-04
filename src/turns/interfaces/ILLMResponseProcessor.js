@@ -19,6 +19,7 @@ export class ILLMResponseProcessor {
    * generating an appropriate fallback ITurnAction and logging the error.
    *
    * This method is asynchronous to accommodate potentially long-running parsing/repair operations.
+   *
    * @async
    * @param {string} llmJsonResponse - The raw JSON string received from the LLM.
    * @param {string} actorId - The ID of the actor for whom this action is being processed.

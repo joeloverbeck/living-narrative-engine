@@ -11,6 +11,7 @@
 export const FormatUtils = {
   /**
    * Formats a total number of seconds into a HH:MM:SS string.
+   *
    * @param {number} totalSeconds - The total number of seconds to format.
    * @returns {string} The formatted time string (e.g., "01:05:32") or 'N/A' if the input is invalid.
    * Handles invalid inputs (non-numbers, NaN, negative numbers) by returning 'N/A'.

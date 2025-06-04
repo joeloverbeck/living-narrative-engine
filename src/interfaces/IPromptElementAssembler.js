@@ -36,6 +36,7 @@ export class IPromptElementAssembler {
    * This method is responsible for taking the configuration of a specific prompt element,
    * the global prompt data, a placeholder resolver, and a map of all prompt elements,
    * and producing the final string output for that element.
+   *
    * @param {PromptElement} elementConfig - The configuration for the specific prompt element to assemble.
    * @param {PromptData} promptData - The global prompt data object, containing all raw content parts,
    * flags, and other necessary data (like perceptionLogArray) needed for assembly.

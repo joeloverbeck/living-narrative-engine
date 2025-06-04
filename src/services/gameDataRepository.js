@@ -178,6 +178,7 @@ export class GameDataRepository extends IGameDataRepository {
 
   /**
    * Retrieves a specific ComponentDefinition by its ID from the registry.
+   *
    * @param {string} id The fully qualified ID (e.g., 'core:position').
    * @returns {ComponentDefinition | null} The component definition, or null if not found.
    */
@@ -197,6 +198,7 @@ export class GameDataRepository extends IGameDataRepository {
 
   /**
    * Retrieves all ComponentDefinition objects currently stored in the registry.
+   *
    * @returns {ComponentDefinition[]} An array of all component definitions.
    */
   getAllComponentDefinitions() {
@@ -210,6 +212,7 @@ export class GameDataRepository extends IGameDataRepository {
 
   /**
    * Handles queries directed to the GameDataRepository.
+   *
    * @param {string | object} queryDetails - Details about the query.
    * @returns {any | undefined} The result of the query or undefined if not supported.
    */

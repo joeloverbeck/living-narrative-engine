@@ -23,19 +23,20 @@
  * simply exposing the underlying components via getters.
  */
 export class DomUiFacade {
-     * @private #actionButtonsRenderer;
-     * @private #locationRenderer;
-     * @private #titleRenderer;
-     * @private #inputStateController;
-     * @private #uiMessageRenderer;
-     * @private #perceptionLogRenderer;
-     * @private #saveGameUI;
-     * @private #loadGameUI;
-     * @private #llmSelectionModal;
-     * @private #speechBubbleRenderer;
+  #actionButtonsRenderer;
+  #locationRenderer;
+  #titleRenderer;
+  #inputStateController;
+  #uiMessageRenderer;
+  #perceptionLogRenderer;
+  #saveGameUI;
+  #loadGameUI;
+  #llmSelectionModal;
+  #speechBubbleRenderer;
 
   /**
    * Creates an instance of DomUiFacade.
+   *
    * @param {object} deps - Dependencies object containing all required renderers/controllers.
    * @param {ActionButtonsRenderer} deps.actionButtonsRenderer - Renderer for action buttons.
    * @param {LocationRenderer} deps.locationRenderer - Renderer for location details.

@@ -24,6 +24,7 @@ class InputHandler extends IInputHandler {
 
   /**
    * Creates an instance of InputHandler.
+   *
    * @param {HTMLInputElement} inputElement - The HTML input element to manage for commands.
    * @param {(command: string) => void} [onCommandCallback] - An *initial* command callback. Can be overridden later via setCommandCallback.
    * @param {IValidatedEventDispatcher} validatedEventDispatcher - The application's validated event dispatcher instance. // Changed from EventBus
@@ -70,6 +71,7 @@ class InputHandler extends IInputHandler {
 
   /**
    * Binds the necessary DOM event listeners.
+   *
    * @private
    */
   _bindEvents() {
@@ -87,6 +89,7 @@ class InputHandler extends IInputHandler {
 
   /**
    * Subscribes to application events for enabling/disabling input.
+   *
    * @private
    */
   _subscribeToEvents() {
@@ -120,6 +123,7 @@ class InputHandler extends IInputHandler {
 
   /**
    * Handles keydown events specifically within the input element (primarily for Enter).
+   *
    * @param {KeyboardEvent} event
    * @private
    */
@@ -145,6 +149,7 @@ class InputHandler extends IInputHandler {
 
   /**
    * Handles keydown events globally on the document (for UI toggles, etc.).
+   *
    * @param {KeyboardEvent} event
    * @private
    */
@@ -163,6 +168,7 @@ class InputHandler extends IInputHandler {
 
   /**
    * Sets or replaces the function to be called when a command is submitted via Enter key.
+   *
    * @param {(command: string) => void} callbackFn - The new function to call with the command string.
    */
   setCommandCallback(callbackFn) {

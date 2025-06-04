@@ -8,6 +8,7 @@
 export class IPromptStaticContentService {
   /**
    * Returns the core task description text.
+   *
    * @returns {string}
    */
   getCoreTaskDescriptionText() {
@@ -18,11 +19,11 @@ export class IPromptStaticContentService {
 
   /**
    * Returns character portrayal guidelines.
+   *
    * @param {string} characterName - The name of the character.
    * @returns {string}
    */
   getCharacterPortrayalGuidelines(characterName) {
-     
     throw new Error(
       "Method 'getCharacterPortrayalGuidelines()' must be implemented."
     );
@@ -30,6 +31,7 @@ export class IPromptStaticContentService {
 
   /**
    * Returns the NC-21 content policy text.
+   *
    * @returns {string}
    */
   getNc21ContentPolicyText() {
@@ -38,6 +40,7 @@ export class IPromptStaticContentService {
 
   /**
    * Returns the final LLM instruction text.
+   *
    * @returns {string}
    */
   getFinalLlmInstructionText() {

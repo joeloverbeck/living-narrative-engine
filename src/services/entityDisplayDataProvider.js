@@ -55,6 +55,7 @@ export class EntityDisplayDataProvider {
 
   /**
    * Creates an instance of EntityDisplayDataProvider.
+   *
    * @param {object} dependencies - The dependencies for the service.
    * @param {IEntityManager} dependencies.entityManager - The entity manager instance.
    * @param {ILogger} dependencies.logger - The logger instance.
@@ -82,6 +83,7 @@ export class EntityDisplayDataProvider {
   /**
    * Retrieves the display name of an entity.
    * Falls back to entity ID if the name component is missing, then to a default name.
+   *
    * @param {NamespacedId | string} entityId - The ID of the entity.
    * @param {string} [defaultName] - The default name to return if the entity or its name cannot be determined.
    * @returns {string} The entity's display name, its ID, or the default name.
@@ -120,6 +122,7 @@ export class EntityDisplayDataProvider {
   /**
    * Retrieves the full image path for an entity's portrait.
    * Constructs the path using the mod ID derived from the entity's definitionId and the imagePath from its PORTRAIT_COMPONENT.
+   *
    * @param {NamespacedId | string} entityId - The ID of the entity.
    * @returns {string | null} The full path to the portrait image (e.g., /data/mods/core/portraits/hero.png), or null if not found or invalid.
    */
@@ -171,6 +174,7 @@ export class EntityDisplayDataProvider {
 
   /**
    * Retrieves the description of an entity.
+   *
    * @param {NamespacedId | string} entityId - The ID of the entity.
    * @param {string} [defaultDescription] - The default description to return if the entity or its description component is not found.
    * @returns {string} The entity's description or the default description.
@@ -206,6 +210,7 @@ export class EntityDisplayDataProvider {
 
   /**
    * Retrieves the location ID of an entity from its POSITION_COMPONENT.
+   *
    * @param {NamespacedId | string} entityId - The ID of the entity.
    * @returns {NamespacedId | string | null} The location ID (which is an entity instance ID) or null if not found.
    */
@@ -243,6 +248,7 @@ export class EntityDisplayDataProvider {
   /**
    * Compiles a display information object for a character entity.
    * This object includes the entity's ID, name, description, and portrait path.
+   *
    * @param {NamespacedId | string} entityId - The ID of the character entity.
    * @returns {{ id: string, name: string, description: string, portraitPath: string | null } | null}
    * An object with character display information, or null if the entity is not found.
@@ -273,6 +279,7 @@ export class EntityDisplayDataProvider {
   /**
    * Retrieves detailed display information for a location entity.
    * This includes its name, description, and a processed list of exits.
+   *
    * @param {NamespacedId | string} locationEntityId - The instance ID of the location entity.
    * @returns {{ name: string, description: string, exits: Array<ProcessedExit> } | null}
    * An object with location details, or null if the location entity is not found.
@@ -348,6 +355,7 @@ export class EntityDisplayDataProvider {
    * NEW METHOD
    * Retrieves portrait data (image path and alt text) for a given location entity.
    * A location entity must have a "core:portrait" component for this to return data.
+   *
    * @param {NamespacedId | string} locationEntityId - The ID of the location entity.
    * @returns {PortraitData | null} Portrait data { imagePath: string, altText: string | null } or null if not found/applicable.
    */
@@ -409,6 +417,7 @@ export class EntityDisplayDataProvider {
   /**
    * Extracts the mod ID from an entity's definitionId.
    * For example, 'core:player' -> 'core'.
+   *
    * @private
    * @param {NamespacedId | string | undefined | null} definitionId - The definition ID of the entity (e.g., 'myMod:someEntity').
    * @returns {string | null} The mod ID (namespace part) or null if invalid or not found.

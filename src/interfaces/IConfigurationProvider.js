@@ -40,6 +40,7 @@
 export class IConfigurationProvider {
   /**
    * Fetches raw configuration data from the specified source.
+   *
    * @async
    * @param {string} sourceIdentifier - A string identifying the source of the configuration data
    * (e.g., a file path, a URL, a database query key).

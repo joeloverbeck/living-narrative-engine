@@ -55,6 +55,7 @@ class EventBus {
    * Dispatches an event, ASYNCHRONOUSLY calling all subscribed listeners for that specific event name
    * AND listeners subscribed to the wildcard ('*').
    * Waits for all listener promises to settle.
+   *
    * @param {string} eventName - The name of the event to dispatch (becomes event.type).
    * @param {object} [eventPayload] - The data payload associated with the event (becomes event.payload). Defaults to empty object.
    * @returns {Promise<void>} A promise that resolves when all relevant listeners have been processed.
@@ -104,6 +105,7 @@ class EventBus {
   /**
    * Returns the number of listeners currently subscribed to a specific event
    * (excluding wildcard listeners unless eventName is '*').
+   *
    * @param {string} eventName - The name of the event.
    * @returns {number} The number of listeners for the given event name. Returns 0 if the event has no listeners or the event name is invalid.
    */

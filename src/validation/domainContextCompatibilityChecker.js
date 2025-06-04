@@ -13,11 +13,9 @@
  * Extracted from ActionValidationService for SRP.
  */
 export class DomainContextCompatibilityChecker {
-     * @private
   #logger;
 
   // Define domain categories for clarity
-     * @private
   #entityTargetDomains = [
     'self',
     'inventory',
@@ -29,13 +27,13 @@ export class DomainContextCompatibilityChecker {
     'nearby',
     'nearby_including_blockers',
   ];
-     * @private
+
   #directionTargetDomains = ['direction'];
-     * @private
   #noTargetDomains = ['none']; // Explicitly 'none'
 
   /**
    * Creates an instance of DomainContextCompatibilityChecker.
+   *
    * @param {object} dependencies - The required dependencies.
    * @param {ILogger} dependencies.logger - Logger service instance.
    * @throws {Error} If the logger dependency is missing or invalid.
@@ -61,6 +59,7 @@ export class DomainContextCompatibilityChecker {
   /**
    * Checks if the target domain specified in an action definition is compatible
    * with the type of the provided target context.
+   *
    * @param {ActionDefinition} actionDefinition - The action being validated.
    * @param {ActionTargetContext} targetContext - The context describing the action's target.
    * @returns {boolean} True if the domain and context type are compatible, false otherwise. Logs failures. (AC3)

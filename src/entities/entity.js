@@ -5,11 +5,13 @@
  * An entity is primarily an identifier associated with a collection of
  * raw component data objects, indexed by their unique component type ID string.
  * It acts as a lightweight data container; component logic resides in Systems.
+ *
  * @module core/entities/entity
  */
 class Entity {
   /**
    * The unique runtime identifier (typically a UUID) for this entity instance.
+   *
    * @type {string}
    * @readonly
    */
@@ -18,6 +20,7 @@ class Entity {
   /**
    * The identifier of the entity definition from which this instance was created
    * (e.g., "namespace:template_id").
+   *
    * @type {string}
    * @readonly
    */
@@ -27,6 +30,7 @@ class Entity {
    * Stores the raw data for each component associated with this entity.
    * The key is the component's unique type ID string (e.g., "core:health"),
    * and the value is the plain JavaScript object holding the component's data.
+   *
    * @private
    * @type {Map<string, object>}
    */
@@ -34,6 +38,7 @@ class Entity {
 
   /**
    * Creates a new Entity instance.
+   *
    * @param {string} instanceId - The unique runtime identifier (UUID) for this entity instance.
    * @param {string} definitionId - The identifier of the entity definition (e.g., "isekai:hero").
    * @throws {Error} If no instanceId is provided or is not a string.
@@ -57,6 +62,7 @@ class Entity {
   /**
    * Adds or updates the raw data for a specific component type on this entity.
    * If a component with the same typeId already exists, its data will be overwritten.
+   *
    * @param {string} componentTypeId - The unique string identifier for the component type (e.g., "core:position").
    * @param {object} componentData - The plain JavaScript object containing the component's data.
    * @throws {Error} If componentTypeId is not a non-empty string.
@@ -84,6 +90,7 @@ class Entity {
 
   /**
    * Retrieves the raw data object for a specific component type.
+   *
    * @param {string} componentTypeId - The unique string identifier for the component type.
    * @returns {object | undefined} The component data object if found, otherwise undefined.
    */
@@ -93,6 +100,7 @@ class Entity {
 
   /**
    * Checks if the entity has data associated with a specific component type ID.
+   *
    * @param {string} componentTypeId - The unique string identifier for the component type.
    * @returns {boolean} True if the entity has data for this component type, false otherwise.
    */
@@ -102,6 +110,7 @@ class Entity {
 
   /**
    * Removes the data associated with a specific component type ID from the entity.
+   *
    * @param {string} componentTypeId - The unique string identifier for the component type to remove.
    * @returns {boolean} True if component data was found and removed, false otherwise.
    */
@@ -115,6 +124,7 @@ class Entity {
 
   /**
    * Returns a string representation of the entity, listing its component type IDs.
+   *
    * @returns {string}
    */
   toString() {
@@ -124,6 +134,7 @@ class Entity {
 
   /**
    * Gets an iterable of all component type IDs currently attached to the entity.
+   *
    * @returns {IterableIterator<string>} An iterator over the component type IDs.
    */
   get componentTypeIds() {
@@ -132,6 +143,7 @@ class Entity {
 
   /**
    * Gets an iterable of all component data objects currently attached to the entity.
+   *
    * @returns {IterableIterator<object>} An iterator over the component data objects.
    */
   get allComponentData() {
@@ -140,6 +152,7 @@ class Entity {
 
   /**
    * Gets an iterable of [componentTypeId, componentData] pairs.
+   *
    * @returns {IterableIterator<[string, object]>} An iterator over the [ID, data] pairs.
    */
   get componentEntries() {

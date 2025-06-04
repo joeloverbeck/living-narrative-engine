@@ -37,6 +37,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../../constants/eventIds.js';
 
 /**
  * Represents the object resolved by the prompt() method's promise.
+ *
  * @typedef {object} PlayerPromptResolution
  * @property {DiscoveredActionInfo} action - The selected available action object.
  * @property {string | null} speech - The speech input from the player, or null.
@@ -101,7 +102,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
    * Uses console.error for logging as this runs before the class logger is fully confirmed.
    * @param {any} dependency - The dependency instance to validate.
    * @param {string} dependencyName - The name of the dependency (e.g., "ILogger", "IActionDiscoverySystem") for error messages.
-   * @param {string[]} [requiredMethods=[]] - An array of method names that must exist on the dependency.
+   * @param {string[]} [requiredMethods] - An array of method names that must exist on the dependency.
    * @throws {Error} If the dependency is null/undefined or a required method is missing.
    */
   _validateDependency(dependency, dependencyName, requiredMethods = []) {
@@ -128,6 +129,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
 
   /**
    * Constructor for PlayerPromptService.
+   *
    * @param {PlayerPromptServiceDependencies} dependencies - The dependencies for the service.
    */
   constructor({
@@ -186,7 +188,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
    * @private
    * Clears the currently active prompt by rejecting its promise.
    * The rejection handler of the prompt context is responsible for actual resource cleanup.
-   * @param {PromptError | DOMException | null} [rejectionError=null] - The error to reject the current prompt's promise with.
+   * @param {PromptError | DOMException | null} [rejectionError] - The error to reject the current prompt's promise with.
    * If null, a default "superseded/cancelled" error is used.
    */
   #clearCurrentPrompt(rejectionError = null) {
@@ -657,6 +659,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
 
   /**
    * Prompts the specified actor for an action.
+   *
    * @param actor
    * @param root0
    * @param root0.cancellationSignal

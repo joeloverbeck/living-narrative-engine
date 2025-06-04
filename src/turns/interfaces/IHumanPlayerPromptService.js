@@ -24,6 +24,7 @@
 export class IHumanPlayerPromptService {
   /**
    * Prompts the specified actor for their next action and awaits their response.
+   *
    * @async
    * @param {Entity} actor - The entity (player) to prompt.
    * @param {PlayerPromptOptions} [options] - Optional parameters for the prompt, including a cancellation signal.
@@ -43,6 +44,7 @@ export class IHumanPlayerPromptService {
    * This is a non-blocking call. If a prompt is active, its promise will be rejected
    * (typically with a PromptError or AbortError if a signal was also aborted).
    * If no prompt is active, this method should be a no-op or log appropriately.
+   *
    * @returns {void}
    */
   cancelCurrentPrompt() {

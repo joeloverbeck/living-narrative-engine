@@ -21,6 +21,7 @@ export class ITurnDirectiveStrategy {
   /**
    * Execute the strategy.
    * The actor whose directive is being processed should be obtained via `turnContext.getActor()`.
+   *
    * @abstract
    * @async
    * @param {ITurnContext} turnContext

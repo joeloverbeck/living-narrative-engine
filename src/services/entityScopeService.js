@@ -19,6 +19,7 @@ import {
 
 /**
  * Retrieves entity IDs from the player's inventory.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>} A set of entity IDs in the player's inventory.
  * @private
@@ -58,6 +59,7 @@ function _handleInventory(context) {
 
 /**
  * Retrieves entity IDs from the current location, excluding the player instance if provided in context.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>} A set of entity IDs in the current location (excluding the player if context allows).
  * @private
@@ -95,6 +97,7 @@ function _handleLocation(context) {
 
 /**
  * Retrieves entity IDs from the player's equipped items.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>} A set of entity IDs equipped by the player.
  * @private
@@ -147,6 +150,7 @@ function _handleEquipment(context) {
 
 /**
  * Retrieves entity IDs from the current location that have an ItemComponent.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>} A set of item entity IDs in the location.
  * @private
@@ -185,6 +189,7 @@ function _handleLocationItems(context) {
 
 /**
  * Retrieves entity IDs from the current location that DO NOT have an ItemComponent.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>} A set of non-item entity IDs in the location.
  * @private
@@ -215,6 +220,7 @@ function _handleLocationNonItems(context) {
 
 /**
  * Retrieves entity IDs from both the player's inventory and the current location (excluding player).
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>} A combined set of unique entity IDs from inventory and location.
  * @private
@@ -257,6 +263,7 @@ function _handleNearbyIncludingBlockers(context) {
 
 /**
  * Retrieves the entity ID of the actor itself.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>} A set containing only the player's entity ID, or an empty set if the player entity is not available.
  * @private
@@ -276,6 +283,7 @@ function _handleSelf(context) {
 
 /**
  * Maps scope names (including TargetDomain values where applicable) to their respective handler functions.
+ *
  * @type {Object.<string, (context: ActionContext) => Set<EntityId>>}
  * @private
  */
@@ -309,6 +317,7 @@ const scopeHandlers = {
  * 'nearby', etc., as well as TargetDomain values like 'self', 'environment'.
  * TargetDomains 'direction' and 'none' should be handled by the calling service
  * and not passed here if entity resolution is desired.
+ *
  * @param {string | string[] | TargetDomain | TargetDomain[]} scopes - A single scope/domain name or an array of scope/domain names.
  * @param {ActionContext} context - The action context containing player, location, entityManager, etc.
  * Note: `playerEntity` corresponds to `actingEntity`, `currentLocation` to the actor's location.

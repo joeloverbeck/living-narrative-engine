@@ -18,6 +18,7 @@ export class ITurnHandler {
    * For an AI, this might involve starting the evaluation of state and choosing an action.
    * The handler should signal completion externally (e.g., via `ITurnEndPort`) once the
    * actor's turn activities are finished.
+   *
    * @function startTurn // <<< RENAMED from handleTurn (Ticket #7)
    * @async
    * @param {Entity} actor - The entity whose turn is being handled.
@@ -36,6 +37,7 @@ export class ITurnHandler {
   /**
    * Optional: A method to gracefully shut down the handler, potentially
    * forcing an end to any active turn it's managing.
+   *
    * @function destroy
    * @returns {void | Promise<void>}
    */

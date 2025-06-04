@@ -89,6 +89,7 @@ export class EngineUIManager {
 
   /**
    * Creates an instance of EngineUIManager.
+   *
    * @param {object} dependencies - The dependencies for the service.
    * @param {ISafeEventDispatcher} dependencies.eventDispatcher - The event dispatcher for subscribing to game events.
    * @param {DomUiFacade} dependencies.domUiFacade - The facade for interacting with DOM UI components.
@@ -127,6 +128,7 @@ export class EngineUIManager {
   /**
    * Initializes the EngineUIManager by setting up event subscriptions.
    * This method should be called once the service is created and its dependencies are resolved.
+   *
    * @returns {void}
    */
   initialize() {
@@ -442,6 +444,7 @@ export class EngineUIManager {
    * Disposes of the EngineUIManager, primarily for cleaning up event subscriptions if necessary.
    * Currently, ISafeEventDispatcher handles unsubscription if the listener itself is destroyed or deregistered.
    * This method is provided for completeness and future use if manual unsubscription becomes necessary.
+   *
    * @returns {void}
    */
   dispose() {

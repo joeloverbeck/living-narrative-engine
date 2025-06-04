@@ -50,6 +50,7 @@
 export class IHttpClient {
   /**
    * Asynchronously makes an HTTP request to the specified URL with the given options.
+   *
    * @async
    * @param {string} url - The absolute URL to which the request will be made.
    * @param {HttpClientRequestOptions} options - An object containing the request details

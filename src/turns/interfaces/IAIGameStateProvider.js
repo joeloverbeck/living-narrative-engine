@@ -20,6 +20,7 @@ export class IAIGameStateProvider {
    * Asynchronously builds the AIGameStateDTO for a given AI actor within the current turn context.
    * This method is responsible for querying various game systems and actor components
    * to assemble a comprehensive view of the AI's current situation.
+   *
    * @async
    * @param {Entity} actor - The AI-controlled entity for whom the game state is being built.
    * @param {ITurnContext} turnContext - The context of the current turn, providing access to game services like EntityManager, ActionDiscoverySystem, etc.

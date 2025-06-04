@@ -10,6 +10,7 @@
 export class IGameDataRepository {
   /**
    * Retrieves a specific ActionDefinition by its ID.
+   *
    * @param {string} actionId The fully qualified ID of the action (e.g., 'core:move').
    * @returns {ActionDefinition | null} The action definition if found, otherwise null.
    */
@@ -19,6 +20,7 @@ export class IGameDataRepository {
 
   /**
    * Returns all ActionDefinition objects currently available.
+   *
    * @returns {ActionDefinition[]} An array of all action definitions.
    */
   getAllActionDefinitions() {

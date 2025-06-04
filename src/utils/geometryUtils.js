@@ -8,6 +8,7 @@
  * Calculates the squared Euclidean distance between two points in 2D space.
  * Using squared distance avoids the need for Math.sqrt, which can be computationally
  * more expensive and is often unnecessary if only comparing distances.
+ *
  * @param {number} x1 - The x-coordinate of the first point.
  * @param {number} y1 - The y-coordinate of the first point.
  * @param {number} x2 - The x-coordinate of the second point.
@@ -40,6 +41,7 @@ export const calculateDistanceSquaredCoords = (x1, y1, x2, y2) => {
 /**
  * Calculates the squared Euclidean distance between two position objects.
  * Assumes position objects have 'x' and 'y' properties. Provides default 0 if missing.
+ *
  * @param {{ x?: number, y?: number }} posA - The first position object.
  * @param {{ x?: number, y?: number }} posB - The second position object.
  * @returns {number} The squared distance between the two positions. Returns NaN if inputs are invalid non-objects.

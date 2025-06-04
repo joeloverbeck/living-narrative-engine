@@ -10,6 +10,7 @@
 export class IPromptBuilder {
   /**
    * Builds the final prompt string for a given LLM configuration and prompt data.
+   *
    * @async
    * @param {string} llmId - The identifier of the LLM configuration to use.
    * @param {PromptData} promptData - The structured data for the prompt.

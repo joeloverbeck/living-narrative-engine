@@ -25,6 +25,7 @@ export class IActionDiscoverySystem {
    * Determines all valid actions that the specified entity can currently perform.
    * This typically involves checking action definitions against the entity's state,
    * components, location, inventory, and the environment.
+   *
    * @function getValidActions
    * @param {Entity} actingEntity - The entity for whom to discover actions.
    * @param {ActionContext} context - The current context, including location and potentially other relevant state.

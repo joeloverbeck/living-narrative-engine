@@ -89,6 +89,7 @@ import ThoughtsSectionAssembler from '../../services/promptElementAssemblers/tho
 
 /**
  * Registers core domain logic services.
+ *
  * @export
  * @param {AppContainer} container - The application's DI container.
  */

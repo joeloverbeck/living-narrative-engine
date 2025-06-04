@@ -32,6 +32,7 @@
 export class ITurnContextFactory {
   /**
    * Creates a turn context instance.
+   *
    * @param {object} params - The parameters required to create the turn context.
    * @param {Entity} params.actor - The current actor whose turn is being processed.
    * @param {ILogger} params.logger - The logger instance for turn-specific logging.

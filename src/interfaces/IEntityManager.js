@@ -11,6 +11,7 @@
 export class IEntityManager {
   /**
    * Retrieves an active entity instance by its unique ID (UUID).
+   *
    * @param {string} instanceId The unique ID (UUID) of the entity to retrieve.
    * @returns {Entity | undefined} The entity instance if found, otherwise undefined.
    */
@@ -20,6 +21,7 @@ export class IEntityManager {
 
   /**
    * Creates a new Entity instance based on its definition ID, assigning it a unique instance ID.
+   *
    * @param {string} definitionId - The unique ID of the entity definition to instantiate (e.g., "isekai:hero").
    * @param {string | null} [instanceId] - Optional. The unique instance ID (UUID) for this entity.
    * If not provided (or null), the implementation should generate a new UUID.
@@ -35,6 +37,7 @@ export class IEntityManager {
 
   /**
    * Retrieves the raw data object for a specific component type from an entity.
+   *
    * @param {string} instanceId - The ID (UUID) of the entity.
    * @param {string} componentTypeId - The unique string ID of the component type.
    * @returns {object | undefined} The component data object if found, otherwise undefined.
@@ -45,6 +48,7 @@ export class IEntityManager {
 
   /**
    * Checks if an entity has data associated with a specific component type ID.
+   *
    * @param {string} instanceId - The ID (UUID) of the entity.
    * @param {string} componentTypeId - The unique string ID of the component type.
    * @returns {boolean} True if the entity has the component data, false otherwise.
@@ -55,6 +59,7 @@ export class IEntityManager {
 
   /**
    * Fetches all active entities that possess a specific component type.
+   *
    * @param {string} componentTypeId - The unique string identifier for the component type.
    * @returns {Entity[]} A new array containing all active Entity instances that have the specified component.
    * Returns an empty array if no matching entities are found.
@@ -66,6 +71,7 @@ export class IEntityManager {
   /**
    * Dynamically adds a component data object to an existing entity.
    * Implementations should handle validation and side effects (e.g., spatial index updates).
+   *
    * @param {string} instanceId - The ID (UUID) of the entity to modify.
    * @param {string} componentTypeId - The unique string ID of the component type to add.
    * @param {object} componentData - The plain JavaScript object containing the component's data.
@@ -80,6 +86,7 @@ export class IEntityManager {
   /**
    * Removes a component data object from an existing entity.
    * Implementations should handle side effects (e.g., spatial index updates).
+   *
    * @param {string} instanceId - The ID (UUID) of the entity to modify.
    * @param {string} componentTypeId - The unique string ID of the component type to remove.
    * @returns {boolean} True if the component was found and removed, false otherwise.
@@ -91,6 +98,7 @@ export class IEntityManager {
   /**
    * Retrieves all entity instance IDs (UUIDs) present in a specific location.
    * This is often used by services like TargetResolutionService to find entities in the environment.
+   *
    * @param {string} locationId - The unique ID of the location entity (which itself is an entity, typically identified by its instance ID or a well-known definition ID if it's a unique location).
    * @returns {Set<string>} A Set of entity instance IDs (UUIDs) in the specified location. Returns an empty Set if the location is not found or has no entities.
    */

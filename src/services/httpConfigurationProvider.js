@@ -29,6 +29,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
 
   /**
    * Creates an instance of HttpConfigurationProvider.
+   *
    * @param {object} [options] - Configuration options.
    * @param {ILogger} [options.logger] - An ILogger instance for logging. Defaults to the global console.
    */
@@ -41,6 +42,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
    * Fetches raw configuration data from the specified URL.
    * It uses the global `fetch` API, handles HTTP errors, parses the response as JSON,
    * and logs the process.
+   *
    * @async
    * @param {string} sourceUrl - The URL from which to fetch the configuration data.
    * This URL should point to a JSON file structured according to {@link RootLLMConfigsFile}.

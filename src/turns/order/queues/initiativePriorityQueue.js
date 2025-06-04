@@ -12,11 +12,13 @@ import { ITurnOrderQueue } from '../../interfaces/ITurnOrderQueue.js';
 // --- Type Imports ---
 /**
  * Represents an entity in the game. Expected to have at least an 'id' property.
+ *
  * @typedef {import('../../interfaces/ITurnOrderQueue.js').Entity} Entity
  */
 
 /**
  * Internal structure stored in the priority queue.
+ *
  * @typedef {object} QueueItem
  * @property {Entity} entity - The game entity.
  * @property {number} priority - The entity's initiative score for this queue.
@@ -34,6 +36,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
   /**
    * The internal priority queue instance from the 'tinyqueue' library.
    * Stores QueueItem objects.
+   *
    * @private
    * @type {TinyQueue<QueueItem>}
    */
@@ -43,6 +46,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * A set storing the unique IDs (`entity.id`) of entities that have been
    * marked for removal via the `remove()` method but might still physically
    * exist in the #queue until processed by `getNext()` or `peek()`.
+   *
    * @private
    * @type {Set<string>}
    */
@@ -64,6 +68,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * Adds an entity with a specific priority to the queue.
    * If the entity was previously marked for removal, this effectively cancels
    * the removal.
+   *
    * @override
    * @param {Entity} entity - The entity object to add. Must have a valid 'id'.
    * @param {number} priority - The numerical priority (initiative). Higher values are prioritized. Must be a finite number.
@@ -106,6 +111,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * Marks an entity for removal from the queue using a lazy removal strategy.
    * The entity is not immediately removed from the underlying heap for performance reasons.
    * It will be skipped when encountered by `getNext()` or `peek()`.
+   *
    * @override
    * @param {string} entityId - The unique ID of the entity to remove.
    * @returns {null} Always returns null due to the lazy removal strategy,
@@ -131,6 +137,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
   /**
    * Retrieves and removes the entity with the highest priority from the queue,
    * skipping any entities marked for lazy removal.
+   *
    * @override
    * @returns {Entity | null} The highest priority entity object, or null if the
    * queue is effectively empty.
@@ -184,6 +191,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
   /**
    * Returns the entity with the highest priority without removing it from the queue.
    * Skips and cleans up any entities marked for lazy removal found at the top.
+   *
    * @override
    * @returns {Entity | null} The highest priority entity object, or null if the
    * queue is effectively empty.
@@ -237,6 +245,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
 
   /**
    * Checks if the queue currently contains no active entities (considering lazy removals).
+   *
    * @override
    * @returns {boolean} True if the queue is effectively empty, false otherwise.
    */
@@ -261,6 +270,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
 
   /**
    * Removes all entities from the queue and clears lazy removal tracking.
+   *
    * @override
    * @returns {void}
    */
@@ -281,6 +291,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * This calculation subtracts the count of lazily removed entity IDs
    * (those marked via `remove()` but not yet processed by `getNext`/`peek`)
    * from the physical queue length.
+   *
    * @override
    * @returns {number} The number of active entities.
    */
@@ -304,6 +315,7 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
    * Entities marked for lazy removal are excluded.
    * The order of entities in the returned array is based on the internal heap
    * structure of the priority queue and is **not** guaranteed to be sorted by priority.
+   *
    * @override
    * @returns {Array<Entity>} An array of the active entities. Returns an empty array `[]`
    * if the queue is effectively empty.

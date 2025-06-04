@@ -14,6 +14,7 @@ import { createComponentAccessor } from './contextAssembler.js';
 /**
  * Builds the JsonLogic-friendly context object used by the action-validation engine.
  * Includes actor, target, and a representation of the action attempt itself under the 'event' key.
+ *
  * @param {ActionDefinition} actionDefinition - The definition of the action being attempted. // <<< TICKET 6: Added parameter
  * @param {Entity} actorEntity - The entity attempting the action.
  * @param {ActionTargetContext} targetContext - The context of the action's target.

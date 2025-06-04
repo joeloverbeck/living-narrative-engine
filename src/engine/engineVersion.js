@@ -22,6 +22,7 @@ if (!semver.valid(versionFromPackage)) {
  * will result in a startup error.
  *
  * The constant is frozen, ensuring it cannot be modified at runtime.
+ *
  * @type {string}
  * @constant
  * @example

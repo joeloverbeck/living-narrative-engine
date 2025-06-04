@@ -1,5 +1,6 @@
 /**
  * Safely sets a potentially nested property on an object using a dot-separated path.
+ *
  * @param {object} obj - The target object.
  * @param {string} path - The dot-separated path (e.g., "style.color", "dataset.userId").
  * @param {*} value - The value to set.

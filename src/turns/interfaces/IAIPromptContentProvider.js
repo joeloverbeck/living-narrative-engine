@@ -50,6 +50,7 @@
 export class IAIPromptContentProvider {
   /**
    * Assembles the complete PromptData object required for constructing an LLM prompt.
+   *
    * @param {AIGameStateDTO} gameStateDto - The comprehensive game state for the current AI actor.
    * @param {ILogger} logger - Logger instance for logging during the assembly process.
    * @returns {Promise<PromptData>} A promise that resolves to the fully assembled PromptData object.
@@ -61,6 +62,7 @@ export class IAIPromptContentProvider {
 
   /**
    * Generates the character definition content.
+   *
    * @param {AIGameStateDTO} gameStateDto - The game state DTO.
    * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} The formatted character segment.
@@ -74,6 +76,7 @@ export class IAIPromptContentProvider {
 
   /**
    * Generates the world context content (location, exits, other characters).
+   *
    * @param {AIGameStateDTO} gameStateDto - The game state DTO.
    * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} The formatted world context segment.
@@ -85,6 +88,7 @@ export class IAIPromptContentProvider {
 
   /**
    * Generates the available actions content.
+   *
    * @param {AIGameStateDTO} gameStateDto - The game state DTO.
    * @param {ILogger} [logger] - Optional logger instance.
    * @returns {string} The formatted actions segment.
@@ -98,6 +102,7 @@ export class IAIPromptContentProvider {
 
   /**
    * Returns the core task description text.
+   *
    * @returns {string}
    * @throws {Error} If the method is not implemented.
    */
@@ -107,6 +112,7 @@ export class IAIPromptContentProvider {
 
   /**
    * Returns character portrayal guidelines.
+   *
    * @param {string} characterName - The name of the character.
    * @returns {string}
    * @throws {Error} If the method is not implemented.
@@ -119,6 +125,7 @@ export class IAIPromptContentProvider {
 
   /**
    * Returns the content policy text (e.g., NC-21).
+   *
    * @returns {string}
    * @throws {Error} If the method is not implemented.
    */
@@ -128,6 +135,7 @@ export class IAIPromptContentProvider {
 
   /**
    * Returns the final LLM instruction text.
+   *
    * @returns {string}
    * @throws {Error} If the method is not implemented.
    */
@@ -140,6 +148,7 @@ export class IAIPromptContentProvider {
   /**
    * Validates if the provided AIGameStateDTO contains the critical information
    * necessary for generating prompt data.
+   *
    * @param {AIGameStateDTO} gameStateDto - The game state DTO to validate.
    * @param {ILogger} logger - Logger instance for logging validation issues.
    * @returns {{isValid: boolean, errorContent: string | null}} An object indicating if the state is valid
@@ -147,7 +156,6 @@ export class IAIPromptContentProvider {
    * @throws {Error} May throw an error if validation itself fails unexpectedly.
    */
   validateGameStateForPrompting(gameStateDto, logger) {
-     
     throw new Error(
       "Method 'validateGameStateForPrompting()' must be implemented."
     );

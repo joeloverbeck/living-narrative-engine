@@ -35,6 +35,7 @@ export class ILLMAdapter {
    * (e.g., LLM refusing to answer, content moderation). For simplicity in this
    * definition, throwing an exception (e.g., `LLMError` extending `Error`) is
    * the primary expectation for unrecoverable issues.
+   *
    * @async
    * @param {string} gameSummary - A string providing a summarized representation
    * of the current game state and relevant actor information, structured

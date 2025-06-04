@@ -16,6 +16,7 @@
 export class IFileSystemReader {
   /**
    * Asynchronously reads the entire contents of a file.
+   *
    * @async
    * @param {string} filePath - The path to the file to be read.
    * @param {string} encoding - The character encoding to use (e.g., 'utf-8').
@@ -35,6 +36,7 @@ export class IFileSystemReader {
 export class IEnvironmentVariableReader {
   /**
    * Retrieves the value of an environment variable.
+   *
    * @param {string} variableName - The name of the environment variable.
    * @returns {string | undefined} The value of the environment variable if set, otherwise undefined.
    */

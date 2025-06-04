@@ -51,6 +51,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
    * Canonical method used by PlayerTurnHandler / TurnManager.
    * The 'success' parameter is part of the ITurnEndPort interface contract
    * and IS included in the core:turn_ended event payload.
+   *
    * @param {string} entityId
    * @param {boolean} success - Indicates the outcome of the turn from the notifier's perspective.
    */
@@ -103,6 +104,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
   /**
    * ⚠️ Legacy shim so the old unit-tests that call `turnEnded()` still pass.
    * Calls `notifyTurnEnded(id, true)` so existing behavioural assertions remain valid.
+   *
    * @param {string} entityId
    */
   async turnEnded(entityId) {

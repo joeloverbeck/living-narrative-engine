@@ -24,17 +24,11 @@ import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js'; // As
 // --- MODIFICATION END ---
 
 class GamePersistenceService extends IGamePersistenceService {
-     * @private
   #logger;
-     * @private
   #saveLoadService;
-     * @private
   #entityManager;
-     * @private
   #dataRegistry;
-     * @private
   #playtimeTracker;
-     * @private
   #container; // Still needed if other services are resolved for restoration/capture
 
   constructor({
@@ -91,6 +85,7 @@ class GamePersistenceService extends IGamePersistenceService {
 
   /**
    * Captures the current game state.
+   *
    * @param {string | null | undefined} activeWorldName - The name of the currently active world, passed from GameEngine.
    * @returns {SaveGameStructure} The captured game state object.
    */

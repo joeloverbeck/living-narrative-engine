@@ -32,6 +32,7 @@ export class IApiKeyProvider {
    * - For client-side execution, this method might return `null` if API keys are managed by a backend proxy,
    * indicating that the key is not directly accessible or needed by the client-facing adapter.
    * - It should also gracefully handle cases where a key is not configured or not found, returning `null`.
+   *
    * @async
    * @param {LLMModelConfig} llmConfig - An object representing the configuration of the specific LLM
    * for which the key is needed. This configuration should provide necessary details for key lookup,

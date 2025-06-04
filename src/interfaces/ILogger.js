@@ -8,6 +8,7 @@
 export class ILogger {
   /**
    * Logs an informational message.
+   *
    * @param {string} message - The message string.
    * @param {...any} args - Additional arguments to log with the message.
    * @returns {void}
@@ -18,6 +19,7 @@ export class ILogger {
 
   /**
    * Logs a warning message.
+   *
    * @param {string} message - The message string.
    * @param {...any} args - Additional arguments to log with the message.
    * @returns {void}
@@ -28,6 +30,7 @@ export class ILogger {
 
   /**
    * Logs an error message.
+   *
    * @param {string} message - The message string.
    * @param {...any} args - Additional arguments to log with the message.
    * @returns {void}
@@ -38,6 +41,7 @@ export class ILogger {
 
   /**
    * Logs a debug message.
+   *
    * @param {string} message - The message string.
    * @param {...any} args - Additional arguments to log with the message.
    * @returns {void}

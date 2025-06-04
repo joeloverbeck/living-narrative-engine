@@ -48,6 +48,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
    * Determines the action a human player will take for the current turn.
    * It calls `PlayerPromptService.prompt()` with a cancellation signal obtained
    * from the `ITurnContext`.
+   *
    * @async
    * @param {ITurnContext} context - The turn context for the current turn.
    * @returns {Promise<ITurnAction>} A Promise that resolves to an ITurnAction object.
@@ -195,6 +196,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
 
   /**
    * Helper to safely get the logger from the context.
+   *
    * @param {ITurnContext} context - The ITurnContext instance.
    * @returns {ILogger} A valid logger instance.
    * @throws {Error} If context is invalid, or logger cannot be retrieved, or the retrieved logger is invalid.
@@ -240,6 +242,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
 
   /**
    * Helper to safely get the actor from the context, using a provided logger.
+   *
    * @param {ITurnContext} context - The ITurnContext instance.
    * @param {ILogger} logger - A valid logger instance for reporting issues.
    * @returns {Entity} A valid actor entity.
@@ -285,6 +288,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
 
   /**
    * Helper to safely get the player prompt service from the context, using a provided logger.
+   *
    * @param {ITurnContext} context - The ITurnContext instance.
    * @param {ILogger} logger - A valid logger instance for reporting issues.
    * @returns {IPlayerPromptService} A valid player prompt service instance.

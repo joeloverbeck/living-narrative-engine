@@ -17,18 +17,17 @@ import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
+ *
  * @implements {IInitializationService}
  */
 class InitializationService extends IInitializationService {
-     * @private
   #container;
-     * @private
   #logger;
-     * @private
   #validatedEventDispatcher;
 
   /**
    * Creates a new InitializationService instance.
+   *
    * @param {object} dependencies - The required service dependencies.
    * @param {AppContainer} dependencies.container - The application's dependency container.
    * @param {ILogger} dependencies.logger - The logging service.
@@ -82,6 +81,7 @@ class InitializationService extends IInitializationService {
 
   /**
    * Runs the complete asynchronous sequence required to initialize the game for a specific world.
+   *
    * @async
    * @param {string} worldName - The identifier of the world to initialize.
    * @returns {Promise<InitializationResult>} The result of the initialization attempt.

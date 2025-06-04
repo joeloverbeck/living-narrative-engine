@@ -7,6 +7,7 @@
 class IPlaytimeTracker {
   /**
    * Resets the playtime tracker, clearing accumulated playtime and ending any active session.
+   *
    * @abstract
    * @returns {void}
    */
@@ -17,6 +18,7 @@ class IPlaytimeTracker {
   /**
    * Starts a new play session.
    * Sets the session start time to the current time.
+   *
    * @abstract
    * @returns {void}
    */
@@ -27,6 +29,7 @@ class IPlaytimeTracker {
   /**
    * Ends the current play session, calculates its duration, adds it to the
    * accumulated playtime, and resets the session timer.
+   *
    * @abstract
    * @returns {void}
    */
@@ -37,6 +40,7 @@ class IPlaytimeTracker {
   /**
    * Gets the total accumulated playtime in seconds, including the current session's duration if active.
    * This method should not modify any internal state of the PlaytimeTracker.
+   *
    * @abstract
    * @returns {number} Total playtime in seconds.
    */
@@ -47,6 +51,7 @@ class IPlaytimeTracker {
   /**
    * Sets the accumulated playtime, typically when loading a game.
    * This will also reset any currently active session timer before setting the new value.
+   *
    * @abstract
    * @param {number} seconds - The total accumulated playtime in seconds from a saved game.
    * @returns {void}

@@ -31,6 +31,7 @@ export class EventBusCommandInputGateway extends ICommandInputPort {
 
   /**
    * Creates an instance of EventBusCommandInputGateway.
+   *
    * @param {object} dependencies - The dependencies required by the gateway.
    * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The VED instance.
    * @throws {Error} If dependencies are missing or invalid.
@@ -52,6 +53,7 @@ export class EventBusCommandInputGateway extends ICommandInputPort {
   /**
    * Handles the 'core:submit_command' event. Extracts the command, trims it,
    * and calls the provided listener if the command is non-empty.
+   *
    * @private
    * @param {CommandListener} listener - The original listener callback provided to onCommand.
    * @param {CommandSubmitEvent | CommandSubmitEventData} eventData - The event data received from the VED.
@@ -91,6 +93,7 @@ export class EventBusCommandInputGateway extends ICommandInputPort {
 
   /**
    * Registers a listener to be called whenever a 'core:submit_command' event occurs.
+   *
    * @param {CommandListener} listener - The function to execute when a valid command is received.
    * @returns {UnsubscribeFn} A function that, when called, unregisters this specific listener.
    * @throws {Error} If the listener is not a function or subscription fails.

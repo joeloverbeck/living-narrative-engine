@@ -10,6 +10,7 @@
 /**
  * Represents the outcome of the game initialization sequence.
  * This type is used by the IInitializationService.runInitializationSequence method.
+ *
  * @typedef {object} InitializationResult
  * @property {boolean} success - Indicates whether the initialization sequence completed successfully.
  * @property {Error} [error] - An error object containing details if initialization failed (success is false).
@@ -42,6 +43,7 @@ class IInitializationService {
    * If the initialization process encounters a critical failure at any step,
    * the promise should resolve with `success: false` and an `Error` object.
    * The return object can include additional key-value pairs for more detailed reporting.
+   *
    * @async
    * @param {string} worldName - The identifier of the world to initialize. Must be a non-empty string.
    * @returns {Promise<{success: boolean, error?: Error, [key: string]: any}>}
@@ -55,7 +57,6 @@ class IInitializationService {
    * @abstract
    */
   async runInitializationSequence(worldName) {
-    // eslint-disable-next-line no-unused-vars
     const _worldName = worldName; // To satisfy linter if no-unused-vars is enabled
     throw new Error(
       'IInitializationService.runInitializationSequence: Method not implemented.'

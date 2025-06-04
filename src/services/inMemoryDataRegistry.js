@@ -12,6 +12,7 @@
  * This class acts as a central registry for loaded game definitions.
  * It dynamically discovers the starting player and location based on component data
  * within the registered entity definitions.
+ *
  * @implements {IDataRegistry}
  */
 class InMemoryDataRegistry {
@@ -23,6 +24,7 @@ class InMemoryDataRegistry {
      * Internal storage for typed game data definitions.
      * The outer Map's key is the data type (e.g., 'actions', 'entities', 'components').
      * The inner Map's key is the specific item's ID, and the value is the data object.
+     *
      * @private
      * @type {Map<string, Map<string, object>>}
      */
@@ -36,6 +38,7 @@ class InMemoryDataRegistry {
   /**
    * Stores a data object under a specific category (`type`) and unique identifier (`id`).
    * If the type category doesn't exist, it's created. Overwrites existing data for the same type/id.
+   *
    * @param {string} type - The category of data (e.g., 'entities', 'actions'). Must be a non-empty string.
    * @param {string} id - The unique identifier for the data object within its type. Must be a non-empty string.
    * @param {object} data - The data object to store. Must be a non-null object.
@@ -70,6 +73,7 @@ class InMemoryDataRegistry {
 
   /**
    * Retrieves a specific data object by its type and ID.
+   *
    * @param {string} type - The category of data (e.g., 'entities').
    * @param {string} id - The unique identifier of the data object.
    * @returns {object | undefined} The data object if found, otherwise undefined.
@@ -81,6 +85,7 @@ class InMemoryDataRegistry {
 
   /**
    * Retrieves all data objects belonging to a specific type as an array.
+   *
    * @param {string} type - The category of data (e.g., 'entities').
    * @returns {object[]} An array of data objects for the given type. Returns an empty array
    * if the type is unknown or has no data stored.
@@ -92,6 +97,7 @@ class InMemoryDataRegistry {
 
   /**
    * Retrieves all loaded system rule objects.
+   *
    * @returns {object[]} An array containing all stored system rule objects.
    */
   getAllSystemRules() {
@@ -166,6 +172,7 @@ class InMemoryDataRegistry {
    * Dynamically discovers the starting player ID by finding the first entity
    * definition in the 'entities' type map that contains a 'core:player' component.
    * The iteration order depends on the insertion order into the underlying Map.
+   *
    * @returns {string | null} The ID of the first entity definition found with a
    * 'core:player' component, or null if no such entity is found.
    */
@@ -204,6 +211,7 @@ class InMemoryDataRegistry {
    * It first finds the starting player ID using `getStartingPlayerId()`.
    * Then, it retrieves the player's entity definition and extracts the 'locationId'
    * property from the 'core:position' component data within that definition.
+   *
    * @returns {string | null} The 'locationId' string found in the starting player's
    * position component data, or null if the player ID, definition, position component,
    * or locationId property cannot be found.

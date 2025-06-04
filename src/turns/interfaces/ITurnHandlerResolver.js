@@ -13,6 +13,7 @@
 export class ITurnHandlerResolver {
   /**
    * Resolves the correct turn handler implementation for the given actor entity.
+   *
    * @function resolveHandler
    * @async
    * @param {Entity} actor - The entity whose turn handler needs to be resolved.

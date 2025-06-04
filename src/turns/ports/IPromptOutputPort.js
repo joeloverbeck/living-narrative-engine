@@ -19,6 +19,7 @@ export class IPromptOutputPort {
   /**
    * Sends a prompt to the specified player entity, typically indicating it's their turn
    * and providing available actions.
+   *
    * @async
    * @param {string} entityId - The unique ID of the player entity being prompted.
    * @param {DiscoveredActionInfo[]} availableActions - An array of objects describing the actions

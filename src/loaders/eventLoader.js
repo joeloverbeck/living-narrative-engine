@@ -24,6 +24,7 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Assumin
  * Extends {@link BaseManifestItemLoader} to leverage common file processing logic,
  * including primary schema validation. Specific processing for event definitions,
  * particularly payload schema registration, is implemented in this class.
+ *
  * @class EventLoader
  * @augments BaseManifestItemLoader
  */
@@ -34,6 +35,7 @@ class EventLoader extends BaseManifestItemLoader {
    *
    * AC: The constructor is defined and accepts the standard core service dependencies.
    * AC: EventLoader constructor calls super() passing 'events' as the first argument, followed by the dependency arguments in the correct order.
+   *
    * @param {IConfiguration} config - Configuration service instance.
    * @param {IPathResolver} pathResolver - Path resolution service instance.
    * @param {IDataFetcher} dataFetcher - Data fetching service instance.
@@ -69,6 +71,7 @@ class EventLoader extends BaseManifestItemLoader {
    * Validates the data against the primary event schema, extracts the event ID,
    * registers any inline payload schema, stores the definition in the registry via the base helper,
    * and returns an object containing the final registry key and whether an overwrite occurred.
+   *
    * @override
    * @protected
    * @async

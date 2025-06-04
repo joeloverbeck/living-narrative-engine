@@ -11,6 +11,7 @@ export class IActionExecutor {
    * Executes the action specified by the actionId using the provided context.
    * This involves validating the action, potentially resolving targets,
    * performing the action's logic (often by dispatching events), and returning the outcome.
+   *
    * @function executeAction
    * @param {string} actionId - The unique identifier of the action to execute (e.g., 'core:move').
    * @param {ActionContext} context - The context in which the action is being performed,

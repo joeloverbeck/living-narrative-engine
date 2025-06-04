@@ -67,6 +67,7 @@
 export class ITurnContext {
   /**
    * Retrieves the current actor (e.g., player, NPC) whose turn is being processed.
+   *
    * @returns {Entity | null} The current actor entity, or null if no actor is active.
    */
   getActor() {
@@ -75,6 +76,7 @@ export class ITurnContext {
 
   /**
    * Retrieves a logger instance for logging turn-specific information.
+   *
    * @returns {ILogger} The logger instance.
    */
   getLogger() {
@@ -84,6 +86,7 @@ export class ITurnContext {
   /**
    * Retrieves the player prompt service for interacting with a human player.
    * Note: This might need generalization if non-player entities require analogous services.
+   *
    * @returns {IPlayerPromptService} The player prompt service instance.
    * @throws {Error} If the service is not available in the current context.
    */
@@ -93,6 +96,7 @@ export class ITurnContext {
 
   /**
    * Retrieves the CommandProcessor service.
+   *
    * @returns {ICommandProcessor} The command processor instance.
    * @throws {Error} If the service is not available in the current context.
    */
@@ -102,6 +106,7 @@ export class ITurnContext {
 
   /**
    * Retrieves the CommandOutcomeInterpreter service.
+   *
    * @returns {ICommandOutcomeInterpreter} The command outcome interpreter instance.
    * @throws {Error} If the service is not available in the current context.
    */
@@ -113,6 +118,7 @@ export class ITurnContext {
 
   /**
    * Retrieves the SafeEventDispatcher service.
+   *
    * @returns {ISafeEventDispatcher} The safe event dispatcher instance.
    * @throws {Error} If the service is not available in the current context.
    */
@@ -122,6 +128,7 @@ export class ITurnContext {
 
   /**
    * Retrieves the SubscriptionLifecycleManager for managing event subscriptions scoped to the turn.
+   *
    * @returns {SubscriptionLifecycleManager} The subscription manager instance.
    * @throws {Error} If the service is not available in the current context.
    */
@@ -131,6 +138,7 @@ export class ITurnContext {
 
   /**
    * Retrieves the EntityManager service.
+   *
    * @returns {IEntityManager} The entity manager instance.
    * @throws {Error} If the service is not available in the current context.
    */
@@ -142,6 +150,7 @@ export class ITurnContext {
   /**
    * Retrieves the global Action-Discovery System so callers can ask
    * "what can this actor do **right now**".
+   *
    * @returns {IActionDiscoverySystem}
    * @throws {Error} if it is missing from the context.
    */
@@ -152,6 +161,7 @@ export class ITurnContext {
 
   /**
    * Retrieves the ITurnEndPort for signaling the end of a turn to external listeners.
+   *
    * @returns {ITurnEndPort} The turn end port instance.
    * @throws {Error} If the service is not available in the current context.
      }
@@ -170,6 +180,7 @@ export class ITurnContext {
 
   /**
    * Checks if the turn is currently awaiting an external event to conclude.
+   *
    * @returns {boolean} True if awaiting an external event, false otherwise.
    */
   isAwaitingExternalEvent() {
@@ -181,6 +192,7 @@ export class ITurnContext {
    * This is how strategies or other components using ITurnContext can initiate state changes
    * without directly holding a reference to the concrete handler's transition method.
    * The actual transition logic resides in the BaseTurnHandler.
+   *
    * @param {new (handler: import('../handlers/baseTurnHandler.js').BaseTurnHandler, ...args: any[]) => ITurnState} StateClass - The class of the state to transition to.
    * @param {any[]} [constructorArgs] - Optional arguments to pass to the state constructor (after the handler).
    * @returns {Promise<void>}
@@ -193,6 +205,7 @@ export class ITurnContext {
   /**
    * Informs the underlying handler about the need to wait for an external event.
    * Primarily used by states like AwaitingExternalTurnEndState.
+   *
    * @param {boolean} isAwaiting - True if the handler should mark itself as waiting.
    * @param {string} actorId - The ID of the actor for whom the wait is being set.
    * @returns {void}
@@ -204,6 +217,7 @@ export class ITurnContext {
   /**
    * Retrieves the current actor's turn strategy.
    * This strategy is responsible for deciding the actor's action for the turn.
+   *
    * @returns {IActorTurnStrategy} The actor's turn strategy instance.
    * @throws {Error} If no strategy is available or provided during context construction.
    */
@@ -216,6 +230,7 @@ export class ITurnContext {
    * This is typically called by `AwaitingPlayerInputState` (or a similar state) after the
    * actor's {@link IActorTurnStrategy#decideAction} method resolves with an {@link ITurnAction}.
    * The stored action can then be retrieved by states like `ProcessingCommandState`.
+   *
    * @param {ITurnAction} action - The action chosen by the actor.
    * @returns {void}
    * @throws {Error} If the provided action is invalid or if it's called at an inappropriate time.
@@ -228,6 +243,7 @@ export class ITurnContext {
    * Retrieves the action that was chosen for the current turn.
    * This is typically called by `ProcessingCommandState` (or a similar state) to get the
    * {@link ITurnAction} that was previously set by `setChosenAction`.
+   *
    * @returns {ITurnAction | null} The chosen action object, or `null` if no action
    * has been set for the current turn yet.
    */
@@ -239,6 +255,7 @@ export class ITurnContext {
   /**
    * Retrieves an AbortSignal that can be used to cancel long-running operations
    * associated with this turn context, such as player prompts.
+   *
    * @returns {AbortSignal} The AbortSignal.
    */
   getPromptSignal() {
@@ -249,6 +266,7 @@ export class ITurnContext {
    * Signals that any active long-running operation (like a player prompt)
    * associated with this turn context should be cancelled.
    * This will trigger the 'abort' event on the signal obtained via `getPromptSignal()`.
+   *
    * @returns {void}
    */
   cancelActivePrompt() {

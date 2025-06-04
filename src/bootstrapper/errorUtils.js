@@ -20,6 +20,7 @@
 
 /**
  * Displays a fatal startup error to the user, logs it to the console, and updates UI elements.
+ *
  * @param {FatalErrorUIElements} uiElements - References to key UI elements.
  * @param {FatalErrorDetails} errorDetails - Details about the error.
  */

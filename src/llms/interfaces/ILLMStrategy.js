@@ -62,6 +62,7 @@ export class ILLMStrategy {
    * and the configured `jsonOutputStrategy.method`, making the API call (usually via an IHttpClient
    * instance provided indirectly or directly), and then extracting the raw JSON string from the
    * LLM's response.
+   *
    * @async
    * @param {LLMStrategyExecuteParams} params - An object containing all necessary parameters for execution,
    * including the game summary, LLM configuration, API key (if applicable), and environment context.

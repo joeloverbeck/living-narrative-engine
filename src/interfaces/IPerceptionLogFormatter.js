@@ -34,12 +34,12 @@
 export class IPerceptionLogFormatter {
   /**
    * Transforms an array of raw perception log entries.
+   *
    * @param {RawPerceptionLogEntry[]} rawLogEntries - The raw perception log entries from game state.
    * @returns {FormattedPerceptionEntry[]} The formatted perception log entries.
    * @throws {Error} If the method is not implemented.
    */
   format(rawLogEntries) {
-     
     throw new Error("Method 'format()' must be implemented.");
   }
 }

@@ -19,6 +19,7 @@ export class ISafeEventDispatcher {
    * Safely dispatches an event using the underlying IValidatedEventDispatcher.
    * Logs errors internally if the dispatch fails (returns false or throws) but
    * guarantees this method itself will not throw an exception.
+   *
    * @async
    * @param {string} eventName - The unique identifier of the event to dispatch.
    * @param {object} payload - The data associated with the event.
@@ -39,6 +40,7 @@ export class ISafeEventDispatcher {
    * Wraps the underlying IValidatedEventDispatcher's subscribe method.
    * Logs errors internally if subscription fails but guarantees this method
    * itself will not throw an exception if the underlying subscribe call throws.
+   *
    * @param {string} eventName - The name of the event to subscribe to.
    * @param {EventListener} listener - The function to call when the event is dispatched.
    * @returns {UnsubscribeFn | null} An unsubscribe function if successful, or null on failure.
@@ -52,6 +54,7 @@ export class ISafeEventDispatcher {
    * Wraps the underlying IValidatedEventDispatcher's unsubscribe method.
    * Logs errors internally if unsubscription fails. Does not throw.
    * Note: This direct unsubscribe is less common if using the UnsubscribeFn returned by `subscribe`.
+   *
    * @param {string} eventName - The name of the event to unsubscribe from.
    * @param {EventListener} listener - The listener function to remove.
    * @returns {void}

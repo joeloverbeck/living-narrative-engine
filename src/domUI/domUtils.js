@@ -13,6 +13,7 @@ export const DomUtils = {
   /**
    * Clears all child nodes from a given DOM element.
    * If the element is null or undefined, this function does nothing.
+   *
    * @param {Element | null | undefined} element - The DOM element to clear.
    */
   clearElement(element) {
@@ -28,6 +29,7 @@ export const DomUtils = {
   /**
    * Sets the text content or HTML content of a given DOM element.
    * If the element is null or undefined, this function does nothing.
+   *
    * @param {Element | null | undefined} element - The DOM element whose content will be set.
    * @param {string} content - The string content to set.
    * @param {boolean} [allowHtml] - If true, `content` is set as HTML using `innerHTML`.
@@ -48,6 +50,7 @@ export const DomUtils = {
   /**
    * Toggles a CSS class on a DOM element.
    * If the element or its classList is null or undefined, this function does nothing.
+   *
    * @param {Element | null | undefined} element - The DOM element.
    * @param {string} className - The CSS class name to toggle.
    * @param {boolean} [force] - If true, adds the class. If false, removes the class.
@@ -75,6 +78,7 @@ export const DomUtils = {
   /**
    * Shows a DOM element by setting its display style.
    * If the element or its style property is null or undefined, this function does nothing.
+   *
    * @param {HTMLElement | null | undefined} element - The DOM element to show.
    * @param {string} [displayStyle] - The CSS display style to apply (e.g., 'block', 'flex', 'inline-block').
    */
@@ -89,6 +93,7 @@ export const DomUtils = {
   /**
    * Hides a DOM element by setting its display style to 'none'.
    * If the element or its style property is null or undefined, this function does nothing.
+   *
    * @param {HTMLElement | null | undefined} element - The DOM element to hide.
    */
   hideElement(element) {

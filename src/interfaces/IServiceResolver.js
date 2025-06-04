@@ -28,6 +28,7 @@ export class IServiceResolver {
    * The resolution mechanism (e.g., handling singletons vs. transients)
    * depends on the specific container implementation. Based on the current
    * AppContainer, this resolution is synchronous.
+   *
    * @function resolveByTag // JSDoc hint for method within interface/class structure
    * @param {string} tag - The tag identifying the group of services to resolve.
    * Cannot be null or empty.

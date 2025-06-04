@@ -6,10 +6,10 @@ import { IPathResolver } from '../interfaces/IPathResolver.js';
  * Default implementation of IPathResolver.
  * Resolves paths by combining base paths from IConfiguration with specific filenames.
  * Uses standard URL/path joining logic (adjust if running in Node.js vs Browser).
+ *
  * @implements {IPathResolver}
  */
 class DefaultPathResolver extends IPathResolver {
-     * @private
   #config;
 
   /**
@@ -55,6 +55,7 @@ class DefaultPathResolver extends IPathResolver {
 
   /**
    * Very lightweight joiner that behaves identically in browser and Node.
+   *
    * @private
    * @param {...string} segments
    * @returns {string}
@@ -155,6 +156,7 @@ class DefaultPathResolver extends IPathResolver {
 
   /**
    * **Implements Sub-Ticket 3.**
+   *
    * @param {string} modId
    * @returns {string}
    */

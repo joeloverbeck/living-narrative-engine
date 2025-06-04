@@ -9,6 +9,7 @@ import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
  * Retrieves the display name of an entity.
  * It first checks for a `core:name` component and uses `component.text`.
  * If not found, it falls back to `entity.name` (if it exists).
+ *
  * @param {Entity | null | undefined} entity - The entity whose name is to be retrieved.
  * @param {ILogger} [logger] - Optional logger instance for debug/warning messages.
  * @returns {string | undefined} The display name of the entity or undefined if no name is found.

@@ -25,6 +25,7 @@ import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader
 
 /**
  * Creates a mock IConfiguration service.
+ *
  * @param overrides
  */
 const createMockConfiguration = (overrides = {}) => ({
@@ -54,6 +55,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 /**
  * Creates a mock IPathResolver service.
+ *
  * @param overrides
  */
 const createMockPathResolver = (overrides = {}) => ({
@@ -78,6 +80,7 @@ const createMockPathResolver = (overrides = {}) => ({
 
 /**
  * Creates a mock IDataFetcher service.
+ *
  * @param overrides
  */
 const createMockDataFetcher = (overrides = {}) => ({
@@ -87,6 +90,7 @@ const createMockDataFetcher = (overrides = {}) => ({
 
 /**
  * Creates a mock ISchemaValidator service.
+ *
  * @param overrides
  */
 const createMockSchemaValidator = (overrides = {}) => ({
@@ -102,6 +106,7 @@ const createMockSchemaValidator = (overrides = {}) => ({
 
 /**
  * Creates a mock IDataRegistry service.
+ *
  * @param overrides
  */
 const createMockDataRegistry = (overrides = {}) => ({
@@ -117,6 +122,7 @@ const createMockDataRegistry = (overrides = {}) => ({
 
 /**
  * Creates a mock ILogger service.
+ *
  * @param overrides
  */
 const createMockLogger = (overrides = {}) => ({

@@ -21,6 +21,7 @@ import { getDisplayName, TARGET_MESSAGES } from '../utils/messages.js';
 /**
  * Find exits whose direction or display-name matches the user’s phrase.
  * Returns two buckets: exact‐direction matches and name/alias matches.
+ *
  * @param {ActionContext} context
  * @param {string} rawPhrase
  * @param {ILogger} logger
@@ -106,6 +107,7 @@ function findPotentialExitMatches(context, rawPhrase, logger) {
  * Returns **the exit object itself** (so callers have direction, target, blocker),
  * or `null` if not found / ambiguous. Callers that previously expected a
  * connection-entity ID now read `resolvedExit.target`.
+ *
  * @param {ActionContext & { validatedEventDispatcher: ValidatedEventDispatcher, logger: ILogger }} context
  * @param {string}   rawPhrase
  * @param {string}   actionVerb           – verb for ambiguity prompts (“go”, “enter”, …)

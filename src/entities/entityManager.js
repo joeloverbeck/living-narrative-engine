@@ -85,6 +85,7 @@ class EntityManager extends IEntityManager {
    * Retrieves the *pre-validated* definition from IDataRegistry, instantiates the Entity,
    * copies component *data* (deep-cloned), and registers the definition-to-instance mapping.
    * Spatial indexing is *deferred* and handled by the WorldInitializer after references are resolved.
+   *
    * @param {string} definitionId - The unique ID of the entity definition to instantiate (e.g., "isekai:hero").
    * @param {string | null} [instanceId] - Optional. The unique instance ID (UUID) for this entity.
    * If not provided (or null), a new UUID will be generated.
@@ -215,6 +216,7 @@ class EntityManager extends IEntityManager {
   /**
    * Retrieves the primary entity instance associated with a given definition ID.
    * "Primary" usually means the first one non-forced-new instance created and mapped.
+   *
    * @param {string} definitionId - The definition ID to look up.
    * @returns {Entity | undefined} The entity instance, or undefined if no instance is mapped to this definition ID.
    */
@@ -231,6 +233,7 @@ class EntityManager extends IEntityManager {
 
   /**
    * Retrieves an entity instance by its unique runtime instance ID.
+   *
    * @param {string} instanceId - The UUID of the entity instance.
    * @returns {Entity | undefined} The entity instance if found, otherwise undefined.
    */
@@ -243,6 +246,7 @@ class EntityManager extends IEntityManager {
    * Validates the component data against its schema before adding.
    * Updates the spatial index if the position component is added or modified.
    * Component data is deep-cloned before being added to the entity.
+   *
    * @param {string} instanceId - The ID (UUID) of the entity to modify.
    * @param {string} componentTypeId - The unique string ID of the component type to add (e.g., "core:health").
    * @param {object} componentData - The plain JavaScript object containing the component's data.

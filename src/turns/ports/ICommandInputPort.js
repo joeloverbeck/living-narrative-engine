@@ -25,6 +25,7 @@ export class ICommandInputPort {
   /**
    * Registers a listener to be called whenever a command is submitted for the player.
    * This is analogous to subscribing to a command submission event.
+   *
    * @param {CommandListener} listener - The function to execute when a command is received.
    * @returns {UnsubscribeFn} A function that, when called, unregisters the provided listener.
    * @throws {Error} Implementations might throw if the listener is invalid or registration fails.

@@ -25,6 +25,7 @@
 class IGamePersistenceService {
   /**
    * Saves the current game state.
+   *
    * @param {string} saveName - The desired name for the save file.
    * @param {boolean} isEngineInitialized - Indicates if the game engine is fully initialized.
    * @param {string | null | undefined} [activeWorldName] - Optional: The name of the currently active world.
@@ -40,6 +41,7 @@ class IGamePersistenceService {
 
   /**
    * Loads a game from the specified save identifier and restores the game state.
+   *
    * @param {string} saveIdentifier - The unique identifier of the save file to load (e.g., filename or path).
    * @returns {Promise<LoadAndRestoreResult>} A promise that resolves with the result of the load and restore operation.
    * @abstract
@@ -52,6 +54,7 @@ class IGamePersistenceService {
 
   /**
    * Checks if saving the game is currently allowed.
+   *
    * @param {boolean} isEngineInitialized - Indicates if the game engine is fully initialized.
    * @returns {boolean} True if saving is allowed, false otherwise.
    * @abstract

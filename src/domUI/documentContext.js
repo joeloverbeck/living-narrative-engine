@@ -11,11 +11,13 @@
  * Provides a consistent way to access document querySelector and createElement,
  * either from a provided root element's ownerDocument or the global document.
  * This facilitates testing with JSDOM or similar environments.
+ *
  * @implements {IDocumentContext}
  */
 class DocumentContext {
   /**
    * The document object (either global or from root's ownerDocument) used for DOM operations.
+   *
    * @private
    * @type {Document | null}
    */
@@ -26,6 +28,7 @@ class DocumentContext {
    * It determines the appropriate document object to use based on the presence of a root element
    * or the availability of `global.document`.
    * Logs an error if no valid document context can be found.
+   *
    * @param {HTMLElement | Document | null | undefined} [root] - Optional root element or document. If it's a Document, it's used directly.
    * If it's a valid HTMLElement, its ownerDocument will be used. Otherwise, it falls back to the global `document`.
    */
@@ -107,6 +110,7 @@ class DocumentContext {
    * Finds the first Element within the context that matches the specified CSS selector.
    * Corresponds to `document.querySelector`. Logs a warning if the context is unavailable
    * or an error if the query itself fails.
+   *
    * @param {string} selector - The CSS selector string to match against.
    * @returns {Element | null} The first matching element, or null if no match is found,
    * the context is missing, or the selector is invalid.
@@ -132,6 +136,7 @@ class DocumentContext {
   /**
    * Creates the HTML element specified by tagName within the context.
    * Corresponds to `document.createElement`. Logs a warning if the context is unavailable.
+   *
    * @template {keyof HTMLElementTagNameMap} K - Ensures the tag name is a valid HTML tag.
    * @param {K} tagName - The tag name for the element to create (e.g., 'div', 'span', 'button').
    * @returns {HTMLElementTagNameMap[K] | null} The newly created HTML element, or null if the
@@ -159,6 +164,7 @@ class DocumentContext {
    * Getter to access the underlying Document object being used by this context.
    * Primarily intended for diagnostics or scenarios where direct document access is unavoidable,
    * though standard usage should rely on `query` and `create`.
+   *
    * @returns {Document | null} The underlying Document object, or null if none was determined.
    */
   get document() {

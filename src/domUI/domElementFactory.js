@@ -14,6 +14,7 @@
 class DomElementFactory {
   /**
    * The document context used for creating elements.
+   *
    * @private
    * @type {IDocumentContext | null}
    */
@@ -21,6 +22,7 @@ class DomElementFactory {
 
   /**
    * Creates an instance of DomElementFactory.
+   *
    * @param {IDocumentContext} docContext - The document context provider (e.g., an instance of DocumentContext).
    */
   constructor(docContext) {
@@ -37,6 +39,7 @@ class DomElementFactory {
   /**
    * Helper to add CSS classes to an element.
    * Handles single string, space-separated string, or array of strings.
+   *
    * @private
    * @param {Element} element - The element to add classes to.
    * @param {string | string[] | undefined | null} cls - The class or classes to add.
@@ -57,6 +60,7 @@ class DomElementFactory {
 
   /**
    * Creates a <div> element.
+   *
    * @param {string | string[] | undefined | null} [cls] - Optional CSS class(es) to add.
    * @returns {HTMLDivElement | null} The created element or null if context is invalid.
    */
@@ -71,6 +75,7 @@ class DomElementFactory {
 
   /**
    * Creates a <button> element.
+   *
    * @param {string} [text] - The text content of the button.
    * @param {string | string[] | undefined | null} [cls] - Optional CSS class(es) to add.
    * @returns {HTMLButtonElement | null} The created element or null if context is invalid.
@@ -87,6 +92,7 @@ class DomElementFactory {
 
   /**
    * Creates a <ul> element.
+   *
    * @param {string | undefined | null} [id] - Optional ID for the element.
    * @param {string | string[] | undefined | null} [cls] - Optional CSS class(es) to add.
    * @returns {HTMLUListElement | null} The created element or null if context is invalid.
@@ -105,6 +111,7 @@ class DomElementFactory {
 
   /**
    * Creates an <li> element.
+   *
    * @param {string | string[] | undefined | null} [cls] - Optional CSS class(es) to add.
    * @param {string} [text] - Optional text content for the list item.
    * @returns {HTMLLIElement | null} The created element or null if context is invalid.
@@ -123,6 +130,7 @@ class DomElementFactory {
 
   /**
    * Creates a <span> element.
+   *
    * @param {string | string[] | undefined | null} [cls] - Optional CSS class(es) to add.
    * @param {string} [text] - Optional text content for the span.
    * @returns {HTMLSpanElement | null} The created element or null if context is invalid.
@@ -141,6 +149,7 @@ class DomElementFactory {
 
   /**
    * Creates a <p> element.
+   *
    * @param {string | string[] | undefined | null} [cls] - Optional CSS class(es) to add.
    * @param {string} [text] - Optional text content for the paragraph.
    * @returns {HTMLParagraphElement | null} The created element or null if context is invalid.
@@ -159,6 +168,7 @@ class DomElementFactory {
 
   /**
    * Creates an <h3> element.
+   *
    * @param {string | string[] | undefined | null} [cls] - Optional CSS class(es) to add.
    * @param {string} [text] - Optional text content for the heading.
    * @returns {HTMLHeadingElement | null} The created element or null if context is invalid.
@@ -177,6 +187,7 @@ class DomElementFactory {
 
   /**
    * Creates an <img> element.
+   *
    * @param {string} src - The source URL for the image.
    * @param {string} alt - The alt text for the image.
    * @param {string | string[] | undefined | null} [cls] - Optional CSS class(es) to add.
@@ -195,6 +206,7 @@ class DomElementFactory {
 
   /**
    * Generic element creator for tags not covered by specific helpers.
+   *
    * @template {keyof HTMLElementTagNameMap} K
    * @param {K} tagName - The tag name to create.
    * @param {{id?: string, cls?: string | string[], text?: string, attrs?: Record<string, string>}} [options] - Optional configuration.

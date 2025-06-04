@@ -45,6 +45,7 @@ export class EnvironmentContext {
 
   /**
    * Creates an instance of EnvironmentContext.
+   *
    * @param {object} params - The parameters for the EnvironmentContext.
    * @param {ILogger} params.logger - An instance conforming to ILogger for internal logging.
    * @param {string} params.executionEnvironment - The execution environment. Expected to be 'client', 'server', or 'unknown'.
@@ -187,6 +188,7 @@ export class EnvironmentContext {
 
   /**
    * Gets the execution environment.
+   *
    * @returns {'client' | 'server' | 'unknown'} The current execution environment.
    */
   getExecutionEnvironment() {
@@ -195,6 +197,7 @@ export class EnvironmentContext {
 
   /**
    * Gets the project root path.
+   *
    * @returns {string | null} The project root path if the environment is 'server' and it was provided, otherwise null.
    */
   getProjectRootPath() {
@@ -204,6 +207,7 @@ export class EnvironmentContext {
   /**
    * Gets the proxy server URL.
    * Returns the configured URL if in 'client' mode, or the provided URL (or default) in other modes.
+   *
    * @returns {string} The proxy server URL.
    */
   getProxyServerUrl() {
@@ -212,6 +216,7 @@ export class EnvironmentContext {
 
   /**
    * Checks if the current execution environment is 'client'.
+   *
    * @returns {boolean} True if the execution environment is 'client', false otherwise.
    */
   isClient() {
@@ -220,6 +225,7 @@ export class EnvironmentContext {
 
   /**
    * Checks if the current execution environment is 'server'.
+   *
    * @returns {boolean} True if the execution environment is 'server', false otherwise.
    */
   isServer() {

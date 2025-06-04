@@ -5,6 +5,7 @@ import { ENGINE_VERSION } from '../engine/engineVersion.js';
 /**
  * Checks if the current engine version (ENGINE_VERSION) satisfies a given SemVer range.
  * This utility centralizes the version comparison logic.
+ *
  * @param {string} range - The SemVer range string to check against (e.g., "^1.2.0", ">=2.0.0 <3.0.0").
  * @returns {boolean} True if the engine version satisfies the range, false otherwise.
  * @throws {TypeError} If the provided range is missing (null/undefined), an empty string,

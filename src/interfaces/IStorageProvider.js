@@ -10,6 +10,7 @@ export class IStorageProvider {
   /**
    * Writes data to a file atomically.
    * This typically involves writing to a temporary file first, then renaming.
+   *
    * @param {string} filePath - The final path for the file.
    * @param {Uint8Array} data - The data to write.
    * @returns {Promise<{success: boolean, error?: string}>}
@@ -21,6 +22,7 @@ export class IStorageProvider {
 
   /**
    * Lists files in a given directory matching a pattern.
+   *
    * @param {string} directoryPath - The directory to scan.
    * @param {string} pattern - A pattern to match filenames (e.g., "*.sav").
    * @returns {Promise<Array<string>>} A list of file names.
@@ -32,6 +34,7 @@ export class IStorageProvider {
 
   /**
    * Reads data from a file.
+   *
    * @param {string} filePath - The path to the file.
    * @returns {Promise<Uint8Array>} The file content.
    * @async
@@ -42,6 +45,7 @@ export class IStorageProvider {
 
   /**
    * Deletes a file.
+   *
    * @param {string} filePath - The path to the file.
    * @returns {Promise<{success: boolean, error?: string}>}
    * @async
@@ -52,6 +56,7 @@ export class IStorageProvider {
 
   /**
    * Checks if a file exists.
+   *
    * @param {string} filePath - The path to the file.
    * @returns {Promise<boolean>} True if the file exists, false otherwise.
    * @async

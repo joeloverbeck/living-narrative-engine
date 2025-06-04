@@ -44,6 +44,7 @@
 export class ISaveLoadService {
   /**
    * Saves the current game state to a specified manual save slot/name.
+   *
    * @param {string} saveName - The desired name for the save file (e.g., "Chapter1_End").
    * @param {object} gameStateObject - The complete game state object to be saved. This should conform to SaveGameStructure but without the checksum pre-calculated.
    * @returns {Promise<{success: boolean, message?: string, error?: string, filePath?: string}>} Feedback object.
@@ -55,6 +56,7 @@ export class ISaveLoadService {
 
   /**
    * Lists available manual save files and their parsed metadata.
+   *
    * @returns {Promise<Array<SaveFileMetadata>>} A list of metadata objects for discovered manual save files.
    * @async
    */
@@ -65,6 +67,7 @@ export class ISaveLoadService {
   /**
    * Loads game data from a specified save file identifier.
    * This method handles reading the file, decompression, deserialization, and basic integrity checks.
+   *
    * @param {string} saveIdentifier - The unique identifier for the save file (e.g., full file path).
    * @returns {Promise<LoadGameResult>} An object containing the success status, loaded data (if successful), or an error message.
    * @async
@@ -76,6 +79,7 @@ export class ISaveLoadService {
 
   /**
    * Deletes a manual save file.
+   *
    * @param {string} saveIdentifier - The identifier of the save file to delete (e.g., full filename or path).
    * @returns {Promise<{success: boolean, error?: string}>}
    * @async

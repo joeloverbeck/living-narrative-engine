@@ -20,6 +20,7 @@
 export class IAIPlayerStrategyFactory {
   /**
    * Creates an AI player strategy instance.
+   *
    * @param {object} dependencies - The dependencies required by the AI player strategy.
    * @param {ILLMAdapter} dependencies.llmAdapter - Adapter for LLM communication.
    * @param {IAIGameStateProvider} dependencies.gameStateProvider - Provider for AI game state.

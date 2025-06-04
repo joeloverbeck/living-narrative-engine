@@ -11,6 +11,7 @@
 export class ICommandOutcomeInterpreter {
   /**
    * Interprets a CommandResult and returns the appropriate TurnDirective.
+   *
    * @async
    * @param {CommandResult} result - The result object from command processing.
    * @param {string} actorId - The unique ID of the entity whose command result is being interpreted.

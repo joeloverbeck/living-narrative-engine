@@ -16,17 +16,15 @@ import { tokens } from '../config/tokens.js';
  * event system via 'core:submit_command' events.
  */
 class InputSetupService {
-     * @private
   #container;
-     * @private
   #logger;
-     * @private
   #validatedEventDispatcher;
 
   // #gameLoop field removed
 
   /**
    * Creates an instance of InputSetupService.
+   *
    * @param {object} options - The dependencies.
    * @param {AppContainer} options.container
    * @param {ILogger} options.logger

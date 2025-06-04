@@ -30,6 +30,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
   /**
    * Creates an instance of EventBusPromptAdapter.
    * Prefers ISafeEventDispatcher if available.
+   *
    * @param {object} dependencies - The dependencies required by the adapter.
    * @param {ISafeEventDispatcher} [dependencies.safeEventDispatcher] - The preferred safe dispatcher.
    * @param {IValidatedEventDispatcher} [dependencies.validatedEventDispatcher] - Fallback VED.
@@ -62,6 +63,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
 
   /**
    * Sends a prompt by dispatching the 'core:player_turn_prompt' event.
+   *
    * @async
    * @param {string} entityId - The unique ID of the player entity being prompted.
    * @param {DiscoveredActionInfo[]} availableActions - An array of objects describing the actions.

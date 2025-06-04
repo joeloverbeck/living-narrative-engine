@@ -9,6 +9,7 @@
 /**
  * Parameters accepted by {@link DispatchEventHandler#execute}.
  * Placeholders in `eventType` or `payload` values are assumed to be pre-resolved by OperationInterpreter.
+ *
  * @typedef {object} DispatchEventParameters
  * @property {string}                eventType                Namespaced event id.
  * @property {Record<string, any>=}  payload                  Optional payload object.
@@ -47,6 +48,7 @@ class DispatchEventHandler {
 
   /**
    * Emit a new game-event using pre-resolved parameters.
+   *
    * @param {DispatchEventParameters|null|undefined} params - Parameters with placeholders already resolved.
    * @param {ExecutionContext} executionContext - The context (used for services, not resolution here).
    */

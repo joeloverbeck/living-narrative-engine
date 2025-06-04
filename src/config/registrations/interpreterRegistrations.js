@@ -41,6 +41,7 @@ import QuerySystemDataHandler from '../../logic/operationHandlers/querySystemDat
 /**
  * Registers the OperationRegistry, OperationInterpreter, SystemLogicInterpreter,
  * CommandOutcomeInterpreter, and all associated Operation Handlers.
+ *
  * @export
  * @param {AppContainer} container - The application's DI container.
  */

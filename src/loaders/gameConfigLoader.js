@@ -16,19 +16,15 @@
  * After validation, it ensures 'core' is the first mod and returns the list of mod IDs.
  */
 class GameConfigLoader {
-     * @private
   #configuration;
-     * @private
   #pathResolver;
-     * @private
   #dataFetcher;
-     * @private
   #schemaValidator;
-     * @private
   #logger;
 
   /**
    * Creates a new GameConfigLoader instance.
+   *
    * @param {object} dependencies
    * @param {IConfiguration} dependencies.configuration - Configuration service.
    * @param {IPathResolver} dependencies.pathResolver - Path resolution service.
@@ -98,6 +94,7 @@ class GameConfigLoader {
 
   /**
    * Helper to format Ajv validation errors into a readable string.
+   *
    * @private
    * @param {AjvErrorObject[] | null | undefined} errors - The array of error objects from Ajv.
    * @returns {string} A formatted string representation of the errors.
@@ -115,6 +112,7 @@ class GameConfigLoader {
    * If validation is successful, ensures 'core' is the first mod ID and returns the array of mod IDs.
    * Throws an error if any step fails (file not found, parse error, validation error),
    * halting the loading process.
+   *
    * @returns {Promise<string[]>} A promise that resolves with the array of mod IDs (guaranteed to start with 'core')
    * if loading, parsing, and validation succeed. The promise rejects if any step fails.
    * @public

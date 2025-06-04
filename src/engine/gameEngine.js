@@ -110,6 +110,7 @@ class GameEngine {
    * Handles preliminary checks and setup before the main game initialization sequence begins.
    * This includes stopping any existing game session if the engine is already initialized,
    * setting the active world, and logging the preparation step.
+   *
    * @private
    * @async
    * @param {string} worldName - The name of the world for the new game session.
@@ -136,6 +137,7 @@ class GameEngine {
    * This method resolves and calls the `IInitializationService` to set up the game world
    * according to the provided world name. It also dispatches a UI event to indicate
    * that the initialization process has started.
+   *
    * @private
    * @async
    * @param {string} worldName - The name of the world to initialize.
@@ -179,6 +181,7 @@ class GameEngine {
    * Finalizes the setup for a new game after successful world initialization.
    * This includes setting engine state flags, starting the playtime tracker,
    * dispatching game and UI events, and starting the turn manager.
+   *
    * @private
    * @async
    * @param {string} worldName - The name of the world that was successfully initialized.
@@ -252,6 +255,7 @@ class GameEngine {
    * Handles the common tasks required when a new game attempt fails.
    * This includes logging the error, dispatching a UI failure event,
    * and resetting critical engine state flags.
+   *
    * @private
    * @async
    * @param {Error} error - The error object that caused the new game failure.
@@ -286,6 +290,7 @@ class GameEngine {
    * - `_executeInitializationSequence`: Runs the main world initialization logic.
    * - `_finalizeNewGameSuccess`: Performs post-initialization setup if successful.
    * - `_handleNewGameFailure`: Manages cleanup and error reporting if any step fails.
+   *
    * @async
    * @param {string} worldName - The name of the world to start.
    * @returns {Promise<void>} A promise that resolves when the new game is successfully started, or rejects if an error occurs.
@@ -338,6 +343,7 @@ class GameEngine {
    * and resets the engine's initialization state and active world.
    * Relies on established interface contracts for service interactions.
    * Critical services like ILogger and ISafeEventDispatcher are assumed to be present.
+   *
    * @async
    * @returns {Promise<void>} A promise that resolves when the engine has fully stopped.
    * @fires ENGINE_STOPPED_UI - Dispatched to inform the UI that the engine is inactive.
@@ -391,6 +397,7 @@ class GameEngine {
    * Triggers a manual save of the current game state with the given save name.
    * It checks if the engine is initialized and if the persistence service is available.
    * Dispatches UI events to inform the user about the progress and outcome of the save operation.
+   *
    * @async
    * @param {string} saveName - The name to use for the save file.
    * @returns {Promise<SaveResult>} A promise that resolves to an object indicating the success or failure of the save operation.
@@ -531,6 +538,7 @@ class GameEngine {
    * This helper encapsulates preliminary steps such as stopping any current game,
    * resetting core game state, and dispatching a UI event to indicate the load
    * operation is in progress.
+   *
    * @private
    * @async
    * @param {string} saveIdentifier - The identifier for the save game to be loaded.
@@ -563,6 +571,7 @@ class GameEngine {
   /**
    * Calls the IGamePersistenceService to load and restore game data.
    * This method encapsulates the direct interaction with the persistence service for loading.
+   *
    * @private
    * @async
    * @param {string} saveIdentifier - The identifier for the save game to load.
@@ -585,6 +594,7 @@ class GameEngine {
    * Finalizes the setup for a loaded game after successful data restoration.
    * This includes setting engine state, updating active world, starting playtime
    * and turn manager, and dispatching relevant game and UI events.
+   *
    * @private
    * @async
    * @param {SaveGameStructure} loadedSaveData - The successfully restored save game data.
@@ -650,6 +660,7 @@ class GameEngine {
    * Centralizes the actions taken when a game load attempt fails.
    * This includes logging the error, dispatching a UI failure event,
    * resetting engine state flags, and preparing the standard failure response object.
+   *
    * @private
    * @async
    * @param {string | Error} errorInfo - The error message string or Error object.
@@ -694,6 +705,7 @@ class GameEngine {
    * Orchestrates loading a game from a save identifier.
    * It coordinates helper methods to prepare for loading, execute the load operation,
    * finalize success, or handle failures consistently.
+   *
    * @async
    * @param {string} saveIdentifier - The identifier for the save game to load.
    * @returns {Promise<{success: boolean, error?: string, data?: SaveGameStructure | null}>}
@@ -757,6 +769,7 @@ class GameEngine {
    * Requests the display of the save game UI.
    * This method is synchronous and dispatches events to request UI actions.
    * It checks for the availability of the GamePersistenceService and whether saving is currently allowed.
+   *
    * @memberof GameEngine
    * @fires ENGINE_MESSAGE_DISPLAY_REQUESTED - If GamePersistenceService is unavailable.
    * @fires REQUEST_SHOW_SAVE_GAME_UI - If saving is allowed.
@@ -802,6 +815,7 @@ class GameEngine {
    * Requests the display of the load game UI.
    * This method is synchronous and dispatches an event to request the UI action.
    * It also checks for the availability of the GamePersistenceService.
+   *
    * @memberof GameEngine
    * @fires ENGINE_MESSAGE_DISPLAY_REQUESTED - If GamePersistenceService is unavailable.
    * @fires REQUEST_SHOW_LOAD_GAME_UI - To request the load game UI.

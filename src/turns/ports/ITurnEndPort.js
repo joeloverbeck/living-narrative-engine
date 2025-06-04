@@ -8,6 +8,7 @@
 export class ITurnEndPort {
   /**
    * Notify whoever is listening that a turn has ended.
+   *
    * @async
    * @param {string}  entityId – ID of the actor whose turn is over.
    * @param {boolean} success  – Was the turn a success (true) or a failure (false)?

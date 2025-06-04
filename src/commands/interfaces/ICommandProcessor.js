@@ -12,6 +12,7 @@ export class ICommandProcessor {
    * Processes a command string submitted by the given actor during their turn.
    * Implementations should handle parsing, validation (is the command valid for this actor
    * in this situation?), and triggering the action execution mechanism.
+   *
    * @function processCommand
    * @async
    * @param {Entity} actor - The entity submitting the command.

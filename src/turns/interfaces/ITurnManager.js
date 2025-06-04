@@ -11,6 +11,7 @@
 export class ITurnManager {
   /**
    * Starts the turn management process, potentially initializing the first round or turn.
+   *
    * @function start
    * @async
    * @returns {Promise<void>} A promise that resolves when the manager has successfully started
@@ -24,6 +25,7 @@ export class ITurnManager {
 
   /**
    * Stops the turn management process, halting the progression of turns.
+   *
    * @function stop
    * @async
    * @returns {Promise<void>} A promise that resolves when the manager has successfully stopped.
@@ -36,6 +38,7 @@ export class ITurnManager {
 
   /**
    * Retrieves the entity instance whose turn it is currently.
+   *
    * @function getCurrentActor
    * @returns {Entity | null} The entity currently taking its turn, or `null` if no
    * turn is active (e.g., between rounds, before starting, or after stopping).
@@ -46,6 +49,7 @@ export class ITurnManager {
 
   /**
    * Retrieves the turn handler instance that is currently managing the active turn.
+   *
    * @function getActiveTurnHandler
    * @returns {ITurnHandler | null} The currently active turn handler, or `null` if no
    * turn is active or no handler is currently assigned.
@@ -59,6 +63,7 @@ export class ITurnManager {
   /**
    * Advances the game state to the next entity's turn. This is typically called
    * after the current actor has completed their action or decided to wait.
+   *
    * @function advanceTurn
    * @async
    * @returns {Promise<void>} A promise that resolves when the transition to the next

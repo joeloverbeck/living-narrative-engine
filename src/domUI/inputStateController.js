@@ -20,6 +20,7 @@ import { RendererBase } from './rendererBase.js';
 export class InputStateController extends RendererBase {
   /**
    * The HTML input element being controlled.
+   *
    * @private
    * @type {HTMLInputElement}
    */
@@ -30,6 +31,7 @@ export class InputStateController extends RendererBase {
 
   /**
    * Creates an instance of InputStateController.
+   *
    * @param {object} deps - Dependencies object.
    * @param {ILogger} deps.logger - The logger instance.
    * @param {IDocumentContext} deps.documentContext - The document context (not directly used but part of RendererBase).
@@ -80,6 +82,7 @@ export class InputStateController extends RendererBase {
 
   /**
    * Subscribes to VED events relevant for updating the input state.
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -102,6 +105,7 @@ export class InputStateController extends RendererBase {
   /**
    * Handles keydown events on the input element.
    * Specifically intercepts the 'Enter' key to prevent default actions and stop further propagation.
+   *
    * @private
    * @param {KeyboardEvent} event - The keyboard event.
    */
@@ -118,6 +122,7 @@ export class InputStateController extends RendererBase {
 
   /**
    * Handles the 'textUI:disable_input' event.
+   *
    * @private
    * @param {DisableInputEvent} event - The full event object ({ type, payload }).
    */
@@ -144,6 +149,7 @@ export class InputStateController extends RendererBase {
 
   /**
    * Handles the 'textUI:enable_input' event.
+   *
    * @private
    * @param {EnableInputEvent} event - The full event object ({ type, payload }).
    */
@@ -170,6 +176,7 @@ export class InputStateController extends RendererBase {
 
   /**
    * Enables or disables the managed input element and sets its placeholder text.
+   *
    * @param {boolean} enabled - `true` to enable the input, `false` to disable it.
    * @param {string} [placeholderText] - The placeholder text to display in the input field. Defaults to empty string.
    */

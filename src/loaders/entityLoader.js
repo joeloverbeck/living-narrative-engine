@@ -23,6 +23,7 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
  * based on their manifests. Entities are defined by an ID and a collection of components.
  * Extends {@link BaseManifestItemLoader} to leverage common file processing logic,
  * including primary schema validation based on the 'entities' content type.
+ *
  * @class EntityLoader
  * @augments BaseManifestItemLoader
  */
@@ -34,6 +35,7 @@ class EntityLoader extends BaseManifestItemLoader {
 
   /**
    * Creates an instance of EntityLoader.
+   *
    * @param {IConfiguration} config - Configuration service instance.
    * @param {IPathResolver} pathResolver - Path resolution service instance.
    * @param {IDataFetcher} dataFetcher - Data fetching service instance.
@@ -79,6 +81,7 @@ class EntityLoader extends BaseManifestItemLoader {
   /**
    * Validates the components within an entity's data structure against their
    * registered schemas.
+   *
    * @private
    * @param {string} modId - The ID of the mod owning the entity.
    * @param {string} entityId - The full ID of the entity being validated.
@@ -162,6 +165,7 @@ class EntityLoader extends BaseManifestItemLoader {
    * 2. Performs runtime validation of `components` against their schemas.
    * 3. Delegates storage to the base class helper, always using the 'entities' category.
    * 4. Returns an object containing the final, fully qualified entity ID and whether an overwrite occurred.
+   *
    * @override
    * @protected
    * @async
