@@ -1,7 +1,7 @@
 // tests/services/EntityDisplayDataProvider.test.js
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
-import { EntityDisplayDataProvider } from '../../src/services/EntityDisplayDataProvider.js';
+import { EntityDisplayDataProvider } from '../../src/services/entityDisplayDataProvider.js';
 import {
   NAME_COMPONENT_ID,
   PORTRAIT_COMPONENT_ID,
