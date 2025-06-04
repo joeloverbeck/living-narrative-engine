@@ -311,4 +311,28 @@ describe('InMemoryDataRegistry', () => {
       expect(registry.getAll(type2)).toEqual([]);
     });
   });
+
+  describe('content source tracing', () => {
+    it('tracks the mod origin of stored items and updates on override', () => {
+      const type = 'items';
+      const id = 'mod:itemA';
+      registry.store(type, id, { modId: 'modA', val: 1 });
+      expect(registry.getContentSource(type, id)).toBe('modA');
+
+      registry.store(type, id, { modId: 'modB', val: 2 });
+      expect(registry.getContentSource(type, id)).toBe('modB');
+    });
+
+    it('lists all content for a specific mod', () => {
+      registry.store('actions', 'modX:jump', { modId: 'modX' });
+      registry.store('items', 'modY:apple', { modId: 'modY' });
+      registry.store('items', 'modX:stone', { modId: 'modX' });
+
+      const result = registry.listContentByMod('modX');
+      expect(result).toEqual({
+        actions: ['modX:jump'],
+        items: expect.arrayContaining(['modX:stone']),
+      });
+    });
+  });
 });

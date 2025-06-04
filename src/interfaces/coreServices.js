@@ -65,6 +65,12 @@
  * Retrieves all loaded system rule objects.
  * @property {() => void} clear
  * Removes all stored data objects and the manifest from the registry.
+ * @property {(type: string, id: string) => string | null} [getContentSource]
+ * Optional helper to retrieve the mod ID that most recently provided a given
+ * content item.
+ * @property {(modId: string) => Record<string, string[]>} [listContentByMod]
+ * Optional helper that lists all content IDs provided by the specified mod,
+ * organized by content type.
  *
  * // --- Specific Getters ---
  * @property {(id: string) => object | undefined} getEntityDefinition Retrieves a definition classified as an 'entity'.
