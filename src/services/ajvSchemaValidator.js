@@ -1,4 +1,4 @@
-// src/core/services/ajvSchemaValidator.js
+// src/services/ajvSchemaValidator.js
 // -----------------------------------------------------------------------------
 // Implements ISchemaValidator via Ajv. Preloads both v1 and v2 “turn action” schemas.
 // -----------------------------------------------------------------------------
