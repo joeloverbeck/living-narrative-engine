@@ -119,16 +119,16 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
 
       if (!hasApiKeyEnvVar && !hasApiKeyFileName) {
         this.#logger.error(
-          `ClientApiKeyProvider.getKey (${llmId}\)\: Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`
+          `ClientApiKeyProvider.getKey (${llmId}): Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`
         );
       } else {
         this.#logger.debug(
-          `ClientApiKeyProvider.getKey (${llmId}\)\: Configuration for cloud service '${apiType}' has required key identifier(s) for proxy usage (apiKeyEnvVar: '${llmConfig.apiKeyEnvVar || 'N/A'}', apiKeyFileName\: '${llmConfig.apiKeyFileName || 'N/A'}').`
+          `ClientApiKeyProvider.getKey (${llmId}): Configuration for cloud service '${apiType}' has required key identifier(s) for proxy usage (apiKeyEnvVar: '${llmConfig.apiKeyEnvVar || 'N/A'}', apiKeyFileName: '${llmConfig.apiKeyFileName || 'N/A'}').`
         );
       }
     } else if (apiType && typeof apiType === 'string') {
       this.#logger.debug(
-        `ClientApiKeyProvider.getKey (${llmId}\)\: LLM apiType '${apiType}' is not listed as a cloud service requiring proxy key identifier validation. Skipping checks.`
+        `ClientApiKeyProvider.getKey (${llmId}): LLM apiType '${apiType}' is not listed as a cloud service requiring proxy key identifier validation. Skipping checks.`
       );
     } else {
       // This case implies llmConfig.apiType is missing or invalid, which might be an issue itself,

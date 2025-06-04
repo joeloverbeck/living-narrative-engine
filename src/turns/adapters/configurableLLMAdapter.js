@@ -40,7 +40,7 @@ import {
  * @typedef {object} LLMConfigurationFile
  * @description The root structure of the LLM configuration file.
  * @property {string} defaultConfigId - The ID of the default LLM configuration to use.
- * @property {Object<string, LLMModelConfig>} configs - A map of LLM configurations, where each key is a configId.
+ * @property {{[key: string]: LLMModelConfig}} configs - A map of LLM configurations, where each key is a configId.
  */
 
 /** @typedef {import('../../llms/services/llmConfigLoader.js').LoadConfigsErrorResult} LoadConfigsErrorResult */
@@ -138,9 +138,9 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     ) {
       const errorMsg =
         'ConfigurableLLMAdapter: Constructor requires a valid ILogger instance.';
-      (logger && typeof logger.error === 'function'
-        ? logger.error
-        : console.error)(errorMsg);
+      if (logger && typeof logger.error === 'function') {
+        logger.error(errorMsg);
+      }
       throw new Error(errorMsg);
     }
     this.#logger = logger;
@@ -478,11 +478,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
    * @throws {Error} If the adapter is not initialized or not operational (propagated from #ensureInitialized).
    */
   async setActiveLlm(llmId) {
-    try {
-      await this.#ensureInitialized();
-    } catch (error) {
-      throw error; // Re-throw to make setActiveLlm reject as per failing tests.
-    }
+    await this.#ensureInitialized();
 
     // Use #allConfigsMap
     if (!this.#allConfigsMap) {
@@ -527,11 +523,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
    * @throws {Error} If the adapter is not initialized or not operational (propagated from #ensureInitialized).
    */
   async getCurrentActiveLlmConfig() {
-    try {
-      await this.#ensureInitialized();
-    } catch (error) {
-      throw error;
-    }
+    await this.#ensureInitialized();
 
     if (!this.#currentActiveLlmConfig) {
       this.#logger.debug(
@@ -615,8 +607,8 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * @private
    * Validates a single LLM configuration object.
-   * @param {LLMModelConfig} config
-   * @returns {Array<{field: string, reason: string}>}
+   * @param {LLMModelConfig} config - Configuration to validate.
+   * @returns {Array<{field: string, reason: string}>} Array of validation errors.
    */
   #validateConfig(config) {
     const errors = [];
@@ -696,8 +688,8 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * @private
    * Retrieves an API key for the given config, enforcing required logic.
-   * @param {LLMModelConfig} config
-   * @returns {Promise<string | undefined>}
+   * @param {LLMModelConfig} config - LLM configuration requiring a key.
+   * @returns {Promise<string | undefined>} Resolved API key, if any.
    */
   async #getApiKeyForConfig(config) {
     this.#logger.debug(
@@ -740,8 +732,8 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * @private
    * Creates an LLM strategy instance for the provided config.
-   * @param {LLMModelConfig} config
-   * @returns {ILLMStrategy}
+   * @param {LLMModelConfig} config - LLM configuration used for strategy creation.
+   * @returns {ILLMStrategy} Created strategy instance.
    */
   #createStrategy(config) {
     try {
@@ -867,7 +859,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * FOR TESTING ONLY: Retrieves the loaded LLM configurations (the root object).
    *
-   * @returns {LLMConfigurationFile | null}
+   * @returns {LLMConfigurationFile | null} The loaded configuration file or null.
    */
   getLoadedConfigs_FOR_TESTING_ONLY() {
     // Return the root configuration object which includes defaultConfigId and the configs map
@@ -877,7 +869,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * FOR TESTING ONLY: Retrieves the ID of the currently active LLM.
    *
-   * @returns {string | null}
+   * @returns {string | null} The active LLM ID or null.
    */
   getActiveLlmId_FOR_TESTING_ONLY() {
     return this.#currentActiveLlmId;
@@ -886,7 +878,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * FOR TESTING ONLY: Retrieves the execution environment string.
    *
-   * @returns {string}
+   * @returns {string} The current execution environment.
    */
   getExecutionEnvironment_FOR_TESTING_ONLY() {
     return this.#environmentContext
@@ -897,7 +889,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * FOR TESTING ONLY: Retrieves the project root path from environment context.
    *
-   * @returns {string | null}
+   * @returns {string | null} The project root path.
    */
   getProjectRootPath_FOR_TESTING_ONLY() {
     return this.#environmentContext
@@ -908,7 +900,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * FOR TESTING ONLY: Retrieves the proxy server URL from environment context.
    *
-   * @returns {string}
+   * @returns {string} The proxy server URL.
    */
   getProxyServerUrl_FOR_TESTING_ONLY() {
     return this.#environmentContext
@@ -919,7 +911,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * FOR TESTING ONLY: Retrieves the EnvironmentContext instance.
    *
-   * @returns {EnvironmentContext | null}
+   * @returns {EnvironmentContext | null} The environment context instance.
    */
   getEnvironmentContext_FOR_TESTING_ONLY() {
     return this.#environmentContext;
@@ -928,7 +920,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * FOR TESTING ONLY: Retrieves the IApiKeyProvider instance.
    *
-   * @returns {IApiKeyProvider | null}
+   * @returns {IApiKeyProvider | null} The API key provider in use.
    */
   getApiKeyProvider_FOR_TESTING_ONLY() {
     return this.#apiKeyProvider;
@@ -937,7 +929,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   /**
    * FOR TESTING ONLY: Retrieves the LLMStrategyFactory instance.
    *
-   * @returns {LLMStrategyFactory | null}
+   * @returns {LLMStrategyFactory | null} The strategy factory instance.
    */
   getLlmStrategyFactory_FOR_TESTING_ONLY() {
     return this.#llmStrategyFactory;

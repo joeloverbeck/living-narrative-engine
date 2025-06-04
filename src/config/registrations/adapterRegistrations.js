@@ -1,5 +1,6 @@
 // src/core/config/registrations/adapterRegistrations.js
 // --- FILE START ---
+/* eslint-env node */
 
 /**
  * @file Registers port adapter implementations with the DI container,
@@ -48,7 +49,6 @@ import { LLMStrategyFactory } from '../../llms/LLMStrategyFactory.js';
  * Registers the default port adapters and the ConfigurableLLMAdapter with its dependencies
  * for a client-side environment.
  *
- * @export
  * @param {AppContainer} container - The application's DI container.
  */
 export function registerAdapters(container) {
@@ -141,8 +141,8 @@ export function registerAdapters(container) {
   const projectRoot = null;
 
   let proxyUrl = undefined;
-  if (typeof process !== 'undefined' && process.env) {
-    proxyUrl = process.env.PROXY_URL || undefined;
+  if (globalThis.process && globalThis.process.env) {
+    proxyUrl = globalThis.process.env.PROXY_URL || undefined;
   }
 
   const environmentContext = new EnvironmentContext({
