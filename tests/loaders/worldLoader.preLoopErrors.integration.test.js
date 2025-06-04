@@ -7,6 +7,7 @@ import WorldLoader from '../../src/loaders/worldLoader.js';
 
 // --- Dependencies to Mock/Import ---
 import ModDependencyError from '../../src/errors/modDependencyError.js';
+import WorldLoaderError from '../../src/errors/worldLoaderError.js';
 
 // --- Mock Modules BEFORE they are potentially imported by SUT or other imports ---
 jest.mock('../../src/modding/modDependencyValidator.js', () => ({
@@ -254,7 +255,14 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     mockGameConfigLoader.loadConfig.mockResolvedValue([modAId]);
 
     // Action & Assertions
-    await expect(worldLoader.loadWorld(worldName)).rejects.toBe(simulatedError);
+    let manifestErr;
+    try {
+      await worldLoader.loadWorld(worldName);
+    } catch (e) {
+      manifestErr = e;
+    }
+    expect(manifestErr).toBeInstanceOf(WorldLoaderError);
+    expect(manifestErr.cause).toBe(simulatedError);
 
     // Verify side effects
     expect(mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
@@ -344,9 +352,14 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${gameSchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
 
     // Action & Assertions
-    await expect(worldLoader.loadWorld(worldName)).rejects.toThrow(
-      expectedFinalErrorMessage
-    );
+    let thrown;
+    try {
+      await worldLoader.loadWorld(worldName);
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(WorldLoaderError);
+    expect(thrown.message).toBe(expectedFinalErrorMessage);
 
     // Verify side effects
     expect(mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
@@ -395,9 +408,14 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${manifestSchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
 
     // Action & Assertions
-    await expect(worldLoader.loadWorld(worldName)).rejects.toThrow(
-      expectedFinalErrorMessage
-    );
+    let thrown2;
+    try {
+      await worldLoader.loadWorld(worldName);
+    } catch (e) {
+      thrown2 = e;
+    }
+    expect(thrown2).toBeInstanceOf(WorldLoaderError);
+    expect(thrown2.message).toBe(expectedFinalErrorMessage);
 
     // Verify side effects
     expect(mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
@@ -457,9 +475,14 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${entitySchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
 
     // Action & Assertions
-    await expect(worldLoader.loadWorld(worldName)).rejects.toThrow(
-      expectedFinalErrorMessage
-    );
+    let thrown3;
+    try {
+      await worldLoader.loadWorld(worldName);
+    } catch (e) {
+      thrown3 = e;
+    }
+    expect(thrown3).toBeInstanceOf(WorldLoaderError);
+    expect(thrown3.message).toBe(expectedFinalErrorMessage);
 
     // Verify side effects
     expect(mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
