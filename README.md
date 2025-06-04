@@ -268,6 +268,20 @@ Mods can specify the range of engine versions they are compatible with using the
 _(Note: Schema validation, ID mismatch, and invalid gameVersion format errors are typically caught by specific
 loaders/validators but are included here for completeness as fatal loading errors related to manifests)._
 
+### Validating Mods Quickly
+
+Before committing new mods or deploying the game you can run a standalone
+validation step:
+
+```bash
+npm run validate-mods
+```
+
+This command scans every folder under `data/mods/`, validates each manifest,
+checks declared dependencies and conflicts, and verifies that all content files
+conform to their JSON schemas. If any problems are found they will be printed to
+the console; otherwise you will see **“All mods passed validation.”**
+
 ### Documentation ▶️
 
 **JSON Logic – Composite Operators ➜ docs/json-logic/composite-logical-operators.md**
