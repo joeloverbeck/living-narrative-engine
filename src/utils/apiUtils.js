@@ -20,6 +20,8 @@
  * @throws {Error} Throws an error if all retries fail, a non-retryable HTTP error occurs,
  * or another unhandled error arises during fetching. The error message will attempt
  * to include details parsed from the error response body (JSON or text).
+ * If a 429 status is encountered and the response includes a `Retry-After`
+ * header, that value (in seconds) is used as the next delay before retrying.
  * @example
  * try {
  * const options = { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) };
@@ -49,9 +51,10 @@ export async function Workspace_retry(
       if (!response.ok) {
         // Attempt to get more detailed error information from the response body [cite: 1]
         let errorBodyText = `Status: ${response.status}, StatusText: ${response.statusText}`;
+        let parsedErrorBody = null;
         try {
-          const errorJson = await response.json();
-          errorBodyText = JSON.stringify(errorJson); // [cite: 1]
+          parsedErrorBody = await response.json();
+          errorBodyText = JSON.stringify(parsedErrorBody); // [cite: 1]
         } catch (e) {
           try {
             errorBodyText = await response.text(); // [cite: 1]
@@ -66,14 +69,20 @@ export async function Workspace_retry(
         );
 
         if (isRetryableStatusCode && currentAttempt < maxRetries) {
-          // Exponential backoff calculation [cite: 1]
-          const delayFactor = Math.pow(2, currentAttempt - 1); // currentAttempt starts at 1
-          let delay = baseDelayMs * delayFactor;
-          delay = Math.min(delay, maxDelayMs); // Cap the delay [cite: 1]
-
-          // Jitter calculation (+/- 20% of the calculated delay) [cite: 1]
-          const jitter = (Math.random() * 0.4 - 0.2) * delay;
-          const waitTimeMs = Math.max(0, Math.floor(delay + jitter)); // Ensure non-negative
+          let waitTimeMs;
+          if (response.status === 429) {
+            const retryAfter = parseFloat(response.headers.get('Retry-After'));
+            if (!Number.isNaN(retryAfter) && retryAfter > 0) {
+              waitTimeMs = Math.floor(retryAfter * 1000);
+            }
+          }
+          if (waitTimeMs === undefined) {
+            const delayFactor = Math.pow(2, currentAttempt - 1); // currentAttempt starts at 1
+            let delay = baseDelayMs * delayFactor;
+            delay = Math.min(delay, maxDelayMs); // Cap the delay [cite: 1]
+            const jitter = (Math.random() * 0.4 - 0.2) * delay;
+            waitTimeMs = Math.max(0, Math.floor(delay + jitter)); // Ensure non-negative
+          }
 
           console.warn(
             `Workspace_retry: Attempt ${currentAttempt}/${maxRetries} for ${url} failed with status ${response.status}. Retrying in ${waitTimeMs}ms...`
@@ -83,8 +92,11 @@ export async function Workspace_retry(
         } else {
           // Non-retryable HTTP error or max retries reached for an HTTP error
           const errorMessage = `API request to ${url} failed after ${currentAttempt} attempt(s) with status ${response.status}: ${errorBodyText}`;
+          const err = new Error(errorMessage);
+          err.status = response.status;
+          err.body = parsedErrorBody !== null ? parsedErrorBody : errorBodyText;
           console.error(errorMessage);
-          throw new Error(errorMessage);
+          throw err;
         }
       }
       // Assuming the successful LLM API response is JSON content [cite: 1]
@@ -118,10 +130,10 @@ export async function Workspace_retry(
       } else {
         // Max retries reached for a network error, or it's another type of error not handled above.
         const finalErrorMessage = `Workspace failed for ${url} after ${currentAttempt} attempt(s). Final error: ${error.message}`;
+        const finalError = new Error(finalErrorMessage);
+        finalError.status = error.status;
         console.error(finalErrorMessage, error); // Log the original error for more context
-        // Throw a new error to standardize, or re-throw if it's already specific enough.
-        // For consistency with the HTTP error path, wrapping it.
-        throw new Error(finalErrorMessage);
+        throw finalError;
       }
     }
   }
