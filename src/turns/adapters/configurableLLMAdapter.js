@@ -13,6 +13,15 @@ import {
 } from '../../llms/constants/llmConstants.js';
 import gptEncoder from 'gpt-3-encoder';
 import PromptTooLongError from '../../errors/promptTooLongError.js';
+import {
+  LLMInteractionError,
+  ApiKeyError,
+  InsufficientCreditsError,
+  ContentPolicyError,
+  PermissionError,
+  BadRequestError,
+  MalformedResponseError,
+} from '../../errors/llmInteractionErrors.js';
 
 /**
  * @typedef {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
@@ -905,11 +914,74 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
           ...error,
         };
       }
-      this.#logger.error(
-        `ConfigurableLLMAdapter.getAIDecision: Error during getAIDecision for LLM '${llmIdForLog}': ${error.message}`,
-        logDetails
-      );
-      throw error;
+
+      if (
+        error.name === 'HttpClientError' ||
+        Object.prototype.hasOwnProperty.call(error, 'status')
+      ) {
+        logDetails.status = error.status;
+        logDetails.parsedErrorBody = error.responseBody || error.body;
+        this.#logger.error(
+          `ConfigurableLLMAdapter.getAIDecision: LLM API error for LLM '${llmIdForLog}'. Status: ${error.status}. Message: ${error.message}`,
+          logDetails
+        );
+
+        const status = error.status;
+        if (status === 401) {
+          throw new ApiKeyError(error.message, {
+            status,
+            llmId: llmIdForLog,
+            responseBody: logDetails.parsedErrorBody,
+          });
+        }
+        if (status === 402) {
+          throw new InsufficientCreditsError(error.message, {
+            status,
+            llmId: llmIdForLog,
+            responseBody: logDetails.parsedErrorBody,
+          });
+        }
+        if (status === 403) {
+          const bodyStr = JSON.stringify(
+            logDetails.parsedErrorBody || ''
+          ).toLowerCase();
+          if (bodyStr.includes('policy')) {
+            throw new ContentPolicyError(error.message, {
+              status,
+              llmId: llmIdForLog,
+              responseBody: logDetails.parsedErrorBody,
+            });
+          }
+          throw new PermissionError(error.message, {
+            status,
+            llmId: llmIdForLog,
+            responseBody: logDetails.parsedErrorBody,
+          });
+        }
+        if (status === 400) {
+          throw new BadRequestError(error.message, {
+            status,
+            llmId: llmIdForLog,
+            responseBody: logDetails.parsedErrorBody,
+          });
+        }
+        throw new LLMInteractionError(error.message, {
+          status,
+          llmId: llmIdForLog,
+          responseBody: logDetails.parsedErrorBody,
+        });
+      } else {
+        this.#logger.error(
+          `ConfigurableLLMAdapter.getAIDecision: Error during getAIDecision for LLM '${llmIdForLog}': ${error.message}`,
+          logDetails
+        );
+        if (error.name === 'JsonProcessingError') {
+          throw new MalformedResponseError(error.message, {
+            llmId: llmIdForLog,
+          });
+        }
+        throw error;
+      }
     }
   }
 
