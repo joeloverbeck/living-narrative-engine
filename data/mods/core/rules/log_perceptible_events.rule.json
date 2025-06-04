@@ -1,4 +1,4 @@
- {
+{
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "log_perceptible_events",
   "comment": "Listens for 'core:perceptible_event' and delegates to PerceptionUpdateService to add entries to the 'core:perception_log' of relevant entities.",

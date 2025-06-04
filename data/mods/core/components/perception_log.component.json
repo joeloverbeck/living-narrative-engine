@@ -61,10 +61,7 @@
         "default": []
       }
     },
-    "required": [
-      "logEntries",
-      "maxEntries"
-    ],
+    "required": ["logEntries", "maxEntries"],
     "additionalProperties": false
   }
 }

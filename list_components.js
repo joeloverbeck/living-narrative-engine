@@ -10,20 +10,22 @@ const relativeDirPath = 'data/components';
 const directoryPath = path.join(process.cwd(), relativeDirPath);
 
 // Define the asynchronous function to get filenames
+/**
+ *
+ */
 async function getFilenames() {
-    try {
-        // Read the directory contents asynchronously
-        const filenames = await fs.readdir(directoryPath);
+  try {
+    // Read the directory contents asynchronously
+    const filenames = await fs.readdir(directoryPath);
 
-        // Return the array (the actual strings in the array don't have quotes)
-        return filenames;
-
-    } catch (err) {
-        // Handle potential errors
-        console.error(`Error reading directory ${directoryPath}:`, err);
-        // Return an empty array to indicate failure gracefully
-        return [];
-    }
+    // Return the array (the actual strings in the array don't have quotes)
+    return filenames;
+  } catch (err) {
+    // Handle potential errors
+    console.error(`Error reading directory ${directoryPath}:`, err);
+    // Return an empty array to indicate failure gracefully
+    return [];
+  }
 }
 
 // --- Main Execution Logic ---
@@ -32,32 +34,36 @@ async function getFilenames() {
 console.log(`Attempting to read directory: ${directoryPath}`);
 
 // Call the async function and handle the result (Promise)
-getFilenames().then(files => {
+getFilenames()
+  .then((files) => {
     // This code runs *after* getFilenames completes
-    if (files && files.length >= 0) { // Check if files is a valid array (even empty)
+    if (files && files.length >= 0) {
+      // Check if files is a valid array (even empty)
 
-        // --- MODIFICATION HERE ---
-        // Use JSON.stringify to format the array output with double quotes
-        const jsonFormattedFilenames = JSON.stringify(files, null, 2); // Use null, 2 for pretty printing
+      // --- MODIFICATION HERE ---
+      // Use JSON.stringify to format the array output with double quotes
+      const jsonFormattedFilenames = JSON.stringify(files, null, 2); // Use null, 2 for pretty printing
 
-        if (files.length > 0) {
-            console.log('Successfully retrieved filenames (JSON format):');
-            console.log(jsonFormattedFilenames);
-            // Example output:
-            // [
-            //   "attack_attempted.event.json",
-            //   "move_attempted.event.json"
-            // ]
-        } else {
-            console.log('Directory read successfully, but it contains no files (JSON format):');
-            console.log(jsonFormattedFilenames); // Will output: []
-        }
-        // You can now copy the output starting from '[' to ']' directly into a JSON file.
-
+      if (files.length > 0) {
+        console.log('Successfully retrieved filenames (JSON format):');
+        console.log(jsonFormattedFilenames);
+        // Example output:
+        // [
+        //   "attack_attempted.event.json",
+        //   "move_attempted.event.json"
+        // ]
+      } else {
+        console.log(
+          'Directory read successfully, but it contains no files (JSON format):'
+        );
+        console.log(jsonFormattedFilenames); // Will output: []
+      }
+      // You can now copy the output starting from '[' to ']' directly into a JSON file.
     } else {
-        // This case might occur if the catch block didn't return []
-        console.log('Could not retrieve filenames (check error message above).');
+      // This case might occur if the catch block didn't return []
+      console.log('Could not retrieve filenames (check error message above).');
     }
-}).catch(error => {
+  })
+  .catch((error) => {
     console.error('An unexpected error occurred during execution:', error);
-});
+  });

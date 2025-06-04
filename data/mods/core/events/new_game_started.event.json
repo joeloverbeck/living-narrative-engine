@@ -10,9 +10,7 @@
         "description": "The name of the world that was loaded for the new game."
       }
     },
-    "required": [
-      "worldName"
-    ],
+    "required": ["worldName"],
     "additionalProperties": false
   }
 }

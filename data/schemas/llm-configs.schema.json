@@ -17,10 +17,7 @@
       }
     }
   },
-  "required": [
-    "defaultConfigId",
-    "configs"
-  ],
+  "required": ["defaultConfigId", "configs"],
   "definitions": {
     "llmConfiguration": {
       "type": "object",
@@ -90,25 +87,18 @@
               "description": "Required if 'method' is 'openrouter_json_schema' or similar schema-based methods. The JSON schema definition for the expected output."
             }
           },
-          "required": [
-            "method"
-          ],
+          "required": ["method"],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "method": {
-                    "enum": [
-                      "tool_calling",
-                      "openrouter_tool_calling"
-                    ]
+                    "enum": ["tool_calling", "openrouter_tool_calling"]
                   }
                 }
               },
               "then": {
-                "required": [
-                  "toolName"
-                ]
+                "required": ["toolName"]
               }
             },
             {
@@ -120,9 +110,7 @@
                 }
               },
               "then": {
-                "required": [
-                  "grammar"
-                ]
+                "required": ["grammar"]
               }
             },
             {
@@ -134,9 +122,7 @@
                 }
               },
               "then": {
-                "required": [
-                  "jsonSchema"
-                ]
+                "required": ["jsonSchema"]
               }
             }
           ],
@@ -173,11 +159,7 @@
                 "description": "String to append to this part's content."
               }
             },
-            "required": [
-              "key",
-              "prefix",
-              "suffix"
-            ],
+            "required": ["key", "prefix", "suffix"],
             "additionalProperties": false
           }
         },

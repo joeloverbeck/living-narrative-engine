@@ -1,13 +1,12 @@
 // src/utils/objectUtils.js
 
 /**
- * @fileoverview Utility functions for working with plain JavaScript objects.
+ * @file Utility functions for working with plain JavaScript objects.
  */
 
 /**
  * Safely retrieves a potentially nested property value from an object using a dot-notation path string.
  * This function is purely generic and has no knowledge of specific application structures like Entities or Components.
- *
  * @param {Record<string, any> | any[] | null | undefined} obj - The object or array to retrieve the property from.
  * @param {string | null | undefined} propertyPath - The dot-separated path string (e.g., "a.b.c", "a.list.0.name").
  * @returns {any | undefined} The value found at the specified path, or undefined if:
@@ -16,7 +15,6 @@
  * - Any intermediate property in the path does not exist.
  * - Any intermediate value in the path is null, undefined, or not an object/array (and thus cannot be further traversed).
  * - The path contains empty segments (e.g., "a..b").
- *
  * @example
  * const myObj = { a: { b: [ { name: 'first' }, { name: 'second' } ], c: 5 }, d: null };
  * getObjectPropertyByPath(myObj, 'a.b.1.name'); // Returns 'second'
@@ -33,7 +31,12 @@
  */
 export const getObjectPropertyByPath = (obj, propertyPath) => {
   // Validate inputs: object must exist and path must be a non-empty string
-  if (obj === null || typeof obj === 'undefined' || typeof propertyPath !== 'string' || propertyPath === '') {
+  if (
+    obj === null ||
+    typeof obj === 'undefined' ||
+    typeof propertyPath !== 'string' ||
+    propertyPath === ''
+  ) {
     return undefined;
   }
 

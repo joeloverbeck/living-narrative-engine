@@ -80,11 +80,11 @@ end
 
 Loader-->>Caller: Map<string, object> { 'ModA': ManifestA, 'ModB': ManifestB }
 deactivate Loader
-*Diagram Notes:*
+_Diagram Notes:_
 
-* Fetching (fetch) happens in parallel for efficiency.
-* Validation and registry storage occur sequentially based on the requested order.
-* The diagram shows the happy path; errors during fetch, validation, or ID checks will halt the process and throw an error.
+- Fetching (fetch) happens in parallel for efficiency.
+- Validation and registry storage occur sequentially based on the requested order.
+- The diagram shows the happy path; errors during fetch, validation, or ID checks will halt the process and throw an error.
 
 ## Usage
 
@@ -93,17 +93,19 @@ Inject ModManifestLoader using your dependency injection container and call load
 ```javascript
 // Example within an async function (e.g., inside WorldLoader)
 async function loadMods(container, requestedModIds) {
-try {
-const modManifestLoader = container.resolve(tokens.ModManifestLoader); // Assuming DI tokens
-const loadedManifests = await modManifestLoader.loadRequestedManifests(requestedModIds);
+  try {
+    const modManifestLoader = container.resolve(tokens.ModManifestLoader); // Assuming DI tokens
+    const loadedManifests =
+      await modManifestLoader.loadRequestedManifests(requestedModIds);
 
-console.log(`Successfully loaded ${loadedManifests.size} mod manifests:`, [...loadedManifests.keys()]);
-// Proceed with dependency resolution and content loading using loadedManifests...
-
-} catch (error) {
-console.error("Failed to load mod manifests:", error);
-// Halt game loading or provide feedback to the user
-}
+    console.log(`Successfully loaded ${loadedManifests.size} mod manifests:`, [
+      ...loadedManifests.keys(),
+    ]);
+    // Proceed with dependency resolution and content loading using loadedManifests...
+  } catch (error) {
+    console.error('Failed to load mod manifests:', error);
+    // Halt game loading or provide feedback to the user
+  }
 }
 
 // Example call:
@@ -114,21 +116,21 @@ console.error("Failed to load mod manifests:", error);
 
 The loadRequestedManifests method can throw errors under various conditions. It's crucial to wrap the call in a try...catch block.
 
-| Error Code (Constant)         | Error Type        | Cause                                                                                             | How to Handle / Prevent                                                                                                                               |
-| :---------------------------- | :---------------- | :------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| INVALID_REQUEST_ARRAY       | TypeError       | The requestedModIds parameter passed was not an array.                                          | Ensure the input is always an array (e.g., derived correctly from game.json).                                                                       |
-| INVALID_REQUEST_ID        | TypeError       | An element within the requestedModIds array was not a non-empty string.                         | Validate the mod IDs in game.json before passing them. Ensure they are strings.                                                                       |
-| DUPLICATE_REQUEST_ID      | Error           | The same mod ID appears multiple times in the requestedModIds array.                              | Ensure the mod list in game.json contains unique IDs. Validate the list after loading it.                                                             |
-| NO_VALIDATOR              | Error           | The schema validator function for mod manifests could not be retrieved.                           | Ensure the mod.manifest.schema.json is correctly configured in StaticConfiguration and that SchemaLoader ran successfully beforehand.               |
-| FETCH_FAIL                  | (Logged Warning)  | Failed to fetch a specific manifest file (network error, file not found).                       | Check file paths, network connectivity, and web server configuration. The loader logs a warning and skips the mod, but won't throw *unless* no mods load. |
-| VALIDATION_FAIL           | Error           | A fetched manifest file failed validation against mod.manifest.schema.json.                   | Correct the invalid mod.manifest.json file according to the schema requirements and logged error details.                                           |
-| MISSING_MANIFEST_ID       | Error           | A validated manifest file is missing the required top-level "id" property or it's empty.          | Ensure the mod.manifest.json file includes a valid, non-empty "id" string property.                                                               |
-| ID_MISMATCH                 | Error           | The "id" property inside a manifest file does not match the requested mod ID (directory name).  | Ensure the "id" field within mod.manifest.json exactly matches the mod's directory name used in game.json.                                        |
-| REGISTRY_STORE_FAIL         | Error           | An error occurred while trying to store a validated manifest in the data registry.                | Check the IDataRegistry implementation for issues (e.g., memory limits, incorrect method implementation).                                           |
-| *(Generic Fetch/Parse Error)* | Error           | Low-level error during fetch (e.g., malformed JSON in the manifest file).                         | Check the manifest file for valid JSON syntax. Check network logs for fetch issues.                                                                   |
+| Error Code (Constant)         | Error Type       | Cause                                                                                          | How to Handle / Prevent                                                                                                                                   |
+| :---------------------------- | :--------------- | :--------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| INVALID_REQUEST_ARRAY         | TypeError        | The requestedModIds parameter passed was not an array.                                         | Ensure the input is always an array (e.g., derived correctly from game.json).                                                                             |
+| INVALID_REQUEST_ID            | TypeError        | An element within the requestedModIds array was not a non-empty string.                        | Validate the mod IDs in game.json before passing them. Ensure they are strings.                                                                           |
+| DUPLICATE_REQUEST_ID          | Error            | The same mod ID appears multiple times in the requestedModIds array.                           | Ensure the mod list in game.json contains unique IDs. Validate the list after loading it.                                                                 |
+| NO_VALIDATOR                  | Error            | The schema validator function for mod manifests could not be retrieved.                        | Ensure the mod.manifest.schema.json is correctly configured in StaticConfiguration and that SchemaLoader ran successfully beforehand.                     |
+| FETCH_FAIL                    | (Logged Warning) | Failed to fetch a specific manifest file (network error, file not found).                      | Check file paths, network connectivity, and web server configuration. The loader logs a warning and skips the mod, but won't throw _unless_ no mods load. |
+| VALIDATION_FAIL               | Error            | A fetched manifest file failed validation against mod.manifest.schema.json.                    | Correct the invalid mod.manifest.json file according to the schema requirements and logged error details.                                                 |
+| MISSING_MANIFEST_ID           | Error            | A validated manifest file is missing the required top-level "id" property or it's empty.       | Ensure the mod.manifest.json file includes a valid, non-empty "id" string property.                                                                       |
+| ID_MISMATCH                   | Error            | The "id" property inside a manifest file does not match the requested mod ID (directory name). | Ensure the "id" field within mod.manifest.json exactly matches the mod's directory name used in game.json.                                                |
+| REGISTRY_STORE_FAIL           | Error            | An error occurred while trying to store a validated manifest in the data registry.             | Check the IDataRegistry implementation for issues (e.g., memory limits, incorrect method implementation).                                                 |
+| _(Generic Fetch/Parse Error)_ | Error            | Low-level error during fetch (e.g., malformed JSON in the manifest file).                      | Check the manifest file for valid JSON syntax. Check network logs for fetch issues.                                                                       |
 
 **General Handling:**
 
-* Always use try...catch around loadRequestedManifests.
-* Log the caught error for debugging.
-* In case of an error, halt the game loading process and inform the user that loading failed due to mod configuration or file issues. Provide details from the error message if possible.
+- Always use try...catch around loadRequestedManifests.
+- Log the caught error for debugging.
+- In case of an error, halt the game loading process and inform the user that loading failed due to mod configuration or file issues. Provide details from the error message if possible.

@@ -5,9 +5,7 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": [
-      "text"
-    ],
+    "required": ["text"],
     "properties": {
       "text": {
         "type": "string",

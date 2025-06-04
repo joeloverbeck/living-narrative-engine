@@ -18,31 +18,31 @@ export const LLM_TURN_ACTION_SCHEMA_ID = 'llmTurnActionResponseSchema/v1';
  * - `speech`: The character's spoken dialogue.
  */
 export const LLM_TURN_ACTION_SCHEMA = {
-    $id: LLM_TURN_ACTION_SCHEMA_ID,         // Self-referential ID for Ajv
-    type: 'object',
-    properties: {
-        actionDefinitionId: {
-            type: 'string',
-            description:
-                "The unique System Identifier for the action to be performed (e.g., 'core:wait', 'core:go', 'app:take_item'). " +
-                "This MUST be one of the 'System ID' values provided in the 'Your available actions are:' section.",
-            minLength: 1,
-        },
-        commandString: {
-            type: 'string',
-            description:
-                "The exact command string that will be processed by the game's command parser (e.g., 'wait', 'go north', " +
-                "'take a_torch from sconce', 'say Hello there'). This value MUST be a complete, parsable command.",
-            minLength: 1,
-        },
-        speech: {
-            type: 'string',
-            description:
-                'The exact words the character will say aloud. Use an empty string ("") if the character chooses not to speak.',
-        },
+  $id: LLM_TURN_ACTION_SCHEMA_ID, // Self-referential ID for Ajv
+  type: 'object',
+  properties: {
+    actionDefinitionId: {
+      type: 'string',
+      description:
+        "The unique System Identifier for the action to be performed (e.g., 'core:wait', 'core:go', 'app:take_item'). " +
+        "This MUST be one of the 'System ID' values provided in the 'Your available actions are:' section.",
+      minLength: 1,
     },
-    required: ['actionDefinitionId', 'commandString', 'speech'],
-    additionalProperties: false,            // Disallow undeclared top-level keys
+    commandString: {
+      type: 'string',
+      description:
+        "The exact command string that will be processed by the game's command parser (e.g., 'wait', 'go north', " +
+        "'take a_torch from sconce', 'say Hello there'). This value MUST be a complete, parsable command.",
+      minLength: 1,
+    },
+    speech: {
+      type: 'string',
+      description:
+        'The exact words the character will say aloud. Use an empty string ("") if the character chooses not to speak.',
+    },
+  },
+  required: ['actionDefinitionId', 'commandString', 'speech'],
+  additionalProperties: false, // Disallow undeclared top-level keys
 };
 
 /* ──────────────────────────────────────────────────────────────────────────── */
@@ -55,7 +55,7 @@ export const LLM_TURN_ACTION_SCHEMA = {
  * @type {string}
  */
 export const LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID =
-    'llmTurnActionResponseSchema/v2';
+  'llmTurnActionResponseSchema/v2';
 
 /**
  * JSON Schema (v2) for the LLM's response.
@@ -63,18 +63,18 @@ export const LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID =
  * paragraph suitable for short-term memory or chain-of-thought logging.
  */
 export const LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA = {
-    $id: LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID,
-    type: 'object',
-    properties: {
-        actionDefinitionId: LLM_TURN_ACTION_SCHEMA.properties.actionDefinitionId,
-        commandString: LLM_TURN_ACTION_SCHEMA.properties.commandString,
-        speech: LLM_TURN_ACTION_SCHEMA.properties.speech,
-        thoughts: {
-            type: 'string',
-            description:
-                'First-person internal monologue; one short paragraph in character voice.',
-        },
+  $id: LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID,
+  type: 'object',
+  properties: {
+    actionDefinitionId: LLM_TURN_ACTION_SCHEMA.properties.actionDefinitionId,
+    commandString: LLM_TURN_ACTION_SCHEMA.properties.commandString,
+    speech: LLM_TURN_ACTION_SCHEMA.properties.speech,
+    thoughts: {
+      type: 'string',
+      description:
+        'First-person internal monologue; one short paragraph in character voice.',
     },
-    required: ['actionDefinitionId', 'commandString', 'speech', 'thoughts'],
-    additionalProperties: false,
+  },
+  required: ['actionDefinitionId', 'commandString', 'speech', 'thoughts'],
+  additionalProperties: false,
 };

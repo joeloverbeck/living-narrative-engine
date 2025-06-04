@@ -34,7 +34,8 @@ class OperationRegistry {
 
   register(operationType, handler) {
     if (typeof operationType !== 'string' || !operationType.trim()) {
-      const errorMsg = 'OperationRegistry.register: operationType must be a non-empty string.';
+      const errorMsg =
+        'OperationRegistry.register: operationType must be a non-empty string.';
       this.#log('error', errorMsg);
       throw new Error(errorMsg);
     }
@@ -47,22 +48,34 @@ class OperationRegistry {
     const trimmedType = operationType.trim();
 
     if (this.#registry.has(trimmedType)) {
-      this.#log('warn', `OperationRegistry: Overwriting existing handler for operation type "${trimmedType}".`);
+      this.#log(
+        'warn',
+        `OperationRegistry: Overwriting existing handler for operation type "${trimmedType}".`
+      );
     }
 
     this.#registry.set(trimmedType, handler);
-    this.#log('debug', `OperationRegistry: Registered handler for operation type "${trimmedType}".`);
+    this.#log(
+      'debug',
+      `OperationRegistry: Registered handler for operation type "${trimmedType}".`
+    );
   }
 
   getHandler(operationType) {
     if (typeof operationType !== 'string') {
-      this.#log('warn', `OperationRegistry.getHandler: Received non-string operationType: ${typeof operationType}. Returning undefined.`);
+      this.#log(
+        'warn',
+        `OperationRegistry.getHandler: Received non-string operationType: ${typeof operationType}. Returning undefined.`
+      );
       return undefined;
     }
     const trimmedType = operationType.trim();
     const handler = this.#registry.get(trimmedType);
     if (!handler) {
-      this.#log('debug', `OperationRegistry: No handler found for operation type "${trimmedType}".`);
+      this.#log(
+        'debug',
+        `OperationRegistry: No handler found for operation type "${trimmedType}".`
+      );
     }
     return handler;
   }
@@ -90,14 +103,20 @@ class OperationRegistry {
       }
     } catch (logError) {
       // --- Fallback Log (if the chosen logger/console method itself threw an error) ---
-      console.error(`Error occurred in logging utility (faulty logger method for level '${level}') trying to log message: "${message}"`, logError);
+      console.error(
+        `Error occurred in logging utility (faulty logger method for level '${level}') trying to log message: "${message}"`,
+        logError
+      );
 
       // Attempt to log the original message using a very safe fallback
       try {
         // MODIFIED LINE: Removed "[FALLBACK - ...]" prefix
         console.log(`[${level.toUpperCase()}] ${message}`, ...args);
       } catch (fallbackError) {
-        console.error('CRITICAL LOGGING FAILURE: Even the final console.log fallback failed.', fallbackError);
+        console.error(
+          'CRITICAL LOGGING FAILURE: Even the final console.log fallback failed.',
+          fallbackError
+        );
       }
     }
   }

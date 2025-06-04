@@ -25,16 +25,10 @@
       "portrait.component.json",
       "short_term_memory.component.json"
     ],
-    "characters": [
-    ],
-    "items": [
-    ],
-    "locations": [
-    ],
-    "actions": [
-      "wait.action.json",
-      "go.action.json"
-    ],
+    "characters": [],
+    "items": [],
+    "locations": [],
+    "actions": ["wait.action.json", "go.action.json"],
     "rules": [
       "turn_started.rule.json",
       "turn_ended.rule.json",
@@ -65,7 +59,6 @@
       "ui_operation_in_progress.event.json",
       "game_loaded.event.json"
     ],
-    "operations": [
-    ]
+    "operations": []
   }
 }

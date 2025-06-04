@@ -4,20 +4,19 @@
 // -----------------------------------------------------------------------------
 
 // Import both v1 and v2 schema IDs if needed (we’ll only export v2 here)
-import {
-    LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA,
-} from '../../turns/schemas/llmOutputSchemas.js';
+import { LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA } from '../../turns/schemas/llmOutputSchemas.js';
 
 // Strip the `$id` off the imported v1 schema so downstream tools can embed it without re‐exposing `$id`.
-const {$id: _, ...LLM_PROVIDER_TURN_ACTION_SCHEMA} = LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA;
+const { $id: _, ...LLM_PROVIDER_TURN_ACTION_SCHEMA } =
+  LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA;
 
 /**
  * Default fallback action if the LLM cannot produce a valid structured response.
  */
 export const DEFAULT_FALLBACK_ACTION = {
-    actionDefinitionId: 'core:wait',
-    commandString: 'wait',
-    speech: 'I am having trouble thinking right now.',
+  actionDefinitionId: 'core:wait',
+  commandString: 'wait',
+  speech: 'I am having trouble thinking right now.',
 };
 
 /**
@@ -30,13 +29,13 @@ export const CLOUD_API_TYPES = ['openrouter', 'openai', 'anthropic'];
  * the schema (based on the canonical turn‐action schema minus `$id`).
  */
 export const OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA = {
-    name: 'game_ai_action_speech_output',
-    strict: true,
-    schema: LLM_PROVIDER_TURN_ACTION_SCHEMA,
+  name: 'game_ai_action_speech_output',
+  strict: true,
+  schema: LLM_PROVIDER_TURN_ACTION_SCHEMA,
 };
 
 /**
  * Default description shown when the “OpenRouter” tool is invoked.
  */
 export const OPENROUTER_DEFAULT_TOOL_DESCRIPTION =
-    "Extracts the character's game action and speech based on the current situation. Both action and speech are required.";
+  "Extracts the character's game action and speech based on the current situation. Both action and speech are required.";

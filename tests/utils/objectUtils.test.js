@@ -1,7 +1,7 @@
 // src/tests/utils/objectUtils.test.js
 
 import { getObjectPropertyByPath } from '../../src/utils/objectUtils.js';
-import {describe, expect, it} from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 
 describe('getObjectPropertyByPath', () => {
   const testObj = {
@@ -17,8 +17,8 @@ describe('getObjectPropertyByPath', () => {
     },
     i: undefined,
     j: null,
-    k: [ 'x', 'y', 'z' ],
-    'complex.key': 'value with dot'
+    k: ['x', 'y', 'z'],
+    'complex.key': 'value with dot',
   };
 
   // --- Basic Access ---
@@ -79,7 +79,9 @@ describe('getObjectPropertyByPath', () => {
 
   it('should return undefined if an intermediate property exists but its value is undefined', () => {
     const objWithUndefined = { level1: { level2: undefined } };
-    expect(getObjectPropertyByPath(objWithUndefined, 'level1.level2.level3')).toBeUndefined();
+    expect(
+      getObjectPropertyByPath(objWithUndefined, 'level1.level2.level3')
+    ).toBeUndefined();
   });
 
   // --- Invalid Inputs ---
@@ -132,7 +134,9 @@ describe('getObjectPropertyByPath', () => {
     // and fail to find 'complex' as the first part.
     const objWithDotKey = { 'complex.key': 'value' };
     // Therefore, the expected result for this path *is* undefined based on the function's design.
-    expect(getObjectPropertyByPath(objWithDotKey, 'complex.key')).toBeUndefined();
+    expect(
+      getObjectPropertyByPath(objWithDotKey, 'complex.key')
+    ).toBeUndefined();
     // If you needed to access 'complex.key', you would need a different mechanism (like passing the path as an array ['complex.key'])
     // or modify the function to support escaping dots.
   });
@@ -148,10 +152,11 @@ describe('getObjectPropertyByPath', () => {
     // However, the implementation currently rejects paths with empty segments ("a..b")
     // Accessing `testObj.b['']` works directly, but not via path "b." or "b.."
     // Let's test direct access via a path if the key was valid segment e.g. "b.emptyKeyProp" if obj was { b: { emptyKeyProp: 'value' } }
-    const objWithNamedEmptyKey = { b: { emptyKeyProp: testObj.b[''] }};
-    expect(getObjectPropertyByPath(objWithNamedEmptyKey, 'b.emptyKeyProp')).toBe('empty key property');
+    const objWithNamedEmptyKey = { b: { emptyKeyProp: testObj.b[''] } };
+    expect(
+      getObjectPropertyByPath(objWithNamedEmptyKey, 'b.emptyKeyProp')
+    ).toBe('empty key property');
   });
-
 
   // --- Array Access ---
   it('should access array elements by numeric index', () => {

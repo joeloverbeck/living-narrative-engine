@@ -6,26 +6,17 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": [
-    ],
+    "components": [],
     "characters": [
       "hero.character.json",
       "sidekick.character.json",
       "receptionist.character.json"
     ],
-    "items": [
-    ],
-    "locations": [
-      "adventurers_guild.location.json",
-      "town.location.json"
-    ],
-    "actions": [
-    ],
-    "rules": [
-    ],
-    "events": [
-    ],
-    "operations": [
-    ]
+    "items": [],
+    "locations": ["adventurers_guild.location.json", "town.location.json"],
+    "actions": [],
+    "rules": [],
+    "events": [],
+    "operations": []
   }
 }

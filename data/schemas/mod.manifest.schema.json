@@ -91,11 +91,7 @@
       }
     }
   },
-  "required": [
-    "id",
-    "version",
-    "name"
-  ],
+  "required": ["id", "version", "name"],
   "definitions": {
     "contentFileList": {
       "description": "Array of relative paths (using forward slashes '/') to .json definition files for a specific content type. Paths must not start with '/' or contain '..'.",
@@ -123,10 +119,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "id",
-        "version"
-      ]
+      "required": ["id", "version"]
     }
   }
 }

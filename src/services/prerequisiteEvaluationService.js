@@ -2,7 +2,7 @@
 
 // --- START: Refactor-AVS-3.3.1 ---
 // No change needed here for 3.3.2, builder already imported
-import {ActionValidationContextBuilder} from './actionValidationContextBuilder.js';
+import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
 // --- END: Refactor-AVS-3.3.1 ---
 
 /* type-only imports */
@@ -25,38 +25,50 @@ import {ActionValidationContextBuilder} from './actionValidationContextBuilder.j
  * and then uses the JsonLogicEvaluationService to evaluate the rules against that context.
  */
 export class PrerequisiteEvaluationService {
-  /** @private @type {ILogger} */
+     * @private
   #logger;
-  /** @private @type {JsonLogicEvaluationService} */
+     * @private
   #jsonLogicEvaluationService;
   // --- START: Refactor-AVS-3.3.1 ---
   // No change needed here for 3.3.2
-  /** @private @type {ActionValidationContextBuilder} */
+     * @private
   #actionValidationContextBuilder;
 
   // --- END: Refactor-AVS-3.3.1 ---
 
   /**
-     * Creates an instance of PrerequisiteEvaluationService.
-     * @param {{
-     * logger: ILogger,
-     * jsonLogicEvaluationService: JsonLogicEvaluationService,
-     * actionValidationContextBuilder: ActionValidationContextBuilder // Added in 3.3.1
-     * }} dependencies - The required services.
-     * @throws {Error} If dependencies are missing or invalid.
-     */
-  constructor({logger, jsonLogicEvaluationService, actionValidationContextBuilder}) { // Added actionValidationContextBuilder in 3.3.1
+   * Creates an instance of PrerequisiteEvaluationService.
+   * @param {{
+   * logger: ILogger,
+   * jsonLogicEvaluationService: JsonLogicEvaluationService,
+   * actionValidationContextBuilder: ActionValidationContextBuilder // Added in 3.3.1
+   * }} dependencies - The required services.
+   * @throws {Error} If dependencies are missing or invalid.
+   */
+  constructor({
+    logger,
+    jsonLogicEvaluationService,
+    actionValidationContextBuilder,
+  }) {
+    // Added actionValidationContextBuilder in 3.3.1
     // --- Constructor Guards ---
     // No changes needed here for 3.3.2
     if (!logger?.debug || !logger?.error || !logger.warn) {
-      throw new Error('PrerequisiteEvaluationService requires a valid ILogger instance.');
+      throw new Error(
+        'PrerequisiteEvaluationService requires a valid ILogger instance.'
+      );
     }
     if (!jsonLogicEvaluationService?.evaluate) {
-      throw new Error('PrerequisiteEvaluationService requires a valid JsonLogicEvaluationService instance.');
+      throw new Error(
+        'PrerequisiteEvaluationService requires a valid JsonLogicEvaluationService instance.'
+      );
     }
     // --- START: Refactor-AVS-3.3.1 ---
-    if (!actionValidationContextBuilder?.buildContext) { // Added Guard in 3.3.1
-      throw new Error('PrerequisiteEvaluationService requires a valid ActionValidationContextBuilder instance.');
+    if (!actionValidationContextBuilder?.buildContext) {
+      // Added Guard in 3.3.1
+      throw new Error(
+        'PrerequisiteEvaluationService requires a valid ActionValidationContextBuilder instance.'
+      );
     }
     // --- END: Refactor-AVS-3.3.1 ---
 
@@ -66,22 +78,23 @@ export class PrerequisiteEvaluationService {
     this.#actionValidationContextBuilder = actionValidationContextBuilder; // Added assignment in 3.3.1
     // --- END: Refactor-AVS-3.3.1 ---
 
-    this.#logger.info('PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder).');
+    this.#logger.info(
+      'PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder).'
+    );
   }
 
-
   /**
-     * Evaluates an array of prerequisite rules for a given action context.
-     * It first builds the evaluation context using the provided action details
-     * and then applies the JsonLogic rules.
-     *
-     * @param {object[]} prerequisites - The array of prerequisite rule objects. Should conform to expected structure (e.g., { logic: {...}, failure_message?: "..." }).
-     * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
-     * @param {Entity} actor - The entity performing the action.
-     * @param {ActionTargetContext} targetContext - The context of the action's target.
-     * @returns {boolean} True if all prerequisites pass (or if the list is empty), false if any rule fails, if there's an evaluation error, or if context building fails.
-     */
-  evaluate(prerequisites, actionDefinition, actor, targetContext) { // Signature updated in 3.3.1
+   * Evaluates an array of prerequisite rules for a given action context.
+   * It first builds the evaluation context using the provided action details
+   * and then applies the JsonLogic rules.
+   * @param {object[]} prerequisites - The array of prerequisite rule objects. Should conform to expected structure (e.g., { logic: {...}, failure_message?: "..." }).
+   * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
+   * @param {Entity} actor - The entity performing the action.
+   * @param {ActionTargetContext} targetContext - The context of the action's target.
+   * @returns {boolean} True if all prerequisites pass (or if the list is empty), false if any rule fails, if there's an evaluation error, or if context building fails.
+   */
+  evaluate(prerequisites, actionDefinition, actor, targetContext) {
+    // Signature updated in 3.3.1
     // --- START: Refactor-AVS-3.3.2 ---
     // Task: Derive actionId at the beginning
     const actionId = actionDefinition?.id ?? 'unknown_action'; // AC1
@@ -92,7 +105,9 @@ export class PrerequisiteEvaluationService {
     if (!prerequisites || prerequisites.length === 0) {
       // --- START: Refactor-AVS-3.3.2 ---
       // Task: Update Logging (Use local actionId)
-      this.#logger.debug(`PrereqEval[${actionId}]: → PASSED (No prerequisites to evaluate).`); // AC6
+      this.#logger.debug(
+        `PrereqEval[${actionId}]: → PASSED (No prerequisites to evaluate).`
+      ); // AC6
       // Task: Remove old logs (None existed for checking passed-in evalCtx) // AC7 (N/A)
       // --- END: Refactor-AVS-3.3.2 ---
       return true; // No rules means prerequisites are met.
@@ -109,33 +124,43 @@ export class PrerequisiteEvaluationService {
         targetContext
       );
       // Optional: Log successful context building
-      this.#logger.debug(`PrereqEval[${actionId}]: Evaluation Context Built Successfully.`); // AC6
-
-    } catch (buildError) { // Task: Wrap in try...catch, Handle errors in catch(err) // AC3
+      this.#logger.debug(
+        `PrereqEval[${actionId}]: Evaluation Context Built Successfully.`
+      ); // AC6
+    } catch (buildError) {
+      // Task: Wrap in try...catch, Handle errors in catch(err) // AC3
       // Task: Log error detailing failure (include required context) and return false // AC4
-      this.#logger.error(`PrereqEval[${actionId}]: ← FAILED (Internal Error: Failed to build evaluation context via ActionValidationContextBuilder). Error: ${buildError.message}`, {
-        actorId: actorId,
-        targetContext: targetContext, // Include the target context object
-        // buildError.message is already in the main string
-        stack: buildError.stack // Include stack trace
-      }); // AC6 (log uses actionId)
+      this.#logger.error(
+        `PrereqEval[${actionId}]: ← FAILED (Internal Error: Failed to build evaluation context via ActionValidationContextBuilder). Error: ${buildError.message}`,
+        {
+          actorId: actorId,
+          targetContext: targetContext, // Include the target context object
+          // buildError.message is already in the main string
+          stack: buildError.stack, // Include stack trace
+        }
+      ); // AC6 (log uses actionId)
       return false; // Context building failed
     }
 
     // Task: Handle Missing Context (Post-Build Check) - Self-correction applied: Removed redundant check as builder throws on failure. The catch block handles it.
     // --- END: Refactor-AVS-3.3.2 ---
 
-
     // ─── 3 Evaluate prerequisite rules ──────────────────────────────────
     // --- START: Refactor-AVS-3.3.2 ---
     // Task: Update Logging (Use local actionId)
-    this.#logger.debug(`PrereqEval[${actionId}]: Evaluating ${prerequisites.length} prerequisite rule(s)...`); // AC6
+    this.#logger.debug(
+      `PrereqEval[${actionId}]: Evaluating ${prerequisites.length} prerequisite rule(s)...`
+    ); // AC6
     // --- END: Refactor-AVS-3.3.2 ---
     for (const [index, prereqObject] of prerequisites.entries()) {
       const ruleNumber = index + 1;
 
       // Basic structural check of the prerequisite object itself
-      if (!prereqObject || typeof prereqObject !== 'object' || Array.isArray(prereqObject)) {
+      if (
+        !prereqObject ||
+        typeof prereqObject !== 'object' ||
+        Array.isArray(prereqObject)
+      ) {
         // --- START: Refactor-AVS-3.3.2 ---
         // Task: Update Logging (Use local actionId)
         this.#logger.error(
@@ -147,7 +172,8 @@ export class PrerequisiteEvaluationService {
 
       const ruleLogic = prereqObject.logic;
       // Check for the presence and basic type of the 'logic' property
-      if (!ruleLogic || typeof ruleLogic !== 'object') { // JsonLogic rules are objects
+      if (!ruleLogic || typeof ruleLogic !== 'object') {
+        // JsonLogic rules are objects
         // --- START: Refactor-AVS-3.3.2 ---
         // Task: Update Logging (Use local actionId)
         this.#logger.error(
@@ -167,10 +193,13 @@ export class PrerequisiteEvaluationService {
       } catch (evalError) {
         // --- START: Refactor-AVS-3.3.2 ---
         // Task: Update Logging (Use local actionId)
-        this.#logger.error(`PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Error during JsonLogic evaluation. Rule: ${JSON.stringify(prereqObject)}`, {
-          error: evalError.message,
-          stack: evalError.stack
-        }); // AC6
+        this.#logger.error(
+          `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Error during JsonLogic evaluation. Rule: ${JSON.stringify(prereqObject)}`,
+          {
+            error: evalError.message,
+            stack: evalError.stack,
+          }
+        ); // AC6
         // --- END: Refactor-AVS-3.3.2 ---
         return false; // Evaluation error means failure
       }
@@ -178,7 +207,9 @@ export class PrerequisiteEvaluationService {
       if (!pass) {
         // --- START: Refactor-AVS-3.3.2 ---
         // Task: Update Logging (Use local actionId)
-        this.#logger.debug(`PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Prerequisite check FAILED. Rule: ${JSON.stringify(prereqObject)}`); // AC6
+        this.#logger.debug(
+          `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Prerequisite check FAILED. Rule: ${JSON.stringify(prereqObject)}`
+        ); // AC6
         // --- END: Refactor-AVS-3.3.2 ---
         if (prereqObject.failure_message) {
           this.#logger.debug(`   Reason: ${prereqObject.failure_message}`); // Log message doesn't contain actionId, so no change needed
@@ -187,7 +218,9 @@ export class PrerequisiteEvaluationService {
       } else {
         // --- START: Refactor-AVS-3.3.2 ---
         // Task: Update Logging (Use local actionId)
-        this.#logger.debug(`PrereqEval[${actionId}]:   - Prerequisite Rule ${ruleNumber}/${prerequisites.length} PASSED: ${JSON.stringify(prereqObject)}`); // AC6
+        this.#logger.debug(
+          `PrereqEval[${actionId}]:   - Prerequisite Rule ${ruleNumber}/${prerequisites.length} PASSED: ${JSON.stringify(prereqObject)}`
+        ); // AC6
         // --- END: Refactor-AVS-3.3.2 ---
       }
     }
@@ -195,7 +228,9 @@ export class PrerequisiteEvaluationService {
     // ─── 4 All prerequisites passed ────────────────────────────────────
     // --- START: Refactor-AVS-3.3.2 ---
     // Task: Update Logging (Use local actionId)
-    this.#logger.debug(`PrereqEval[${actionId}]: → PASSED (All ${prerequisites.length} prerequisite rules evaluated successfully).`); // AC6
+    this.#logger.debug(
+      `PrereqEval[${actionId}]: → PASSED (All ${prerequisites.length} prerequisite rules evaluated successfully).`
+    ); // AC6
     // --- END: Refactor-AVS-3.3.2 ---
     return true; // All rules passed
   }

@@ -20,9 +20,7 @@
         "default": 0
       }
     },
-    "required": [
-      "locationId"
-    ],
+    "required": ["locationId"],
     "additionalProperties": false
   },
   "resolveFields": [

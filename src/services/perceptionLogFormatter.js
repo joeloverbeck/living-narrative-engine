@@ -34,63 +34,77 @@
  * @implements {IPerceptionLogFormatter}
  */
 export class PerceptionLogFormatter {
-    /** @type {ILogger} */
-    #logger;
+  /** @type {ILogger} */
+  #logger;
 
-    /**
-     * @param {object} dependencies
-     * @param {ILogger} dependencies.logger
-     */
-    constructor({logger}) {
-        if (!logger) {
-            throw new Error("PerceptionLogFormatter: Logger dependency is required.");
-        }
-        this.#logger = logger;
-        this.#logger.debug("PerceptionLogFormatter initialized.");
+  /**
+   * @param {object} dependencies
+   * @param {ILogger} dependencies.logger
+   */
+  constructor({ logger }) {
+    if (!logger) {
+      throw new Error('PerceptionLogFormatter: Logger dependency is required.');
     }
+    this.#logger = logger;
+    this.#logger.debug('PerceptionLogFormatter initialized.');
+  }
 
-    /**
-     * Transforms an array of raw perception log entries.
-     * @param {RawPerceptionLogEntry[]} rawLogEntries - The raw perception log entries from game state.
-     * @returns {FormattedPerceptionEntry[]} The formatted perception log entries.
-     */
-    format(rawLogEntries) {
-        if (!rawLogEntries || !Array.isArray(rawLogEntries)) {
-            this.#logger.warn("PerceptionLogFormatter.format: rawLogEntries is not a valid array or is null/undefined. Returning empty array.");
-            return [];
-        }
-        this.#logger.debug(`PerceptionLogFormatter.format attempting to process ${rawLogEntries.length} entries.`);
-
-        return rawLogEntries.map(rawEntry => {
-            if (!rawEntry || typeof rawEntry !== 'object') {
-                this.#logger.warn(`PerceptionLogFormatter.format: Invalid raw perception log entry skipped: ${JSON.stringify(rawEntry)}`);
-                return null; // Mark for filtering
-            }
-
-            const mappedEntry = {
-                content: rawEntry.descriptionText || "", // Map descriptionText to content
-                timestamp: rawEntry.timestamp,           // Pass through timestamp
-                type: rawEntry.perceptionType,           // Map perceptionType to type
-                eventId: rawEntry.eventId,
-                actorId: rawEntry.actorId,
-                targetId: rawEntry.targetId
-                // Include other raw properties if they might be used by custom placeholders in perception_log_entry config
-            };
-
-            if (typeof mappedEntry.timestamp === 'undefined') {
-                this.#logger.warn(`PerceptionLogFormatter.format: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) missing 'timestamp'. Placeholder {timestamp} may not resolve correctly. Original entry: ${JSON.stringify(rawEntry)}`);
-            }
-            if (typeof mappedEntry.type === 'undefined') {
-                this.#logger.warn(`PerceptionLogFormatter.format: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) missing 'perceptionType' (for 'type'). Placeholder {type} may not resolve correctly. Original entry: ${JSON.stringify(rawEntry)}`);
-            }
-            // If 'content' is empty after mapping, PromptBuilder will handle it by outputting an empty string.
-            if (mappedEntry.content === "") {
-                this.#logger.debug(`PerceptionLogFormatter.format: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) resulted in empty 'content' after mapping from 'descriptionText'. Original entry: ${JSON.stringify(rawEntry)}`);
-            }
-
-            return mappedEntry;
-        }).filter(entry => entry !== null); // Remove entries that were marked as null due to being invalid
+  /**
+   * Transforms an array of raw perception log entries.
+   * @param {RawPerceptionLogEntry[]} rawLogEntries - The raw perception log entries from game state.
+   * @returns {FormattedPerceptionEntry[]} The formatted perception log entries.
+   */
+  format(rawLogEntries) {
+    if (!rawLogEntries || !Array.isArray(rawLogEntries)) {
+      this.#logger.warn(
+        'PerceptionLogFormatter.format: rawLogEntries is not a valid array or is null/undefined. Returning empty array.'
+      );
+      return [];
     }
+    this.#logger.debug(
+      `PerceptionLogFormatter.format attempting to process ${rawLogEntries.length} entries.`
+    );
+
+    return rawLogEntries
+      .map((rawEntry) => {
+        if (!rawEntry || typeof rawEntry !== 'object') {
+          this.#logger.warn(
+            `PerceptionLogFormatter.format: Invalid raw perception log entry skipped: ${JSON.stringify(rawEntry)}`
+          );
+          return null; // Mark for filtering
+        }
+
+        const mappedEntry = {
+          content: rawEntry.descriptionText || '', // Map descriptionText to content
+          timestamp: rawEntry.timestamp, // Pass through timestamp
+          type: rawEntry.perceptionType, // Map perceptionType to type
+          eventId: rawEntry.eventId,
+          actorId: rawEntry.actorId,
+          targetId: rawEntry.targetId,
+          // Include other raw properties if they might be used by custom placeholders in perception_log_entry config
+        };
+
+        if (typeof mappedEntry.timestamp === 'undefined') {
+          this.#logger.warn(
+            `PerceptionLogFormatter.format: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) missing 'timestamp'. Placeholder {timestamp} may not resolve correctly. Original entry: ${JSON.stringify(rawEntry)}`
+          );
+        }
+        if (typeof mappedEntry.type === 'undefined') {
+          this.#logger.warn(
+            `PerceptionLogFormatter.format: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) missing 'perceptionType' (for 'type'). Placeholder {type} may not resolve correctly. Original entry: ${JSON.stringify(rawEntry)}`
+          );
+        }
+        // If 'content' is empty after mapping, PromptBuilder will handle it by outputting an empty string.
+        if (mappedEntry.content === '') {
+          this.#logger.debug(
+            `PerceptionLogFormatter.format: Perception log entry (event ID: ${rawEntry.eventId || 'N/A'}) resulted in empty 'content' after mapping from 'descriptionText'. Original entry: ${JSON.stringify(rawEntry)}`
+          );
+        }
+
+        return mappedEntry;
+      })
+      .filter((entry) => entry !== null); // Remove entries that were marked as null due to being invalid
+  }
 }
 
 // --- FILE END ---

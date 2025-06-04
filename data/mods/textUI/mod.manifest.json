@@ -6,16 +6,11 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": [
-    ],
-    "characters": [
-    ],
-    "items": [
-    ],
-    "locations": [
-    ],
-    "actions": [
-    ],
+    "components": [],
+    "characters": [],
+    "items": [],
+    "locations": [],
+    "actions": [],
     "rules": [
       "player_turn_prompt.rule.json",
       "submit_command.rule.json",
@@ -34,7 +29,6 @@
       "update_available_actions.event.json",
       "display_speech.event.json"
     ],
-    "operations": [
-    ]
+    "operations": []
   }
 }

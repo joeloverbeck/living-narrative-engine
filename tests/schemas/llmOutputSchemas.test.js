@@ -6,10 +6,8 @@
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import {
-    LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA,
-} from '../../src/turns/schemas/llmOutputSchemas.js';
-import {jest, describe, test, expect, beforeAll} from '@jest/globals';
+import { LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA } from '../../src/turns/schemas/llmOutputSchemas.js';
+import { jest, describe, test, expect, beforeAll } from '@jest/globals';
 
 // -----------------------------------------------------------------------------
 // Helper – compile the schema once for all tests to keep things DRY.
@@ -18,9 +16,9 @@ import {jest, describe, test, expect, beforeAll} from '@jest/globals';
 let validate;
 
 beforeAll(() => {
-    const ajv = new Ajv({strict: true});
-    addFormats(ajv);
-    validate = ajv.compile(LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA);
+  const ajv = new Ajv({ strict: true });
+  addFormats(ajv);
+  validate = ajv.compile(LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA);
 });
 
 // -----------------------------------------------------------------------------
@@ -28,50 +26,51 @@ beforeAll(() => {
 // -----------------------------------------------------------------------------
 
 describe('LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA contract', () => {
-    test('fails validation when `thoughts` field is missing', () => {
-        const data = {
-            actionDefinitionId: 'x',
-            commandString: 'y',
-            speech: 'z',
-        };
+  test('fails validation when `thoughts` field is missing', () => {
+    const data = {
+      actionDefinitionId: 'x',
+      commandString: 'y',
+      speech: 'z',
+    };
 
-        const isValid = validate(data);
-        expect(isValid).toBe(false);
-        expect(validate.errors).toBeDefined();
-        // Ensure the error is specifically about the missing `thoughts` property.
-        const missingThoughtsError = validate.errors.find(
-            (err) => err.keyword === 'required' && err.params.missingProperty === 'thoughts'
-        );
-        expect(missingThoughtsError).toBeTruthy();
-    });
+    const isValid = validate(data);
+    expect(isValid).toBe(false);
+    expect(validate.errors).toBeDefined();
+    // Ensure the error is specifically about the missing `thoughts` property.
+    const missingThoughtsError = validate.errors.find(
+      (err) =>
+        err.keyword === 'required' && err.params.missingProperty === 'thoughts'
+    );
+    expect(missingThoughtsError).toBeTruthy();
+  });
 
-    test('fails validation when `thoughts` is not a string', () => {
-        const data = {
-            actionDefinitionId: 'x',
-            commandString: 'y',
-            speech: 'z',
-            thoughts: 123,
-        };
+  test('fails validation when `thoughts` is not a string', () => {
+    const data = {
+      actionDefinitionId: 'x',
+      commandString: 'y',
+      speech: 'z',
+      thoughts: 123,
+    };
 
-        const isValid = validate(data);
-        expect(isValid).toBe(false);
-        expect(validate.errors).toBeDefined();
-        const typeError = validate.errors.find(
-            (err) => err.instancePath === '/thoughts' && err.keyword === 'type'
-        );
-        expect(typeError).toBeTruthy();
-    });
+    const isValid = validate(data);
+    expect(isValid).toBe(false);
+    expect(validate.errors).toBeDefined();
+    const typeError = validate.errors.find(
+      (err) => err.instancePath === '/thoughts' && err.keyword === 'type'
+    );
+    expect(typeError).toBeTruthy();
+  });
 
-    test('passes validation when `thoughts` is a valid string', () => {
-        const data = {
-            actionDefinitionId: 'x',
-            commandString: 'y',
-            speech: 'z',
-            thoughts: 'Internal monologue',
-        };
+  test('passes validation when `thoughts` is a valid string', () => {
+    const data = {
+      actionDefinitionId: 'x',
+      commandString: 'y',
+      speech: 'z',
+      thoughts: 'Internal monologue',
+    };
 
-        const isValid = validate(data);
-        expect(isValid).toBe(true);
-        expect(validate.errors).toBeNull();
-    });
+    const isValid = validate(data);
+    expect(isValid).toBe(true);
+    expect(validate.errors).toBeNull();
+  });
 });

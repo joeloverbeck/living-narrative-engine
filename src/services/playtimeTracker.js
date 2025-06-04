@@ -1,6 +1,6 @@
 // src/services/playtimeTracker.js
 
-import IPlaytimeTracker from "../interfaces/IPlaytimeTracker.js";
+import IPlaytimeTracker from '../interfaces/IPlaytimeTracker.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -13,173 +13,193 @@ import IPlaytimeTracker from "../interfaces/IPlaytimeTracker.js";
  * @implements {IPlaytimeTracker}
  */
 class PlaytimeTracker extends IPlaytimeTracker {
-    /**
-     * Stores the total playtime from previous sessions in seconds.
-     * @private
-     * @type {number}
-     */
-    #accumulatedPlaytimeSeconds = 0;
+  /**
+   * Stores the total playtime from previous sessions in seconds.
+   * @private
+   * @type {number}
+   */
+  #accumulatedPlaytimeSeconds = 0;
 
-    /**
-     * Stores the timestamp (from Date.now()) when the current play session started.
-     * A value of 0 indicates no active session.
-     * @private
-     * @type {number}
-     */
-    #sessionStartTime = 0;
+  /**
+   * Stores the timestamp (from Date.now()) when the current play session started.
+   * A value of 0 indicates no active session.
+   * @private
+   * @type {number}
+   */
+  #sessionStartTime = 0;
 
-    /**
-     * Instance of an ILogger compatible logger.
-     * @private
-     * @type {ILogger}
-     */
-    #logger;
+  /**
+   * Instance of an ILogger compatible logger.
+   * @private
+   * @type {ILogger}
+   */
+  #logger;
 
-    /**
-     * Creates a new PlaytimeTracker instance.
-     * @param {object} dependencies - The dependencies for the service.
-     * @param {ILogger} dependencies.logger - An ILogger compatible logger instance.
-     * @throws {Error} If the logger dependency is not provided.
-     */
-    constructor({logger}) {
-        super();
+  /**
+   * Creates a new PlaytimeTracker instance.
+   * @param {object} dependencies - The dependencies for the service.
+   * @param {ILogger} dependencies.logger - An ILogger compatible logger instance.
+   * @throws {Error} If the logger dependency is not provided.
+   */
+  constructor({ logger }) {
+    super();
 
-        if (!logger || typeof logger.info !== 'function') {
-            console.error('PlaytimeTracker: Logger dependency is missing or invalid. Falling back to console.error.');
-            // Fallback logger for environments where a full logger isn't available or during initial setup
-            this.#logger = {
-                info: (message) => console.info(`PlaytimeTracker (fallback): ${message}`),
-                warn: (message) => console.warn(`PlaytimeTracker (fallback): ${message}`),
-                error: (message) => console.error(`PlaytimeTracker (fallback): ${message}`),
-                debug: (message) => console.debug(`PlaytimeTracker (fallback): ${message}`),
-            };
-        } else {
-            this.#logger = logger;
-        }
-
-        this.#logger.info('PlaytimeTracker: Instance created.');
+    if (!logger || typeof logger.info !== 'function') {
+      console.error(
+        'PlaytimeTracker: Logger dependency is missing or invalid. Falling back to console.error.'
+      );
+      // Fallback logger for environments where a full logger isn't available or during initial setup
+      this.#logger = {
+        info: (message) =>
+          console.info(`PlaytimeTracker (fallback): ${message}`),
+        warn: (message) =>
+          console.warn(`PlaytimeTracker (fallback): ${message}`),
+        error: (message) =>
+          console.error(`PlaytimeTracker (fallback): ${message}`),
+        debug: (message) =>
+          console.debug(`PlaytimeTracker (fallback): ${message}`),
+      };
+    } else {
+      this.#logger = logger;
     }
 
-    /**
-     * Starts a new play session.
-     * Sets the session start time to the current time and logs the event.
-     * If a session is already active (i.e., #sessionStartTime > 0), this method
-     * will effectively restart the session timer from the current moment and log a warning.
-     * @returns {void}
-     */
-    startSession() {
-        if (this.#sessionStartTime > 0) {
-            this.#logger.warn(`PlaytimeTracker: startSession called while a session was already active (started at ${this.#sessionStartTime}). Restarting session timer.`);
-        }
-        this.#sessionStartTime = Date.now();
-        this.#logger.info(`PlaytimeTracker: Session started at ${this.#sessionStartTime}`);
+    this.#logger.info('PlaytimeTracker: Instance created.');
+  }
+
+  /**
+   * Starts a new play session.
+   * Sets the session start time to the current time and logs the event.
+   * If a session is already active (i.e., #sessionStartTime > 0), this method
+   * will effectively restart the session timer from the current moment and log a warning.
+   * @returns {void}
+   */
+  startSession() {
+    if (this.#sessionStartTime > 0) {
+      this.#logger.warn(
+        `PlaytimeTracker: startSession called while a session was already active (started at ${this.#sessionStartTime}). Restarting session timer.`
+      );
+    }
+    this.#sessionStartTime = Date.now();
+    this.#logger.info(
+      `PlaytimeTracker: Session started at ${this.#sessionStartTime}`
+    );
+  }
+
+  /**
+   * Ends the current play session, calculates its duration, adds it to the
+   * accumulated playtime, and resets the session timer.
+   * If no session is active, it logs this information and ensures the timer is reset.
+   * @returns {void}
+   */
+  endSessionAndAccumulate() {
+    if (this.#sessionStartTime > 0) {
+      const currentSessionDuration = Math.floor(
+        (Date.now() - this.#sessionStartTime) / 1000
+      );
+      this.#accumulatedPlaytimeSeconds += currentSessionDuration;
+      this.#logger.info(
+        `PlaytimeTracker: Session ended. Duration: ${currentSessionDuration}s. Accumulated playtime: ${this.#accumulatedPlaytimeSeconds}s.`
+      );
+    } else {
+      this.#logger.info(
+        'PlaytimeTracker: endSessionAndAccumulate called but no active session was found.'
+      );
+    }
+    this.#sessionStartTime = 0; // Reset session start time regardless of whether a session was active.
+  }
+
+  /**
+   * Gets the total accumulated playtime in seconds, including the current session's duration if active.
+   * This method does not modify any internal state of the PlaytimeTracker.
+   * @returns {number} Total playtime in seconds.
+   */
+  getTotalPlaytime() {
+    let currentSessionDurationInSeconds = 0;
+    if (this.#sessionStartTime > 0) {
+      currentSessionDurationInSeconds = Math.floor(
+        (Date.now() - this.#sessionStartTime) / 1000
+      );
+    }
+    return this.#accumulatedPlaytimeSeconds + currentSessionDurationInSeconds;
+  }
+
+  /**
+   * Sets the accumulated playtime, typically when loading a game.
+   * This will also reset any currently active session timer before setting the new value.
+   * @param {number} seconds - The total accumulated playtime in seconds from a saved game.
+   * @returns {void}
+   * @throws {TypeError} If seconds is not a number.
+   * @throws {RangeError} If seconds is negative.
+   */
+  setAccumulatedPlaytime(seconds) {
+    if (typeof seconds !== 'number') {
+      const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a number, but received ${typeof seconds}.`;
+      this.#logger.error(errorMessage);
+      throw new TypeError(errorMessage);
+    }
+    if (seconds < 0) {
+      const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a non-negative number, but received ${seconds}.`;
+      this.#logger.error(errorMessage);
+      throw new RangeError(errorMessage);
     }
 
-    /**
-     * Ends the current play session, calculates its duration, adds it to the
-     * accumulated playtime, and resets the session timer.
-     * If no session is active, it logs this information and ensures the timer is reset.
-     * @returns {void}
-     */
-    endSessionAndAccumulate() {
-        if (this.#sessionStartTime > 0) {
-            const currentSessionDuration = Math.floor((Date.now() - this.#sessionStartTime) / 1000);
-            this.#accumulatedPlaytimeSeconds += currentSessionDuration;
-            this.#logger.info(`PlaytimeTracker: Session ended. Duration: ${currentSessionDuration}s. Accumulated playtime: ${this.#accumulatedPlaytimeSeconds}s.`);
-        } else {
-            this.#logger.info('PlaytimeTracker: endSessionAndAccumulate called but no active session was found.');
-        }
-        this.#sessionStartTime = 0; // Reset session start time regardless of whether a session was active.
-    }
+    this.#accumulatedPlaytimeSeconds = seconds;
+    this.#sessionStartTime = 0; // Reset session start time
+    this.#logger.info(
+      `PlaytimeTracker: Accumulated playtime set to ${seconds}s.`
+    );
+  }
 
-    /**
-     * Gets the total accumulated playtime in seconds, including the current session's duration if active.
-     * This method does not modify any internal state of the PlaytimeTracker.
-     * @returns {number} Total playtime in seconds.
-     */
-    getTotalPlaytime() {
-        let currentSessionDurationInSeconds = 0;
-        if (this.#sessionStartTime > 0) {
-            currentSessionDurationInSeconds = Math.floor((Date.now() - this.#sessionStartTime) / 1000);
-        }
-        return this.#accumulatedPlaytimeSeconds + currentSessionDurationInSeconds;
-    }
+  /**
+   * Resets the playtime tracker, clearing accumulated playtime and ending any active session.
+   * Useful for starting a new game from scratch or if initialization fails.
+   * @returns {void}
+   */
+  reset() {
+    this.#accumulatedPlaytimeSeconds = 0;
+    this.#sessionStartTime = 0;
+    this.#logger.info('PlaytimeTracker: Playtime reset.');
+  }
 
-    /**
-     * Sets the accumulated playtime, typically when loading a game.
-     * This will also reset any currently active session timer before setting the new value.
-     * @param {number} seconds - The total accumulated playtime in seconds from a saved game.
-     * @returns {void}
-     * @throws {TypeError} If seconds is not a number.
-     * @throws {RangeError} If seconds is negative.
-     */
-    setAccumulatedPlaytime(seconds) {
-        if (typeof seconds !== 'number') {
-            const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a number, but received ${typeof seconds}.`;
-            this.#logger.error(errorMessage);
-            throw new TypeError(errorMessage);
-        }
-        if (seconds < 0) {
-            const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a non-negative number, but received ${seconds}.`;
-            this.#logger.error(errorMessage);
-            throw new RangeError(errorMessage);
-        }
+  /**
+   * FOR TESTING PURPOSES ONLY.
+   * Gets the current accumulated playtime in seconds.
+   * @returns {number}
+   * @private
+   */
+  _getAccumulatedPlaytimeSeconds() {
+    return this.#accumulatedPlaytimeSeconds;
+  }
 
-        this.#accumulatedPlaytimeSeconds = seconds;
-        this.#sessionStartTime = 0; // Reset session start time
-        this.#logger.info(`PlaytimeTracker: Accumulated playtime set to ${seconds}s.`);
-    }
+  /**
+   * FOR TESTING PURPOSES ONLY.
+   * Gets the current session start time.
+   * @returns {number}
+   * @private
+   */
+  _getSessionStartTime() {
+    return this.#sessionStartTime;
+  }
 
-    /**
-     * Resets the playtime tracker, clearing accumulated playtime and ending any active session.
-     * Useful for starting a new game from scratch or if initialization fails.
-     * @returns {void}
-     */
-    reset() {
-        this.#accumulatedPlaytimeSeconds = 0;
-        this.#sessionStartTime = 0;
-        this.#logger.info('PlaytimeTracker: Playtime reset.');
-    }
+  /**
+   * FOR TESTING PURPOSES ONLY.
+   * Sets the session start time to a specific value.
+   * @param {number} startTime - The timestamp to set as the session start time.
+   * @private
+   */
+  _setSessionStartTime(startTime) {
+    this.#sessionStartTime = startTime;
+  }
 
-    /**
-     * FOR TESTING PURPOSES ONLY.
-     * Gets the current accumulated playtime in seconds.
-     * @returns {number}
-     * @private
-     */
-    _getAccumulatedPlaytimeSeconds() {
-        return this.#accumulatedPlaytimeSeconds;
-    }
-
-    /**
-     * FOR TESTING PURPOSES ONLY.
-     * Gets the current session start time.
-     * @returns {number}
-     * @private
-     */
-    _getSessionStartTime() {
-        return this.#sessionStartTime;
-    }
-
-    /**
-     * FOR TESTING PURPOSES ONLY.
-     * Sets the session start time to a specific value.
-     * @param {number} startTime - The timestamp to set as the session start time.
-     * @private
-     */
-    _setSessionStartTime(startTime) {
-        this.#sessionStartTime = startTime;
-    }
-
-    /**
-     * FOR TESTING PURPOSES ONLY.
-     * Sets the accumulated playtime to a specific value.
-     * @param {number} seconds - The accumulated playtime in seconds.
-     * @private
-     */
-    _setAccumulatedPlaytimeSeconds(seconds) {
-        this.#accumulatedPlaytimeSeconds = seconds;
-    }
+  /**
+   * FOR TESTING PURPOSES ONLY.
+   * Sets the accumulated playtime to a specific value.
+   * @param {number} seconds - The accumulated playtime in seconds.
+   * @private
+   */
+  _setAccumulatedPlaytimeSeconds(seconds) {
+    this.#accumulatedPlaytimeSeconds = seconds;
+  }
 }
 
 export default PlaytimeTracker;

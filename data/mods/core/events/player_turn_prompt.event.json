@@ -35,21 +35,13 @@
               "description": "A detailed description of what the action does."
             }
           },
-          "required": [
-            "id",
-            "name",
-            "command",
-            "description"
-          ],
+          "required": ["id", "name", "command", "description"],
           "additionalProperties": false
         },
         "uniqueItems": false
       }
     },
-    "required": [
-      "entityId",
-      "availableActions"
-    ],
+    "required": ["entityId", "availableActions"],
     "additionalProperties": false
   }
 }
