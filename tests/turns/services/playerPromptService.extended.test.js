@@ -1,5 +1,6 @@
 // tests/turns/services/playerPromptService.extended.test.js
 // --- FILE START ---
+/* eslint-disable jest/no-conditional-expect */
 import HumanPlayerPromptService from '../../../src/turns/services/humanPlayerPromptService.js';
 import { PromptError } from '../../../src/errors/promptError.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../../src/constants/eventIds.js';
@@ -89,7 +90,8 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
 
     it('should throw if logger is missing', () => {
-      const { logger, ...deps } = baseDependencies;
+      const { logger: _logger, ...deps } = baseDependencies;
+      void _logger;
       const testDeps = { ...deps };
       delete testDeps.logger;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
@@ -125,7 +127,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
 
     it('should throw if actionDiscoverySystem is missing', () => {
-      const { actionDiscoverySystem, ...deps } = baseDependencies;
+      const { actionDiscoverySystem: _actionDiscoverySystem, ...deps } =
+        baseDependencies;
+      void _actionDiscoverySystem;
       const testDeps = { ...deps };
       delete testDeps.actionDiscoverySystem;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
@@ -161,7 +165,8 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
 
     it('should throw if promptOutputPort is missing', () => {
-      const { promptOutputPort, ...deps } = baseDependencies;
+      const { promptOutputPort: _promptOutputPort, ...deps } = baseDependencies;
+      void _promptOutputPort;
       const testDeps = { ...deps };
       delete testDeps.promptOutputPort;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
@@ -197,7 +202,8 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
 
     it('should throw if worldContext is missing', () => {
-      const { worldContext, ...deps } = baseDependencies;
+      const { worldContext: _worldContext, ...deps } = baseDependencies;
+      void _worldContext;
       const testDeps = { ...deps };
       delete testDeps.worldContext;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
@@ -233,7 +239,8 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
 
     it('should throw if entityManager is missing', () => {
-      const { entityManager, ...deps } = baseDependencies;
+      const { entityManager: _entityManager, ...deps } = baseDependencies;
+      void _entityManager;
       const testDeps = { ...deps };
       delete testDeps.entityManager;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
@@ -269,7 +276,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
 
     it('should throw if gameDataRepository is missing', () => {
-      const { gameDataRepository, ...deps } = baseDependencies;
+      const { gameDataRepository: _gameDataRepository, ...deps } =
+        baseDependencies;
+      void _gameDataRepository;
       const testDeps = { ...deps };
       delete testDeps.gameDataRepository;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
@@ -305,7 +314,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
 
     it('should throw if validatedEventDispatcher is missing', () => {
-      const { validatedEventDispatcher, ...deps } = baseDependencies;
+      const { validatedEventDispatcher: _validatedEventDispatcher, ...deps } =
+        baseDependencies;
+      void _validatedEventDispatcher;
       const testDeps = { ...deps };
       delete testDeps.validatedEventDispatcher;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(

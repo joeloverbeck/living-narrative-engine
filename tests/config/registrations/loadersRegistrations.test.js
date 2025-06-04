@@ -1,5 +1,6 @@
 // Filename: src/tests/core/config/registrations/loadersRegistrations.test.js
 // ****** CORRECTED FILE ******
+/* eslint-disable no-unused-vars */
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */

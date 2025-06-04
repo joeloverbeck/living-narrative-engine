@@ -1,5 +1,7 @@
 // ****** REVISED CORRECTED FILE V12 ******
 // src/tests/core/config/registrations/runtimeRegistrations.test.js
+/* eslint-disable jest/no-conditional-expect */
+/* eslint-disable no-unused-vars */
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -28,8 +30,11 @@ import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 // --- Class Under Test ---
 import { registerRuntime } from '../../../src/config/registrations/runtimeRegistrations.js';
 // Import other registration functions needed for dependency setup in tests
-import { registerCoreSystems } from '../../../src/config/registrations/coreSystemsRegistrations.js';
-import { registerDomainServices } from '../../../src/config/registrations/domainServicesRegistrations.js';
+import { registerCoreSystems as _registerCoreSystems } from '../../../src/config/registrations/coreSystemsRegistrations.js';
+import { registerDomainServices as _registerDomainServices } from '../../../src/config/registrations/domainServicesRegistrations.js';
+
+void _registerCoreSystems;
+void _registerDomainServices;
 
 // --- Dependencies ---
 import { tokens } from '../../../src/config/tokens.js';
@@ -37,10 +42,15 @@ import { tokens } from '../../../src/config/tokens.js';
 // import {ActionDiscoverySystem} from '../../../../systems/actionDiscoverySystem.js'; // Now mocked
 // import TurnHandlerResolver from '../../../../core/services/turnHandlerResolver.js'; // Now mocked
 // Import concrete classes for domain services (if needed, but mostly mocked)
+// Import concrete classes for reference only
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
 import CommandParser from '../../../src/commands/commandParser.js';
 import WorldContext from '../../../src/context/worldContext.js';
 import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js'; // Original for type info if needed
+void CommandProcessor;
+void CommandParser;
+void WorldContext;
+void TurnOrderService;
 
 // --- MOCK the Modules (Classes being registered/depended upon) ---
 // REMOVED: GameLoop mock - runtimeRegistrations no longer uses it
@@ -477,9 +487,6 @@ describe('registerRuntime', () => {
   });
 
   // --- REMOVED Obsolete Test Case ---
-  // it('resolving GameLoop does not throw', () => {
-  //     // ... Test content removed ...
-  // });
 
   it('resolving InputSetupService does not throw', () => {
     // Arrange

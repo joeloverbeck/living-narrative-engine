@@ -1,5 +1,6 @@
 // src/tests/logic/jsonLogicEvaluationService.entityIdAccess.test.js
 
+/* eslint-disable jsdoc/check-tag-names */
 /**
  * @jest-environment node
  * @file This file contains unit tests for the JsonLogicEvaluationService.
@@ -9,6 +10,8 @@
  * like actor/target IDs.
  * It uses mocked dependencies (ILogger, EntityManager) to achieve this isolation.
  */
+/* eslint-enable jsdoc/check-tag-names */
+/* eslint-disable no-unused-vars */
 
 import {
   describe,
