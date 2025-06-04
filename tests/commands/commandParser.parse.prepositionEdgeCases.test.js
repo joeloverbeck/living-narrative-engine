@@ -18,13 +18,13 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
   const MockGameDataRepository = jest.fn().mockImplementation(() => {
     // This is what the mock constructor will return when called with 'new'
     return {
-      getAllActionDefinitions: mockGetAllActionDefinitions
+      getAllActionDefinitions: mockGetAllActionDefinitions,
       // Add mocks for other methods if CommandParser constructor or other tests need them
     };
   });
-    // The factory function MUST return an object mapping named exports to their mocks
+  // The factory function MUST return an object mapping named exports to their mocks
   return {
-    GameDataRepository: MockGameDataRepository // Map the named export
+    GameDataRepository: MockGameDataRepository, // Map the named export
   };
 });
 
@@ -83,7 +83,7 @@ describe('CommandParser.parse() - Preposition Handling Edge Cases', () => {
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null // Structurally valid
+      error: null, // Structurally valid
     };
 
     const result = commandParser.parse(input);
@@ -103,7 +103,7 @@ describe('CommandParser.parse() - Preposition Handling Edge Cases', () => {
       preposition: 'to', // First supported preposition
       indirectObjectPhrase: 'wizard with staff', // Remainder including "with"
       originalInput: input,
-      error: null // Structurally valid
+      error: null, // Structurally valid
     };
 
     const result = commandParser.parse(input);
@@ -123,7 +123,7 @@ describe('CommandParser.parse() - Preposition Handling Edge Cases', () => {
       preposition: 'at', // Matched case-insensitively, stored lowercase
       indirectObjectPhrase: 'map',
       originalInput: input,
-      error: null // Structurally valid
+      error: null, // Structurally valid
     };
 
     const result = commandParser.parse(input);
@@ -143,7 +143,7 @@ describe('CommandParser.parse() - Preposition Handling Edge Cases', () => {
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null // Structurally valid
+      error: null, // Structurally valid
     };
 
     const result = commandParser.parse(input);
@@ -163,7 +163,7 @@ describe('CommandParser.parse() - Preposition Handling Edge Cases', () => {
       preposition: 'on',
       indirectObjectPhrase: 'table',
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -182,7 +182,7 @@ describe('CommandParser.parse() - Preposition Handling Edge Cases', () => {
       preposition: 'on',
       indirectObjectPhrase: null, // Missing IO
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -190,5 +190,4 @@ describe('CommandParser.parse() - Preposition Handling Edge Cases', () => {
     expect(result).toEqual(expectedOutput); // AC1, AC5
     expect(mockGetAllActionDefinitions).toHaveBeenCalledTimes(1);
   });
-
 });

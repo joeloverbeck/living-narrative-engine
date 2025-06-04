@@ -22,7 +22,6 @@
  * Provides access to the entity's ID and its component data. Properties within
  * `components` resolve to null if the component is not present on the entity,
  * ensuring predictable behavior with the JSON Logic `var` operator.
- *
  * @property {string | number} id - The unique identifier of the entity, retrieved from the Entity instance.
  * @property {Object<string, object|null>} components - A map-like structure providing access to the entity's
  * component data. Keys are Component Type IDs (e.g., "Health", "Position").
@@ -36,7 +35,6 @@
  * The data object provided to the JSON Logic evaluation engine when processing
  * a SystemRule condition or an IF operation's condition. This object aggregates
  * all necessary contextual information required for the condition logic.
- *
  * @property {object} event - Information about the triggering event.
  * @property {string} event.type - The namespaced ID of the triggering event (e.g., "ACTION_SUCCESS:MOVE").
  * @property {object | null} event.payload - The payload object carried by the triggering event. Contents vary by event type. Represented as null if payload was undefined.
@@ -47,11 +45,11 @@
  * @property {object} [entities] - Optional placeholder for future direct access to any entity's component data by ID.
  */
 
-
 // --- REFINED Type Definitions for Operation Handling ---
 
 /**
  * @typedef {object} OperationParams
+ * @property
  * Represents the parameters provided to an Operation Handler. This is typically
  * the `parameters` object defined within an `Operation` in a SystemRule's action
  * list (conforming to `operation.schema.json`).
@@ -64,7 +62,6 @@
  * needed by an Operation Handler during its execution. This context is assembled
  * by the OperationInterpreter (or a similar orchestrator) before invoking the handler.
  * It offers the necessary tools to interact with live game state and static definitions.
- *
  * @property {JsonLogicEvaluationContext} evaluationContext - The data context used for JSON Logic evaluations, containing information about the event, actor, target, and any temporary context variables set by preceding operations (like QUERY_COMPONENT).
  * @property {EntityManager} entityManager - The central manager for accessing and manipulating live entity and component data. Essential for operations like MODIFY_COMPONENT.
  * @property {ValidatedEventDispatcher} validatedEventDispatcher - The system's validated event dispatcher for emitting new events as a result of the operation's execution. Used by operations like DISPATCH_EVENT.

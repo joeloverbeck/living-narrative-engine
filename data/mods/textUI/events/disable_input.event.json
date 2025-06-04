@@ -10,9 +10,7 @@
         "description": "The message to display in the input field's placeholder attribute when it is disabled (e.g., 'Input disabled.', 'Processing...', 'Fatal error during initialization. Cannot continue.')."
       }
     },
-    "required": [
-      "message"
-    ],
+    "required": ["message"],
     "additionalProperties": false,
     "$comment": "Used by InputStateController to update the placeholder and disable the input. Also used by InputHandler to stop processing Enter key."
   }

@@ -18,13 +18,13 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
   const MockGameDataRepository = jest.fn().mockImplementation(() => {
     // This is what the mock constructor will return when called with 'new'
     return {
-      getAllActionDefinitions: mockGetAllActionDefinitions
+      getAllActionDefinitions: mockGetAllActionDefinitions,
       // Add mocks for other methods if CommandParser constructor or other tests need them
     };
   });
-    // The factory function MUST return an object mapping named exports to their mocks
+  // The factory function MUST return an object mapping named exports to their mocks
   return {
-    GameDataRepository: MockGameDataRepository // Map the named export
+    GameDataRepository: MockGameDataRepository, // Map the named export
   };
 });
 
@@ -80,7 +80,7 @@ describe('CommandParser.parse() - Verb-Only and Verb+DirectObject Tests', () => 
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -102,7 +102,7 @@ describe('CommandParser.parse() - Verb-Only and Verb+DirectObject Tests', () => 
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -124,7 +124,7 @@ describe('CommandParser.parse() - Verb-Only and Verb+DirectObject Tests', () => 
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -146,11 +146,11 @@ describe('CommandParser.parse() - Verb-Only and Verb+DirectObject Tests', () => 
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     // Ensure the 'read' action is available in the mock data
-    expect(MOCK_ACTIONS.some(action => action.id === 'core:read')).toBe(true);
+    expect(MOCK_ACTIONS.some((action) => action.id === 'core:read')).toBe(true);
 
     const result = commandParser.parse(input);
 
@@ -172,7 +172,7 @@ describe('CommandParser.parse() - Verb-Only and Verb+DirectObject Tests', () => 
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -195,7 +195,7 @@ describe('CommandParser.parse() - Verb-Only and Verb+DirectObject Tests', () => 
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -212,7 +212,7 @@ describe('CommandParser.parse() - Verb-Only and Verb+DirectObject Tests', () => 
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);

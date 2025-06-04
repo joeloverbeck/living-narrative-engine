@@ -37,9 +37,7 @@
         "default": false
       }
     },
-    "required": [
-      "message"
-    ],
+    "required": ["message"],
     "additionalProperties": false
   }
 }

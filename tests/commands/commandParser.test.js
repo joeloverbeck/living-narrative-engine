@@ -18,7 +18,7 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
   return jest.fn().mockImplementation(() => {
     // Instances created via 'new GameDataRepository()' in tests will have this structure
     return {
-      getAllActionDefinitions: mockGetAllActionDefinitions
+      getAllActionDefinitions: mockGetAllActionDefinitions,
     };
   });
 });
@@ -36,7 +36,6 @@ const MOCK_ACTIONS = Object.freeze([
   { id: 'core:go', commandVerb: 'go', name: 'Go' },
   // Add other mock actions as needed based on MOCK_ACTIONS from the source file
 ]);
-
 
 // --- Task 6: Test Suite Structure ---
 describe('CommandParser', () => {
@@ -73,11 +72,17 @@ describe('CommandParser', () => {
 
     it('AC2: should have a mock GameDataRepository with a configurable getAllActionDefinitions', () => {
       expect(mockRepositoryInstance).toBeDefined();
-      expect(typeof mockRepositoryInstance.getAllActionDefinitions).toBe('function');
-      expect(jest.isMockFunction(mockRepositoryInstance.getAllActionDefinitions)).toBe(true);
+      expect(typeof mockRepositoryInstance.getAllActionDefinitions).toBe(
+        'function'
+      );
+      expect(
+        jest.isMockFunction(mockRepositoryInstance.getAllActionDefinitions)
+      ).toBe(true);
 
       // Demonstrate configurability
-      const customReturnValue = [{ id: 'custom:action', commandVerb: 'custom', name: 'Custom'}];
+      const customReturnValue = [
+        { id: 'custom:action', commandVerb: 'custom', name: 'Custom' },
+      ];
       mockGetAllActionDefinitions.mockReturnValueOnce(customReturnValue);
       const result = mockRepositoryInstance.getAllActionDefinitions();
       expect(result).toEqual(customReturnValue);
@@ -101,10 +106,8 @@ describe('CommandParser', () => {
     });
   });
 
-
   // --- Ticket 2: Constructor Tests (Section 6.1) ---
   describe('constructor', () => {
-
     // Test Case: CPARSE-C-001
     it('[CPARSE-C-001] should successfully instantiate with a valid mock GameDataRepository (AC1, AC3)', () => {
       // The instance 'commandParser' is created in beforeEach.
@@ -122,21 +125,24 @@ describe('CommandParser', () => {
     it('[CPARSE-C-002] should throw specific error if repository is null (AC2)', () => {
       // We need to bypass the beforeEach setup for this specific test
       // by calling the constructor directly with invalid input.
-      const expectedError = 'CommandParser requires a GameDataRepository instance.';
+      const expectedError =
+        'CommandParser requires a GameDataRepository instance.';
       // The arrow function wrapper is necessary for Jest to catch the thrown error.
       expect(() => new CommandParser(null)).toThrow(expectedError);
     });
 
     // Test Case: CPARSE-C-003
     it('[CPARSE-C-003] should throw specific error if repository is undefined (AC2)', () => {
-      const expectedError = 'CommandParser requires a GameDataRepository instance.';
+      const expectedError =
+        'CommandParser requires a GameDataRepository instance.';
       expect(() => new CommandParser(undefined)).toThrow(expectedError);
     });
 
     // Test Case: CPARSE-C-004
     it('[CPARSE-C-004] should throw specific error if repository object lacks getAllActionDefinitions method (AC2)', () => {
       const invalidRepo = { name: 'InvalidRepoWithoutMethod' }; // Missing the required method
-      const expectedError = "CommandParser requires GameDataRepository with 'getAllActionDefinitions'.";
+      const expectedError =
+        "CommandParser requires GameDataRepository with 'getAllActionDefinitions'.";
       // Need to cast to 'any' or use // @ts-ignore if using TypeScript to bypass type checks during test setup
       expect(() => new CommandParser(invalidRepo)).toThrow(expectedError);
 
@@ -147,17 +153,28 @@ describe('CommandParser', () => {
     // Test Case: CPARSE-C-005
     it('[CPARSE-C-005] should throw specific error if repository.getAllActionDefinitions is not a function (AC2)', () => {
       // Create mock repositories where getAllActionDefinitions exists but is the wrong type
-      const repoWithWrongTypeString = { getAllActionDefinitions: 'i am not a function' };
+      const repoWithWrongTypeString = {
+        getAllActionDefinitions: 'i am not a function',
+      };
       const repoWithWrongTypeNumber = { getAllActionDefinitions: 123 };
       const repoWithWrongTypeNull = { getAllActionDefinitions: null };
       const repoWithWrongTypeObject = { getAllActionDefinitions: {} };
 
-      const expectedError = "CommandParser requires GameDataRepository with 'getAllActionDefinitions'.";
+      const expectedError =
+        "CommandParser requires GameDataRepository with 'getAllActionDefinitions'.";
 
-      expect(() => new CommandParser(repoWithWrongTypeString)).toThrow(expectedError);
-      expect(() => new CommandParser(repoWithWrongTypeNumber)).toThrow(expectedError);
-      expect(() => new CommandParser(repoWithWrongTypeNull)).toThrow(expectedError);
-      expect(() => new CommandParser(repoWithWrongTypeObject)).toThrow(expectedError);
+      expect(() => new CommandParser(repoWithWrongTypeString)).toThrow(
+        expectedError
+      );
+      expect(() => new CommandParser(repoWithWrongTypeNumber)).toThrow(
+        expectedError
+      );
+      expect(() => new CommandParser(repoWithWrongTypeNull)).toThrow(
+        expectedError
+      );
+      expect(() => new CommandParser(repoWithWrongTypeObject)).toThrow(
+        expectedError
+      );
     });
   });
 

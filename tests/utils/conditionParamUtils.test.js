@@ -1,6 +1,6 @@
 // src/tests/utils/conditionParamUtils.test.js
 
-import {describe, it, expect} from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import {
   getNumberParam,
   getStringParam,
@@ -11,7 +11,6 @@ import {
 // --- Test Suite for Parameter Getters ---
 
 describe('Condition Parameter Utility Functions (conditionParamUtils.js)', () => {
-
   // --- Test Data ---
   const conditionData = {
     numValue: 10,
@@ -20,13 +19,12 @@ describe('Condition Parameter Utility Functions (conditionParamUtils.js)', () =>
     nullValue: null,
     zeroValue: 0,
     falseValue: false,
-    objValue: {a: 1},
+    objValue: { a: 1 },
     presentButWrongType: 'not a number',
   };
   const emptyConditionData = {};
   const nullConditionData = null;
   const undefinedConditionData = undefined;
-
 
   // --- getNumberParam ---
   describe('getNumberParam', () => {
@@ -61,21 +59,33 @@ describe('Condition Parameter Utility Functions (conditionParamUtils.js)', () =>
       expect(getStringParam(conditionData, 'stringValue')).toBe('hello');
     });
     it('should return default value if key is missing', () => {
-      expect(getStringParam(conditionData, 'missingKey', 'default')).toBe('default');
+      expect(getStringParam(conditionData, 'missingKey', 'default')).toBe(
+        'default'
+      );
       expect(getStringParam(conditionData, 'missingKey')).toBeNull();
-      expect(getStringParam(emptyConditionData, 'stringValue', 'default')).toBe('default');
+      expect(getStringParam(emptyConditionData, 'stringValue', 'default')).toBe(
+        'default'
+      );
     });
     it('should return default value if value has wrong type', () => {
-      expect(getStringParam(conditionData, 'numValue', 'default')).toBe('default');
+      expect(getStringParam(conditionData, 'numValue', 'default')).toBe(
+        'default'
+      );
       expect(getStringParam(conditionData, 'numValue')).toBeNull();
     });
     it('should return default value if value is null', () => {
-      expect(getStringParam(conditionData, 'nullValue', 'default')).toBe('default');
+      expect(getStringParam(conditionData, 'nullValue', 'default')).toBe(
+        'default'
+      );
       expect(getStringParam(conditionData, 'nullValue')).toBeNull();
     });
     it('should return default value if conditionData itself is null or undefined', () => {
-      expect(getStringParam(nullConditionData, 'stringValue', 'default')).toBe('default');
-      expect(getStringParam(undefinedConditionData, 'stringValue', 'default')).toBe('default');
+      expect(getStringParam(nullConditionData, 'stringValue', 'default')).toBe(
+        'default'
+      );
+      expect(
+        getStringParam(undefinedConditionData, 'stringValue', 'default')
+      ).toBe('default');
       expect(getStringParam(nullConditionData, 'stringValue')).toBeNull();
     });
   });
@@ -102,7 +112,9 @@ describe('Condition Parameter Utility Functions (conditionParamUtils.js)', () =>
     });
     it('should return default value if conditionData itself is null or undefined', () => {
       expect(getBooleanParam(nullConditionData, 'boolValue', true)).toBe(true);
-      expect(getBooleanParam(undefinedConditionData, 'boolValue', true)).toBe(true);
+      expect(getBooleanParam(undefinedConditionData, 'boolValue', true)).toBe(
+        true
+      );
       expect(getBooleanParam(nullConditionData, 'boolValue')).toBeNull();
     });
   });
@@ -115,7 +127,7 @@ describe('Condition Parameter Utility Functions (conditionParamUtils.js)', () =>
       expect(getValueParam(conditionData, 'boolValue')).toBe(true);
       expect(getValueParam(conditionData, 'zeroValue')).toBe(0);
       expect(getValueParam(conditionData, 'falseValue')).toBe(false);
-      expect(getValueParam(conditionData, 'objValue')).toEqual({a: 1});
+      expect(getValueParam(conditionData, 'objValue')).toEqual({ a: 1 });
     });
     it('should return undefined if key is missing', () => {
       expect(getValueParam(conditionData, 'missingKey')).toBeUndefined();

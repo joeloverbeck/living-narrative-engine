@@ -21,10 +21,7 @@
         "default": false
       }
     },
-    "required": [
-      "entityId",
-      "speechContent"
-    ],
+    "required": ["entityId", "speechContent"],
     "additionalProperties": false
   }
 }

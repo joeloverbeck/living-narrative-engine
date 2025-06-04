@@ -39,9 +39,7 @@
               "pattern": "^\\S(.*\\S)?$"
             }
           },
-          "required": [
-            "entityId"
-          ],
+          "required": ["entityId"],
           "additionalProperties": false,
           "description": "Reference via explicit entityId property."
         }

@@ -13,9 +13,9 @@
  * @type {string[]}
  */
 export const LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY = [
-    'ollama',
-    'llama_cpp_server_openai_compatible',
-    'tgi_openai_compatible',
+  'ollama',
+  'llama_cpp_server_openai_compatible',
+  'tgi_openai_compatible',
 ];
 
 /**
@@ -67,12 +67,12 @@ export const HTTP_METHOD_OPTIONS = 'OPTIONS';
  * @type {number[]}
  */
 export const RETRYABLE_HTTP_STATUS_CODES = [
-    408, // Request Timeout
-    429, // Too Many Requests
-    500, // Internal Server Error
-    502, // Bad Gateway
-    503, // Service Unavailable
-    504, // Gateway Timeout
+  408, // Request Timeout
+  429, // Too Many Requests
+  500, // Internal Server Error
+  502, // Bad Gateway
+  503, // Service Unavailable
+  504, // Gateway Timeout
 ];
 
 /**
@@ -98,7 +98,6 @@ export const LOG_LLM_ID_PROXY_NOT_OPERATIONAL = 'N/A_PROXY_NOT_OPERATIONAL';
  * @type {string}
  */
 export const LOG_LLM_ID_REQUEST_VALIDATION_FAILED = 'N/A_VALIDATION';
-
 
 // Note: Other potential constants like default retry parameters (maxRetries, delays)
 // are currently handled as localized fallbacks within specific services (e.g., LlmRequestService)

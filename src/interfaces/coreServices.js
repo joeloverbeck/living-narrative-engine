@@ -1,7 +1,7 @@
 // src/core/interfaces/coreServices.js
 // --- FILE START ---
 /**
- * @fileoverview Defines JSDoc typedefs for core service interfaces,
+ * @file Defines JSDoc typedefs for core service interfaces,
  * promoting dependency injection and loose coupling. These types define
  * the expected shape of objects implementing these responsibilities.
  */
@@ -50,7 +50,6 @@
  * **Note on Keys:** For definitions loaded via mods (using loaders like ComponentLoader, ActionLoader, etc.),
  * the `id` used with `store` and `get` methods is expected to be in the fully qualified format: `modId:itemId`.
  * The specific loader implementations are responsible for constructing this key before storing.
- *
  * @typedef {object} IDataRegistry
  * @property {(type: string, id: string, data: object) => void} store
  * Stores a data object under a specific category (`type`) and unique identifier (`id`).
@@ -68,7 +67,6 @@
  * @property {(id: string) => object | undefined} getActionDefinition Retrieves a definition classified as an 'action'.
  * @property {(id: string) => object | undefined} getEventDefinition Retrieves a definition classified as an 'event'.
  * @property {(id: string) => object | undefined} getComponentDefinition Retrieves a definition classified as a 'component'.
- *
  * @property {() => object[]} getAllEntityDefinitions Retrieves all 'entity' definitions.
  * @property {() => object[]} getAllActionDefinitions Retrieves all 'action' definitions.
  * @property {() => object[]} getAllEventDefinitions Retrieves all 'event' definitions.
@@ -120,7 +118,6 @@
  * @property {() => string} getModManifestFilename
  * Returns the standard filename for a mod manifest file.
  */
-
 
 // --- Spatial Indexing ---
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Adjusted path assuming coreServices.js is in src/core/interfaces

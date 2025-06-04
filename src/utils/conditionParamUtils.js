@@ -10,7 +10,6 @@
  * Returns undefined if the parameter is missing or of the wrong type.
  * Returns null if the parameter is explicitly null and type is 'any'.
  * Internal helper function.
- *
  * @param {ConditionObjectData | null | undefined} conditionData - The condition data object.
  * @param {string} name - The name of the parameter key.
  * @param {'string' | 'number' | 'boolean' | 'any'} type - The expected JavaScript type (or 'any').
@@ -28,7 +27,7 @@ const getParam = (conditionData, name, type) => {
   if (value === undefined || value === null) {
     // Allow 'any' type to return null if the value is explicitly null
     // Return undefined if missing, null if explicitly null & type is 'any'
-    return (type === 'any' && value === null) ? null : undefined;
+    return type === 'any' && value === null ? null : undefined;
   }
 
   // Type checking based on the expected type
@@ -40,12 +39,11 @@ const getParam = (conditionData, name, type) => {
   return value;
 };
 
-
 /**
  * Gets a number parameter from condition data object.
  * @param {ConditionObjectData | null | undefined} conditionData - The condition data.
  * @param {string} name - Parameter name.
- * @param {number | null} [defaultValue=null] - Default value if missing or invalid type.
+ * @param {number | null} [defaultValue] - Default value if missing or invalid type.
  * @returns {number | null}
  */
 export const getNumberParam = (conditionData, name, defaultValue = null) => {
@@ -57,7 +55,7 @@ export const getNumberParam = (conditionData, name, defaultValue = null) => {
  * Gets a string parameter from condition data object.
  * @param {ConditionObjectData | null | undefined} conditionData - The condition data.
  * @param {string} name - Parameter name.
- * @param {string | null} [defaultValue=null] - Default value if missing or invalid type.
+ * @param {string | null} [defaultValue] - Default value if missing or invalid type.
  * @returns {string | null}
  */
 export const getStringParam = (conditionData, name, defaultValue = null) => {
@@ -69,7 +67,7 @@ export const getStringParam = (conditionData, name, defaultValue = null) => {
  * Gets a boolean parameter from condition data object.
  * @param {ConditionObjectData | null | undefined} conditionData - The condition data.
  * @param {string} name - Parameter name.
- * @param {boolean | null} [defaultValue=null] - Default value if missing or invalid type.
+ * @param {boolean | null} [defaultValue] - Default value if missing or invalid type.
  * @returns {boolean | null}
  */
 export const getBooleanParam = (conditionData, name, defaultValue = null) => {

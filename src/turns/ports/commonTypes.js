@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 /**
- * @fileoverview Common types used across different ports within the core domain.
+ * @file Common types used across different ports within the core domain.
  */
 
 /**

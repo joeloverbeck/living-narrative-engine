@@ -15,8 +15,6 @@
       "uniqueItems": true
     }
   },
-  "required": [
-    "mods"
-  ],
+  "required": ["mods"],
   "additionalProperties": false
 }

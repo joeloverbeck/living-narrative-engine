@@ -49,11 +49,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "direct",
-                  "arrayOfDefinitionIds",
-                  "arrayOfObjects"
-                ],
+                "enum": ["direct", "arrayOfDefinitionIds", "arrayOfObjects"],
                 "description": "- 'direct': The value is a single definition ID string.\n- 'arrayOfDefinitionIds': The value is an array of definition ID strings.\n- 'arrayOfObjects': The value is an array of objects, each potentially containing a definition ID."
               },
               "idField": {
@@ -61,14 +57,10 @@
                 "description": "Required if resolutionStrategy.type is 'arrayOfObjects'. Specifies the property name within each object (in the array) that holds the definition ID string (e.g., 'target')."
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           }
         },
-        "required": [
-          "resolutionStrategy"
-        ],
+        "required": ["resolutionStrategy"],
         "if": {
           "properties": {
             "dataPathIsSelf": {
@@ -79,17 +71,12 @@
           }
         },
         "then": {
-          "required": [
-            "dataPath"
-          ]
+          "required": ["dataPath"]
         }
       },
       "default": []
     }
   },
-  "required": [
-    "id",
-    "dataSchema"
-  ],
+  "required": ["id", "dataSchema"],
   "additionalProperties": false
 }

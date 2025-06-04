@@ -121,48 +121,90 @@ describe('getContextValue Utility (conditionContextUtils.js)', () => {
   // --- Test Cases: Entity Targets ---
   describe('Entity Targets', () => {
     it('should access direct entity properties (id)', () => {
-      expect(getContextValue(entityWithComponents, 'id', mockDataAccess)).toBe('entity-1');
+      expect(getContextValue(entityWithComponents, 'id', mockDataAccess)).toBe(
+        'entity-1'
+      );
     });
 
     it('should access direct entity properties (customProp)', () => {
-      expect(getContextValue(entityWithComponents, 'customProp', mockDataAccess)).toBe('customVal1');
+      expect(
+        getContextValue(entityWithComponents, 'customProp', mockDataAccess)
+      ).toBe('customVal1');
     });
 
     it('should access a component instance directly when path is just the component key', () => {
-      const result = getContextValue(entityWithComponents, 'Health', mockDataAccess);
+      const result = getContextValue(
+        entityWithComponents,
+        'Health',
+        mockDataAccess
+      );
       expect(result).toBe(healthComponentInstance); // Should return the instance itself
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('Health');
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'Health'
+      );
     });
 
     it('should access a direct property on a known component', () => {
-      expect(getContextValue(entityWithComponents, 'Health.current', mockDataAccess)).toBe(50);
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('Health');
+      expect(
+        getContextValue(entityWithComponents, 'Health.current', mockDataAccess)
+      ).toBe(50);
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'Health'
+      );
     });
 
     it('should access a nested property within a known component', () => {
-      expect(getContextValue(entityWithComponents, 'Position.coords.x', mockDataAccess)).toBe(10);
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('Position');
+      expect(
+        getContextValue(
+          entityWithComponents,
+          'Position.coords.x',
+          mockDataAccess
+        )
+      ).toBe(10);
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'Position'
+      );
     });
 
     it('should access an intermediate nested object within a known component', () => {
-      expect(getContextValue(entityWithComponents, 'Position.coords', mockDataAccess)).toEqual({ x: 10, y: 20 });
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('Position');
+      expect(
+        getContextValue(entityWithComponents, 'Position.coords', mockDataAccess)
+      ).toEqual({ x: 10, y: 20 });
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'Position'
+      );
     });
   });
 
   // --- Test Cases: Entity Edge Cases ---
   describe('Entity Edge Cases', () => {
     it('should return undefined if component key is known but entity lacks the component instance', () => {
-      expect(getContextValue(entityWithoutComponents, 'Health.current', mockDataAccess)).toBeUndefined();
+      expect(
+        getContextValue(
+          entityWithoutComponents,
+          'Health.current',
+          mockDataAccess
+        )
+      ).toBeUndefined();
       // Ensure dataAccess was still asked for the component class
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('Health');
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'Health'
+      );
       // Ensure getComponent would have been called (implicitly tested by the undefined result)
     });
 
     it('should fallback to direct property access if component key is unknown to dataAccess', () => {
       // Entity does NOT have a direct 'UnknownComponent' property
-      expect(getContextValue(entityWithComponents, 'UnknownComponent.value', mockDataAccess)).toBeUndefined();
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('UnknownComponent');
+      expect(
+        getContextValue(
+          entityWithComponents,
+          'UnknownComponent.value',
+          mockDataAccess
+        )
+      ).toBeUndefined();
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'UnknownComponent'
+      );
       // Ensure it tried direct access after failing component lookup (implicitly tested)
     });
 
@@ -170,17 +212,29 @@ describe('getContextValue Utility (conditionContextUtils.js)', () => {
       const entityWithDirectMatch = new MockEntity('e-direct');
       entityWithDirectMatch.UnknownComponent = { value: 'direct value' }; // Direct property
 
-      expect(getContextValue(entityWithDirectMatch, 'UnknownComponent.value', mockDataAccess)).toBe('direct value');
+      expect(
+        getContextValue(
+          entityWithDirectMatch,
+          'UnknownComponent.value',
+          mockDataAccess
+        )
+      ).toBe('direct value');
       // dataAccess was still checked first
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('UnknownComponent');
-      expect(mockDataAccess.getComponentClassByKey).toHaveReturnedWith(undefined);
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'UnknownComponent'
+      );
+      expect(mockDataAccess.getComponentClassByKey).toHaveReturnedWith(
+        undefined
+      );
     });
 
     it('should return direct property value if path matches direct prop name that is also a KNOWN component key, but dataAccess is missing', () => {
       // entityWithComponents has a direct property `Health = 'direct health value'`
       // AND 'Health' is a known component key.
       // If dataAccess is missing, it should *only* do direct lookup.
-      expect(getContextValue(entityWithComponents, 'Health', null)).toBe('direct health value');
+      expect(getContextValue(entityWithComponents, 'Health', null)).toBe(
+        'direct health value'
+      );
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled(); // Because dataAccess was null
     });
 
@@ -188,42 +242,72 @@ describe('getContextValue Utility (conditionContextUtils.js)', () => {
       // entityWithComponents has a direct property `Health = 'direct health value'`
       // AND 'Health' is a known component key.
       // If dataAccess IS provided, component lookup takes precedence.
-      expect(getContextValue(entityWithComponents, 'Health', mockDataAccess)).toBe(healthComponentInstance);
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('Health');
+      expect(
+        getContextValue(entityWithComponents, 'Health', mockDataAccess)
+      ).toBe(healthComponentInstance);
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'Health'
+      );
     });
 
-
     it('should return undefined if component exists but the property path within the component is invalid', () => {
-      expect(getContextValue(entityWithComponents, 'Health.nonExistentProp', mockDataAccess)).toBeUndefined();
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('Health');
+      expect(
+        getContextValue(
+          entityWithComponents,
+          'Health.nonExistentProp',
+          mockDataAccess
+        )
+      ).toBeUndefined();
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'Health'
+      );
     });
 
     it('should return undefined if component exists but nested access fails (e.g., accessing prop on primitive)', () => {
-      expect(getContextValue(entityWithComponents, 'Health.current.deeper', mockDataAccess)).toBeUndefined();
-      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith('Health');
+      expect(
+        getContextValue(
+          entityWithComponents,
+          'Health.current.deeper',
+          mockDataAccess
+        )
+      ).toBeUndefined();
+      expect(mockDataAccess.getComponentClassByKey).toHaveBeenCalledWith(
+        'Health'
+      );
     });
-
   });
 
   // --- Test Cases: Non-Entity Targets ---
   describe('Non-Entity Targets (e.g., Connection)', () => {
     it('should access direct properties on a plain object target', () => {
-      expect(getContextValue(mockConnection1, 'id', mockDataAccess)).toBe('conn1');
-      expect(getContextValue(mockConnection1, 'type', mockDataAccess)).toBe('Door');
+      expect(getContextValue(mockConnection1, 'id', mockDataAccess)).toBe(
+        'conn1'
+      );
+      expect(getContextValue(mockConnection1, 'type', mockDataAccess)).toBe(
+        'Door'
+      );
       // dataAccess should not have been used for non-entity
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled();
     });
 
     it('should access nested properties on a plain object target', () => {
-      expect(getContextValue(mockConnection1, 'details.material', mockDataAccess)).toBe('copper');
-      expect(getContextValue(mockConnection2, 'details.state', mockDataAccess)).toBe('flowing');
+      expect(
+        getContextValue(mockConnection1, 'details.material', mockDataAccess)
+      ).toBe('copper');
+      expect(
+        getContextValue(mockConnection2, 'details.state', mockDataAccess)
+      ).toBe('flowing');
       // dataAccess should not have been used
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled();
     });
 
     it('should return undefined for non-existent properties on a plain object target', () => {
-      expect(getContextValue(mockConnection1, 'nonExistent', mockDataAccess)).toBeUndefined();
-      expect(getContextValue(mockConnection1, 'details.nonExistent', mockDataAccess)).toBeUndefined();
+      expect(
+        getContextValue(mockConnection1, 'nonExistent', mockDataAccess)
+      ).toBeUndefined();
+      expect(
+        getContextValue(mockConnection1, 'details.nonExistent', mockDataAccess)
+      ).toBeUndefined();
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled();
     });
 
@@ -246,39 +330,55 @@ describe('getContextValue Utility (conditionContextUtils.js)', () => {
     });
 
     it('should return undefined if propertyPath is null', () => {
-      expect(getContextValue(entityWithComponents, null, mockDataAccess)).toBeUndefined();
+      expect(
+        getContextValue(entityWithComponents, null, mockDataAccess)
+      ).toBeUndefined();
     });
 
     it('should return undefined if propertyPath is undefined', () => {
-      expect(getContextValue(entityWithComponents, undefined, mockDataAccess)).toBeUndefined();
+      expect(
+        getContextValue(entityWithComponents, undefined, mockDataAccess)
+      ).toBeUndefined();
     });
 
     it('should return undefined if propertyPath is an empty string', () => {
-      expect(getContextValue(entityWithComponents, '', mockDataAccess)).toBeUndefined();
+      expect(
+        getContextValue(entityWithComponents, '', mockDataAccess)
+      ).toBeUndefined();
     });
 
     it('should return undefined if propertyPath is not a string', () => {
-      expect(getContextValue(entityWithComponents, 123, mockDataAccess)).toBeUndefined();
-      expect(getContextValue(entityWithComponents, {path:'a'}, mockDataAccess)).toBeUndefined();
+      expect(
+        getContextValue(entityWithComponents, 123, mockDataAccess)
+      ).toBeUndefined();
+      expect(
+        getContextValue(entityWithComponents, { path: 'a' }, mockDataAccess)
+      ).toBeUndefined();
     });
 
     it('should return undefined when trying component access on Entity if dataAccess is null', () => {
       // This relies on fallback behavior. Entity has no direct 'Health' *object* property.
       // It *does* have a direct 'Health' string property 'direct health value'
-      expect(getContextValue(entityWithComponents, 'Health.current', null)).toBeUndefined(); // Fallback to direct access fails here.
+      expect(
+        getContextValue(entityWithComponents, 'Health.current', null)
+      ).toBeUndefined(); // Fallback to direct access fails here.
       // Ensure dataAccess mock was NOT called
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled();
     });
 
     it('should return direct property value when trying component access path on Entity if dataAccess is null AND direct prop exists', () => {
       // Test the direct fallback when dataAccess is null and a direct prop matches the *first* part
-      expect(getContextValue(entityWithComponents, 'Health', null)).toBe('direct health value');
+      expect(getContextValue(entityWithComponents, 'Health', null)).toBe(
+        'direct health value'
+      );
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled();
     });
 
     it('should return undefined when trying component access on non-Entity even if dataAccess is provided', () => {
       // Should not attempt component lookup on a connection object
-      expect(getContextValue(mockConnection1, 'Health.current', mockDataAccess)).toBeUndefined();
+      expect(
+        getContextValue(mockConnection1, 'Health.current', mockDataAccess)
+      ).toBeUndefined();
       // Crucially, dataAccess should NOT have been called as target is not an entity
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled();
     });
@@ -287,17 +387,24 @@ describe('getContextValue Utility (conditionContextUtils.js)', () => {
   // --- Test Cases: Target is Component Instance ---
   describe('Target is Component Instance', () => {
     it('should allow accessing properties if the target is a component instance itself', () => {
-      expect(getContextValue(healthComponentInstance, 'current', mockDataAccess)).toBe(50);
-      expect(getContextValue(positionComponentInstance, 'coords.y', mockDataAccess)).toBe(20);
+      expect(
+        getContextValue(healthComponentInstance, 'current', mockDataAccess)
+      ).toBe(50);
+      expect(
+        getContextValue(positionComponentInstance, 'coords.y', mockDataAccess)
+      ).toBe(20);
       // DataAccess should not be needed or used when target isn't an entity
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled();
     });
 
     it('should return undefined for non-existent properties on a component instance target', () => {
-      expect(getContextValue(healthComponentInstance, 'nonExistent', mockDataAccess)).toBeUndefined();
-      expect(getContextValue(positionComponentInstance, 'coords.z', mockDataAccess)).toBeUndefined();
+      expect(
+        getContextValue(healthComponentInstance, 'nonExistent', mockDataAccess)
+      ).toBeUndefined();
+      expect(
+        getContextValue(positionComponentInstance, 'coords.z', mockDataAccess)
+      ).toBeUndefined();
       expect(mockDataAccess.getComponentClassByKey).not.toHaveBeenCalled();
     });
   });
-
 });

@@ -18,13 +18,13 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
   const MockGameDataRepository = jest.fn().mockImplementation(() => {
     // This is what the mock constructor will return when called with 'new'
     return {
-      getAllActionDefinitions: mockGetAllActionDefinitions
+      getAllActionDefinitions: mockGetAllActionDefinitions,
       // Add mocks for other methods if CommandParser constructor or other tests need them
     };
   });
-    // The factory function MUST return an object mapping named exports to their mocks
+  // The factory function MUST return an object mapping named exports to their mocks
   return {
-    GameDataRepository: MockGameDataRepository // <--- Map the named export
+    GameDataRepository: MockGameDataRepository, // <--- Map the named export
   };
 });
 
@@ -77,7 +77,7 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -96,7 +96,7 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -116,7 +116,7 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -136,7 +136,7 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: 'Internal Error: Command verb mismatch.' // As specified in CommandParser.js for verb mismatch
+      error: 'Internal Error: Command verb mismatch.', // As specified in CommandParser.js for verb mismatch
     };
 
     const result = commandParser.parse(input);
@@ -156,7 +156,7 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: 'Internal Error: Command verb mismatch.'
+      error: 'Internal Error: Command verb mismatch.',
     };
 
     const result = commandParser.parse(input);
@@ -179,7 +179,7 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: 'Internal Error: Command verb mismatch.' // Verb 'look' is now unknown
+      error: 'Internal Error: Command verb mismatch.', // Verb 'look' is now unknown
     };
 
     const result = commandParser.parse(input);
@@ -198,7 +198,7 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
     const duplicateVerbActions = [
       { id: 'plugin1:look', commandVerb: 'look', name: 'Look (Plugin 1)' },
       { id: 'core:go', commandVerb: 'go', name: 'Go' }, // Different verb
-      { id: 'plugin2:look', commandVerb: 'look', name: 'Look (Plugin 2)' } // Duplicate verb
+      { id: 'plugin2:look', commandVerb: 'look', name: 'Look (Plugin 2)' }, // Duplicate verb
     ];
     // Override the default mock return value
     mockGetAllActionDefinitions.mockReturnValueOnce(duplicateVerbActions);
@@ -211,7 +211,7 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
       preposition: null,
       indirectObjectPhrase: null,
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);

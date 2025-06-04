@@ -40,7 +40,6 @@ import { getObjectPropertyByPath } from './objectUtils.js';
  *
  * This function is intended to replace the Entity/Component-specific logic previously
  * embedded within older utility functions like `getNestedProperty`.
- *
  * @param {Entity | Connection | any | null | undefined} target - The context object from which to retrieve the value
  * (e.g., an Entity instance, a Connection object, or potentially other data structures).
  * @param {string | null | undefined} propertyPath - A dot-separated string representing the path to the desired property.
@@ -54,7 +53,6 @@ import { getObjectPropertyByPath } from './objectUtils.js';
  * - `propertyPath` is not a non-empty string.
  * - The path cannot be resolved (e.g., intermediate property missing, component not found).
  * - `dataAccess` is required for component lookup but not provided.
- *
  * @example
  * // Assume 'entity' is an Entity instance, 'connection' is a Connection object,
  * // and 'dataAccess' provides component lookups.

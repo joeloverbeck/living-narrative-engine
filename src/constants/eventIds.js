@@ -22,7 +22,6 @@ export const AI_TURN_PROCESSING_ENDED = 'core:ai_turn_processing_ended';
 /**
  * Signals the engine is starting to initialize a world.
  * The UI can use this to display an initial loading message.
- *
  * @event ENGINE_INITIALIZING_UI
  * @type {string}
  * @constant
@@ -37,7 +36,6 @@ export const ENGINE_INITIALIZING_UI = 'core:ui_initializing';
 /**
  * Signals the engine has initialized (or loaded) and is ready for user input.
  * The UI can use this to update its state, set the game title, and enable input.
- *
  * @event ENGINE_READY_UI
  * @type {string}
  * @constant
@@ -53,7 +51,6 @@ export const ENGINE_READY_UI = 'core:ui_ready';
 /**
  * Signals a potentially blocking engine operation is underway.
  * The UI should indicate this status and typically disable user input.
- *
  * @event ENGINE_OPERATION_IN_PROGRESS_UI
  * @type {string}
  * @constant
@@ -69,7 +66,6 @@ export const ENGINE_OPERATION_IN_PROGRESS_UI = 'core:ui_operation_in_progress';
 /**
  * Signals a significant engine operation has failed.
  * The UI should display the error and ensure input remains disabled or is re-disabled.
- *
  * @event ENGINE_OPERATION_FAILED_UI
  * @type {string}
  * @constant
@@ -85,7 +81,6 @@ export const ENGINE_OPERATION_FAILED_UI = 'core:ui_operation_failed';
 /**
  * Signals the engine has been stopped.
  * The UI should update its status accordingly and disable input.
- *
  * @event ENGINE_STOPPED_UI
  * @type {string}
  * @constant
@@ -100,7 +95,6 @@ export const ENGINE_STOPPED_UI = 'core:ui_stopped';
 /**
  * Signals a request from the engine to display a general informational or error message to the user.
  * This is for messages not tied to a specific blocking operation's start/end/failure.
- *
  * @event ENGINE_MESSAGE_DISPLAY_REQUESTED
  * @type {string}
  * @constant
@@ -111,12 +105,12 @@ export const ENGINE_STOPPED_UI = 'core:ui_stopped';
  * //   type: 'info' | 'error' | 'fatal' | 'warning' // The type of message, for appropriate UI styling.
  * // }
  */
-export const ENGINE_MESSAGE_DISPLAY_REQUESTED = 'core:ui_message_display_requested';
+export const ENGINE_MESSAGE_DISPLAY_REQUESTED =
+  'core:ui_message_display_requested';
 
 /**
  * Signals a request from the engine to show the save game interface.
  * The UI manager should handle the presentation of the save game UI.
- *
  * @event REQUEST_SHOW_SAVE_GAME_UI
  * @type {string}
  * @constant
@@ -129,7 +123,6 @@ export const REQUEST_SHOW_SAVE_GAME_UI = 'core:ui_request_show_save_game';
 /**
  * Signals a request from the engine to show the load game interface.
  * The UI manager should handle the presentation of the load game UI.
- *
  * @event REQUEST_SHOW_LOAD_GAME_UI
  * @type {string}
  * @constant
@@ -143,7 +136,6 @@ export const REQUEST_SHOW_LOAD_GAME_UI = 'core:ui_request_show_load_game';
  * Signals that saving the game is currently not allowed.
  * The UI should inform the user why saving is disabled (e.g., game not initialized, critical state).
  * The specific message can be static or determined by the UI manager based on this event.
- *
  * @event CANNOT_SAVE_GAME_INFO
  * @type {string}
  * @constant

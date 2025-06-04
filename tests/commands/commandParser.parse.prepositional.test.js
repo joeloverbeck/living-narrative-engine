@@ -18,13 +18,13 @@ jest.mock('../../src/services/gameDataRepository.js', () => {
   const MockGameDataRepository = jest.fn().mockImplementation(() => {
     // This is what the mock constructor will return when called with 'new'
     return {
-      getAllActionDefinitions: mockGetAllActionDefinitions
+      getAllActionDefinitions: mockGetAllActionDefinitions,
       // Add mocks for other methods if CommandParser constructor or other tests need them
     };
   });
-    // The factory function MUST return an object mapping named exports to their mocks
+  // The factory function MUST return an object mapping named exports to their mocks
   return {
-    GameDataRepository: MockGameDataRepository // Map the named export
+    GameDataRepository: MockGameDataRepository, // Map the named export
   };
 });
 
@@ -82,7 +82,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'in',
       indirectObjectPhrase: 'box',
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -103,7 +103,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'on',
       indirectObjectPhrase: 'stone altar',
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -125,7 +125,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'at',
       indirectObjectPhrase: 'door',
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -146,7 +146,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: '>',
       indirectObjectPhrase: 'the dark cave',
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -168,7 +168,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: '>',
       indirectObjectPhrase: 'lock',
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -190,7 +190,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'with', // First preposition found
       indirectObjectPhrase: 'helmet about task', // Remainder after 'with'
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -212,7 +212,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'in', // First preposition found
       indirectObjectPhrase: 'box with lid', // Remainder after 'in'
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -234,7 +234,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'in',
       indirectObjectPhrase: null, // IO is missing
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -256,7 +256,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'on',
       indirectObjectPhrase: null, // IO is missing
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -279,7 +279,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'on',
       indirectObjectPhrase: 'table', // Assumes leading spaces before IO are trimmed
       originalInput: input,
-      error: null
+      error: null,
     };
     // Verification based on CommandParser logic:
     // textAfterCommand = "  key   on   table"
@@ -308,7 +308,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'at',
       indirectObjectPhrase: 'door',
       originalInput: input,
-      error: null
+      error: null,
     };
     // Verification:
     // textAfterCommand = "  at   door" (after verb 'look' removed and trimmed)
@@ -333,7 +333,7 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'with',
       indirectObjectPhrase: null, // IO is missing
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
@@ -351,12 +351,11 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
       preposition: 'at',
       indirectObjectPhrase: null, // IO is missing
       originalInput: input,
-      error: null
+      error: null,
     };
 
     const result = commandParser.parse(input);
     expect(result).toEqual(expectedOutput);
     expect(mockGetAllActionDefinitions).toHaveBeenCalledTimes(1);
   });
-
 });

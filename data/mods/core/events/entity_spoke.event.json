@@ -16,10 +16,7 @@
         "description": "The text content of what the entity said."
       }
     },
-    "required": [
-      "entityId",
-      "speechContent"
-    ],
+    "required": ["entityId", "speechContent"],
     "additionalProperties": false
   }
 }

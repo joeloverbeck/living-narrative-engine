@@ -10,9 +10,7 @@
         "description": "The identifier of the save game that was loaded (e.g., file name, slot ID, or a full path)."
       }
     },
-    "required": [
-      "saveIdentifier"
-    ],
+    "required": ["saveIdentifier"],
     "additionalProperties": false
   }
 }

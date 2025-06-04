@@ -6,10 +6,7 @@
     "description": "An array of possible exits from this location. May be empty (e.g., a supernatural trap with no exits until one is programmatically added).",
     "items": {
       "type": "object",
-      "required": [
-        "direction",
-        "target"
-      ],
+      "required": ["direction", "target"],
       "properties": {
         "direction": {
           "type": "string",

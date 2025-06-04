@@ -13,44 +13,63 @@
  * Extracted from ActionValidationService for SRP.
  */
 export class DomainContextCompatibilityChecker {
-  /** @private @type {ILogger} */
+     * @private
   #logger;
 
   // Define domain categories for clarity
-  /** @private @type {TargetDomain[]} */
-  #entityTargetDomains = ['self', 'inventory', 'equipment', 'environment', 'location', 'location_items', 'location_non_items', 'nearby', 'nearby_including_blockers'];
-  /** @private @type {TargetDomain[]} */
+     * @private
+  #entityTargetDomains = [
+    'self',
+    'inventory',
+    'equipment',
+    'environment',
+    'location',
+    'location_items',
+    'location_non_items',
+    'nearby',
+    'nearby_including_blockers',
+  ];
+     * @private
   #directionTargetDomains = ['direction'];
-  /** @private @type {TargetDomain[]} */
+     * @private
   #noTargetDomains = ['none']; // Explicitly 'none'
 
   /**
-     * Creates an instance of DomainContextCompatibilityChecker.
-     * @param {object} dependencies - The required dependencies.
-     * @param {ILogger} dependencies.logger - Logger service instance.
-     * @throws {Error} If the logger dependency is missing or invalid.
-     */
-  constructor({logger}) {
+   * Creates an instance of DomainContextCompatibilityChecker.
+   * @param {object} dependencies - The required dependencies.
+   * @param {ILogger} dependencies.logger - Logger service instance.
+   * @throws {Error} If the logger dependency is missing or invalid.
+   */
+  constructor({ logger }) {
     // Dependency Injection & Validation (AC2)
-    if (!logger || typeof logger.debug !== 'function' || typeof logger.error !== 'function' || typeof logger.warn !== 'function' || typeof logger.info !== 'function') {
+    if (
+      !logger ||
+      typeof logger.debug !== 'function' ||
+      typeof logger.error !== 'function' ||
+      typeof logger.warn !== 'function' ||
+      typeof logger.info !== 'function'
+    ) {
       // Throw error if logger is missing or doesn't conform to the expected ILogger interface
-      throw new Error('DomainContextCompatibilityChecker requires a valid ILogger instance.');
+      throw new Error(
+        'DomainContextCompatibilityChecker requires a valid ILogger instance.'
+      );
     }
     this.#logger = logger;
     this.#logger.info('DomainContextCompatibilityChecker initialized.');
   }
 
   /**
-     * Checks if the target domain specified in an action definition is compatible
-     * with the type of the provided target context.
-     *
-     * @param {ActionDefinition} actionDefinition - The action being validated.
-     * @param {ActionTargetContext} targetContext - The context describing the action's target.
-     * @returns {boolean} True if the domain and context type are compatible, false otherwise. Logs failures. (AC3)
-     */
+   * Checks if the target domain specified in an action definition is compatible
+   * with the type of the provided target context.
+   * @param {ActionDefinition} actionDefinition - The action being validated.
+   * @param {ActionTargetContext} targetContext - The context describing the action's target.
+   * @returns {boolean} True if the domain and context type are compatible, false otherwise. Logs failures. (AC3)
+   */
   check(actionDefinition, targetContext) {
     if (!actionDefinition || !targetContext) {
-      this.#logger.error('DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.');
+      this.#logger.error(
+        'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.'
+      );
       return false; // Cannot proceed with invalid inputs
     }
 
@@ -63,17 +82,29 @@ export class DomainContextCompatibilityChecker {
     if (contextType !== 'none') {
       // Case 1: Action expects NO target, but context provides one.
       if (this.#noTargetDomains.includes(expectedDomain)) {
-        this.#logger.debug(`Validation failed (Domain/Context): Action '${actionId}' (domain '${expectedDomain}') expects no target, but context type is '${contextType}'.`);
+        this.#logger.debug(
+          `Validation failed (Domain/Context): Action '${actionId}' (domain '${expectedDomain}') expects no target, but context type is '${contextType}'.`
+        );
         return false;
       }
       // Case 2: Action expects a DIRECTION, but context is not 'direction'.
-      if (this.#directionTargetDomains.includes(expectedDomain) && contextType !== 'direction') {
-        this.#logger.debug(`Validation failed (Domain/Context): Action '${actionId}' (domain '${expectedDomain}') requires 'direction' context, but got '${contextType}'.`);
+      if (
+        this.#directionTargetDomains.includes(expectedDomain) &&
+        contextType !== 'direction'
+      ) {
+        this.#logger.debug(
+          `Validation failed (Domain/Context): Action '${actionId}' (domain '${expectedDomain}') requires 'direction' context, but got '${contextType}'.`
+        );
         return false;
       }
       // Case 3: Action expects an ENTITY, but context is not 'entity'.
-      if (this.#entityTargetDomains.includes(expectedDomain) && contextType !== 'entity') {
-        this.#logger.debug(`Validation failed (Domain/Context): Action '${actionId}' (domain '${expectedDomain}') requires 'entity' context, but got '${contextType}'.`);
+      if (
+        this.#entityTargetDomains.includes(expectedDomain) &&
+        contextType !== 'entity'
+      ) {
+        this.#logger.debug(
+          `Validation failed (Domain/Context): Action '${actionId}' (domain '${expectedDomain}') requires 'entity' context, but got '${contextType}'.`
+        );
         return false;
       }
       // Case 4: Special case for 'self' domain - target must be the actor.
@@ -92,17 +123,21 @@ export class DomainContextCompatibilityChecker {
       // The check that `targetContext.entityId` actually matches the `actorId` when `target_domain` is 'self'
       // *must* remain in the `ActionValidationService` or be moved to yet another checker, as it requires the `actorEntity`.
       // Therefore, the specific check `targetContext.entityId !== actorId` is *NOT* moved here.
-
-    } else { // contextType is 'none'
+    } else {
+      // contextType is 'none'
       // Case 6: Context provides NO target, but action *requires* one (i.e., domain is not 'none').
       if (!this.#noTargetDomains.includes(expectedDomain)) {
-        this.#logger.debug(`Validation failed (Domain/Context): Action '${actionId}' (domain '${expectedDomain}') requires a target, but context type is 'none'.`);
+        this.#logger.debug(
+          `Validation failed (Domain/Context): Action '${actionId}' (domain '${expectedDomain}') requires a target, but context type is 'none'.`
+        );
         return false;
       }
     }
 
     // If none of the incompatibility checks failed:
-    this.#logger.debug(`Domain/Context Check Passed: Action '${actionId}' (domain '${expectedDomain}') is compatible with context type '${contextType}'.`);
+    this.#logger.debug(
+      `Domain/Context Check Passed: Action '${actionId}' (domain '${expectedDomain}') is compatible with context type '${contextType}'.`
+    );
     return true; // Compatible
   }
 }

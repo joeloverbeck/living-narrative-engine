@@ -1,6 +1,5 @@
 // src/core/engineVersion.js
 
-
 import pkg from '../../package.json';
 import semver from 'semver';
 
@@ -8,11 +7,11 @@ const versionFromPackage = pkg.version;
 
 // Validate the version on startup (when this module is first imported)
 if (!semver.valid(versionFromPackage)) {
-    // Throw an error immediately if the version format is invalid
-    throw new Error(
-        `Invalid engine version specified in package.json: "${versionFromPackage}". ` +
-        `Version must be a valid SemVer string (e.g., "1.2.3").`
-    );
+  // Throw an error immediately if the version format is invalid
+  throw new Error(
+    `Invalid engine version specified in package.json: "${versionFromPackage}". ` +
+      `Version must be a valid SemVer string (e.g., "1.2.3").`
+  );
 }
 
 /**
@@ -23,7 +22,6 @@ if (!semver.valid(versionFromPackage)) {
  * will result in a startup error.
  *
  * The constant is frozen, ensuring it cannot be modified at runtime.
- *
  * @type {string}
  * @constant
  * @example

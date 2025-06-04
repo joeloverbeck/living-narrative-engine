@@ -1,6 +1,13 @@
 // tests/services/consoleLogger.test.js
 
-import {describe, it, expect, beforeEach, afterEach, jest} from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ConsoleLogger, { LogLevel } from '../../src/services/consoleLogger.js';
 
 describe('ConsoleLogger', () => {
@@ -45,7 +52,7 @@ describe('ConsoleLogger', () => {
     it('should call console.info once with the correct message and additional arguments', () => {
       const message = 'User logged in:';
       const userId = 123;
-      const sessionData = {token: 'abc', expires: 3600};
+      const sessionData = { token: 'abc', expires: 3600 };
       logger.info(message, userId, sessionData);
 
       expect(infoSpy).toHaveBeenCalledTimes(1);
@@ -57,7 +64,7 @@ describe('ConsoleLogger', () => {
     it('should call console.warn once with the correct message and arguments', () => {
       const message = 'Configuration value deprecated:';
       const configKey = 'old_api_key';
-      const details = {newValue: 'new_token_format', deadline: '2025-12-31'};
+      const details = { newValue: 'new_token_format', deadline: '2025-12-31' };
       logger.warn(message, configKey, details);
 
       expect(warnSpy).toHaveBeenCalledTimes(1);
@@ -86,7 +93,7 @@ describe('ConsoleLogger', () => {
     it('should call console.error once with the correct message and multiple arguments', () => {
       const message = 'Validation failed for user:';
       const userId = 456;
-      const validationErrors = [{field: 'email', code: 'INVALID_FORMAT'}];
+      const validationErrors = [{ field: 'email', code: 'INVALID_FORMAT' }];
       logger.error(message, userId, validationErrors);
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
@@ -107,7 +114,7 @@ describe('ConsoleLogger', () => {
 
       const message = 'Entering function calculateTotal:';
       const input = [1, 2, 3];
-      const context = {userRole: 'admin'};
+      const context = { userRole: 'admin' };
       logger.debug(message, input, context); // This should call console.debug
 
       expect(debugSpy).toHaveBeenCalledTimes(1);

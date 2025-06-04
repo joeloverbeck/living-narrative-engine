@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 /**
- * @fileoverview Registers core game logic systems, particularly those needing initialization or shutdown.
+ * @file Registers core game logic systems, particularly those needing initialization or shutdown.
  * Also includes registration for turn-related handlers, resolvers, and the ITurnContext provider.
  */
 
@@ -36,9 +36,8 @@
 /** @typedef {import('../../turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
 /** @typedef {import('../../services/promptBuilder.js').PromptBuilder} IPromptBuilder */ // Assuming this is the concrete class for the interface
 
-
 // --- System Imports ---
-import {ActionDiscoverySystem} from '../../systems/actionDiscoverySystem.js';
+import { ActionDiscoverySystem } from '../../systems/actionDiscoverySystem.js';
 import TurnManager from '../../turns/turnManager.js';
 
 // --- Handler & Resolver Imports ---
@@ -47,145 +46,284 @@ import AITurnHandler from '../../turns/handlers/aiTurnHandler.js';
 import TurnHandlerResolver from '../../turns/services/turnHandlerResolver.js';
 
 // --- DI & Helper Imports ---
-import {tokens} from '../tokens.js';
-import {Registrar} from '../registrarHelpers.js';
-import {formatActionCommand} from '../../services/actionFormatter.js';
-import {INITIALIZABLE, SHUTDOWNABLE} from "../tags.js";
+import { tokens } from '../tokens.js';
+import { Registrar } from '../registrarHelpers.js';
+import { formatActionCommand } from '../../services/actionFormatter.js';
+import { INITIALIZABLE, SHUTDOWNABLE } from '../tags.js';
 
+/**
+ *
+ * @param container
+ */
 export function registerCoreSystems(container) {
-    const registrar = new Registrar(container);
-    /** @type {ILogger} */
-    const logger = container.resolve(tokens.ILogger);
+  const registrar = new Registrar(container);
+  /** @type {ILogger} */
+  const logger = container.resolve(tokens.ILogger);
 
-    let registrationCount = 0;
-    logger.info('Core Systems Registration: Starting...');
+  let registrationCount = 0;
+  logger.info('Core Systems Registration: Starting...');
 
-    registrar.tagged(INITIALIZABLE).singletonFactory(tokens.IActionDiscoverySystem, (c) => new ActionDiscoverySystem({
-        gameDataRepository: /** @type {IGameDataRepository} */ (c.resolve(tokens.IGameDataRepository)),
-        entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)),
+  registrar.tagged(INITIALIZABLE).singletonFactory(
+    tokens.IActionDiscoverySystem,
+    (c) =>
+      new ActionDiscoverySystem({
+        gameDataRepository: /** @type {IGameDataRepository} */ (
+          c.resolve(tokens.IGameDataRepository)
+        ),
+        entityManager: /** @type {IEntityManager_Interface} */ (
+          c.resolve(tokens.IEntityManager)
+        ),
         actionValidationService: c.resolve(tokens.ActionValidationService),
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: () => new Set()
-    }));
-    logger.debug(`Core Systems Registration: Registered ${String(tokens.IActionDiscoverySystem)} tagged with ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
+        getEntityIdsForScopesFn: () => new Set(),
+      })
+  );
+  logger.debug(
+    `Core Systems Registration: Registered ${String(tokens.IActionDiscoverySystem)} tagged with ${INITIALIZABLE.join(', ')}.`
+  );
+  registrationCount++;
 
-    registrar.tagged(SHUTDOWNABLE).singletonFactory(tokens.PlayerTurnHandler, (c) =>
-        new PlayerTurnHandler({
-            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)),
-            commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
-            turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
-            playerPromptService: /** @type {IPlayerPromptService} */ (c.resolve(tokens.IPlayerPromptService)),
-            commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
-            safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
-            subscriptionLifecycleManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
-        })
-    );
-    logger.debug(`Core Systems Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`);
-    registrationCount++;
-
-    registrar.singletonFactory(tokens.AITurnHandler, (c) => {
-        return new AITurnHandler({
-            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)),
-            gameWorldAccess: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
-            turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
-            illmAdapter: /** @type {ILLMAdapter_Interface} */ (c.resolve(tokens.ILLMAdapter)),
-            commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
-            commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
-            safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
-            subscriptionManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
-            entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)),
-            actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (c.resolve(tokens.IActionDiscoverySystem)),
-            promptBuilder: /** @type {IPromptBuilder} */ (c.resolve(tokens.IPromptBuilder)),
-            aiPlayerStrategyFactory: /** @type {IAIPlayerStrategyFactory} */ (c.resolve(tokens.IAIPlayerStrategyFactory)),
-            turnContextFactory: /** @type {ITurnContextFactory} */ (c.resolve(tokens.ITurnContextFactory)),
-            gameStateProvider: /** @type {IAIGameStateProvider} */ (c.resolve(tokens.IAIGameStateProvider)),
-            promptContentProvider: /** @type {IAIPromptContentProvider} */ (c.resolve(tokens.IAIPromptContentProvider)),
-            llmResponseProcessor: /** @type {ILLMResponseProcessor} */ (c.resolve(tokens.ILLMResponseProcessor)),
-        });
-    });
-    logger.debug(`Core Systems Registration: Registered ${tokens.AITurnHandler}.`);
-    registrationCount++;
-
-    registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => {
-        const createPlayerHandlerFactory = () => new PlayerTurnHandler({
-            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-            turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)),
-            commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
-            turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
-            playerPromptService: /** @type {IPlayerPromptService} */ (c.resolve(tokens.IPlayerPromptService)),
-            commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
-            safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
-            subscriptionLifecycleManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
-        });
-
-        const createAiHandlerFactory = () => {
-            return new AITurnHandler({
-                logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-                turnStateFactory: /** @type {ITurnStateFactory} */ (c.resolve(tokens.ITurnStateFactory)),
-                gameWorldAccess: /** @type {IWorldContext} */ (c.resolve(tokens.IWorldContext)),
-                turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
-                illmAdapter: /** @type {ILLMAdapter_Interface} */ (c.resolve(tokens.ILLMAdapter)),
-                commandProcessor: /** @type {ICommandProcessor} */ (c.resolve(tokens.ICommandProcessor)),
-                commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (c.resolve(tokens.ICommandOutcomeInterpreter)),
-                safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (c.resolve(tokens.ISafeEventDispatcher)),
-                subscriptionManager: /** @type {SubscriptionLifecycleManager} */ (c.resolve(tokens.SubscriptionLifecycleManager)),
-                entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)),
-                actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (c.resolve(tokens.IActionDiscoverySystem)),
-                promptBuilder: /** @type {IPromptBuilder} */ (c.resolve(tokens.IPromptBuilder)),
-                aiPlayerStrategyFactory: /** @type {IAIPlayerStrategyFactory} */ (c.resolve(tokens.IAIPlayerStrategyFactory)),
-                turnContextFactory: /** @type {ITurnContextFactory} */ (c.resolve(tokens.ITurnContextFactory)),
-                gameStateProvider: /** @type {IAIGameStateProvider} */ (c.resolve(tokens.IAIGameStateProvider)),
-                promptContentProvider: /** @type {IAIPromptContentProvider} */ (c.resolve(tokens.IAIPromptContentProvider)),
-                llmResponseProcessor: /** @type {ILLMResponseProcessor} */ (c.resolve(tokens.ILLMResponseProcessor)),
-            });
-        };
-
-        return new TurnHandlerResolver({
-            logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-            createPlayerTurnHandler: createPlayerHandlerFactory,
-            createAiTurnHandler: createAiHandlerFactory
-        });
-    });
-    logger.debug(`Core Systems Registration: Registered ${tokens.TurnHandlerResolver} (with handler factories).`);
-    registrationCount++;
-
-    registrar.tagged(INITIALIZABLE).singletonFactory(tokens.ITurnManager, (c) => new TurnManager({
-        turnOrderService: /** @type {ITurnOrderService} */ (c.resolve(tokens.ITurnOrderService)),
-        entityManager: /** @type {IEntityManager_Interface} */ (c.resolve(tokens.IEntityManager)),
+  registrar.tagged(SHUTDOWNABLE).singletonFactory(
+    tokens.PlayerTurnHandler,
+    (c) =>
+      new PlayerTurnHandler({
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-        dispatcher: /** @type {IValidatedEventDispatcher} */ (c.resolve(tokens.IValidatedEventDispatcher)),
-        turnHandlerResolver: /** @type {TurnHandlerResolver_Concrete} */ (c.resolve(tokens.TurnHandlerResolver))
-    }));
-    logger.debug(`Core Systems Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`);
-    registrationCount++;
+        turnStateFactory: /** @type {ITurnStateFactory} */ (
+          c.resolve(tokens.ITurnStateFactory)
+        ),
+        commandProcessor: /** @type {ICommandProcessor} */ (
+          c.resolve(tokens.ICommandProcessor)
+        ),
+        turnEndPort: /** @type {ITurnEndPort} */ (
+          c.resolve(tokens.ITurnEndPort)
+        ),
+        playerPromptService: /** @type {IPlayerPromptService} */ (
+          c.resolve(tokens.IPlayerPromptService)
+        ),
+        commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (
+          c.resolve(tokens.ICommandOutcomeInterpreter)
+        ),
+        safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
+          c.resolve(tokens.ISafeEventDispatcher)
+        ),
+        subscriptionLifecycleManager:
+          /** @type {SubscriptionLifecycleManager} */ (
+            c.resolve(tokens.SubscriptionLifecycleManager)
+          ),
+      })
+  );
+  logger.debug(
+    `Core Systems Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`
+  );
+  registrationCount++;
 
-    // Use registrar for ITurnContext for consistency
-    registrar.transientFactory(tokens.ITurnContext, (c) => {
-        const localLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
-        const turnManager = /** @type {ITurnManager | null} */ (c.resolve(tokens.ITurnManager));
-
-        if (!turnManager) {
-            localLogger.warn(`ITurnContext Factory: ${String(tokens.ITurnManager)} could not be resolved. Returning null.`);
-            return null;
-        }
-
-        const activeHandler = turnManager.getActiveTurnHandler();
-        if (activeHandler && typeof activeHandler.getTurnContext === 'function') {
-            const context = activeHandler.getTurnContext();
-            return context;
-        } else if (activeHandler) {
-            localLogger.warn(`ITurnContext Factory: Active handler (${activeHandler.constructor.name}) found, but getTurnContext is not a function. Returning null.`);
-        }
-        return null;
+  registrar.singletonFactory(tokens.AITurnHandler, (c) => {
+    return new AITurnHandler({
+      logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      turnStateFactory: /** @type {ITurnStateFactory} */ (
+        c.resolve(tokens.ITurnStateFactory)
+      ),
+      gameWorldAccess: /** @type {IWorldContext} */ (
+        c.resolve(tokens.IWorldContext)
+      ),
+      turnEndPort: /** @type {ITurnEndPort} */ (c.resolve(tokens.ITurnEndPort)),
+      illmAdapter: /** @type {ILLMAdapter_Interface} */ (
+        c.resolve(tokens.ILLMAdapter)
+      ),
+      commandProcessor: /** @type {ICommandProcessor} */ (
+        c.resolve(tokens.ICommandProcessor)
+      ),
+      commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (
+        c.resolve(tokens.ICommandOutcomeInterpreter)
+      ),
+      safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
+        c.resolve(tokens.ISafeEventDispatcher)
+      ),
+      subscriptionManager: /** @type {SubscriptionLifecycleManager} */ (
+        c.resolve(tokens.SubscriptionLifecycleManager)
+      ),
+      entityManager: /** @type {IEntityManager_Interface} */ (
+        c.resolve(tokens.IEntityManager)
+      ),
+      actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (
+        c.resolve(tokens.IActionDiscoverySystem)
+      ),
+      promptBuilder: /** @type {IPromptBuilder} */ (
+        c.resolve(tokens.IPromptBuilder)
+      ),
+      aiPlayerStrategyFactory: /** @type {IAIPlayerStrategyFactory} */ (
+        c.resolve(tokens.IAIPlayerStrategyFactory)
+      ),
+      turnContextFactory: /** @type {ITurnContextFactory} */ (
+        c.resolve(tokens.ITurnContextFactory)
+      ),
+      gameStateProvider: /** @type {IAIGameStateProvider} */ (
+        c.resolve(tokens.IAIGameStateProvider)
+      ),
+      promptContentProvider: /** @type {IAIPromptContentProvider} */ (
+        c.resolve(tokens.IAIPromptContentProvider)
+      ),
+      llmResponseProcessor: /** @type {ILLMResponseProcessor} */ (
+        c.resolve(tokens.ILLMResponseProcessor)
+      ),
     });
-    logger.debug(`Core Systems Registration: Registered transient factory for ${String(tokens.ITurnContext)}.`);
-    registrationCount++;
+  });
+  logger.debug(
+    `Core Systems Registration: Registered ${tokens.AITurnHandler}.`
+  );
+  registrationCount++;
 
-    logger.info(`Core Systems Registration: Completed registering ${registrationCount} systems, handlers, services, and providers.`);
+  registrar.singletonFactory(tokens.TurnHandlerResolver, (c) => {
+    const createPlayerHandlerFactory = () =>
+      new PlayerTurnHandler({
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+        turnStateFactory: /** @type {ITurnStateFactory} */ (
+          c.resolve(tokens.ITurnStateFactory)
+        ),
+        commandProcessor: /** @type {ICommandProcessor} */ (
+          c.resolve(tokens.ICommandProcessor)
+        ),
+        turnEndPort: /** @type {ITurnEndPort} */ (
+          c.resolve(tokens.ITurnEndPort)
+        ),
+        playerPromptService: /** @type {IPlayerPromptService} */ (
+          c.resolve(tokens.IPlayerPromptService)
+        ),
+        commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (
+          c.resolve(tokens.ICommandOutcomeInterpreter)
+        ),
+        safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
+          c.resolve(tokens.ISafeEventDispatcher)
+        ),
+        subscriptionLifecycleManager:
+          /** @type {SubscriptionLifecycleManager} */ (
+            c.resolve(tokens.SubscriptionLifecycleManager)
+          ),
+      });
+
+    const createAiHandlerFactory = () => {
+      return new AITurnHandler({
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+        turnStateFactory: /** @type {ITurnStateFactory} */ (
+          c.resolve(tokens.ITurnStateFactory)
+        ),
+        gameWorldAccess: /** @type {IWorldContext} */ (
+          c.resolve(tokens.IWorldContext)
+        ),
+        turnEndPort: /** @type {ITurnEndPort} */ (
+          c.resolve(tokens.ITurnEndPort)
+        ),
+        illmAdapter: /** @type {ILLMAdapter_Interface} */ (
+          c.resolve(tokens.ILLMAdapter)
+        ),
+        commandProcessor: /** @type {ICommandProcessor} */ (
+          c.resolve(tokens.ICommandProcessor)
+        ),
+        commandOutcomeInterpreter: /** @type {ICommandOutcomeInterpreter} */ (
+          c.resolve(tokens.ICommandOutcomeInterpreter)
+        ),
+        safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
+          c.resolve(tokens.ISafeEventDispatcher)
+        ),
+        subscriptionManager: /** @type {SubscriptionLifecycleManager} */ (
+          c.resolve(tokens.SubscriptionLifecycleManager)
+        ),
+        entityManager: /** @type {IEntityManager_Interface} */ (
+          c.resolve(tokens.IEntityManager)
+        ),
+        actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (
+          c.resolve(tokens.IActionDiscoverySystem)
+        ),
+        promptBuilder: /** @type {IPromptBuilder} */ (
+          c.resolve(tokens.IPromptBuilder)
+        ),
+        aiPlayerStrategyFactory: /** @type {IAIPlayerStrategyFactory} */ (
+          c.resolve(tokens.IAIPlayerStrategyFactory)
+        ),
+        turnContextFactory: /** @type {ITurnContextFactory} */ (
+          c.resolve(tokens.ITurnContextFactory)
+        ),
+        gameStateProvider: /** @type {IAIGameStateProvider} */ (
+          c.resolve(tokens.IAIGameStateProvider)
+        ),
+        promptContentProvider: /** @type {IAIPromptContentProvider} */ (
+          c.resolve(tokens.IAIPromptContentProvider)
+        ),
+        llmResponseProcessor: /** @type {ILLMResponseProcessor} */ (
+          c.resolve(tokens.ILLMResponseProcessor)
+        ),
+      });
+    };
+
+    return new TurnHandlerResolver({
+      logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      createPlayerTurnHandler: createPlayerHandlerFactory,
+      createAiTurnHandler: createAiHandlerFactory,
+    });
+  });
+  logger.debug(
+    `Core Systems Registration: Registered ${tokens.TurnHandlerResolver} (with handler factories).`
+  );
+  registrationCount++;
+
+  registrar.tagged(INITIALIZABLE).singletonFactory(
+    tokens.ITurnManager,
+    (c) =>
+      new TurnManager({
+        turnOrderService: /** @type {ITurnOrderService} */ (
+          c.resolve(tokens.ITurnOrderService)
+        ),
+        entityManager: /** @type {IEntityManager_Interface} */ (
+          c.resolve(tokens.IEntityManager)
+        ),
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+        dispatcher: /** @type {IValidatedEventDispatcher} */ (
+          c.resolve(tokens.IValidatedEventDispatcher)
+        ),
+        turnHandlerResolver: /** @type {TurnHandlerResolver_Concrete} */ (
+          c.resolve(tokens.TurnHandlerResolver)
+        ),
+      })
+  );
+  logger.debug(
+    `Core Systems Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`
+  );
+  registrationCount++;
+
+  // Use registrar for ITurnContext for consistency
+  registrar.transientFactory(tokens.ITurnContext, (c) => {
+    const localLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+    const turnManager = /** @type {ITurnManager | null} */ (
+      c.resolve(tokens.ITurnManager)
+    );
+
+    if (!turnManager) {
+      localLogger.warn(
+        `ITurnContext Factory: ${String(tokens.ITurnManager)} could not be resolved. Returning null.`
+      );
+      return null;
+    }
+
+    const activeHandler = turnManager.getActiveTurnHandler();
+    if (activeHandler && typeof activeHandler.getTurnContext === 'function') {
+      const context = activeHandler.getTurnContext();
+      return context;
+    } else if (activeHandler) {
+      localLogger.warn(
+        `ITurnContext Factory: Active handler (${activeHandler.constructor.name}) found, but getTurnContext is not a function. Returning null.`
+      );
+    }
+    return null;
+  });
+  logger.debug(
+    `Core Systems Registration: Registered transient factory for ${String(tokens.ITurnContext)}.`
+  );
+  registrationCount++;
+
+  logger.info(
+    `Core Systems Registration: Completed registering ${registrationCount} systems, handlers, services, and providers.`
+  );
 }
 
 // --- FILE END ---
