@@ -32,25 +32,13 @@ describe('ENGINE_VERSION constant', () => {
     // attempting to reassign a constant imported from another module
     // should throw a TypeError.
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      /* eslint-disable no-import-assign */
       // @ts-ignore - Deliberately attempting to violate immutability for testing
       ENGINE_VERSION = '9.9.9';
+      /* eslint-enable no-import-assign */
     }).toThrow(Error);
 
     // Double-check that the value wasn't altered (it shouldn't be possible)
     expect(ENGINE_VERSION).toBe(pkg.version);
   });
-
-  // Optional: Test the error scenario (requires more complex setup)
-  // This would involve mocking package.json or using dynamic imports
-  // to load a version of the module linked to an invalid package.json.
-  // describe('when package.json version is invalid', () => {
-  //   it('should throw an error during module initialization', async () => {
-  //     // Mocking setup would go here...
-  //     // Example using dynamic import (syntax/feasibility depends on test env):
-  //     // jest.unstable_mockModule('../../package.json', () => ({ version: 'INVALID-VERSION' }), { virtual: true });
-  //     // await expect(import('../../src/core/ENGINE_VERSION.js')).rejects.toThrow(/Invalid engine version/);
-  //     // Reset mocks afterwards...
-  //   });
-  // });
 });
