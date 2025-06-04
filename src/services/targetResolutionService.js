@@ -123,32 +123,25 @@ class TargetResolutionService extends ITargetResolutionService {
     }
     this.#logger = logger;
 
-    try {
-      this.#_validateDependency(entityManager, 'entityManager', [
-        'getEntityInstance',
-        'getEntitiesInLocation',
-      ]);
-      this.#_validateDependency(worldContext, 'worldContext', [
-        'getLocationOfEntity',
-        'getCurrentActor',
-        'getCurrentLocation',
-      ]);
-      this.#_validateDependency(gameDataRepository, 'gameDataRepository', [
-        'getActionDefinition',
-        'getAllActionDefinitions',
-      ]);
-      this.#_validateDependency(
-        getEntityIdsForScopes,
-        'getEntityIdsForScopes',
-        [],
-        true
-      );
-    } catch (error) {
-      // The #_validateDependency method already logs using this.#logger if available,
-      // or console.error if this.#logger is the failing dependency or not yet assigned.
-      // Re-throwing the error is appropriate here to halt construction.
-      throw error;
-    }
+    this.#_validateDependency(entityManager, 'entityManager', [
+      'getEntityInstance',
+      'getEntitiesInLocation',
+    ]);
+    this.#_validateDependency(worldContext, 'worldContext', [
+      'getLocationOfEntity',
+      'getCurrentActor',
+      'getCurrentLocation',
+    ]);
+    this.#_validateDependency(gameDataRepository, 'gameDataRepository', [
+      'getActionDefinition',
+      'getAllActionDefinitions',
+    ]);
+    this.#_validateDependency(
+      getEntityIdsForScopes,
+      'getEntityIdsForScopes',
+      [],
+      true
+    );
 
     this.#entityManager = entityManager;
     this.#worldContext = worldContext;

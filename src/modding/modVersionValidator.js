@@ -52,7 +52,7 @@ export default function validateModEngineVersions(manifests, logger) {
 
     // --- Task: Unit tests (missing field) ---
     // Skip if gameVersion is missing (undefined) or explicitly null
-    if (originalGameVersion == null) {
+    if (originalGameVersion === null || originalGameVersion === undefined) {
       continue;
     }
 

@@ -566,7 +566,7 @@ export class SaveGameUI extends BaseModalRenderer {
         nextIndex = slots.length - 1;
         break;
       case 'Enter':
-      case ' ':
+      case ' ': {
         event.preventDefault();
         const slotId = parseInt(target.dataset.slotId || '-1', 10);
         const slotData = this.currentSlotsDisplayData.find(
@@ -577,6 +577,7 @@ export class SaveGameUI extends BaseModalRenderer {
         }
         // If Enter on a selected, valid slot, could potentially trigger save, but for now, selection is enough.
         return;
+      }
       default:
         return;
     }

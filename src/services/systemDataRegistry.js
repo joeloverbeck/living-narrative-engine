@@ -85,7 +85,7 @@ export class SystemDataRegistry {
       return;
     }
 
-    if (sourceInstance == null) {
+    if (sourceInstance === null || sourceInstance === undefined) {
       // Checks for both null and undefined
       this.#logger.warn(
         `${methodName}: Invalid sourceInstance provided for sourceId '${sourceId}'. Must not be null or undefined.`

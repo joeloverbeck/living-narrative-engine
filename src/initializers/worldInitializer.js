@@ -42,6 +42,15 @@ class WorldInitializer {
   #referenceResolver;
 
   /**
+   * Exposes the provided world context for potential external use.
+   *
+   * @returns {IWorldContext}
+   */
+  getWorldContext() {
+    return this.#worldContext;
+  }
+
+  /**
    * Creates an instance of WorldInitializer.
    *
    * @param {object} dependencies

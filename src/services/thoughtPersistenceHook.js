@@ -14,7 +14,11 @@ import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
 export function persistThoughts(action, actorEntity, logger) {
   /* ── 1. Validate thoughts ───────────────────────────────────────────── */
   const rawThoughts = action?.thoughts;
-  if (rawThoughts == null || String(rawThoughts).trim() === '') {
+  if (
+    rawThoughts === null ||
+    rawThoughts === undefined ||
+    String(rawThoughts).trim() === ''
+  ) {
     logger.warn('STM-001 Missing thoughts');
     return;
   }
