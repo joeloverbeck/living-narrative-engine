@@ -1,32 +1,40 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "core:notes",
-  "title": "Core Notes",
-  "description": "Schema for the core:notes component. An object with a single 'notes' array, where each note has exactly two fields: 'text' (non-empty string) and 'timestamp' (ISO 8601 date-time). No extra properties are allowed at any level.",
-  "type": "object",
-  "properties": {
-    "notes": {
-      "type": "array",
-      "minItems": 0,
-      "items": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "minLength": 1,
-            "description": "The note content; must be a non-empty string."
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:notes",
+  "description": "Stores an array of notes (text + ISO-8601 timestamp) on an entity.",
+  "dataSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "notes": {
+        "type": "array",
+        "minItems": 0,
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The note content."
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the note was created."
+            }
           },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "description": "ISO 8601 date-time string representing when the note was created."
-          }
-        },
-        "required": ["text", "timestamp"],
-        "additionalProperties": false
+          "required": [
+            "text",
+            "timestamp"
+          ],
+          "additionalProperties": false
+        }
       }
-    }
+    },
+    "required": [
+      "notes"
+    ],
+    "additionalProperties": false
   },
-  "required": ["notes"],
-  "additionalProperties": false
+  "resolveFields": []
 }
