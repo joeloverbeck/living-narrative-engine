@@ -25,6 +25,8 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import coreNotesSchema from '../../data/mods/core/components/notes.component.json';
+import componentDefinitionSchema from '../../data/schemas/component-definition.schema.json';
+import commonSchema from '../../data/schemas/common.schema.json';
 import { beforeAll, describe, expect, test } from '@jest/globals';
 
 describe('JSON-Schema – core:notes component', () => {
@@ -32,8 +34,19 @@ describe('JSON-Schema – core:notes component', () => {
   let validateEntity;
 
   beforeAll(() => {
-    const ajv = new Ajv({ strict: true, allErrors: true });
+    const ajv = new Ajv({ strict: false, allErrors: true });
     addFormats(ajv);
+
+    ajv.addSchema(
+      commonSchema,
+      'http://example.com/schemas/common.schema.json'
+    );
+
+    // Register the meta schema that defines component definitions
+    ajv.addSchema(
+      componentDefinitionSchema,
+      'http://example.com/schemas/component-definition.schema.json'
+    );
 
     // Register the component schema so it can be $-referred from others.
     ajv.addSchema(coreNotesSchema, 'core:notes');

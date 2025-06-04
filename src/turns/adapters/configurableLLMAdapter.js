@@ -11,6 +11,7 @@ import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
 import {
   CLOUD_API_TYPES, // Added import for CLOUD_API_TYPES
 } from '../../llms/constants/llmConstants.js';
+import gptEncoder from 'gpt-3-encoder';
 
 /**
  * @typedef {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
@@ -750,6 +751,42 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   }
 
   /**
+   * Estimates the number of tokens in a prompt string using a tokenizer library.
+   * Falls back to a rough approximation if tokenization fails.
+   *
+   * @private
+   * @param {string} promptString - The full prompt to be sent to the LLM.
+   * @param {LLMModelConfig} llmConfig - The active LLM configuration.
+   * @returns {number} Estimated token count.
+   */
+  #estimateTokenCount(promptString, llmConfig) {
+    if (!promptString || typeof promptString !== 'string') {
+      this.#logger.warn(
+        `ConfigurableLLMAdapter.#estimateTokenCount: Invalid promptString for LLM '${llmConfig?.configId}'.`
+      );
+      return 0;
+    }
+
+    try {
+      if (gptEncoder && typeof gptEncoder.encode === 'function') {
+        const tokens = gptEncoder.encode(promptString);
+        const count = Array.isArray(tokens) ? tokens.length : tokens;
+        return count;
+      }
+      this.#logger.warn(
+        `ConfigurableLLMAdapter.#estimateTokenCount: Tokenizer encode function not available for LLM '${llmConfig?.configId}'.`
+      );
+    } catch (tokErr) {
+      this.#logger.warn(
+        `ConfigurableLLMAdapter.#estimateTokenCount: Tokenization failed for LLM '${llmConfig?.configId}': ${tokErr.message}`
+      );
+    }
+
+    const approx = promptString.split(/\s+/).filter(Boolean).length;
+    return approx;
+  }
+
+  /**
    * Generates an action and speech based on the provided game summary using a configured LLM.
    *
    * @async
@@ -789,6 +826,14 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
           problematicFields: validationErrors,
         });
       }
+
+      const estimatedTokens = this.#estimateTokenCount(
+        gameSummary,
+        activeConfig
+      );
+      this.#logger.info(
+        `ConfigurableLLMAdapter.getAIDecision: Estimated prompt token count for LLM '${activeConfig.configId}': ${estimatedTokens}`
+      );
 
       const apiKey = await this.#getApiKeyForConfig(activeConfig);
       const strategy = this.#createStrategy(activeConfig);
@@ -933,6 +978,17 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
    */
   getLlmStrategyFactory_FOR_TESTING_ONLY() {
     return this.#llmStrategyFactory;
+  }
+
+  /**
+   * FOR TESTING ONLY: Exposes the private #estimateTokenCount method.
+   *
+   * @param {string} promptString - Prompt to estimate.
+   * @param {LLMModelConfig} llmConfig - Configuration used for estimation.
+   * @returns {number} Estimated token count.
+   */
+  estimateTokenCount_FOR_TESTING_ONLY(promptString, llmConfig) {
+    return this.#estimateTokenCount(promptString, llmConfig);
   }
 }
 
