@@ -1,29 +1,74 @@
 # AGENTS.md
 
-## Installation
+## Overview
 
-- We have a sub-project inside this repository. It's in the folder "llm-proxy-server" from the root. You should navigate
-  to that folder and run "npm install" to install its dependencies. Then you can run, inside that directory, "npm run
-  test" to ensure all tests pass.
+This repository contains two Node projects:
 
-## Global dependencies
+| Path                | Purpose             |
+|---------------------|---------------------|
+| `/`                 | App + tests         |
+| `/llm-proxy-server` | Proxy micro-service |
 
-- You probably need to install jest globally in order to run tests.
-- This repository also uses "http-server" when running the app with "npm run start". I tell you this in case running the
-  app is necessary.
+All commands assume **Node ≥ 20** and **npm ≥ 10** (use `nvm use` if you have multiple versions).
 
-## Linting
+---
 
-- We currently don't use a linter.
+## Quick Start
 
-## Testing
+~~~bash
+# root app
+npm install
+npm test          # runs Jest
 
-- You can run all the tests from the root by running "npm run test". If possible, try to ensure all the tests pass
-  before finalizing your task.
-- Remember that we have a sub-project inside this repository. It's in the folder "llm-proxy-server" from the root.
-  Inside that directory, you can run "npm run test" to run those tests.
+# proxy server
+cd llm-proxy-server
+npm install
+npm test
+~~~
 
-## PR Instructions
+> **Tip:** No global installs needed—everything comes from `devDependencies`.
 
-- Title format: [Fix] Short description
-- Include a one-line summary and a "Testing Done" section
+---
+
+## Scripts
+
+| Location | Script          | Purpose                         |
+|----------|-----------------|---------------------------------|
+| root     | `npm test`      | Runs root-level Jest suite      |
+| root     | `npm run start` | Launches app with `http-server` |
+| proxy    | `npm test`      | Runs proxy tests                |
+
+---
+
+## Linting & Formatting
+
+We currently **do not** enforce linting.  
+If you introduce ESLint/Prettier, ensure CI fails on lint errors and update this doc.
+
+---
+
+## Pull Requests
+
+1. **Title format** – `[Fix] Short description`
+2. **Description template**
+
+~~~text
+Summary: <one-line what/why>
+
+Testing Done:
+- [ ] Root tests `npm test`
+- [ ] Proxy tests `cd llm-proxy-server && npm test`
+- [ ] Manual smoke run `npm run start`
+~~~
+
+3. CI **must** be green before requesting review.
+
+---
+
+## Troubleshooting
+
+| Symptom                  | Fix                                  |
+|--------------------------|--------------------------------------|
+| Tests can’t find `jest`  | `rm -rf node_modules && npm install` |
+| Port 8080 already in use | `PORT=8081 npm run start`            |
+| Proxy env vars missing   | Copy `.env.example` → `.env`         |
