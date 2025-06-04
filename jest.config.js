@@ -1,4 +1,9 @@
-// jest.config.js
+/* eslint-env node */
+
+/**
+ * @description Jest configuration for the root project.
+ * @type {import('@jest/types').Config.InitialOptions}
+ */
 module.exports = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['./jest.setup.js'],
