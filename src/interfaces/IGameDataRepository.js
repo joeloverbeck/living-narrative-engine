@@ -28,4 +28,25 @@ export class IGameDataRepository {
       'IGameDataRepository.getAllActionDefinitions not implemented.'
     );
   }
+
+  /**
+   * Returns the mod ID that supplied a particular content item.
+   *
+   * @param {string} type Content type category.
+   * @param {string} id Fully qualified item ID.
+   * @returns {string | null} Mod ID or null if not tracked.
+   */
+  getContentSource(type, id) {
+    throw new Error('IGameDataRepository.getContentSource not implemented.');
+  }
+
+  /**
+   * Lists all content IDs provided by the specified mod.
+   *
+   * @param {string} modId The mod identifier.
+   * @returns {Record<string, string[]>} Mapping of type to IDs.
+   */
+  listContentByMod(modId) {
+    throw new Error('IGameDataRepository.listContentByMod not implemented.');
+  }
 }

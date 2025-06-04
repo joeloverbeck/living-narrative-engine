@@ -206,6 +206,39 @@ export class GameDataRepository extends IGameDataRepository {
     return this.#registry.getAllComponentDefinitions();
   }
 
+  /**
+   * Retrieves the mod ID responsible for a given content item.
+   *
+   * @param {string} type - The content type (e.g., 'actions').
+   * @param {string} id - The fully qualified item ID.
+   * @returns {string | null} The mod ID or null if unknown.
+   */
+  getContentSource(type, id) {
+    if (typeof this.#registry.getContentSource === 'function') {
+      return this.#registry.getContentSource(type, id);
+    }
+    this.#logger.warn(
+      'GameDataRepository: getContentSource not supported by registry'
+    );
+    return null;
+  }
+
+  /**
+   * Lists all content provided by a specific mod.
+   *
+   * @param {string} modId - The mod identifier.
+   * @returns {Record<string, string[]>} Mapping of type to IDs.
+   */
+  listContentByMod(modId) {
+    if (typeof this.#registry.listContentByMod === 'function') {
+      return this.#registry.listContentByMod(modId);
+    }
+    this.#logger.warn(
+      'GameDataRepository: listContentByMod not supported by registry'
+    );
+    return {};
+  }
+
   // ────────────────────────────────────────────────────────────────────────────
   //  Generic Query Handler
   // ────────────────────────────────────────────────────────────────────────────

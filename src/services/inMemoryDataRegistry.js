@@ -30,6 +30,15 @@ class InMemoryDataRegistry {
      */
     this.data = new Map();
 
+    /**
+     * Tracks which mod supplied each content item.
+     * Maps a content type to a Map of item ID to the originating mod ID.
+     *
+     * @private
+     * @type {Map<string, Map<string, string>>}
+     */
+    this.contentOrigins = new Map();
+
     // Manifest property removed - no longer used.
 
     // console.log("InMemoryDataRegistry: Instance created.");
@@ -66,9 +75,15 @@ class InMemoryDataRegistry {
 
     if (!this.data.has(type)) {
       this.data.set(type, new Map());
+      this.contentOrigins.set(type, new Map());
     }
     const typeMap = this.data.get(type);
     typeMap.set(id, data);
+
+    const originMap = this.contentOrigins.get(type);
+    if (originMap && typeof data.modId === 'string') {
+      originMap.set(id, data.modId);
+    }
   }
 
   /**
@@ -148,6 +163,40 @@ class InMemoryDataRegistry {
     return this.getAll('components');
   }
 
+  /**
+   * Retrieves the mod ID that provided a specific content item.
+   *
+   * @param {string} type - The content type category.
+   * @param {string} id - The fully qualified ID of the content item.
+   * @returns {string | null} The mod ID if tracked, otherwise null.
+   */
+  getContentSource(type, id) {
+    const typeMap = this.contentOrigins.get(type);
+    return typeMap ? typeMap.get(id) || null : null;
+  }
+
+  /**
+   * Lists all content IDs provided by a specific mod, grouped by content type.
+   *
+   * @param {string} modId - The mod identifier.
+   * @returns {Record<string, string[]>} Mapping of content type to array of IDs.
+   */
+  listContentByMod(modId) {
+    /** @type {Record<string, string[]>} */
+    const result = {};
+    for (const [type, idMap] of this.contentOrigins.entries()) {
+      for (const [id, source] of idMap.entries()) {
+        if (source === modId) {
+          if (!result[type]) {
+            result[type] = [];
+          }
+          result[type].push(id);
+        }
+      }
+    }
+    return result;
+  }
+
   // =======================================================
   // --- End Specific Definition Getter Methods ---
   // =======================================================
@@ -157,6 +206,7 @@ class InMemoryDataRegistry {
    */
   clear() {
     this.data.clear();
+    this.contentOrigins.clear();
     // Manifest removed, no need to clear it.
     // console.log("InMemoryDataRegistry: Cleared all data.");
   }
