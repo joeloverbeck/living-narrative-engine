@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
- 
 
 import StaticConfiguration from '../src/services/staticConfiguration.js';
 import DefaultPathResolver from '../src/services/defaultPathResolver.js';
