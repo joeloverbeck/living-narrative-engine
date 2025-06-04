@@ -24,17 +24,14 @@ import { IValidatedEventDispatcher } from '../interfaces/IValidatedEventDispatch
  * Ensures that events are structurally correct before being sent, when possible.
  */
 class ValidatedEventDispatcher extends IValidatedEventDispatcher {
-     * @private
   #eventBus;
-     * @private
   #gameDataRepository;
-     * @private
   #schemaValidator;
-     * @private
   #logger;
 
   /**
    * Creates an instance of ValidatedEventDispatcher.
+   *
    * @param {object} dependencies
    * @param {EventBus} dependencies.eventBus - The main event bus for dispatching and subscriptions.
    * @param {GameDataRepository} dependencies.gameDataRepository - Repository to access event definitions.
@@ -74,10 +71,11 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    * and dispatches the event via the EventBus if validation passes or is skipped.
    * Logs detailed information, including warnings if validation is skipped due to
    * missing definitions or schemas, unless suppressed by options.
+   *
    * @param {string} eventName - The namespaced ID of the event to dispatch.
    * @param {object} payload - The data payload for the event.
-   * @param {object} [options={}] - Optional settings.
-   * @param {boolean} [options.allowSchemaNotFound=false] - If true, suppresses warnings when dispatching occurs specifically because an event definition or its associated payload schema was not found or not yet loaded.
+   * @param {object} [options] - Optional settings.
+   * @param {boolean} [options.allowSchemaNotFound] - If true, suppresses warnings when dispatching occurs specifically because an event definition or its associated payload schema was not found or not yet loaded.
    * @returns {Promise<boolean>} A promise resolving to `true` if the event was successfully dispatched, and `false` otherwise.
    */
   async dispatchValidated(eventName, payload, options = {}) {
@@ -192,6 +190,7 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    * Subscribes a listener function to a specific event name.
    * Delegates directly to the underlying EventBus and returns a function
    * that can be called to unsubscribe the listener.
+   *
    * @param {string} eventName - The name of the event to subscribe to.
    * @param {EventListener} listener - The function to call when the event is dispatched.
    * @returns {() => void} A function that, when called, unsubscribes the listener.
@@ -217,6 +216,7 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
   /**
    * Unsubscribes a listener function from a specific event name.
    * Delegates directly to the underlying EventBus.
+   *
    * @param {string} eventName - The name of the event to unsubscribe from.
    * @param {EventListener} listener - The listener function to remove.
    * @returns {void}

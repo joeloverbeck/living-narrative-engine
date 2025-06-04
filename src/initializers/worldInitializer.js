@@ -43,6 +43,7 @@ class WorldInitializer {
 
   /**
    * Creates an instance of WorldInitializer.
+   *
    * @param {object} dependencies
    * @param {EntityManager} dependencies.entityManager
    * @param {IWorldContext} dependencies.worldContext
@@ -91,6 +92,7 @@ class WorldInitializer {
 
   /**
    * Helper method to dispatch world initialization related events with standardized error logging.
+   *
    * @param {string} eventName - The name of the event.
    * @param {object} payload - The event payload.
    * @param {string} identifierForLog - An identifier (e.g., entity ID, definition ID) for logging purposes if dispatch fails.
@@ -118,6 +120,7 @@ class WorldInitializer {
   /**
    * Instantiates all entities from their definitions based on data from the repository. (Pass 1)
    * Dispatches 'worldinit:entity_instantiated' or 'worldinit:entity_instantiation_failed' events.
+   *
    * @returns {Promise<{entities: Entity[], count: number}>} An object containing the list of instantiated entities and their count.
    * @private
    */
@@ -186,6 +189,7 @@ class WorldInitializer {
   /**
    * Resolves field references for all components of a single entity using the ReferenceResolver.
    * Iterates through the entity's components and their 'resolveFields' specifications.
+   *
    * @param {Entity} entity - The entity whose components need reference resolution.
    * @private
    * @throws {Error} If a critical error occurs during component iteration that should halt processing for this entity.
@@ -276,6 +280,7 @@ class WorldInitializer {
   /**
    * Adds a single entity to the spatial index if it has a valid position and location.
    * Checks for the POSITION_COMPONENT_ID and uses its locationId.
+   *
    * @param {Entity} entity - The entity to potentially add to the spatial index.
    * @returns {boolean} True if the entity was added to the spatial index, false otherwise.
    * @private
@@ -328,6 +333,7 @@ class WorldInitializer {
    * Processes a single entity for reference resolution and spatial index population during Pass 2.
    * This involves validating the entity, resolving its component references,
    * and then attempting to add it to the spatial index.
+   *
    * @param {Entity} entity - The entity to process.
    * @returns {Promise<boolean>} True if the entity was successfully added to the spatial index, false otherwise.
    * @private
@@ -364,6 +370,7 @@ class WorldInitializer {
    * Resolves component references and populates the spatial index for the given entities. (Pass 2)
    * This method iterates through entities, resolving their component references using
    * the ReferenceResolver service and then attempts to add them to the spatial index.
+   *
    * @param {Entity[]} instantiatedEntities - An array of entities instantiated in Pass 1.
    * @private
    */
@@ -391,6 +398,7 @@ class WorldInitializer {
    * and builds the spatial index.
    * Dispatches 'initialization:world_initializer:started/completed/failed' events.
    * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
+   *
    * @returns {Promise<boolean>} Resolves with true if successful.
    * @throws {Error} If a critical error occurs during initialization that should stop the process.
    */

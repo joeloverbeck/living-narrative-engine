@@ -12,6 +12,7 @@
 /**
  * Fetches raw data from a specified source (URL or accessible file path)
  * using the global fetch API. Assumes the response should be JSON.
+ *
  * @implements {IDataFetcher}
  */
 class WorkspaceDataFetcher {
@@ -19,6 +20,7 @@ class WorkspaceDataFetcher {
    * Fetches data identified by the given string (typically a URL or file path).
    * It uses the global `Workspace` function available in the environment.
    * The promise resolves with the parsed JSON data if the request is successful and the content type indicates JSON.
+   *
    * @param {string} identifier - The URL or path string identifying the resource to fetch.
    * @returns {Promise<any>} A promise that resolves with the parsed JSON object from the response body.
    * @throws {Error} Throws an error if the identifier is invalid, the network request fails, the HTTP response status indicates an error (not ok), or if parsing as JSON fails.

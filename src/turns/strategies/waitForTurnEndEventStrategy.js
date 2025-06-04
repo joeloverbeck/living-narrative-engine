@@ -23,6 +23,7 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
    * This strategy transitions the turn to AwaitingExternalTurnEndState, relying solely on
    * ITurnContext to obtain the actor and manage turn progression.
    * The explicit 'actor' parameter has been removed from the signature as per Ticket 2.
+   *
    * @override
    * @async
    * @param {ITurnContext} turnContext - The context for the current turn.

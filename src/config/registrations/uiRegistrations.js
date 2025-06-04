@@ -29,7 +29,7 @@ import {
 } from '../../domUI/index.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
-import { EngineUIManager } from '../../domUI/engineUIManager.js'; // Corrected import path if EngineUIManager is also in domUI/index.js or directly from its file
+import { EngineUIManager } from '../../domUI'; // Corrected import path if EngineUIManager is also in domUI/index.js or directly from its file
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
@@ -47,6 +47,7 @@ import { EngineUIManager } from '../../domUI/engineUIManager.js'; // Corrected i
 
 /**
  * Registers UI-specific dependencies after the DomRenderer refactor.
+ *
  * @export
  * @param {AppContainer} container - The application's DI container.
  * @param {object} uiElements - An object containing references to essential UI elements passed from bootstrap.

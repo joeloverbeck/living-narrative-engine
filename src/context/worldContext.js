@@ -16,6 +16,7 @@ import {
  * from the EntityManager based on component queries. Focuses on identifying the
  * single current actor and their location.
  * Implements the IWorldContext interface.
+ *
  * @class WorldContext
  * @implements {IWorldContext}
  */
@@ -34,6 +35,7 @@ class WorldContext extends IWorldContext {
 
   /**
    * Creates an instance of WorldContext.
+   *
    * @param {EntityManager} entityManager - The entity manager instance to query game state.
    * @param {ILogger} logger - The logger service.
    * @throws {Error} If entityManager or logger is invalid.
@@ -73,6 +75,7 @@ class WorldContext extends IWorldContext {
    * Asserts that exactly one entity has the CURRENT_ACTOR_COMPONENT_ID.
    * Throws an error in development environments if the assertion fails.
    * Logs an error in production environments if the assertion fails.
+   *
    * @private
    * @param {Entity[]} actors - The array of entities found with the current actor component.
    * @returns {boolean} True if the assertion passes (exactly one actor), false otherwise.
@@ -96,6 +99,7 @@ class WorldContext extends IWorldContext {
 
   /**
    * Retrieves the primary entity currently marked as the active actor.
+   *
    * @returns {Entity | null} The current actor entity instance, or null if none or multiple are found.
    * @implements {IWorldContext.getCurrentActor}
    */
@@ -113,6 +117,7 @@ class WorldContext extends IWorldContext {
   /**
    * Retrieves the entity representing the current location of the primary actor.
    * The locationId in the actor's position component should be an instance ID.
+   *
    * @returns {Entity | null} The entity instance representing the current location, or null if it cannot be determined.
    * @implements {IWorldContext.getCurrentLocation}
    */
@@ -156,6 +161,7 @@ class WorldContext extends IWorldContext {
   /**
    * Retrieves the location entity containing a specific entity instance, based on its position component.
    * The locationId in the entity's position component should be an instance ID.
+   *
    * @param {string} entityId - The unique ID of the entity whose location is requested.
    * @returns {Entity | null} The location entity instance where the specified entity resides.
    * @implements {IWorldContext.getLocationOfEntity}
@@ -211,6 +217,7 @@ class WorldContext extends IWorldContext {
   /**
    * Resolves a direction taken from a current location to a target location's INSTANCE ID.
    * This method is intended to be called via SystemDataRegistry for rules.
+   *
    * @param {object} queryParams - Parameters for the query.
    * @param {string} queryParams.current_location_id - The INSTANCE ID of the current location entity.
    * @param {string} queryParams.direction_taken - The direction string (e.g., "out to town").
@@ -310,6 +317,7 @@ class WorldContext extends IWorldContext {
 
   /**
    * Retrieves the current timestamp in ISO 8601 format.
+   *
    * @returns {string} The current ISO 8601 timestamp (e.g., "YYYY-MM-DDTHH:mm:ss.sssZ").
    * @implements {IWorldContext.getCurrentISOTimestamp}
    */
@@ -319,6 +327,7 @@ class WorldContext extends IWorldContext {
 
   /**
    * Handles queries directed to the WorldContext via the SystemDataRegistry.
+   *
    * @param {string | object} queryDetails - Details about the query.
    * Can be a simple string (e.g., "getCurrentISOTimestamp")
    * or an object (e.g., { action: "getCurrentISOTimestamp" } or { query_type: "..."}).

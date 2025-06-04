@@ -1,5 +1,4 @@
 // Filename: src/core/services/worldLoader.js
- 
 
 // --- Type‑only JSDoc imports ────────────────────────────────────────────────
 /** @typedef {import('../interfaces/coreServices.js').ILogger}             ILogger */
@@ -29,6 +28,7 @@ import { resolveOrder } from '../modding/modLoadOrderResolver.js';
 /**
  * Expected return structure from BaseManifestItemLoader.loadItemsForMod.
  * (Assumed to be implemented per AC#8 stretch goal).
+ *
  * @typedef {object} LoadItemsResult
  * @property {number} count - Number of items successfully loaded.
  * @property {number} overrides - Number of items that overwrote existing ones.
@@ -37,6 +37,7 @@ import { resolveOrder } from '../modding/modLoadOrderResolver.js';
 
 /**
  * Structure to hold aggregated results per content type.
+ *
  * @typedef {object} ContentTypeCounts
  * @property {number} count
  * @property {number} overrides
@@ -46,12 +47,14 @@ import { resolveOrder } from '../modding/modLoadOrderResolver.js';
 /**
  * Structure to hold aggregated results for a single mod.
  * Maps typeName to ContentTypeCounts.
+ *
  * @typedef {Record<string, ContentTypeCounts>} ModResultsSummary
  */
 
 /**
  * Structure to hold aggregated results across all mods.
  * Maps typeName to ContentTypeCounts.
+ *
  * @typedef {Record<string, ContentTypeCounts>} TotalResultsSummary
  */
 
@@ -75,6 +78,7 @@ class WorldLoader {
 
   /**
    * Configuration mapping content types to their loaders and parameters.
+   *
    * @private
    * @type {Array<{loader: BaseManifestItemLoaderInterface, contentKey: string, contentTypeDir: string, typeName: string}>}
    */
@@ -83,6 +87,7 @@ class WorldLoader {
   // ── Constructor ────────────────────────────────────────────────────────
   /**
    * Creates an instance of WorldLoader.
+   *
    * @param {object} dependencies - The required service dependencies.
    * @param {IDataRegistry} dependencies.registry - The data registry.
    * @param {ILogger} dependencies.logger - The logging service.
@@ -225,6 +230,7 @@ class WorldLoader {
    * High‑level orchestration of the entire data‑load pipeline.
    * Orchestrates schema loading, game config loading, manifest processing,
    * dependency validation, load order resolution, and sequential, per-mod content loading.
+   *
    * @param {string} worldName - A hint or identifier for the world being loaded (used for logging/events).
    * @returns {Promise<void>} A promise that resolves when loading completes successfully or rejects on critical failure.
    * @throws {Error | ModDependencyError} Re-throws critical errors encountered during the loading sequence.
@@ -600,6 +606,7 @@ class WorldLoader {
   // ── Helper: final summary logger ────────────────────────────────────────
   /**
    * Prints a multi‑line summary of what was loaded across all mods.
+   *
    * @private
    * @param {string}   worldName
    * @param {string[]} requestedModIds
