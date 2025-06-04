@@ -10,7 +10,6 @@
  * @description Represents the comprehensive data structure required to build a prompt for an LLM.
  * It consolidates all necessary information, including character details, world context,
  * available actions, and specific instructions for the AI.
- *
  * @property {string} taskDefinitionContent - Core instructions defining the AI's primary task.
  * @property {string} characterPersonaContent - Detailed description of the AI character's persona,
  * including traits, background, and motivations.

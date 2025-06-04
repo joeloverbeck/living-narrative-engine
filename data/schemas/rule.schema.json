@@ -38,9 +38,6 @@
       "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
     }
   },
-  "required": [
-    "event_type",
-    "actions"
-  ],
+  "required": ["event_type", "actions"],
   "additionalProperties": false
 }

@@ -14,20 +14,14 @@
       "type": {
         "type": "string",
         "description": "Required. The severity level of the message.",
-        "enum": [
-          "error",
-          "warning"
-        ]
+        "enum": ["error", "warning"]
       },
       "details": {
         "type": "string",
         "description": "Optional. Additional technical details about the error, suitable for logging or debugging, but potentially not for direct user display."
       }
     },
-    "required": [
-      "message",
-      "type"
-    ],
+    "required": ["message", "type"],
     "additionalProperties": false
   }
 }

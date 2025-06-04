@@ -11,9 +11,9 @@ provider after securely attaching the necessary API key.
 
 ### 1.1. Request Format
 
-* **Endpoint**: `/api/llm-request` (or a similarly configured central endpoint)
-  * **Method**: `POST`
-  * **Content-Type**: `application/json`
+- **Endpoint**: `/api/llm-request` (or a similarly configured central endpoint)
+  - **Method**: `POST`
+  - **Content-Type**: `application/json`
 
 ### 1.2. Request Body Schema
 
@@ -81,11 +81,11 @@ The JSON body of the POST request from the client to the proxy must adhere to th
 
 ## 2. Proxy-to-Client Error Responses
 
-When the proxy server encounters an error *that it can identify and handle before or during the forwarding process to
-the LLM provider*, or if the proxy itself has an internal issue, it will respond to the client with an error message in
+When the proxy server encounters an error _that it can identify and handle before or during the forwarding process to
+the LLM provider_, or if the proxy itself has an internal issue, it will respond to the client with an error message in
 the following JSON schema.
 
-This schema is for errors originating *within the proxy*, not necessarily for all errors received *from* the downstream
+This schema is for errors originating _within the proxy_, not necessarily for all errors received _from_ the downstream
 LLM API (though the proxy might choose to wrap those in this format if it makes sense for client-side handling).
 
 ### 2.1. Error Response Body Schema
@@ -134,27 +134,27 @@ LLM API (though the proxy might choose to wrap those in this format if it makes 
 
 #### `stage` Enum Values Explained:
 
-* `request_validation`: The client's request to the proxy was malformed or missing required fields (e.g., `llmId` or
+- `request_validation`: The client's request to the proxy was malformed or missing required fields (e.g., `llmId` or
   `targetPayload` missing).
-  * `llm_config_lookup_error`: The proxy could not find its internal configuration associated with the provided `llmId` (
+  - `llm_config_lookup_error`: The proxy could not find its internal configuration associated with the provided `llmId` (
     e.g., to determine the API key name or target LLM URL).
-  * `api_key_retrieval_error`: The proxy failed to retrieve the necessary API key from its environment variables or secure
+  - `api_key_retrieval_error`: The proxy failed to retrieve the necessary API key from its environment variables or secure
     storage, based on the configuration linked to `llmId`.
-  * `llm_endpoint_resolution_error`: The proxy could not determine the actual target LLM API endpoint URL based on the
+  - `llm_endpoint_resolution_error`: The proxy could not determine the actual target LLM API endpoint URL based on the
     `llmId`.
-  * `llm_forwarding_error_network`: The proxy encountered a network issue when attempting to connect to the downstream LLM
+  - `llm_forwarding_error_network`: The proxy encountered a network issue when attempting to connect to the downstream LLM
     provider (e.g., DNS lookup failure, connection timeout).
-  * `llm_forwarding_error_http_client`: The downstream LLM provider responded with a 4xx HTTP error code (e.g., 400 Bad
+  - `llm_forwarding_error_http_client`: The downstream LLM provider responded with a 4xx HTTP error code (e.g., 400 Bad
     Request from LLM, 401 Unauthorized from LLM if key was rejected, 429 Rate Limit).
-  * `llm_forwarding_error_http_server`: The downstream LLM provider responded with a 5xx HTTP error code (e.g., 500
+  - `llm_forwarding_error_http_server`: The downstream LLM provider responded with a 5xx HTTP error code (e.g., 500
     Internal Server Error from LLM).
-  * `internal_proxy_error`: An unexpected server-side error occurred within the proxy itself.
+  - `internal_proxy_error`: An unexpected server-side error occurred within the proxy itself.
 
 ### 2.2. Example Proxy Error Responses
 
 #### Example 1: Request Validation Error
 
-*HTTP Status Code from Proxy to Client: 400 Bad Request*
+_HTTP Status Code from Proxy to Client: 400 Bad Request_
 
     {
       "error": true,
@@ -175,7 +175,7 @@ LLM API (though the proxy might choose to wrap those in this format if it makes 
 
 #### Example 2: API Key Retrieval Error
 
-*HTTP Status Code from Proxy to Client: 500 Internal Server Error* (or 401/403 if more appropriate for the specific
+_HTTP Status Code from Proxy to Client: 500 Internal Server Error_ (or 401/403 if more appropriate for the specific
 scenario of the proxy not being able to fulfill due to its own auth setup issues for the target)
 
     {
@@ -191,7 +191,7 @@ scenario of the proxy not being able to fulfill due to its own auth setup issues
 
 #### Example 3: LLM Forwarding Network Error
 
-*HTTP Status Code from Proxy to Client: 502 Bad Gateway*
+_HTTP Status Code from Proxy to Client: 502 Bad Gateway_
 
     {
       "error": true,
@@ -207,9 +207,9 @@ scenario of the proxy not being able to fulfill due to its own auth setup issues
 
 #### Example 4: Downstream LLM API returns an error (e.g. 400 Bad Request from LLM)
 
-*HTTP Status Code from Proxy to Client: Might be the same as what the LLM returned (e.g., 400), or the proxy might
-choose a more generic 502/503 if it considers the downstream provider unavailable.*
-*This example assumes the proxy relays the HTTP status code of the LLM's error response.*
+_HTTP Status Code from Proxy to Client: Might be the same as what the LLM returned (e.g., 400), or the proxy might
+choose a more generic 502/503 if it considers the downstream provider unavailable._
+_This example assumes the proxy relays the HTTP status code of the LLM's error response._
 
     {
       "error": true,
@@ -237,9 +237,9 @@ changes and managed accordingly with versioning or clear communication to client
 
 ## 4. Security Considerations
 
-* The proxy server **MUST NOT** log the actual `targetPayload` or sensitive parts of `targetHeaders` if they contain
+- The proxy server **MUST NOT** log the actual `targetPayload` or sensitive parts of `targetHeaders` if they contain
   user-specific or confidential information from the game prompt, unless absolutely necessary for debugging and with
   appropriate data protection measures in place.
-  * The `llmId` should be treated as an identifier and not directly expose sensitive details about the backend
+  - The `llmId` should be treated as an identifier and not directly expose sensitive details about the backend
     configuration if it were to be inadvertently logged on the client side.
-  * The proxy must securely retrieve API keys and never expose them to the client or in its own logs.
+  - The proxy must securely retrieve API keys and never expose them to the client or in its own logs.

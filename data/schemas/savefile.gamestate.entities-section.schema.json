@@ -15,9 +15,7 @@
       "uniqueItems": false
     }
   },
-  "required": [
-    "entities"
-  ],
+  "required": ["entities"],
   "definitions": {
     "runtimeEntityInstance": {
       "title": "Runtime Entity Instance",
@@ -29,18 +27,13 @@
           "description": "A persistent, globally unique identifier for this specific entity instance (e.g., a UUID v4). This ID is generated at runtime when the entity instance is created and is used to track the instance across save/load cycles. It MUST be distinct from the definitionId.",
           "type": "string",
           "format": "uuid",
-          "examples": [
-            "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-          ]
+          "examples": ["a1b2c3d4-e5f6-7890-1234-567890abcdef"]
         },
         "definitionId": {
           "description": "The namespaced ID of the entity definition (e.g., 'isekai:hero_character', 'core:chest') from which this instance was originally created. This ID links the instance back to its static template stored in DataRegistry and MUST conform to the common.schema.json#/definitions/namespacedId format.",
           "type": "string",
           "pattern": "^[a-zA-Z0-9_\\-:]+$",
-          "examples": [
-            "isekai:hero_character",
-            "core:chest_01"
-          ]
+          "examples": ["isekai:hero_character", "core:chest_01"]
         },
         "components": {
           "description": "A collection of components currently attached to this entity instance at the time of saving. Keys are namespaced component definition IDs (e.g., 'core:position', 'isekai:mana'), conforming to common.schema.json#/definitions/namespacedId. Values contain the full runtime data for that specific component instance as it exists on this entity. This data reflects any changes from the component's default state in its definition. This collection only includes components currently attached to the instance; components can be dynamically added to an entity instance during gameplay (and would be saved here if attached), and components present in the original definition might have been dynamically removed (and thus would not be present here). The data structure for component values must be serializable (e.g., composed of primitive types, nested objects, and arrays) and should align with the dataSchema defined in its corresponding component definition.",
@@ -106,11 +99,7 @@
           ]
         }
       },
-      "required": [
-        "instanceId",
-        "definitionId",
-        "components"
-      ],
+      "required": ["instanceId", "definitionId", "components"],
       "examples": [
         {
           "instanceId": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
@@ -127,9 +116,7 @@
               "level": 5,
               "experience": 1250
             },
-            "core:effects_active": [
-              "isekai:effect_strength_buff"
-            ]
+            "core:effects_active": ["isekai:effect_strength_buff"]
           }
         },
         {

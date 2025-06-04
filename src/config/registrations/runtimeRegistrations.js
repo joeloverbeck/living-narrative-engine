@@ -1,10 +1,10 @@
 // src/core/config/registrations/runtimeRegistrations.js
 // ****** MODIFIED FILE ******
-import {tokens} from '../tokens.js';
-import {Registrar} from '../registrarHelpers.js';
+import { tokens } from '../tokens.js';
+import { Registrar } from '../registrarHelpers.js';
 // REMOVED: GameLoop import (no longer directly instantiated here)
 // import GameLoop from "../../gameLoop.js";
-import InputSetupService from "../../setup/inputSetupService.js";
+import InputSetupService from '../../setup/inputSetupService.js';
 
 // --- Import Interfaces for Type Hinting ---
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
@@ -24,37 +24,41 @@ import InputSetupService from "../../setup/inputSetupService.js";
 /**
  * Registers runtime services like TurnManager and input setup.
  * NOTE: GameLoop registration has been removed from this file.
- *
  * @export
  * @param {AppContainer} container - The application's DI container.
  */
 export function registerRuntime(container) {
-    const r = new Registrar(container);
-    /** @type {ILogger} */
-    const log = container.resolve(tokens.ILogger); // Use explicit type
-    log.info('Runtime Registration: Starting...'); // <<< Moved log up
+  const r = new Registrar(container);
+  /** @type {ILogger} */
+  const log = container.resolve(tokens.ILogger); // Use explicit type
+  log.info('Runtime Registration: Starting...'); // <<< Moved log up
 
-    // ====================================================================
-    // REMOVED: Register GameLoop as Singleton
-    // The GameLoop instance is now expected to be created and managed
-    // elsewhere, likely within the main application bootstrapping process
-    // or initialization service, *after* the container is configured.
-    // ====================================================================
-    // r.singletonFactory(tokens.GameLoop, c => { ... }); // <<< ENTIRE BLOCK REMOVED
-    // log.info(`Runtime Registration: Registered ${tokens.GameLoop} (Singleton).`); // <<< REMOVED
+  // ====================================================================
+  // REMOVED: Register GameLoop as Singleton
+  // The GameLoop instance is now expected to be created and managed
+  // elsewhere, likely within the main application bootstrapping process
+  // or initialization service, *after* the container is configured.
+  // ====================================================================
+  // r.singletonFactory(tokens.GameLoop, c => { ... }); // <<< ENTIRE BLOCK REMOVED
+  // log.info(`Runtime Registration: Registered ${tokens.GameLoop} (Singleton).`); // <<< REMOVED
 
-
-    r.singletonFactory(tokens.InputSetupService, c => new InputSetupService({
+  r.singletonFactory(
+    tokens.InputSetupService,
+    (c) =>
+      new InputSetupService({
         container: c,
         logger: c.resolve(tokens.ILogger),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher)
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         // REMOVED: GameLoop injection - InputSetupService no longer interacts directly with GameLoop.
         // gameLoop: c.resolve(tokens.GameLoop) // <<< LINE REMOVED
-    }));
-    log.info(`Runtime Registration: Registered ${tokens.InputSetupService} (Singleton).`);
+      })
+  );
+  log.info(
+    `Runtime Registration: Registered ${tokens.InputSetupService} (Singleton).`
+  );
 
-    // Note: Other runtime services like TurnManager, TurnHandlerResolver etc.
-    // are assumed to be registered elsewhere (e.g., serviceRegistrations.js or coreRegistrations.js)
+  // Note: Other runtime services like TurnManager, TurnHandlerResolver etc.
+  // are assumed to be registered elsewhere (e.g., serviceRegistrations.js or coreRegistrations.js)
 
-    log.info('Runtime Registration: complete.');
+  log.info('Runtime Registration: complete.');
 }

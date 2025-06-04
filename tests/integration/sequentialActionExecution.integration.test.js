@@ -1,6 +1,6 @@
 // src/tests/integration/sequentialActionExecution.integration.test.js
 
-/* eslint-disable max-lines */
+ 
 /**
  * Integration Test — Sub‑Ticket 3 (TICKET‑12.3)
  * ------------------------------------------------------------
@@ -31,12 +31,12 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import ModifyComponentHandler from '../../src/logic/operationHandlers/modifyComponentHandler.js';
 import {
-    afterEach,
-    beforeEach,
-    describe,
-    expect,
-    it,
-    jest,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
 } from '@jest/globals';
 
 /** ---------- Simple stubs & helpers ------------------------------------------------ */
@@ -47,196 +47,212 @@ import {
  * context‑assembly helpers.
  */
 class SimpleEntityManager {
-    constructor() {
-        /** @type {Map<string, Map<string, any>>} */
-        this.entities = new Map();
-    }
+  constructor() {
+    /** @type {Map<string, Map<string, any>>} */
+    this.entities = new Map();
+  }
 
-    addComponent(entityId, componentType, data) {
-        if (!this.entities.has(entityId)) this.entities.set(entityId, new Map());
-        this.entities.get(entityId).set(componentType, data);
-    }
+  addComponent(entityId, componentType, data) {
+    if (!this.entities.has(entityId)) this.entities.set(entityId, new Map());
+    this.entities.get(entityId).set(componentType, data);
+  }
 
-    getComponentData(entityId, componentType) {
-        return this.entities.get(entityId)?.get(componentType);
-    }
+  getComponentData(entityId, componentType) {
+    return this.entities.get(entityId)?.get(componentType);
+  }
 
-    hasComponent(entityId, componentType) {
-        return this.entities.get(entityId)?.has(componentType) ?? false;
-    }
+  hasComponent(entityId, componentType) {
+    return this.entities.get(entityId)?.has(componentType) ?? false;
+  }
 
-    /** Minimal stub for contextAssembler’s getEntityInstance() */
-    getEntityInstance(entityId) {
-        return {id: entityId};
-    }
+  /**
+   * Minimal stub for contextAssembler’s getEntityInstance()
+   * @param entityId
+   */
+  getEntityInstance(entityId) {
+    return { id: entityId };
+  }
 }
 
 /** Stub IDataRegistry exposing only the method used by SystemLogicInterpreter. */
 class StubDataRegistry {
-    constructor(rules) {
-        this._rules = rules;
-    }
+  constructor(rules) {
+    this._rules = rules;
+  }
 
-    getAllSystemRules() {
-        return this._rules;
-    }
+  getAllSystemRules() {
+    return this._rules;
+  }
 }
 
 /** Jest‑friendly logger stub capturing calls for optional debugging. */
 const createMockLogger = () => ({
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
 });
 
 /**
  * Build the ExecutionContext object expected by real operation handlers from
  * the *raw* evaluationContext that OperationInterpreter currently passes in.
+ * @param root0
+ * @param root0.evaluationContext
+ * @param root0.entityManager
+ * @param root0.logger
  */
-function buildExecContext({evaluationContext, entityManager, logger}) {
-    return {
-        evaluationContext,
-        entityManager,
-        logger,
-    };
+function buildExecContext({ evaluationContext, entityManager, logger }) {
+  return {
+    evaluationContext,
+    entityManager,
+    logger,
+  };
 }
 
 describe('Sequential Action Execution – Success Path', () => {
-    /** @type {*} */
-    let logger;
-    /** @type {EventBus} */
-    let eventBus;
-    /** @type {SimpleEntityManager} */
-    let entityManager;
-    /** @type {OperationRegistry} */
-    let opRegistry;
-    /** @type {OperationInterpreter} */
-    let opInterpreter;
-    /** @type {JsonLogicEvaluationService} */
-    let jsonLogicSvc;
-    /** @type {SystemLogicInterpreter} */
-    let sysInterpreter;
+  /** @type {*} */
+  let logger;
+  /** @type {EventBus} */
+  let eventBus;
+  /** @type {SimpleEntityManager} */
+  let entityManager;
+  /** @type {OperationRegistry} */
+  let opRegistry;
+  /** @type {OperationInterpreter} */
+  let opInterpreter;
+  /** @type {JsonLogicEvaluationService} */
+  let jsonLogicSvc;
+  /** @type {SystemLogicInterpreter} */
+  let sysInterpreter;
 
-    /** Handler spies we need to assert on */
-    let modifyHandlerSpy;
-    let logHandlerMock;
-    let dispatchHandlerMock;
-    let dispatchSpy; // spy on EventBus.dispatch for side‑effect assertion
+  /** Handler spies we need to assert on */
+  let modifyHandlerSpy;
+  let logHandlerMock;
+  let dispatchHandlerMock;
+  let dispatchSpy; // spy on EventBus.dispatch for side‑effect assertion
 
-    beforeEach(() => {
-        // ─── Core plumbing ────────────────────────────────────────────────
-        logger = createMockLogger();
-        eventBus = new EventBus();
-        entityManager = new SimpleEntityManager();
+  beforeEach(() => {
+    // ─── Core plumbing ────────────────────────────────────────────────
+    logger = createMockLogger();
+    eventBus = new EventBus();
+    entityManager = new SimpleEntityManager();
 
-        opRegistry = new OperationRegistry({logger});
-        opInterpreter = new OperationInterpreter({logger, operationRegistry: opRegistry});
-        jsonLogicSvc = new JsonLogicEvaluationService({logger});
+    opRegistry = new OperationRegistry({ logger });
+    opInterpreter = new OperationInterpreter({
+      logger,
+      operationRegistry: opRegistry,
+    });
+    jsonLogicSvc = new JsonLogicEvaluationService({ logger });
 
-        // ─── Handler registration ─────────────────────────────────────────
-        // 1. MODIFY_COMPONENT – wrap the real handler so we can spy on invocation.
-        const realModifyHandler = new ModifyComponentHandler({entityManager, logger});
-
-        modifyHandlerSpy = jest.fn((params, rawEvalCtx) => {
-            const execCtx = buildExecContext({
-                evaluationContext: rawEvalCtx,
-                entityManager,
-                logger,
-            });
-            realModifyHandler.execute(params, execCtx);
-        });
-        opRegistry.register('MODIFY_COMPONENT', modifyHandlerSpy);
-
-        // 2. LOG – pure mock so we can inspect parameters.
-        logHandlerMock = jest.fn();
-        opRegistry.register('LOG', logHandlerMock);
-
-        // 3. DISPATCH_EVENT – calls through to EventBus.dispatch (which we also spy on)
-        dispatchHandlerMock = jest.fn((params) =>
-            eventBus.dispatch(params.eventType, params.payload),
-        );
-        opRegistry.register('DISPATCH_EVENT', dispatchHandlerMock);
-        dispatchSpy = jest.spyOn(eventBus, 'dispatch');
-
-        // ─── Rule setup ───────────────────────────────────────────────────
-        const testRule = {
-            rule_id: 'test-sequential-success',
-            event_type: 'Test:SequenceTrigger',
-            actions: [
-                {
-                    type: 'MODIFY_COMPONENT',
-                    parameters: {
-                        entity_ref: 'actor',
-                        component_type: 'testState',
-                        field: 'step1_complete',
-                        mode: 'set',
-                        value: true,
-                    },
-                },
-                {
-                    type: 'LOG',
-                    parameters: {
-                        level: 'info',
-                        message: 'Step 2 Logged',
-                    },
-                },
-                {
-                    type: 'DISPATCH_EVENT',
-                    parameters: {
-                        eventType: 'Test:SequenceComplete',
-                        payload: {actorId: '{actor.id}'},
-                    },
-                },
-            ],
-        };
-        const dataRegistry = new StubDataRegistry([testRule]);
-
-        sysInterpreter = new SystemLogicInterpreter({
-            logger,
-            eventBus,
-            dataRegistry,
-            jsonLogicEvaluationService: jsonLogicSvc,
-            entityManager,
-            operationInterpreter: opInterpreter,
-        });
-        sysInterpreter.initialize();
-
-        // ─── World state ──────────────────────────────────────────────────
-        entityManager.addComponent('test-actor-id', 'testState', {
-            step1_complete: false,
-        });
+    // ─── Handler registration ─────────────────────────────────────────
+    // 1. MODIFY_COMPONENT – wrap the real handler so we can spy on invocation.
+    const realModifyHandler = new ModifyComponentHandler({
+      entityManager,
+      logger,
     });
 
-    afterEach(() => {
-        jest.resetAllMocks();
+    modifyHandlerSpy = jest.fn((params, rawEvalCtx) => {
+      const execCtx = buildExecContext({
+        evaluationContext: rawEvalCtx,
+        entityManager,
+        logger,
+      });
+      realModifyHandler.execute(params, execCtx);
+    });
+    opRegistry.register('MODIFY_COMPONENT', modifyHandlerSpy);
+
+    // 2. LOG – pure mock so we can inspect parameters.
+    logHandlerMock = jest.fn();
+    opRegistry.register('LOG', logHandlerMock);
+
+    // 3. DISPATCH_EVENT – calls through to EventBus.dispatch (which we also spy on)
+    dispatchHandlerMock = jest.fn((params) =>
+      eventBus.dispatch(params.eventType, params.payload)
+    );
+    opRegistry.register('DISPATCH_EVENT', dispatchHandlerMock);
+    dispatchSpy = jest.spyOn(eventBus, 'dispatch');
+
+    // ─── Rule setup ───────────────────────────────────────────────────
+    const testRule = {
+      rule_id: 'test-sequential-success',
+      event_type: 'Test:SequenceTrigger',
+      actions: [
+        {
+          type: 'MODIFY_COMPONENT',
+          parameters: {
+            entity_ref: 'actor',
+            component_type: 'testState',
+            field: 'step1_complete',
+            mode: 'set',
+            value: true,
+          },
+        },
+        {
+          type: 'LOG',
+          parameters: {
+            level: 'info',
+            message: 'Step 2 Logged',
+          },
+        },
+        {
+          type: 'DISPATCH_EVENT',
+          parameters: {
+            eventType: 'Test:SequenceComplete',
+            payload: { actorId: '{actor.id}' },
+          },
+        },
+      ],
+    };
+    const dataRegistry = new StubDataRegistry([testRule]);
+
+    sysInterpreter = new SystemLogicInterpreter({
+      logger,
+      eventBus,
+      dataRegistry,
+      jsonLogicEvaluationService: jsonLogicSvc,
+      entityManager,
+      operationInterpreter: opInterpreter,
+    });
+    sysInterpreter.initialize();
+
+    // ─── World state ──────────────────────────────────────────────────
+    entityManager.addComponent('test-actor-id', 'testState', {
+      step1_complete: false,
+    });
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('executes all actions in order and applies each side‑effect', async () => {
+    // ─ Act ─
+    await eventBus.dispatch('Test:SequenceTrigger', {
+      actorId: 'test-actor-id',
     });
 
-    it('executes all actions in order and applies each side‑effect', async () => {
-        // ─ Act ─
-        await eventBus.dispatch('Test:SequenceTrigger', {actorId: 'test-actor-id'});
+    // ─ Assert – side‑effects ─────────────────────────────────────────
+    expect(
+      entityManager.getComponentData('test-actor-id', 'testState')
+        .step1_complete
+    ).toBe(true);
 
-        // ─ Assert – side‑effects ─────────────────────────────────────────
-        expect(
-            entityManager.getComponentData('test-actor-id', 'testState').step1_complete,
-        ).toBe(true);
+    expect(logHandlerMock).toHaveBeenCalledTimes(1);
+    const [logParams] = logHandlerMock.mock.calls[0];
+    expect(logParams).toEqual(
+      expect.objectContaining({ level: 'info', message: 'Step 2 Logged' })
+    );
 
-        expect(logHandlerMock).toHaveBeenCalledTimes(1);
-        const [logParams] = logHandlerMock.mock.calls[0];
-        expect(logParams).toEqual(
-            expect.objectContaining({level: 'info', message: 'Step 2 Logged'}),
-        );
-
-        expect(dispatchSpy).toHaveBeenCalledWith('Test:SequenceComplete', {
-            actorId: 'test-actor-id',
-        });
-
-        // ─ Assert – invocation order ─────────────────────────────────────
-        const modifyOrder = modifyHandlerSpy.mock.invocationCallOrder[0];
-        const logOrder = logHandlerMock.mock.invocationCallOrder[0];
-        const dispatchOrder = dispatchHandlerMock.mock.invocationCallOrder[0];
-
-        expect(modifyOrder).toBeLessThan(logOrder);
-        expect(logOrder).toBeLessThan(dispatchOrder);
+    expect(dispatchSpy).toHaveBeenCalledWith('Test:SequenceComplete', {
+      actorId: 'test-actor-id',
     });
+
+    // ─ Assert – invocation order ─────────────────────────────────────
+    const modifyOrder = modifyHandlerSpy.mock.invocationCallOrder[0];
+    const logOrder = logHandlerMock.mock.invocationCallOrder[0];
+    const dispatchOrder = dispatchHandlerMock.mock.invocationCallOrder[0];
+
+    expect(modifyOrder).toBeLessThan(logOrder);
+    expect(logOrder).toBeLessThan(dispatchOrder);
+  });
 });

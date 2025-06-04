@@ -10,9 +10,7 @@
         "description": "The text content to display as the new title."
       }
     },
-    "required": [
-      "text"
-    ],
+    "required": ["text"],
     "additionalProperties": false,
     "$comment": "Payload contains only the text string for the new title."
   }

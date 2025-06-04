@@ -19,10 +19,7 @@
               "format": "date-time"
             }
           },
-          "required": [
-            "text",
-            "timestamp"
-          ],
+          "required": ["text", "timestamp"],
           "additionalProperties": false
         },
         "default": [],
@@ -34,10 +31,7 @@
         "default": 10
       }
     },
-    "required": [
-      "thoughts",
-      "maxEntries"
-    ],
+    "required": ["thoughts", "maxEntries"],
     "additionalProperties": false
   },
   "resolveFields": []

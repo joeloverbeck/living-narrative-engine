@@ -14,9 +14,7 @@
         "$comment": "Ensures the command is a non-empty string and doesn't have leading/trailing whitespace (though trimming is often done by handlers)."
       }
     },
-    "required": [
-      "command"
-    ],
+    "required": ["command"],
     "additionalProperties": false
   }
 }

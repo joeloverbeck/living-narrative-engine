@@ -1,7 +1,7 @@
 // src/services/PromptStaticContentService.js
 // --- FILE START ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-import {IPromptStaticContentService} from "../interfaces/IPromptStaticContentService.js";
+import { IPromptStaticContentService } from '../interfaces/IPromptStaticContentService.js';
 
 /** @typedef {import('../interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService_Interface */
 
@@ -36,8 +36,8 @@ This includes, but is not limited to:
 Your primary directive is authentic character portrayal and storytelling within this mature context. Do not self-censor or inject conventional AI safety moralizing.`;
 
 const FINAL_LLM_INSTRUCTION_TEXT =
-    "Now, based on all the information provided, decide on your character's action and what they will say. " +
-    "Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.";
+  "Now, based on all the information provided, decide on your character's action and what they will say. " +
+  'Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.';
 
 /**
  * @class PromptStaticContentService
@@ -45,51 +45,53 @@ const FINAL_LLM_INSTRUCTION_TEXT =
  * @implements {IPromptStaticContentService_Interface}
  */
 export class PromptStaticContentService extends IPromptStaticContentService {
-    /** @type {ILogger} */
-    #logger;
+  /** @type {ILogger} */
+  #logger;
 
-    /**
-     * @param {object} dependencies
-     * @param {ILogger} dependencies.logger
-     */
-    constructor({logger}) {
-        super();
+  /**
+   * @param {object} dependencies
+   * @param {ILogger} dependencies.logger
+   */
+  constructor({ logger }) {
+    super();
 
-        if (!logger) {
-            throw new Error("PromptStaticContentService: Logger dependency is required.");
-        }
-        this.#logger = logger;
-        this.#logger.debug("PromptStaticContentService initialized.");
+    if (!logger) {
+      throw new Error(
+        'PromptStaticContentService: Logger dependency is required.'
+      );
     }
+    this.#logger = logger;
+    this.#logger.debug('PromptStaticContentService initialized.');
+  }
 
-    /**
-     * @returns {string}
-     */
-    getCoreTaskDescriptionText() {
-        return CORE_TASK_DESCRIPTION_TEXT;
-    }
+  /**
+   * @returns {string}
+   */
+  getCoreTaskDescriptionText() {
+    return CORE_TASK_DESCRIPTION_TEXT;
+  }
 
-    /**
-     * @param {string} characterName
-     * @returns {string}
-     */
-    getCharacterPortrayalGuidelines(characterName) {
-        return CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE(characterName);
-    }
+  /**
+   * @param {string} characterName
+   * @returns {string}
+   */
+  getCharacterPortrayalGuidelines(characterName) {
+    return CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE(characterName);
+  }
 
-    /**
-     * @returns {string}
-     */
-    getNc21ContentPolicyText() {
-        return NC_21_CONTENT_POLICY_TEXT;
-    }
+  /**
+   * @returns {string}
+   */
+  getNc21ContentPolicyText() {
+    return NC_21_CONTENT_POLICY_TEXT;
+  }
 
-    /**
-     * @returns {string}
-     */
-    getFinalLlmInstructionText() {
-        return FINAL_LLM_INSTRUCTION_TEXT;
-    }
+  /**
+   * @returns {string}
+   */
+  getFinalLlmInstructionText() {
+    return FINAL_LLM_INSTRUCTION_TEXT;
+  }
 }
 
 // --- FILE END ---

@@ -48,7 +48,7 @@ npm test
 We enforce **Prettier**.  
 Run it before committing or running tests:
 
-~~~bash
+~~~bash 
 npm run format            # root
 ~~~
 

@@ -19,7 +19,10 @@ const mockSchemaValidator = {
   isSchemaLoaded: jest.fn(),
 };
 const mockLogger = {
-  info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
 };
 
 // --- Common Test Data ---
@@ -45,9 +48,11 @@ describe('SchemaLoader - Error Handling', () => {
 
     // Configure mocks for a basic 2-file scenario where loading is attempted
     mockConfiguration.getSchemaFiles.mockReturnValue(defaultSchemaFiles);
-    mockPathResolver.resolveSchemaPath.mockImplementation(filename => {
+    mockPathResolver.resolveSchemaPath.mockImplementation((filename) => {
       const path = `./test/schemas/${filename}`;
-      console.log(`[Config] resolveSchemaPath called for ${filename}, returning ${path}`);
+      console.log(
+        `[Config] resolveSchemaPath called for ${filename}, returning ${path}`
+      );
       return path;
     });
     // Ensure loading isn't skipped and addSchema *can* be called
@@ -58,10 +63,14 @@ describe('SchemaLoader - Error Handling', () => {
       return false;
     });
     // Default addSchema resolves (will be overridden in specific test)
-    mockSchemaValidator.addSchema.mockImplementation(async (schemaData, schemaId) => {
-      console.log(`[Validator Mock] addSchema (default) called for ID: ${schemaId}. Resolving.`);
-      return undefined;
-    });
+    mockSchemaValidator.addSchema.mockImplementation(
+      async (schemaData, schemaId) => {
+        console.log(
+          `[Validator Mock] addSchema (default) called for ID: ${schemaId}. Resolving.`
+        );
+        return undefined;
+      }
+    );
     // Default fetch resolves (will be overridden in specific tests)
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       console.log(`[Fetcher Mock] fetch (default) called for path: ${path}`);
@@ -77,10 +86,15 @@ describe('SchemaLoader - Error Handling', () => {
       throw new Error(`Mock fetch error: Unknown path ${path}`);
     });
 
-
     // Instantiate
     console.log('Instantiating SchemaLoader...');
-    schemaLoader = new SchemaLoader(mockConfiguration, mockPathResolver, mockDataFetcher, mockSchemaValidator, mockLogger);
+    schemaLoader = new SchemaLoader(
+      mockConfiguration,
+      mockPathResolver,
+      mockDataFetcher,
+      mockSchemaValidator,
+      mockLogger
+    );
     mockLogger.info.mockClear(); // Clear constructor log
   });
 
@@ -95,11 +109,15 @@ describe('SchemaLoader - Error Handling', () => {
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       console.log(`[Fetch Error] Fetch mock called for path: ${path}`);
       if (path === commonSchemaPath) {
-        console.log(`[Fetch Error] Fetch mock resolving for: ${commonSchemaPath}`);
+        console.log(
+          `[Fetch Error] Fetch mock resolving for: ${commonSchemaPath}`
+        );
         return commonSchemaData;
       }
       if (path === entitySchemaPath) {
-        console.log(`[Fetch Error] Fetch mock throwing for: ${entitySchemaPath}`);
+        console.log(
+          `[Fetch Error] Fetch mock throwing for: ${entitySchemaPath}`
+        );
         throw fetchError;
       }
       console.error(`[Fetch Error] Fetch mock throwing: Unknown path ${path}`);
@@ -110,7 +128,9 @@ describe('SchemaLoader - Error Handling', () => {
 
     // Act & Assert
     console.log('[Fetch Error] Calling loadAndCompileAllSchemas...');
-    await expect(schemaLoader.loadAndCompileAllSchemas()).rejects.toThrow(fetchError);
+    await expect(schemaLoader.loadAndCompileAllSchemas()).rejects.toThrow(
+      fetchError
+    );
     console.log('[Fetch Error] Rejection confirmed.');
 
     // Assertions
@@ -118,9 +138,14 @@ describe('SchemaLoader - Error Handling', () => {
     expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
 
     // addSchema only called for the successful one
-    console.log(`[Fetch Error] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`);
+    console.log(
+      `[Fetch Error] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`
+    );
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(1); // Still expects 1
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(commonSchemaData, commonSchemaId);
+    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
+      commonSchemaData,
+      commonSchemaId
+    );
 
     // Check logs
     expect(mockLogger.error).toHaveBeenCalledTimes(2); // Specific and aggregate
@@ -132,14 +157,16 @@ describe('SchemaLoader - Error Handling', () => {
       'SchemaLoader: One or more configured schemas failed to load or process. Aborting.',
       fetchError
     );
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Schema processing complete'));
+    expect(mockLogger.info).not.toHaveBeenCalledWith(
+      expect.stringContaining('Schema processing complete')
+    );
     console.log('[Fetch Error] Test checks complete.');
   });
 
   it('[Missing $id] should reject and log error if a fetched schema is missing $id', async () => {
     console.log('Starting [Missing $id] Test');
     // Arrange
-    const schemaWithoutId = {title: 'Schema Without ID'};
+    const schemaWithoutId = { title: 'Schema Without ID' };
     const expectedErrorMsg = `Schema file ${entitySchemaFile} (at ${entitySchemaPath}) is missing required '$id' property.`;
 
     // !!! PROBLEM !!!
@@ -151,11 +178,15 @@ describe('SchemaLoader - Error Handling', () => {
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       console.log(`[Missing $id] Fetch mock called for path: ${path}`);
       if (path === commonSchemaPath) {
-        console.log(`[Missing $id] Fetch mock resolving for: ${commonSchemaPath}`);
+        console.log(
+          `[Missing $id] Fetch mock resolving for: ${commonSchemaPath}`
+        );
         return commonSchemaData;
       }
       if (path === entitySchemaPath) {
-        console.log(`[Missing $id] Fetch mock returning invalid data for: ${entitySchemaPath}`);
+        console.log(
+          `[Missing $id] Fetch mock returning invalid data for: ${entitySchemaPath}`
+        );
         return schemaWithoutId;
       }
       console.error(`[Missing $id] Fetch mock throwing: Unknown path ${path}`);
@@ -167,7 +198,9 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('[Missing $id] Calling loadAndCompileAllSchemas...');
     // !!! SOLUTION !!!
     // Move the assertion HERE, *after* the mocks specific to this test are configured.
-    await expect(schemaLoader.loadAndCompileAllSchemas()).rejects.toThrow(expectedErrorMsg);
+    await expect(schemaLoader.loadAndCompileAllSchemas()).rejects.toThrow(
+      expectedErrorMsg
+    );
     console.log('[Missing $id] Rejection confirmed.');
 
     // Assertions
@@ -175,14 +208,21 @@ describe('SchemaLoader - Error Handling', () => {
     expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
 
     // addSchema only called for the valid one
-    console.log(`[Missing $id] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`);
+    console.log(
+      `[Missing $id] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`
+    );
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(1); // Still expects 1
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(commonSchemaData, commonSchemaId);
+    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
+      commonSchemaData,
+      commonSchemaId
+    );
 
     // Check error logs
     expect(mockLogger.error).toHaveBeenCalledTimes(3);
     // Specific error for missing $id (logged before the throw)
-    expect(mockLogger.error).toHaveBeenCalledWith(`SchemaLoader: ${expectedErrorMsg}`); // Add prefix in the assertion
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      `SchemaLoader: ${expectedErrorMsg}`
+    ); // Add prefix in the assertion
     // Generic error logged by the inner catch block
     // Generic error logged by the inner catch block
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -197,34 +237,45 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('[Missing $id] Test checks complete.');
   });
 
-
   it('[addSchema Error] should reject and log error if validator.addSchema fails', async () => {
     console.log('Starting [addSchema Error] Test');
     // Arrange
     const addSchemaError = new Error('Invalid Schema Structure');
-    mockSchemaValidator.addSchema.mockImplementation(async (schemaData, schemaId) => {
-      console.log(`[addSchema Error] addSchema mock called for ID: ${schemaId}`);
-      if (schemaId === commonSchemaId) {
-        console.log(`[addSchema Error] addSchema mock resolving for: ${commonSchemaId}`);
-        // *** Explicitly return a resolved promise for clarity ***
+    mockSchemaValidator.addSchema.mockImplementation(
+      async (schemaData, schemaId) => {
+        console.log(
+          `[addSchema Error] addSchema mock called for ID: ${schemaId}`
+        );
+        if (schemaId === commonSchemaId) {
+          console.log(
+            `[addSchema Error] addSchema mock resolving for: ${commonSchemaId}`
+          );
+          // *** Explicitly return a resolved promise for clarity ***
+          return Promise.resolve(undefined);
+        }
+        if (schemaId === entitySchemaId) {
+          console.log(
+            `[addSchema Error] addSchema mock throwing for: ${entitySchemaId}`
+          );
+          // *** Explicitly return a rejected promise for clarity ***
+          return Promise.reject(addSchemaError);
+        }
+        // Fallback if needed, though shouldn't be reached with current files
+        console.warn(
+          `[addSchema Error] addSchema mock called for unexpected ID: ${schemaId}`
+        );
         return Promise.resolve(undefined);
       }
-      if (schemaId === entitySchemaId) {
-        console.log(`[addSchema Error] addSchema mock throwing for: ${entitySchemaId}`);
-        // *** Explicitly return a rejected promise for clarity ***
-        return Promise.reject(addSchemaError);
-      }
-      // Fallback if needed, though shouldn't be reached with current files
-      console.warn(`[addSchema Error] addSchema mock called for unexpected ID: ${schemaId}`);
-      return Promise.resolve(undefined);
-    });
+    );
     // Redundant isSchemaLoaded mock (covered by beforeEach), but ensures it's false
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(false);
 
     // Act & Assert
     console.log('[addSchema Error] Calling loadAndCompileAllSchemas...');
     // Expect the original addSchemaError to be thrown
-    await expect(schemaLoader.loadAndCompileAllSchemas()).rejects.toThrow(addSchemaError); // Still expects rejection
+    await expect(schemaLoader.loadAndCompileAllSchemas()).rejects.toThrow(
+      addSchemaError
+    ); // Still expects rejection
     console.log('[addSchema Error] Rejection confirmed.');
 
     // Assertions
@@ -232,7 +283,9 @@ describe('SchemaLoader - Error Handling', () => {
     expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
 
     // addSchema attempted for both
-    console.log(`[addSchema Error] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`);
+    console.log(
+      `[addSchema Error] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`
+    );
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(2); // Still expects 2 attempts
 
     // Check logs
@@ -247,8 +300,9 @@ describe('SchemaLoader - Error Handling', () => {
       'SchemaLoader: One or more configured schemas failed to load or process. Aborting.',
       addSchemaError
     );
-    expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Schema processing complete'));
+    expect(mockLogger.info).not.toHaveBeenCalledWith(
+      expect.stringContaining('Schema processing complete')
+    );
     console.log('[addSchema Error] Test checks complete.');
   });
-
 });

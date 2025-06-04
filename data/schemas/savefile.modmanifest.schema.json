@@ -15,9 +15,7 @@
       "uniqueItems": true
     }
   },
-  "required": [
-    "activeMods"
-  ],
+  "required": ["activeMods"],
   "definitions": {
     "activeModEntry": {
       "description": "Represents a single mod that was active when the game was saved.",
@@ -28,33 +26,22 @@
           "description": "The unique identifier of the mod. This MUST exactly match the 'id' field from the mod's 'mod.manifest.json' file and typically aligns with the mod's folder name.",
           "type": "string",
           "pattern": "^[a-zA-Z0-9_]+$",
-          "examples": [
-            "core",
-            "isekai_adventure_pack"
-          ]
+          "examples": ["core", "isekai_adventure_pack"]
         },
         "version": {
           "description": "The exact version string of the mod at the time of saving. This MUST exactly match the 'version' field from the mod's 'mod.manifest.json' file. Semantic Versioning (e.g., '1.2.3') is strongly preferred to aid in compatibility assessment.",
           "type": "string",
           "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$",
-          "examples": [
-            "1.0.0",
-            "0.2.1-beta+build57"
-          ]
+          "examples": ["1.0.0", "0.2.1-beta+build57"]
         },
         "checksum": {
           "description": "(Optional - for future enhancement) A cryptographic checksum (e.g., SHA256) of the mod's critical files or its primary manifest. This could be used in the future to detect unversioned local changes to mod files. V1 implementation may defer calculating or storing this value.",
           "type": "string",
           "pattern": "^[a-fA-F0-9]{64}$",
-          "examples": [
-            "a1b2c3d4e5f6... (SHA256 hash)"
-          ]
+          "examples": ["a1b2c3d4e5f6... (SHA256 hash)"]
         }
       },
-      "required": [
-        "modId",
-        "version"
-      ]
+      "required": ["modId", "version"]
     }
   }
 }

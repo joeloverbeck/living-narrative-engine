@@ -23,113 +23,142 @@
 //  Handler implementation
 // -----------------------------------------------------------------------------
 class RemoveComponentHandler {
-    /** @type {ILogger}        */ #logger;
-    /** @type {EntityManager} */ #entityManager;
+  /** @type {ILogger}        */ #logger;
+  /** @type {EntityManager} */ #entityManager;
 
-    /**
-     * Creates an instance of RemoveComponentHandler.
-     * @param {object} dependencies - Dependencies object.
-     * @param {EntityManager} dependencies.entityManager - The entity management service.
-     * @param {ILogger} dependencies.logger - The logging service instance.
-     * @throws {Error} If entityManager or logger are missing or invalid.
-     */
-    constructor({entityManager, logger}) {
-        // Validate logger FIRST
-        if (!logger || ['info', 'warn', 'error', 'debug'].some(m => typeof logger[m] !== 'function')) {
-            throw new Error('RemoveComponentHandler requires a valid ILogger instance.');
-        }
-        // Validate EntityManager dependency - needs removeComponent
-        if (!entityManager || typeof entityManager.removeComponent !== 'function') {
-            throw new Error('RemoveComponentHandler requires a valid EntityManager instance with a removeComponent method.');
-        }
-        this.#logger = logger;
-        this.#entityManager = entityManager;
+  /**
+   * Creates an instance of RemoveComponentHandler.
+   * @param {object} dependencies - Dependencies object.
+   * @param {EntityManager} dependencies.entityManager - The entity management service.
+   * @param {ILogger} dependencies.logger - The logging service instance.
+   * @throws {Error} If entityManager or logger are missing or invalid.
+   */
+  constructor({ entityManager, logger }) {
+    // Validate logger FIRST
+    if (
+      !logger ||
+      ['info', 'warn', 'error', 'debug'].some(
+        (m) => typeof logger[m] !== 'function'
+      )
+    ) {
+      throw new Error(
+        'RemoveComponentHandler requires a valid ILogger instance.'
+      );
+    }
+    // Validate EntityManager dependency - needs removeComponent
+    if (!entityManager || typeof entityManager.removeComponent !== 'function') {
+      throw new Error(
+        'RemoveComponentHandler requires a valid EntityManager instance with a removeComponent method.'
+      );
+    }
+    this.#logger = logger;
+    this.#entityManager = entityManager;
+  }
+
+  /**
+   * Resolves entity_ref -> entityId or null.
+   * (Copied directly from ModifyComponentHandler/AddComponentHandler as the logic is identical)
+   * @private
+   * @param {RemoveComponentOperationParams['entity_ref']} ref - The entity reference from parameters.
+   * @param {ExecutionContext} ctx - The execution context.
+   * @returns {string | null} The resolved entity ID or null.
+   */
+  #resolveEntityId(ref, ctx) {
+    const ec = ctx?.evaluationContext ?? {};
+    if (typeof ref === 'string') {
+      const t = ref.trim();
+      if (!t) return null;
+      if (t === 'actor') return ec.actor?.id ?? null;
+      if (t === 'target') return ec.target?.id ?? null;
+      return t; // Assume direct ID
+    }
+    if (
+      ref &&
+      typeof ref === 'object' &&
+      typeof ref.entityId === 'string' &&
+      ref.entityId.trim()
+    ) {
+      return ref.entityId.trim();
+    }
+    return null;
+  }
+
+  /**
+   * Executes the REMOVE_COMPONENT operation.
+   * Removes a component instance from the specified entity.
+   * @param {RemoveComponentOperationParams | null | undefined} params - The parameters for the operation.
+   * @param {ExecutionContext} executionContext - The execution context.
+   * @returns {void}
+   * @implements {OperationHandler}
+   */
+  execute(params, executionContext) {
+    const log = executionContext?.logger ?? this.#logger;
+
+    // 1. Validate Parameters
+    if (!params || typeof params !== 'object') {
+      log.warn('REMOVE_COMPONENT: params missing or invalid.', { params });
+      return;
     }
 
-    /**
-     * Resolves entity_ref -> entityId or null.
-     * (Copied directly from ModifyComponentHandler/AddComponentHandler as the logic is identical)
-     * @private
-     * @param {RemoveComponentOperationParams['entity_ref']} ref - The entity reference from parameters.
-     * @param {ExecutionContext} ctx - The execution context.
-     * @returns {string | null} The resolved entity ID or null.
-     */
-    #resolveEntityId(ref, ctx) {
-        const ec = ctx?.evaluationContext ?? {};
-        if (typeof ref === 'string') {
-            const t = ref.trim();
-            if (!t) return null;
-            if (t === 'actor') return ec.actor?.id ?? null;
-            if (t === 'target') return ec.target?.id ?? null;
-            return t; // Assume direct ID
-        }
-        if (ref && typeof ref === 'object' && typeof ref.entityId === 'string' && ref.entityId.trim()) {
-            return ref.entityId.trim();
-        }
-        return null;
+    // Extract required parameters (value is not needed for remove)
+    const { entity_ref, component_type } = params;
+
+    if (!entity_ref) {
+      log.warn('REMOVE_COMPONENT: "entity_ref" parameter is required.');
+      return;
+    }
+    if (typeof component_type !== 'string' || !component_type.trim()) {
+      log.warn(
+        'REMOVE_COMPONENT: Invalid or missing "component_type" parameter (must be non-empty string).'
+      );
+      return;
     }
 
-    /**
-     * Executes the REMOVE_COMPONENT operation.
-     * Removes a component instance from the specified entity.
-     *
-     * @param {RemoveComponentOperationParams | null | undefined} params - The parameters for the operation.
-     * @param {ExecutionContext} executionContext - The execution context.
-     * @returns {void}
-     * @implements {OperationHandler}
-     */
-    execute(params, executionContext) {
-        const log = executionContext?.logger ?? this.#logger;
+    const trimmedComponentType = component_type.trim();
 
-        // 1. Validate Parameters
-        if (!params || typeof params !== 'object') {
-            log.warn('REMOVE_COMPONENT: params missing or invalid.', {params});
-            return;
-        }
-
-        // Extract required parameters (value is not needed for remove)
-        const {entity_ref, component_type} = params;
-
-        if (!entity_ref) {
-            log.warn('REMOVE_COMPONENT: "entity_ref" parameter is required.');
-            return;
-        }
-        if (typeof component_type !== 'string' || !component_type.trim()) {
-            log.warn('REMOVE_COMPONENT: Invalid or missing "component_type" parameter (must be non-empty string).');
-            return;
-        }
-
-        const trimmedComponentType = component_type.trim();
-
-        // 2. Resolve Entity ID
-        const entityId = this.#resolveEntityId(entity_ref, executionContext);
-        if (!entityId) {
-            log.warn(`REMOVE_COMPONENT: Could not resolve entity id from entity_ref.`, {entity_ref});
-            return;
-        }
-
-        // 3. Execute Remove Component
-        try {
-            // EntityManager.removeComponent handles removing the component.
-            // Behavior if component doesn't exist might depend on EntityManager implementation
-            // (e.g., it might return false or just do nothing silently). We assume it
-            // doesn't throw an error for non-existent components, but might for invalid entityId.
-            const removed = this.#entityManager.removeComponent(entityId, trimmedComponentType);
-
-            // Log based on success/failure (assuming removeComponent might return boolean, or just log success if no error)
-            // Adjust logging based on actual EntityManager behavior if needed
-            if (removed !== false) { // Example check, adjust if removeComponent returns void on success
-                log.debug(`REMOVE_COMPONENT: Successfully removed component "${trimmedComponentType}" from entity "${entityId}" (or component did not exist).`);
-            } else {
-                // This branch might be reached if EntityManager explicitly returns false for some reason
-                log.warn(`REMOVE_COMPONENT: Attempted to remove component "${trimmedComponentType}" from entity "${entityId}", but operation reported failure.`);
-            }
-        } catch (e) {
-            // Catch potential errors from removeComponent (e.g., entity not found by EntityManager)
-            log.error(`REMOVE_COMPONENT: Failed to remove component "${trimmedComponentType}" from entity "${entityId}". Error: ${e.message}`, {error: e});
-            // Optionally include stack trace in debug/verbose mode: e.stack
-        }
+    // 2. Resolve Entity ID
+    const entityId = this.#resolveEntityId(entity_ref, executionContext);
+    if (!entityId) {
+      log.warn(
+        `REMOVE_COMPONENT: Could not resolve entity id from entity_ref.`,
+        { entity_ref }
+      );
+      return;
     }
+
+    // 3. Execute Remove Component
+    try {
+      // EntityManager.removeComponent handles removing the component.
+      // Behavior if component doesn't exist might depend on EntityManager implementation
+      // (e.g., it might return false or just do nothing silently). We assume it
+      // doesn't throw an error for non-existent components, but might for invalid entityId.
+      const removed = this.#entityManager.removeComponent(
+        entityId,
+        trimmedComponentType
+      );
+
+      // Log based on success/failure (assuming removeComponent might return boolean, or just log success if no error)
+      // Adjust logging based on actual EntityManager behavior if needed
+      if (removed !== false) {
+        // Example check, adjust if removeComponent returns void on success
+        log.debug(
+          `REMOVE_COMPONENT: Successfully removed component "${trimmedComponentType}" from entity "${entityId}" (or component did not exist).`
+        );
+      } else {
+        // This branch might be reached if EntityManager explicitly returns false for some reason
+        log.warn(
+          `REMOVE_COMPONENT: Attempted to remove component "${trimmedComponentType}" from entity "${entityId}", but operation reported failure.`
+        );
+      }
+    } catch (e) {
+      // Catch potential errors from removeComponent (e.g., entity not found by EntityManager)
+      log.error(
+        `REMOVE_COMPONENT: Failed to remove component "${trimmedComponentType}" from entity "${entityId}". Error: ${e.message}`,
+        { error: e }
+      );
+      // Optionally include stack trace in debug/verbose mode: e.stack
+    }
+  }
 }
 
 export default RemoveComponentHandler;

@@ -1,8 +1,8 @@
 // tests/services/promptStaticContentService.test.js
 // --- FILE START ---
 
-import {jest, describe, beforeEach, it, expect} from '@jest/globals';
-import {PromptStaticContentService} from '../../src/services/promptStaticContentService.js';
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+import { PromptStaticContentService } from '../../src/services/promptStaticContentService.js';
 
 // --- Expected String Constants (derived from PromptStaticContentService.js for verification) ---
 // These are defined here to ensure tests check against the exact values from the service.
@@ -36,94 +36,107 @@ This includes, but is not limited to:
 -   Prejudice, discrimination, and other 'isms' if they are part of the character or world.
 Your primary directive is authentic character portrayal and storytelling within this mature context. Do not self-censor or inject conventional AI safety moralizing.`;
 
-const FINAL_LLM_INSTRUCTION_TEXT_EXPECTED = "Now, based on all the information provided, decide on your character's action and what they will say. Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.";
+const FINAL_LLM_INSTRUCTION_TEXT_EXPECTED =
+  "Now, based on all the information provided, decide on your character's action and what they will say. Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.";
 
 // Mock ILogger
 const mockLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 describe('PromptStaticContentService', () => {
-    let service;
+  let service;
 
-    beforeEach(() => {
-        // Reset mocks before each test
-        mockLogger.debug.mockClear();
-        mockLogger.info.mockClear();
-        mockLogger.warn.mockClear();
-        mockLogger.error.mockClear();
-        service = new PromptStaticContentService({logger: mockLogger});
+  beforeEach(() => {
+    // Reset mocks before each test
+    mockLogger.debug.mockClear();
+    mockLogger.info.mockClear();
+    mockLogger.warn.mockClear();
+    mockLogger.error.mockClear();
+    service = new PromptStaticContentService({ logger: mockLogger });
+  });
+
+  describe('constructor', () => {
+    it('should initialize with a logger and log initialization', () => {
+      expect(service).toBeDefined();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'PromptStaticContentService initialized.'
+      );
     });
 
-    describe('constructor', () => {
-        it('should initialize with a logger and log initialization', () => {
-            expect(service).toBeDefined();
-            expect(mockLogger.debug).toHaveBeenCalledWith("PromptStaticContentService initialized.");
-        });
+    it('should throw an error if logger is not provided', () => {
+      expect(() => new PromptStaticContentService({})).toThrow(
+        'PromptStaticContentService: Logger dependency is required.'
+      );
+      expect(() => new PromptStaticContentService({ logger: null })).toThrow(
+        'PromptStaticContentService: Logger dependency is required.'
+      );
+      expect(
+        () => new PromptStaticContentService({ logger: undefined })
+      ).toThrow('PromptStaticContentService: Logger dependency is required.');
+    });
+  });
 
-        it('should throw an error if logger is not provided', () => {
-            expect(() => new PromptStaticContentService({})).toThrow("PromptStaticContentService: Logger dependency is required.");
-            expect(() => new PromptStaticContentService({logger: null})).toThrow("PromptStaticContentService: Logger dependency is required.");
-            expect(() => new PromptStaticContentService({logger: undefined})).toThrow("PromptStaticContentService: Logger dependency is required.");
-        });
+  describe('getCoreTaskDescriptionText', () => {
+    it('should return the correct core task description text', () => {
+      const text = service.getCoreTaskDescriptionText();
+      expect(text).toEqual(CORE_TASK_DESCRIPTION_TEXT_EXPECTED);
+    });
+  });
+
+  describe('getCharacterPortrayalGuidelines', () => {
+    it('should return portrayal guidelines with the character name capitalized when a name is provided', () => {
+      const characterName = 'MyCharacter';
+      const guidelines = service.getCharacterPortrayalGuidelines(characterName);
+      const expectedGuidelines =
+        CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED(characterName);
+      expect(guidelines).toEqual(expectedGuidelines);
     });
 
-    describe('getCoreTaskDescriptionText', () => {
-        it('should return the correct core task description text', () => {
-            const text = service.getCoreTaskDescriptionText();
-            expect(text).toEqual(CORE_TASK_DESCRIPTION_TEXT_EXPECTED);
-        });
+    it('should return portrayal guidelines with a fallback if name is an empty string', () => {
+      const guidelines = service.getCharacterPortrayalGuidelines('');
+      const expectedGuidelines =
+        CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED('');
+      expect(guidelines).toEqual(expectedGuidelines);
+      expect(guidelines).toContain('BEING THIS CHARACTER:');
+      expect(guidelines).toContain('You are this character.');
     });
 
-    describe('getCharacterPortrayalGuidelines', () => {
-        it('should return portrayal guidelines with the character name capitalized when a name is provided', () => {
-            const characterName = 'MyCharacter';
-            const guidelines = service.getCharacterPortrayalGuidelines(characterName);
-            const expectedGuidelines = CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED(characterName);
-            expect(guidelines).toEqual(expectedGuidelines);
-        });
-
-        it('should return portrayal guidelines with a fallback if name is an empty string', () => {
-            const guidelines = service.getCharacterPortrayalGuidelines('');
-            const expectedGuidelines = CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED('');
-            expect(guidelines).toEqual(expectedGuidelines);
-            expect(guidelines).toContain("BEING THIS CHARACTER:");
-            expect(guidelines).toContain("You are this character.");
-        });
-
-        it('should return portrayal guidelines with a fallback if name is null', () => {
-            const guidelines = service.getCharacterPortrayalGuidelines(null);
-            const expectedGuidelines = CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED(null);
-            expect(guidelines).toEqual(expectedGuidelines);
-            expect(guidelines).toContain("BEING THIS CHARACTER:");
-            expect(guidelines).toContain("You are this character.");
-        });
-
-        it('should return portrayal guidelines with a fallback if name is undefined', () => {
-            const guidelines = service.getCharacterPortrayalGuidelines(undefined);
-            const expectedGuidelines = CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED(undefined);
-            expect(guidelines).toEqual(expectedGuidelines);
-            expect(guidelines).toContain("BEING THIS CHARACTER:");
-            expect(guidelines).toContain("You are this character.");
-        });
+    it('should return portrayal guidelines with a fallback if name is null', () => {
+      const guidelines = service.getCharacterPortrayalGuidelines(null);
+      const expectedGuidelines =
+        CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED(null);
+      expect(guidelines).toEqual(expectedGuidelines);
+      expect(guidelines).toContain('BEING THIS CHARACTER:');
+      expect(guidelines).toContain('You are this character.');
     });
 
-    describe('getNc21ContentPolicyText', () => {
-        it('should return the correct NC-21 content policy text', () => {
-            const text = service.getNc21ContentPolicyText();
-            expect(text).toEqual(NC_21_CONTENT_POLICY_TEXT_EXPECTED);
-        });
+    it('should return portrayal guidelines with a fallback if name is undefined', () => {
+      const guidelines = service.getCharacterPortrayalGuidelines(undefined);
+      const expectedGuidelines =
+        CHARACTER_PORTRAYAL_GUIDELINES_TEMPLATE_EXPECTED(undefined);
+      expect(guidelines).toEqual(expectedGuidelines);
+      expect(guidelines).toContain('BEING THIS CHARACTER:');
+      expect(guidelines).toContain('You are this character.');
     });
+  });
 
-    describe('getFinalLlmInstructionText', () => {
-        it('should return the correct final LLM instruction text', () => {
-            const text = service.getFinalLlmInstructionText();
-            expect(text).toEqual(FINAL_LLM_INSTRUCTION_TEXT_EXPECTED);
-        });
+  describe('getNc21ContentPolicyText', () => {
+    it('should return the correct NC-21 content policy text', () => {
+      const text = service.getNc21ContentPolicyText();
+      expect(text).toEqual(NC_21_CONTENT_POLICY_TEXT_EXPECTED);
     });
+  });
+
+  describe('getFinalLlmInstructionText', () => {
+    it('should return the correct final LLM instruction text', () => {
+      const text = service.getFinalLlmInstructionText();
+      expect(text).toEqual(FINAL_LLM_INSTRUCTION_TEXT_EXPECTED);
+    });
+  });
 });
 
 // --- FILE END ---
