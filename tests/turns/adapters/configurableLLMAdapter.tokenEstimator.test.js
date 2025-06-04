@@ -1,13 +1,28 @@
+// tests/turns/adapters/configurableLLMAdapter.tokenEstimator.test.js
+// -----------------------------------------------------------------------------
+// Verifies the internal token-count helper in ConfigurableLLMAdapter.
+//
+// 2025-06-04 – switched to “gpt-tokenizer”; we stub its encoder so the test
+// suite can dictate the exact token count (or make it blow up) without
+// depending on the real WASM build.
+// -----------------------------------------------------------------------------
+
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ConfigurableLLMAdapter } from '../../../src/turns/adapters/configurableLLMAdapter.js';
 
-jest.mock('gpt-3-encoder', () => ({
-  __esModule: true,
-  default: { encode: jest.fn() },
-}));
+// ---------- MOCK gpt-tokenizer -----------------------------------------------
+jest.mock('gpt-tokenizer', () => {
+  const encodeSpy = jest.fn(); // shared across every “encoding” instance
+  return {
+    __esModule: true,
+    encoding_for_model: jest.fn(() => ({ encode: encodeSpy, free: jest.fn() })),
+    get_encoding: jest.fn(() => ({ encode: encodeSpy, free: jest.fn() })),
+    _encodeSpy: encodeSpy, // re-export so tests can reach it
+  };
+});
+import { _encodeSpy as encodeSpy } from 'gpt-tokenizer';
 
-import gptEncoder from 'gpt-3-encoder';
-
+// ---------- Static fixtures ---------------------------------------------------
 const sampleConfig = {
   configId: 'test-llm',
   displayName: 'Test LLM',
@@ -37,6 +52,7 @@ const mockEnvironmentContext = {
 const mockApiKeyProvider = { getKey: jest.fn() };
 const mockLlmStrategyFactory = { getStrategy: jest.fn() };
 
+// ---------- Tests -------------------------------------------------------------
 describe('ConfigurableLLMAdapter token estimation', () => {
   let adapter;
 
@@ -51,7 +67,7 @@ describe('ConfigurableLLMAdapter token estimation', () => {
   });
 
   it('returns token length from tokenizer when available', () => {
-    gptEncoder.encode.mockReturnValue([1, 2, 3]);
+    encodeSpy.mockReturnValue([1, 2, 3]); // 3 tokens
     const count = adapter.estimateTokenCount_FOR_TESTING_ONLY(
       'test prompt',
       sampleConfig
@@ -60,14 +76,15 @@ describe('ConfigurableLLMAdapter token estimation', () => {
   });
 
   it('falls back to word approximation when tokenizer throws', () => {
-    gptEncoder.encode.mockImplementation(() => {
+    encodeSpy.mockImplementation(() => {
       throw new Error('boom');
     });
+
     const count = adapter.estimateTokenCount_FOR_TESTING_ONLY(
       'two words',
       sampleConfig
     );
-    expect(count).toBe(2);
+    expect(count).toBe(2); // word-count fallback
     expect(mockLogger.warn).toHaveBeenCalled();
   });
 });

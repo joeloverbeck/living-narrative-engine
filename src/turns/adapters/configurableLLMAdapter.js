@@ -2,16 +2,9 @@
 // --- FILE START ---
 
 import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
-// getApiKeyFromFileSystem import removed as per Ticket 21
-// import {getApiKeyFromFile as getApiKeyFromFileSystem} from '../../utils/apiKeyFileRetriever.js';
+import { CLOUD_API_TYPES } from '../../llms/constants/llmConstants.js';
 
-// Base strategy imports are removed as they are no longer directly used here.
-// Strategies are now handled by LLMStrategyFactory.
-
-import {
-  CLOUD_API_TYPES, // Added import for CLOUD_API_TYPES
-} from '../../llms/constants/llmConstants.js';
-import gptEncoder from 'gpt-3-encoder';
+import { encoding_for_model, get_encoding } from 'gpt-tokenizer'; // ⬅ new
 import PromptTooLongError from '../../errors/promptTooLongError.js';
 import {
   LLMInteractionError,
@@ -761,13 +754,13 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   }
 
   /**
-   * Estimates the number of tokens in a prompt string using a tokenizer library.
-   * Falls back to a rough approximation if tokenization fails.
+   * Estimates token count for a prompt using gpt-tokenizer.
+   * Falls back to a rough word-count if the tokenizer blows up.
    *
    * @private
-   * @param {string} promptString - The full prompt to be sent to the LLM.
-   * @param {LLMModelConfig} llmConfig - The active LLM configuration.
-   * @returns {number} Estimated token count.
+   * @param {string} promptString
+   * @param {LLMModelConfig} llmConfig
+   * @returns {number}
    */
   #estimateTokenCount(promptString, llmConfig) {
     if (!promptString || typeof promptString !== 'string') {
@@ -778,22 +771,26 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     }
 
     try {
-      if (gptEncoder && typeof gptEncoder.encode === 'function') {
-        const tokens = gptEncoder.encode(promptString);
-        const count = Array.isArray(tokens) ? tokens.length : tokens;
-        return count;
+      /* pick the right encoding for the model if known; otherwise fall back */
+      let enc;
+      try {
+        enc = encoding_for_model(llmConfig?.modelIdentifier || 'gpt-3.5-turbo');
+      } catch {
+        enc = get_encoding('cl100k_base');
       }
-      this.#logger.warn(
-        `ConfigurableLLMAdapter.#estimateTokenCount: Tokenizer encode function not available for LLM '${llmConfig?.configId}'.`
-      );
+
+      const tokenIds = enc.encode(promptString);
+      const count = Array.isArray(tokenIds) ? tokenIds.length : tokenIds;
+      enc.free(); // release WASM memory
+      return count;
     } catch (tokErr) {
       this.#logger.warn(
         `ConfigurableLLMAdapter.#estimateTokenCount: Tokenization failed for LLM '${llmConfig?.configId}': ${tokErr.message}`
       );
     }
 
-    const approx = promptString.split(/\s+/).filter(Boolean).length;
-    return approx;
+    /* crude fall-back: words ≈ tokens */
+    return promptString.split(/\s+/).filter(Boolean).length;
   }
 
   /**

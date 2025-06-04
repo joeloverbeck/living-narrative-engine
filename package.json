@@ -9,7 +9,7 @@
     "ajv-formats": "^3.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "gpt-3-encoder": "^1.1.4",
+    "gpt-tokenizer": "^2.9.0",
     "jest-mock-extended": "^4.0.0-beta1",
     "jsdom": "^26.1.0",
     "json-logic-js": "^2.0.5",
