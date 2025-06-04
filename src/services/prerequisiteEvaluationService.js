@@ -25,19 +25,17 @@ import { ActionValidationContextBuilder } from './actionValidationContextBuilder
  * and then uses the JsonLogicEvaluationService to evaluate the rules against that context.
  */
 export class PrerequisiteEvaluationService {
-     * @private
   #logger;
-     * @private
   #jsonLogicEvaluationService;
   // --- START: Refactor-AVS-3.3.1 ---
   // No change needed here for 3.3.2
-     * @private
   #actionValidationContextBuilder;
 
   // --- END: Refactor-AVS-3.3.1 ---
 
   /**
    * Creates an instance of PrerequisiteEvaluationService.
+   *
    * @param {{
    * logger: ILogger,
    * jsonLogicEvaluationService: JsonLogicEvaluationService,
@@ -87,6 +85,7 @@ export class PrerequisiteEvaluationService {
    * Evaluates an array of prerequisite rules for a given action context.
    * It first builds the evaluation context using the provided action details
    * and then applies the JsonLogic rules.
+   *
    * @param {object[]} prerequisites - The array of prerequisite rule objects. Should conform to expected structure (e.g., { logic: {...}, failure_message?: "..." }).
    * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
    * @param {Entity} actor - The entity performing the action.

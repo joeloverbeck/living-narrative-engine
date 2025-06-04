@@ -17,8 +17,6 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
-/** @typedef {object} JSONLogicRule */
- * @property
 
 // --- Mock Dependencies ---
 
@@ -35,6 +33,7 @@ const mockLogger = {
 // (Keep these helpers as they are used in logging assertions for other test cases)
 /**
  * Creates a simplified summary of a JSON Logic rule (e.g., for logging).
+ *
  * @param {JSONLogicRule | any} rule The rule object.
  * @returns {string} A string summary.
  */
@@ -51,6 +50,7 @@ const getRuleSummary = (rule) => {
 
 /**
  * Gets the top-level keys from the context object as a string (e.g., for logging).
+ *
  * @param {JsonLogicEvaluationContext | any} context The context object.
  * @returns {string} Comma-separated string of top-level keys.
  */

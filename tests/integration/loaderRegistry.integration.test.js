@@ -11,6 +11,7 @@ import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader
 
 /**
  * Creates a mock IConfiguration service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../../core/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
@@ -40,6 +41,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 /**
  * Creates a mock IPathResolver service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../../core/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
  */
@@ -66,6 +68,7 @@ const createMockPathResolver = (overrides = {}) => ({
 
 /**
  * Creates a mock IDataFetcher service.
+ *
  * @param {object} [pathToResponse] - Map of path strings to successful response data.
  * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
  * @returns {import('../../../../core/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
@@ -93,6 +96,7 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
 
 /**
  * Creates a mock ISchemaValidator service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../../core/interfaces/coreServices.js').ISchemaValidator} Mocked schema validator service.
  */
@@ -171,6 +175,7 @@ const createMockSchemaValidator = (overrides = {}) => {
 
 /**
  * Creates a mock ILogger service.
+ *
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../../core/interfaces/coreServices.js').ILogger} Mocked logger service.
  */

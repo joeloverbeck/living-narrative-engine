@@ -112,19 +112,12 @@ import { performSemanticValidations } from '../../validation/llmConfigSemanticVa
  * @description Service responsible for loading, parsing, and validating LLM prompt configuration files (e.g. llm-configs.json).
  */
 export class LlmConfigLoader {
-     * @private
   #logger;
-     * @private
   #schemaValidator;
-     * @private
   #configuration;
-     * @private
   #defaultConfigPath = 'config/llm-configs.json';
-     * @private
   #defaultMaxRetries = 3;
-     * @private
   #defaultBaseDelayMs = 500;
-     * @private
   #defaultMaxDelayMs = 5000;
 
   constructor(dependencies = {}) {
@@ -155,6 +148,7 @@ export class LlmConfigLoader {
 
   /**
    * Transforms an Ajv error object into a standardized format.
+   *
    * @private
    * @param {import('ajv').ErrorObject} ajvError - The error object from Ajv.
    * @param {LLMRootConfiguration | any} parsedRootData - The root parsed data.
@@ -231,6 +225,7 @@ export class LlmConfigLoader {
 
   /**
    * Transforms an original semantic error object from performSemanticValidations into a standardized format.
+   *
    * @private
    * @param {OriginalSemanticValidationError} semanticError - The original semantic error.
    * @returns {StandardizedValidationError} The standardized error object.
@@ -279,6 +274,7 @@ export class LlmConfigLoader {
 
   /**
    * Loads, parses, and validates the LLM Prompt configuration file.
+   *
    * @async
    * @param {string} [filePathValue] - The path to the llm-configs.json file.
    * @returns {Promise<LLMRootConfiguration | LoadConfigsErrorResult>}

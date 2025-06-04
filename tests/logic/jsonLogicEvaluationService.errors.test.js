@@ -2,7 +2,7 @@
 
 /**
  * @jest-environment node
- * @fileoverview This file contains unit tests for the JsonLogicEvaluationService,
+ * @file This file contains unit tests for the JsonLogicEvaluationService,
  * specifically focusing on error handling scenarios and the handling of non-boolean
  * results returned by the underlying json-logic-js library.
  * It uses a mocked ILogger and spies on `jsonLogic.apply` to simulate these conditions.
@@ -25,8 +25,6 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
-/** @typedef {object} JSONLogicRule */
- * @property
 
 // --- Mock Dependencies ---
 

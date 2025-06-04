@@ -45,16 +45,13 @@ const LLM_SELECTION_MODAL_ELEMENTS_CONFIG = {
  * patterns for rendering the LLM list.
  */
 export class LlmSelectionModal extends BaseModalRenderer {
-     * @private
   #llmAdapter;
-     * @private
   #domElementFactory; // Keep for direct use in _renderListItem
-
-     * @private
   #changeLlmButton = null; // External button, managed here for its event listener
 
   /**
    * Creates an instance of LlmSelectionModal.
+   *
    * @param {object} dependencies - The dependencies for this class.
    * @param {ILogger} dependencies.logger - A logger instance.
    * @param {IDocumentContext} dependencies.documentContext - The document context service.
@@ -175,6 +172,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
 
   /**
    * Fetches LLM options and the currently active LLM ID from the adapter.
+   *
    * @private
    * @async
    * @returns {Promise<LlmListData | null>} Object containing llmOptions and currentActiveLlmId, or null on error.
@@ -199,6 +197,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
 
   /**
    * Renders a single LLM option as an <li> element.
+   *
    * @private
    * @param {LlmConfigOption} optionData - The LLM option data.
    * @param {number} itemIndex - The index of the item.
@@ -251,6 +250,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
 
   /**
    * Gets the message or element to display when the LLM list is empty or fails to load.
+   *
    * @private
    * @param {boolean} errorOccurred - Whether an error occurred while fetching list data.
    * @param {string} [errorMessage] - The error message if an error occurred.
@@ -274,6 +274,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
 
   /**
    * Called after the LLM list has been rendered. Manages tabindex for focus.
+   *
    * @private
    * @param {LlmListData | null} listData - The data that was rendered.
    * @param {HTMLElement} container - The list container element.
@@ -305,6 +306,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
   /**
    * Orchestrates rendering the LLM list: fetches data, clears container,
    * renders items or empty message, and calls post-render hook.
+   *
    * @private
    * @async
    */

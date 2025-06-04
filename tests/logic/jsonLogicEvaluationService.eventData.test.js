@@ -2,7 +2,7 @@
 
 /**
  * @jest-environment node
- * @fileoverview This file contains unit tests for the JsonLogicEvaluationService,
+ * @file This file contains unit tests for the JsonLogicEvaluationService,
  * specifically focusing on accessing event data (event.type, event.payload)
  * within the JsonLogic context using the 'var' operator.
  * Corresponds to Ticket [PARENT_ID].4.
@@ -18,8 +18,6 @@ import Entity from '../../src/entities/entity.js'; // Adjust path - Needed for m
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */ // Adjust path as needed
 /** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */ // Adjust path as needed
-/** @typedef {object} JSONLogicRule */
- * @property
 
 // --- Mock Dependencies (Setup from Ticket [PARENT_ID].1) ---
 

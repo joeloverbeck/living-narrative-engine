@@ -9,6 +9,7 @@
 /**
  * Represents an entity in the game (e.g., player, NPC).
  * Implementations will likely use a more concrete class or interface.
+ *
  * @typedef {import('./ITurnOrderQueue.js').Entity} Entity
  */
 
@@ -27,6 +28,7 @@
 export class ITurnOrderService {
   /**
    * Initializes and starts a new round of turns. This typically clears any previous round's state.
+   *
    * @function startNewRound
    * @param {Array<Entity>} entities - An array of entity objects participating in this round.
    * @param {TurnOrderStrategy} strategy - The strategy to use for ordering turns ('round-robin' or 'initiative').
@@ -43,6 +45,7 @@ export class ITurnOrderService {
   /**
    * Gets the next entity whose turn it is and advances the turn order.
    * This effectively consumes the turn from the underlying queue.
+   *
    * @function getNextEntity
    * @returns {Entity | null} The entity whose turn is next, or null if the round is over or the queue is empty.
    */
@@ -53,6 +56,7 @@ export class ITurnOrderService {
   /**
    * Returns the next entity in the turn order without advancing the turn.
    * Useful for predicting who is next without changing the state.
+   *
    * @function peekNextEntity
    * @returns {Entity | null} The entity whose turn is next, or null if the round is over or the queue is empty.
    */
@@ -63,6 +67,7 @@ export class ITurnOrderService {
   /**
    * Adds an entity to the current round's turn order dynamically (e.g., a summoned creature).
    * The entity's position depends on the current strategy and implementation details (e.g., added at the end for round-robin, slotted by initiative).
+   *
    * @function addEntity
    * @param {Entity} entity - The entity to add.
    * @param {number} [initiativeValue] - The initiative score for the entity, primarily used if the current strategy is 'initiative'.
@@ -76,6 +81,7 @@ export class ITurnOrderService {
 
   /**
    * Removes an entity from the current round's turn order (e.g., if defeated or removed from combat).
+   *
    * @function removeEntity
    * @param {string} entityId - The unique ID of the entity to remove.
    * @returns {void}
@@ -87,6 +93,7 @@ export class ITurnOrderService {
 
   /**
    * Checks if the turn order queue for the current round is empty (meaning all entities have taken their turn this round, or the round hasn't started/was cleared).
+   *
    * @function isEmpty
    * @returns {boolean} True if the turn order is complete or empty, false otherwise.
    */
@@ -97,6 +104,7 @@ export class ITurnOrderService {
   /**
    * Gets a list of entities currently remaining in the turn order for this round.
    * This list should be treated as read-only by consumers. The order reflects the *remaining* turn sequence.
+   *
    * @function getCurrentOrder
    * @returns {ReadonlyArray<Entity>} A read-only array of entities remaining in the turn order. Returns an empty array `[]` if none remain.
    * (Note: JSDoc uses `Array<Entity>`, the `ReadonlyArray` implies intent).
@@ -110,6 +118,7 @@ export class ITurnOrderService {
   /**
    * Clears the current turn order queue and resets any round-specific state.
    * Typically called when a round ends or is explicitly stopped.
+   *
    * @function clearCurrentRound
    * @returns {void}
    */

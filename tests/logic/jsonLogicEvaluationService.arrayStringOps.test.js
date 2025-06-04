@@ -2,7 +2,7 @@
 
 /**
  * @jest-environment node
- * @fileoverview This file contains unit tests for the JsonLogicEvaluationService.
+ * @file This file contains unit tests for the JsonLogicEvaluationService.
  * It focuses specifically on testing array and string operators, like 'in',
  * verifying their behavior when accessing data from the evaluation context
  * (e.g., actor components, event payload).
@@ -25,8 +25,6 @@ import Entity from '../../src/entities/entity.js'; // Adjust path as needed - Fo
 /** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */ // Adjust path as needed
-/** @typedef {object} JSONLogicRule */
- * @property
 
 // --- Mock Dependencies ---
 

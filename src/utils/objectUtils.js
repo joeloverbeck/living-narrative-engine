@@ -7,6 +7,7 @@
 /**
  * Safely retrieves a potentially nested property value from an object using a dot-notation path string.
  * This function is purely generic and has no knowledge of specific application structures like Entities or Components.
+ *
  * @param {Record<string, any> | any[] | null | undefined} obj - The object or array to retrieve the property from.
  * @param {string | null | undefined} propertyPath - The dot-separated path string (e.g., "a.b.c", "a.list.0.name").
  * @returns {any | undefined} The value found at the specified path, or undefined if:

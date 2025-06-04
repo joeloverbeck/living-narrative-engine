@@ -19,6 +19,7 @@ import { Registrar } from '../registrarHelpers.js'; // Adjusted path
 
 /**
  * Registers the InitializationService and ShutdownService.
+ *
  * @export
  * @param {AppContainer} container - The application's DI container.
  */

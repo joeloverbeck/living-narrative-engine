@@ -133,6 +133,7 @@ export class PromptBuilder extends IPromptBuilder {
 
   /**
    * Initializes a new instance of the PromptBuilder.
+   *
    * @param {object} dependencies - The dependencies for the PromptBuilder.
    * @param {ILogger} [dependencies.logger] - An optional logger instance.
    * @param {LLMConfigService} dependencies.llmConfigService - Service for LLM configuration management.
@@ -255,6 +256,7 @@ export class PromptBuilder extends IPromptBuilder {
   /**
    * Assembles a final prompt string based on the provided LLM identifier and structured prompt data.
    * This method orchestrates the assembly by delegating to specialized assembler components.
+   *
    * @param {string} llmId - A string identifying the target LLM. This is typically the `configId` of an LLM configuration,
    * or a `modelIdentifier` that the `LLMConfigService` can resolve.
    * @param {PromptData} promptData - A structured JavaScript object containing content and flags.

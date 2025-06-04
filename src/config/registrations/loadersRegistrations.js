@@ -51,6 +51,7 @@ import { Registrar } from '../registrarHelpers.js';
 /**
  * Registers core data infrastructure services (Configuration, PathResolver, Validator, Registry, Fetcher)
  * and specific data loaders (Schema, Manifest, Rules, Generic Content, Component Definitions, Game Config, Mod Manifests). // <<< UPDATED Description
+ *
  * @export
  * @param {AppContainer} container - The application's DI container.
  */

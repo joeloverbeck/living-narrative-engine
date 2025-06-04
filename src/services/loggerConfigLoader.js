@@ -62,6 +62,7 @@ export class LoggerConfigLoader {
 
   /**
    * Creates an instance of LoggerConfigLoader.
+   *
    * @param {object} [dependencies] - Optional dependencies.
    * @param {ILogger} [dependencies.logger] - An optional logger instance. Uses `console` for its own logging if not provided,
    * which is important during early bootstrap when the main app logger might not be fully configured.
@@ -82,6 +83,7 @@ export class LoggerConfigLoader {
   /**
    * Loads and parses the logger configuration file from the specified path,
    * or a default path if none is provided.
+   *
    * @async
    * @param {string} [filePath] - The path to the logger-config.json file.
    * If not provided, the configured default path will be used.

@@ -13,8 +13,6 @@ import Entity from '../../src/entities/entity.js'; // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */
 /** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */
-/** @typedef {object} JSONLogicRule */
- * @property
 
 // --- Mock Dependencies ---
 

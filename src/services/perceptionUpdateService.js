@@ -48,6 +48,7 @@ const DEFAULT_MAX_LOG_ENTRIES = 50; // Default based on schema
 /**
  * Service responsible for updating character perception logs within a given location.
  * Implements a handleQuery method to be compatible with SystemDataRegistry.
+ *
  * @class PerceptionUpdateService
  */
 class PerceptionUpdateService {
@@ -56,6 +57,7 @@ class PerceptionUpdateService {
 
   /**
    * Creates an instance of PerceptionUpdateService.
+   *
    * @param {object} dependencies - The dependencies for the service.
    * @param {ILogger} dependencies.logger - The logger service.
    * @param {IEntityManager} dependencies.entityManager - The entity manager service.
@@ -90,6 +92,7 @@ class PerceptionUpdateService {
   /**
    * Handles queries routed from the SystemDataRegistry.
    * This method acts as a dispatcher based on the 'action' property in queryDetails.
+   *
    * @param {QueryDetailsForPerceptionUpdate} queryDetails - An object containing the action to perform and its parameters.
    * @returns {Promise<PerceptionUpdateResult | any>} A promise resolving to the result of the dispatched action.
    */
@@ -137,6 +140,7 @@ class PerceptionUpdateService {
   /**
    * Adds a new log entry to the perception logs of all relevant entities in a specified location.
    * Relevant entities are those present in the location and possessing a 'core:perception_log' component.
+   *
    * @param {AddEntryParams} params - The parameters for adding the log entry.
    * @returns {Promise<PerceptionUpdateResult>} A Promise resolving to an object indicating the outcome.
    */

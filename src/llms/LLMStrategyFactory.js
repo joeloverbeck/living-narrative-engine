@@ -46,6 +46,7 @@ export class LLMStrategyFactory {
 
   /**
    * Creates an instance of LLMStrategyFactory.
+   *
    * @param {object} dependencies - The dependencies for this factory.
    * @param {IHttpClient} dependencies.httpClient - An instance conforming to IHttpClient.
    * @param {ILogger} dependencies.logger - An instance conforming to ILogger.
@@ -81,6 +82,7 @@ export class LLMStrategyFactory {
 
   /**
    * Creates and returns the appropriate concrete ILLMStrategy instance.
+   *
    * @param {LLMModelConfigType} llmConfig - The configuration for the LLM model.
    * @returns {ILLMStrategy} An instance of the selected concrete ILLMStrategy.
    * @throws {ConfigurationError} If llmConfig is invalid (e.g., missing apiType).

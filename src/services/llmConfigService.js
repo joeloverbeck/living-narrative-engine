@@ -83,6 +83,7 @@ export class LLMConfigService {
 
   /**
    * Creates an instance of LLMConfigService.
+   *
    * @param {object} options - The options for the LLMConfigService.
    * @param {IConfigurationProvider} options.configurationProvider - The configuration provider instance.
    * @param {ILogger} options.logger - An ILogger instance for logging.
@@ -154,6 +155,7 @@ export class LLMConfigService {
 
   /**
    * Validates the basic structure of an individual LLMConfig object.
+   *
    * @private
    * @param {any} config - The configuration object to validate.
    * @returns {boolean} True if the config is valid, false otherwise.
@@ -224,6 +226,7 @@ export class LLMConfigService {
   /**
    * Adds or updates configurations in the cache.
    * Validates each configuration before adding.
+   *
    * @param {LLMConfig[]} configs - An array of LLMConfig objects to add or update.
    * @param {boolean} [isInitialLoad] - Internal flag to adjust behavior for constructor loading.
    * @returns {void}
@@ -293,6 +296,7 @@ export class LLMConfigService {
    * Fetches configurations from the configured source using IConfigurationProvider,
    * validates them, and populates the internal cache.
    * Sets the #configsLoadedOrAttempted flag regardless of success or failure.
+   *
    * @private
    * @async
    * @returns {Promise<void>}
@@ -402,6 +406,7 @@ export class LLMConfigService {
    * Ensures that configurations are loaded into the cache if they haven't been already.
    * This method handles the logic to load configurations only once unless explicitly refreshed.
    * It considers if a source identifier is set or if initial configs were provided.
+   *
    * @private
    * @async
    * @returns {Promise<void>}
@@ -464,6 +469,7 @@ export class LLMConfigService {
    * 1. Direct match by `configId`.
    * 2. Exact match by `modelIdentifier`.
    * 3. Wildcard match by `modelIdentifier` (longest prefix wins).
+   *
    * @public
    * @async
    * @param {string} llmId - The identifier of the LLM configuration to retrieve.
@@ -570,6 +576,7 @@ export class LLMConfigService {
   /**
    * Clears the internal LLM configurations cache and resets the loaded state flag.
    * This forces a fresh load from the source on the next getConfig call if a source is configured.
+   *
    * @public
    * @returns {void}
    */
@@ -587,6 +594,7 @@ export class LLMConfigService {
    * Retrieves the internal LLM configurations cache.
    * NOTE: This method is intended for testing purposes only.
    * Modifying the returned map directly can lead to unpredictable behavior.
+   *
    * @public
    * @returns {Map<string, LLMConfig>} The internal map of LLM configurations.
    */
@@ -597,6 +605,7 @@ export class LLMConfigService {
   /**
    * Retrieves the internal flag indicating if configurations have been loaded or an attempt was made.
    * NOTE: This method is intended for testing purposes only.
+   *
    * @public
    * @returns {boolean} The value of the #configsLoadedOrAttempted flag.
    */

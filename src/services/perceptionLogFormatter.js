@@ -51,6 +51,7 @@ export class PerceptionLogFormatter {
 
   /**
    * Transforms an array of raw perception log entries.
+   *
    * @param {RawPerceptionLogEntry[]} rawLogEntries - The raw perception log entries from game state.
    * @returns {FormattedPerceptionEntry[]} The formatted perception log entries.
    */

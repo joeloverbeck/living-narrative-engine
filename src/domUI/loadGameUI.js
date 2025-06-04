@@ -17,6 +17,7 @@ import { FormatUtils } from '../utils/formatUtils.js';
 
 /**
  * Extends SaveFileMetadata for display purposes, including corruption status.
+ *
  * @typedef {SaveFileMetadata & { isCorrupted?: boolean }} LoadSlotDisplayData
  */
 
@@ -46,16 +47,11 @@ const LOAD_GAME_UI_ELEMENTS_CONFIG = {
  * @description Manages the modal dialog for loading saved games.
  */
 class LoadGameUI extends BaseModalRenderer {
-     * @private
   saveLoadService;
-     * @private
   gameEngine = null;
-     * @private
   domElementFactory; // Kept for direct use in _renderLoadSlotItem
 
-     * @private
   selectedSlotData = null;
-     * @private
   currentSlotsDisplayData = [];
 
   // isOperationInProgress is managed by BaseModalRenderer's _setOperationInProgress
@@ -110,6 +106,7 @@ class LoadGameUI extends BaseModalRenderer {
 
   /**
    * Initializes the LoadGameUI with the GameEngine instance and sets up event listeners.
+   *
    * @param {GameEngine} gameEngineInstance - The main game engine instance.
    */
   init(gameEngineInstance) {
@@ -226,6 +223,7 @@ class LoadGameUI extends BaseModalRenderer {
 
   /**
    * Fetches and processes save slot data from the service.
+   *
    * @private
    * @async
    * @returns {Promise<LoadSlotDisplayData[]>}
@@ -271,6 +269,7 @@ class LoadGameUI extends BaseModalRenderer {
 
   /**
    * Renders a single save slot item.
+   *
    * @private
    * @param {LoadSlotDisplayData} slotData - The data for the slot.
    * @param {number} itemIndex - The index of the item.
@@ -345,6 +344,7 @@ class LoadGameUI extends BaseModalRenderer {
 
   /**
    * Gets the message to display when the load slots list is empty.
+   *
    * @private
    * @returns {string | HTMLElement}
    */
@@ -362,6 +362,7 @@ class LoadGameUI extends BaseModalRenderer {
   /**
    * Populates the load slots list in the UI.
    * Orchestrates fetching data, clearing container, rendering items or empty message.
+   *
    * @private
    * @async
    */
@@ -540,6 +541,7 @@ class LoadGameUI extends BaseModalRenderer {
 
   /**
    * Handles the "Load" button click.
+   *
    * @private
    * @async
    */
@@ -621,6 +623,7 @@ class LoadGameUI extends BaseModalRenderer {
 
   /**
    * Handles the "Delete" button click.
+   *
    * @private
    * @async
    */

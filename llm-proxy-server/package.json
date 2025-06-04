@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node src/core/server.js",
     "dev": "node --watch src/core/server.js",
-    "test": "jest"
+    "test": "jest",
+    "format": "prettier --write \"**/*.{js,json,md,cjs}\"",
+    "format:check": "prettier --check \"**/*.{js,json,md,cjs}\"",
+    "lint": "eslint . --ext .js,.cjs --fix"
   },
   "keywords": [
     "llm",
@@ -24,6 +27,12 @@
   "devDependencies": {
     "@babel/core": "^7.27.1",
     "@babel/preset-env": "^7.27.2",
-    "babel-jest": "^29.7.0"
+    "babel-jest": "^29.7.0",
+    "globals": "^16.2.0",
+    "prettier": "^3.5.3",
+    "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-jest": "^28.12.0",
+    "eslint-plugin-jsdoc": "^50.7.1"
   }
 }

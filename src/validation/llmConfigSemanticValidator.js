@@ -24,6 +24,7 @@
  * The primary check ensures that all string keys listed in any `promptAssemblyOrder`
  * array correspond to actual `key` values defined in the `promptElements` array
  * within the same configuration object.
+ *
  * @param {Record<string, LLMConfiguration>} configsMap - The map of LLM configurations (e.g., parsedRootObject.configs).
  * @returns {SemanticValidationError[]} An array of semantic error objects. If no errors are found, it returns an empty array.
  */

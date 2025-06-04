@@ -19,6 +19,7 @@ export class PlaceholderResolver {
 
   /**
    * Initializes a new instance of the PlaceholderResolver.
+   *
    * @param {ILogger} [logger] - An optional logger instance. If not provided, `console` will be used.
    */
   constructor(logger = console) {
@@ -39,6 +40,7 @@ export class PlaceholderResolver {
    *
    * If the input `str` is not a string or is empty, an empty string is returned.
    * Non-object items in `dataSources` are gracefully skipped during the key search.
+   *
    * @param {string} str - The string potentially containing placeholders (e.g., "Hello {name}, welcome to {place}!").
    * @param {...object} dataSources - A variable number of data source objects to search for placeholder values.
    * Earlier objects in the list take precedence.

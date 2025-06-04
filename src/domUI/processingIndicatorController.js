@@ -23,6 +23,7 @@ import {
 export class ProcessingIndicatorController extends BoundDomRendererBase {
   /**
    * The dynamically created or found processing indicator HTML element.
+   *
    * @private
    * @type {HTMLElement | null}
    */
@@ -30,6 +31,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
   /**
    * The speech input element, if handling player input indication.
+   *
    * @private
    * @type {HTMLInputElement | null}
    */
@@ -37,6 +39,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
   /**
    * The DomElementFactory instance.
+   *
    * @private
    * @type {DomElementFactory | null}
    */
@@ -104,6 +107,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
   /**
    * Finds or creates the indicator element and appends it to the outputDiv.
+   *
    * @private
    */
   #initializeIndicatorElement() {
@@ -166,6 +170,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
   /**
    * Subscribes to relevant VED events and DOM events.
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -216,6 +221,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
   /**
    * Shows the processing indicator.
+   *
    * @param {IndicatorType} type - The type of processing causing the indicator to show.
    * @private
    */
@@ -244,6 +250,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
   /**
    * Hides the processing indicator.
+   *
    * @param {IndicatorType | 'initialization'} type - The type of processing causing the indicator to hide.
    * @private
    */
@@ -268,6 +275,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
   /**
    * Cleans up resources, removing the indicator element if dynamically created.
+   *
    * @override
    */
   dispose() {

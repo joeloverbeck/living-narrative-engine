@@ -6,6 +6,7 @@
 /**
  * The unique identifier used to register and retrieve the v1 schema
  * with the AjvSchemaValidator.
+ *
  * @type {string}
  */
 export const LLM_TURN_ACTION_SCHEMA_ID = 'llmTurnActionResponseSchema/v1';
@@ -52,6 +53,7 @@ export const LLM_TURN_ACTION_SCHEMA = {
 /**
  * The unique identifier used to register and retrieve the v2 schema
  * (includes `thoughts`) with the AjvSchemaValidator.
+ *
  * @type {string}
  */
 export const LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID =

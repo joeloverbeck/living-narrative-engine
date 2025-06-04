@@ -11,6 +11,7 @@
 export class LLMStrategyFactoryError extends Error {
   /**
    * The API type (e.g., "openai", "anthropic") from the LLMModelConfig that was problematic.
+   *
    * @type {string | undefined}
    */
   apiType;
@@ -18,12 +19,14 @@ export class LLMStrategyFactoryError extends Error {
   /**
    * The JSON output method (e.g., "tool_calling", "native_json_mode") from the
    * LLMModelConfig's jsonOutputStrategy that was problematic.
+   *
    * @type {string | undefined}
    */
   jsonOutputMethod;
 
   /**
    * Creates an instance of LLMStrategyFactoryError.
+   *
    * @param {string} message - The primary error message.
    * @param {object} [details] - Additional details about the error.
    * @param {string} [details.apiType] - The apiType that caused the error.

@@ -8,6 +8,7 @@
 class OperationRegistry {
   /**
    * Internal storage for mapping operation type strings to operationHandlers.
+   *
    * @private
    * @readonly
    * @type {Map<string, OperationHandler>}
@@ -16,6 +17,7 @@ class OperationRegistry {
 
   /**
    * Optional logger instance for internal messages (like registration warnings).
+   *
    * @private
    * @type {ILogger | null}
    */
@@ -23,6 +25,7 @@ class OperationRegistry {
 
   /**
    * Creates an instance of OperationRegistry.
+   *
    * @param {object} [dependencies] - Optional dependencies.
    * @param {ILogger} [dependencies.logger] - Optional logger for warnings.
    */
@@ -83,6 +86,7 @@ class OperationRegistry {
   /**
    * Internal logging helper that uses the injected logger or falls back to console.
    * Also handles errors thrown by the logger itself.
+   *
    * @private
    * @param {'info' | 'warn' | 'error' | 'debug'} level - Log level.
    * @param {string} message - The log message.

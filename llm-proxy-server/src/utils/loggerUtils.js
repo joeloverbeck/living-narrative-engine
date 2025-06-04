@@ -6,6 +6,7 @@
 
 /**
  * Ensures that a valid logger object is available, providing a console fallback if necessary.
+ *
  * @param {ILogger | undefined | null} logger - The logger instance to validate.
  * @param {string} [fallbackMessagePrefix] - A prefix for messages logged by the fallback console logger.
  * @returns {ILogger} A valid logger instance (either the one provided or a console-based fallback).

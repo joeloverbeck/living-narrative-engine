@@ -1,6 +1,5 @@
 // src/logic/operationHandlers/modifyComponentHandler.js
 
- 
 // -----------------------------------------------------------------------------
 //  MODIFY_COMPONENT Handler — Ticket T-02 / Refactored T-XX
 //  Applies modifications ('set' or 'inc') to specific fields within an existing component.
@@ -23,6 +22,7 @@ import resolvePath from '../../utils/resolvePath.js';
 
 /**
  * Parameters accepted by {@link ModifyComponentHandler#execute}.
+ *
  * @typedef {object} ModifyComponentOperationParams
  * @property {'actor'|'target'|string|EntityRefObject} entity_ref     - Required. Reference to the entity whose component field will be modified.
  * @property {string}  component_type - Required. The namespaced type ID of the component to modify.
@@ -37,6 +37,7 @@ import resolvePath from '../../utils/resolvePath.js';
 
 /**
  * Create missing chain and set value at leaf.
+ *
  * @param root
  * @param path
  * @param value
@@ -59,6 +60,7 @@ function setByPath(root, path, value) {
 
 /**
  * Increment numeric leaf value.
+ *
  * @param root
  * @param path
  * @param delta
@@ -83,6 +85,7 @@ class ModifyComponentHandler {
 
   /**
    * Creates an instance of ModifyComponentHandler.
+   *
    * @param {object} dependencies - Dependencies object.
    * @param {EntityManager} dependencies.entityManager - The entity management service. Needs `getComponentData`.
    * @param {ILogger} dependencies.logger - The logging service instance.
@@ -116,6 +119,7 @@ class ModifyComponentHandler {
   /**
    * Resolve entity_ref → entityId or null.
    * (Unchanged - Copied to AddComponentHandler as well)
+   *
    * @param ref
    * @param ctx
    * @private
@@ -144,6 +148,7 @@ class ModifyComponentHandler {
    * Executes the MODIFY_COMPONENT operation for field-level mutations.
    * It now prepares the modified component data and uses EntityManager.addComponent
    * to apply the changes, ensuring side effects like spatial index updates are triggered.
+   *
    * @param {ModifyComponentOperationParams|null|undefined} params - The parameters for the operation.
    * @param {ExecutionContext} execCtx - The execution context.
    * @implements {OperationHandler}

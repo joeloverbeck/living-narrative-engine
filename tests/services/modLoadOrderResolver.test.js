@@ -9,6 +9,7 @@ import ModDependencyError from '../../src/errors/modDependencyError.js';
 
 /**
  * Convenience factory for a minimal manifest object.
+ *
  * @param {string} id
  * @param {Array<object>} [dependencies]
  * @returns {import('../../src/modding/modDependencyValidator.js').ModManifest}
@@ -24,6 +25,7 @@ const makeManifest = (id, dependencies = []) => ({
  * before/after for mutation tests.
  * This is NOT for equality of Sets/Maps, only to detect structural mutation
  * of the original object reference.
+ *
  * @param {any} value
  */
 const deepSnapshot = (value) => {
@@ -41,6 +43,7 @@ const deepSnapshot = (value) => {
 
 /**
  * Creates a mock logger instance matching the ILogger interface.
+ *
  * @returns {import('../../src/interfaces/coreServices.js').ILogger}
  */
 const createMockLogger = () => ({
@@ -52,6 +55,7 @@ const createMockLogger = () => ({
 
 /**
  * Helper to create an empty Map for manifests.
+ *
  * @returns {Map<string, import('../../src/modding/modDependencyValidator.js').ModManifest>}
  */
 const createEmptyManifestMap = () => new Map();

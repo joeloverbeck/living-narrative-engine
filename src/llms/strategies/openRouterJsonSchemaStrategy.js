@@ -21,6 +21,7 @@ import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../constants/llmConstan
 export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
   /**
    * Constructs an instance of OpenRouterJsonSchemaStrategy.
+   *
    * @param {object} deps - The dependencies object.
    * @param {IHttpClient} deps.httpClient - The HTTP client for making API requests.
    * @param {ILogger} deps.logger - The logger instance.
@@ -36,6 +37,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
    * Constructs the provider-specific part of the request payload for JSON Schema mode.
    * This involves defining the 'response_format' object using the
    * schema from llmConfig.jsonOutputStrategy.jsonSchema.
+   *
    * @override
    * @protected
    * @param {object} baseMessagesPayload - The base messages payload.
@@ -93,6 +95,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
 
   /**
    * Extracts the JSON string from the OpenRouter response for JSON Schema mode.
+   *
    * @override
    * @protected
    * @async

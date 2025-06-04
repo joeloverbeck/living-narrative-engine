@@ -22,6 +22,7 @@ import { ResolutionStatus } from '../types/resolutionStatus.js';
 
 /**
  * Matches a phrase against a list of candidates using a three-tier logic: exact, startsWith, substring.
+ *
  * @param {NameMatchCandidate[]} candidates - Array of candidates {id, name}.
  * @param {string} phrase - The noun phrase to match.
  * @param {ILogger} logger - An ILogger instance for internal logging.

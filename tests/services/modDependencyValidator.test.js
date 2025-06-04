@@ -7,6 +7,7 @@ import ModDependencyError from '../../src/errors/modDependencyError.js';
 
 /**
  * Creates a mock logger instance matching the ILogger interface.
+ *
  * @returns {import('../../../src/core/interfaces/coreServices.js').ILogger}
  */
 const createMockLogger = () => ({
@@ -19,6 +20,7 @@ const createMockLogger = () => ({
 /**
  * Helper to create the Map expected by the validator.
  * Keys are lower-cased mod IDs.
+ *
  * @param {Array<import('../../../src/core/services/modDependencyValidator.js').ModManifest>} manifestsArray
  * @returns {Map<string, import('../../../src/core/services/modDependencyValidator.js').ModManifest>}
  */

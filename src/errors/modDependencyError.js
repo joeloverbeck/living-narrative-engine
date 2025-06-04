@@ -7,6 +7,7 @@
 class ModDependencyError extends Error {
   /**
    * Creates an instance of ModDependencyError.
+   *
    * @param {string} message - A consolidated message, often joined from multiple individual errors.
    * @param {Error | undefined} [cause] - The underlying error that caused this dependency issue, if any.
    */

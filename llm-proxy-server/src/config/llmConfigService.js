@@ -65,6 +65,9 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/**
+ *
+ */
 export class LlmConfigService {
   /** @type {IFileSystemReader} */
   #fileSystemReader;
@@ -86,6 +89,7 @@ export class LlmConfigService {
 
   /**
    * Constructs an LlmConfigService instance.
+   *
    * @param {IFileSystemReader} fileSystemReader - An IFileSystemReader instance.
    * @param {ILogger} logger - An ILogger instance.
    * @param {AppConfigService} appConfig - An AppConfigService instance.
@@ -116,6 +120,7 @@ export class LlmConfigService {
   /**
    * Sets the initialization error details and logs the error.
    * Also sets the proxy operational status to false.
+   *
    * @private
    * @param {string} message - The human-readable error message.
    * @param {string} stage - The machine-readable stage of the error.
@@ -172,6 +177,7 @@ export class LlmConfigService {
   /**
    * Initializes the service by loading and validating the LLM configurations.
    * This method should be called once during application startup.
+   *
    * @returns {Promise<void>}
    */
   async initialize() {
@@ -318,6 +324,7 @@ export class LlmConfigService {
 
   /**
    * Checks if the proxy is operational based on configuration loading success.
+   *
    * @returns {boolean} True if operational, false otherwise.
    */
   isOperational() {
@@ -326,6 +333,7 @@ export class LlmConfigService {
 
   /**
    * Gets all loaded LLM configurations.
+   *
    * @returns {LLMConfigurationFileForProxy | null} The loaded configurations, or null if not loaded/failed.
    */
   getLlmConfigs() {
@@ -334,6 +342,7 @@ export class LlmConfigService {
 
   /**
    * Gets a specific LLM configuration by its ID.
+   *
    * @param {string} llmId - The ID of the LLM to retrieve.
    * @returns {LLMModelConfig | null} The LLM configuration, or null if not found or not loaded.
    */
@@ -357,6 +366,7 @@ export class LlmConfigService {
 
   /**
    * Gets the actual resolved path used for loading the LLM configuration file.
+   *
    * @returns {string | null} The resolved path, or null if not yet determined.
    */
   getResolvedConfigPath() {
@@ -369,6 +379,7 @@ export class LlmConfigService {
    * The `originalError` property from the internal error object is not directly exposed here
    * to avoid leaking potentially large or sensitive error objects to less controlled contexts.
    * The error log within `_setInitializationError` handles logging necessary details from `originalError`.
+   *
    * @returns {StandardizedErrorObject | null} Error details, or null if initialization was successful.
    */
   getInitializationErrorDetails() {
@@ -383,6 +394,7 @@ export class LlmConfigService {
   /**
    * Checks if any configured cloud LLM uses apiKeyFileName.
    * This is useful for displaying startup warnings if PROXY_PROJECT_ROOT_PATH is not set.
+   *
    * @returns {boolean} True if any cloud LLM is configured to use an API key file, false otherwise.
    */
   hasFileBasedApiKeys() {

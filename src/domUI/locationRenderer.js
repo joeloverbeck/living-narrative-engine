@@ -33,11 +33,13 @@ import {
 
 /**
  * Represents a character to be displayed.
+ *
  * @typedef {import('../services/EntityDisplayDataProvider.js').CharacterDisplayInfo} CharacterDisplayData
  */
 
 /**
  * Represents the data structure for displaying a location.
+ *
  * @typedef {object} LocationDisplayPayload
  * @property {string} name - The name of the location.
  * @property {string} description - The textual description of the location.
@@ -54,21 +56,16 @@ const DEFAULT_LOCATION_DESCRIPTION = 'You see nothing remarkable.';
  * Renders details of the current location, including its name, description, exits, and characters.
  * It extends BoundDomRendererBase to manage its DOM sub-elements and uses EntityDisplayDataProvider
  * for fetching display data.
+ *
  * @augments {BoundDomRendererBase}
  */
 export class LocationRenderer extends BoundDomRendererBase {
-     * @private
   baseContainerElement;
-     * @private
   domElementFactory;
-     * @private
   entityManager;
-     * @private
   entityDisplayDataProvider;
-     * @private
   dataRegistry;
 
-     * @private
   _EVENT_TYPE_SUBSCRIBED = 'core:turn_started';
 
   constructor({

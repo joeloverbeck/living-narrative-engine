@@ -9,6 +9,7 @@
 /**
  * Parameters for the LOG operation.
  * Placeholders in `message` are assumed to be pre-resolved by OperationInterpreter.
+ *
  * @typedef {object} LogOperationParams
  * @property {string|*} message - The message to log (required, potentially pre-resolved to non-string).
  * @property {'info'|'warn'|'error'|'debug'} [level='info'] - The logging level.
@@ -18,11 +19,11 @@ const VALID_LOG_LEVELS = ['info', 'warn', 'error', 'debug'];
 const DEFAULT_LOG_LEVEL = 'info';
 
 class LogHandler /* implements OperationHandler */ {
-     * @private
   #logger;
 
   /**
    * Creates an instance of LogHandler.
+   *
    * @param {object} dependencies - The dependencies for the handler.
    * @param {ILogger} dependencies.logger - The logger instance.
    * @throws {Error} If the logger is invalid or missing required methods.
@@ -45,6 +46,7 @@ class LogHandler /* implements OperationHandler */ {
   /**
    * Executes the LOG operation: validates parameters and logs the pre-resolved message
    * using the injected logger at the specified or default level.
+   *
    * @param {OperationParams | LogOperationParams | null | undefined} params - Parameters: { message: *, level?: string }. Message is pre-resolved.
    * @param {ExecutionContext} context - The execution context (used for logging services if needed, not resolution).
    * @returns {void}

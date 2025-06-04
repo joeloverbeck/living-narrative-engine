@@ -17,6 +17,7 @@
 // --- MODLOADER-005 E: Error Code Constants ---
 /**
  * Standardized error codes for ModManifestLoader logging.
+ *
  * @enum {string}
  */
 const ERR = {
@@ -35,13 +36,13 @@ const ERR = {
 // --- End MODLOADER-005 E ---
 
 class ModManifestLoader {
-     * @private #configuration;
-     * @private #pathResolver;
-     * @private #dataFetcher;
-     * @private #schemaValidator;
-     * @private #dataRegistry;
-     * @private #logger;
-     * @private #lastLoadedManifests = null;
+  #configuration;
+  #pathResolver;
+  #dataFetcher;
+  #schemaValidator;
+  #dataRegistry;
+  #logger;
+  #lastLoadedManifests = null;
 
   constructor(
     configuration,
@@ -120,8 +121,9 @@ class ModManifestLoader {
   /**
    * Fetches, validates (against mod.manifest.schema.json), and registers
    * every manifest listed in `requestedModIds`.
+   *
    * @param  {string[]} requestedModIds
-   * @return {Promise<Map<string,object>>}
+   * @returns {Promise<Map<string,object>>}
    * @throws {Error} if any manifest cannot be fetched, validated, or stored.
    */
   async loadRequestedManifests(requestedModIds) {

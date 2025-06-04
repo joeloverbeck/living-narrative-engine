@@ -24,6 +24,7 @@ class ModDependencyValidator {
    * Validates dependencies and conflicts across a map of mod manifests.
    * Checks for missing required dependencies, version mismatches, and conflicts.
    * Logs warnings for issues with optional dependencies.
+   *
    * @param {Map<string, ModManifest>} manifests - Map of mod manifests, keyed by **lower-cased** mod ID.
    * @param {ILogger} logger - Logger instance for warnings.
    * @returns {void} - Returns nothing, but throws ModDependencyError on fatal issues.

@@ -14,6 +14,7 @@ export class IValidatedEventDispatcher {
    * Dispatches an event with the given name and payload.
    * Implementations should ideally validate the payload against a schema associated
    * with the eventName before dispatching via the underlying EventBus.
+   *
    * @function dispatchValidated
    * @param {string} eventName - The unique identifier of the event to dispatch (e.g., 'entity:moved').
    * @param {object} payload - The data associated with the event.
@@ -31,6 +32,7 @@ export class IValidatedEventDispatcher {
   /**
    * Subscribes a listener function to a specific event name.
    * Implementations should delegate this call to the underlying EventBus.
+   *
    * @function subscribe
    * @param {string} eventName - The name of the event to subscribe to.
    * @param {EventListener} listener - The function to call when the event is dispatched.
@@ -45,6 +47,7 @@ export class IValidatedEventDispatcher {
   /**
    * Unsubscribes a listener function from a specific event name.
    * Implementations should delegate this call to the underlying EventBus.
+   *
    * @function unsubscribe
    * @param {string} eventName - The name of the event to unsubscribe from.
    * @param {EventListener} listener - The listener function to remove.

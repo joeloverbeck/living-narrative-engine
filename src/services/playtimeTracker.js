@@ -10,11 +10,13 @@ import IPlaytimeTracker from '../interfaces/IPlaytimeTracker.js';
 /**
  * Manages and tracks player game time, including session start/end times
  * and accumulated playtime across sessions.
+ *
  * @implements {IPlaytimeTracker}
  */
 class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * Stores the total playtime from previous sessions in seconds.
+   *
    * @private
    * @type {number}
    */
@@ -23,6 +25,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * Stores the timestamp (from Date.now()) when the current play session started.
    * A value of 0 indicates no active session.
+   *
    * @private
    * @type {number}
    */
@@ -30,6 +33,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
 
   /**
    * Instance of an ILogger compatible logger.
+   *
    * @private
    * @type {ILogger}
    */
@@ -37,6 +41,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
 
   /**
    * Creates a new PlaytimeTracker instance.
+   *
    * @param {object} dependencies - The dependencies for the service.
    * @param {ILogger} dependencies.logger - An ILogger compatible logger instance.
    * @throws {Error} If the logger dependency is not provided.
@@ -71,6 +76,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
    * Sets the session start time to the current time and logs the event.
    * If a session is already active (i.e., #sessionStartTime > 0), this method
    * will effectively restart the session timer from the current moment and log a warning.
+   *
    * @returns {void}
    */
   startSession() {
@@ -89,6 +95,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
    * Ends the current play session, calculates its duration, adds it to the
    * accumulated playtime, and resets the session timer.
    * If no session is active, it logs this information and ensures the timer is reset.
+   *
    * @returns {void}
    */
   endSessionAndAccumulate() {
@@ -111,6 +118,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * Gets the total accumulated playtime in seconds, including the current session's duration if active.
    * This method does not modify any internal state of the PlaytimeTracker.
+   *
    * @returns {number} Total playtime in seconds.
    */
   getTotalPlaytime() {
@@ -126,6 +134,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * Sets the accumulated playtime, typically when loading a game.
    * This will also reset any currently active session timer before setting the new value.
+   *
    * @param {number} seconds - The total accumulated playtime in seconds from a saved game.
    * @returns {void}
    * @throws {TypeError} If seconds is not a number.
@@ -153,6 +162,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * Resets the playtime tracker, clearing accumulated playtime and ending any active session.
    * Useful for starting a new game from scratch or if initialization fails.
+   *
    * @returns {void}
    */
   reset() {
@@ -164,6 +174,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * FOR TESTING PURPOSES ONLY.
    * Gets the current accumulated playtime in seconds.
+   *
    * @returns {number}
    * @private
    */
@@ -174,6 +185,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * FOR TESTING PURPOSES ONLY.
    * Gets the current session start time.
+   *
    * @returns {number}
    * @private
    */
@@ -184,6 +196,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * FOR TESTING PURPOSES ONLY.
    * Sets the session start time to a specific value.
+   *
    * @param {number} startTime - The timestamp to set as the session start time.
    * @private
    */
@@ -194,6 +207,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   /**
    * FOR TESTING PURPOSES ONLY.
    * Sets the accumulated playtime to a specific value.
+   *
    * @param {number} seconds - The accumulated playtime in seconds.
    * @private
    */

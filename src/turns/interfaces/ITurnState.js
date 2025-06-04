@@ -25,6 +25,7 @@ export class ITurnState {
   /**
    * Called when the BaseTurnHandler transitions into this state.
    * Allows the state to perform setup operations.
+   *
    * @async
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance managing this state.
    * States use this for transitions (handler._transitionToState) and to get ITurnContext (handler.getTurnContext).
@@ -40,6 +41,7 @@ export class ITurnState {
   /**
    * Called when the BaseTurnHandler transitions out of this state.
    * Allows the state to perform cleanup operations.
+   *
    * @async
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance managing this state.
    * @param {ITurnState} [nextState] - The state to which the handler is transitioning.
@@ -55,6 +57,7 @@ export class ITurnState {
    * Handles the initiation of an actor's turn.
    * Typically called by BaseTurnHandler.startTurn() delegating to the current (e.g., Idle) state.
    * The state will use handler.getTurnContext() to access the ITurnContext prepared by the handler.
+   *
    * @async
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance.
    * @param {Entity} actorEntity - The entity whose turn is to be started (already set in ITurnContext by handler).
@@ -70,6 +73,7 @@ export class ITurnState {
   /**
    * Handles a command string submitted by an actor.
    * The state accesses command details and actor via handler.getTurnContext().
+   *
    * @async
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance.
    * @param {string} commandString - The command string.
@@ -86,6 +90,7 @@ export class ITurnState {
   /**
    * Handles the `core:turn_ended` system event.
    * The state accesses event details and current actor via handler.getTurnContext().
+   *
    * @async
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance.
    * @param {SystemEventPayloads[TURN_ENDED_ID_TYPE]} payload - The event payload.
@@ -101,6 +106,7 @@ export class ITurnState {
   /**
    * Handles the result from ICommandProcessor.processCommand().
    * The state uses handler.getTurnContext() to access ITurnContext for services like ICommandOutcomeInterpreter.
+   *
    * @async
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance.
    * @param {Entity} actor - The actor (from ITurnContext).
@@ -118,6 +124,7 @@ export class ITurnState {
   /**
    * Handles a TurnDirective from ICommandOutcomeInterpreter.
    * The state uses handler.getTurnContext() for current actor and services.
+   *
    * @async
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance.
    * @param {Entity} actor - The actor (from ITurnContext).
@@ -134,6 +141,7 @@ export class ITurnState {
 
   /**
    * Handles cleanup if the BaseTurnHandler is destroyed while this state is active.
+   *
    * @async
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance being destroyed.
    * @returns {Promise<void>}
@@ -146,6 +154,7 @@ export class ITurnState {
 
   /**
    * Returns a string identifier for the state.
+   *
    * @returns {string} The name of the state.
    */
   getStateName() {

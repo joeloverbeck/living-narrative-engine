@@ -3,24 +3,17 @@
   "description": "A text adventure game engine with LLM integration.",
   "version": "0.0.1",
   "dependencies": {
-    "@eslint/compat": "^1.2.8",
     "@msgpack/msgpack": "^3.1.1",
     "@toolsycc/json-repair": "^0.1.22",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-jest": "^28.12.0",
-    "eslint-plugin-jsdoc": "^50.7.1",
-    "express": "^5.1.0",
     "jest-mock-extended": "^4.0.0-beta1",
     "jsdom": "^26.1.0",
     "json-logic-js": "^2.0.5",
-    "lint": "^0.8.19",
     "lodash": "^4.17.21",
     "pako": "^2.1.0",
-    "prettier": "^3.5.3",
     "semver": "^7.7.1",
     "tinyqueue": "^3.0.0",
     "uuid": "^11.1.0"
@@ -28,17 +21,23 @@
   "devDependencies": {
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
+    "@eslint/compat": "^1.2.8",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.25.1",
     "@jest/globals": "^29.7.0",
     "babel-jest": "^29.7.0",
     "cpy-cli": "^5.0.0",
-    "esbuild": "^0.x.x",
+    "concurrently": "^9.1.2",
+    "esbuild": "^0.25.*",
     "eslint": "^9.25.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-jest": "^28.12.0",
+    "eslint-plugin-jsdoc": "^50.7.1",
     "globals": "^16.0.0",
     "http-server": "^14.1.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "prettier": "^3.5.3",
     "whatwg-fetch": "^3.6.20",
     "yargs": "^17.7.2"
   },
@@ -49,6 +48,7 @@
     "coverage": "jest --coverage --env=jsdom --silent",
     "build": "esbuild main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html dist && cpy css dist && cpy data dist && cpy config dist && cpy favicon.ico dist",
     "start": "npm run build && http-server dist -o",
-    "validate:llm-configs": "node ./scripts/validate-llm-configs.mjs --dataFile ./config/sample.llm-configs.valid.json --schemaFile ./data/schemas/llm-configs.schema.json"
+    "start:all": "concurrently \"npm run start\" \"npm run start --prefix llm-proxy-server\"",
+    "dev": "concurrently \"npm run start\" \"npm run dev --prefix llm-proxy-server\""
   }
 }

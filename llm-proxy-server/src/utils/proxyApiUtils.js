@@ -9,6 +9,7 @@ import { ensureValidLogger } from './loggerUtils.js'; // MODIFIED: Import ensure
 
 /**
  * Calculates the retry delay with exponential backoff and jitter.
+ *
  * @private
  * @param {number} currentAttempt - The current retry attempt number (1-based).
  * @param {number} baseDelayMs - Initial delay in milliseconds for the first retry.

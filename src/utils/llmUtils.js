@@ -54,6 +54,7 @@ const MARKDOWN_WRAPPER_REGEX = /^```(?:json|markdown)?\s*?\n?(.*?)\n?\s*?```$/s;
  * conversational artifacts, and markdown code block wrappers.
  * This is intended as a first step in a JSON post-processing pipeline,
  * ensuring that subsequent parsing attempts operate on the cleanest possible string.
+ *
  * @param {any} rawOutput - The raw output received from the LLM.
  * Could be a string or any other data type.
  * @returns {any} If `rawOutput` is a string, it returns the cleaned string.
@@ -110,6 +111,7 @@ export function cleanLLMJsonOutput(rawOutput) {
 /**
  * Parses a JSON string, attempting to repair it if initial parsing fails.
  * It first cleans the input string using `cleanLLMJsonOutput`.
+ *
  * @async
  * @param {string} jsonString - The raw JSON string to parse and potentially repair.
  * @param {ILogger} [logger] - Optional logger instance for logging warnings and errors.

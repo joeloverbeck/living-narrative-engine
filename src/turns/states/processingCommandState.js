@@ -26,15 +26,13 @@ import {
  * @augments {AbstractTurnState}
  */
 export class ProcessingCommandState extends AbstractTurnState {
-     * @private
   _isProcessing = false;
-     * @private
   #turnActionToProcess = null;
-     * @private
   #commandStringForLog = null;
 
   /**
    * Creates an instance of ProcessingCommandState.
+   *
    * @param {BaseTurnHandler} handler - The turn handler managing this state.
    * @param {string} [commandString]
    * @param {ITurnAction} [turnAction]

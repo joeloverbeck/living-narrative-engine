@@ -16,24 +16,28 @@
 export class LLMStrategyError extends Error {
   /**
    * The ID of the LLM configuration being used when the error occurred.
+   *
    * @type {string | undefined}
    */
   llmId;
 
   /**
    * The original error that caused this strategy error, if any.
+   *
    * @type {Error | null | undefined}
    */
   originalError;
 
   /**
    * Additional details or context about the error.
+   *
    * @type {object | undefined}
    */
   details;
 
   /**
    * Creates an instance of LLMStrategyError.
+   *
    * @param {string} message - The primary error message.
    * @param {string} [llmId] - The ID of the LLM configuration involved.
    * @param {Error | null} [originalError] - The original error that was caught, if applicable.

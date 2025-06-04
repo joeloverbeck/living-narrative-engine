@@ -15,6 +15,7 @@
 export class ITurnStateFactory {
   /**
    * Creates an initial turn state instance (typically an Idle state).
+   *
    * @param {BaseTurnHandler} handler - The turn handler instance that will manage this state.
    * @returns {ITurnState} The created initial turn state.
    * @throws {Error} If the method is not implemented by a concrete class.
@@ -27,6 +28,7 @@ export class ITurnStateFactory {
 
   /**
    * Creates an idle turn state instance.
+   *
    * @param {BaseTurnHandler} handler - The turn handler instance that will manage this state.
    * @returns {ITurnState} The created idle turn state.
    * @throws {Error} If the method is not implemented by a concrete class.
@@ -39,6 +41,7 @@ export class ITurnStateFactory {
 
   /**
    * Creates an ending turn state instance.
+   *
    * @param {BaseTurnHandler} handler - The turn handler instance.
    * @param {string} actorId - The ID of the actor whose turn is ending.
    * @param {Error|null} error - Any error that occurred during the turn.
@@ -54,6 +57,7 @@ export class ITurnStateFactory {
   /**
    * Creates an Awaiting Player Input state instance.
    * (This method would be used if states themselves use the factory for transitions)
+   *
    * @param {BaseTurnHandler} handler - The turn handler instance.
    * @returns {ITurnState} The created awaiting player input state.
    * @throws {Error} If the method is not implemented by a concrete class.

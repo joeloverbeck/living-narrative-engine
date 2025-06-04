@@ -12,6 +12,7 @@
 export class IWorldContext {
   /**
    * Retrieves the primary entity currently acting or being focused on (e.g., the player character).
+   *
    * @function getCurrentActor
    * @returns {Entity | null} The current actor entity instance, or null if none is active or defined.
    */
@@ -21,6 +22,7 @@ export class IWorldContext {
 
   /**
    * Retrieves the entity representing the current location relevant to the active context or actor.
+   *
    * @function getCurrentLocation
    * @returns {Entity | null} The entity instance representing the current location,
    * or null if the location cannot be determined or is not set.
@@ -31,6 +33,7 @@ export class IWorldContext {
 
   /**
    * Retrieves the location entity containing a specific entity instance.
+   *
    * @function getLocationOfEntity
    * @param {string} entityId - The unique ID of the entity whose location is requested.
    * @returns {Entity | null} The location entity instance where the specified entity resides,
@@ -46,6 +49,7 @@ export class IWorldContext {
    * Retrieves the current timestamp in ISO 8601 format.
    * This method might not be called directly if WorldContext is primarily used via SystemDataRegistry's
    * handleQuery mechanism, but it defines the capability.
+   *
    * @function getCurrentISOTimestamp
    * @returns {string} The current ISO 8601 timestamp (e.g., "YYYY-MM-DDTHH:mm:ss.sssZ").
    */
@@ -60,6 +64,7 @@ export class IWorldContext {
   /**
    * Handles queries directed to the WorldContext via the SystemDataRegistry.
    * The specific structure of queryDetails can vary.
+   *
    * @function handleQuery
    * @param {string | object} queryDetails - Details about the query.
    * @returns {any | undefined} The result of the query or undefined if not supported.

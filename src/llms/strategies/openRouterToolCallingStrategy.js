@@ -21,6 +21,7 @@ import {
 export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
   /**
    * Constructs an instance of OpenRouterToolCallingStrategy.
+   *
    * @param {object} deps - The dependencies object.
    * @param {IHttpClient} deps.httpClient - The HTTP client for making API requests.
    * @param {ILogger} deps.logger - The logger instance.
@@ -34,6 +35,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
 
   /**
    * Constructs the provider-specific part of the request payload for Tool Calling mode.
+   *
    * @override
    * @protected
    * @param {object} baseMessagesPayload - The base messages payload.
@@ -113,6 +115,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
 
   /**
    * Extracts the JSON string from the OpenRouter response using `message.tool_calls`.
+   *
    * @override
    * @protected
    * @async

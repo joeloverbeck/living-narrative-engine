@@ -12,6 +12,7 @@ import { NAME_COMPONENT_ID } from '../constants/componentIds.js'; // Adjust path
  * Gets the display name for an entity.
  * Retrieves data from the 'core:name' component via entity.getComponentData.
  * Falls back to entity ID or a default string if the component or name value is missing.
+ *
  * @param {Entity | null | undefined} entity - The entity instance.
  * @param {string} [fallback] - The string to return if no name or ID is found.
  * @returns {string} The entity's display name or a fallback string.
@@ -68,6 +69,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Target not found in the current location specifically for taking.
+   *
    * @param {string} targetName - The name of the item being looked for.
    * @returns {string}
    */
@@ -77,6 +79,7 @@ export const TARGET_MESSAGES = {
   /**
    * Target not found nearby (e.g., for 'use item on target'). Used by `useActionHandler`.
    * Consider using `NOT_FOUND_NEARBY` as the default if consistency is desired.
+   *
    * @param {string} targetName - The description/name of the target being looked for.
    * @returns {string}
    */
@@ -97,6 +100,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Ambiguous target prompt specifically for using an item on a target.
+   *
    * @param {string} actionVerb - The combined verb phrase (e.g., "use Potion on").
    * @param {string} targetName - The ambiguous name/description of the target.
    * @param {Entity[]} candidates - Array of matching entities.
@@ -111,6 +115,7 @@ export const TARGET_MESSAGES = {
   /**
    * Ambiguous direction prompt when input matches multiple connection direction keys.
    * Used specifically by resolveTargetConnection.
+   *
    * @param {string} directionInput - The ambiguous direction string entered by the user (e.g., 'west').
    * @param {string[]} connectionNames - An array of display names for the matching connection entities (e.g., ['West Gate', 'Western Arch']).
    * @returns {string}
@@ -129,6 +134,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Prompt when an action requires a target but none was provided.
+   *
    * @param {string} verb - The action verb (e.g., 'Attack', 'Take').
    * @returns {string} Example: "Attack what?"
    */
@@ -140,6 +146,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Error indicating a required component is missing on the player or relevant entity.
+   *
    * @param {string} compName - Name of the missing component (e.g., 'Inventory', 'Position').
    * @returns {string}
    */
@@ -165,6 +172,7 @@ export const TARGET_MESSAGES = {
   LOOK_SELF: 'You look yourself over. You seem to be in one piece.',
   /**
    * Default feedback when looking at an entity that has no specific DescriptionComponent text.
+   *
    * @param {string} targetName - The display name of the target entity. (Uses getDisplayName upstream)
    * @returns {string}
    */
@@ -189,12 +197,14 @@ export const TARGET_MESSAGES = {
   MOVE_NO_EXITS: 'There are no obvious exits from here.',
   /**
    * Feedback when trying to move in a direction that is locked. Can be overridden by connection data.
+   *
    * @param {string} direction - The direction attempted.
    * @returns {string}
    */
   MOVE_LOCKED: (direction) => `The way ${direction} is locked.`,
   /**
    * Feedback when connection data for a direction is invalid (e.g., missing target).
+   *
    * @param {string} direction - The direction attempted.
    * @returns {string}
    */
@@ -202,6 +212,7 @@ export const TARGET_MESSAGES = {
     `The way ${direction} seems improperly constructed.`,
   /**
    * Feedback when the target location definition for a connection is missing or invalid.
+   *
    * @param {string} direction - The direction attempted.
    * @returns {string}
    */
@@ -213,12 +224,14 @@ export const TARGET_MESSAGES = {
   // --- Movement Blocking ---
   /**
    * Feedback when movement is blocked because the blocking entity is locked.
+   *
    * @param {string} blockerName - The display name of the blocking entity. (Uses getDisplayName upstream)
    * @returns {string}
    */
   MOVE_BLOCKED_LOCKED: (blockerName) => `The ${blockerName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
   /**
    * Generic feedback when movement is blocked by an entity (e.g., closed door).
+   *
    * @param {string} blockerName - The display name of the blocking entity. (Uses getDisplayName upstream)
    * @returns {string}
    */
@@ -229,6 +242,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Feedback when an entity is successfully opened.
+   *
    * @param {string} targetName - The display name of the opened entity. (Uses getDisplayName upstream)
    * @returns {string}
    */
@@ -236,6 +250,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Default feedback when opening an entity fails for an unspecified or default reason.
+   *
    * @param {string} targetName - The display name of the entity that failed to open. (Uses getDisplayName upstream)
    * @returns {string}
    */
@@ -243,6 +258,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Feedback when attempting to open an entity that is already open.
+   *
    * @param {string} targetName - The display name of the already open entity. (Uses getDisplayName upstream)
    * @returns {string}
    */
@@ -251,6 +267,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Feedback when attempting to open an entity that is locked.
+   *
    * @param {string} targetName - The display name of the locked entity. (Uses getDisplayName upstream)
    * @returns {string}
    */
@@ -258,6 +275,7 @@ export const TARGET_MESSAGES = {
 
   /**
    * Feedback when attempting to open an entity that lacks the OpenableComponent or capability.
+   *
    * @param {string} targetName - The display name of the entity that cannot be opened. (Uses getDisplayName upstream)
    * @returns {string}
    */
@@ -269,6 +287,7 @@ export const TARGET_MESSAGES = {
   USE_FULL_HEALTH: 'You are already at full health.',
   /**
    * Feedback when an item requires an explicit target but none was provided or resolved.
+   *
    * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
    * @returns {string}
    */

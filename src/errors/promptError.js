@@ -14,6 +14,7 @@
 export class PromptError extends Error {
   /**
    * The original error that caused this PromptError, if available.
+   *
    * @type {Error | any | undefined}
    * @public
    */
@@ -21,6 +22,7 @@ export class PromptError extends Error {
 
   /**
    * An optional error code for programmatic error handling or categorization.
+   *
    * @type {string | undefined}
    * @public
    */
@@ -28,6 +30,7 @@ export class PromptError extends Error {
 
   /**
    * Creates an instance of PromptError.
+   *
    * @param {string} message - The primary error message describing the prompt failure.
    * @param {Error | any} [originalError] - The underlying error that triggered this error, if any.
    * This will be stored in the `cause` property.

@@ -7,9 +7,7 @@ import { resolvePlaceholders } from './contextUtils.js'; // Adjust path as neede
 /** @typedef {import('./operationRegistry.js').default} OperationRegistry */
 
 class OperationInterpreter {
-     * @private
   #logger;
-     * @private
   #registry;
 
   constructor({ logger, operationRegistry }) {

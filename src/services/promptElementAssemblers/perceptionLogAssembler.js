@@ -51,6 +51,7 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
    * prefix or suffix strings of perception log entries before placeholder resolution.
    * Example: '<obs timestamp="123">text</obs>' -> '<obs>text</obs>'
    * Example: '<prefix timestamp="any val" other="val">' -> '<prefix other="val">'
+   *
    * @private
    * @static
    * @param {string} str - The string to clean.
@@ -81,6 +82,7 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
 
   /**
    * Initializes a new instance of the PerceptionLogAssembler.
+   *
    * @param {object} [options] - Optional parameters.
    * @param {ILogger} [options.logger] - An ILogger instance. Defaults to the global console.
    */
@@ -95,6 +97,7 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
    * iterating through `promptData.perceptionLogArray`, formatting each entry
    * (including cleaning timestamp attributes from entry config's prefix/suffix and resolving entry-specific placeholders),
    * and then combining these parts into a single string.
+   *
    * @param {PromptElement} elementConfig - The configuration for the 'perception_log_wrapper' element.
    * @param {PromptData} promptData - The global prompt data, expected to contain `perceptionLogArray`.
    * @param {PlaceholderResolver} placeholderResolver - Utility for resolving placeholders.

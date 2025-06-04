@@ -21,10 +21,6 @@ try {
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
-// Assuming JSONLogicRule is structurally compatible with the schema
-// We avoid a direct schema import in runtime code for cleaner separation
-/** @typedef {object} JSONLogicRule */
- * @property
 
 /**
  * @class JsonLogicEvaluationService
@@ -43,6 +39,7 @@ class JsonLogicEvaluationService {
 
   /**
    * Creates an instance of JsonLogicEvaluationService.
+   *
    * @param {object} dependencies - The required services.
    * @param {ILogger} dependencies.logger - Logging service.
    * @throws {Error} If required dependencies are missing or invalid.
@@ -65,6 +62,7 @@ class JsonLogicEvaluationService {
   /**
    * Evaluates a JSON Logic rule against a given data context using json-logic-js,
    * returning a strict boolean based on the truthiness of the result.
+   *
    * @param {JSONLogicRule} rule - The JSON Logic rule object to evaluate.
    * @param {JsonLogicEvaluationContext} context - The data context against which the rule is evaluated.
    * @returns {boolean} - The boolean result derived from the rule evaluation's truthiness. Returns false on error.
@@ -127,6 +125,7 @@ class JsonLogicEvaluationService {
 
   /**
    * Allows adding custom operations to the underlying json-logic-js instance.
+   *
    * @param {string} name - The name of the custom operator (e.g., "hasComponent").
    * @param {Function} func - The function implementing the operator logic.
    */

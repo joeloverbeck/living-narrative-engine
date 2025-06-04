@@ -17,6 +17,7 @@ import { ENGINE_VERSION } from '../engine/engineVersion.js'; // Import the actua
 /**
  * Validates that all loaded mods are compatible with the current engine version.
  * Checks the `gameVersion` field in each manifest against the `ENGINE_VERSION`.
+ *
  * @param {Map<string, ModManifestForVersionCheck>} manifests - A map of mod manifests, keyed by mod ID (case sensitivity depends on how the map was populated, typically lower-case).
  * @param {ILogger} logger - Logger instance for reporting results.
  * @returns {void} - Returns nothing upon successful validation.

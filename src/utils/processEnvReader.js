@@ -14,6 +14,7 @@ export class ProcessEnvReader extends IEnvironmentVariableReader {
   /**
    * Retrieves the value of an environment variable from `process.env`.
    * Only returns the value if the variable is a direct property of `process.env`.
+   *
    * @param {string} variableName - The name of the environment variable.
    * @returns {string | undefined} The value of the environment variable if set as a direct property, otherwise undefined.
    */

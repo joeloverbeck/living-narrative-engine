@@ -14,8 +14,6 @@ import Entity from '../../src/entities/entity.js'; // Adjust path
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */
 /** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */ // Import type for mocking
-/** @typedef {object} JSONLogicRule */
- * @property
 
 // --- Adjust Mocking for Ticket 2.6.3 ---
 // We still need json-logic-js, but we want the REAL 'apply' for end-to-end tests.

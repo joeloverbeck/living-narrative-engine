@@ -27,6 +27,7 @@ import { TURN_STARTED_ID } from '../constants/eventIds.js';
 
 /**
  * Represents a single log entry object as stored in the perception log component.
+ *
  * @typedef {object} LogEntryObject
  * @property {string} descriptionText - The human-readable summary of the event.
  * @property {string} timestamp - When the event occurred.
@@ -39,6 +40,7 @@ import { TURN_STARTED_ID } from '../constants/eventIds.js';
 
 /**
  * Represents the data structure for the perception log component.
+ *
  * @typedef {object} PerceptionLogComponentData
  * @property {number} maxEntries - Maximum number of entries to retain.
  * @property {LogEntryObject[]} logEntries - An array of perception log objects.
@@ -48,6 +50,7 @@ import { TURN_STARTED_ID } from '../constants/eventIds.js';
  * Renders perception logs for the current actor into the perception log panel.
  * Extends BaseListDisplayComponent to handle list rendering and DOM binding.
  * Subscribes to 'core:turn_started' to update based on the current actor.
+ *
  * @augments {BaseListDisplayComponent<LogEntryObject>}
  */
 export class PerceptionLogRenderer extends BaseListDisplayComponent {
@@ -65,6 +68,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Creates an instance of PerceptionLogRenderer.
+   *
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - The logger instance.
    * @param {IDocumentContext} dependencies.documentContext - The document context abstraction.
@@ -130,6 +134,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Public getter for currentActorId (for testing)
+   *
    * @returns {string | null}
    */
   get '#currentActorId'() {
@@ -138,6 +143,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Public setter for currentActorId (for testing)
+   *
    * @param {string | null} value
    */
   set '#currentActorId'(value) {
@@ -146,6 +152,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Fetches perception log data for the current actor.
+   *
    * @protected
    * @override
    * @returns {Promise<LogEntryObject[]> | LogEntryObject[]} An array of log entry objects or an empty array.
@@ -207,6 +214,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   /**
    * Renders a single log entry as an HTML list item.
    * This method is called by `BaseListDisplayComponent.renderList()` for each item from `_getListItemsData`.
+   *
    * @protected
    * @override
    * @param {LogEntryObject} logEntry - The data for the current item to render (renamed from itemData for clarity).
@@ -251,6 +259,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Provides the message to display when the perception log list is empty.
+   *
    * @protected
    * @override
    * @returns {string | HTMLElement} The message or element to display for an empty list.
@@ -294,6 +303,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Called after the list has been rendered. Scrolls to bottom.
+   *
    * @protected
    * @override
    * @param {LogEntryObject[] | null} listData - The data that was rendered.
@@ -309,6 +319,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   /**
    * Handles the 'core:turn_started' event.
    * Made available for testing.
+   *
    * @param {CoreTurnStartedEvent} event - The event object from VED.
    */
   '#handleTurnStarted'(event) {
@@ -353,6 +364,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Private method that actually handles the turn started event.
+   *
    * @private
    * @param {CoreTurnStartedEvent} event - The event object from VED.
    */
@@ -389,6 +401,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Private method that actually scrolls to bottom.
+   *
    * @private
    */
   #scrollToBottom() {
@@ -397,6 +410,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Disposes of resources.
+   *
    * @override
    */
   dispose() {

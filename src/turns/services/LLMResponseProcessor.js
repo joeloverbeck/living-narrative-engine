@@ -86,6 +86,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
 
   /**
    * Creates a safe fallback action and logs the failure.
+   *
    * @private
    * @param {string} errorContext
    * @param {string} actorId
@@ -188,6 +189,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
   /**
    * Parses (with repair), validates, and transforms the LLM’s JSON response
    * string into a safe {@link ProcessedTurnAction}.
+   *
    * @param {string} llmJsonResponse
    * @param {string} actorId
    * @param {ILogger} logger
