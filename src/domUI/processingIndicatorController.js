@@ -46,6 +46,8 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
   #domElementFactory = null;
 
   /**
+   * Creates a controller for rendering processing indicators.
+   *
    * @param {object} params - The parameters object.
    * @param {ILogger} params.logger - The logger instance.
    * @param {IDocumentContext} params.documentContext - The document context abstraction.
@@ -222,10 +224,10 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
   /**
    * Shows the processing indicator.
    *
-   * @param {IndicatorType} type - The type of processing causing the indicator to show.
+   * @param {IndicatorType} _type - The type of processing causing the indicator to show.
    * @private
    */
-  #showIndicator(type) {
+  #showIndicator(_type) {
     if (this.#indicatorElement) {
       // TODO: Potentially update aria-label based on type if needed for player indicator
       // if (type === 'player_input') {

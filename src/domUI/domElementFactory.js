@@ -27,6 +27,7 @@ class DomElementFactory {
    */
   constructor(docContext) {
     if (!docContext || typeof docContext.create !== 'function') {
+      // eslint-disable-next-line no-console
       console.error(
         '[DomElementFactory] Invalid IDocumentContext provided. Element creation will fail.'
       );
@@ -207,14 +208,13 @@ class DomElementFactory {
   /**
    * Generic element creator for tags not covered by specific helpers.
    *
-   * @template {keyof HTMLElementTagNameMap} K
-   * @param {K} tagName - The tag name to create.
+   * @param {string} tagName - The tag name to create.
    * @param {{id?: string, cls?: string | string[], text?: string, attrs?: Record<string, string>}} [options] - Optional configuration.
    * @param {string} [options.id] - ID for the element.
    * @param {string | string[] | undefined | null} [options.cls] - CSS class(es).
    * @param {string} [options.text] - Text content.
    * @param {Record<string, string>} [options.attrs] - Additional attributes as key-value pairs.
-   * @returns {HTMLElementTagNameMap[K] | null} The created element or null.
+   * @returns {HTMLElement | null} The created element or null.
    */
   create(tagName, options = {}) {
     if (!this.#docContext) return null;

@@ -205,7 +205,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
    * @protected
    * @override
    */
-  _renderListItem(actionObject, itemIndex) {
+  _renderListItem(actionObject, _itemIndex) {
     if (this.#isDisposed) return null;
     if (
       !actionObject ||
@@ -353,7 +353,9 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   }
 
   /**
-   * @param eventObject
+   * Processes the 'textUI:update_available_actions' event.
+   *
+   * @param {UIUpdateActionsEventObject} eventObject - Event payload with action list.
    * @private
    */
   async #handleUpdateActions(eventObject) {
@@ -426,6 +428,8 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   }
 
   /**
+   * Sends the currently selected action to the game engine.
+   *
    * @private
    * @async
    */

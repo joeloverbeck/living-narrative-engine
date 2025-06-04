@@ -42,11 +42,13 @@ export class UiMessageRenderer extends BoundDomRendererBase {
   // #messageList and #outputDivElement private caches are removed, use this.elements.
 
   /**
-   * @param {object}  deps
-   * @param {ILogger} deps.logger
-   * @param {IDocumentContext} deps.documentContext
-   * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
-   * @param {DomElementFactory|null} [deps.domElementFactory]
+   * Creates a UIMessageRenderer.
+   *
+   * @param {object} deps - Constructor dependencies.
+   * @param {ILogger} deps.logger - Logger instance.
+   * @param {IDocumentContext} deps.documentContext - DOM abstraction.
+   * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - Event dispatcher.
+   * @param {DomElementFactory|null} [deps.domElementFactory] - Optional element factory.
    */
   constructor({
     logger,
@@ -204,9 +206,9 @@ export class UiMessageRenderer extends BoundDomRendererBase {
   /**
    * Push a message into the list.
    *
-   * @param {string}       text
-   * @param {MessageType}  [type]
-   * @param {boolean}      [allowHtml]
+   * @param {string} text - Message text to render.
+   * @param {MessageType} [type] - Message severity type.
+   * @param {boolean} [allowHtml] - Whether to treat text as HTML.
    */
   render(text, type = 'info', allowHtml = false) {
     if (

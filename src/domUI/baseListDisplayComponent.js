@@ -107,12 +107,12 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    *
    * @abstract
    * @protected
-   * @param {any} itemData - The data for the current item to render.
-   * @param {number} itemIndex - The index of the current item in the `listData` array.
-   * @param {Array<any>} listData - The complete array of data items being rendered.
+   * @param {*} _itemData - The data for the current item (unused base implementation).
+   * @param {number} _itemIndex - The index of the current item.
+   * @param {Array<any>} _listData - The complete array of data items.
    * @returns {HTMLElement | null} The DOM element for the list item, or `null` to skip.
    */
-  _renderListItem(itemData, itemIndex, listData) {
+  _renderListItem(_itemData, _itemIndex, _listData) {
     this.logger.error(
       `${this._logPrefix} _renderListItem() is an abstract method and must be implemented by the subclass.`
     );
@@ -144,14 +144,14 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    *
    * @protected
    * @abstract
-   * @param {Array<any> | null} listData - The array of data items that were rendered, or `null` if the list was empty or data fetching failed.
-   * @param {HTMLElement} container - The `listContainerElement` that was populated.
+   * @param {Array<any> | null} _listData - The array of data items that were rendered, or `null` if the list was empty or data fetching failed.
+   * @param {HTMLElement} _container - The `listContainerElement` that was populated.
    * @returns {void}
    */
-  _onListRendered(listData, container) {
+  _onListRendered(_listData, _container) {
     // Default implementation is empty. Subclasses can override.
     this.logger.debug(
-      `${this._logPrefix} _onListRendered hook called. List data count: ${listData ? listData.length : 'null'}.`
+      `${this._logPrefix} _onListRendered hook called. List data count: ${_listData ? _listData.length : 'null'}.`
     );
   }
 

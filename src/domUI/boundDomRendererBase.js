@@ -18,7 +18,7 @@ import { RendererBase } from './rendererBase.js';
  */
 
 /**
- * @typedef {Object.<string, ElementConfigEntry | string>} ElementsConfig
+ * @typedef {{ [key: string]: ElementConfigEntry | string }} ElementsConfig
  * An object where keys are descriptive names for elements (e.g., 'submitButton', 'listContainer')
  * and values are either an ElementConfigEntry object or a string (CSS selector, implies required: true).
  * e.g.,
@@ -42,7 +42,7 @@ export class BoundDomRendererBase extends RendererBase {
    * Stores the bound DOM elements.
    *
    * @protected
-   * @type {Object.<string, HTMLElement|null>}
+   * @type {{ [key: string]: HTMLElement | null }}
    */
   elements;
 

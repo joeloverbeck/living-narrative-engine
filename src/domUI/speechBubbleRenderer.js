@@ -38,13 +38,15 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
   effectiveSpeechContainer = null;
 
   /**
-   * @param {object} dependencies
-   * @param {ILogger} dependencies.logger
-   * @param {IDocumentContext} dependencies.documentContext
-   * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher
-   * @param {IEntityManager} dependencies.entityManager
-   * @param {DomElementFactory} dependencies.domElementFactory
-   * @param {EntityDisplayDataProvider} dependencies.entityDisplayDataProvider
+   * Creates an instance of SpeechBubbleRenderer.
+   *
+   * @param {object} dependencies - Required services.
+   * @param {ILogger} dependencies.logger - Logger instance.
+   * @param {IDocumentContext} dependencies.documentContext - DOM abstraction.
+   * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - Event dispatcher.
+   * @param {IEntityManager} dependencies.entityManager - Entity manager.
+   * @param {DomElementFactory} dependencies.domElementFactory - Element factory.
+   * @param {EntityDisplayDataProvider} dependencies.entityDisplayDataProvider - Provider for display data.
    */
   constructor({
     logger,

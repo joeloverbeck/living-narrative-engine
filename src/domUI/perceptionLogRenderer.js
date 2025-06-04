@@ -69,7 +69,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   /**
    * Creates an instance of PerceptionLogRenderer.
    *
-   * @param {object} dependencies
+   * @param {object} dependencies - Required services and factories.
    * @param {ILogger} dependencies.logger - The logger instance.
    * @param {IDocumentContext} dependencies.documentContext - The document context abstraction.
    * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
@@ -135,7 +135,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   /**
    * Public getter for currentActorId (for testing)
    *
-   * @returns {string | null}
+   * @returns {string | null} The ID of the actor whose perceptions are displayed.
    */
   get '#currentActorId'() {
     return this.#currentActorId;
@@ -144,7 +144,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   /**
    * Public setter for currentActorId (for testing)
    *
-   * @param {string | null} value
+   * @param {string | null} value - The actor ID to display logs for.
    */
   set '#currentActorId'(value) {
     this.#currentActorId = value;
@@ -218,11 +218,11 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    * @protected
    * @override
    * @param {LogEntryObject} logEntry - The data for the current item to render (renamed from itemData for clarity).
-   * @param {number} itemIndex - The index of the current item in the `listData` array.
-   * @param {Array<LogEntryObject>} listData - The complete array of data items being rendered.
+   * @param {number} _itemIndex - The index of the current item in the `listData` array.
+   * @param {Array<LogEntryObject>} _listData - The complete array of data items being rendered.
    * @returns {HTMLLIElement | null} The created list item element, or null to skip rendering this item.
    */
-  _renderListItem(logEntry, itemIndex, listData) {
+  _renderListItem(logEntry, _itemIndex, _listData) {
     // <-- Corrected signature
     // listData parameter is available if needed, though not used in this specific implementation
     if (
@@ -231,7 +231,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       typeof logEntry.descriptionText !== 'string'
     ) {
       this.logger.warn(
-        `${this._logPrefix} Malformed log entry at index ${itemIndex}. Skipping.`,
+        `${this._logPrefix} Malformed log entry at index ${_itemIndex}. Skipping.`,
         { logEntry }
       );
       return null;
@@ -306,10 +306,10 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    *
    * @protected
    * @override
-   * @param {LogEntryObject[] | null} listData - The data that was rendered.
-   * @param {HTMLElement} container - The list container element.
+   * @param {LogEntryObject[] | null} _listData - The data that was rendered.
+   * @param {HTMLElement} _container - The list container element.
    */
-  _onListRendered(listData, container) {
+  _onListRendered(_listData, _container) {
     this.logger.debug(
       `${this._logPrefix} _onListRendered called. Scrolling to bottom.`
     );
@@ -321,6 +321,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    * Made available for testing.
    *
    * @param {CoreTurnStartedEvent} event - The event object from VED.
+   * @returns {void}
    */
   '#handleTurnStarted'(event) {
     this.logger.debug(
@@ -367,6 +368,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    *
    * @private
    * @param {CoreTurnStartedEvent} event - The event object from VED.
+   * @returns {void}
    */
   #handleTurnStarted(event) {
     return this['#handleTurnStarted'](event);
@@ -375,6 +377,8 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   /**
    * Scrolls the log list element to the bottom.
    * Made available for testing.
+   *
+   * @returns {void}
    */
   '#scrollToBottom'() {
     if (this.elements.listContainerElement) {
@@ -403,6 +407,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    * Private method that actually scrolls to bottom.
    *
    * @private
+   * @returns {void}
    */
   #scrollToBottom() {
     return this['#scrollToBottom']();
