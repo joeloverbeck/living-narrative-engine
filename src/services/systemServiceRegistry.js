@@ -85,8 +85,8 @@ export class SystemServiceRegistry {
       return; // AC 6.2.2
     }
 
-    // Using == null checks for both null and undefined
-    if (serviceInstance == null) {
+    // Check for both null and undefined explicitly
+    if (serviceInstance === null || serviceInstance === undefined) {
       this.#logger.warn(
         `${methodName}: Invalid serviceInstance provided for serviceId '${serviceId}'. Must not be null or undefined.`
       );

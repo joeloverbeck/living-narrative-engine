@@ -149,7 +149,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
           `${this.constructor.name} (${llmId}): message.content was an empty string. Will check tool_calls fallback.`,
           { llmId }
         );
-      } else if (message.hasOwnProperty('content')) {
+      } else if (Object.prototype.hasOwnProperty.call(message, 'content')) {
         this.logger.warn(
           `${this.constructor.name} (${llmId}): message.content was present but not a non-empty string or object (type: ${typeof message.content}, value: ${message.content}). Will check tool_calls fallback.`,
           {

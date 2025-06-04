@@ -214,7 +214,10 @@ export class ProcessingCommandState extends AbstractTurnState {
       }
     } else {
       // Optional: More detailed logging for why speech event wasn't dispatched
-      if (turnAction && turnAction.hasOwnProperty('speech')) {
+      if (
+        turnAction &&
+        Object.prototype.hasOwnProperty.call(turnAction, 'speech')
+      ) {
         if (typeof turnAction.speech !== 'string') {
           logger.debug(
             `${this.getStateName()}: Actor ${actorId} speech field present but not a string (Type: ${typeof turnAction.speech}, Value: "${String(turnAction.speech)}"). No ${ENTITY_SPOKE_ID} event dispatched.`

@@ -185,34 +185,25 @@ class SystemInitializer {
    *
    * @async
    * @returns {Promise<void>} Resolves when all systems have been processed.
-   * @rejects {Error} If resolving the systems critically fails.
+   * @throws {Error} If resolving the systems critically fails.
    */
   async initializeAll() {
     this.#logger.info(
       `SystemInitializer: Starting initialization for systems tagged with '${this.#initializationTag}'...`
     );
 
-    let systemsToInitialize = [];
-    try {
-      systemsToInitialize = await this._resolveSystems();
-      this.#logger.info(
-        `SystemInitializer: Proceeding to initialize ${systemsToInitialize.length} resolved systems sequentially...`
-      );
+    const systemsToInitialize = await this._resolveSystems();
+    this.#logger.info(
+      `SystemInitializer: Proceeding to initialize ${systemsToInitialize.length} resolved systems sequentially...`
+    );
 
-      for (const system of systemsToInitialize) {
-        await this.#_initializeSingleSystem(system); // Handles individual errors and events
-      }
-
-      this.#logger.info(
-        'SystemInitializer: Initialization loop for tagged systems completed.'
-      );
-    } catch (error) {
-      // This catch block handles critical errors from _resolveSystems
-      // Error already logged by _resolveSystems.
-
-      // Re-throw the critical resolution error to halt the overall initialization sequence.
-      throw error;
+    for (const system of systemsToInitialize) {
+      await this.#_initializeSingleSystem(system); // Handles individual errors and events
     }
+
+    this.#logger.info(
+      'SystemInitializer: Initialization loop for tagged systems completed.'
+    );
   }
 }
 
