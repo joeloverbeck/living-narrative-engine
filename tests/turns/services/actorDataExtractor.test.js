@@ -1,7 +1,7 @@
 // tests/turns/services/actorDataExtractor.test.js
 // --- FILE START ---
 
-import { ActorDataExtractor } from '../../../src/turns/services/ActorDataExtractor.js';
+import { ActorDataExtractor } from '../../../src/turns/services/actorDataExtractor.js';
 import {
   NAME_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,

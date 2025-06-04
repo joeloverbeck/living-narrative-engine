@@ -48,7 +48,7 @@ import {
  * @typedef {object} LLMConfigurationFileForProxy
  * @description Represents the structure of the parsed llm-configs.json file.
  * @property {string} [defaultConfigId] - The ID of the default LLM configuration.
- * @property {Object<string, LLMModelConfig>} llms - A dictionary of LLM configurations, keyed by llmId.
+ * @property {Object.<string, LLMModelConfig>} llms - A dictionary of LLM configurations, keyed by llmId.
  */
 
 /**
@@ -385,7 +385,8 @@ export class LlmConfigService {
   getInitializationErrorDetails() {
     if (this.#initializationError) {
       // Return a structure that's safe for external use, omitting the direct originalError object.
-      const { originalError, ...safeErrorDetails } = this.#initializationError;
+      const { originalError: _unusedOriginalError, ...safeErrorDetails } =
+        this.#initializationError;
       return safeErrorDetails;
     }
     return null;

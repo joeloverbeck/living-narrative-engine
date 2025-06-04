@@ -1,7 +1,7 @@
 // tests/llms/strategies/base/baseCompletionLLMStrategy.test.js
 // --- UPDATED FILE START ---
 
-import { BaseCompletionLLMStrategy } from '../../../../src/llms/strategies/base/BaseCompletionLLMStrategy.js'; // Adjusted path
+import { BaseCompletionLLMStrategy } from '../../../../src/llms/strategies/base/baseCompletionLLMStrategy.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 
 // Mock Logger

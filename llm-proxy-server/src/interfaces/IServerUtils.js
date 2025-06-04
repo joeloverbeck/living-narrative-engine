@@ -19,12 +19,14 @@ export class IFileSystemReader {
    *
    * @async
    * @param {string} filePath - The path to the file to be read.
+   * @param _filePath
+   * @param _encoding
    * @param {string} encoding - The character encoding to use (e.g., 'utf-8').
    * @returns {Promise<string>} A Promise that resolves with the file content as a string.
    * @throws {Error} If the file cannot be read (e.g., not found, insufficient permissions, or other I/O errors).
    * Implementations should allow specific errors from the underlying file system module to propagate.
    */
-  async readFile(filePath, encoding) {
+  async readFile(_filePath, _encoding) {
     throw new Error('IFileSystemReader.readFile method not implemented.');
   }
 }
@@ -38,9 +40,10 @@ export class IEnvironmentVariableReader {
    * Retrieves the value of an environment variable.
    *
    * @param {string} variableName - The name of the environment variable.
+   * @param _variableName
    * @returns {string | undefined} The value of the environment variable if set, otherwise undefined.
    */
-  getEnv(variableName) {
+  getEnv(_variableName) {
     throw new Error(
       'IEnvironmentVariableReader.getEnv method not implemented.'
     );

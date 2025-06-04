@@ -2,8 +2,7 @@
 
 import * as fs from 'node:fs/promises';
 
-// No import needed for IFileSystemReader when using JSDoc @interface and @implements.
-// JSDoc tools will resolve the type name.
+/** @typedef {import('./interfaces/IServerUtils.js').IFileSystemReader} IFileSystemReader */
 
 /**
  * @class NodeFileSystemReader

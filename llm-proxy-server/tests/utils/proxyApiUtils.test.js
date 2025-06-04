@@ -8,8 +8,7 @@ import {
   expect,
   jest,
   test,
-  fail,
-} from '@jest/globals'; // Added fail
+} from '@jest/globals';
 
 // SUT (System Under Test)
 import { Workspace_retry } from '../../src/utils/proxyApiUtils.js';
@@ -28,10 +27,12 @@ jest.mock('../../src/utils/loggerUtils.js', () => ({
 // we're copying its implementation here. In a typical scenario,
 // this utility would be exported for direct testing.
 /**
+ * Simplified copy of the private _calculateRetryDelay used for unit testing.
  *
- * @param currentAttempt
- * @param baseDelayMs
- * @param maxDelayMs
+ * @param {number} currentAttempt - The current attempt number.
+ * @param {number} baseDelayMs - Base delay in milliseconds.
+ * @param {number} maxDelayMs - Maximum delay in milliseconds.
+ * @returns {number} Calculated retry delay with jitter.
  */
 function _calculateRetryDelay_forTest(currentAttempt, baseDelayMs, maxDelayMs) {
   const delayFactor = Math.pow(2, currentAttempt - 1);
