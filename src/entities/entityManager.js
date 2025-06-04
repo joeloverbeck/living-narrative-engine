@@ -53,6 +53,48 @@ function validationSucceeded(rawResult) {
   return !!rawResult.isValid;
 }
 
+/**
+ * Deep clone an arbitrary JSON-compatible object.
+ *
+ * @private
+ * @param {object} obj
+ * @returns {object}
+ */
+function cloneDeep(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+/**
+ * Convert a validation result into a readable string for logs.
+ *
+ * @private
+ * @param {ValidationResult|boolean|undefined|null} rawResult
+ * @returns {string}
+ */
+function formatValidationErrors(rawResult) {
+  if (rawResult && typeof rawResult === 'object' && rawResult.errors) {
+    return JSON.stringify(rawResult.errors, null, 2);
+  }
+  return '(validator returned false)';
+}
+
+/**
+ * Assert that an injected dependency exposes required methods.
+ *
+ * @private
+ * @param {string} name
+ * @param {object} instance
+ * @param {string[]} methods
+ */
+function assertInterface(name, instance, methods) {
+  const missing = methods.some((m) => typeof instance?.[m] !== 'function');
+  if (!instance || missing) {
+    throw new Error(
+      `EntityManager requires an ${name} instance with ${methods.join(', ')}.`
+    );
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* EntityManager Implementation                                               */
 
@@ -93,37 +135,14 @@ class EntityManager extends IEntityManager {
     super();
 
     /* ---------- dependency checks ---------- */
-    if (!registry || typeof registry.getEntityDefinition !== 'function') {
-      throw new Error(
-        'EntityManager requires an IDataRegistry instance with getEntityDefinition.'
-      );
-    }
-    if (!validator || typeof validator.validate !== 'function') {
-      throw new Error(
-        'EntityManager requires an ISchemaValidator instance with validate.'
-      );
-    }
-    if (
-      !logger ||
-      typeof logger.info !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      throw new Error(
-        'EntityManager requires an ILogger instance with info, error, warn, and debug methods.'
-      );
-    }
-    if (
-      !spatialIndexManager ||
-      typeof spatialIndexManager.updateEntityLocation !== 'function' ||
-      typeof spatialIndexManager.removeEntity !== 'function' ||
-      typeof spatialIndexManager.addEntity !== 'function'
-    ) {
-      throw new Error(
-        'EntityManager requires an ISpatialIndexManager instance with addEntity, removeEntity, and updateEntityLocation.'
-      );
-    }
+    assertInterface('IDataRegistry', registry, ['getEntityDefinition']);
+    assertInterface('ISchemaValidator', validator, ['validate']);
+    assertInterface('ILogger', logger, ['info', 'error', 'warn', 'debug']);
+    assertInterface('ISpatialIndexManager', spatialIndexManager, [
+      'addEntity',
+      'removeEntity',
+      'updateEntityLocation',
+    ]);
 
     this.#registry = registry;
     this.#validator = validator;
@@ -132,6 +151,100 @@ class EntityManager extends IEntityManager {
     this.#definitionToPrimaryInstanceMap = new Map();
 
     this.#logger.info('EntityManager initialised.');
+  }
+
+  /**
+   * Retrieve an entity by ID or throw an Error if missing.
+   *
+   * @private
+   * @param {string} instanceId
+   * @returns {Entity}
+   */
+  #getEntityOrThrow(instanceId) {
+    const entity = this.activeEntities.get(instanceId);
+    if (!entity) {
+      const msg = `EntityManager.addComponent: Entity not found with ID: ${instanceId}`;
+      this.#logger.error(msg);
+      throw new Error(msg);
+    }
+    return entity;
+  }
+
+  /**
+   * Validate component data and return a deep clone.
+   *
+   * @private
+   * @param {string} componentTypeId
+   * @param {object} data
+   * @param {string} errorContext
+   * @returns {object}
+   */
+  #validateAndClone(componentTypeId, data, errorContext) {
+    const clone = cloneDeep(data);
+    const result = this.#validator.validate(componentTypeId, clone);
+    if (!validationSucceeded(result)) {
+      const details = formatValidationErrors(result);
+      const msg = `${errorContext} Errors:\n${details}`;
+      this.#logger.error(msg);
+      throw new Error(errorContext);
+    }
+    return clone;
+  }
+
+  /**
+   * Inject default components required by the engine (STM, notes).
+   *
+   * @private
+   * @param {Entity} entity
+   * @param {string} instanceId
+   */
+  #injectDefaultComponents(entity, instanceId) {
+    if (
+      entity.hasComponent(ACTOR_COMPONENT_ID) &&
+      !entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)
+    ) {
+      const defaultStm = { thoughts: [], maxEntries: 10 };
+      this.#validateAndClone(
+        SHORT_TERM_MEMORY_COMPONENT_ID,
+        defaultStm,
+        'Default STM validation failed.'
+      );
+      entity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, defaultStm);
+      this.#logger.debug(
+        `createEntityInstance: default 'core:short_term_memory' injected into ${instanceId}.`
+      );
+    }
+
+    if (
+      entity.hasComponent(ACTOR_COMPONENT_ID) &&
+      !entity.hasComponent(NOTES_COMPONENT_ID)
+    ) {
+      const defaultNotes = { notes: [] };
+      this.#validateAndClone(
+        NOTES_COMPONENT_ID,
+        defaultNotes,
+        'Default core:notes validation failed.'
+      );
+      entity.addComponent(NOTES_COMPONENT_ID, defaultNotes);
+      this.#logger.debug(
+        `createEntityInstance: default 'core:notes' injected into ${instanceId}.`
+      );
+    }
+  }
+
+  /**
+   * Track a newly created entity if not a forced clone.
+   *
+   * @private
+   * @param {Entity} entity
+   * @param {string} definitionId
+   * @param {string} instanceId
+   */
+  #commitEntity(entity, definitionId, instanceId) {
+    this.activeEntities.set(instanceId, entity);
+    if (!this.#definitionToPrimaryInstanceMap.has(definitionId)) {
+      this.#definitionToPrimaryInstanceMap.set(definitionId, instanceId);
+    }
   }
 
   /* ---------------------------------------------------------------------- */
@@ -190,69 +303,21 @@ class EntityManager extends IEntityManager {
       for (const [componentTypeId, componentData] of Object.entries(
         entityDefinition.components
       )) {
-        const dataClone = JSON.parse(JSON.stringify(componentData));
-
-        const rawResult = this.#validator.validate(componentTypeId, dataClone);
-        if (!validationSucceeded(rawResult)) {
-          const details =
-            typeof rawResult === 'object' && rawResult?.errors
-              ? JSON.stringify(rawResult.errors, null, 2)
-              : '(validator returned false)';
-          this.#logger.error(
-            `createEntityInstance: validation failed for '${componentTypeId}' on definition '${definitionId}'.\n${details}`
-          );
-          throw new Error('Component validation failed during instantiation.');
-        }
+        const dataClone = this.#validateAndClone(
+          componentTypeId,
+          componentData,
+          `createEntityInstance: validation failed for '${componentTypeId}' on definition '${definitionId}'.`
+        );
 
         entity.addComponent(componentTypeId, dataClone);
       }
 
       /* --- default injections --------------------------------------- */
-      if (
-        entity.hasComponent(ACTOR_COMPONENT_ID) &&
-        !entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)
-      ) {
-        const defaultStm = { thoughts: [], maxEntries: 10 };
-        if (
-          !validationSucceeded(
-            this.#validator.validate(SHORT_TERM_MEMORY_COMPONENT_ID, defaultStm)
-          )
-        ) {
-          throw new Error('Default STM validation failed.');
-        }
-        entity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, defaultStm);
-        this.#logger.debug(
-          `createEntityInstance: default 'core:short_term_memory' injected into ${actualInstanceId}.`
-        );
-      }
-
-      if (
-        entity.hasComponent(ACTOR_COMPONENT_ID) &&
-        !entity.hasComponent(NOTES_COMPONENT_ID)
-      ) {
-        const defaultNotes = { notes: [] };
-        if (
-          !validationSucceeded(
-            this.#validator.validate(NOTES_COMPONENT_ID, defaultNotes)
-          )
-        ) {
-          throw new Error('Default core:notes validation failed.');
-        }
-        entity.addComponent(NOTES_COMPONENT_ID, defaultNotes);
-        this.#logger.debug(
-          `createEntityInstance: default 'core:notes' injected into ${actualInstanceId}.`
-        );
-      }
+      this.#injectDefaultComponents(entity, actualInstanceId);
 
       /* --- bookkeeping --------------------------------------------- */
       if (!forceNew) {
-        this.activeEntities.set(actualInstanceId, entity);
-        if (!this.#definitionToPrimaryInstanceMap.has(definitionId)) {
-          this.#definitionToPrimaryInstanceMap.set(
-            definitionId,
-            actualInstanceId
-          );
-        }
+        this.#commitEntity(entity, definitionId, actualInstanceId);
       }
 
       this.#logger.info(
@@ -283,25 +348,13 @@ class EntityManager extends IEntityManager {
    * @throws {Error}
    */
   addComponent(instanceId, componentTypeId, componentData) {
-    const entity = this.activeEntities.get(instanceId);
-    if (!entity) {
-      const msg = `EntityManager.addComponent: Entity not found with ID: ${instanceId}`;
-      this.#logger.error(msg);
-      throw new Error(msg);
-    }
+    const entity = this.#getEntityOrThrow(instanceId);
 
-    const rawResult = this.#validator.validate(componentTypeId, componentData);
-    if (!validationSucceeded(rawResult)) {
-      const details =
-        typeof rawResult === 'object' && rawResult?.errors
-          ? JSON.stringify(rawResult.errors, null, 2)
-          : '(validator returned false)';
-      const msg = `EntityManager.addComponent: Component data validation failed for type '${componentTypeId}' on entity '${instanceId}'. Errors:\n${details}`;
-      this.#logger.error(msg);
-      throw new Error(
-        `EntityManager.addComponent: Component data validation failed for type '${componentTypeId}' on entity '${instanceId}'.`
-      );
-    }
+    const clonedData = this.#validateAndClone(
+      componentTypeId,
+      componentData,
+      `EntityManager.addComponent: Component data validation failed for type '${componentTypeId}' on entity '${instanceId}'.`
+    );
     this.#logger.debug(
       `EntityManager.addComponent: validation passed for '${componentTypeId}' on '${instanceId}'.`
     );
@@ -320,7 +373,6 @@ class EntityManager extends IEntityManager {
     }
 
     /* --- mutate ---------------------------------------------------- */
-    const clonedData = JSON.parse(JSON.stringify(componentData));
     entity.addComponent(componentTypeId, clonedData);
     this.#logger.debug(
       `EntityManager.addComponent: Successfully added/updated component '${componentTypeId}' data on entity '${instanceId}'.`
