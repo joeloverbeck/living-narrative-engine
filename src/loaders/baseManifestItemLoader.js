@@ -336,7 +336,7 @@ export class BaseManifestItemLoader {
    */
   _getContentTypeSchemaId(contentType) {
     const schemaId = this._config.getContentTypeSchemaId(contentType);
-    if (schemaId == null) {
+    if (schemaId === null || schemaId === undefined) {
       this._logger.warn(
         `${this.constructor.name}: Schema ID for content type '${contentType}' not found in configuration.`
       );
@@ -359,15 +359,21 @@ export class BaseManifestItemLoader {
    * @abstract
    * @protected
    * @async
-   * @param {string} modId - The ID of the mod owning the file.
-   * @param {string} filename - The original filename from the manifest.
-   * @param {string} resolvedPath - The fully resolved path to the file.
-   * @param {any} data - The raw data fetched from the file (already validated against the primary schema).
-   * @param {string} typeName - The content type name (e.g., 'items', 'locations').
+   * @param {string} _modId - The ID of the mod owning the file.
+   * @param {string} _filename - The original filename from the manifest.
+   * @param {string} _resolvedPath - The fully resolved path to the file.
+   * @param {any} _data - The raw data fetched from the file (already validated against the primary schema).
+   * @param {string} _typeName - The content type name (e.g., 'items', 'locations').
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} A promise resolving with an object containing the fully qualified item ID and whether an overwrite occurred.
    * @throws {Error} If processing or validation fails. This error will be caught by `_processFileWrapper`.
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+  async _processFetchedItem(
+    _modId,
+    _filename,
+    _resolvedPath,
+    _data,
+    _typeName
+  ) {
     // <<< MODIFIED: Updated JSDoc Guidance and Return Type
     // istanbul ignore next
     throw new Error(
@@ -605,7 +611,7 @@ export class BaseManifestItemLoader {
         category,
         finalRegistryKey
       );
-      if (existingDefinition != null) {
+      if (existingDefinition !== null && existingDefinition !== undefined) {
         didOverwrite = true; // <<< SET flag if item exists
         this._logger.warn(
           `${this.constructor.name} [${modId}]: Overwriting existing ${category} definition with key '${finalRegistryKey}'. ` +

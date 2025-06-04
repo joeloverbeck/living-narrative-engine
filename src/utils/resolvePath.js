@@ -12,11 +12,11 @@ export default function resolvePath(root, dotPath) {
     throw new TypeError('resolvePath: dotPath must be a non-empty string');
   }
 
-  if (root == null) return undefined; // early null/undefined bail-out
+  if (root === null || root === undefined) return undefined; // early null/undefined bail-out
 
   let current = root;
   for (const segment of dotPath.trim().split('.').filter(Boolean)) {
-    if (current == null) return undefined; // any null/undefined hop → undefined
+    if (current === null || current === undefined) return undefined; // any null/undefined hop → undefined
     current = current[segment];
   }
   return current;

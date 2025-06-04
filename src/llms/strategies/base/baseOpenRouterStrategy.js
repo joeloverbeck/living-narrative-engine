@@ -85,11 +85,11 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    * @async
    * @param {any} responseData - The raw response data from the HTTP client.
    * @param {LLMModelConfig} llmConfig - The LLM configuration.
-   * @param {object} [providerRequestPayload] - The full request payload sent to the provider.
+   * @param {object} [_providerRequestPayload] - The full request payload sent to the provider.
    * @returns {Promise<string | null>} A promise that resolves to the extracted JSON string or null.
    * @throws {Error} This base implementation throws an error if not overridden by a subclass.
    */
-  async _extractJsonOutput(responseData, llmConfig, providerRequestPayload) {
+  async _extractJsonOutput(responseData, llmConfig, _providerRequestPayload) {
     const errorMessage = `${this.constructor.name}._extractJsonOutput: Method not implemented. Subclasses must override this method.`;
     // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
@@ -298,9 +298,9 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
 
       const isHttpClientError =
         error.name === 'HttpClientError' ||
-        (error.hasOwnProperty('status') &&
-          error.hasOwnProperty('response') &&
-          error.hasOwnProperty('url'));
+        (Object.prototype.hasOwnProperty.call(error, 'status') &&
+          Object.prototype.hasOwnProperty.call(error, 'response') &&
+          Object.prototype.hasOwnProperty.call(error, 'url'));
 
       let finalError;
       if (isHttpClientError) {

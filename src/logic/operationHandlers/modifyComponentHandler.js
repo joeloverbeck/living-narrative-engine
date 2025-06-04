@@ -17,7 +17,7 @@ import resolvePath from '../../utils/resolvePath.js';
 
 /**
  * @typedef {object} EntityRefObject
- * @property {string} entityId
+ * @property {string} entityId - The referenced entity ID.
  */
 
 /**
@@ -38,9 +38,10 @@ import resolvePath from '../../utils/resolvePath.js';
 /**
  * Create missing chain and set value at leaf.
  *
- * @param root
- * @param path
- * @param value
+ * @param {object} root - Object to modify.
+ * @param {string} path - Dot-separated path to set.
+ * @param {*} value - Value to place at the path.
+ * @returns {boolean} True if the value was set successfully.
  */
 function setByPath(root, path, value) {
   const parts = path.split('.').filter(Boolean);
@@ -51,7 +52,7 @@ function setByPath(root, path, value) {
       cur[key] = value;
       return true;
     }
-    if (cur[key] == null) cur[key] = {};
+    if (cur[key] === null || cur[key] === undefined) cur[key] = {};
     if (typeof cur[key] !== 'object') return false; // Cannot traverse non-object
     cur = cur[key];
   }
@@ -61,9 +62,10 @@ function setByPath(root, path, value) {
 /**
  * Increment numeric leaf value.
  *
- * @param root
- * @param path
- * @param delta
+ * @param {object} root - Object to modify.
+ * @param {string} path - Dot-separated path to the numeric value.
+ * @param {number} delta - Amount to increment.
+ * @returns {boolean} True if increment succeeded.
  */
 function incByPath(root, path, delta) {
   const parentPath = path.split('.').slice(0, -1).join('.');
@@ -120,8 +122,9 @@ class ModifyComponentHandler {
    * Resolve entity_ref → entityId or null.
    * (Unchanged - Copied to AddComponentHandler as well)
    *
-   * @param ref
-   * @param ctx
+   * @param {string|EntityRefObject} ref - Reference to resolve.
+   * @param {ExecutionContext} ctx - The execution context.
+   * @returns {string|null} The resolved entity ID or null.
    * @private
    */
   #resolveEntityId(ref, ctx) {
@@ -151,7 +154,7 @@ class ModifyComponentHandler {
    *
    * @param {ModifyComponentOperationParams|null|undefined} params - The parameters for the operation.
    * @param {ExecutionContext} execCtx - The execution context.
-   * @implements {OperationHandler}
+   * @returns {void}
    */
   execute(params, execCtx) {
     const log = execCtx?.logger ?? this.#logger;
@@ -175,7 +178,12 @@ class ModifyComponentHandler {
       log.warn('MODIFY_COMPONENT: mode must be "set" or "inc".');
       return;
     }
-    if (field == null || typeof field !== 'string' || !field.trim()) {
+    if (
+      field === null ||
+      field === undefined ||
+      typeof field !== 'string' ||
+      !field.trim()
+    ) {
       log.warn(
         'MODIFY_COMPONENT: "field" parameter (non-empty string) is required for modification.'
       );

@@ -1,5 +1,6 @@
 // src/utils/processEnvReader.js
 // --- CORRECTED FILE START ---
+/* eslint-env node */
 
 // Corrected import path
 import { IEnvironmentVariableReader } from '../../llm-proxy-server/src/interfaces/IServerUtils.js';
@@ -27,8 +28,11 @@ export class ProcessEnvReader extends IEnvironmentVariableReader {
 
     // Ensure we only retrieve properties directly set on process.env
     // and not from its prototype chain.
-    if (Object.prototype.hasOwnProperty.call(process.env, variableName)) {
-      return process.env[variableName];
+    if (
+      globalThis.process &&
+      Object.prototype.hasOwnProperty.call(globalThis.process.env, variableName)
+    ) {
+      return globalThis.process.env[variableName];
     }
     return undefined;
   }

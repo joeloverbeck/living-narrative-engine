@@ -59,7 +59,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
       // This case should ideally be caught by upstream validation in ConfigurableLLMAdapter,
       // but as a safeguard:
       this.logger.error(
-        `${this.constructor.name} \(${llmId}): Invalid or missing 'toolName' in llmConfig.jsonOutputStrategy. Expected a non-empty string.`,
+        `${this.constructor.name} (${llmId}): Invalid or missing 'toolName' in llmConfig.jsonOutputStrategy. Expected a non-empty string.`,
         {
           llmId,
           jsonOutputStrategy: llmConfig.jsonOutputStrategy,
@@ -81,7 +81,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
 
     if (!toolParametersSchema || typeof toolParametersSchema !== 'object') {
       this.logger.error(
-        `${this.constructor.name} \(${llmId}): Invalid tool parameters schema (OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA). Expected an object.`,
+        `${this.constructor.name} (${llmId}): Invalid tool parameters schema (OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA). Expected an object.`,
         {
           llmId,
           toolParametersSchema,
@@ -100,7 +100,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
     };
 
     this.logger.debug(
-      `${this.constructor.name} \(${llmId}): Defined tool for use with name '${configuredToolName}'.`,
+      `${this.constructor.name} (${llmId}): Defined tool for use with name '${configuredToolName}'.`,
       {
         llmId,
         toolName: tool.function.name, // Log the actually used tool name
@@ -121,11 +121,11 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
    * @async
    * @param {any} responseData - The raw response data from the HTTP client.
    * @param {LLMModelConfig} llmConfig - The LLM configuration.
-   * @param {object} [providerRequestPayload] - The request payload sent to the provider.
+   * @param {object} [_providerRequestPayload] - The request payload sent to the provider.
    * @returns {Promise<string>} A promise that resolves to the extracted JSON string.
    * @throws {LLMStrategyError} If JSON content cannot be extracted or validated.
    */
-  async _extractJsonOutput(responseData, llmConfig, providerRequestPayload) {
+  async _extractJsonOutput(responseData, llmConfig, _providerRequestPayload) {
     // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
     // MODIFICATION END
@@ -139,7 +139,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
       typeof expectedToolName !== 'string' ||
       expectedToolName.trim() === ''
     ) {
-      const errorMsg = `${this.constructor.name} \(${llmId}): Invalid or missing 'toolName' in llmConfig.jsonOutputStrategy for extraction. Expected a non-empty string.`;
+      const errorMsg = `${this.constructor.name} (${llmId}): Invalid or missing 'toolName' in llmConfig.jsonOutputStrategy for extraction. Expected a non-empty string.`;
       this.logger.error(errorMsg, {
         llmId,
         jsonOutputStrategy: llmConfig.jsonOutputStrategy,
@@ -149,7 +149,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
     // MODIFICATION END
 
     if (!message) {
-      const errorMsg = `${this.constructor.name} \(${llmId}): Response structure did not contain 'choices[0].message'.`;
+      const errorMsg = `${this.constructor.name} (${llmId}): Response structure did not contain 'choices[0].message'.`;
       this.logger.warn(errorMsg, {
         llmId,
         responseDataPreview: JSON.stringify(responseData)?.substring(0, 500),
@@ -186,7 +186,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
       }
 
       if (reason) {
-        const errorMsg = `${this.constructor.name} \(${llmId}): Failed to extract JSON from tool_calls. ${reason}`;
+        const errorMsg = `${this.constructor.name} (${llmId}): Failed to extract JSON from tool_calls. ${reason}`;
         this.logger.error(errorMsg, {
           llmId,
           toolCallDetails: {
@@ -212,7 +212,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
 
       const extractedJsonString = toolCall.function.arguments.trim();
       this.logger.info(
-        `${this.constructor.name} \(${llmId}): Successfully extracted JSON string from tool_calls[0].function.arguments for tool '${expectedToolName}'.`,
+        `${this.constructor.name} (${llmId}): Successfully extracted JSON string from tool_calls[0].function.arguments for tool '${expectedToolName}'.`,
         {
           llmId,
           length: extractedJsonString.length,
@@ -220,11 +220,14 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
       );
       return extractedJsonString;
     } else {
-      const errorMsg = `${this.constructor.name} \(${llmId}): Response did not contain expected 'message.tool_calls' array, or it was empty.`;
+      const errorMsg = `${this.constructor.name} (${llmId}): Response did not contain expected 'message.tool_calls' array, or it was empty.`;
       this.logger.error(errorMsg, {
         llmId,
         messageObjectPreview: {
-          has_tool_calls: message.hasOwnProperty('tool_calls'),
+          has_tool_calls: Object.prototype.hasOwnProperty.call(
+            message,
+            'tool_calls'
+          ),
           tool_calls_type: typeof message.tool_calls,
           tool_calls_length: Array.isArray(message.tool_calls)
             ? message.tool_calls.length
