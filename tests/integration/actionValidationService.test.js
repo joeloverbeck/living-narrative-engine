@@ -1,16 +1,11 @@
 // src/tests/integration/actionValidationService.test.js
 
+/* eslint-disable jsdoc/check-tag-names */
 /**
  * @jest-environment node
  */
-import {
-  describe,
-  expect,
-  test,
-  jest,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+/* eslint-enable jsdoc/check-tag-names */
+import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 
 // --- System Under Test (SUT) ---
 import { ActionValidationService } from '../../src/services/actionValidationService.js'; // Adjust path if needed
@@ -56,8 +51,6 @@ const mockDomainChecker = {
 // /** @type {jest.Mock<(actionDef: ActionDefinition, actor: Entity, target: ActionTargetContext, manager: EntityManager, logger: ILogger) => JsonLogicEvaluationContext>} */
 // const mockContextCreatorFn = jest.fn();
 
-// Mock PrerequisiteEvaluationService Instance (using mocked constructor)
-const MockPrerequisiteEvaluationService = PrerequisiteEvaluationService; // Alias for clarity
 /** @type {jest.Mocked<PrerequisiteEvaluationService>} */
 let mockPesInstance;
 
@@ -141,9 +134,6 @@ describe('Integration Test: ActionValidationService - Prerequisite Validation St
   });
 
   // --- Test Cases ---
-
-  // REMOVED: Test Context Creator Call (No longer relevant for AVS)
-  // test('should call createActionValidationContextFn with correct args when prerequisites exist', () => { ... });
 
   // AC3: Prerequisite Check - PES Called with Correct Arguments
   test('AC3: should call PrerequisiteEvaluationService.evaluate with correct args when prerequisites exist', () => {
@@ -316,9 +306,6 @@ describe('Integration Test: ActionValidationService - Prerequisite Validation St
     );
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
   });
-
-  // REMOVED: Test for context creator throwing error (no longer AVS responsibility)
-  // test('should return false and log error if createActionValidationContextFn throws, does NOT call PES', () => { ... });
 
   // Optional: Test edge case where target entity resolution fails
   // AVS only warns, PES might fail later, but AVS itself proceeds. AVS Test should verify PES is still called.
