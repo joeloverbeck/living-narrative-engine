@@ -12,6 +12,7 @@ import {
   CLOUD_API_TYPES, // Added import for CLOUD_API_TYPES
 } from '../../llms/constants/llmConstants.js';
 import gptEncoder from 'gpt-3-encoder';
+import PromptTooLongError from '../../errors/promptTooLongError.js';
 
 /**
  * @typedef {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
@@ -792,7 +793,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
    * @async
    * @param {string} gameSummary - A string providing a summarized representation of the game state.
    * @returns {Promise<string>} A Promise that resolves to a JSON string representing the LLM's decision.
-   * @throws {Error | ConfigurationError} If issues occur.
+   * @throws {PromptTooLongError | Error | ConfigurationError} If issues occur or the prompt exceeds available space.
    */
   async getAIDecision(gameSummary) {
     // #ensureInitialized will throw if not initialized or not operational.
@@ -834,6 +835,34 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
       this.#logger.info(
         `ConfigurableLLMAdapter.getAIDecision: Estimated prompt token count for LLM '${activeConfig.configId}': ${estimatedTokens}`
       );
+
+      if (
+        typeof activeConfig.contextTokenLimit === 'number' &&
+        activeConfig.contextTokenLimit > 0
+      ) {
+        const maxTokensForOutput =
+          typeof activeConfig.defaultParameters?.max_tokens === 'number'
+            ? activeConfig.defaultParameters.max_tokens
+            : 150;
+        const promptTokenSpace =
+          activeConfig.contextTokenLimit - maxTokensForOutput;
+        const warningThreshold = 0.9 * promptTokenSpace;
+
+        if (estimatedTokens >= promptTokenSpace) {
+          const msg = `Estimated prompt tokens (${estimatedTokens}) exceed available space (${promptTokenSpace}) for LLM '${activeConfig.configId}'.`;
+          this.#logger.error(`ConfigurableLLMAdapter.getAIDecision: ${msg}`);
+          throw new PromptTooLongError(msg, {
+            estimatedTokens,
+            promptTokenSpace,
+            contextTokenLimit: activeConfig.contextTokenLimit,
+            maxTokensForOutput,
+          });
+        } else if (estimatedTokens >= warningThreshold) {
+          this.#logger.warn(
+            `ConfigurableLLMAdapter.getAIDecision: Estimated prompt token count (${estimatedTokens}) is nearing the limit (${promptTokenSpace}) for LLM '${activeConfig.configId}'.`
+          );
+        }
+      }
 
       const apiKey = await this.#getApiKeyForConfig(activeConfig);
       const strategy = this.#createStrategy(activeConfig);
