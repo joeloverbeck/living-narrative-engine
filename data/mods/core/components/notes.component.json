@@ -23,17 +23,12 @@
               "description": "When the note was created."
             }
           },
-          "required": [
-            "text",
-            "timestamp"
-          ],
+          "required": ["text", "timestamp"],
           "additionalProperties": false
         }
       }
     },
-    "required": [
-      "notes"
-    ],
+    "required": ["notes"],
     "additionalProperties": false
   },
   "resolveFields": []

@@ -1,159 +1,161 @@
 /* css/themes/_default-theme.css */
 
 :root {
-    /* "Vibrant Explorer" Theme */
+  /* "Vibrant Explorer" Theme */
 
-    /* Colors */
-    --primary-text-color: #2c3e50; /* Dark Slate Blue - good contrast */
-    --secondary-text-color: #576574; /* Cool Grey - softer than before */
-    --primary-bg-color: #fdfdfd; /* Almost White - clean page background */
-    --secondary-bg-color: #f1f2f6; /* Light Cool Grey - for UI chrome */
+  /* Colors */
+  --primary-text-color: #2c3e50; /* Dark Slate Blue - good contrast */
+  --secondary-text-color: #576574; /* Cool Grey - softer than before */
+  --primary-bg-color: #fdfdfd; /* Almost White - clean page background */
+  --secondary-bg-color: #f1f2f6; /* Light Cool Grey - for UI chrome */
 
-    --accent-color-primary: #1abc9c; /* Rich Teal/Cyan - main accent */
-    --accent-color-focus-ring: rgba(
-            26,
-            188,
-            156,
-            0.35
-    ); /* For focus box-shadow */
-    --accent-color-secondary: #e67e22; /* Warm Orange - secondary accent for calls to action or highlights */
+  --accent-color-primary: #1abc9c; /* Rich Teal/Cyan - main accent */
+  --accent-color-focus-ring: rgba(
+    26,
+    188,
+    156,
+    0.35
+  ); /* For focus box-shadow */
+  --accent-color-secondary: #e67e22; /* Warm Orange - secondary accent for calls to action or highlights */
 
-    --panel-bg-color: #ffffff; /* White (For content panels) */
-    --panel-border-color: #dfe4ea; /* Softer panel borders */
+  --panel-bg-color: #ffffff; /* White (For content panels) */
+  --panel-border-color: #dfe4ea; /* Softer panel borders */
 
-    --input-bg-color: #ffffff;
-    --input-text-color: var(--primary-text-color);
-    --input-border-color: #ced4da; /* Standard input border */
-    --input-placeholder-color: var(--secondary-text-color);
+  --input-bg-color: #ffffff;
+  --input-text-color: var(--primary-text-color);
+  --input-border-color: #ced4da; /* Standard input border */
+  --input-placeholder-color: var(--secondary-text-color);
 
-    /* A11Y: Adjusted button colors for contrast */
-    --button-bg-color: var(--accent-color-primary); /* Use primary accent */
-    --button-text-color: #ffffff;
-    --button-hover-bg-color: #16a085; /* Darker Teal/Cyan for hover */
-    --button-disabled-bg-color: #d4f0eb; /* Lighter, desaturated teal */
-    --button-disabled-text-color: #7fccc2;
+  /* A11Y: Adjusted button colors for contrast */
+  --button-bg-color: var(--accent-color-primary); /* Use primary accent */
+  --button-text-color: #ffffff;
+  --button-hover-bg-color: #16a085; /* Darker Teal/Cyan for hover */
+  --button-disabled-bg-color: #d4f0eb; /* Lighter, desaturated teal */
+  --button-disabled-text-color: #7fccc2;
 
-    /* NEW: Variables for selected action button for enhanced visual clarity */
-    --button-selected-bg-color: var(
-            --accent-color-secondary
-    ); /* Orange for selected */
-    --button-selected-text-color: #ffffff; /* White text */
-    --button-selected-border-color: #d35400; /* Darker Orange border */
-    --button-selected-glow-color: rgba(230, 126, 34, 0.45); /* Orange glow */
+  /* NEW: Variables for selected action button for enhanced visual clarity */
+  --button-selected-bg-color: var(
+    --accent-color-secondary
+  ); /* Orange for selected */
+  --button-selected-text-color: #ffffff; /* White text */
+  --button-selected-border-color: #d35400; /* Darker Orange border */
+  --button-selected-glow-color: rgba(230, 126, 34, 0.45); /* Orange glow */
 
-    /* Button Danger (for Delete) */
-    --button-danger-bg-color: #e74c3c; /* Softer Red */
-    --button-danger-text-color: #ffffff;
-    --button-danger-hover-bg-color: #c0392b; /* Darker Red */
-    --button-danger-border-color: #a93226;
+  /* Button Danger (for Delete) */
+  --button-danger-bg-color: #e74c3c; /* Softer Red */
+  --button-danger-text-color: #ffffff;
+  --button-danger-hover-bg-color: #c0392b; /* Darker Red */
+  --button-danger-border-color: #a93226;
 
-    /* A11Y: Adjusted messaging colors for contrast on typical panel background (#FFFFFF) */
-    --error-text-color: #c0392b; /* Using the darker danger red for text */
-    --error-bg-color: #fadbd8; /* Light Red background for error messages/areas */
-    --success-text-color: #27ae60; /* Emerald Green */
-    --info-text-color: #2980b9; /* Belize Hole Blue (a calm, informative blue) */
-    --echo-text-color: var(--secondary-text-color);
+  /* A11Y: Adjusted messaging colors for contrast on typical panel background (#FFFFFF) */
+  --error-text-color: #c0392b; /* Using the darker danger red for text */
+  --error-bg-color: #fadbd8; /* Light Red background for error messages/areas */
+  --success-text-color: #27ae60; /* Emerald Green */
+  --info-text-color: #2980b9; /* Belize Hole Blue (a calm, informative blue) */
+  --echo-text-color: var(--secondary-text-color);
 
-    /* --- MODIFIED & ADDED: Variables for speech messages --- */
-    --speech-text-color: #6a1b9a; /* MODIFIED: Darker Wisteria Purple for better contrast */
-    --speech-bg-color: #f5eef8; /* Light Purple tint for background (remains same) */
-    --speech-border-color: var(
-            --speech-text-color
-    ); /* Border matches text color for emphasis */
-    --speech-action-text-color: #c0392b; /* ADDED: For action text, using a contrasting red */
-    /* --- END MODIFIED & ADDED --- */
+  /* --- MODIFIED & ADDED: Variables for speech messages --- */
+  --speech-text-color: #6a1b9a; /* MODIFIED: Darker Wisteria Purple for better contrast */
+  --speech-bg-color: #f5eef8; /* Light Purple tint for background (remains same) */
+  --speech-border-color: var(
+    --speech-text-color
+  ); /* Border matches text color for emphasis */
+  --speech-action-text-color: #c0392b; /* ADDED: For action text, using a contrasting red */
+  /* --- END MODIFIED & ADDED --- */
 
-    /* NEW: Variables for Player Speech Bubbles */
-    --player-speech-bg-color: #fff8e6; /* parchment */
-    --player-speech-text-color: #5b4a24; /* dark umber */
-    --player-speech-border-color: #d6b97d; /* subtle outline */
-    /* Ensures action text within player bubble also has good contrast if it needs a specific color */
-    --player-speech-action-text-color: var(
-            --player-speech-text-color
-    ); /* Default to same as main player text color */
+  /* NEW: Variables for Player Speech Bubbles */
+  --player-speech-bg-color: #fff8e6; /* parchment */
+  --player-speech-text-color: #5b4a24; /* dark umber */
+  --player-speech-border-color: #d6b97d; /* subtle outline */
+  /* Ensures action text within player bubble also has good contrast if it needs a specific color */
+  --player-speech-action-text-color: var(
+    --player-speech-text-color
+  ); /* Default to same as main player text color */
 
-    /* Fonts */
-    --font-narrative: 'Merriweather', serif;
-    --font-ui: 'Open Sans', sans-serif;
-    --font-monospace: 'Roboto Mono', monospace; /* For code or fixed-width needs */
+  /* Fonts */
+  --font-narrative: 'Merriweather', serif;
+  --font-ui: 'Open Sans', sans-serif;
+  --font-monospace:
+    'Roboto Mono', monospace; /* For code or fixed-width needs */
 
-    --font-size-base: 16px;
-    --font-size-small: 0.875rem; /* 14px */
-    --font-size-large: 1.125rem; /* 18px */
-    --font-size-h1: 2rem; /* 32px */
-    --font-size-h2: 1.75rem; /* 28px */
-    --font-size-h3: 1.5rem; /* 24px */
+  --font-size-base: 16px;
+  --font-size-small: 0.875rem; /* 14px */
+  --font-size-large: 1.125rem; /* 18px */
+  --font-size-h1: 2rem; /* 32px */
+  --font-size-h2: 1.75rem; /* 28px */
+  --font-size-h3: 1.5rem; /* 24px */
 
-    /* Spacing */
-    --spacing-unit: 8px;
-    --spacing-xs: calc(0.5 * var(--spacing-unit)); /* 4px */
-    --spacing-sm: var(--spacing-unit); /* 8px */
-    --spacing-md: calc(1.5 * var(--spacing-unit)); /* 12px */
-    --spacing-lg: calc(2 * var(--spacing-unit)); /* 16px */
-    --spacing-xl: calc(3 * var(--spacing-unit)); /* 24px */
+  /* Spacing */
+  --spacing-unit: 8px;
+  --spacing-xs: calc(0.5 * var(--spacing-unit)); /* 4px */
+  --spacing-sm: var(--spacing-unit); /* 8px */
+  --spacing-md: calc(1.5 * var(--spacing-unit)); /* 12px */
+  --spacing-lg: calc(2 * var(--spacing-unit)); /* 16px */
+  --spacing-xl: calc(3 * var(--spacing-unit)); /* 24px */
 
-    /* Borders */
-    --border-radius-xs: 2px;
-    --border-radius-sm: 4px;
-    --border-radius-md: 6px;
-    --border-radius-lg: 12px;
-    --border-radius-circle: 50%; /* For perfectly circular elements */
-    --border-radius-standard: var(
-            --border-radius-md
-    ); /* Alias for common rounded corners, using existing md */
-    --border-width: 2px; /* CHANGED from 1px to 2px */
-    --border-color-subtle: var(--panel-border-color);
+  /* Borders */
+  --border-radius-xs: 2px;
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 12px;
+  --border-radius-circle: 50%; /* For perfectly circular elements */
+  --border-radius-standard: var(
+    --border-radius-md
+  ); /* Alias for common rounded corners, using existing md */
+  --border-width: 2px; /* CHANGED from 1px to 2px */
+  --border-color-subtle: var(--panel-border-color);
 
-    /* Shadows */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06); /* Slightly more noticeable for small elements */
-    --shadow-md: 0 5px 10px rgba(0, 0, 0, 0.1); /* Deeper shadow for panels, cards, etc. */
-    --shadow-lg: 0 15px 25px rgba(0, 0, 0, 0.15); /* More prominent shadow for modals or elevated elements */
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06); /* Slightly more noticeable for small elements */
+  --shadow-md: 0 5px 10px rgba(0, 0, 0, 0.1); /* Deeper shadow for panels, cards, etc. */
+  --shadow-lg: 0 15px 25px rgba(0, 0, 0, 0.15); /* More prominent shadow for modals or elevated elements */
 
-    /* NEW: Specific shadow for speech bubbles */
-    --shadow-speech-bubble: 0 3px 6px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  /* NEW: Specific shadow for speech bubbles */
+  --shadow-speech-bubble:
+    0 3px 6px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
 
-    --portrait-size-medium: 60px; /* For consistent portrait sizes across UI */
-    --portrait-size-large: 200px;
+  --portrait-size-medium: 60px; /* For consistent portrait sizes across UI */
+  --portrait-size-large: 200px;
 
-    --line-height-base: 1.5; /* A common base line height for readability */
-    --color-bg-surface-raised: var(
-            --secondary-bg-color
-    ); /* Or var(--panel-bg-color) if you prefer white. Using secondary-bg-color for a slight distinction. */
+  --line-height-base: 1.5; /* A common base line height for readability */
+  --color-bg-surface-raised: var(
+    --secondary-bg-color
+  ); /* Or var(--panel-bg-color) if you prefer white. Using secondary-bg-color for a slight distinction. */
 }
 
 @media (max-width: 1024px) {
-    :root {
-        --font-size-base: 15px;
-        --font-size-h1: 1.9rem;
-        --font-size-h2: 1.65rem;
-        --font-size-h3: 1.4rem;
-        --spacing-lg: 14px;
-        --spacing-md: 10px;
-        --spacing-sm: 7px;
-    }
+  :root {
+    --font-size-base: 15px;
+    --font-size-h1: 1.9rem;
+    --font-size-h2: 1.65rem;
+    --font-size-h3: 1.4rem;
+    --spacing-lg: 14px;
+    --spacing-md: 10px;
+    --spacing-sm: 7px;
+  }
 }
 
 @media (max-width: 768px) {
-    :root {
-        --font-size-base: 14px;
-        --font-size-h1: 1.7rem;
-        --font-size-h2: 1.5rem;
-        --font-size-h3: 1.25rem;
-        --spacing-lg: 12px;
-        --spacing-md: 8px;
-        --spacing-sm: 6px;
-        --spacing-xs: 4px;
-    }
+  :root {
+    --font-size-base: 14px;
+    --font-size-h1: 1.7rem;
+    --font-size-h2: 1.5rem;
+    --font-size-h3: 1.25rem;
+    --spacing-lg: 12px;
+    --spacing-md: 8px;
+    --spacing-sm: 6px;
+    --spacing-xs: 4px;
+  }
 }
 
 @media (max-width: 480px) {
-    :root {
-        --font-size-base: 13px;
-        --font-size-small: 0.85rem;
-        --font-size-h1: 1.5rem;
-        --font-size-h2: 1.3rem;
-        --font-size-h3: 1.15rem;
-        --spacing-sm: 5px;
-        --spacing-xs: 3px;
-    }
+  :root {
+    --font-size-base: 13px;
+    --font-size-small: 0.85rem;
+    --font-size-h1: 1.5rem;
+    --font-size-h2: 1.3rem;
+    --font-size-h3: 1.15rem;
+    --spacing-sm: 5px;
+    --spacing-xs: 3px;
+  }
 }
