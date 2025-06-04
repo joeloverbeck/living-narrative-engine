@@ -1,5 +1,6 @@
 // tests/turns/services/playerPromptService.more.test.js
 // --- FILE START ---
+/* eslint-disable jest/no-conditional-expect */
 import HumanPlayerPromptService from '../../../src/turns/services/humanPlayerPromptService.js';
 import { PromptError } from '../../../src/errors/promptError.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../../src/constants/eventIds.js';

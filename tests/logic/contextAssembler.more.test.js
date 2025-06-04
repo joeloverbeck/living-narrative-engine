@@ -1,16 +1,12 @@
 // src/tests/logic/contextAssembler.more.test.js
 
+/* eslint-disable jsdoc/check-tag-names */
 /**
  * @jest-environment node
  */
-import {
-  describe,
-  expect,
-  test,
-  jest,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+/* eslint-enable jsdoc/check-tag-names */
+/* eslint-disable jest/no-conditional-expect */
+import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 // Import ONLY createJsonLogicContext
 import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path if necessary
 // Import Entity type for creating mock entity structure
@@ -42,7 +38,9 @@ const mockEntityManager = {
 };
 
 /**
- * @param {string | number} id
+ * Creates a simple mock entity object for testing.
+ *
+ * @param {string | number} id - Identifier for the entity.
  * @returns {Partial<Entity>} A mock entity object with an ID.
  */
 const createMockEntity = (id) => ({ id: id });
@@ -656,7 +654,8 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
         mockEntityManager,
         mockLogger
       );
-      const hasPosition = 'position' in context.actor?.components;
+      const hasPosition =
+        context.actor?.components && 'position' in context.actor.components;
       expect(context.actor).not.toBeNull();
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
         actorId,

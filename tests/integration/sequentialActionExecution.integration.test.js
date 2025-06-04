@@ -1,15 +1,18 @@
 // src/tests/integration/sequentialActionExecution.integration.test.js
+/* eslint-disable jsdoc/require-returns */
+/* eslint-disable jsdoc/require-param-description */
+/* eslint-disable jsdoc/require-param-type */
 
 /**
- * Integration Test — Sub‑Ticket 3 (TICKET‑12.3)
+ * Integration Test — Sub‑Ticket 3 (TICKET‑12.3)
  * ------------------------------------------------------------
  * Validates that a SystemRule containing multiple actions is
  * executed sequentially *in order* and that every action’s
  * side‑effects take place.
  *
- *  • Action 1 – MODIFY_COMPONENT
- *  • Action 2 – LOG
- *  • Action 3 – DISPATCH_EVENT
+ *  • Action 1 – MODIFY_COMPONENT
+ *  • Action 2 – LOG
+ *  • Action 3 – DISPATCH_EVENT
  *
  * Acceptance criteria:
  *  ✓ Each handler is invoked exactly once.
@@ -110,7 +113,7 @@ function buildExecContext({ evaluationContext, entityManager, logger }) {
   };
 }
 
-describe('Sequential Action Execution – Success Path', () => {
+describe('Sequential Action Execution – Success Path', () => {
   /** @type {*} */
   let logger;
   /** @type {EventBus} */
@@ -146,7 +149,7 @@ describe('Sequential Action Execution – Success Path', () => {
     jsonLogicSvc = new JsonLogicEvaluationService({ logger });
 
     // ─── Handler registration ─────────────────────────────────────────
-    // 1. MODIFY_COMPONENT – wrap the real handler so we can spy on invocation.
+    // 1. MODIFY_COMPONENT – wrap the real handler so we can spy on invocation.
     const realModifyHandler = new ModifyComponentHandler({
       entityManager,
       logger,
@@ -162,11 +165,11 @@ describe('Sequential Action Execution – Success Path', () => {
     });
     opRegistry.register('MODIFY_COMPONENT', modifyHandlerSpy);
 
-    // 2. LOG – pure mock so we can inspect parameters.
+    // 2. LOG – pure mock so we can inspect parameters.
     logHandlerMock = jest.fn();
     opRegistry.register('LOG', logHandlerMock);
 
-    // 3. DISPATCH_EVENT – calls through to EventBus.dispatch (which we also spy on)
+    // 3. DISPATCH_EVENT – calls through to EventBus.dispatch (which we also spy on)
     dispatchHandlerMock = jest.fn((params) =>
       eventBus.dispatch(params.eventType, params.payload)
     );
@@ -232,7 +235,7 @@ describe('Sequential Action Execution – Success Path', () => {
       actorId: 'test-actor-id',
     });
 
-    // ─ Assert – side‑effects ─────────────────────────────────────────
+    // ─ Assert – side‑effects ─────────────────────────────────────────
     expect(
       entityManager.getComponentData('test-actor-id', 'testState')
         .step1_complete
@@ -248,7 +251,7 @@ describe('Sequential Action Execution – Success Path', () => {
       actorId: 'test-actor-id',
     });
 
-    // ─ Assert – invocation order ─────────────────────────────────────
+    // ─ Assert – invocation order ─────────────────────────────────────
     const modifyOrder = modifyHandlerSpy.mock.invocationCallOrder[0];
     const logOrder = logHandlerMock.mock.invocationCallOrder[0];
     const dispatchOrder = dispatchHandlerMock.mock.invocationCallOrder[0];

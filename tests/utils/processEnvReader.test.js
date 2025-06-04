@@ -1,20 +1,12 @@
 // tests/utils/processEnvReader.test.js
 // --- NEW FILE START ---
 
-import {
-  jest,
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-} from '@jest/globals';
+import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
 import { ProcessEnvReader } from '../../src/utils/processEnvReader.js';
 
 describe('ProcessEnvReader', () => {
   /** @type {ProcessEnvReader} */
   let reader;
-  /** @type {NodeJS.ProcessEnv} */
   let originalEnv;
 
   beforeEach(() => {

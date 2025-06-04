@@ -222,13 +222,12 @@ describe('parseAndRepairJson', () => {
         expect.any(Object)
       );
 
-      try {
-        await parseAndRepairJson(problematicJsonString, mockLogger);
-      } catch (e) {
-        expect(e).toBeInstanceOf(JsonProcessingError);
-        expect(e.originalError).toBe(repairError);
-        expect(e.stage).toBe('final_parse_after_repair');
-      }
+      await expect(
+        parseAndRepairJson(problematicJsonString, mockLogger)
+      ).rejects.toMatchObject({
+        originalError: repairError,
+        stage: 'final_parse_after_repair',
+      });
     });
   });
 
@@ -236,7 +235,8 @@ describe('parseAndRepairJson', () => {
   describe('Logger Interactions', () => {
     test('should not call logger methods (except error for invalid type) if no logger is provided and JSON is valid', async () => {
       const validJsonString = '{"status": "ok"}';
-      await parseAndRepairJson(validJsonString);
+      const result = await parseAndRepairJson(validJsonString);
+      expect(result).toEqual({ status: 'ok' });
     });
 
     test('should not call logger methods if no logger is provided and repair is attempted and succeeds', async () => {

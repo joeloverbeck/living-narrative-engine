@@ -1,7 +1,10 @@
 // src/tests/services/ActionValidationService.prerequisites.test.js
+/* eslint-disable jsdoc/check-tag-names */
 /**
  * @jest-environment node
  */
+/* eslint-enable jsdoc/check-tag-names */
+/* eslint-disable no-unused-vars */
 import {
   describe,
   expect,
