@@ -1,4 +1,5 @@
 // src/domUI/__mocks__/boundDomRendererBase.js
+import { jest } from '@jest/globals';
 
 const mockAddDomListener = jest.fn();
 const mockSuperDestroy = jest.fn();
@@ -92,4 +93,4 @@ const BoundDomRendererBase = jest.fn().mockImplementation(function ({
   BoundDomRendererBase._mockSuperDestroy = mockSuperDestroy;
 });
 
-module.exports = { BoundDomRendererBase };
+export { BoundDomRendererBase };
