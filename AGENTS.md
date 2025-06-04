@@ -2,12 +2,15 @@
 
 ## Overview
 
-This `AGENTS.MD` file provides a quick reference for AI agents working on the Living Narrative Engine repository. For comprehensive contribution guidelines, including coding standards, JSDoc requirements, testing procedures, and details on the modding system, **please refer to the main [CONTRIBUTING.md](CONTRIBUTING.md) file located in the root of this repository.**
+This `AGENTS.MD` file provides a quick reference for AI agents working on the Living Narrative Engine repository. For
+comprehensive contribution guidelines, including coding standards, JSDoc requirements, testing procedures, and details
+on the modding system, **please refer to the main [CONTRIBUTING.md](CONTRIBUTING.md) file located in the root of this
+repository.**
 
 This repository contains two Node projects:
 
 | Path                | Purpose             |
-| ------------------- | ------------------- |
+|---------------------|---------------------|
 | `/`                 | App + tests         |
 | `/llm-proxy-server` | Proxy micro-service |
 
@@ -41,7 +44,7 @@ npm test
 For more details on the project structure and coding standards associated with these scripts, see CONTRIBUTING.md.
 
 | Location | Script           | Purpose                                    |
-| -------- | ---------------- | ------------------------------------------ |
+|----------|------------------|--------------------------------------------|
 | root     | `npm run format` | Formats all files with Prettier            |
 | root     | `npm run lint`   | ESLint + auto-fix; fails on remaining errs |
 | root     | `npm test`       | Runs root-level Jest suite                 |
@@ -53,23 +56,41 @@ For more details on the project structure and coding standards associated with t
 
 ---
 
-## Formatting
+### JSDoc Requirements for AI Agents
 
-We enforce **Prettier**.  
-Run it before committing or running tests:
+- Every new function or class must include `@description`, `@param`, and `@returns` tags.
+- Complex types should use `@typedef` blocks. Agents should follow the examples in CONTRIBUTING.md.
 
-```bash
-npm run format            # root
-```
+---
 
-CI will fail if files are not correctly formatted. See CONTRIBUTING.md for more on coding standards.
+### Context Pointers for Agents
+
+- For core game logic, start with `src/engine/gameEngine.js`.
+- Always reference the function signature at the top of each file before writing or editing code.
+
+---
+
+### Agent Testing Workflow
+
+1. After code generation, run `npm test` (root) and `cd llm-proxy-server && npm test`.
+2. If any tests fail, diagnose the failure, attempt auto-fix via `npm run lint` (root and proxy), then re-run tests.
+3. If tests still fail, create a PR labeled “🚫 tests failing—needs human review” with logs included.
+
+---
+
+### Formatting Guidelines for Codex Agents
+
+- Run `npm run format` in both the root and `llm-proxy-server` before any code changes are finalized.
+- Use Prettier config at `.prettierrc.json`—agents should not override these rules.
+- See CONTRIBUTING.md for more on coding standards.
 
 ---
 
 ## Linting
 
 We use **ESLint** with Prettier integration, Jest rules, and JSDoc checks.  
-Note: currently lint shows a huge amount of issues due to having started using lint very late in the project, so only try to fix lint issues in the files you're working with. See CONTRIBUTING.md for policy.
+Note: currently lint shows a huge amount of issues due to having started using lint very late in the project, so only
+try to fix lint issues in the files you're working with. See CONTRIBUTING.md for policy.
 
 ```bash
 npm run lint              # root
@@ -79,10 +100,10 @@ npm run lint              # proxy
 
 ---
 
-## Pull Requests
+### Branch & PR Naming Conventions for Agents
 
-1. **Title format** – `[Fix] Short description`
-2. **Description template** (Refer to CONTRIBUTING.md for the full PR process and best practices.)
+- Branch format: `feature/agent-{short-description}`, e.g., `feature/agent-add-login-endpoint`.
+- PR title format: `[Agent] {One-line summary}`.
 
 ```text
 Summary: <one-line what/why>
@@ -102,7 +123,7 @@ Testing Done:
 ## Troubleshooting
 
 | Symptom                     | Fix                                  |
-| --------------------------- | ------------------------------------ |
+|-----------------------------|--------------------------------------|
 | Prettier changes on CI      | Run `npm run format` locally         |
 | ESLint rule not auto-fixing | Address manually or adjust config    |
 | Tests can’t find `jest`     | `rm -rf node_modules && npm install` |
