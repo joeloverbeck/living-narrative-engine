@@ -1,6 +1,7 @@
 // src/bootstrapper/UIBootstrapper.js
 
 import DocumentContext from '../domUI/documentContext.js'; // Adjusted path based on typical structure
+/* eslint-disable no-console */
 
 /**
  * @typedef {object} EssentialUIElements

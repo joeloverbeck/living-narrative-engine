@@ -25,90 +25,90 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import coreNotesSchema from '../../data/mods/core/components/notes.component.json';
-import {beforeAll, describe, expect, test} from "@jest/globals";
+import { beforeAll, describe, expect, test } from '@jest/globals';
 
 describe('JSON-Schema – core:notes component', () => {
-    /** @type {import('ajv').ValidateFunction} */
-    let validateEntity;
+  /** @type {import('ajv').ValidateFunction} */
+  let validateEntity;
 
-    beforeAll(() => {
-        const ajv = new Ajv({strict: true, allErrors: true});
-        addFormats(ajv);
+  beforeAll(() => {
+    const ajv = new Ajv({ strict: true, allErrors: true });
+    addFormats(ajv);
 
-        // Register the component schema so it can be $-referred from others.
-        ajv.addSchema(coreNotesSchema, 'core:notes');
+    // Register the component schema so it can be $-referred from others.
+    ajv.addSchema(coreNotesSchema, 'core:notes');
 
-        // Minimal wrapper: an “entity” that may (or may not) contain core:notes.
-        const entitySchema = {
-            $id: 'test://schemas/entity-with-optional-notes',
-            type: 'object',
-            properties: {
-                'core:notes': {$ref: 'core:notes#'},
-            },
-            additionalProperties: true,
-        };
-        validateEntity = ajv.compile(entitySchema);
-    });
+    // Minimal wrapper: an “entity” that may (or may not) contain core:notes.
+    const entitySchema = {
+      $id: 'test://schemas/entity-with-optional-notes',
+      type: 'object',
+      properties: {
+        'core:notes': { $ref: 'core:notes#' },
+      },
+      additionalProperties: true,
+    };
+    validateEntity = ajv.compile(entitySchema);
+  });
 
-    const validCases = [
-        ['no core:notes key', {}],
-        ['core:notes with empty array', {'core:notes': {notes: []}}],
-    ];
+  const validCases = [
+    ['no core:notes key', {}],
+    ['core:notes with empty array', { 'core:notes': { notes: [] } }],
+  ];
 
-    test.each(validCases)('✓ %s – should validate', (_label, payload) => {
-        const isValid = validateEntity(payload);
-        if (!isValid) {
-            // Helpful if the test ever fails.
-            console.error(validateEntity.errors);
-        }
-        expect(isValid).toBe(true);
-    });
+  test.each(validCases)('✓ %s – should validate', (_label, payload) => {
+    const isValid = validateEntity(payload);
+    if (!isValid) {
+      // Helpful if the test ever fails.
+      console.error(validateEntity.errors);
+    }
+    expect(isValid).toBe(true);
+  });
 
-    const invalidCases = [
-        [
-            'empty text',
+  const invalidCases = [
+    [
+      'empty text',
+      {
+        'core:notes': {
+          notes: [{ text: '', timestamp: '2025-06-04T12:00:00Z' }],
+        },
+      },
+    ],
+    [
+      'missing timestamp',
+      {
+        'core:notes': {
+          notes: [{ text: 'foo' }],
+        },
+      },
+    ],
+    [
+      'malformed timestamp',
+      {
+        'core:notes': {
+          notes: [{ text: 'foo', timestamp: 'not-a-date' }],
+        },
+      },
+    ],
+    [
+      'extra property on note object',
+      {
+        'core:notes': {
+          notes: [
             {
-                'core:notes': {
-                    notes: [{text: '', timestamp: '2025-06-04T12:00:00Z'}],
-                },
+              text: 'foo',
+              timestamp: '2025-06-04T12:00:00Z',
+              extra: 123,
             },
-        ],
-        [
-            'missing timestamp',
-            {
-                'core:notes': {
-                    notes: [{text: 'foo'}],
-                },
-            },
-        ],
-        [
-            'malformed timestamp',
-            {
-                'core:notes': {
-                    notes: [{text: 'foo', timestamp: 'not-a-date'}],
-                },
-            },
-        ],
-        [
-            'extra property on note object',
-            {
-                'core:notes': {
-                    notes: [
-                        {
-                            text: 'foo',
-                            timestamp: '2025-06-04T12:00:00Z',
-                            extra: 123,
-                        },
-                    ],
-                },
-            },
-        ],
-    ];
+          ],
+        },
+      },
+    ],
+  ];
 
-    test.each(invalidCases)('✗ %s – should reject', (_label, payload) => {
-        const isValid = validateEntity(payload);
-        expect(isValid).toBe(false);
-        expect(validateEntity.errors).toBeDefined();
-        expect(validateEntity.errors.length).toBeGreaterThan(0);
-    });
+  test.each(invalidCases)('✗ %s – should reject', (_label, payload) => {
+    const isValid = validateEntity(payload);
+    expect(isValid).toBe(false);
+    expect(validateEntity.errors).toBeDefined();
+    expect(validateEntity.errors.length).toBeGreaterThan(0);
+  });
 });

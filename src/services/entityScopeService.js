@@ -1,4 +1,5 @@
 // src/services/entityScopeService.js
+/* eslint-disable no-console */
 
 import {
   EQUIPMENT_COMPONENT_ID,
@@ -232,7 +233,10 @@ function _handleNearby(context) {
 }
 
 /**
- * @param context
+ * Retrieves entity IDs from nearby scopes including blockers in exits.
+ *
+ * @param {ActionContext} context - Current action context.
+ * @returns {Set<EntityId>} Aggregated entity IDs including blockers.
  * @private
  */
 function _handleNearbyIncludingBlockers(context) {
@@ -284,7 +288,7 @@ function _handleSelf(context) {
 /**
  * Maps scope names (including TargetDomain values where applicable) to their respective handler functions.
  *
- * @type {Object.<string, (context: ActionContext) => Set<EntityId>>}
+ * @type {{[key: string]: (context: ActionContext) => Set<EntityId>}}
  * @private
  */
 const scopeHandlers = {

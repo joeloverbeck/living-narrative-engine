@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { ICommandInputPort } from '../ports/ICommandInputPort.js';
+/* eslint-disable no-console */
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
