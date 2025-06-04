@@ -19,8 +19,8 @@ server (`llm-proxy-server`).
 
 - **Node.js**: Version 20.x or newer (e.g., `20.10.0` or as specified in `.nvmrc` if present).
 - **npm**: Version 10.x or newer (comes with Node.js typically).
-    - Use `nvm use` if you have `nvm` (Node Version Manager) installed to switch to the project's recommended Node
-      version.
+  - Use `nvm use` if you have `nvm` (Node Version Manager) installed to switch to the project's recommended Node
+    version.
 
 ### Initial Setup
 
@@ -78,9 +78,9 @@ Familiarize yourself with the main project directories:
 - `config/`: Contains configuration files, primarily for Large Language Models (LLMs) and logging.
 - `css/`: Stylesheets used by the web application.
 - `data/`: Crucial for the data-driven nature of the engine. Contains:
-    - Mods (game content, rules, entities, etc., in subdirectories).
-    - Schemas (JSON schemas for validating mod files and other data structures).
-    - Core game configuration like `game.json`.
+  - Mods (game content, rules, entities, etc., in subdirectories).
+  - Schemas (JSON schemas for validating mod files and other data structures).
+  - Core game configuration like `game.json`.
 - `docs/`: Contains documentation, including guides on JSON Logic usage and other engine systems.
 - `llm-proxy-server/`: A separate Node.js sub-project. This acts as an API server to proxy requests to various LLM
   services. It has its own `package.json`, tests, and source code.
@@ -93,16 +93,16 @@ Familiarize yourself with the main project directories:
 ### Formatting
 
 - **Prettier**: This project uses Prettier for automated code formatting. Ensure code is formatted before committing.
-    - Run `npm run format` from the **root directory** to format all relevant files in both the root project and
-      `llm-proxy-server`.
+  - Run `npm run format` from the **root directory** to format all relevant files in both the root project and
+    `llm-proxy-server`.
 - Configuration is in `.prettierrc.json`.
 
 ### Linting
 
 - **ESLint**: ESLint is used for static code analysis.
-    - Run `npm run lint` from the **root directory** to lint files there.
-    - Run `npm run lint` from the **`llm-proxy-server` directory** (`cd llm-proxy-server && npm run lint`) to lint files
-      specific to the proxy server.
+  - Run `npm run lint` from the **root directory** to lint files there.
+  - Run `npm run lint` from the **`llm-proxy-server` directory** (`cd llm-proxy-server && npm run lint`) to lint files
+    specific to the proxy server.
 - Configuration is in `eslint.config.js` (root) and potentially another in `llm-proxy-server/`. We extend
   `eslint:recommended`, `eslint-config-prettier`.
 - **eslint-plugin-jsdoc**: This plugin is used to validate JSDoc comments.
@@ -149,8 +149,8 @@ Familiarize yourself with the main project directories:
 ## Changelog Entry
 
 - **[1.2.4] – 2025-06-04**
-    - Fixed bug in `authenticateUser` error handling (#123)
-    - Improved JSDoc for `errorHandler.js`
+  - Fixed bug in `authenticateUser` error handling (#123)
+  - Improved JSDoc for `errorHandler.js`
 ```
 
 ### AI-Generated Code Review Checklist
@@ -180,7 +180,7 @@ Comprehensive JSDoc commenting is **mandatory** for this project. It serves mult
 The following table outlines recommended JSDoc tags and their purpose within this project:
 
 | JSDoc Tag      | Purpose in this Project                                                                                         | Example Snippet (Conceptual)                                                                                                                                                        |
-|----------------|-----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@description` | Provide a clear summary of the function/class/module's purpose.                                                 | `/** @description Manages the loading and processing of game mods. */`                                                                                                              |
 | `@param`       | Define type, name, and purpose of each function/method parameter. Essential for function contracts.             | `/** @param {string} modId - The unique identifier for the mod. */`<br/>`/** @param {ModData[]} modsToProcess - Array of raw mod data objects. */`                                  |
 | `@returns`     | Define type and meaning of a function's/method's return value.                                                  | `/** @returns {Promise<ProcessedMod>} A promise resolving to the processed mod data. */`<br/>`/** @returns {boolean} True if the action was successful, false otherwise. */`        |
@@ -207,13 +207,13 @@ moddable nature.
 
 - **Framework**: All tests are written using **Jest**.
 - **Root Project Tests**:
-    - Located in the `tests/` directory.
-    - Run using `npm test` from the root directory.
-    - These tests run in a `jsdom` environment to simulate a browser.
-    - Check test coverage using `npm run coverage` from the root directory.
+  - Located in the `tests/` directory.
+  - Run using `npm test` from the root directory.
+  - These tests run in a `jsdom` environment to simulate a browser.
+  - Check test coverage using `npm run coverage` from the root directory.
 - **LLM Proxy Server Tests**:
-    - Located in the `llm-proxy-server/tests/` directory.
-    - Run using `npm test` from within the `llm-proxy-server` directory (`cd llm-proxy-server && npm test`).
+  - Located in the `llm-proxy-server/tests/` directory.
+  - Run using `npm test` from within the `llm-proxy-server` directory (`cd llm-proxy-server && npm test`).
 - **Test Structure**: Follow the **Arrange-Act-Assert (AAA)** pattern for clarity.
 - **Coverage**: Aim for high code coverage. New features should ideally be accompanied by tests.
 - **Mocks**: Utilize `jest.mock()` or `jest-mock-extended` for mocking dependencies.
@@ -226,47 +226,47 @@ moddable nature.
 
 1. **Pre-Commit Checks**:
 
-    - Format your code: `npm run format` (from root).
-    - Lint\_ your code: `npm run lint` (from root) AND `cd llm-proxy-server && npm run lint`. Address new errors an
-    - Run all tests: `npm test` (from root) AND `cd llm-proxy-server && npm test`. Ensure they all pass.
+   - Format your code: `npm run format` (from root).
+   - Lint\_ your code: `npm run lint` (from root) AND `cd llm-proxy-server && npm run lint`. Address new errors an
+   - Run all tests: `npm test` (from root) AND `cd llm-proxy-server && npm test`. Ensure they all pass.
 
 2. **Commit Messages**:
 
-    - Write clear, concise, and descriptive commit messages.
-    - Follow conventional commit message formats if possible (e.g., `feat: add new targeting system`,
-      `fix: resolve issue with item parsing`).
+   - Write clear, concise, and descriptive commit messages.
+   - Follow conventional commit message formats if possible (e.g., `feat: add new targeting system`,
+     `fix: resolve issue with item parsing`).
 
 3. **Pull Requests (PRs)**:
 
-    - **Title Format**: `[Scope/Type] Short description of the change`
-        - Examples: `[Fix] Resolve mod loading circular dependency bug`, `[Feat] Implement weather system component`,
-          `[Docs] Update JSDoc for EntityService`
-    - **Description**: Use the following template (as also noted in `AGENTS.md`):
+   - **Title Format**: `[Scope/Type] Short description of the change`
+     - Examples: `[Fix] Resolve mod loading circular dependency bug`, `[Feat] Implement weather system component`,
+       `[Docs] Update JSDoc for EntityService`
+   - **Description**: Use the following template (as also noted in `AGENTS.md`):
 
-      ```text
-      Summary: <One-line summary of what this PR does and why it's needed.>
+     ```text
+     Summary: <One-line summary of what this PR does and why it's needed.>
 
-      Changes Made:
-      - <Detailed point 1>
-      - <Detailed point 2>
-      - ...
+     Changes Made:
+     - <Detailed point 1>
+     - <Detailed point 2>
+     - ...
 
-      Testing Done:
-      - [ ] Code formatted (`npm run format` from root)
-      - [ ] Lint passes (`npm run lint` in root AND `llm-proxy-server`)
-      - [ ] Root tests pass (`npm test` in root)
-      - [ ] Proxy server tests pass (`cd llm-proxy-server && npm test`)
-      - [ ] Manual smoke test / User validation (Describe what was tested)
+     Testing Done:
+     - [ ] Code formatted (`npm run format` from root)
+     - [ ] Lint passes (`npm run lint` in root AND `llm-proxy-server`)
+     - [ ] Root tests pass (`npm test` in root)
+     - [ ] Proxy server tests pass (`cd llm-proxy-server && npm test`)
+     - [ ] Manual smoke test / User validation (Describe what was tested)
 
-      Related Issues:
-      - Closes #<issue_number> (if applicable)
+     Related Issues:
+     - Closes #<issue_number> (if applicable)
 
-      Notes for Reviewers:
-      - <Any specific points to focus on, or questions for the reviewer>
-      ```
+     Notes for Reviewers:
+     - <Any specific points to focus on, or questions for the reviewer>
+     ```
 
-    - Ensure your branch is up-to-date with the main branch before submitting.
-    - CI checks (if configured) must pass before a PR can be merged.
+   - Ensure your branch is up-to-date with the main branch before submitting.
+   - CI checks (if configured) must pass before a PR can be merged.
 
 ## Mod Development Specifics
 
@@ -277,10 +277,10 @@ Given the engine's reliance on mods defined in the `data/` directory:
 - Familiarize yourself with the `mod.manifest.json` structure and its importance for defining mod metadata,
   dependencies, and conflicts.
 - Refer to `README.md` for detailed information on:
-    - Mod structure and `mod.manifest.json`.
-    - Dependency and conflict resolution rules (D1-D3, C1-C2).
-    - Engine version compatibility (`gameVersion` in manifest, Rule E1).
-    - JSON schema validation for mod files.
+  - Mod structure and `mod.manifest.json`.
+  - Dependency and conflict resolution rules (D1-D3, C1-C2).
+  - Engine version compatibility (`gameVersion` in manifest, Rule E1).
+  - JSON schema validation for mod files.
 - Consult `docs/` for guides on using JSON Logic for rule definitions and other specific systems.
 
 ## Understanding the Engine and its Data-Driven Nature

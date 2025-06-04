@@ -9,7 +9,7 @@ import {
   test,
   expect,
 } from '@jest/globals';
-import { ProcessEnvReader } from '../../src/utils/ProcessEnvReader.js';
+import { ProcessEnvReader } from '../../src/utils/processEnvReader.js';
 
 describe('ProcessEnvReader', () => {
   /** @type {ProcessEnvReader} */

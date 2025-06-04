@@ -1,5 +1,5 @@
 /**
- * tests/services/ShortTermMemoryService.test.js
+ * tests/services/shortTermMemoryService.test.js
  *
  * Unit-test suite for ShortTermMemoryService.addThought().
  * Scenarios covered (see ticket):
@@ -12,7 +12,7 @@
  * Jest is expected as the test runner.
  */
 
-import ShortTermMemoryService from '../../src/services/ShortTermMemoryService.js';
+import ShortTermMemoryService from '../../src/services/shortTermMemoryService.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 
 const ISO_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/; // quick ISO-8601 sanity check

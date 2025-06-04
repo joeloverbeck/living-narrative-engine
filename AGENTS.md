@@ -10,7 +10,7 @@ repository.**
 This repository contains two Node projects:
 
 | Path                | Purpose             |
-|---------------------|---------------------|
+| ------------------- | ------------------- |
 | `/`                 | App + tests         |
 | `/llm-proxy-server` | Proxy micro-service |
 
@@ -44,7 +44,7 @@ npm test
 For more details on the project structure and coding standards associated with these scripts, see CONTRIBUTING.md.
 
 | Location | Script           | Purpose                                    |
-|----------|------------------|--------------------------------------------|
+| -------- | ---------------- | ------------------------------------------ |
 | root     | `npm run format` | Formats all files with Prettier            |
 | root     | `npm run lint`   | ESLint + auto-fix; fails on remaining errs |
 | root     | `npm test`       | Runs root-level Jest suite                 |
@@ -123,7 +123,7 @@ Testing Done:
 ## Troubleshooting
 
 | Symptom                     | Fix                                  |
-|-----------------------------|--------------------------------------|
+| --------------------------- | ------------------------------------ |
 | Prettier changes on CI      | Run `npm run format` locally         |
 | ESLint rule not auto-fixing | Address manually or adjust config    |
 | Tests can’t find `jest`     | `rm -rf node_modules && npm install` |
