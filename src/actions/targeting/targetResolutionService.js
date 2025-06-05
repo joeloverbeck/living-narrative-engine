@@ -4,12 +4,12 @@ import { ITargetResolutionService } from '../../interfaces/ITargetResolutionServ
 import { ResolutionStatus } from '../../types/resolutionStatus.js';
 import {
   EQUIPMENT_COMPONENT_ID,
-  EXITS_COMPONENT_ID,
   INVENTORY_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { matchNames } from '../../utils/nameMatcher.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 import { validateDependency } from '../../utils/validationUtils.js';
+import { getAvailableExits } from '../../utils/locationUtils.js';
 // import { getEntityIdsForScopes } from './entityScopeService.js'; // Import if not injected
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -737,45 +737,21 @@ class TargetResolutionService extends ITargetResolutionService {
       `TargetResolutionService.#_resolveDirection: Current location is '${currentLocationEntity.id}'.`
     );
 
-    const exitsComponentData =
-      currentLocationEntity.getComponentData(EXITS_COMPONENT_ID);
-    if (!Array.isArray(exitsComponentData) || exitsComponentData.length === 0) {
+    const availableExits = getAvailableExits(
+      currentLocationEntity,
+      this.#entityManager,
+      this.#logger
+    );
+
+    if (!availableExits || availableExits.length === 0) {
       this.#logger.debug(
-        `TargetResolutionService.#_resolveDirection: Location '${currentLocationEntity.id}' has no '${EXITS_COMPONENT_ID}' component, it's not an array, or it's empty.`
+        `TargetResolutionService.#_resolveDirection: Location '${currentLocationEntity.id}' has no valid exits according to getAvailableExits.`
       );
       return {
         status: ResolutionStatus.NOT_FOUND,
         targetType: 'direction',
         targetId: null,
         error: 'There are no obvious exits from here.',
-      };
-    }
-
-    const validExits = [];
-    for (const exit of exitsComponentData) {
-      if (
-        exit &&
-        typeof exit === 'object' &&
-        typeof exit.direction === 'string' &&
-        exit.direction.trim() !== ''
-      ) {
-        validExits.push({ id: exit.direction, name: exit.direction });
-      } else {
-        this.#logger.warn(
-          `TargetResolutionService.#_resolveDirection: Location '${currentLocationEntity.id}' has an invalid exit object or missing/empty direction string: ${JSON.stringify(exit)}.`
-        );
-      }
-    }
-
-    if (validExits.length === 0) {
-      this.#logger.debug(
-        `TargetResolutionService.#_resolveDirection: Location '${currentLocationEntity.id}' has an exits component, but no valid direction strings found within its data.`
-      );
-      return {
-        status: ResolutionStatus.NOT_FOUND,
-        targetType: 'direction',
-        targetId: null,
-        error: 'There are no clearly marked exits here.',
       };
     }
 
@@ -798,9 +774,9 @@ class TargetResolutionService extends ITargetResolutionService {
     const normalizedNounPhrase = nounPhrase.toLowerCase().trim();
     const matchedDirections = [];
 
-    for (const exitCandidate of validExits) {
-      if (exitCandidate.name.toLowerCase() === normalizedNounPhrase) {
-        matchedDirections.push(exitCandidate.name);
+    for (const exit of availableExits) {
+      if (exit.direction.toLowerCase() === normalizedNounPhrase) {
+        matchedDirections.push(exit.direction);
       }
     }
 
@@ -826,7 +802,7 @@ class TargetResolutionService extends ITargetResolutionService {
       };
     } else {
       this.#logger.debug(
-        `TargetResolutionService.#_resolveDirection: No exit matches direction '${nounPhrase}'. Valid exits were: ${validExits.map((e) => e.name).join(', ')}`
+        `TargetResolutionService.#_resolveDirection: No exit matches direction '${nounPhrase}'. Valid exits were: ${availableExits.map((e) => e.direction).join(', ')}`
       );
       return {
         status: ResolutionStatus.NOT_FOUND,
