@@ -2,8 +2,8 @@
 // ****** CORRECTED FILE ******
 
 import InitializationService from '../../../src/initializers/services/initializationService.js';
-import { tokens } from '../../../src/config/tokens.js';
-import AppContainer from '../../../src/config/appContainer.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- Mocks ---

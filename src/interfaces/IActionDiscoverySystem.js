@@ -1,4 +1,4 @@
-// src/core/interfaces/IActionDiscoverySystem.js (Assuming this is the path for the interface)
+// src/interfaces/IActionDiscoverySystem.js (Assuming this is the path for the interface)
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../entities/entity.js').default} Entity */

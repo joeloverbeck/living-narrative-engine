@@ -1,4 +1,4 @@
-// src/core/interfaces/IEntityManager.js
+// src/interfaces/IEntityManager.js
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 

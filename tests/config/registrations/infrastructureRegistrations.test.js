@@ -1,8 +1,8 @@
-// src/tests/core/config/registrations/infrastructureRegistrations.test.js
+// src/tests/dependencyInjection/registrations/infrastructureRegistrations.test.js
 
-import AppContainer from '../../../src/config/appContainer.js';
-import { tokens } from '../../../src/config/tokens.js';
-import { registerInfrastructure } from '../../../src/config/registrations/infrastructureRegistrations.js';
+import AppContainer from '../../../src/dependencyInjection/appContainer.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { registerInfrastructure } from '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import { mockDeep } from 'jest-mock-extended';
 import {

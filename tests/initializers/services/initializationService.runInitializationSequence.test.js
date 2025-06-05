@@ -11,7 +11,7 @@ import {
   jest,
   test,
 } from '@jest/globals';
-import { tokens } from '../../../src/config/tokens.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 // --- Mocks ---
 let mockContainer;

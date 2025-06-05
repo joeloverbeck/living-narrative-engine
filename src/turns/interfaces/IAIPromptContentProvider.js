@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 /**
- * @typedef {import('../../services/AIPromptContentProvider.js').AIPromptContentProvider} AIPromptContentProvider // For JSDoc link if needed, though interface methods are key
+ * @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} AIPromptContentProvider // For JSDoc link if needed, though interface methods are key
  * @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../types/promptData.js').PromptData} PromptData

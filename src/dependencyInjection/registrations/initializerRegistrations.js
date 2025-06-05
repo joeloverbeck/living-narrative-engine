@@ -1,4 +1,4 @@
-// src/core/config/registrations/initializerRegistrations.js
+// src/dependencyInjection/registrations/initializerRegistrations.js
 // --- FILE START ---
 
 import { tokens } from '../tokens.js';

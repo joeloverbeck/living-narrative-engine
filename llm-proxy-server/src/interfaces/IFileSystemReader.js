@@ -6,7 +6,6 @@
 
 /**
  * Asynchronously reads the entire contents of a file.
- *
  * @function
  * @name IFileSystemReader#readFile
  * @param {string} filePath - The path to the file to be read.

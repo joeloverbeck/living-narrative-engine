@@ -1,4 +1,4 @@
-// src/core/ports/ICommandInputPort.js
+// src/turns/ports/ICommandInputPort.js
 // --- FILE START ---
 
 /**

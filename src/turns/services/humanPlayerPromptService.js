@@ -1,4 +1,4 @@
-// src/core/services/playerPromptService.js
+// src/turns/services/playerPromptService.js
 // --- FILE START ---
 
 // --- Interface/Type Imports for JSDoc ---

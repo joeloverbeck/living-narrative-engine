@@ -8,7 +8,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import { HttpConfigurationProvider } from '../../src/services/httpConfigurationProvider.js'; // Adjust path as needed
+import { HttpConfigurationProvider } from '../../src/configuration/httpConfigurationProvider.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Path updated as per your usage
 
 describe('HttpConfigurationProvider', () => {

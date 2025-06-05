@@ -4,8 +4,8 @@
 /**
  * @typedef {import('./ILLMAdapter.js').ILLMAdapter} ILLMAdapter
  * @typedef {import('./IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider
- * @typedef {import('../../services/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider // Or an IAIPromptContentProvider interface if defined
- * @typedef {import('../../services/promptBuilder.js').PromptBuilder} IPromptBuilder // Interface for PromptBuilder
+ * @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider // Or an IAIPromptContentProvider interface if defined
+ * @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder // Interface for PromptBuilder
  * @typedef {import('./ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('./IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy

@@ -1,9 +1,9 @@
-// src/tests/core/initializers/services/initializationService.integration.test.js
+// src/tests/initializers/services/initializationService.integration.test.js
 
-import AppContainer from '../../../src/config/appContainer.js';
+import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import InitializationService from '../../../src/initializers/services/initializationService.js'; // Adjust path if needed
-import { registerOrchestration } from '../../../src/config/registrations/orchestrationRegistrations.js'; // Function under test (partially)
-import { tokens } from '../../../src/config/tokens.js';
+import { registerOrchestration } from '../../../src/dependencyInjection/registrations/orchestrationRegistrations.js'; // Function under test (partially)
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   beforeEach,
   describe,

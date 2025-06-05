@@ -1,4 +1,4 @@
-// src/tests/core/initializers/services/initializationService.constructor.test.js
+// src/tests/initializers/services/initializationService.constructor.test.js
 
 import InitializationService from '../../../src/initializers/services/initializationService.js';
 import {
@@ -10,7 +10,7 @@ import {
   jest,
   test,
 } from '@jest/globals';
-import { tokens } from '../../../src/config/tokens.js'; // Import tokens for DomUiFacade
+import { tokens } from '../../../src/dependencyInjection/tokens.js'; // Import tokens for DomUiFacade
 
 // --- Mocks ---
 let mockContainer;

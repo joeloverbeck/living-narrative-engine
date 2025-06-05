@@ -1,4 +1,4 @@
-// src/core/turns/interfaces/IActorTurnStrategy.js
+// src/turns/interfaces/IActorTurnStrategy.js
 // --- FILE START ---
 
 /**

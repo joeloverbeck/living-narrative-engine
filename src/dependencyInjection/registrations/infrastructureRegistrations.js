@@ -1,20 +1,20 @@
-// src/core/config/registrations/infrastructureRegistrations.js
+// src/dependencyInjection/registrations/infrastructureRegistrations.js
 
 import EventBus from '../../events/eventBus.js';
 import SpatialIndexManager from '../../entities/spatialIndexManager.js';
 import WorldLoader from '../../loaders/worldLoader.js';
-import { GameDataRepository } from '../../services/gameDataRepository.js'; // Concrete class
+import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concrete class
 import EntityManager from '../../entities/entityManager.js'; // Concrete class
 import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js'; // Concrete Class Import
 import { SafeEventDispatcher } from '../../events/safeEventDispatcher.js';
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
-import { SystemServiceRegistry } from '../../services/systemServiceRegistry.js';
-import { SystemDataRegistry } from '../../services/systemDataRegistry.js';
+import { SystemServiceRegistry } from '../../registry/systemServiceRegistry.js';
+import { SystemDataRegistry } from '../../data/systemDataRegistry.js';
 
 // --- ADDED IMPORT FOR SaveLoadService ---
-import SaveLoadService from '../../services/saveLoadService.js';
-import { BrowserStorageProvider } from '../../services/browserStorageProvider.js';
+import SaveLoadService from '../../persistence/saveLoadService.js';
+import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger

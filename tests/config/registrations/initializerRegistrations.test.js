@@ -1,11 +1,11 @@
-// tests/config/registrations/initializerRegistrations.test.js
+// tests/dependencyInjection/registrations/initializerRegistrations.test.js
 // --- FILE START ---
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../../src/context/worldContext.js').default} WorldContext */
-/** @typedef {import('../../../src/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+/** @typedef {import('../../../src/data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../../src/initializers/worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../../src/initializers/systemInitializer.js').default} SystemInitializer */
@@ -16,11 +16,11 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 
 // --- Class Under Test ---
-import { registerInitializers } from '../../../src/config/registrations/initializerRegistrations.js';
+import { registerInitializers } from '../../../src/dependencyInjection/registrations/initializerRegistrations.js';
 
 // --- Dependencies ---
-import { tokens } from '../../../src/config/tokens.js';
-import { INITIALIZABLE } from '../../../src/config/tags.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js';
 
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../src/initializers/worldInitializer.js');

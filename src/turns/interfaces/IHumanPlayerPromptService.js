@@ -1,4 +1,4 @@
-// src/core/interfaces/IPlayerPromptService.js
+// src/interfaces/IPlayerPromptService.js
 // --- FILE START ---
 /** @typedef {import('../../entities/entity.js').default} Entity */
 // Assuming AvailableAction might be defined elsewhere or is a more generic type.

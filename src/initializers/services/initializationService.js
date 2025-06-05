@@ -1,7 +1,7 @@
 // src/initializers/services/initializationService.js
 
 // --- Type Imports ---
-/** @typedef {import('../../config/appContainer.js').default} AppContainer */
+/** @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../loaders/worldLoader.js').default} WorldLoader */
@@ -12,7 +12,7 @@
 // --- Interface Imports for JSDoc & `extends` ---
 /** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 import { IInitializationService } from '../../interfaces/IInitializationService.js';
-import { tokens } from '../../config/tokens.js';
+import { tokens } from '../../dependencyInjection/tokens.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 
 /**

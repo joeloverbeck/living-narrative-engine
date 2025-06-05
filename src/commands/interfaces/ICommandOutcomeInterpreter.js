@@ -1,4 +1,4 @@
-// src/core/interfaces/ICommandOutcomeInterpreter.js
+// src/interfaces/ICommandOutcomeInterpreter.js
 // --- FILE START ---
 /** @typedef {import('../commandProcessor.js').CommandResult} CommandResult */
 // Or a more specific shared type
