@@ -79,10 +79,14 @@ describe('_mergeNotesIntoEntity', () => {
   });
 
   test('creates component when missing and adds unique, valid notes', () => {
-    const notes = [
-      { text: 'First Note', timestamp: '2025-06-05T12:00:00.000Z' },
-      { text: 'Second Note', timestamp: '2025-06-05T13:00:00.000Z' },
-    ];
+    jest
+      .spyOn(Date.prototype, 'toISOString')
+      .mockReturnValueOnce('2025-06-05T12:00:00.000Z')
+      .mockReturnValueOnce('2025-06-05T12:00:00.000Z')
+      .mockReturnValueOnce('2025-06-05T13:00:00.000Z')
+      .mockReturnValue('2025-06-05T13:00:00.000Z');
+
+    const notes = ['First Note', 'Second Note'];
 
     processor._mergeNotesIntoEntity(notes, actor, logger);
 
@@ -106,9 +110,7 @@ describe('_mergeNotesIntoEntity', () => {
     actor.components[NOTES_COMPONENT_ID] = {
       notes: [{ text: 'Buy milk!', timestamp: '2025-06-05T10:00:00.000Z' }],
     };
-    const dup = [
-      { text: '  buy   MILK ', timestamp: '2025-06-05T11:00:00.000Z' },
-    ];
+    const dup = ['  buy   MILK '];
 
     processor._mergeNotesIntoEntity(dup, actor, logger);
 
@@ -120,10 +122,12 @@ describe('_mergeNotesIntoEntity', () => {
   });
 
   test('incoming duplicates (Alpha vs alpha) only adds one', () => {
-    const incoming = [
-      { text: 'Alpha', timestamp: '2025-06-01T00:00:00.000Z' },
-      { text: 'alpha', timestamp: '2025-06-02T00:00:00.000Z' },
-    ];
+    jest
+      .spyOn(Date.prototype, 'toISOString')
+      .mockReturnValueOnce('2025-06-01T00:00:00.000Z')
+      .mockReturnValueOnce('2025-06-02T00:00:00.000Z');
+
+    const incoming = ['Alpha', 'alpha'];
 
     processor._mergeNotesIntoEntity(incoming, actor, logger);
 
@@ -140,11 +144,15 @@ describe('_mergeNotesIntoEntity', () => {
   });
 
   test('mixed valid and invalid notes: logs error for invalid, adds only valid', () => {
+    jest
+      .spyOn(Date.prototype, 'toISOString')
+      .mockReturnValue('2025-06-05T12:00:00.000Z');
+
     const mixed = [
-      { text: '', timestamp: '2025-06-05T10:00:00.000Z' }, // invalid: empty text
-      { text: 'Valid Note', timestamp: '2025-06-05T12:00:00.000Z' }, // valid
-      { text: 'Also Valid', timestamp: 'invalid-date' }, // invalid: bad timestamp
-      { foo: 'bar' }, // invalid: missing fields
+      '', // invalid: empty string
+      'Valid Note', // valid
+      123, // invalid: not a string
+      { foo: 'bar' }, // invalid: wrong type
     ];
 
     processor._mergeNotesIntoEntity(mixed, actor, logger);
@@ -168,15 +176,11 @@ describe('_mergeNotesIntoEntity', () => {
     // Stub Date.prototype.toISOString() to return a fixed value
     jest
       .spyOn(Date.prototype, 'toISOString')
-      .mockReturnValue('2025-06-04T12:00:00Z');
+      .mockReturnValueOnce('2025-06-04T11:00:00Z')
+      .mockReturnValueOnce('2025-06-04T12:00:00Z');
 
     // Prepare one valid note
-    const singleNote = [
-      {
-        text: 'Example note text',
-        timestamp: '2025-06-04T11:00:00Z',
-      },
-    ];
+    const singleNote = ['Example note text'];
 
     processor._mergeNotesIntoEntity(singleNote, actor, logger);
 
