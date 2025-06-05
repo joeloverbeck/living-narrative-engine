@@ -71,7 +71,7 @@ const createMockTurnContext = (
     getTurnEndPort: jest.fn().mockReturnValue(defaultServices.turnEndPort),
     // Add other ITurnContext methods as needed, with default mocks
     isValid: jest.fn().mockReturnValue(true), // Assume valid by default
-    endTurn: jest.fn(), // Though not directly used by TurnEndingState's core logic
+    endTurn: jest.fn(),
     requestTransition: jest.fn(),
     setAwaitingExternalEvent: jest.fn(),
     isAwaitingExternalEvent: jest.fn(),

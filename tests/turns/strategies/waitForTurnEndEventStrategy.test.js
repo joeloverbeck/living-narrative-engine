@@ -1,4 +1,4 @@
-// src/core/turns/strategies/waitForTurnEndEventStrategy.test.js
+// src/turns/strategies/waitForTurnEndEventStrategy.test.js
 
 import WaitForTurnEndEventStrategy from '../../../src/turns/strategies/waitForTurnEndEventStrategy.js';
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
@@ -83,7 +83,7 @@ describe('WaitForTurnEndEventStrategy', () => {
 
   test('should correctly execute WAIT_FOR_EVENT directive and request transition', async () => {
     const directive = TurnDirective.WAIT_FOR_EVENT;
-    const cmdProcResult = {}; // Not directly used by this strategy's core logic
+    const cmdProcResult = {};
 
     await strategy.execute(mockTurnContext, directive, cmdProcResult);
 

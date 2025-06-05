@@ -1,4 +1,4 @@
-// src/core/turns/states/turnEndingState.js
+// src/turns/states/turnEndingState.js
 // -----------------------------------------------------------------------------
 //  TurnEndingState - Handles the final steps of ending a turn.
 // -----------------------------------------------------------------------------

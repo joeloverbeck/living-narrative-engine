@@ -3,7 +3,7 @@
 // --- Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../interfaces/IWorldContext.js').default} IWorldContext */
-/** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */
+/** @typedef {import('../data/gameDataRepository.js').default} GameDataRepository */
 /** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../data/schemas/entity.schema.json').EntityDefinition} EntityDefinition */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -122,7 +122,6 @@ class WorldInitializer {
         `WorldInitializer (EventDispatch): Failed dispatching '${eventName}' event for ${identifierForLog}. Error:`,
         e
       );
-      // Event dispatch failures are logged but don't stop core processes.
     }
   }
 

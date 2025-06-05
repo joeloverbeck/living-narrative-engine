@@ -26,7 +26,7 @@ jest.mock('../../src/entities/entityManager.js', () => {
 
 // Now import the dependencies *after* the mocks are set up
 import WorldContext from '../../src/context/worldContext.js';
-import ConsoleLogger from '../../src/services/consoleLogger.js';
+import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import Entity from '../../src/entities/entity.js';
 import EntityManager from '../../src/entities/entityManager.js'; // Mocked constructor
 import {

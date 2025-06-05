@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/worldLoader.overrides.integration.test.js
+// Filename: tests/loaders/worldLoader.overrides.integration.test.js
 // Sub-Ticket 8: Integration Test - Mod Overrides and Load Order
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
@@ -17,6 +17,7 @@ import * as ModVersionValidatorModule from '../../src/modding/modVersionValidato
 jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
 import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
   resolveOrder: jest.fn(),
 }));
@@ -34,8 +35,8 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
-/** @typedef {import('../../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
-/** @typedef {import('../../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../../interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub-Ticket 8)', () => {
   /** @type {WorldLoader} */
@@ -78,11 +79,10 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
   let mockBarManifest;
   /** @type {Map<string, ModManifest>} */
   let mockManifestMap;
-  const coreModId = 'core';
   const fooModId = 'foo';
   const barModId = 'bar';
   const worldName = 'overrideTestWorld';
-  const finalOrder = [coreModId, fooModId, barModId];
+  const finalOrder = [CORE_MOD_ID, fooModId, barModId];
   const baseItemId = 'potion'; // The base ID used in the JSON files
 
   // --- Mocked Functions (from imports) ---
@@ -107,7 +107,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         // Handle manifest lookups (lowercase keys used by WorldLoader for get)
         if (type === 'mod_manifests') {
           const lcId = id.toLowerCase(); // Ensure lookup is case-insensitive
-          if (lcId === coreModId) return mockCoreManifest;
+          if (lcId === CORE_MOD_ID) return mockCoreManifest;
           if (lcId === fooModId) return mockFooManifest;
           if (lcId === barModId) return mockBarManifest;
         }
@@ -129,7 +129,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       getManifest: jest.fn((id) => {
         // Make getManifest use the internal store for consistency
         const lcId = id.toLowerCase();
-        if (lcId === coreModId) return mockCoreManifest;
+        if (lcId === CORE_MOD_ID) return mockCoreManifest;
         if (lcId === fooModId) return mockFooManifest;
         if (lcId === barModId) return mockBarManifest;
         return null;
@@ -237,7 +237,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     // --- 2. Define Mock Data ---
     const itemFilename = 'items/potion.json';
     mockCoreManifest = {
-      id: coreModId,
+      id: CORE_MOD_ID,
       version: '1.0.0',
       name: 'Core',
       gameVersion: '^1.0.0',
@@ -260,7 +260,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
 
     mockManifestMap = new Map();
     // Store with original case keys (as returned by ModManifestLoader)
-    mockManifestMap.set(coreModId, mockCoreManifest);
+    mockManifestMap.set(CORE_MOD_ID, mockCoreManifest);
     mockManifestMap.set(fooModId, mockFooManifest);
     mockManifestMap.set(barModId, mockBarManifest);
 
@@ -285,7 +285,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
 
     // GameConfigLoader - Request all three mods
     mockGameConfigLoader.loadConfig.mockResolvedValue([
-      coreModId,
+      CORE_MOD_ID,
       fooModId,
       barModId,
     ]);
@@ -317,9 +317,9 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         if (typeNameArg === 'items' && contentKeyArg === 'items') {
           // Determine which data to "load" and store based on the modId
           let itemData;
-          if (modIdArg === coreModId) {
+          if (modIdArg === CORE_MOD_ID) {
             itemData = {
-              id: `${coreModId}:${baseItemId}`,
+              id: `${CORE_MOD_ID}:${baseItemId}`,
               description: 'Core potion effect',
               value: 10,
             };
@@ -395,7 +395,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     // Check calls with correct arguments in the expected order
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
       1,
-      coreModId,
+      CORE_MOD_ID,
       mockCoreManifest,
       'items',
       'items',
@@ -421,15 +421,15 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     // 3. Verify Registry Storage - check that store was called with the correct prefixed keys and data
     // Core's Potion
     const corePotionStoredData = {
-      id: `${coreModId}:${baseItemId}`,
+      id: `${CORE_MOD_ID}:${baseItemId}`,
       description: 'Core potion effect',
       value: 10,
-      modId: coreModId,
+      modId: CORE_MOD_ID,
       _sourceFile: 'items/potion.json',
     };
     expect(mockRegistry.store).toHaveBeenCalledWith(
       'entities',
-      `${coreModId}:${baseItemId}`,
+      `${CORE_MOD_ID}:${baseItemId}`,
       corePotionStoredData
     );
 
@@ -465,7 +465,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     // Core Potion
     const corePotionFinal = mockRegistry.get(
       'entities',
-      `${coreModId}:${baseItemId}`
+      `${CORE_MOD_ID}:${baseItemId}`
     );
     expect(corePotionFinal).toBeDefined();
     expect(corePotionFinal).toEqual(corePotionStoredData); // Compare with the data that should have been stored

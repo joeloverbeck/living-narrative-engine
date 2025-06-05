@@ -1,4 +1,4 @@
-// src/core/tags.js
+// src/dependencyInjection/tags.js
 
 /**
  * Array containing the tag used to identify systems that require initialization.

@@ -1,4 +1,4 @@
-// src/core/constants/turnDirectives.js
+// src/turns/constants/turnDirectives.js
 // --- FILE START ---
 /**
  * @file Defines constants for turn directives used by CommandOutcomeInterpreter.

@@ -1,10 +1,10 @@
 // src/tests/testUtils.js
 
-import { PrerequisiteEvaluationService } from '../src/services/prerequisiteEvaluationService.js';
+import { PrerequisiteEvaluationService } from '../src/actions/validation/prerequisiteEvaluationService.js';
 import { jest } from '@jest/globals';
 
 // --- Mock PrerequisiteEvaluationService ---
-jest.mock('../src/services/prerequisiteEvaluationService.js'); // Mock needs to be in the utility or called before import in test
+jest.mock('../src/actions/validation/prerequisiteEvaluationService.js'); // Mock needs to be in the utility or called before import in test
 
 /**
  *

@@ -1,4 +1,4 @@
-// src/tests/core/turnOrder/turnOrderService.startNewRound.errors.test.js
+// src/tests/turns/order/turnOrderService.startNewRound.errors.test.js
 
 /**
  * @file Unit tests for the TurnOrderService class, focusing on the

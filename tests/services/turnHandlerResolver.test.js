@@ -1,4 +1,4 @@
-// src/tests/core/services/turnHandlerResolver.test.js
+// src/tests/services/turnHandlerResolver.test.js
 // --- FILE START (Entire file content as requested) ---
 
 import TurnHandlerResolver from '../../src/turns/services/turnHandlerResolver.js';

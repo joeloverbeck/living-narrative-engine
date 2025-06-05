@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/worldLoader.logVerification.integration.test.js
+// Filename: src/tests/loaders/worldLoader.logVerification.integration.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
@@ -16,6 +16,7 @@ import * as ModVersionValidatorModule from '../../src/modding/modVersionValidato
 jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
 import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
   resolveOrder: jest.fn(),
 }));
@@ -33,8 +34,8 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
-/** @typedef {import('../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
-/** @typedef {import('../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7)', () => {
   /** @type {WorldLoader} */
@@ -79,7 +80,6 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
   let modBManifest;
   /** @type {Map<string, ModManifest>} */
   let mockManifestMap;
-  const coreModId = 'core';
   const overrideModId = 'overrideMod';
   const modAId = 'modA';
   const modBId = 'modB';
@@ -187,7 +187,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
 
     // --- 2. Define Base Mock Data (can be overridden in tests) ---
     coreManifest = {
-      id: coreModId,
+      id: CORE_MOD_ID,
       version: '1.0.0',
       name: 'Core',
       gameVersion: '1.0.0',
@@ -264,7 +264,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
   });
 
   // ── Test Case: Basic 'Core' Load Summary (like 7.1) ────────────────────
-  it("should log the correct summary for a basic 'core' mod load", async () => {
+  it('should log the correct summary for a basic CORE_MOD_ID mod load', async () => {
     // Setup: Core mod defines 2 actions, 1 component, 3 rules.
     const coreActionCount = 2;
     const coreComponentCount = 1;
@@ -274,17 +274,17 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       components: Array(coreComponentCount).fill('dummy.json'),
       rules: Array(coreRuleCount).fill('dummy.json'),
     };
-    mockManifestMap.set(coreModId, coreManifest);
+    mockManifestMap.set(CORE_MOD_ID, coreManifest);
 
-    mockGameConfigLoader.loadConfig.mockResolvedValue([coreModId]);
+    mockGameConfigLoader.loadConfig.mockResolvedValue([CORE_MOD_ID]);
     mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
       mockManifestMap
     );
-    mockedResolveOrder.mockReturnValue([coreModId]);
+    mockedResolveOrder.mockReturnValue([CORE_MOD_ID]);
 
     // Configure registry.get to return the manifest
     mockRegistry.get.mockImplementation((type, id) => {
-      if (type === 'mod_manifests' && id === coreModId.toLowerCase()) {
+      if (type === 'mod_manifests' && id === CORE_MOD_ID.toLowerCase()) {
         return coreManifest;
       }
       return undefined;
@@ -299,7 +299,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         contentTypeDirArg,
         typeNameArg
       ) =>
-        modIdArg === coreModId && typeNameArg === 'actions'
+        modIdArg === CORE_MOD_ID && typeNameArg === 'actions'
           ? { count: coreActionCount, overrides: 0, errors: 0 }
           : { count: 0, overrides: 0, errors: 0 }
     );
@@ -311,7 +311,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         contentTypeDirArg,
         typeNameArg
       ) =>
-        modIdArg === coreModId && typeNameArg === 'components'
+        modIdArg === CORE_MOD_ID && typeNameArg === 'components'
           ? { count: coreComponentCount, overrides: 0, errors: 0 }
           : { count: 0, overrides: 0, errors: 0 }
     );
@@ -323,7 +323,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         contentTypeDirArg,
         typeNameArg
       ) =>
-        modIdArg === coreModId && typeNameArg === 'rules'
+        modIdArg === CORE_MOD_ID && typeNameArg === 'rules'
           ? { count: coreRuleCount, overrides: 0, errors: 0 }
           : { count: 0, overrides: 0, errors: 0 }
     );
@@ -347,8 +347,8 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     // Find specific lines within the summary block
     const summaryBlock = summaryLines.join('\n');
 
-    expect(summaryBlock).toContain(`• Requested Mods (raw): [${coreModId}]`);
-    expect(summaryBlock).toContain(`• Final Load Order    : [${coreModId}]`);
+    expect(summaryBlock).toContain(`• Requested Mods (raw): [${CORE_MOD_ID}]`);
+    expect(summaryBlock).toContain(`• Final Load Order    : [${CORE_MOD_ID}]`);
     expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
     // Check for specific counts and alphabetical order
@@ -413,22 +413,22 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       actions: Array(overrideActionCount).fill('dummy.json'),
       components: Array(overrideComponentCount).fill('dummy.json'),
     };
-    mockManifestMap.set(coreModId, coreManifest);
+    mockManifestMap.set(CORE_MOD_ID, coreManifest);
     mockManifestMap.set(overrideModId, overrideManifest);
 
     mockGameConfigLoader.loadConfig.mockResolvedValue([
-      coreModId,
+      CORE_MOD_ID,
       overrideModId,
     ]);
     mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
       mockManifestMap
     );
-    mockedResolveOrder.mockReturnValue([coreModId, overrideModId]);
+    mockedResolveOrder.mockReturnValue([CORE_MOD_ID, overrideModId]);
 
     // Configure registry.get to return manifests
     mockRegistry.get.mockImplementation((type, id) => {
       if (type === 'mod_manifests') {
-        if (id === coreModId.toLowerCase()) return coreManifest;
+        if (id === CORE_MOD_ID.toLowerCase()) return coreManifest;
         if (id === overrideModId.toLowerCase()) return overrideManifest;
       }
       return undefined;
@@ -445,7 +445,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       ) => {
         if (typeNameArg !== 'actions')
           return { count: 0, overrides: 0, errors: 0 };
-        if (modIdArg === coreModId)
+        if (modIdArg === CORE_MOD_ID)
           return { count: coreActionCount, overrides: 0, errors: 0 };
         if (modIdArg === overrideModId)
           return { count: overrideActionCount, overrides: 0, errors: 0 }; // Assuming override count applies elsewhere or is tracked internally
@@ -487,10 +487,10 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     const summaryBlock = summaryLines.join('\n');
 
     expect(summaryBlock).toContain(
-      `• Requested Mods (raw): [${coreModId}, ${overrideModId}]`
+      `• Requested Mods (raw): [${CORE_MOD_ID}, ${overrideModId}]`
     );
     expect(summaryBlock).toContain(
-      `• Final Load Order    : [${coreModId}, ${overrideModId}]`
+      `• Final Load Order    : [${CORE_MOD_ID}, ${overrideModId}]`
     );
     expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
@@ -561,24 +561,24 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       rules: Array(modBRuleCount).fill('dummy.json'),
       // 'events' key missing entirely
     };
-    mockManifestMap.set(coreModId, coreManifest);
+    mockManifestMap.set(CORE_MOD_ID, coreManifest);
     mockManifestMap.set(modAId, modAManifest);
     mockManifestMap.set(modBId, modBManifest);
 
     mockGameConfigLoader.loadConfig.mockResolvedValue([
-      coreModId,
+      CORE_MOD_ID,
       modAId,
       modBId,
     ]);
     mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
       mockManifestMap
     );
-    mockedResolveOrder.mockReturnValue([coreModId, modAId, modBId]);
+    mockedResolveOrder.mockReturnValue([CORE_MOD_ID, modAId, modBId]);
 
     // Configure registry.get to return manifests
     mockRegistry.get.mockImplementation((type, id) => {
       if (type === 'mod_manifests') {
-        if (id === coreModId.toLowerCase()) return coreManifest;
+        if (id === CORE_MOD_ID.toLowerCase()) return coreManifest;
         if (id === modAId.toLowerCase()) return modAManifest;
         if (id === modBId.toLowerCase()) return modBManifest;
       }
@@ -594,7 +594,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         contentTypeDirArg,
         typeNameArg
       ) =>
-        modIdArg === coreModId && typeNameArg === 'components'
+        modIdArg === CORE_MOD_ID && typeNameArg === 'components'
           ? { count: coreCompCount, overrides: 0, errors: 0 }
           : { count: 0, overrides: 0, errors: 0 }
     );
@@ -643,10 +643,10 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     const summaryBlock = summaryLines.join('\n');
 
     expect(summaryBlock).toContain(
-      `• Requested Mods (raw): [${coreModId}, ${modAId}, ${modBId}]`
+      `• Requested Mods (raw): [${CORE_MOD_ID}, ${modAId}, ${modBId}]`
     );
     expect(summaryBlock).toContain(
-      `• Final Load Order    : [${coreModId}, ${modAId}, ${modBId}]`
+      `• Final Load Order    : [${CORE_MOD_ID}, ${modAId}, ${modBId}]`
     );
     expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
@@ -666,7 +666,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     expect(ruleLine).toBeDefined();
 
     expect(actionLine).toMatch(/actions\s+: C:1, O:0, E:0/); // Only from modA
-    expect(componentLine).toMatch(/components\s+: C:1, O:0, E:0/); // Only from core
+    expect(componentLine).toMatch(/components\s+: C:1, O:0, E:0/);
     expect(ruleLine).toMatch(/rules\s+: C:1, O:0, E:0/); // Only from modB
 
     // ---- VVV THIS IS THE FIX VVV ----
@@ -721,7 +721,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     // Core mod also doesn't have 'events'
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `WorldLoader [${coreModId}]: Skipping content type 'events' (key: 'events')`
+        `WorldLoader [${CORE_MOD_ID}]: Skipping content type 'events' (key: 'events')`
       )
     );
   });

@@ -1,14 +1,14 @@
-// tests/config/registrations/uiRegistrations.test.js
+// tests/dependencyInjection/registrations/uiRegistrations.test.js
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../../src/interfaces/IInputHandler.js').IInputHandler} IInputHandler */
 /** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../../src/core/interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */ // Corrected path assuming core/interfaces
+/** @typedef {import('../../../src/interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */ // Corrected path assuming interfaces/
 /** @typedef {import('../../../src/interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
-/** @typedef {import('../../../src/services/EntityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */ // Added for mocking
+/** @typedef {import('../../../src/entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */ // Added for mocking
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -22,10 +22,10 @@ import {
 } from '@jest/globals';
 
 // --- Class Under Test ---
-import { registerUI } from '../../../src/config/registrations/uiRegistrations.js';
+import { registerUI } from '../../../src/dependencyInjection/registrations/uiRegistrations.js';
 
 // --- Dependencies & Concrete Classes ---
-import { tokens } from '../../../src/config/tokens.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import InputHandler from '../../../src/input/inputHandler.js';
 import {
   UiMessageRenderer,

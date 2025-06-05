@@ -2,14 +2,14 @@
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 // Assuming the test file is actually located at src/tests/services/ as per jest output
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js';
+import { TargetResolutionService } from '../../src/actions/targeting/targetResolutionService.js';
 import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
 import Entity from '../../src/entities/entity.js';
 import {
   INVENTORY_COMPONENT_ID,
   NAME_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
-import { getEntityIdsForScopes } from '../../src/services/entityScopeService.js';
+import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js';
 
 // --- Mocks for Dependencies ---
 let mockEntityManager;

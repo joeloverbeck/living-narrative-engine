@@ -1,4 +1,4 @@
-// src/tests/core/services/workspaceDataFetcher.test.js
+// src/tests/services/workspaceDataFetcher.test.js
 
 import {
   describe,
@@ -8,7 +8,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import WorkspaceDataFetcher from '../../src/services/workspaceDataFetcher.js'; // Adjust path as needed
+import WorkspaceDataFetcher from '../../src/data/workspaceDataFetcher.js'; // Adjust path as needed
 
 describe('WorkspaceDataFetcher', () => {
   let fetcher;

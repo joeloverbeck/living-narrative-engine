@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/worldLoader.timingLogs.integration.test.js
+// Filename: src/tests/loaders/worldLoader.timingLogs.integration.test.js
 // Sub-Ticket 9: Test - Verify Performance Timing Logs
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
@@ -17,6 +17,7 @@ import * as ModVersionValidatorModule from '../../src/modding/modVersionValidato
 jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
 import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
   resolveOrder: jest.fn(),
 }));
@@ -34,8 +35,8 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
-/** @typedef {import('../../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
-/** @typedef {import('../../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../../interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Ticket 9)', () => {
   /** @type {WorldLoader} */
@@ -76,10 +77,9 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
   let mockFooManifest;
   /** @type {Map<string, ModManifest>} */
   let mockManifestMap;
-  const coreModId = 'core';
   const fooModId = 'foo';
   const worldName = 'timingTestWorld';
-  const finalOrder = [coreModId, fooModId];
+  const finalOrder = [CORE_MOD_ID, fooModId];
 
   // --- Mocked Functions (from imports) ---
   const mockedModDependencyValidator = ModDependencyValidatorModule.validate;
@@ -97,7 +97,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
         // Handle manifest lookups required by WorldLoader's loop
         if (type === 'mod_manifests') {
           const lcId = id.toLowerCase();
-          if (lcId === coreModId) return mockCoreManifest;
+          if (lcId === CORE_MOD_ID) return mockCoreManifest;
           if (lcId === fooModId) return mockFooManifest;
         }
         return null; // Default get response
@@ -184,7 +184,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
 
     // --- 2. Define Mock Data ---
     mockCoreManifest = {
-      id: coreModId,
+      id: CORE_MOD_ID,
       version: '1.0.0',
       name: 'Core',
       gameVersion: '^1.0.0',
@@ -201,12 +201,12 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
     };
 
     mockManifestMap = new Map();
-    mockManifestMap.set(coreModId, mockCoreManifest); // Use original case keys
+    mockManifestMap.set(CORE_MOD_ID, mockCoreManifest); // Use original case keys
     mockManifestMap.set(fooModId, mockFooManifest);
 
     // --- 3. Configure Mocks ---
     // GameConfigLoader - Request the two mods
-    mockGameConfigLoader.loadConfig.mockResolvedValue([coreModId, fooModId]);
+    mockGameConfigLoader.loadConfig.mockResolvedValue([CORE_MOD_ID, fooModId]);
 
     // ModManifestLoader - Return the manifests
     mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
@@ -250,7 +250,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
 
     // Verify logs for each mod in the final order
     for (const modId of finalOrder) {
-      // Example expected log format: Mod 'core' loaded in 12.34ms: components(1) -> Overrides(0), Errors(0)
+      // Example expected log format: Mod CORE_MOD_ID loaded in 12.34ms: components(1) -> Overrides(0), Errors(0)
       const expectedLogRegex = new RegExp(
         `^Mod '${modId}' loaded in (\\d+\\.\\d{2})ms:`
       ); // Regex to capture duration
@@ -290,7 +290,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
     // Verify loaders were called (sanity check that the timed operation happened)
     // Core mod has components
     expect(mockComponentLoader.loadItemsForMod).toHaveBeenCalledWith(
-      coreModId,
+      CORE_MOD_ID,
       mockCoreManifest,
       'components',
       'components',

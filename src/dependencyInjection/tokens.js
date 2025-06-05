@@ -1,4 +1,4 @@
-// src/config/tokens.js
+// src/dependencyInjection/tokens.js
 // --- FILE START ---
 /**
  * @file Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -213,7 +213,6 @@ export const tokens = Object.freeze({
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',
   IValidatedEventDispatcher: 'IValidatedEventDispatcher',
-  IActionExecutor: 'IActionExecutor',
   IWorldContext: 'IWorldContext',
   ICommandParser: 'ICommandParser',
   ICommandProcessor: 'ICommandProcessor',

@@ -1,7 +1,7 @@
 // tests/services/ThoughtPersistenceHook.test.js
 
-import { persistThoughts } from '../../src/services/thoughtPersistenceHook.js';
-import ShortTermMemoryService from '../../src/services/shortTermMemoryService.js';
+import { persistThoughts } from '../../src/ai/thoughtPersistenceHook.js';
+import ShortTermMemoryService from '../../src/ai/shortTermMemoryService.js';
 import { describe, test, expect, jest } from '@jest/globals';
 
 describe('ThoughtPersistenceHook.processTurnAction', () => {

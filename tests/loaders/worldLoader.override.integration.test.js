@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/worldLoader.override.integration.test.js
+// Filename: src/tests/loaders/worldLoader.override.integration.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
@@ -18,6 +18,7 @@ import * as ModVersionValidatorModule from '../../src/modding/modVersionValidato
 jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
 import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 
 jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
   resolveOrder: jest.fn(),
@@ -36,7 +37,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
-/** @typedef {import('../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Added for the new dependency
 
 describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () => {
@@ -78,7 +79,6 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
   let mockOverrideManifest;
   /** @type {Map<string, ModManifest>} */
   let mockManifestMap;
-  const coreModId = 'core';
   const overrideModId = 'overrideMod';
   const worldName = 'testWorldWithOverrides';
 
@@ -104,7 +104,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         // Handle manifest lookups first (WorldLoader uses lower-case keys)
         if (type === 'mod_manifests') {
           const lowerId = id.toLowerCase(); // Ensure lookup is case-insensitive
-          if (lowerId === coreModId.toLowerCase()) return mockCoreManifest;
+          if (lowerId === CORE_MOD_ID.toLowerCase()) return mockCoreManifest;
           if (lowerId === overrideModId.toLowerCase())
             return mockOverrideManifest;
         }
@@ -127,7 +127,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
       getAllSystemRules: jest.fn(() => []),
       getManifest: jest.fn((id) => {
         // Simulate case-insensitive manifest retrieval
-        if (id.toLowerCase() === coreModId.toLowerCase())
+        if (id.toLowerCase() === CORE_MOD_ID.toLowerCase())
           return mockCoreManifest;
         if (id.toLowerCase() === overrideModId.toLowerCase())
           return mockOverrideManifest;
@@ -222,7 +222,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
 
     // --- 2. Define Mock Data ---
     mockCoreManifest = {
-      id: coreModId,
+      id: CORE_MOD_ID,
       version: '1.0.0',
       name: 'Core Systems',
       gameVersion: '^1.0.0',
@@ -239,12 +239,10 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
       gameVersion: '^1.0.0',
       dependencies: {
         // Good practice to include dependency
-        [coreModId]: '^1.0.0',
+        [CORE_MOD_ID]: '^1.0.0',
       },
       content: {
-        // OverrideMod overrides core's action AND adds a new one
         actions: ['core/action1.json', 'override/action2.json'],
-        // OverrideMod also adds a component (not defined in core)
         components: ['override/component1.json'],
         // NO events, rules, entities etc. defined here
       },
@@ -252,7 +250,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
 
     mockManifestMap = new Map();
     // Store with original case keys as returned by ModManifestLoader
-    mockManifestMap.set(coreModId, mockCoreManifest);
+    mockManifestMap.set(CORE_MOD_ID, mockCoreManifest);
     mockManifestMap.set(overrideModId, mockOverrideManifest);
 
     // --- 3. Configure Mocks (Default Success Paths) ---
@@ -297,7 +295,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
 
     // Configure GameConfigLoader - Request both mods
     mockGameConfigLoader.loadConfig.mockResolvedValue([
-      coreModId,
+      CORE_MOD_ID,
       overrideModId,
     ]);
 
@@ -318,7 +316,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
 
     // Configure resolveOrder (mocked import) - CRITICAL: Define the load order
     // WorldLoader passes lower-case keys map, resolver returns original case IDs
-    mockedResolveOrder.mockReturnValue([coreModId, overrideModId]);
+    mockedResolveOrder.mockReturnValue([CORE_MOD_ID, overrideModId]);
 
     // --- Configure Content Loader Mocks ---
 
@@ -338,8 +336,8 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         let count = 0;
         let overrides = 0;
 
-        if (modIdArg === coreModId) {
-          const itemId = `${coreModId}:action1`;
+        if (modIdArg === CORE_MOD_ID) {
+          const itemId = `${CORE_MOD_ID}:action1`;
           const itemData = { value: 'core_value' };
           mockRegistry.store('actions', itemId, itemData);
           mockLogger.debug(
@@ -348,7 +346,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
           );
           count = 1; // Assumes 1 file maps to 1 item for simplicity in mock
         } else if (modIdArg === overrideModId) {
-          const overrideItemId = `${coreModId}:action1`;
+          const overrideItemId = `${CORE_MOD_ID}:action1`;
           const overrideItemData = { value: 'override_value' };
           if (mockRegistry.get('actions', overrideItemId)) {
             overrides++;
@@ -454,35 +452,34 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
 
     // Verify registry.store was called to store meta.final_mod_order
     expect(mockRegistry.store).toHaveBeenCalledWith('meta', 'final_mod_order', [
-      coreModId,
+      CORE_MOD_ID,
       overrideModId,
     ]);
 
     // Verify ModManifestLoader called correctly
     expect(mockModManifestLoader.loadRequestedManifests).toHaveBeenCalledWith([
-      coreModId,
+      CORE_MOD_ID,
       overrideModId,
     ]);
 
     // Verify resolveOrder was called correctly
     const expectedValidationMap = new Map();
-    expectedValidationMap.set(coreModId.toLowerCase(), mockCoreManifest);
+    expectedValidationMap.set(CORE_MOD_ID.toLowerCase(), mockCoreManifest);
     expectedValidationMap.set(
       overrideModId.toLowerCase(),
       mockOverrideManifest
     );
     expect(mockedResolveOrder).toHaveBeenCalledWith(
-      [coreModId, overrideModId],
+      [CORE_MOD_ID, overrideModId],
       expectedValidationMap,
       mockLogger
     );
 
     // --- Assert Loader Calls ---
 
-    // ActionLoader: Called for core (1 action listed) and overrideMod (2 actions listed)
     expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledTimes(2);
     expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledWith(
-      coreModId,
+      CORE_MOD_ID,
       mockCoreManifest,
       'actions',
       'actions',
@@ -506,9 +503,9 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
       'components',
       'components'
     );
-    // Verify it was NOT called trying to process 'components' for coreMod (since core manifest doesn't list them)
+
     expect(mockComponentLoader.loadItemsForMod).not.toHaveBeenCalledWith(
-      coreModId,
+      CORE_MOD_ID,
       mockCoreManifest,
       'components',
       'components',
@@ -519,7 +516,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
     expect(mockEventLoader.loadItemsForMod).toHaveBeenCalledTimes(0);
     // These subsequent checks are now redundant if calledTimes is 0, but harmless
     expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalledWith(
-      coreModId,
+      CORE_MOD_ID,
       mockCoreManifest,
       'events',
       'events',
@@ -537,7 +534,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
     expect(mockRuleLoader.loadItemsForMod).toHaveBeenCalledTimes(0);
     // Redundant but harmless checks:
     expect(mockRuleLoader.loadItemsForMod).not.toHaveBeenCalledWith(
-      coreModId,
+      CORE_MOD_ID,
       mockCoreManifest,
       'rules',
       'rules',
@@ -555,7 +552,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledTimes(0);
     // Spot check one type (redundant but harmless):
     expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalledWith(
-      coreModId,
+      CORE_MOD_ID,
       mockCoreManifest,
       'items',
       'items',
@@ -607,10 +604,10 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
           `— WorldLoader Load Summary (World: '${worldName}') —`
         ),
         expect.stringContaining(
-          `• Requested Mods (raw): [${coreModId}, ${overrideModId}]`
+          `• Requested Mods (raw): [${CORE_MOD_ID}, ${overrideModId}]`
         ), // Added bullet, space, brackets
         expect.stringContaining(
-          `• Final Load Order    : [${coreModId}, ${overrideModId}]`
+          `• Final Load Order    : [${CORE_MOD_ID}, ${overrideModId}]`
         ), // Added bullet, space, brackets
         expect.stringContaining(`• Content Loading Summary (Totals):`), // Added bullet, space
         expect.stringContaining('———————————————————————————————————————————'), // Separator line

@@ -8,10 +8,10 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js'; // Adjust path as necessary
+import { TargetResolutionService } from '../../src/actions/targeting/targetResolutionService.js'; // Adjust path as necessary
 import { ResolutionStatus } from '../../src/types/resolutionStatus.js'; // Adjust path as necessary
 import Entity from '../../src/entities/entity.js';
-import { getEntityIdsForScopes } from '../../src/services/entityScopeService.js'; // Adjust path as necessary
+import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js'; // Adjust path as necessary
 
 // Mocks for dependencies
 const mockEntityManager = {

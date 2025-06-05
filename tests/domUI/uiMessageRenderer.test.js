@@ -11,7 +11,7 @@ import { JSDOM } from 'jsdom';
 import { UiMessageRenderer } from '../../src/domUI';
 import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
-import ConsoleLogger from '../../src/services/consoleLogger.js';
+import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
 import {
   ACTION_FAILED_ID,
@@ -19,7 +19,7 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../src/constants/eventIds.js';
 
-jest.mock('../../src/services/consoleLogger.js');
+jest.mock('../../src/logging/consoleLogger.js');
 jest.mock('../../src/events/validatedEventDispatcher.js');
 
 describe('UiMessageRenderer', () => {

@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/worldLoader.errorHandling.integration.test.js
+// Filename: src/tests/loaders/worldLoader.errorHandling.integration.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
@@ -18,6 +18,7 @@ import * as ModVersionValidatorModule from '../../src/modding/modVersionValidato
 jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
 
 import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 
 jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
   resolveOrder: jest.fn(),
@@ -36,7 +37,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
-/** @typedef {import('../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
 
 // Filename: src/tests/integration/worldLoader.errorHandling.integration.test.js
 
@@ -71,7 +72,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
   let mockGameConfigLoader;
   /** @type {jest.Mocked<ModManifestLoader>} */
   let mockModManifestLoader;
-  /** @type {jest.Mocked<import('../../core/services/validatedEventDispatcher.js').default>} */
+  /** @type {jest.Mocked<import('../../services/validatedEventDispatcher.js').default>} */
   let mockValidatedEventDispatcher;
 
   // --- Mock Data ---
@@ -81,7 +82,6 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
   let mockBadModManifest;
   /** @type {Map<string, ModManifest>} */
   let mockManifestMap;
-  const coreModId = 'core';
   const badModId = 'badMod';
   const worldName = 'testWorldContentError';
   const simulatedErrorMessage = 'Simulated validation/parsing failure';
@@ -105,7 +105,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
       }),
       get: jest.fn((type, id) => {
         if (type === 'mod_manifests') {
-          if (id === coreModId.toLowerCase()) return mockCoreManifest;
+          if (id === CORE_MOD_ID.toLowerCase()) return mockCoreManifest;
           if (id === badModId.toLowerCase()) return mockBadModManifest;
         }
         return internalStore[type]?.[id];
@@ -199,7 +199,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
 
     // --- 2. Define Mock Data (as per TEST-LOADER-7.4) ---
     mockCoreManifest = {
-      id: coreModId,
+      id: CORE_MOD_ID,
       version: '1.0.0',
       name: 'Core',
       gameVersion: '^1.0.0',
@@ -214,7 +214,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     };
 
     mockManifestMap = new Map();
-    mockManifestMap.set(coreModId, mockCoreManifest);
+    mockManifestMap.set(CORE_MOD_ID, mockCoreManifest);
     mockManifestMap.set(badModId, mockBadModManifest);
 
     // --- 3. Configure Mocks ---
@@ -243,7 +243,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     });
     // **************************************************************************
 
-    mockGameConfigLoader.loadConfig.mockResolvedValue([coreModId, badModId]);
+    mockGameConfigLoader.loadConfig.mockResolvedValue([CORE_MOD_ID, badModId]);
     mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
       mockManifestMap
     );
@@ -255,10 +255,9 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     mockedValidateModEngineVersions.mockImplementation(() => {
       /* Assume success */
     });
-    mockedResolveOrder.mockReturnValue([coreModId, badModId]); // Define load order
+    mockedResolveOrder.mockReturnValue([CORE_MOD_ID, badModId]); // Define load order
 
     // --- Configure Content Loader Mocks (Specific behaviors) ---
-    // ActionLoader: Succeeds for core
     mockActionLoader.loadItemsForMod.mockImplementation(
       async (
         modIdArg,
@@ -267,8 +266,8 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         contentTypeDirArg,
         typeNameArg
       ) => {
-        if (modIdArg === coreModId && typeNameArg === 'actions') {
-          const itemId = `${coreModId}:action1`;
+        if (modIdArg === CORE_MOD_ID && typeNameArg === 'actions') {
+          const itemId = `${CORE_MOD_ID}:action1`;
           const itemData = { id: itemId, value: 'core_action_data' };
           mockRegistry.store('actions', itemId, itemData);
           mockLogger.debug(
@@ -381,16 +380,15 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     expect(errorCallArgs[2]).toBeInstanceOf(Error);
     expect(errorCallArgs[2].message).toBe(simulatedErrorMessage);
 
-    // Verify actionLoader.loadItemsForMod (for core) completed successfully
     expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledTimes(1);
     expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledWith(
-      coreModId,
+      CORE_MOD_ID,
       mockCoreManifest,
       'actions',
       'actions',
       'actions'
     );
-    expect(mockRegistry.get('actions', `${coreModId}:action1`)).toBeDefined();
+    expect(mockRegistry.get('actions', `${CORE_MOD_ID}:action1`)).toBeDefined();
 
     // Verify componentLoader.loadItemsForMod (for badMod) was called (and threw internally)
     expect(mockComponentLoader.loadItemsForMod).toHaveBeenCalledTimes(1);
@@ -415,7 +413,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     expect(mockRegistry.get('rules', `${badModId}:rule1`)).toBeDefined();
 
     // Verify the registry contains core:action1
-    const coreAction = mockRegistry.get('actions', `${coreModId}:action1`);
+    const coreAction = mockRegistry.get('actions', `${CORE_MOD_ID}:action1`);
     expect(coreAction).toEqual({
       id: 'core:action1',
       value: 'core_action_data',
@@ -445,10 +443,10 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
           `WorldLoader Load Summary (World: '${worldName}')`
         ),
         expect.stringContaining(
-          `Requested Mods (raw): [${coreModId}, ${badModId}]`
+          `Requested Mods (raw): [${CORE_MOD_ID}, ${badModId}]`
         ),
         expect.stringContaining(
-          `Final Load Order    : [${coreModId}, ${badModId}]`
+          `Final Load Order    : [${CORE_MOD_ID}, ${badModId}]`
         ),
         expect.stringContaining(`Content Loading Summary (Totals):`),
         expect.stringMatching(/actions\s+: C:1, O:0, E:0/),

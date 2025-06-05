@@ -11,11 +11,11 @@ import {
 
 /**
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
+ * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('./domElementFactory.js').default} DomElementFactory // Ensure this is the correct path for DomElementFactory
- * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
- * @typedef {import('../core/interfaces/IEvent.js').IEvent} IEvent
+ * @typedef {import('../interfaces/IEventSubscription').IEventSubscription} IEventSubscription
+ * @typedef {import('../interfaces/IEvent.js').IEvent} IEvent
  */
 
 /**

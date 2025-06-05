@@ -1,9 +1,9 @@
 // src/tests/services/targetResolutionService.domain-none.test.js
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js'; // Adjusted path
+import { TargetResolutionService } from '../../src/actions/targeting/targetResolutionService.js'; // Adjusted path
 import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
-import { getEntityIdsForScopes } from '../../src/services/entityScopeService.js'; // Adjusted path
+import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js'; // Adjusted path
 // Entity might not be strictly needed for 'none' domain, but good to have for consistency if other tests are added to this file.
 // import Entity from '../entities/entity.js'; // Adjusted path
 

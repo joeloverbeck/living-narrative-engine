@@ -1,4 +1,4 @@
-// src/core/turns/strategies/turnDirectiveStrategyResolver.js
+// src/turns/strategies/turnDirectiveStrategyResolver.js
 // ────────────────────────────────────────────────────────────────────────────
 //  TurnDirectiveStrategyResolver  – PTH-STRAT-006
 // ────────────────────────────────────────────────────────────────────────────

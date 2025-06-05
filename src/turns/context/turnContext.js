@@ -1,4 +1,4 @@
-// src/core/turns/context/turnContext.js
+// src/turns/context/turnContext.js
 // --- FILE START ---
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
@@ -32,7 +32,7 @@
  * @typedef {function(boolean, string): void} OnSetAwaitingExternalEventCallback
  */
 /**
- * @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
+ * @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
  */
 /**
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor

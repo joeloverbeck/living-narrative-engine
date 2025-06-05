@@ -1,3 +1,5 @@
+// src
+
 import ShortTermMemoryService from './shortTermMemoryService.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
 

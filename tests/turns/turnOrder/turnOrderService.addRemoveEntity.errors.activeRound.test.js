@@ -1,4 +1,4 @@
-// src/tests/core/turnOrder/turnOrderService.addRemoveEntity.errors.activeRound.test.js
+// src/tests/turns/order/turnOrderService.addRemoveEntity.errors.activeRound.test.js
 
 /**
  * @file Unit tests for the TurnOrderService class, focusing on the

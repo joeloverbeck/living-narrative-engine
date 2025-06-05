@@ -1,5 +1,5 @@
 // tests/promptElementAssemblers/ThoughtsSectionAssembler.test.js
-import { ThoughtsSectionAssembler } from '../../../src/services/promptElementAssemblers/thoughtsSectionAssembler.js';
+import { ThoughtsSectionAssembler } from '../../../src/prompting/assembling/thoughtsSectionAssembler.js';
 import { describe, expect, test } from '@jest/globals';
 
 describe('ThoughtsSectionAssembler.assemble()', () => {

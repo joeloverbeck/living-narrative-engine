@@ -1,4 +1,4 @@
-// src/tests/core/turns/turnManager.roundLifecycle.test.js
+// src/tests/turns/turnManager.roundLifecycle.test.js
 // --- FILE START ---
 
 import TurnManager from '../../src/turns/turnManager.js';

@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, jest, test } from '@jest/globals'; // We'
 // Mock the dependencies using jest.mock
 // We mock the entire modules to intercept the class constructors or specific exports
 jest.mock('../../src/events/eventBus.js'); // Mock EventBus module
-jest.mock('../../src/services/gameDataRepository.js'); // Mock GameDataRepository module
+jest.mock('../../src/data/gameDataRepository.js'); // Mock GameDataRepository module
 
 // Create mock implementations for the interfaces/classes
 const mockEventBus = {

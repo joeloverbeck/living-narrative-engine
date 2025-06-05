@@ -8,9 +8,9 @@ import {
   jest,
   afterEach,
 } from '@jest/globals';
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js';
+import { TargetResolutionService } from '../../src/actions/targeting/targetResolutionService.js';
 import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
-import { getEntityIdsForScopes } from '../../src/services/entityScopeService.js';
+import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js';
 import Entity from '../../src/entities/entity.js'; // Using Entity for mocks
 
 // Constants used by the service

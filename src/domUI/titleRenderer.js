@@ -2,7 +2,7 @@
 import { RendererBase } from './rendererBase.js';
 
 /**
- * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
+ * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  */

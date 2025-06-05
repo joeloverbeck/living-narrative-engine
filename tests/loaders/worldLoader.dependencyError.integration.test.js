@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/worldLoader.dependencyError.integration.test.js
+// Filename: src/tests/loaders/worldLoader.dependencyError.integration.test.js
 // NOTE: Ensure this file is actually at this path in your project.
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
@@ -21,6 +21,7 @@ import * as ModVersionValidatorModule from '../../src/modding/modVersionValidato
 jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn());
 
 import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
   resolveOrder: jest.fn(),
 }));
@@ -38,10 +39,10 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
-/** @typedef {import('../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
-/** @typedef {import('../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
-// --- Placeholder for actual engine version (replace if needed, or retrieve from config) ---
+// --- Placeholder for actual engine version (replace if needed, or retrieve from dependencyInjection) ---
 const ENGINE_VERSION = '1.0.0'; // Example engine version
 
 describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Version Errors (TEST-LOADER-7.5)', () => {
@@ -85,7 +86,6 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
   const worldName = 'testWorldDependencyErrors';
   const modAId = 'modA';
   const modBId = 'modB';
-  const coreModId = 'core';
 
   beforeEach(() => {
     jest.clearAllMocks(); // Reset mocks between tests
@@ -234,10 +234,9 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
   // ── Test Case: Missing Required Dependency ──────────────────────────────
   it('should throw ModDependencyError if a required dependency is missing', async () => {
     // Arrange
-    const missingDepId = coreModId;
+    const missingDepId = CORE_MOD_ID;
     const expectedErrorMessage = `Mod '${modAId}' requires missing dependency '${missingDepId}'.`;
 
-    // Setup: Request modA, which requires 'core', but 'core' manifest is not loaded
     mockGameConfigLoader.loadConfig.mockResolvedValue([modAId]);
     const modAManifest = {
       id: modAId,
@@ -410,21 +409,21 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
     // Arrange
     const requiredVersionRange = '^2.0.0';
     const actualDepVersion = '1.0.0';
-    const expectedErrorMessage = `Mod '${modAId}' requires dependency '${coreModId}' version '${requiredVersionRange}', but found version '${actualDepVersion}'.`;
+    const expectedErrorMessage = `Mod '${modAId}' requires dependency '${CORE_MOD_ID}' version '${requiredVersionRange}', but found version '${actualDepVersion}'.`;
 
     // Setup: Request modA and core, modA requires core@^2.0.0, but core is 1.0.0
-    mockGameConfigLoader.loadConfig.mockResolvedValue([modAId, coreModId]);
+    mockGameConfigLoader.loadConfig.mockResolvedValue([modAId, CORE_MOD_ID]);
     const modAManifest = {
       id: modAId,
       version: '1.0.0',
       name: 'Mod A',
       dependencies: [
-        { id: coreModId, version: requiredVersionRange, required: true },
+        { id: CORE_MOD_ID, version: requiredVersionRange, required: true },
       ],
       content: {},
     };
     const coreManifest = {
-      id: coreModId,
+      id: CORE_MOD_ID,
       version: actualDepVersion,
       name: 'Core',
       gameVersion: ENGINE_VERSION,
@@ -432,7 +431,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
     };
     const loadedManifestsMap = new Map([
       [modAId.toLowerCase(), modAManifest],
-      [coreModId.toLowerCase(), coreManifest],
+      [CORE_MOD_ID.toLowerCase(), coreManifest],
     ]);
     mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
       loadedManifestsMap
@@ -441,7 +440,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
     mockRegistry.get.mockImplementation((type, id) => {
       if (type === 'mod_manifests') {
         if (id === modAId.toLowerCase()) return modAManifest;
-        if (id === coreModId.toLowerCase()) return coreManifest;
+        if (id === CORE_MOD_ID.toLowerCase()) return coreManifest;
       }
       return undefined;
     });
@@ -472,7 +471,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
   // ── Test Case: No Content Loaders Called on Early Error ─────────────────
   it('should not call any content loaders if an error occurs before the loading loop', async () => {
     // Arrange: Reuse the "Missing Required Dependency" scenario which throws early
-    const missingDepId = coreModId;
+    const missingDepId = CORE_MOD_ID;
     const expectedErrorMessage = `Mod '${modAId}' requires missing dependency '${missingDepId}'.`;
 
     mockGameConfigLoader.loadConfig.mockResolvedValue([modAId]);

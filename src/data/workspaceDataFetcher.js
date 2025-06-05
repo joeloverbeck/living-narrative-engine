@@ -1,4 +1,4 @@
-// src/core/services/workspaceDataFetcher.js
+// src/data/workspaceDataFetcher.js
 
 /**
  * @file Implements the IDataFetcher interface using the global fetch API

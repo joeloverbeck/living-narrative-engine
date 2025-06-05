@@ -1,15 +1,15 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-import StaticConfiguration from '../src/services/staticConfiguration.js';
-import DefaultPathResolver from '../src/services/defaultPathResolver.js';
-import AjvSchemaValidator from '../src/services/ajvSchemaValidator.js';
-import ConsoleLogger, { LogLevel } from '../src/services/consoleLogger.js';
+import StaticConfiguration from '../src/configuration/staticConfiguration.js';
+import DefaultPathResolver from '../src/pathing/defaultPathResolver.js';
+import AjvSchemaValidator from '../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger, { LogLevel } from '../src/logging/consoleLogger.js';
 import SchemaLoader from '../src/loaders/schemaLoader.js';
 import ModManifestLoader from '../src/modding/modManifestLoader.js';
 import ModDependencyValidator from '../src/modding/modDependencyValidator.js';
 import validateModEngineVersions from '../src/modding/modVersionValidator.js';
-import InMemoryDataRegistry from '../src/services/inMemoryDataRegistry.js';
+import InMemoryDataRegistry from '../src/data/inMemoryDataRegistry.js';
 
 /** Simple IDataFetcher implementation using Node's fs module. */
 class NodeDataFetcher {

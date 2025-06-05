@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/worldLoader.preLoopErrors.integration.test.js
+// Filename: tests/loaders/worldLoader.preLoopErrors.integration.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
@@ -22,6 +22,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
   resolveOrder: jest.fn(),
 }));
 import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 
 // --- Type‑only JSDoc imports for Mocks ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -36,8 +37,8 @@ import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResol
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
-/** @typedef {import('../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
-/** @typedef {import('../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, Cycles, Missing Essentials (TEST-LOADER-7.6)', () => {
   /** @type {WorldLoader} */
@@ -80,7 +81,6 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
   let modBManifest;
   /** @type {Map<string, ModManifest>} */
   let mockManifestMap;
-  const coreModId = 'core';
   const modAId = 'modA';
   const modBId = 'modB';
   const worldName = 'testWorldPreLoopError';
@@ -166,7 +166,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
 
     // --- 2. Define Base Mock Data ---
     coreManifest = {
-      id: coreModId,
+      id: CORE_MOD_ID,
       version: '1.0.0',
       name: 'Core',
       gameVersion: '1.0.0',
@@ -220,9 +220,9 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     });
     mockResolveOrder.mockReturnValue([]);
 
-    mockGameConfigLoader.loadConfig.mockResolvedValue([coreModId]);
+    mockGameConfigLoader.loadConfig.mockResolvedValue([CORE_MOD_ID]);
     const defaultMap = new Map();
-    defaultMap.set(coreModId.toLowerCase(), coreManifest);
+    defaultMap.set(CORE_MOD_ID.toLowerCase(), coreManifest);
     mockModManifestLoader.loadRequestedManifests.mockResolvedValue(defaultMap);
 
     // --- 4. Instantiate SUT ---

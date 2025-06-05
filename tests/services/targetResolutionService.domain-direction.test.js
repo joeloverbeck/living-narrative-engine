@@ -1,10 +1,10 @@
 // src/tests/services/targetResolutionService.domain-direction.test.js
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js';
+import { TargetResolutionService } from '../../src/actions/targeting/targetResolutionService.js';
 import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
 import { EXITS_COMPONENT_ID } from '../../src/constants/componentIds.js';
-import { getEntityIdsForScopes } from '../../src/services/entityScopeService.js'; // Import the constant
+import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js'; // Import the constant
 
 // --- Mocks for Dependencies ---
 let mockEntityManager;

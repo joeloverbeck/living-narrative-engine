@@ -1,4 +1,4 @@
-// src/config/registrations/uiRegistrations.js
+// src/dependencyInjection/registrations/uiRegistrations.js
 // --- FILE START ---
 /**
  * @file Registers UI-related services and dependencies with the AppContainer.
@@ -41,7 +41,7 @@ import { EngineUIManager } from '../../domUI'; // Corrected import path if Engin
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
-/** @typedef {import('../../services/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
+/** @typedef {import('../../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
 
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 

@@ -1,4 +1,4 @@
-// src/core/worldContext.js
+// src/context/worldContext.js
 // --- FILE START ---
 
 /** @typedef {import('../entities/entity.js').default} Entity */

@@ -1,4 +1,4 @@
-// src/core/turns/strategies/waitForTurnEndEventStrategy.js
+// src/turns/strategies/waitForTurnEndEventStrategy.js
 // ────────────────────────────────────────────────────────────────
 //  WaitForTurnEndEventStrategy
 // ────────────────────────────────────────────────────────────────
@@ -11,10 +11,6 @@
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import { AwaitingExternalTurnEndState } from '../states/awaitingExternalTurnEndState.js';
-// Corrected import path for TURN_ENDED_ID as per the ticket description (assuming it's in a top-level constants)
-// If eventIds.js is within 'core', the path might be '../../constants/eventIds.js'
-// If eventIds.js is within 'core/constants', the path would be '../constants/eventIds.js'
-// Based on AwaitingExternalTurnEndState.js, it seems to be '../../constants/eventIds.js'
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 
 export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy {

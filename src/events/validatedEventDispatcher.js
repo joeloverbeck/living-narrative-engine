@@ -9,8 +9,8 @@
 
 /** @typedef {import('./eventBus.js').default} EventBus */
 /** @typedef {import('./eventBus.js').EventListener} EventListener */ // Added for type hinting
-/** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../services/gameDataRepository.js').EventDefinition} EventDefinition */
+/** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
+/** @typedef {import('../data/gameDataRepository.js').EventDefinition} EventDefinition */
 /** @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */

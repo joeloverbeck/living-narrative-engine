@@ -1,4 +1,4 @@
-// Filename: src/core/services/worldLoader.js
+// Filename: src/loaders/worldLoader.js
 
 // --- Type‑only JSDoc imports ────────────────────────────────────────────────
 /** @typedef {import('../interfaces/coreServices.js').ILogger}             ILogger */
@@ -163,7 +163,7 @@ class WorldLoader {
     this.#modManifestLoader = modManifestLoader;
     this.#validatedEventDispatcher = validatedEventDispatcher;
 
-    // --- Initialize content loaders config ---
+    // --- Initialize content loaders dependencyInjection ---
     this.#contentLoadersConfig = [
       {
         loader: this.#componentDefinitionLoader,
@@ -229,7 +229,7 @@ class WorldLoader {
   // ── Public API ──────────────────────────────────────────────────────────
   /**
    * High‑level orchestration of the entire data‑load pipeline.
-   * Orchestrates schema loading, game config loading, manifest processing,
+   * Orchestrates schema loading, game dependencyInjection loading, manifest processing,
    * dependency validation, load order resolution, and sequential, per-mod content loading.
    *
    * @param {string} worldName - A hint or identifier for the world being loaded (used for logging/events).

@@ -1,4 +1,4 @@
-// src/core/systemServiceRegistry.js
+// src/registry/systemServiceRegistry.js
 
 /**
  * @file Defines the SystemServiceRegistry class, responsible for

@@ -1,4 +1,4 @@
-// src/tests/core/turnManager.base.test.js
+// src/tests/turns/turnManager.base.test.js
 // --- FILE START (Corrected) ---
 
 import TurnManager from '../../src/turns/turnManager.js';

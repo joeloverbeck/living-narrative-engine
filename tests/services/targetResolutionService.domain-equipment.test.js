@@ -1,9 +1,9 @@
 // src/tests/services/targetResolutionService.domain-equipment.test.js
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { TargetResolutionService } from '../../src/services/targetResolutionService.js';
+import { TargetResolutionService } from '../../src/actions/targeting/targetResolutionService.js';
 import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
-import { getEntityIdsForScopes } from '../../src/services/entityScopeService.js';
+import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js';
 import Entity from '../../src/entities/entity.js'; // Import Entity if creating instances
 
 // Constants used by the service

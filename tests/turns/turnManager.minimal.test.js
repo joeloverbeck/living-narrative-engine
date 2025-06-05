@@ -1,4 +1,4 @@
-// src/tests/core/turnManager.fixes.test.js
+// tests/turns/turnManager.minimal.test.js
 // --- FILE START (Corrected) ---
 import {
   jest,

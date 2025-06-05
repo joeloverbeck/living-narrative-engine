@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/worldLoader.entityMultiKey.integration.test.js
+// Filename: src/tests/loaders/worldLoader.entityMultiKey.integration.test.js
 // Sub-Ticket 11: Test - Verify EntityLoader Multi-Key Handling
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';

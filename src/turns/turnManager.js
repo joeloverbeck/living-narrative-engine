@@ -1,4 +1,4 @@
-// src/core/turnManager.js
+// src/turns/turnManager.js
 // --- FILE START ---
 
 /** @typedef {import('../entities/entity.js').default} Entity */

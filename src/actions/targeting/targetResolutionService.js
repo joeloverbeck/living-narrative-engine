@@ -1,27 +1,27 @@
-// src/services/targetResolutionService.js
+// src/actions/targeting/targetResolutionService.js
 
-import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
-import { ResolutionStatus } from '../types/resolutionStatus.js';
+import { ITargetResolutionService } from '../../interfaces/ITargetResolutionService.js';
+import { ResolutionStatus } from '../../types/resolutionStatus.js';
 import {
   EQUIPMENT_COMPONENT_ID,
   EXITS_COMPONENT_ID,
   INVENTORY_COMPONENT_ID,
-} from '../constants/componentIds.js';
-import { matchNames } from '../utils/nameMatcher.js';
-import { getEntityDisplayName } from '../utils/entityUtils.js';
+} from '../../constants/componentIds.js';
+import { matchNames } from '../../utils/nameMatcher.js';
+import { getEntityDisplayName } from '../../utils/entityUtils.js';
 // import { getEntityIdsForScopes } from './entityScopeService.js'; // Import if not injected
 
-/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
-/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../core/interfaces/ILogger.js').ILogger} ILogger */
-/** @typedef {import('./entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
+/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
+/** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
+/** @typedef {import('../../entities/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
 
 /** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../types/actionContext.js').ActionContext} ActionContext */
-/** @typedef {import('../types/targetResolutionResult.js').TargetResolutionResult} TargetResolutionResult */
-/** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../utils/nameMatcher.js').NameMatchCandidate} NameMatchCandidate */
+/** @typedef {import('../../types/targetResolutionResult.js').TargetResolutionResult} TargetResolutionResult */
+/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../utils/nameMatcher.js').NameMatchCandidate} NameMatchCandidate */
 
 /**
  * @description Options for constructing a TargetResolutionService.
