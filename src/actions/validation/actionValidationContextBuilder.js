@@ -11,11 +11,9 @@
 
 // --- BEGIN FIX ---
 // Import constants for component IDs
-import {
-  EXITS_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../constants/componentIds.js'; // Adjust path if necessary
+import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { validateDependency } from '../../utils/validationUtils.js';
+import { getExitByDirection } from '../../utils/locationUtils.js';
 // --- END FIX ---
 
 /**
@@ -50,6 +48,7 @@ export class ActionValidationContextBuilder {
       this.#logger = logger;
     } catch (e) {
       const errorMsg = `ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
+      // eslint-disable-next-line no-console
       console.error(errorMsg);
       throw new Error(errorMsg);
     }
@@ -152,33 +151,29 @@ export class ActionValidationContextBuilder {
 
       if (actorLocationId && typeof actorLocationId === 'string') {
         this.#logger.debug(
-          `ActionValidationContextBuilder: Actor '${actor.id}' is at location '${actorLocationId}'. Fetching exits for direction '${targetContext.direction}'.`
-        );
-        const exitsData = this.#entityManager.getComponentData(
-          actorLocationId,
-          EXITS_COMPONENT_ID
+          `ActionValidationContextBuilder: Actor '${actor.id}' is at location '${actorLocationId}'. Fetching exit details for direction '${targetContext.direction}'.`
         );
 
-        if (Array.isArray(exitsData)) {
-          const matchedExit = exitsData.find(
-            (exit) => exit && exit.direction === targetContext.direction
+        const matchedExit = getExitByDirection(
+          actorLocationId,
+          targetContext.direction,
+          this.#entityManager,
+          this.#logger
+        );
+
+        if (matchedExit) {
+          this.#logger.debug(
+            `ActionValidationContextBuilder: Found matching exit for direction '${targetContext.direction}' via getExitByDirection:`,
+            matchedExit
           );
-          if (matchedExit) {
-            this.#logger.debug(
-              `ActionValidationContextBuilder: Found matching exit for direction '${targetContext.direction}':`,
-              matchedExit
-            );
-            targetExitDetailsValue = matchedExit; // Store the entire exit object
-            targetBlockerValue = matchedExit.blocker; // Will be the blocker's ID (string), null, or undefined if property absent
-          } else {
-            this.#logger.warn(
-              `ActionValidationContextBuilder: Direction '${targetContext.direction}' not found in ${EXITS_COMPONENT_ID} data for location '${actorLocationId}'.`
-            );
-          }
+          targetExitDetailsValue = matchedExit; // Store the entire exit object
+          targetBlockerValue = matchedExit.blocker; // Will be the blocker's ID (string), null, or undefined if property absent
         } else {
           this.#logger.warn(
-            `ActionValidationContextBuilder: No valid ${EXITS_COMPONENT_ID} data (or not an array) found for location '${actorLocationId}'.`
+            `ActionValidationContextBuilder: Direction '${targetContext.direction}' not found in location '${actorLocationId}' using getExitByDirection. Target exit details will be null.`
           );
+          // targetExitDetailsValue remains null
+          // targetBlockerValue remains undefined
         }
       } else {
         this.#logger.warn(

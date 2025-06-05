@@ -1,17 +1,19 @@
 // src/tests/services/actionValidationContextBuilder.test.js
 // --- FILE START ---
 
-/**
- * @jest-environment node
- */
+/* eslint-disable jsdoc/check-tag-names */
+/** @jest-environment node */
+/* eslint-enable jsdoc/check-tag-names */
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 import { ActionValidationContextBuilder } from '../../src/actions/validation/actionValidationContextBuilder.js'; // Adjust path as needed
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js'; // Adjust path as needed
 // --- BEGIN FIX: Import component IDs for mocking ---
-import {
-  EXITS_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../src/constants/componentIds.js';
+import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { getExitByDirection } from '../../src/utils/locationUtils.js';
+
+jest.mock('../../src/utils/locationUtils.js', () => ({
+  getExitByDirection: jest.fn(),
+}));
 // --- END FIX ---
 
 // --- Mock Dependencies ---
@@ -47,7 +49,7 @@ const mockEntityManager = {
  *
  * @param {string} id - The entity ID.
  * @param {object | null} [componentsData] - Optional components data object.
- * @returns {jest.Mocked<import('../../src/entities/entity.js').default>}
+ * @returns {jest.Mocked<import('../../src/entities/entity.js').default>} Mock entity instance
  */
 const createMockEntity = (id, componentsData = { mock: true }) => ({
   id: id,
@@ -75,6 +77,7 @@ describe('ActionValidationContextBuilder', () => {
     jest.clearAllMocks();
     mockEntityManager.getEntityInstance.mockReset();
     mockEntityManager.getComponentData.mockReset(); // Reset this as well
+    getExitByDirection.mockReset();
 
     builder = new ActionValidationContextBuilder({
       entityManager: mockEntityManager,
@@ -332,22 +335,18 @@ describe('ActionValidationContextBuilder', () => {
       // It will now continue to do so, but the expectation includes the new default fields.
       // New tests would be needed to cover successful exit finding.
       it('should build the context correctly for a direction target (when no exit data is found)', () => {
-        // Mock actor's position component to be retrievable
+        // Mock actor's position component
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentId) => {
             if (entityId === actorId && componentId === POSITION_COMPONENT_ID) {
-              return actorComponents[POSITION_COMPONENT_ID]; // e.g., { locationId: 'loc:current' }
-            }
-            // Mock no EXITS_COMPONENT_ID for the location to test this path
-            if (
-              entityId === 'loc:current' &&
-              componentId === EXITS_COMPONENT_ID
-            ) {
-              return null; // Or an empty array, or not an array to trigger warnings
+              return actorComponents[POSITION_COMPONENT_ID];
             }
             return undefined;
           }
         );
+
+        // getExitByDirection returns null to simulate no exit
+        getExitByDirection.mockReturnValueOnce(null);
 
         let context;
         expect(() => {
@@ -378,13 +377,15 @@ describe('ActionValidationContextBuilder', () => {
           actorId,
           POSITION_COMPONENT_ID
         );
-        expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        expect(getExitByDirection).toHaveBeenCalledWith(
           'loc:current',
-          EXITS_COMPONENT_ID
+          direction,
+          mockEntityManager,
+          mockLogger
         );
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining(
-            `No valid ${EXITS_COMPONENT_ID} data (or not an array) found for location 'loc:current'`
+            `Direction '${direction}' not found in location 'loc:current' using getExitByDirection`
           )
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
@@ -395,7 +396,7 @@ describe('ActionValidationContextBuilder', () => {
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Actor '${actorId}' is at location 'loc:current'. Fetching exits for direction '${direction}'.`
+            `Actor '${actorId}' is at location 'loc:current'. Fetching exit details for direction '${direction}'.`
           )
         );
       });
@@ -413,31 +414,28 @@ describe('ActionValidationContextBuilder', () => {
         const actorCurrentLocationId = 'loc:guild';
 
         // Mock actor's position component
-        mockEntityManager.getComponentData
-          .mockImplementationOnce((entityId, componentId) => {
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
             if (entityId === actorId && componentId === POSITION_COMPONENT_ID) {
               return { locationId: actorCurrentLocationId };
             }
             return undefined;
-          })
-          // Mock location's exits component
-          .mockImplementationOnce((entityId, componentId) => {
-            if (
-              entityId === actorCurrentLocationId &&
-              componentId === EXITS_COMPONENT_ID
-            ) {
-              return [
-                { direction: 'out', target: 'loc:town', blocker: null },
-                mockExitObject,
-              ];
-            }
-            return undefined;
-          });
+          }
+        );
+
+        getExitByDirection.mockReturnValueOnce(mockExitObject);
 
         const context = builder.buildContext(
           sampleActionDefinition,
           mockActor,
           specificTargetContext
+        );
+
+        expect(getExitByDirection).toHaveBeenCalledWith(
+          actorCurrentLocationId,
+          specificDirection,
+          mockEntityManager,
+          mockLogger
         );
 
         expect(context.target).toEqual({
@@ -450,7 +448,7 @@ describe('ActionValidationContextBuilder', () => {
         });
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Found matching exit for direction '${specificDirection}'`
+            `Found matching exit for direction '${specificDirection}' via getExitByDirection:`
           ),
           mockExitObject
         );
