@@ -10,6 +10,11 @@ import { matchNames } from '../../utils/nameMatcher.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 import { getAvailableExits } from '../../utils/locationUtils.js';
+import {
+  formatSpecifyItemMessage,
+  formatNounPhraseNotFoundMessage,
+  formatNothingOfKindMessage,
+} from '../../utils/messages.js';
 // import { getEntityIdsForScopes } from './entityScopeService.js'; // Import if not injected
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -127,56 +132,7 @@ class TargetResolutionService extends ITargetResolutionService {
     );
   }
 
-  // #region Error Message Utilities
-  /**
-   * @description Generates "You need to specify which {itemType}..." messages.
-   * @param {string} itemType - Type of item (e.g., "item", "equipped item").
-   * @param {string} [domainDetails] - Optional details like "from your inventory".
-   * @returns {string} Formatted error message.
-   * @private
-   */
-  #_msgSpecifyItem(itemType, domainDetails = '') {
-    let message = `You need to specify which ${itemType}`;
-    if (domainDetails && domainDetails.trim() !== '') {
-      message += ` ${domainDetails.trim()}`;
-    }
-    message += '.';
-    return message;
-  }
-
-  /**
-   * @description Generates "You don't have/see '{nounPhrase}'..." messages.
-   * @param {string} nounPhrase - The specific item name.
-   * @param {string} context - How/where it's missing (e.g., "in your inventory", "equipped", "here").
-   * @param {object} [options] - Optional parameters.
-   * @param {string} [options.verb] - The verb to use (e.g., "have", "see").
-   * @param {boolean} [options.useAny] - Whether to prefix the nounPhrase with "any ".
-   * @returns {string} Formatted error message.
-   * @private
-   */
-  #_msgNounPhraseNotFound(
-    nounPhrase,
-    context,
-    { verb = 'have', useAny = false } = {}
-  ) {
-    const anyPrefix = useAny ? 'any ' : '';
-    let currentVerb = verb;
-    if (context.toLowerCase() === 'here') {
-      currentVerb = 'see'; // Override verb for "here" context
-    }
-    return `You don't ${currentVerb} ${anyPrefix}"${nounPhrase}" ${context}.`;
-  }
-
-  /**
-   * @description Generates "You don't have anything like that..." messages.
-   * @param {string} context - Where this applies (e.g., "in your inventory", "equipped").
-   * @returns {string} Formatted error message.
-   * @private
-   */
-  #_msgNothingOfKind(context) {
-    return `You don't have anything like that ${context}.`;
-  }
-  // #endregion Error Message Utilities
+  // Error message utilities removed in favor of shared helpers in messages.js
 
   /**
    * @private
@@ -516,7 +472,10 @@ class TargetResolutionService extends ITargetResolutionService {
     );
 
     if (finalResult.status === ResolutionStatus.NONE) {
-      finalResult.error = this.#_msgSpecifyItem('item', 'from your inventory');
+      finalResult.error = formatSpecifyItemMessage(
+        'item',
+        'from your inventory'
+      );
       finalResult.targetType = 'entity';
     } else if (finalResult.status === ResolutionStatus.NOT_FOUND) {
       finalResult.targetType = 'entity';
@@ -525,9 +484,9 @@ class TargetResolutionService extends ITargetResolutionService {
           this.#logger.debug(
             `TargetResolutionService.#_resolveInventoryDomain: No valid named item candidates found in actor '${actorEntity.id}'s inventory (original item IDs count from scope: ${itemIdsSet.size}) when searching for "${nounPhrase}".`
           );
-          finalResult.error = this.#_msgNothingOfKind('in your inventory');
+          finalResult.error = formatNothingOfKindMessage('in your inventory');
         } else {
-          finalResult.error = this.#_msgNounPhraseNotFound(
+          finalResult.error = formatNounPhraseNotFoundMessage(
             nounPhrase,
             'in your inventory'
           );
@@ -536,7 +495,7 @@ class TargetResolutionService extends ITargetResolutionService {
         this.#logger.debug(
           `TargetResolutionService.#_resolveInventoryDomain: No valid named item candidates found in actor '${actorEntity.id}'s inventory for empty nounPhrase. ItemIds count from scope: ${itemIdsSet.size}, Candidates count: ${candidates.length}`
         );
-        finalResult.error = this.#_msgNothingOfKind('in your inventory');
+        finalResult.error = formatNothingOfKindMessage('in your inventory');
       }
     }
     return finalResult;
@@ -591,7 +550,7 @@ class TargetResolutionService extends ITargetResolutionService {
     );
 
     if (finalResult.status === ResolutionStatus.NONE) {
-      finalResult.error = this.#_msgSpecifyItem('equipped item');
+      finalResult.error = formatSpecifyItemMessage('equipped item');
       finalResult.targetType = 'entity';
     } else if (finalResult.status === ResolutionStatus.NOT_FOUND) {
       finalResult.targetType = 'entity';
@@ -600,12 +559,12 @@ class TargetResolutionService extends ITargetResolutionService {
           this.#logger.debug(
             `TargetResolutionService.#_resolveEquipment: Searched for "${nounPhrase}", but no nameable/valid candidates found from ${equippedItemIdsSet.size} equipped item IDs (from scope).`
           );
-          finalResult.error = this.#_msgNothingOfKind('equipped');
+          finalResult.error = formatNothingOfKindMessage('equipped');
         } else {
           this.#logger.debug(
             `TargetResolutionService.#_resolveEquipment: Searched for "${nounPhrase}". Candidates count: ${candidates.length}, initial item IDs from scope: ${equippedItemIdsSet.size}. No match found.`
           );
-          finalResult.error = this.#_msgNounPhraseNotFound(
+          finalResult.error = formatNounPhraseNotFoundMessage(
             nounPhrase,
             'equipped'
           );
@@ -614,7 +573,7 @@ class TargetResolutionService extends ITargetResolutionService {
         this.#logger.debug(
           `TargetResolutionService.#_resolveEquipment: No nounPhrase and no nameable candidates found. Initial item IDs from scope: ${equippedItemIdsSet.size}.`
         );
-        finalResult.error = this.#_msgNothingOfKind('equipped');
+        finalResult.error = formatNothingOfKindMessage('equipped');
       }
     }
     return finalResult;
@@ -668,7 +627,9 @@ class TargetResolutionService extends ITargetResolutionService {
         targetType: isSearchingSpecific ? 'entity' : 'none',
         targetId: null,
         error: isSearchingSpecific
-          ? this.#_msgNounPhraseNotFound(nounPhrase, 'here', { useAny: true })
+          ? formatNounPhraseNotFoundMessage(nounPhrase, 'here', {
+              useAny: true,
+            })
           : 'There is nothing here.',
       };
     }
@@ -690,7 +651,9 @@ class TargetResolutionService extends ITargetResolutionService {
         targetType: isSearchingSpecific ? 'entity' : 'none',
         targetId: null,
         error: isSearchingSpecific
-          ? this.#_msgNounPhraseNotFound(nounPhrase, 'here', { useAny: true })
+          ? formatNounPhraseNotFoundMessage(nounPhrase, 'here', {
+              useAny: true,
+            })
           : 'There is nothing else of interest here.',
       };
     }
@@ -705,11 +668,11 @@ class TargetResolutionService extends ITargetResolutionService {
     );
 
     if (finalResult.status === ResolutionStatus.NONE) {
-      finalResult.error = this.#_msgSpecifyItem('item', 'here');
+      finalResult.error = formatSpecifyItemMessage('item', 'here');
       finalResult.targetType = 'entity';
     } else if (finalResult.status === ResolutionStatus.NOT_FOUND) {
       finalResult.targetType = 'entity';
-      finalResult.error = this.#_msgNounPhraseNotFound(nounPhrase, 'here'); // No useAny here, direct not found.
+      finalResult.error = formatNounPhraseNotFoundMessage(nounPhrase, 'here'); // No useAny here, direct not found.
     }
     return finalResult;
   }
