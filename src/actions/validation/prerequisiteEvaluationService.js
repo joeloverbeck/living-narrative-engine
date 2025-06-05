@@ -1,9 +1,6 @@
 // src/actions/validation/prerequisiteEvaluationService.js
 
-// --- START: Refactor-AVS-3.3.1 ---
-// No change needed here for 3.3.2, builder already imported
-import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
-// --- END: Refactor-AVS-3.3.1 ---
+import { validateDependency } from '../../utils/validationUtils.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -36,11 +33,10 @@ export class PrerequisiteEvaluationService {
   /**
    * Creates an instance of PrerequisiteEvaluationService.
    *
-   * @param {{
-   * logger: ILogger,
-   * jsonLogicEvaluationService: JsonLogicEvaluationService,
-   * actionValidationContextBuilder: ActionValidationContextBuilder // Added in 3.3.1
-   * }} dependencies - The required services.
+   * @param {object} dependencies - The required services.
+   * @param {ILogger} dependencies.logger - Logger instance.
+   * @param {JsonLogicEvaluationService} dependencies.jsonLogicEvaluationService - Service for JsonLogic evaluation.
+   * @param {ActionValidationContextBuilder} dependencies.actionValidationContextBuilder - Builder for evaluation contexts.
    * @throws {Error} If dependencies are missing or invalid.
    */
   constructor({
@@ -48,33 +44,49 @@ export class PrerequisiteEvaluationService {
     jsonLogicEvaluationService,
     actionValidationContextBuilder,
   }) {
-    // Added actionValidationContextBuilder in 3.3.1
-    // --- Constructor Guards ---
-    // No changes needed here for 3.3.2
-    if (!logger?.debug || !logger?.error || !logger.warn) {
-      throw new Error(
-        'PrerequisiteEvaluationService requires a valid ILogger instance.'
+    try {
+      validateDependency(
+        logger,
+        'PrerequisiteEvaluationService: logger',
+        console,
+        {
+          requiredMethods: ['debug', 'error', 'warn', 'info'],
+        }
       );
+      this.#logger = logger;
+    } catch (e) {
+      const errorMsg = `PrerequisiteEvaluationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
+      // eslint-disable-next-line no-console
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
-    if (!jsonLogicEvaluationService?.evaluate) {
-      throw new Error(
-        'PrerequisiteEvaluationService requires a valid JsonLogicEvaluationService instance.'
-      );
-    }
-    // --- START: Refactor-AVS-3.3.1 ---
-    if (!actionValidationContextBuilder?.buildContext) {
-      // Added Guard in 3.3.1
-      throw new Error(
-        'PrerequisiteEvaluationService requires a valid ActionValidationContextBuilder instance.'
-      );
-    }
-    // --- END: Refactor-AVS-3.3.1 ---
 
-    this.#logger = logger;
+    try {
+      validateDependency(
+        jsonLogicEvaluationService,
+        'PrerequisiteEvaluationService: jsonLogicEvaluationService',
+        this.#logger,
+        {
+          requiredMethods: ['evaluate'],
+        }
+      );
+      validateDependency(
+        actionValidationContextBuilder,
+        'PrerequisiteEvaluationService: actionValidationContextBuilder',
+        this.#logger,
+        {
+          requiredMethods: ['buildContext'],
+        }
+      );
+    } catch (e) {
+      this.#logger.error(
+        `PrerequisiteEvaluationService Constructor: Dependency validation failed. Error: ${e.message}`
+      );
+      throw e;
+    }
+
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
-    // --- START: Refactor-AVS-3.3.1 ---
-    this.#actionValidationContextBuilder = actionValidationContextBuilder; // Added assignment in 3.3.1
-    // --- END: Refactor-AVS-3.3.1 ---
+    this.#actionValidationContextBuilder = actionValidationContextBuilder;
 
     this.#logger.info(
       'PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder).'
