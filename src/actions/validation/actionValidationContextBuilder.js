@@ -15,6 +15,7 @@ import {
   EXITS_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../constants/componentIds.js'; // Adjust path if necessary
+import { validateDependency } from '../../utils/validationUtils.js';
 // --- END FIX ---
 
 /**
@@ -36,23 +37,40 @@ export class ActionValidationContextBuilder {
    * @throws {Error} If dependencies are missing or invalid (e.g., missing required methods).
    */
   constructor({ entityManager, logger }) {
-    if (
-      !entityManager?.getEntityInstance ||
-      typeof entityManager.getComponentData !== 'function'
-    ) {
-      // Added check for getComponentData
-      throw new Error(
-        'ActionValidationContextBuilder requires a valid EntityManager with getEntityInstance and getComponentData methods.'
+    // 1. Validate logger dependency first
+    try {
+      validateDependency(
+        logger,
+        'ActionValidationContextBuilder: logger',
+        console,
+        {
+          requiredMethods: ['debug', 'error', 'warn'],
+        }
       );
-    }
-    if (!logger?.debug || !logger?.error || !logger.warn) {
-      throw new Error(
-        'ActionValidationContextBuilder requires a valid ILogger instance.'
-      );
+      this.#logger = logger;
+    } catch (e) {
+      const errorMsg = `ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
-    this.#entityManager = entityManager;
-    this.#logger = logger;
+    // 2. Validate entityManager dependency using the validated logger
+    try {
+      validateDependency(
+        entityManager,
+        'ActionValidationContextBuilder: entityManager',
+        this.#logger,
+        { requiredMethods: ['getEntityInstance', 'getComponentData'] }
+      );
+      this.#entityManager = entityManager;
+    } catch (e) {
+      this.#logger.error(
+        `ActionValidationContextBuilder Constructor: Dependency validation failed for entityManager. Error: ${e.message}`
+      );
+      throw e;
+    }
+
+    // this.#logger.info('ActionValidationContextBuilder initialized.'); // Optional init log
   }
 
   /**
