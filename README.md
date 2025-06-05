@@ -18,6 +18,39 @@ adventure games and immersive simulations. The core philosophy is **extreme modd
 The long-term vision includes integrating AI agents (LLMs) to drive dynamic NPC interactions and behaviours, creating
 truly living narratives.
 
+## Memory Components
+
+We now have three distinct memory-related components attachable to any core:actor. Below is a concise reference:
+
+core:short_term_memory
+
+Purpose: Stores ephemeral, first-person internal monologue (e.g., “I can’t believe they did that!”).  
+Lifecycle: Capped by maxEntries (default 10).  
+Included in Prompt: Under “Your Thoughts”.  
+Schema ID: core:short_term_memory → `./data/mods/core/short_term_memory.component.json`
+
+core:perception_log
+
+Purpose: Chronological log of events the character perceives (e.g., “Player X entered the room”).  
+Lifecycle: Capped by maxEntries (default 50).  
+Included in Prompt: Under “Perception Log”.  
+Schema ID: core:perception_log → `./data/mods/core/perception_log.component.json`
+
+core:notes
+
+Purpose: Persistent “mental notes”—important items or facts the character deems crucial (e.g., “Joel Overbeck is
+untrustworthy”).  
+Lifecycle: Uncapped; duplicates filtered out on merge.  
+Included in Prompt: Under “Important Things to Remember” (only if non-empty).  
+Schema ID: core:notes → `./data/mods/core/notes.component.json`
+
+core:goals
+
+Purpose: Short- or long-term goals defined by designers (not LLM-generated).  
+Lifecycle: Uncapped; only designer-driven.  
+Included in Prompt: Under “Your Goals” (only if non-empty).  
+Schema ID: core:goals → `./data/mods/core/goals.component.json`
+
 ## Getting Started
 
 This project primarily runs in the browser using JavaScript, with a Node.js-based proxy server for handling requests to
@@ -31,42 +64,56 @@ Ensure you have Node.js and npm installed. You can download them from [https://n
 
 1. **Clone the repository (if you haven't already)**
 
+   ```bash
    git clone https://github.com/joeloverbeck/living-narrative-engine.git
    cd living-narrative-engine
+   ```
 
 2. **Install root project dependencies**
    Navigate to the root directory of the cloned project (e.g., `living-narrative-engine`) and run:
 
+   ```bash
    npm install
+   ```
 
 3. **Install LLM Proxy Server dependencies**
    Navigate to the `llm-proxy-server` subdirectory within the project:
 
+   ```bash
    cd llm-proxy-server
+   ```
 
    Then, install its specific dependencies:
 
+   ```bash
    npm install
+   ```
 
    Once done, return to the root project directory:
 
+   ```bash
    cd ..
+   ```
 
 ### Running locally
 
-To run the application, you will need to start two separate processes in two different command line terminals or "
-windows":
+To run the application, you will need to start two separate processes in two different command line terminals or
+"windows":
 
 1. **Start the LLM Proxy Server:**
 
 - Open a new command line terminal.
 - Navigate to the `llm-proxy-server` directory:
 
+  ```bash
   cd path/to/your/project/living-narrative-engine/llm-proxy-server
+  ```
 
 - Run the development server:
 
+  ```bash
   npm run dev
+  ```
 
   This server will handle API requests related to LLM interactions. Keep this terminal window open.
 
@@ -75,11 +122,15 @@ windows":
 - Open a separate new command line terminal.
 - Navigate to the root directory of the project (e.g., `living-narrative-engine`):
 
+  ```bash
   cd path/to/your/project/living-narrative-engine
+  ```
 
 - Run the main application:
 
+  ```bash
   npm run start
+  ```
 
   This will typically open the application in your default web browser (e.g., at a URL like `http://localhost:3000` or
   similar, depending on your project's `start` script configuration). Check the terminal output for the exact URL.
@@ -107,16 +158,14 @@ named `game.json`.
 
 The `game.json` file must be a JSON object containing a single required property: `mods`.
 
-- `mods`: An array of unique strings. Each string is the identifier (ID) of a mod to be loaded.
-
-  {
-  "mods": [
-  "core",
-  "textUI",
-  "base_adventure_mechanics",
-  "my_custom_story_mod"
-  ]
-  }
+    {
+      "mods": [
+        "core",
+        "textUI",
+        "base_adventure_mechanics",
+        "my_custom_story_mod"
+      ]
+    }
 
 **Load Order / Priority:**
 
@@ -127,8 +176,8 @@ implementation).
 
 **Schema:**
 
-The formal structure of this file is defined by the game.schema.json schema file. The engine validates game.json against
-this schema during startup. You can refer to data/schemas/game.schema.json for the precise definition.
+The formal structure of this file is defined by the `game.schema.json` schema file. The engine validates `game.json`
+against this schema during startup. You can refer to `data/schemas/game.schema.json` for the precise definition.
 
 ## Dependency & Conflict Validation
 
@@ -154,10 +203,12 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
 - **Reasoning:** The mod explicitly requires functionality or content from the missing dependency. Proceeding would
   likely lead to runtime errors.
 - **Example:**
-  - `ModA/mod.manifest.json`:
-    `{ "id": "ModA", "version": "1.0.0", "dependencies": [{ "modId": "CoreUtils", "version": ">=1.2.0" }] }`
-  - `game.json`: `{ "mods": ["ModA", "AnotherMod"] }` (Missing "CoreUtils")
-  - **Outcome:** Loading halts with an error indicating "ModA" requires missing dependency "CoreUtils".
+    - `ModA/mod.manifest.json`:
+      ```json
+      { "id": "ModA", "version": "1.0.0", "dependencies": [{ "modId": "CoreUtils", "version": ">=1.2.0" }] }
+      ```
+    - `game.json`: `{ "mods": ["ModA", "AnotherMod"] }` (Missing "CoreUtils")
+    - **Outcome:** Loading halts with an error indicating "ModA" requires missing dependency "CoreUtils".
 
 **Rule D2: Version Mismatch (Incompatible Version)**
 
@@ -168,12 +219,14 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
   version (too old or potentially too new if explicitly restricted) can cause API incompatibilities or unexpected
   behavior.
 - **Example:**
-  - `ModB/mod.manifest.json`:
-    `{ "id": "ModB", "version": "2.0.0", "dependencies": [{ "modId": "CoreUtils", "version": "^1.3.0" }] }` (Requires
-    CoreUtils >=1.3.0 and <2.0.0)
-  - `CoreUtils/mod.manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
-  - `game.json`: `{ "mods": ["CoreUtils", "ModB"] }`
-  - **Outcome:** Loading halts. Error: "ModB" requires "CoreUtils" version "^1.3.0", but found "1.2.5".
+    - `ModB/mod.manifest.json`:
+      ```json
+      { "id": "ModB", "version": "2.0.0", "dependencies": [{ "modId": "CoreUtils", "version": "^1.3.0" }] }
+      ```
+      (Requires CoreUtils >=1.3.0 and <2.0.0)
+    - `CoreUtils/mod.manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
+    - `game.json`: `{ "mods": ["CoreUtils", "ModB"] }`
+    - **Outcome:** Loading halts. Error: "ModB" requires "CoreUtils" version "^1.3.0", but found "1.2.5".
 
 **Rule D3: Circular Dependency**
 
@@ -182,9 +235,9 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
 - **Severity:** **FATAL**
 - **Reasoning:** Circular dependencies create an unresolvable load order and often indicate a design flaw in the mods.
 - **Example:**
-  - `ModX/mod.manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
-  - `ModY/mod.manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
-  - **Outcome:** Loading halts with an error detecting a circular dependency between "ModX" and "ModY".
+    - `ModX/mod.manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
+    - `ModY/mod.manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
+    - **Outcome:** Loading halts with an error detecting a circular dependency between "ModX" and "ModY".
 
 ### Conflict Rules
 
@@ -200,12 +253,14 @@ this mod is known to be incompatible with. Version ranges _can_ be specified but
   overriding the same critical data in incompatible ways, causing game-breaking bugs). Respecting this declaration
   prevents known unstable states.
 - **Example:**
-  - `AwesomeSwords/mod.manifest.json`:
-    `{ "id": "AwesomeSwords", "version": "1.0.0", "conflicts": [{ "modId": "SuperSwords" }] }`
-  - `SuperSwords/mod.manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
-  - `game.json`: `{ "mods": ["AwesomeSwords", "SuperSwords"] }`
-  - **Outcome:** Loading halts. Error: Detected conflict between "AwesomeSwords" and "SuperSwords" as declared by "
-    AwesomeSwords".
+    - `AwesomeSwords/mod.manifest.json`:
+      ```json
+      { "id": "AwesomeSwords", "version": "1.0.0", "conflicts": [{ "modId": "SuperSwords" }] }
+      ```
+    - `SuperSwords/mod.manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
+    - `game.json`: `{ "mods": ["AwesomeSwords", "SuperSwords"] }`
+    - **Outcome:** Loading halts. Error: Detected conflict between "AwesomeSwords" and "SuperSwords" as declared by
+      "AwesomeSwords".
 
 **Rule C2: Duplicate Mod ID Loaded**
 
@@ -217,10 +272,10 @@ this mod is known to be incompatible with. Version ranges _can_ be specified but
   overrides or data corruption. The user must resolve the ambiguity by removing or renaming one of the sources. Note:
   This rule applies _before_ dependency/conflict checks based on the final list of loaded mods.
 - **Example:**
-  - Directory `./mods/MyMod/mod.manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
-  - Directory `./mods/AnotherAttempt/mod.manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
-  - `game.json`: `{ "mods": ["MyMod", "AnotherAttempt"] }` (Assuming both directories correspond to these IDs)
-  - **Outcome:** Loading halts. Error: Duplicate mod ID "mymod" found from sources "MyMod" and "AnotherAttempt".
+    - Directory `./mods/MyMod/mod.manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
+    - Directory `./mods/AnotherAttempt/mod.manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
+    - `game.json`: `{ "mods": ["MyMod", "AnotherAttempt"] }` (Assuming both directories correspond to these IDs)
+    - **Outcome:** Loading halts. Error: Duplicate mod ID "mymod" found from sources "MyMod" and "AnotherAttempt".
 
 ### Engine Compatibility
 
@@ -231,15 +286,15 @@ Mods can specify the range of engine versions they are compatible with using the
 - **Format:** A string representing a Semantic Versioning (SemVer) range (e.g., `"^1.2.0"`, `">=1.0.0 <2.0.0"`,
   `"1.5.x"`). See the [npm semver documentation](https://docs.npmjs.com/cli/v7/using-npm/semver) for details on range
   syntax.
-- **Behavior:** During startup, the engine checks its own version (imported as `ENGINE_VERSION` in the code) against the
-  `gameVersion` range specified by _each_ loaded mod that includes this field.
+- **Behavior:** During startup, the engine checks its own version (`ENGINE_VERSION`) against the `gameVersion` range
+  specified by _each_ loaded mod that includes this field.
 - **Validation:**
-  - If a mod specifies a `gameVersion` range, and the `ENGINE_VERSION` does _not_ satisfy that range, the engine will
-    **halt startup** with a fatal `ModDependencyError`, listing all incompatible mods.
-  - If a mod specifies a `gameVersion` that is not a valid SemVer range string (e.g., misspelled, incorrect type), the
-    engine will **halt startup** with a fatal `TypeError`.
-  - If a mod _omits_ the `gameVersion` field, or sets it to `null`, an empty string (`""`), or only whitespace, it is
-    **skipped** for this check and will not cause an engine compatibility error.
+    - If a mod specifies a `gameVersion` range, and the `ENGINE_VERSION` does _not_ satisfy that range, the engine will
+      **halt startup** with a fatal `ModDependencyError`, listing all incompatible mods.
+    - If a mod specifies a `gameVersion` that is not a valid SemVer range string (e.g., misspelled, incorrect type),
+      the engine will **halt startup** with a fatal `TypeError`.
+    - If a mod _omits_ the `gameVersion` field, or sets it to `null`, an empty string (`""`), or only whitespace, it is
+      **skipped** for this check and will not cause an engine compatibility error.
 
 **Rule E1: Engine Version Incompatibility**
 
@@ -249,15 +304,18 @@ Mods can specify the range of engine versions they are compatible with using the
 - **Reasoning:** The mod author expects specific engine features or behavior present only within the declared version
   range. Running outside this range risks runtime errors or incorrect functionality.
 - **Example:**
-  - `SomeMod/mod.manifest.json`: `{ "id": "SomeMod", "version": "1.0.0", "gameVersion": "^1.2.0" }` (Requires engine >
-    =1.2.0 and <2.0.0)
-  - Current Engine Version (`ENGINE_VERSION`): `1.1.5`
-  - **Outcome:** Loading halts. Error: "SomeMod" incompatible with engine v1.1.5 (requires '^1.2.0').
+    - `SomeMod/mod.manifest.json`:
+      ```json
+      { "id": "SomeMod", "version": "1.0.0", "gameVersion": "^1.2.0" }
+      ```
+      (Requires engine >=1.2.0 and <2.0.0)
+    - Current Engine Version (`ENGINE_VERSION`): `1.1.5`
+    - **Outcome:** Loading halts. Error: "SomeMod" incompatible with engine v1.1.5 (requires '^1.2.0').
 
 ### Validation Summary Table
 
 | Rule Code | Description                     | Severity | Notes                                                                    |
-| :-------- | :------------------------------ | :------- | :----------------------------------------------------------------------- |
+|:----------|:--------------------------------|:---------|:-------------------------------------------------------------------------|
 | **D1**    | Missing Dependency              | FATAL    | Cannot proceed without required content/functionality.                   |
 | **D2**    | Incompatible Dependency Version | FATAL    | Potential for API breaks or incorrect behavior.                          |
 | **D3**    | Circular Dependency             | FATAL    | Unresolvable load order.                                                 |
@@ -276,9 +334,7 @@ loaders/validators but are included here for completeness as fatal loading error
 Before committing new mods or deploying the game you can run a standalone
 validation step:
 
-```bash
-npm run validate-mods
-```
+    npm run validate-mods
 
 This command scans every folder under `data/mods/`, validates each manifest,
 checks declared dependencies and conflicts, and verifies that all content files
@@ -287,16 +343,16 @@ the console; otherwise you will see **“All mods passed validation.”**
 
 ### Documentation ▶️
 
-**JSON Logic – Composite Operators ➜ docs/json-logic/composite-logical-operators.md**
+**JSON Logic – Composite Operators ➜ docs/json-logic/composite-logical-operators.md**  
 Quick reference for and, or, and not/!, including edge-cases and examples.
 
-**Full JSON Logic Usage Guide ➜ docs/json-logic/json-logic-usage.md**
+**Full JSON Logic Usage Guide ➜ docs/json-logic/json-logic-usage.md**  
 Complete operator list, context explanation, and many ready-made patterns.
 
-**Mod Manifest Loader Usage ➜ docs/mods/modManifestLoader.md**
+**Mod Manifest Loader Usage ➜ docs/mods/modManifestLoader.md**  
 How to use the ModManifestLoader service and handle potential errors.
 
 ### License
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
-See the LICENSE file for full details.
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.  
+See the LICENSE file for full details. 
