@@ -5,8 +5,8 @@
 //  @description
 //  Centralised factory and runtime registry for all Entity instances. Handles
 //  validation of component payloads, automatic injection of required defaults
-//  (e.g. `core:short_term_memory`, `core:notes`) and co-ordination with the
-//  spatial-index service.
+//  (e.g. `core:short_term_memory`, `core:notes`, `core:goals`) and co-ordination
+//  with the spatial-index service.
 //
 //  @module EntityManager
 //  @since   0.3.0
@@ -38,7 +38,7 @@ import { IEntityManager } from '../interfaces/IEntityManager.js';
 /* -------------------------------------------------------------------------- */
 
 /**
- * Normalise any validator return shape to a simple `true | false`.
+ * Normalize any validator return shape to a simple `true | false`.
  *
  * Legacy validators may return `undefined`, `null`, or a bare boolean. Newer
  * validators should return `{ isValid: boolean, errors?: any }`.
@@ -107,7 +107,7 @@ function assertInterface(name, instance, methods) {
  * Runtime manager responsible for:
  *  • Instantiating entities from definitions
  *  • Validating and mutating component payloads
- *  • Injecting engine-level default components
+ *  • Injecting engine-level default components (STM, notes, and goals)
  *  • Tracking active entities and their primary instances
  *  • Propagating position changes to the spatial index
  */
@@ -142,6 +142,7 @@ class EntityManager extends IEntityManager {
       'addEntity',
       'removeEntity',
       'updateEntityLocation',
+      'clearIndex',
     ]);
 
     this.#registry = registry;
@@ -192,13 +193,14 @@ class EntityManager extends IEntityManager {
   }
 
   /**
-   * Inject default components required by the engine (STM, notes).
+   * Inject default components required by the engine (STM, notes, and goals).
    *
    * @private
    * @param {Entity} entity
    * @param {string} instanceId
    */
   #injectDefaultComponents(entity, instanceId) {
+    // If it's an actor and SHORT_TERM_MEMORY is missing, add it.
     if (
       entity.hasComponent(ACTOR_COMPONENT_ID) &&
       !entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)
@@ -215,6 +217,7 @@ class EntityManager extends IEntityManager {
       );
     }
 
+    // If it's an actor and NOTES is missing, add it.
     if (
       entity.hasComponent(ACTOR_COMPONENT_ID) &&
       !entity.hasComponent(NOTES_COMPONENT_ID)
@@ -228,6 +231,24 @@ class EntityManager extends IEntityManager {
       entity.addComponent(NOTES_COMPONENT_ID, defaultNotes);
       this.#logger.debug(
         `createEntityInstance: default 'core:notes' injected into ${instanceId}.`
+      );
+    }
+
+    // If it's an actor and GOALS is missing, add it.
+    // @description Adds a default `core:goals` with an empty array when absent.
+    if (
+      entity.hasComponent(ACTOR_COMPONENT_ID) &&
+      !entity.hasComponent('core:goals')
+    ) {
+      const defaultGoals = { goals: [] };
+      this.#validateAndClone(
+        'core:goals',
+        defaultGoals,
+        'Default core:goals validation failed.'
+      );
+      entity.addComponent('core:goals', defaultGoals);
+      this.#logger.debug(
+        `createEntityInstance: default 'core:goals' injected into ${instanceId}.`
       );
     }
   }
@@ -312,7 +333,7 @@ class EntityManager extends IEntityManager {
         entity.addComponent(componentTypeId, dataClone);
       }
 
-      /* --- default injections --------------------------------------- */
+      /* --- default injections (STM, notes, goals) ------------------------------- */
       this.#injectDefaultComponents(entity, actualInstanceId);
 
       /* --- bookkeeping --------------------------------------------- */

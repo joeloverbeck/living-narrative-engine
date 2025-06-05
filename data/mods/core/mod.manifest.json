@@ -24,7 +24,8 @@
       "speech_patterns.component.json",
       "portrait.component.json",
       "short_term_memory.component.json",
-      "notes.component.json"
+      "notes.component.json",
+      "goals.component.json"
     ],
     "characters": [],
     "items": [],
