@@ -1,4 +1,4 @@
-// tests/services/AIPromptContentProvider.test.js
+// tests/prompting/AIPromptContentProvider.test.js
 // --- FILE START ---
 
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';

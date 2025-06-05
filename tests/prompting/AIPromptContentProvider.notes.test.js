@@ -1,4 +1,4 @@
-// tests/services/AIPromptContentProvider.test.js
+// tests/prompting/AIPromptContentProvider.notes.test.js
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 

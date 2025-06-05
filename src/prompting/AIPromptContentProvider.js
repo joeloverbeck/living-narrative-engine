@@ -8,17 +8,6 @@
 /** @typedef {import('../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 
-/**
- * @typedef {object} RawPerceptionLogEntry
- * @description Represents a single perception log entry from game state or entity component.
- * @property {string} [descriptionText] - The textual description of the perception.
- * @property {string} [perceptionType] - The type/category of perception.
- * @property {string} [timestamp] - The timestamp when the perception occurred.
- * @property {string} [eventId] - The associated event ID.
- * @property {string} [actorId] - The actor ID related to this perception.
- * @property {string} [targetId] - The target ID related to this perception.
- */
-
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
 import {
@@ -234,23 +223,32 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         ? memoryComp.thoughts.map((t) => t.text).filter(Boolean)
         : [];
 
-      // 5. Pull notes component → notesArray
+      // 5. Pull notes component → notesArray (filter out malformed entries)
       const notesComp = componentsMap['core:notes'];
       promptData.notesArray = Array.isArray(notesComp?.notes)
         ? notesComp.notes
-            .map((n) => ({
-              text: n.text,
-              timestamp: n.timestamp,
-            }))
-            .filter((item) => item.text && item.timestamp)
+            .filter(
+              (n) =>
+                typeof n.text === 'string' &&
+                n.text.trim().length > 0 &&
+                typeof n.timestamp === 'string' &&
+                n.timestamp.trim().length > 0
+            )
+            .map((n) => ({ text: n.text, timestamp: n.timestamp }))
         : [];
 
-      // 6. Pull goals component → goalsArray
+      // 6. Pull goals component → goalsArray (filter out malformed entries)
       const goalsComp = componentsMap['core:goals'];
       promptData.goalsArray = Array.isArray(goalsComp?.goals)
         ? goalsComp.goals
+            .filter(
+              (g) =>
+                typeof g.text === 'string' &&
+                g.text.trim().length > 0 &&
+                typeof g.timestamp === 'string' &&
+                g.timestamp.trim().length > 0
+            )
             .map((g) => ({ text: g.text, timestamp: g.timestamp }))
-            .filter((item) => item.text && item.timestamp)
         : [];
       this.#logger.debug(
         `AIPromptContentProvider.getPromptData: goalsArray contains ${promptData.goalsArray.length} entries.`
