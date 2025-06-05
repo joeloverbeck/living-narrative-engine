@@ -92,7 +92,7 @@ describe('ActionValidationContextBuilder', () => {
           logger: mockLogger,
         })
     ).toThrow(
-      'ActionValidationContextBuilder requires a valid EntityManager with getEntityInstance and getComponentData methods.'
+      'Missing required dependency: ActionValidationContextBuilder: entityManager.'
     );
     const incompleteEntityManager = { getEntityInstance: jest.fn() }; // Missing getComponentData
     expect(
@@ -102,7 +102,7 @@ describe('ActionValidationContextBuilder', () => {
           logger: mockLogger,
         })
     ).toThrow(
-      'ActionValidationContextBuilder requires a valid EntityManager with getEntityInstance and getComponentData methods.'
+      "Invalid or missing method 'getComponentData' on dependency 'ActionValidationContextBuilder: entityManager'."
     );
     const anotherIncompleteEntityManager = { getComponentData: jest.fn() }; // Missing getEntityInstance
     expect(
@@ -112,7 +112,7 @@ describe('ActionValidationContextBuilder', () => {
           logger: mockLogger,
         })
     ).toThrow(
-      'ActionValidationContextBuilder requires a valid EntityManager with getEntityInstance and getComponentData methods.'
+      "Invalid or missing method 'getEntityInstance' on dependency 'ActionValidationContextBuilder: entityManager'."
     );
     // --- END FIX ---
   });
@@ -131,7 +131,7 @@ describe('ActionValidationContextBuilder', () => {
           logger: null,
         })
     ).toThrow(
-      'ActionValidationContextBuilder requires a valid ILogger instance.'
+      'ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: Missing required dependency: ActionValidationContextBuilder: logger.'
     );
     expect(
       () =>
@@ -140,7 +140,7 @@ describe('ActionValidationContextBuilder', () => {
           logger: { debug: jest.fn(), error: jest.fn() }, // Missing warn
         })
     ).toThrow(
-      'ActionValidationContextBuilder requires a valid ILogger instance.'
+      "ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: Invalid or missing method 'warn' on dependency 'ActionValidationContextBuilder: logger'."
     );
   });
 
