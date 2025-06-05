@@ -1,4 +1,5 @@
-// src/services/AIPromptContentProvider.js
+// src/prompting/AIPromptContentProvider.js
+
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
 /** @typedef {import('../turns/dtos/AIGameStateDTO.js').ActorPromptDataDTO} ActorPromptDataDTO */
@@ -8,14 +9,14 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 
 /**
- * @typedef {object} RawPerceptionLogEntry
- * @description Represents a single entry as it might come from the game state or entity component.
- * @property {string} [descriptionText]
- * @property {string} [perceptionType]
- * @property {string} [timestamp]
- * @property {string} [eventId]
- * @property {string} [actorId]
- * @property {string} [targetId]
+ * @typedef {Object} RawPerceptionLogEntry
+ * @description Represents a single perception log entry from game state or entity component.
+ * @property {string} [descriptionText] - The textual description of the perception.
+ * @property {string} [perceptionType] - The type/category of perception.
+ * @property {string} [timestamp] - The timestamp when the perception occurred.
+ * @property {string} [eventId] - The associated event ID.
+ * @property {string} [actorId] - The actor ID related to this perception.
+ * @property {string} [targetId] - The target ID related to this perception.
  */
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
@@ -55,11 +56,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #gameStateValidationService;
 
   /**
-   * @param {object} dependencies
-   * @param {ILogger} dependencies.logger
-   * @param {IPromptStaticContentService} dependencies.promptStaticContentService
-   * @param {IPerceptionLogFormatter} dependencies.perceptionLogFormatter
-   * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService
+   * @param {object} dependencies - Object containing required services.
+   * @param {ILogger} dependencies.logger - Logger instance for logging.
+   * @param {IPromptStaticContentService} dependencies.promptStaticContentService - Service for static prompt content.
+   * @param {IPerceptionLogFormatter} dependencies.perceptionLogFormatter - Service to format perception logs.
+   * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService - Service to validate game state for prompting.
+   * @returns {void}
    */
   constructor({
     logger,
@@ -95,12 +97,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * @private
    * Helper method to format a list of items into a string segment for the prompt.
-   * @param {string} title
-   * @param {Array<*>} items
-   * @param {function(*): string} itemFormatter
-   * @param {string} emptyMessage
-   * @param {ILogger} logger
-   * @returns {string}
+   * @param {string} title - Section title.
+   * @param {Array<*>} items - Array of items to format.
+   * @param {function(*): string} itemFormatter - Function to convert each item to a string.
+   * @param {string} emptyMessage - Message to show if items is empty.
+   * @param {ILogger} logger - Logger instance for debugging.
+   * @returns {string} Formatted section string.
    */
   _formatListSegment(title, items, itemFormatter, emptyMessage, logger) {
     const cleanedTitle = title.replace(/[:\n]*$/, '');
@@ -125,9 +127,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * @private
    * Helper method to format an optional attribute if it has a non-empty value.
-   * @param {string} label
-   * @param {string | undefined | null} value
-   * @returns {string | null}
+   * @param {string} label - The label for the attribute.
+   * @param {string | undefined | null} value - The attribute value.
+   * @returns {string | null} Formatted attribute or null if empty.
    */
   _formatOptionalAttribute(label, value) {
     if (value && typeof value === 'string') {
@@ -142,9 +144,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * Validates if the provided AIGameStateDTO contains the critical information.
    *
-   * @param {AIGameStateDTO | null | undefined} gameStateDto
-   * @param {ILogger} logger
-   * @returns {{isValid: boolean, errorContent: string | null}}
+   * @param {AIGameStateDTO | null | undefined} gameStateDto - The game state DTO to validate.
+   * @param {ILogger} logger - Logger instance for logging validation issues.
+   * @returns {{isValid: boolean, errorContent: string | null}} Result of validation.
    */
   validateGameStateForPrompting(gameStateDto, logger) {
     this.#logger.debug(
@@ -156,9 +158,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   /**
    * Assembles the complete PromptData object required for constructing an LLM prompt.
    *
-   * @param {AIGameStateDTO} gameStateDto
-   * @param {ILogger} logger
-   * @returns {Promise<PromptData>}
+   * @param {AIGameStateDTO} gameStateDto - The comprehensive game state for the current AI actor.
+   * @param {ILogger} logger - Logger instance for logging during the assembly process.
+   * @returns {Promise<PromptData>} A promise that resolves to the fully assembled PromptData object.
    * @throws {Error} If critical information is missing.
    */
   async getPromptData(gameStateDto, logger) {
@@ -243,7 +245,18 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
             .filter((item) => item.text && item.timestamp)
         : [];
 
-      // 6. Wrap-up / logging
+      // 6. Pull goals component → goalsArray
+      const goalsComp = componentsMap['core:goals'];
+      promptData.goalsArray = Array.isArray(goalsComp?.goals)
+        ? goalsComp.goals
+            .map((g) => ({ text: g.text, timestamp: g.timestamp }))
+            .filter((item) => item.text && item.timestamp)
+        : [];
+      this.#logger.debug(
+        `AIPromptContentProvider.getPromptData: goalsArray contains ${promptData.goalsArray.length} entries.`
+      );
+
+      // 7. Wrap-up / logging
       this.#logger.info(
         'AIPromptContentProvider.getPromptData: PromptData assembled successfully.'
       );
@@ -273,9 +286,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
-   * @param {AIGameStateDTO} gameState
-   * @param {ILogger | undefined} logger
-   * @returns {string}
+   * @param {AIGameStateDTO} gameState - The game state DTO.
+   * @param {ILogger} [logger] - Optional logger instance.
+   * @returns {string} Formatted character persona content.
    */
   getCharacterPersonaContent(gameState, logger) {
     this.#logger.debug(
@@ -294,7 +307,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
     const characterInfo = [];
     characterInfo.push(
-      `YOU ARE ${actorPromptData.name || DEFAULT_FALLBACK_CHARACTER_NAME}.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.`
+      `YOU ARE ${actorPromptData.name || DEFAULT_FALLBACK_CHARACTER_NAME}\.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.`
     );
 
     if (actorPromptData.description) {
@@ -341,9 +354,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
-   * @param {AIGameStateDTO} gameState
-   * @param {ILogger | undefined} logger
-   * @returns {string}
+   * @param {AIGameStateDTO} gameState - The game state DTO.
+   * @param {ILogger} [logger] - Optional logger instance.
+   * @returns {string} Formatted world context content.
    */
   getWorldContextContent(gameState, logger) {
     this.#logger.debug(
@@ -401,9 +414,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   }
 
   /**
-   * @param {AIGameStateDTO} gameState
-   * @param {ILogger | undefined} logger
-   * @returns {string}
+   * @param {AIGameStateDTO} gameState - The game state DTO.
+   * @param {ILogger} [logger] - Optional logger instance.
+   * @returns {string} Formatted available actions content.
    */
   getAvailableActionsInfoContent(gameState, logger) {
     this.#logger.debug(

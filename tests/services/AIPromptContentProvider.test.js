@@ -532,6 +532,7 @@ describe('AIPromptContentProvider', () => {
         userInputContent: testUserInput,
         finalInstructionsContent: MOCK_FINAL_INSTR,
         notesArray: [],
+        goalsArray: [],
         perceptionLogArray: formattedPerceptions,
         characterName: testCharName,
         locationName: testLocationName,

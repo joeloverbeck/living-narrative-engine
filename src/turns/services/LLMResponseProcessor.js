@@ -95,7 +95,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     this.#entityManager = entityManager; // may be null in tests
 
     // Unit tests spy on this warning:
-    // eslint-disable-next-line no-console
+
     if (!this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_SCHEMA_ID)) {
       console.warn(
         `LLMResponseProcessor: Schema with ID '${LLM_TURN_ACTION_SCHEMA_ID}' is not loaded in the provided schema validator. Validation will fail if this schema is required.`

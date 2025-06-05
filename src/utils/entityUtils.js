@@ -13,9 +13,8 @@ import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
  * 3. The entity's direct `name` property.
  * 4. The entity's `id`.
  * 5. The provided `fallbackString`.
- *
  * @param {Entity | null | undefined} entity - The entity whose name is to be retrieved.
- * @param {string} [fallbackString='unknown entity'] - String returned if no name is determined.
+ * @param {string} [fallbackString] - String returned if no name is determined.
  * @param {ILogger} [logger] - Optional logger instance for debug/warning messages.
  * @returns {string} The display name of the entity or the fallback string.
  */
