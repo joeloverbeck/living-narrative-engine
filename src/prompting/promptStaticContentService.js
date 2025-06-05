@@ -37,7 +37,9 @@ Your primary directive is authentic character portrayal and storytelling within 
 
 const FINAL_LLM_INSTRUCTION_TEXT =
   "Now, based on all the information provided, decide on your character's action and what they will say. " +
-  'Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.';
+  'Remember: *only visible actions go inside asterisks – never internal thoughts.* ' +
+  'If you learn a new fact your character considers vital to their survival or prosperity—such as directions, allies, or threats—add it to the optional "notes" array in your JSON response. ' +
+  'Only include distinct, important items that are not already noted. Fully BE the character.';
 
 /**
  * @class PromptStaticContentService
