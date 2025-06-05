@@ -9,6 +9,7 @@ import {
 } from '../../constants/componentIds.js';
 import { matchNames } from '../../utils/nameMatcher.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
+import { validateDependency } from '../../utils/validationUtils.js';
 // import { getEntityIdsForScopes } from './entityScopeService.js'; // Import if not injected
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -45,53 +46,7 @@ class TargetResolutionService extends ITargetResolutionService {
   /** @type {ILogger} */ #logger;
   /** @type {GetEntityIdsForScopesFn} */ #getEntityIdsForScopes;
 
-  /**
-   * @description Validates a dependency instance, checking for its existence and required methods.
-   * Logs an error and throws if validation fails. This method is intended for internal use
-   * during constructor setup.
-   * @param {any} dependency - The dependency instance to validate.
-   * @param {string} dependencyName - The name of the dependency (for logging and error messages).
-   * @param {string[]} [requiredMethods] - An array of method names that must exist on the dependency.
-   * @param {boolean} [isFunction] - Whether the dependency is expected to be a function.
-   * @private
-   * @throws {Error} If the dependency is missing or does not have all required methods/type.
-   */
-  #_validateDependency(
-    dependency,
-    dependencyName,
-    requiredMethods = [],
-    isFunction = false
-  ) {
-    if (!dependency) {
-      const errorMsg = `TargetResolutionService Constructor: Missing required dependency: ${dependencyName}.`;
-      if (this.#logger && this.#logger !== dependency) {
-        this.#logger.error(errorMsg);
-      } else {
-        console.error(errorMsg); // Fallback if logger itself is the issue or not yet set
-      }
-      throw new Error(errorMsg);
-    }
-    if (isFunction && typeof dependency !== 'function') {
-      const errorMsg = `TargetResolutionService Constructor: Dependency '${dependencyName}' must be a function.`;
-      if (this.#logger && this.#logger !== dependency) {
-        this.#logger.error(errorMsg);
-      } else {
-        console.error(errorMsg);
-      }
-      throw new Error(errorMsg);
-    }
-    for (const method of requiredMethods) {
-      if (typeof dependency[method] !== 'function') {
-        const errorMsg = `TargetResolutionService Constructor: Invalid or missing method '${method}' on dependency '${dependencyName}'.`;
-        if (this.#logger && this.#logger !== dependency) {
-          this.#logger.error(errorMsg);
-        } else {
-          console.error(errorMsg);
-        }
-        throw new Error(errorMsg);
-      }
-    }
-  }
+  // Private validation method removed in favor of centralized utility
 
   /**
    * @description Constructor for TargetResolutionService. It injects and validates all required dependencies.
@@ -109,39 +64,58 @@ class TargetResolutionService extends ITargetResolutionService {
       getEntityIdsForScopes,
     } = options || {};
 
-    if (
-      !logger ||
-      typeof logger.info !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function' ||
-      typeof logger.warn !== 'function'
-    ) {
-      const errorMsg =
-        'TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Requires methods: info, error, debug, warn.';
+    // 1. Validate the logger dependency first using console for error reporting
+    try {
+      validateDependency(logger, 'TargetResolutionService: logger', console, {
+        requiredMethods: ['info', 'error', 'debug', 'warn'],
+      });
+      this.#logger = logger;
+    } catch (e) {
+      const errorMsg = `TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Dependency validation utility reported: ${e.message}`;
       console.error(errorMsg);
       throw new Error(errorMsg);
     }
-    this.#logger = logger;
 
-    this.#_validateDependency(entityManager, 'entityManager', [
-      'getEntityInstance',
-      'getEntitiesInLocation',
-    ]);
-    this.#_validateDependency(worldContext, 'worldContext', [
-      'getLocationOfEntity',
-      'getCurrentActor',
-      'getCurrentLocation',
-    ]);
-    this.#_validateDependency(gameDataRepository, 'gameDataRepository', [
-      'getActionDefinition',
-      'getAllActionDefinitions',
-    ]);
-    this.#_validateDependency(
-      getEntityIdsForScopes,
-      'getEntityIdsForScopes',
-      [],
-      true
-    );
+    // 2. Validate remaining dependencies using the validated logger
+    try {
+      validateDependency(
+        entityManager,
+        'TargetResolutionService: entityManager',
+        this.#logger,
+        { requiredMethods: ['getEntityInstance', 'getEntitiesInLocation'] }
+      );
+      validateDependency(
+        worldContext,
+        'TargetResolutionService: worldContext',
+        this.#logger,
+        {
+          requiredMethods: [
+            'getLocationOfEntity',
+            'getCurrentActor',
+            'getCurrentLocation',
+          ],
+        }
+      );
+      validateDependency(
+        gameDataRepository,
+        'TargetResolutionService: gameDataRepository',
+        this.#logger,
+        {
+          requiredMethods: ['getActionDefinition', 'getAllActionDefinitions'],
+        }
+      );
+      validateDependency(
+        getEntityIdsForScopes,
+        'TargetResolutionService: getEntityIdsForScopes',
+        this.#logger,
+        { isFunction: true }
+      );
+    } catch (e) {
+      this.#logger.error(
+        `TargetResolutionService Constructor: Dependency validation failed. Error: ${e.message}`
+      );
+      throw e;
+    }
 
     this.#entityManager = entityManager;
     this.#worldContext = worldContext;
