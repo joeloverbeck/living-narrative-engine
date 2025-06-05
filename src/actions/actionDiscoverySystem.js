@@ -191,7 +191,7 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
               actionDef,
               targetContext,
               this.#entityManager,
-              {}
+              { logger: this.#logger, debug: true }
             );
             if (command !== null) {
               validActions.push({
@@ -255,7 +255,7 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
                     actionDef,
                     targetContext,
                     this.#entityManager,
-                    {}
+                    { logger: this.#logger, debug: true }
                   );
                   if (command !== null) {
                     validActions.push({
@@ -326,7 +326,7 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
                 actionDef,
                 targetContext,
                 this.#entityManager,
-                {}
+                { logger: this.#logger, debug: true }
               );
               if (command !== null) {
                 validActions.push({
