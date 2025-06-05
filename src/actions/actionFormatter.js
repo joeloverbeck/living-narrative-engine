@@ -2,12 +2,13 @@
 
 // --- Type Imports ---
 /** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
-/** @typedef {import('./validation/actionValidationService.js').ActionTargetContext} ActionTargetContext */
+/** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 // --- Dependency Imports ---
-import { getDisplayName } from '../utils/messages.js'; // Assuming path is correct
+import { getEntityDisplayName } from '../utils/entityUtils.js';
 
 /**
  * Formats a validated action and target into a user-facing command string.
@@ -17,8 +18,9 @@ import { getDisplayName } from '../utils/messages.js'; // Assuming path is corre
  * @param {EntityManager} entityManager - The entity manager for lookups. Must not be null/undefined.
  * @param {object} [options] - Optional parameters.
  * @param {boolean} [options.debug] - If true, logs additional debug information.
+ * @param {ILogger} [options.logger] - Logger instance used for diagnostic output. Defaults to console.
  * @returns {string | null} The formatted command string, or null if inputs are invalid.
- * @throws {Error} If critical dependencies (entityManager, getDisplayName) are missing or invalid during processing.
+ * @throws {Error} If critical dependencies (entityManager, getEntityDisplayName) are missing or invalid during processing.
  */
 export function formatActionCommand(
   actionDefinition,
@@ -26,25 +28,25 @@ export function formatActionCommand(
   entityManager,
   options = {}
 ) {
-  const { debug = false } = options;
+  const { debug = false, logger = console } = options;
 
   // --- 1. Input Validation ---
   if (!actionDefinition || !actionDefinition.template) {
-    console.error(
+    logger.error(
       'formatActionCommand: Invalid or missing actionDefinition or template.',
       { actionDefinition }
     );
     return null;
   }
   if (!validatedTargetContext) {
-    console.error(
+    logger.error(
       'formatActionCommand: Invalid or missing validatedTargetContext.',
       { validatedTargetContext }
     );
     return null;
   }
   if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-    console.error('formatActionCommand: Invalid or missing entityManager.', {
+    logger.error('formatActionCommand: Invalid or missing entityManager.', {
       entityManager,
     });
     // This is a critical dependency, throw an error or return null based on desired strictness
@@ -52,13 +54,13 @@ export function formatActionCommand(
       'formatActionCommand requires a valid EntityManager instance.'
     );
   }
-  if (typeof getDisplayName !== 'function') {
-    console.error(
-      'formatActionCommand: getDisplayName utility function is not available.'
+  if (typeof getEntityDisplayName !== 'function') {
+    logger.error(
+      'formatActionCommand: getEntityDisplayName utility function is not available.'
     );
     // This is a critical dependency
     throw new Error(
-      'formatActionCommand requires the getDisplayName utility function.'
+      'formatActionCommand requires the getEntityDisplayName utility function.'
     );
   }
 
@@ -66,7 +68,7 @@ export function formatActionCommand(
   const contextType = validatedTargetContext.type;
 
   if (debug) {
-    console.log(
+    logger.debug(
       `Formatting command for action: ${actionDefinition.id}, template: "${command}", targetType: ${contextType}`
     );
   }
@@ -77,7 +79,7 @@ export function formatActionCommand(
       case 'entity': {
         const targetId = validatedTargetContext.entityId;
         if (!targetId) {
-          console.warn(
+          logger.warn(
             `formatActionCommand: Target context type is 'entity' but entityId is missing for action ${actionDefinition.id}. Template: "${command}"`
           );
           // Decide how to handle this - return template as-is, or indicate error?
@@ -90,16 +92,16 @@ export function formatActionCommand(
         const targetEntity = entityManager.getEntityInstance(targetId);
 
         if (targetEntity) {
-          // Use getDisplayName utility, which handles its own fallback to ID or 'unknown entity'
-          targetName = getDisplayName(targetEntity);
+          // Use getEntityDisplayName utility, which handles its own fallback to ID or 'unknown entity'
+          targetName = getEntityDisplayName(targetEntity, logger);
           if (debug) {
-            console.log(
+            logger.debug(
               ` -> Found entity ${targetId}, display name: "${targetName}"`
             );
           }
         } else {
           // If entity instance lookup fails (shouldn't happen if context is truly validated, but good to check)
-          console.warn(
+          logger.warn(
             `formatActionCommand: Could not find entity instance for ID ${targetId} (action: ${actionDefinition.id}). Using ID as fallback name.`
           );
           // targetName remains targetId (our fallback)
@@ -113,13 +115,13 @@ export function formatActionCommand(
       case 'direction': {
         const direction = validatedTargetContext.direction;
         if (!direction) {
-          console.warn(
+          logger.warn(
             `formatActionCommand: Target context type is 'direction' but direction string is missing for action ${actionDefinition.id}. Template: "${command}"`
           );
           return null; // Indicate failure
         }
         if (debug) {
-          console.log(` -> Using direction: "${direction}"`);
+          logger.debug(` -> Using direction: "${direction}"`);
         }
         // Replace {direction} placeholder
         command = command.replace('{direction}', direction);
@@ -129,25 +131,25 @@ export function formatActionCommand(
       case 'none':
         // No placeholders expected, use the template directly.
         if (debug) {
-          console.log(' -> No target type, using template as is.');
+          logger.debug(' -> No target type, using template as is.');
         }
         // Optional check: Warn if template *unexpectedly* contains placeholders?
         if (command.includes('{target}') || command.includes('{direction}')) {
-          console.warn(
+          logger.warn(
             `formatActionCommand: Action ${actionDefinition.id} has target_domain 'none' but template "${command}" contains placeholders.`
           );
         }
         break;
 
       default:
-        console.warn(
+        logger.warn(
           `formatActionCommand: Unknown validatedTargetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`
         );
         // Return template as-is for unknown types? Or null? Returning unmodified seems safer.
         break;
     }
   } catch (error) {
-    console.error(
+    logger.error(
       `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
       error
     );
@@ -156,7 +158,7 @@ export function formatActionCommand(
 
   // --- 3. Return Formatted String ---
   if (debug) {
-    console.log(` <- Final formatted command: "${command}"`);
+    logger.debug(` <- Final formatted command: "${command}"`);
   }
   return command;
 }
