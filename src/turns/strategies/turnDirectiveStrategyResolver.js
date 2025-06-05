@@ -36,8 +36,12 @@ import WaitForTurnEndEventStrategy from './waitForTurnEndEventStrategy.js';
 const STRATEGY_SINGLETONS = new Map();
 
 /**
+ * Retrieves a singleton instance for the provided strategy class, creating it
+ * on first use.
  *
- * @param strategyClass
+ * @param {Constructor<ITurnDirectiveStrategy>} strategyClass - The class to
+ *        instantiate.
+ * @returns {ITurnDirectiveStrategy} The cached instance for the class.
  */
 function getOrCreate(strategyClass) {
   const key = strategyClass.name;
@@ -79,11 +83,16 @@ export default class TurnDirectiveStrategyResolver {
         // the legacy behaviour inside PlayerTurnHandler.
 
         /* istanbul ignore next */
-        if (process.env.NODE_ENV !== 'production') {
+        if (
+          typeof globalThis !== 'undefined' &&
+          globalThis.process &&
+          globalThis.process.env.NODE_ENV !== 'production'
+        ) {
           // Helpful debug log when running tests or dev builds.
           // We **do not** throw because production should keep rolling.
           // The caller retains ultimate responsibility for safe execution.
           //  – If that is undesirable, swap the console.warn() for an Error.
+          // eslint-disable-next-line no-console
           console.warn(
             `${this.name}: Unrecognised TurnDirective (\u201c${directive}\u201d). Falling back to WAIT_FOR_EVENT.`
           );
