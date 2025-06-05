@@ -23,7 +23,7 @@ describe('GoalsSectionAssembler', () => {
     const pd = {
       goalsArray: [{ text: 'Finish quest', timestamp: '2025-01-01T00:00:00Z' }],
     };
-    const expected = '\nYour Goals:\n\n- Finish quest\n\n';
+    const expected = '\n- Finish quest\n';
     expect(assembler.assemble(cfg, pd, placeholderResolver)).toBe(expected);
   });
 
@@ -35,7 +35,7 @@ describe('GoalsSectionAssembler', () => {
         { text: 'Second', timestamp: '2025-01-02' },
       ],
     };
-    const expected = '\nYour Goals:\n\n- First\n- Second\n- Third\n\n';
+    const expected = '\n- First\n- Second\n- Third\n';
     expect(assembler.assemble(cfg, pd, placeholderResolver)).toBe(expected);
   });
 
@@ -46,7 +46,7 @@ describe('GoalsSectionAssembler', () => {
         { text: 'Invalid', timestamp: 'not-a-date' },
       ],
     };
-    const expected = '\nYour Goals:\n\n- Valid\n- Invalid\n\n';
+    const expected = '\n- Valid\n- Invalid\n';
     expect(assembler.assemble(cfg, pd, placeholderResolver)).toBe(expected);
   });
 });

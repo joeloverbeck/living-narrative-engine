@@ -13,15 +13,12 @@ import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssemble
  */
 
 export class NotesSectionAssembler extends IPromptElementAssembler {
-  /** @type {ILogger} */
-  #logger;
-
   /**
    * @param {{logger?: ILogger}} [options]
    */
   constructor({ logger = console } = {}) {
     super();
-    this.#logger = logger;
+    // logger parameter preserved for API consistency
   }
 
   /**
@@ -53,10 +50,11 @@ export class NotesSectionAssembler extends IPromptElementAssembler {
 
     const bodyLines = sorted.map((n) => `- ${n.text}`).join('\n');
 
-    // Exactly one blank line after header and after list
-    const section = `\nImportant Things to Remember:\n\n${bodyLines}\n\n`;
+    // prefix is expected to contain the header text; just insert
+    // a blank line before and after the list for readability
+    const section = `${prefix}\n${bodyLines}\n${suffix}`;
 
-    return `${prefix}${section}${suffix}`;
+    return section;
   }
 }
 

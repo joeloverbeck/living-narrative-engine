@@ -49,8 +49,8 @@ class DummyLLMConfigService {
     this._config = config;
   }
 
-  async getConfig(llmId) {
-    // Always return the same config, ignoring llmId
+  async getConfig(_llmId) {
+    // Always return the same config, ignoring input llmId
     return this._config;
   }
 }
@@ -61,7 +61,8 @@ describe('PromptBuilder → GoalsSectionAssembler integration', () => {
     promptElements: [
       {
         key: 'goals_wrapper',
-        // no prefix / suffix / condition
+        prefix: '\nYour Goals:\n',
+        suffix: '\n',
       },
     ],
     promptAssemblyOrder: ['goals_wrapper'],
@@ -107,11 +108,11 @@ describe('PromptBuilder → GoalsSectionAssembler integration', () => {
 
     const result = await promptBuilder.build('anyLlmId', promptData);
 
-    // Expect the header and both bullet points
-    expect(result).toContain('Your Goals:');
+    const occurrences = result.match(/Your Goals:/g) || [];
+    expect(occurrences.length).toBe(1);
     expect(result).toContain('- G1');
     expect(result).toContain('- G2');
-    // The result should begin with a newline (as per assembler)
+    // The result should begin with a newline (from prefix)
     expect(result.startsWith('\n')).toBe(true);
   });
 

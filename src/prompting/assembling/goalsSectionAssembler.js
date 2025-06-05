@@ -25,14 +25,12 @@ import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssemble
  * ```
  */
 export class GoalsSectionAssembler extends IPromptElementAssembler {
-  /** @type {ILogger} */ #logger;
-
   /**
    * @param {{ logger?: ILogger }} [options]
    */
   constructor({ logger = console } = {}) {
     super();
-    this.#logger = logger;
+    // logger parameter preserved for API consistency
   }
 
   /**
@@ -69,9 +67,9 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
 
     if (goalLines === '') return '';
 
-    const header = 'Your Goals:';
-    const sectionCore = `${header}\n\n${goalLines}\n`;
-    return `\n${resolvedPrefix}${sectionCore}${resolvedSuffix}\n`;
+    // resolvedPrefix contains the header string (e.g. "\nYour Goals:\n")
+    const sectionCore = `${resolvedPrefix}\n${goalLines}\n${resolvedSuffix}`;
+    return sectionCore;
   }
 }
 
