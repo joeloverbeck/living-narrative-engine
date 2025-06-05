@@ -1,4 +1,4 @@
-// src/services/prerequisiteEvaluationService.js
+// src/actions/validation/prerequisiteEvaluationService.js
 
 // --- START: Refactor-AVS-3.3.1 ---
 // No change needed here for 3.3.2, builder already imported
@@ -6,12 +6,12 @@ import { ActionValidationContextBuilder } from './actionValidationContextBuilder
 // --- END: Refactor-AVS-3.3.1 ---
 
 /* type-only imports */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
-/** @typedef {import('../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
-/** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
-/** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
+/** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
+/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 // --- START: Refactor-AVS-3.3.1 ---
 // No change needed here for 3.3.2
 /** @typedef {import('./actionValidationContextBuilder.js').ActionValidationContextBuilder} ActionValidationContextBuilder */

@@ -15,7 +15,7 @@ import { TURN_STARTED_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {object} CoreTurnStartedPayload
- * @property {import('../core/interfaces/CommonTypes').NamespacedId} entityId - The ID of the entity whose turn has started.
+ * @property {import('../interfaces/CommonTypes').NamespacedId} entityId - The ID of the entity whose turn has started.
  * @property {'player'|'ai'} entityType - The type of the entity.
  */
 
@@ -32,10 +32,10 @@ import { TURN_STARTED_ID } from '../constants/eventIds.js';
  * @property {string} descriptionText - The human-readable summary of the event.
  * @property {string} timestamp - When the event occurred.
  * @property {string} perceptionType - The category of the perceived event.
- * @property {import('../core/interfaces/CommonTypes').NamespacedId} actorId - The ID of the entity that caused the event.
- * @property {import('../core/interfaces/CommonTypes').NullableNamespacedId} [targetId] - Optional. The ID of the primary target of the event.
- * @property {Array<import('../core/interfaces/CommonTypes').NamespacedId>} [involvedEntities] - Optional. Other entities involved.
- * @property {import('../core/interfaces/CommonTypes').NamespacedId} [eventId] - Optional. Unique ID for the log entry or originating event.
+ * @property {import('../interfaces/CommonTypes').NamespacedId} actorId - The ID of the entity that caused the event.
+ * @property {import('../interfaces/CommonTypes').NullableNamespacedId} [targetId] - Optional. The ID of the primary target of the event.
+ * @property {Array<import('../interfaces/CommonTypes').NamespacedId>} [involvedEntities] - Optional. Other entities involved.
+ * @property {import('../interfaces/CommonTypes').NamespacedId} [eventId] - Optional. Unique ID for the log entry or originating event.
  */
 
 /**

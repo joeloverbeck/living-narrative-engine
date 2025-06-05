@@ -8,18 +8,19 @@ import {
   expect,
   afterEach,
 } from '@jest/globals';
-import { PromptBuilder } from '../../src/services/promptBuilder.js';
-import { LLMConfigService } from '../../src/services/llmConfigService.js';
-import { HttpConfigurationProvider } from '../../src/services/httpConfigurationProvider.js';
-import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js'; // For mocking
+import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
+import { LLMConfigService } from '../../src/llms/llmConfigService.js';
+import { HttpConfigurationProvider } from '../../src/configuration/httpConfigurationProvider.js';
+import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler'; // For mocking
 // Import assembler types for JSDoc
-/** @typedef {import('../../src/services/promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
-/** @typedef {import('../../src/services/promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
+/** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
+/** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
 
 /**
- * @typedef {import('../../src/services/llmConfigService.js').LLMConfig} LLMConfig
- * @typedef {import('../../src/services/promptBuilder.js').PromptData} PromptData
- * @typedef {import('../../src/services/promptBuilder.js').PerceptionLogEntry} PerceptionLogEntry
+ * @typedef {import('../../src/llms/llmConfigService.js').LLMConfig} LLMConfig
+ * @typedef {import('../../src/prompting/promptBuilder.js').PromptData} PromptData
+ * @typedef {import('../../src/prompting/promptBuilder.js').PerceptionLogEntry} PerceptionLogEntry
  * @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger
  */
 
@@ -145,6 +146,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       await promptBuilder.build(MOCK_CONFIG_1.configId, {
@@ -189,6 +191,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('any-llm-id', {});
@@ -226,6 +229,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('any-llm-id', {});
@@ -271,6 +275,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('any-llm-id', {});
@@ -316,6 +321,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('any-llm-id', {});
@@ -371,6 +377,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       await promptBuilder.build(MOCK_CONFIG_1.configId, {
@@ -416,6 +423,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       await promptBuilder.build('any-llm-id', {});
@@ -447,6 +455,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       // Check initial log from constructor
@@ -503,6 +512,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       await promptBuilder.build(MOCK_CONFIG_1.configId, {
@@ -563,6 +573,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(1);
@@ -605,6 +616,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
@@ -655,6 +667,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
       // @ts-ignore
       llmConfigService.addOrUpdateConfigs('not an array');
@@ -664,7 +677,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
     });
 
-    test('build returns empty string if LLMConfigService provides no config after attempted load', async () => {
+    test('build returns empty string if LLMConfigService provides no dependencyInjection after attempted load', async () => {
       const mockProvider = {
         fetchData: jest.fn().mockResolvedValue({ configs: {} }),
       };
@@ -679,6 +692,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('some-id', {

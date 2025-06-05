@@ -1,8 +1,9 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
-import { AIPromptContentProvider } from '../../src/services/AIPromptContentProvider.js';
-import { PromptBuilder } from '../../src/services/promptBuilder.js';
+import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
+import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
-import { ThoughtsSectionAssembler } from '../../src/services/promptElementAssemblers/thoughtsSectionAssembler.js';
+import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -60,6 +61,7 @@ describe('Prompt Assembly with short-term memory', () => {
       standardElementAssembler: { assemble: jest.fn().mockReturnValue('') },
       perceptionLogAssembler: { assemble: jest.fn().mockReturnValue('') },
       thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+      notesSectionAssembler: new NotesSectionAssembler({ logger }),
     });
   });
 

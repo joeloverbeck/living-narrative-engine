@@ -13,7 +13,7 @@ import { PerceptionLogRenderer } from '../../src/domUI/perceptionLogRenderer.js'
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { TURN_STARTED_ID } from '../../src/constants/eventIds.js';
 
-jest.mock('../../src/services/consoleLogger.js');
+jest.mock('../../src/logging/consoleLogger.js');
 jest.mock('../../src/events/validatedEventDispatcher.js');
 
 const PERCEPTION_LOG_LIST_SELECTOR = '#perception-log-list';
@@ -48,8 +48,7 @@ describe('PerceptionLogRenderer', () => {
     global.HTMLUListElement = dom.window.HTMLUListElement;
     global.HTMLParagraphElement = dom.window.HTMLParagraphElement;
 
-    const ConsoleLogger =
-      require('../../src/services/consoleLogger.js').default;
+    const ConsoleLogger = require('../../src/logging/consoleLogger.js').default;
     const ValidatedEventDispatcher =
       require('../../src/events/validatedEventDispatcher.js').default;
 

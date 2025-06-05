@@ -95,7 +95,7 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
    * Assembles the 'perception_log_wrapper' element.
    * This involves resolving placeholders for the wrapper's prefix and suffix,
    * iterating through `promptData.perceptionLogArray`, formatting each entry
-   * (including cleaning timestamp attributes from entry config's prefix/suffix and resolving entry-specific placeholders),
+   * (including cleaning timestamp attributes from entry dependencyInjection's prefix/suffix and resolving entry-specific placeholders),
    * and then combining these parts into a single string.
    *
    * @param {PromptElement} elementConfig - The configuration for the 'perception_log_wrapper' element.
@@ -167,7 +167,7 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
       // assembledLogEntries remains empty as the inner formatting block is skipped."
       // Entries will be processed, but only their raw content will be used if that was the fallback.
       // However, the ticket indicates that if pLogEntryConfig is missing, assembledLogEntries remains empty.
-      // This means we effectively don't add entry.content either if the config for formatting is absent.
+      // This means we effectively don't add entry.content either if the dependencyInjection for formatting is absent.
       // Let's adhere to this: if no pLogEntryConfig, entries are not added to assembledLogEntries.
     }
 
@@ -192,7 +192,7 @@ export class PerceptionLogAssembler extends IPromptElementAssembler {
         const entryForResolution = { ...entry };
         delete entryForResolution.timestamp;
 
-        // Clean timestamp attributes from the perception_log_entry config's prefix and suffix
+        // Clean timestamp attributes from the perception_log_entry dependencyInjection's prefix and suffix
         // *before* resolving other placeholders in them.
         const entryConfigPrefixCleaned =
           PerceptionLogAssembler.#cleanTimestampAttributes(

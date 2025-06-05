@@ -12,12 +12,12 @@ import {
 } from '@jest/globals';
 
 // --- Function Under Test ---
-import PerceptionUpdateService from '../../src/services/perceptionUpdateService.js'; // Adjust path as needed
+import PerceptionUpdateService from '../../src/perception/perceptionUpdateService.js'; // Adjust path as needed
 
 // --- JSDoc Imports for Type Hinting (optional, but good practice) ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../src/services/perceptionUpdateService.js').LogEntry} LogEntry */
+/** @typedef {import('../../src/perception/perceptionUpdateService.js').LogEntry} LogEntry */
 
 // --- Constants ---
 const PERCEPTION_LOG_COMPONENT_ID = 'core:perception_log';

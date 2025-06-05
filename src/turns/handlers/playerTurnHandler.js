@@ -10,7 +10,7 @@ import { HumanPlayerStrategy } from '../strategies/humanPlayerStrategy.js'; // A
 
 // This import might not be strictly necessary if SubscriptionLifecycleManagerType is well-defined elsewhere
 // and only its instance is passed. However, keeping for potential type inference or direct use if any.
-import ActualSubscriptionLifecycleManagerClass from '../../services/subscriptionLifecycleManager.js'; // Adjusted path
+import ActualSubscriptionLifecycleManagerClass from '../../events/subscriptionLifecycleManager.js'; // Adjusted path
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */

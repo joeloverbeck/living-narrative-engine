@@ -1,4 +1,4 @@
-// src/tests/core/turns/states/processingCommandState.test.js
+// src/tests/turns/states/processingCommandState.test.js
 
 import {
   describe,

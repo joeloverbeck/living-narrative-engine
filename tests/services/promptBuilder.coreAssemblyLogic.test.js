@@ -8,16 +8,17 @@ import {
   expect,
   afterEach,
 } from '@jest/globals';
-import { PromptBuilder } from '../../src/services/promptBuilder.js';
-import { LLMConfigService } from '../../src/services/llmConfigService.js';
+import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
+import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler';
 // Import assembler types for JSDoc
-/** @typedef {import('../../src/services/promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
-/** @typedef {import('../../src/services/promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
+/** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
+/** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
 
 /**
- * @typedef {import('../../src/services/llmConfigService.js').LLMConfig} LLMConfig
- * @typedef {import('../../src/services/promptBuilder.js').PromptData} PromptData
+ * @typedef {import('../../src/llms/llmConfigService.js').LLMConfig} LLMConfig
+ * @typedef {import('../../src/prompting/promptBuilder.js').PromptData} PromptData
  * @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger
  */
 
@@ -76,6 +77,7 @@ describe('PromptBuilder', () => {
       placeholderResolver: mockPlaceholderResolver,
       standardElementAssembler: mockStandardAssembler,
       perceptionLogAssembler: mockPerceptionLogAssembler,
+      notesSectionAssembler: new NotesSectionAssembler({ logger }),
     });
   });
 
@@ -109,7 +111,7 @@ describe('PromptBuilder', () => {
     };
 
     beforeEach(() => {
-      // Default config for most tests in this suite
+      // Default dependencyInjection for most tests in this suite
       mockLlmConfigService.getConfig.mockResolvedValue(coreLogicConfig);
 
       // Implement the mock for StandardElementAssembler.assemble to mimic old PromptBuilder behavior

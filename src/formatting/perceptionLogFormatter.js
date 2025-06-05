@@ -82,7 +82,7 @@ export class PerceptionLogFormatter {
           eventId: rawEntry.eventId,
           actorId: rawEntry.actorId,
           targetId: rawEntry.targetId,
-          // Include other raw properties if they might be used by custom placeholders in perception_log_entry config
+          // Include other raw properties if they might be used by custom placeholders in perception_log_entry dependencyInjection
         };
 
         if (typeof mappedEntry.timestamp === 'undefined') {

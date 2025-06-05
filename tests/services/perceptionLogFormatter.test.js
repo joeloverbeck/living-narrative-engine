@@ -1,7 +1,7 @@
 // test/services/perceptionLogFormatter.test.js
 // --- FILE START ---
 
-import { PerceptionLogFormatter } from '../../src/services/perceptionLogFormatter.js';
+import { PerceptionLogFormatter } from '../../src/formatting/perceptionLogFormatter.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals'; // Import jest
 
 const mockLogger = {

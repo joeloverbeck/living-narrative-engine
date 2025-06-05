@@ -8,7 +8,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import { PerceptionLogAssembler } from '../../../src/services/promptElementAssemblers/perceptionLogAssembler.js'; // Adjust path
+import { PerceptionLogAssembler } from '../../../src/prompting/assembling/perceptionLogAssembler.js'; // Adjust path
 import { createMockLogger } from '../../testUtils.js'; // Adjust path
 
 // Mock PlaceholderResolver
@@ -222,7 +222,7 @@ describe('PerceptionLogAssembler', () => {
   });
 
   describe('assemble - Handling perception_log_entry Config', () => {
-    it('should warn and produce no entry content if perception_log_entry config is missing', () => {
+    it('should warn and produce no entry content if perception_log_entry dependencyInjection is missing', () => {
       sampleAllPromptElementsMap.delete(PERCEPTION_LOG_ENTRY_KEY);
       activeMockPlaceholderResolver.resolve.mockImplementation((str) => str);
 

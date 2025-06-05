@@ -2,11 +2,11 @@
 
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 
-import { PrerequisiteEvaluationService } from '../../src/services/prerequisiteEvaluationService.js';
+import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js';
 // Import the default export
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 // Import the named export
-import { ActionValidationContextBuilder } from '../../src/services/actionValidationContextBuilder.js';
+import { ActionValidationContextBuilder } from '../../src/actions/validation/actionValidationContextBuilder.js';
 
 // --- Mocking Dependencies ---
 
@@ -30,13 +30,16 @@ jest.mock('../../src/logic/jsonLogicEvaluationService.js', () => ({
 // --- END FIX ---
 
 // --- FIX: Mock factory for NAMED export ---
-jest.mock('../../src/services/actionValidationContextBuilder.js', () => ({
-  __esModule: true, // Indicate ES Module
-  // The 'ActionValidationContextBuilder' key maps to the named export
-  ActionValidationContextBuilder: jest.fn().mockImplementation(() => ({
-    buildContext: jest.fn(),
-  })),
-}));
+jest.mock(
+  '../../src/actions/validation/actionValidationContextBuilder.js',
+  () => ({
+    __esModule: true, // Indicate ES Module
+    // The 'ActionValidationContextBuilder' key maps to the named export
+    ActionValidationContextBuilder: jest.fn().mockImplementation(() => ({
+      buildContext: jest.fn(),
+    })),
+  })
+);
 // --- END FIX ---
 
 // --- Test Suite ---
