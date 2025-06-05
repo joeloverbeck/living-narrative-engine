@@ -1,4 +1,4 @@
-// src/tests/core/config/registrations/domainServicesRegistrations.test.js
+// src/tests/dependencyInjection/registrations/domainServicesRegistrations.test.js
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // Changed to interface
@@ -7,12 +7,11 @@
 /** @typedef {import('../../../src/events/eventBus.js').default} EventBus */
 /** @typedef {import('../../../src/logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../../../src/interfaces/ITargetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
-/** @typedef {import('../../../src/services/actionValidationService.js').ActionValidationService} ActionValidationService */
+/** @typedef {import('../../../src/actions/validation/actionValidationService.js').ActionValidationService} ActionValidationService */
 /** @typedef {import('../../../../services/payloadValueResolverService.js').default} PayloadValueResolverService */
 /** @typedef {import('../../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../../src/commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
-/** @typedef {import('../../../src/interfaces/IActionExecutor.js').IActionExecutor} IActionExecutor */
 /** @typedef {import('../../../src/interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../../src/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
@@ -25,10 +24,10 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 
 // --- Class Under Test ---
-import { registerDomainServices } from '../../../src/config/registrations/domainServicesRegistrations.js';
+import { registerDomainServices } from '../../../src/dependencyInjection/registrations/domainServicesRegistrations.js';
 
 // --- Dependencies ---
-import { tokens } from '../../../src/config/tokens.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 // --- MOCK INSTANCES needed for assertions or as return values from mock constructors ---
 const mockTargetResolutionServiceInstance = { resolveActionTarget: jest.fn() };
@@ -46,7 +45,7 @@ const mockJsonLogicServiceInstance = {};
 const mockPlayerPromptServiceInstance = { prompt: jest.fn() }; // Mock instance for IPlayerPromptService
 
 // --- MOCK the Modules Directly Inline ---
-jest.mock('../../../src/services/targetResolutionService.js', () => ({
+jest.mock('../../../src/actions/targeting/targetResolutionService.js', () => ({
   __esModule: true,
   TargetResolutionService: jest.fn().mockImplementation(() => {
     return mockTargetResolutionServiceInstance;
@@ -60,14 +59,20 @@ jest.mock('../../../src/services/targetResolutionService.js', () => ({
     ERROR: 'ERROR',
   },
 }));
-jest.mock('../../../src/services/actionValidationContextBuilder.js', () => ({
-  __esModule: true,
-  ActionValidationContextBuilder: jest.fn(),
-}));
-jest.mock('../../../src/services/prerequisiteEvaluationService.js', () => ({
-  __esModule: true,
-  PrerequisiteEvaluationService: jest.fn(),
-}));
+jest.mock(
+  '../../../src/actions/validation/actionValidationContextBuilder.js',
+  () => ({
+    __esModule: true,
+    ActionValidationContextBuilder: jest.fn(),
+  })
+);
+jest.mock(
+  '../../../src/actions/validation/prerequisiteEvaluationService.js',
+  () => ({
+    __esModule: true,
+    PrerequisiteEvaluationService: jest.fn(),
+  })
+);
 jest.mock(
   '../../../src/validation/domainContextCompatibilityChecker.js',
   () => ({
@@ -75,7 +80,7 @@ jest.mock(
     DomainContextCompatibilityChecker: jest.fn(),
   })
 );
-jest.mock('../../../src/services/actionValidationService.js', () => ({
+jest.mock('../../../src/actions/validation/actionValidationService.js', () => ({
   __esModule: true,
   ActionValidationService: jest
     .fn()
@@ -111,11 +116,11 @@ jest.mock('../../../src/turns/services/humanPlayerPromptService.js', () => ({
 }));
 
 // --- Import AFTER mocking ---
-import { TargetResolutionService as MockedTargetResolutionService } from '../../../src/services/targetResolutionService.js';
-import { ActionValidationContextBuilder } from '../../../src/services/actionValidationContextBuilder.js';
-import { PrerequisiteEvaluationService } from '../../../src/services/prerequisiteEvaluationService.js';
+import { TargetResolutionService as MockedTargetResolutionService } from '../../../src/actions/targeting/targetResolutionService.js';
+import { ActionValidationContextBuilder } from '../../../src/actions/validation/actionValidationContextBuilder.js';
+import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { DomainContextCompatibilityChecker } from '../../../src/validation/domainContextCompatibilityChecker.js';
-import { ActionValidationService } from '../../../src/services/actionValidationService.js';
+import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import CommandParser from '../../../src/commands/commandParser.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../../src/context/worldContext.js';

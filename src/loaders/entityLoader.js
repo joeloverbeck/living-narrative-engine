@@ -1,4 +1,4 @@
-// Filename: src/core/services/entityLoader.js
+// Filename: src/loaders/entityLoader.js
 
 /**
  * @file Defines the EntityLoader class, responsible for loading

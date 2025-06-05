@@ -9,9 +9,9 @@ import {
 } from '../constants/componentIds.js'; // Used by _handleLocation via SpatialIndex
 
 // --- JSDoc Type Imports ---
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../entities/entity.js').EntityId} EntityId */
+/** @typedef {import('./entityManager.js').default} EntityManager */
+/** @typedef {import('./entity.js').default} Entity */
+/** @typedef {import('./entity.js').EntityId} EntityId */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../components/connectionsComponent.js').ConnectionInfo} ConnectionInfo */
 /** @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain */ // <-- Added TargetDomain type

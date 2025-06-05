@@ -1,4 +1,4 @@
-// src/core/utils/engineVersionSatisfies.js
+// src/utils/engineVersionSatisfies.js
 import semver from 'semver';
 import { ENGINE_VERSION } from '../engine/engineVersion.js';
 

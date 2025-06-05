@@ -3,7 +3,7 @@
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../core/interfaces/ILogger.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
 
 /**
  * Retrieves the display name of an entity.

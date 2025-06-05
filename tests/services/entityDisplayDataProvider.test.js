@@ -1,7 +1,7 @@
 // tests/services/EntityDisplayDataProvider.test.js
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
-import { EntityDisplayDataProvider } from '../../src/services/entityDisplayDataProvider.js';
+import { EntityDisplayDataProvider } from '../../src/entities/entityDisplayDataProvider.js';
 import {
   NAME_COMPONENT_ID,
   PORTRAIT_COMPONENT_ID,
@@ -9,6 +9,7 @@ import {
   POSITION_COMPONENT_ID,
   EXITS_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 
 describe('EntityDisplayDataProvider', () => {
   let mockEntityManager;
@@ -496,7 +497,9 @@ describe('EntityDisplayDataProvider', () => {
   // _getModIdFromDefinitionId
   describe('_getModIdFromDefinitionId', () => {
     it('should extract modId correctly', () => {
-      expect(service._getModIdFromDefinitionId('core:player')).toBe('core');
+      expect(service._getModIdFromDefinitionId('core:player')).toBe(
+        CORE_MOD_ID
+      );
       expect(service._getModIdFromDefinitionId('myMod:someItem:variant')).toBe(
         'myMod'
       );

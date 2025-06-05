@@ -1,4 +1,4 @@
-// src/core/turns/strategies/endTurnFailureStrategy.js
+// src/turns/strategies/endTurnFailureStrategy.js
 // ────────────────────────────────────────────────────────────────
 //  EndTurnFailureStrategy
 // ────────────────────────────────────────────────────────────────

@@ -1,55 +1,55 @@
-// src/core/config/registrations/domainServicesRegistrations.js
+// src/dependencyInjection/registrations/domainServicesRegistrations.js
 // ****** MODIFIED FILE ******
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
-import { TargetResolutionService } from '../../services/targetResolutionService.js';
-import { ActionValidationContextBuilder } from '../../services/actionValidationContextBuilder.js';
-import { PrerequisiteEvaluationService } from '../../services/prerequisiteEvaluationService.js';
+import { TargetResolutionService } from '../../actions/targeting/targetResolutionService.js';
+import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
+import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
 import { DomainContextCompatibilityChecker } from '../../validation/domainContextCompatibilityChecker.js';
-import { ActionValidationService } from '../../services/actionValidationService.js';
+import { ActionValidationService } from '../../actions/validation/actionValidationService.js';
 import CommandParser from '../../commands/commandParser.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 import WorldContext from '../../context/worldContext.js';
 import { TurnOrderService } from '../../turns/order/turnOrderService.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 import HumanPlayerPromptService from '../../turns/services/humanPlayerPromptService.js'; // Concrete class
-import SubscriptionLifecycleManager from '../../services/subscriptionLifecycleManager.js';
-import PerceptionUpdateService from '../../services/perceptionUpdateService.js';
+import SubscriptionLifecycleManager from '../../events/subscriptionLifecycleManager.js';
+import PerceptionUpdateService from '../../perception/perceptionUpdateService.js';
 import ReferenceResolver from '../../initializers/services/referenceResolver.js';
 
 // Import getEntityIdsForScopes directly
-import { getEntityIdsForScopes } from '../../services/entityScopeService.js';
+import { getEntityIdsForScopes } from '../../entities/entityScopeService.js';
 
 // --- PlaytimeTracker Import ---
-import PlaytimeTracker from '../../services/playtimeTracker.js';
+import PlaytimeTracker from '../../engine/playtimeTracker.js';
 
 // --- GamePersistenceService Import ---
-import GamePersistenceService from '../../services/gamePersistenceService.js';
+import GamePersistenceService from '../../persistence/gamePersistenceService.js';
 import { ConcreteTurnContextFactory } from '../../turns/factories/concreteTurnContextFactory.js';
 import { ConcreteAIPlayerStrategyFactory } from '../../turns/factories/concreteAIPlayerStrategyFactory.js';
 import { ConcreteTurnStateFactory } from '../../turns/factories/concreteTurnStateFactory.js';
 import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.js';
-import { AIPromptContentProvider } from '../../services/AIPromptContentProvider.js';
+import { AIPromptContentProvider } from '../../prompting/AIPromptContentProvider.js';
 import { AIGameStateProvider } from '../../turns/services/AIGameStateProvider.js';
 
 // --- PromptBuilder and its dependencies (NEW IMPORTS) ---
-import { PromptBuilder } from '../../services/promptBuilder.js'; // Corrected path
-import { LLMConfigService } from '../../services/llmConfigService.js'; // Corrected path
-import { HttpConfigurationProvider } from '../../services/httpConfigurationProvider.js'; // Corrected path
+import { PromptBuilder } from '../../prompting/promptBuilder.js'; // Corrected path
+import { LLMConfigService } from '../../llms/llmConfigService.js'; // Corrected path
+import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js'; // Corrected path
 import { PlaceholderResolver } from '../../utils/placeholderResolver.js'; // Corrected path
-import { StandardElementAssembler } from '../../services/promptElementAssemblers/standardElementAssembler.js'; // Corrected path
-import { PerceptionLogAssembler } from '../../services/promptElementAssemblers/perceptionLogAssembler.js';
-import { PromptStaticContentService } from '../../services/promptStaticContentService.js'; // Corrected path
+import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js'; // Corrected path
+import { PerceptionLogAssembler } from '../../prompting/assembling/perceptionLogAssembler.js';
+import { PromptStaticContentService } from '../../prompting/promptStaticContentService.js'; // Corrected path
 
 // +++ TICKET 7 IMPORTS START +++
-import { PerceptionLogFormatter } from '../../services/perceptionLogFormatter.js';
+import { PerceptionLogFormatter } from '../../formatting/perceptionLogFormatter.js';
 // +++ TICKET 7 IMPORTS END +++
 
 // +++ TICKET 11 IMPORTS START +++
-import { GameStateValidationServiceForPrompting } from '../../services/gameStateValidationServiceForPrompting.js';
-import { EntityDisplayDataProvider } from '../../services/entityDisplayDataProvider.js';
-import ThoughtsSectionAssembler from '../../services/promptElementAssemblers/thoughtsSectionAssembler.js';
-import NotesSectionAssembler from '../../services/promptElementAssemblers/notesSectionAssembler.js';
+import { GameStateValidationServiceForPrompting } from '../../validation/gameStateValidationServiceForPrompting.js';
+import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
+import ThoughtsSectionAssembler from '../../prompting/assembling/thoughtsSectionAssembler.js';
+import NotesSectionAssembler from '../../prompting/assembling/notesSectionAssembler.js';
 // +++ TICKET 11 IMPORTS END +++
 
 // --- Type Imports for JSDoc ---
@@ -64,27 +64,29 @@ import NotesSectionAssembler from '../../services/promptElementAssemblers/notesS
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../services/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
+/** @typedef {import('../../actions/targeting/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
 /** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
-/** @typedef {import('../../services/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
+/** @typedef {import('../../entities/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
 /** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
 
-/** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager_Type */
-/** @typedef {import('../../services/perceptionUpdateService.js').default} PerceptionUpdateService_Type */
-/** @typedef {import('../../services/gamePersistenceService.js').default} GamePersistenceService_Type */
+/** @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager_Type */
+/** @typedef {import('../../perception/perceptionUpdateService.js').default} PerceptionUpdateService_Type */
+/** @typedef {import('../../persistence/gamePersistenceService.js').default} GamePersistenceService_Type */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */
 /** @typedef {import('../../../initializers/services/referenceResolver.js').default} ReferenceResolver_Concrete */ // Note: path might be '../../initializers/services/referenceResolver.js'
 /** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */
 // --- NEW Type Imports for PromptBuilder dependencies ---
 /** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */ // Note: path might be '../../interfaces/IConfigurationProvider.js'
-/** @typedef {import('../../services/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
+/** @typedef {import('../../llms/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
 /** @typedef {import('../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver_Concrete */
-/** @typedef {import('../../services/promptElementAssemblers/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
-/** @typedef {import('../../services/promptElementAssemblers/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
+/** @typedef {import('../../prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
+/** @typedef {import('../../prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
+/** @typedef {import('../../prompting/assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler_Concrete */
+/** @typedef {import('../../prompting/assembling/notesSectionAssembler.js').default} NotesSectionAssembler_Concrete */
 
 /** @typedef {import('../../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder_Interface */
 
@@ -509,7 +511,7 @@ export function registerDomainServices(container) {
     );
     // This path was previously hardcoded in PromptBuilder's factory.
     // It's assumed to be a URL if HttpConfigurationProvider is used.
-    const llmConfigsPath = './config/llm-configs.json';
+    const llmConfigsPath = './dependencyInjection/llm-configs.json';
     log.info(
       `${String(tokens.LLMConfigService)} factory: Using configSourceIdentifier: "${llmConfigsPath}"`
     );
@@ -559,6 +561,17 @@ export function registerDomainServices(container) {
     `Domain Services Registration: Registered ${String(tokens.ThoughtsSectionAssembler)}.`
   );
 
+  // +++ TICKET 11 REGISTRATION START (Moved NotesSectionAssembler here) +++
+  // Register NotesSectionAssembler
+  r.singletonFactory(tokens.NotesSectionAssembler, (c) => {
+    const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+    return new NotesSectionAssembler({ logger });
+  });
+  log.debug(
+    `Domain Services Registration: Registered ${String(tokens.NotesSectionAssembler)}.`
+  );
+  // +++ TICKET 11 REGISTRATION END +++
+
   // PromptBuilder registration
   r.singletonFactory(tokens.IPromptBuilder, (c) => {
     const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
@@ -576,15 +589,14 @@ export function registerDomainServices(container) {
       /** @type {PerceptionLogAssembler_Concrete} */ (
         c.resolve(tokens.PerceptionLogAssembler)
       );
-    const thoughtsSectionAssembler = c.resolve(tokens.ThoughtsSectionAssembler);
-
-    r.singletonFactory(tokens.NotesSectionAssembler, (c) => {
-      const logger = c.resolve(tokens.ILogger);
-      return new NotesSectionAssembler({ logger });
-    });
-    log.debug(
-      `Domain Services Registration: Registered ${String(tokens.NotesSectionAssembler)}.`
-    );
+    const thoughtsSectionAssembler =
+      /** @type {ThoughtsSectionAssembler_Concrete} */ (
+        c.resolve(tokens.ThoughtsSectionAssembler)
+      );
+    const notesSectionAssembler =
+      /** @type {NotesSectionAssembler_Concrete} */ (
+        c.resolve(tokens.NotesSectionAssembler) // Correctly resolve NotesSectionAssembler
+      );
 
     log.info(
       `${String(tokens.IPromptBuilder)} factory: Creating PromptBuilder with new dependencies.`
@@ -596,7 +608,7 @@ export function registerDomainServices(container) {
       standardElementAssembler,
       perceptionLogAssembler,
       thoughtsSectionAssembler,
-      notesSectionAssembler,
+      notesSectionAssembler, // Now notesSectionAssembler is a defined variable
     });
   });
   log.debug(

@@ -11,8 +11,8 @@ import {
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
- * @typedef {import('../entities/entity.js').default} Entity
- * @typedef {import('../core/interfaces/CommonTypes.js').NamespacedId} NamespacedId
+ * @typedef {import('./entity.js').default} Entity
+ * @typedef {import('../interfaces/CommonTypes.js').NamespacedId} NamespacedId
  */
 
 /**
@@ -416,7 +416,7 @@ export class EntityDisplayDataProvider {
 
   /**
    * Extracts the mod ID from an entity's definitionId.
-   * For example, 'core:player' -> 'core'.
+   * For example, 'core:player' -> CORE_MOD_ID.
    *
    * @private
    * @param {NamespacedId | string | undefined | null} definitionId - The definition ID of the entity (e.g., 'myMod:someEntity').

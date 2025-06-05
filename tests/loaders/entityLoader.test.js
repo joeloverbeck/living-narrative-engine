@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/entityLoader.test.js
+// Filename: src/tests/loaders/entityLoader.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import EntityLoader from '../../src/loaders/entityLoader.js'; // Adjust path as needed
@@ -13,7 +13,7 @@ import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader
 /** @typedef {import('../../src/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../src/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('../../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../src/interfaces/coreServices.js').ValidationResult} ValidationResult */
 // Assume these factories (createMockConfiguration, createMockPathResolver, etc.) are defined as before...
 
@@ -129,7 +129,6 @@ const createMockSchemaValidator = (overrides = {}) => ({
   removeSchema: jest.fn().mockReturnValue(true),
   // --- [LOADER-REFACTOR-04 Test Change]: Ensure components can be marked as loaded ---
   isSchemaLoaded: jest.fn().mockImplementation((schemaId) => {
-    // Assume entity and core component schemas are loaded by default for tests
     if (
       schemaId === ENTITY_SCHEMA_ID ||
       schemaId === COMPONENT_POSITION_ID ||
@@ -275,7 +274,7 @@ describe('EntityLoader', () => {
       expect(loader).toBeInstanceOf(BaseManifestItemLoader);
 
       // --- [LOADER-REFACTOR-04 Test Change START] ---
-      // Verify super() was called correctly by checking config interaction and result
+      // Verify super() was called correctly by checking dependencyInjection interaction and result
       expect(tempConfig.getContentTypeSchemaId).toHaveBeenCalledTimes(1);
       expect(tempConfig.getContentTypeSchemaId).toHaveBeenCalledWith(
         'entities'
@@ -292,14 +291,14 @@ describe('EntityLoader', () => {
     it('should log ONE warning (from base class) if entity schema ID is not found during construction', () => {
       const warnLogger = createMockLogger(); // Use a temporary logger
       const badConfig = createMockConfiguration({
-        // Mock config to return null specifically for 'entities'
+        // Mock dependencyInjection to return null specifically for 'entities'
         getContentTypeSchemaId: jest.fn((typeName) => {
           if (typeName === 'entities') return null;
           return `http://example.com/schemas/${typeName}.schema.json`; // Fallback for others
         }),
       });
 
-      // Instantiate with the temporary logger and bad config
+      // Instantiate with the temporary logger and bad dependencyInjection
       new EntityLoader(
         badConfig,
         mockResolver,

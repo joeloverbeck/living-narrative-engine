@@ -1,4 +1,4 @@
-// tests/core/ENGINE_VERSION.test.js
+// tests/engine/engineVersion.test.js
 import { describe, it, expect } from '@jest/globals';
 import semver from 'semver';
 

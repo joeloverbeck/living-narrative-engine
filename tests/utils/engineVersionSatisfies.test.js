@@ -1,4 +1,4 @@
-// tests/core/utils/engineVersionSatisfies.test.js
+// tests/utils/engineVersionSatisfies.test.js
 import { describe, it, expect } from '@jest/globals';
 
 // Import the function under test
@@ -180,36 +180,4 @@ describe('engineVersionSatisfies Utility', () => {
     // done via code inspection for simple functions like this, as direct
     // testing in Jest is complex or impractical. The implementation adheres to these rules.
   });
-
-  // Optional: Testing behavior if ENGINE_VERSION itself was a pre-release
-  // This requires mocking ENGINE_VERSION, which can be complex with ES Modules in Jest.
-  // Example pseudo-code (actual implementation depends on Jest config/version):
-  // describe('Edge Case: Pre-release ENGINE_VERSION', () => {
-  //   beforeAll(() => {
-  //     jest.mock('../../../src/core/ENGINE_VERSION.js', () => ({
-  //       ENGINE_VERSION: '0.0.2-beta.1'
-  //     }));
-  //     // Need to re-require or use dynamic import for the mocked version
-  //     // engineVersionSatisfies = require('../../../src/core/util/engineVersionSatisfies.js').default;
-  //   });
-  //
-  //   it('should satisfy matching exact pre-release range', () => {
-  //      expect(engineVersionSatisfies('0.0.2-beta.1')).toBe(true);
-  //   });
-  //
-  //   it('should satisfy inclusive range due to includePrerelease flag', () => {
-  //      expect(engineVersionSatisfies('^0.0.1')).toBe(true); // Matches >=0.0.1 <0.1.0
-  //      expect(engineVersionSatisfies('^0.0.2-alpha')).toBe(true); // Matches >=0.0.2-alpha <0.1.0
-  //   });
-  //
-  //   it('should not satisfy range excluding pre-releases if base version matches but prerelease differs', () => {
-  //      // This behavior depends strictly on semver logic with the flag
-  //      expect(engineVersionSatisfies('0.0.2')).toBe(true); // includePrerelease allows this
-  //   });
-  //
-  //   afterAll(() => {
-  //     jest.unmock('../../../src/core/ENGINE_VERSION.js');
-  //     // Restore original import if necessary
-  //   });
-  // });
 });

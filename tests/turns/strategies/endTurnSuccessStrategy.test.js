@@ -1,4 +1,4 @@
-// src/core/turns/strategies/endTurnSuccessStrategy.test.js
+// src/turns/strategies/endTurnSuccessStrategy.test.js
 
 import EndTurnSuccessStrategy from '../../../src/turns/strategies/endTurnSuccessStrategy.js';
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';

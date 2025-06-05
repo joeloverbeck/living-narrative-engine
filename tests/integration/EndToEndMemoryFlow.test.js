@@ -1,17 +1,18 @@
 // tests/integration/EndToEndMemoryFlow.test.js
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
-import { AIPromptContentProvider } from '../../src/services/AIPromptContentProvider.js';
-import { PromptBuilder } from '../../src/services/promptBuilder.js';
+import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
+import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
-import { StandardElementAssembler } from '../../src/services/promptElementAssemblers/standardElementAssembler.js';
-import { PerceptionLogAssembler } from '../../src/services/promptElementAssemblers/perceptionLogAssembler.js';
-import { ThoughtsSectionAssembler } from '../../src/services/promptElementAssemblers/thoughtsSectionAssembler.js';
-import { PromptStaticContentService } from '../../src/services/promptStaticContentService.js';
-import AjvSchemaValidator from '../../src/services/ajvSchemaValidator.js';
+import { StandardElementAssembler } from '../../src/prompting/assembling/standardElementAssembler.js';
+import { PerceptionLogAssembler } from '../../src/prompting/assembling/perceptionLogAssembler.js';
+import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
+import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
+import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID } from '../../src/turns/schemas/llmOutputSchemas.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler';
 
 const mockLogger = () => ({
   info: jest.fn(),
@@ -114,6 +115,7 @@ describe('End-to-End Short-Term Memory Flow', () => {
       standardElementAssembler: new StandardElementAssembler({ logger }),
       perceptionLogAssembler: new PerceptionLogAssembler({ logger }),
       thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+      notesSectionAssembler: new NotesSectionAssembler({ logger }),
     });
 
     schemaValidator = new AjvSchemaValidator(logger);

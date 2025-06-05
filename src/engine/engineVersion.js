@@ -1,4 +1,4 @@
-// src/core/engineVersion.js
+// src/engine/engineVersion.js
 
 import pkg from '../../package.json';
 import semver from 'semver';
@@ -25,9 +25,6 @@ if (!semver.valid(versionFromPackage)) {
  *
  * @type {string}
  * @constant
- * @example
- * import { ENGINE_VERSION } from 'src/core/ENGINE_VERSION.js';
- * console.log(`Running engine version: ${ENGINE_VERSION}`);
  */
 export const ENGINE_VERSION = Object.freeze(versionFromPackage);
 
