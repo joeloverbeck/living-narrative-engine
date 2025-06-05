@@ -203,12 +203,16 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
 - **Reasoning:** The mod explicitly requires functionality or content from the missing dependency. Proceeding would
   likely lead to runtime errors.
 - **Example:**
-    - `ModA/mod.manifest.json`:
-      ```json
-      { "id": "ModA", "version": "1.0.0", "dependencies": [{ "modId": "CoreUtils", "version": ">=1.2.0" }] }
-      ```
-    - `game.json`: `{ "mods": ["ModA", "AnotherMod"] }` (Missing "CoreUtils")
-    - **Outcome:** Loading halts with an error indicating "ModA" requires missing dependency "CoreUtils".
+  - `ModA/mod.manifest.json`:
+    ```json
+    {
+      "id": "ModA",
+      "version": "1.0.0",
+      "dependencies": [{ "modId": "CoreUtils", "version": ">=1.2.0" }]
+    }
+    ```
+  - `game.json`: `{ "mods": ["ModA", "AnotherMod"] }` (Missing "CoreUtils")
+  - **Outcome:** Loading halts with an error indicating "ModA" requires missing dependency "CoreUtils".
 
 **Rule D2: Version Mismatch (Incompatible Version)**
 
@@ -219,14 +223,18 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
   version (too old or potentially too new if explicitly restricted) can cause API incompatibilities or unexpected
   behavior.
 - **Example:**
-    - `ModB/mod.manifest.json`:
-      ```json
-      { "id": "ModB", "version": "2.0.0", "dependencies": [{ "modId": "CoreUtils", "version": "^1.3.0" }] }
-      ```
-      (Requires CoreUtils >=1.3.0 and <2.0.0)
-    - `CoreUtils/mod.manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
-    - `game.json`: `{ "mods": ["CoreUtils", "ModB"] }`
-    - **Outcome:** Loading halts. Error: "ModB" requires "CoreUtils" version "^1.3.0", but found "1.2.5".
+  - `ModB/mod.manifest.json`:
+    ```json
+    {
+      "id": "ModB",
+      "version": "2.0.0",
+      "dependencies": [{ "modId": "CoreUtils", "version": "^1.3.0" }]
+    }
+    ```
+    (Requires CoreUtils >=1.3.0 and <2.0.0)
+  - `CoreUtils/mod.manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
+  - `game.json`: `{ "mods": ["CoreUtils", "ModB"] }`
+  - **Outcome:** Loading halts. Error: "ModB" requires "CoreUtils" version "^1.3.0", but found "1.2.5".
 
 **Rule D3: Circular Dependency**
 
@@ -235,9 +243,9 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
 - **Severity:** **FATAL**
 - **Reasoning:** Circular dependencies create an unresolvable load order and often indicate a design flaw in the mods.
 - **Example:**
-    - `ModX/mod.manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
-    - `ModY/mod.manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
-    - **Outcome:** Loading halts with an error detecting a circular dependency between "ModX" and "ModY".
+  - `ModX/mod.manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
+  - `ModY/mod.manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
+  - **Outcome:** Loading halts with an error detecting a circular dependency between "ModX" and "ModY".
 
 ### Conflict Rules
 
@@ -253,14 +261,18 @@ this mod is known to be incompatible with. Version ranges _can_ be specified but
   overriding the same critical data in incompatible ways, causing game-breaking bugs). Respecting this declaration
   prevents known unstable states.
 - **Example:**
-    - `AwesomeSwords/mod.manifest.json`:
-      ```json
-      { "id": "AwesomeSwords", "version": "1.0.0", "conflicts": [{ "modId": "SuperSwords" }] }
-      ```
-    - `SuperSwords/mod.manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
-    - `game.json`: `{ "mods": ["AwesomeSwords", "SuperSwords"] }`
-    - **Outcome:** Loading halts. Error: Detected conflict between "AwesomeSwords" and "SuperSwords" as declared by
-      "AwesomeSwords".
+  - `AwesomeSwords/mod.manifest.json`:
+    ```json
+    {
+      "id": "AwesomeSwords",
+      "version": "1.0.0",
+      "conflicts": [{ "modId": "SuperSwords" }]
+    }
+    ```
+  - `SuperSwords/mod.manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
+  - `game.json`: `{ "mods": ["AwesomeSwords", "SuperSwords"] }`
+  - **Outcome:** Loading halts. Error: Detected conflict between "AwesomeSwords" and "SuperSwords" as declared by
+    "AwesomeSwords".
 
 **Rule C2: Duplicate Mod ID Loaded**
 
@@ -272,10 +284,10 @@ this mod is known to be incompatible with. Version ranges _can_ be specified but
   overrides or data corruption. The user must resolve the ambiguity by removing or renaming one of the sources. Note:
   This rule applies _before_ dependency/conflict checks based on the final list of loaded mods.
 - **Example:**
-    - Directory `./mods/MyMod/mod.manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
-    - Directory `./mods/AnotherAttempt/mod.manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
-    - `game.json`: `{ "mods": ["MyMod", "AnotherAttempt"] }` (Assuming both directories correspond to these IDs)
-    - **Outcome:** Loading halts. Error: Duplicate mod ID "mymod" found from sources "MyMod" and "AnotherAttempt".
+  - Directory `./mods/MyMod/mod.manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
+  - Directory `./mods/AnotherAttempt/mod.manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
+  - `game.json`: `{ "mods": ["MyMod", "AnotherAttempt"] }` (Assuming both directories correspond to these IDs)
+  - **Outcome:** Loading halts. Error: Duplicate mod ID "mymod" found from sources "MyMod" and "AnotherAttempt".
 
 ### Engine Compatibility
 
@@ -289,12 +301,12 @@ Mods can specify the range of engine versions they are compatible with using the
 - **Behavior:** During startup, the engine checks its own version (`ENGINE_VERSION`) against the `gameVersion` range
   specified by _each_ loaded mod that includes this field.
 - **Validation:**
-    - If a mod specifies a `gameVersion` range, and the `ENGINE_VERSION` does _not_ satisfy that range, the engine will
-      **halt startup** with a fatal `ModDependencyError`, listing all incompatible mods.
-    - If a mod specifies a `gameVersion` that is not a valid SemVer range string (e.g., misspelled, incorrect type),
-      the engine will **halt startup** with a fatal `TypeError`.
-    - If a mod _omits_ the `gameVersion` field, or sets it to `null`, an empty string (`""`), or only whitespace, it is
-      **skipped** for this check and will not cause an engine compatibility error.
+  - If a mod specifies a `gameVersion` range, and the `ENGINE_VERSION` does _not_ satisfy that range, the engine will
+    **halt startup** with a fatal `ModDependencyError`, listing all incompatible mods.
+  - If a mod specifies a `gameVersion` that is not a valid SemVer range string (e.g., misspelled, incorrect type),
+    the engine will **halt startup** with a fatal `TypeError`.
+  - If a mod _omits_ the `gameVersion` field, or sets it to `null`, an empty string (`""`), or only whitespace, it is
+    **skipped** for this check and will not cause an engine compatibility error.
 
 **Rule E1: Engine Version Incompatibility**
 
@@ -304,18 +316,18 @@ Mods can specify the range of engine versions they are compatible with using the
 - **Reasoning:** The mod author expects specific engine features or behavior present only within the declared version
   range. Running outside this range risks runtime errors or incorrect functionality.
 - **Example:**
-    - `SomeMod/mod.manifest.json`:
-      ```json
-      { "id": "SomeMod", "version": "1.0.0", "gameVersion": "^1.2.0" }
-      ```
-      (Requires engine >=1.2.0 and <2.0.0)
-    - Current Engine Version (`ENGINE_VERSION`): `1.1.5`
-    - **Outcome:** Loading halts. Error: "SomeMod" incompatible with engine v1.1.5 (requires '^1.2.0').
+  - `SomeMod/mod.manifest.json`:
+    ```json
+    { "id": "SomeMod", "version": "1.0.0", "gameVersion": "^1.2.0" }
+    ```
+    (Requires engine >=1.2.0 and <2.0.0)
+  - Current Engine Version (`ENGINE_VERSION`): `1.1.5`
+  - **Outcome:** Loading halts. Error: "SomeMod" incompatible with engine v1.1.5 (requires '^1.2.0').
 
 ### Validation Summary Table
 
 | Rule Code | Description                     | Severity | Notes                                                                    |
-|:----------|:--------------------------------|:---------|:-------------------------------------------------------------------------|
+| :-------- | :------------------------------ | :------- | :----------------------------------------------------------------------- |
 | **D1**    | Missing Dependency              | FATAL    | Cannot proceed without required content/functionality.                   |
 | **D2**    | Incompatible Dependency Version | FATAL    | Potential for API breaks or incorrect behavior.                          |
 | **D3**    | Circular Dependency             | FATAL    | Unresolvable load order.                                                 |
@@ -355,4 +367,4 @@ How to use the ModManifestLoader service and handle potential errors.
 ### License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.  
-See the LICENSE file for full details. 
+See the LICENSE file for full details.

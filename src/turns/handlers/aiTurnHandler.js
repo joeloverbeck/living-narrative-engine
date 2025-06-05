@@ -14,7 +14,7 @@
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
- * @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem
+ * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem
  * @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder
  */
 

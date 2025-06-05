@@ -5,7 +5,7 @@
 // @jest-environment node
 
 // --- System Under Test ---
-import { ActionDiscoverySystem } from '../../src/actions/actionDiscoverySystem.js';
+import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
 
 // --- Core Dependencies to Mock ---
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';
@@ -39,7 +39,7 @@ jest.mock('../../src/entities/entityScopeService.js');
 jest.mock('../../src/utils/locationUtils.js');
 
 describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
-  /** @type {jest.Mocked<ActionDiscoverySystem>} */ // Type it as mocked if you intend to spy on its methods, though usually test SUT directly.
+  /** @type {jest.Mocked<ActionDiscoveryService>} */ // Type it as mocked if you intend to spy on its methods, though usually test SUT directly.
   let actionDiscoverySystem;
   /** @type {jest.Mocked<GameDataRepository>} */
   let mockGameDataRepo;
@@ -264,7 +264,7 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
       worldContext: /** @type {any} */ ({}),
     };
 
-    actionDiscoverySystem = new ActionDiscoverySystem({
+    actionDiscoverySystem = new ActionDiscoveryService({
       gameDataRepository: mockGameDataRepo,
       entityManager: mockEntityManager,
       actionValidationService: mockValidationService,

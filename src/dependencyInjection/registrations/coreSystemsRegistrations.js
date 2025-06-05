@@ -14,7 +14,7 @@
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem_Interface */
+/** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem_Interface */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
@@ -37,7 +37,7 @@
 /** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */ // Assuming this is the concrete class for the interface
 
 // --- System Imports ---
-import { ActionDiscoverySystem } from '../../actions/actionDiscoverySystem.js';
+import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
 import TurnManager from '../../turns/turnManager.js';
 
 // --- Handler & Resolver Imports ---
@@ -66,7 +66,7 @@ export function registerCoreSystems(container) {
   registrar.tagged(INITIALIZABLE).singletonFactory(
     tokens.IActionDiscoverySystem,
     (c) =>
-      new ActionDiscoverySystem({
+      new ActionDiscoveryService({
         gameDataRepository: /** @type {IGameDataRepository} */ (
           c.resolve(tokens.IGameDataRepository)
         ),

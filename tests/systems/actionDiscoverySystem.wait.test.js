@@ -7,7 +7,7 @@
  */
 
 // --- System Under Test ---
-import { ActionDiscoverySystem } from '../../src/actions/actionDiscoverySystem.js';
+import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
 
 // --- Core Dependencies to Mock ---
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';
@@ -36,7 +36,7 @@ jest.mock('../../src/entities/entityScopeService.js');
 // --- Test Suite ---
 describe('ActionDiscoverySystem - Wait Action Tests', () => {
   // Renamed describe for clarity
-  /** @type {ActionDiscoverySystem} */
+  /** @type {ActionDiscoveryService} */
   let actionDiscoverySystem;
   /** @type {jest.Mocked<GameDataRepository>} */
   let mockGameDataRepo;
@@ -136,7 +136,7 @@ describe('ActionDiscoverySystem - Wait Action Tests', () => {
       }),
     };
 
-    actionDiscoverySystem = new ActionDiscoverySystem({
+    actionDiscoverySystem = new ActionDiscoveryService({
       gameDataRepository: mockGameDataRepo,
       entityManager: mockEntityManager,
       actionValidationService: mockValidationService,

@@ -17,10 +17,10 @@
  */
 
 /**
- * @interface IActionDiscoverySystem
+ * @interface IActionDiscoveryService
  * @description Defines the contract for discovering valid actions available to an entity in the current game state.
  */
-export class IActionDiscoverySystem {
+export class IActionDiscoveryService {
   /**
    * Determines all valid actions that the specified entity can currently perform.
    * This typically involves checking action definitions against the entity's state,

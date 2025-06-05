@@ -16,7 +16,7 @@
 /** @typedef {import('../../../src/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../../src/turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */ // Changed to interface
-/** @typedef {import('../../../src/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../../../src/interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem */
 /** @typedef {import('../../../src/turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {any} AppContainer */
 

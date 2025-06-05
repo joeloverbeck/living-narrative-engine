@@ -12,7 +12,7 @@
 /** @typedef {import('../../../src/events/eventBus.js').default} EventBus */
 /** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../../src/data/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../../../src/actions/actionDiscoverySystem.js').ActionDiscoverySystem} ActionDiscoverySystem */
+/** @typedef {import('../../../src/actions/actionDiscoveryService.js').ActionDiscoveryService} ActionDiscoverySystem */
 /** @typedef {import('../../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../../src/setup/inputSetupService.js').default} InputSetupService */
 /** @typedef {import('../../../src/turns/turnManager.js').default} TurnManager */
@@ -54,7 +54,7 @@ jest.mock('../../../src/commands/commandParser.js');
 jest.mock('../../../src/context/worldContext.js');
 jest.mock('../../../src/turns/order/turnOrderService.js'); // Mocking TurnOrderService
 // Mock core systems dependencies if needed by other registrations called in tests
-jest.mock('../../../src/actions/actionDiscoverySystem.js'); // Mocking ActionDiscoverySystem
+jest.mock('../../../src/actions/actionDiscoveryService.js'); // Mocking ActionDiscoverySystem
 jest.mock('../../../src/turns/services/turnHandlerResolver.js');
 
 // --- Import AFTER mocking ---
@@ -67,7 +67,7 @@ import CommandParserMock from '../../../src/commands/commandParser.js';
 import GameStateManagerMock from '../../../src/context/worldContext.js';
 import { TurnOrderService as TurnOrderServiceMock } from '../../../src/turns/order/turnOrderService.js';
 // --- CORRECTION: Import the NAMED export 'ActionDiscoverySystem' and alias it ---
-import { ActionDiscoverySystem as ActionDiscoverySystemMock } from '../../../src/actions/actionDiscoverySystem.js';
+import { ActionDiscoveryService as ActionDiscoverySystemMock } from '../../../src/actions/actionDiscoveryService.js';
 import TurnHandlerResolverMock from '../../../src/turns/services/turnHandlerResolver.js';
 
 // --- Mock Implementations (Core & External Dependencies) ---

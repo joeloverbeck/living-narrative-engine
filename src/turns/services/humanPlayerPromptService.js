@@ -3,7 +3,7 @@
 
 // --- Interface/Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem */
 /**
  * @typedef {object} DiscoveredActionInfo
  * @property {string} id - The unique ID of the action.

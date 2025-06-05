@@ -1,6 +1,6 @@
 // src/utils/locationUtils.js
 
-import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
+import {EXITS_COMPONENT_ID} from '../constants/componentIds.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -9,9 +9,9 @@ import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
 /**
  * @typedef {object} ExitData
  * @property {string} direction - Keyword for this exit's direction.
- * @property {string} targetLocationId - ID of the destination location.
+ * @property {string} target - ID of the destination location (resolved instance ID).
  * @property {string} [description] - Optional exit description.
- * @property {string} [blocker] - Optional ID of an entity blocking the exit.
+ * @property {string} [blocker] - Optional ID of an entity blocking the exit (resolved instance ID).
  * @property {boolean} [locked] - Flag indicating if the exit is locked.
  * @property {string[]} [requiredKeys] - IDs of entities that unlock the exit.
  * @property {object} [conditions] - JsonLogic conditions for availability.
@@ -27,43 +27,43 @@ import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
  * @returns {ExitData[] | null} Array of exit objects or null when unavailable.
  */
 function _getExitsComponentData(locationEntityOrId, entityManager, logger) {
-  let locationEntity = locationEntityOrId;
+    let locationEntity = locationEntityOrId;
 
-  if (typeof locationEntityOrId === 'string') {
-    if (
-      !entityManager ||
-      typeof entityManager.getEntityInstance !== 'function'
-    ) {
-      logger?.error(
-        "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid."
-      );
-      return null;
+    if (typeof locationEntityOrId === 'string') {
+        if (
+            !entityManager ||
+            typeof entityManager.getEntityInstance !== 'function'
+        ) {
+            logger?.error(
+                "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid."
+            );
+            return null;
+        }
+        locationEntity = entityManager.getEntityInstance(locationEntityOrId);
     }
-    locationEntity = entityManager.getEntityInstance(locationEntityOrId);
-  }
 
-  if (
-    !locationEntity ||
-    typeof locationEntity.getComponentData !== 'function'
-  ) {
-    const id =
-      typeof locationEntityOrId === 'string'
-        ? locationEntityOrId
-        : locationEntity?.id || 'unknown';
-    logger?.warn(
-      `_getExitsComponentData: Location entity not found or invalid for ID/object: ${id}`
-    );
-    return null;
-  }
+    if (
+        !locationEntity ||
+        typeof locationEntity.getComponentData !== 'function'
+    ) {
+        const id =
+            typeof locationEntityOrId === 'string'
+                ? locationEntityOrId
+                : locationEntity?.id || 'unknown';
+        logger?.warn(
+            `_getExitsComponentData: Location entity not found or invalid for ID/object: ${id}`
+        );
+        return null;
+    }
 
-  const exitsData = locationEntity.getComponentData(EXITS_COMPONENT_ID);
-  if (!Array.isArray(exitsData)) {
-    logger?.debug(
-      `_getExitsComponentData: Location '${locationEntity.id}' has no '${EXITS_COMPONENT_ID}' component, or it's not an array.`
-    );
-    return null;
-  }
-  return /** @type {ExitData[]} */ (exitsData);
+    const exitsData = locationEntity.getComponentData(EXITS_COMPONENT_ID);
+    if (!Array.isArray(exitsData)) {
+        logger?.debug(
+            `_getExitsComponentData: Location '${locationEntity.id}' has no '${EXITS_COMPONENT_ID}' component, or it's not an array.`
+        );
+        return null;
+    }
+    return /** @type {ExitData[]} */ (exitsData);
 }
 
 /**
@@ -76,64 +76,64 @@ function _getExitsComponentData(locationEntityOrId, entityManager, logger) {
  * @returns {ExitData | null} The exit data if found, otherwise null.
  */
 export function getExitByDirection(
-  locationEntityOrId,
-  directionName,
-  entityManager,
-  logger
-) {
-  if (
-    !directionName ||
-    typeof directionName !== 'string' ||
-    directionName.trim() === ''
-  ) {
-    logger?.debug(
-      'getExitByDirection: Invalid or empty directionName provided.'
-    );
-    return null;
-  }
-
-  const exitsData = _getExitsComponentData(
     locationEntityOrId,
+    directionName,
     entityManager,
     logger
-  );
-  if (!exitsData || exitsData.length === 0) {
-    return null;
-  }
-
-  const normalizedDirName = directionName.toLowerCase().trim();
-  for (const exit of exitsData) {
+) {
     if (
-      exit &&
-      typeof exit.direction === 'string' &&
-      exit.direction.toLowerCase().trim() === normalizedDirName
+        !directionName ||
+        typeof directionName !== 'string' ||
+        directionName.trim() === ''
     ) {
-      if (
-        typeof exit.targetLocationId === 'string' &&
-        exit.targetLocationId.trim() !== ''
-      ) {
-        return exit;
-      }
-      const locId =
-        typeof locationEntityOrId === 'string'
-          ? locationEntityOrId
-          : locationEntityOrId?.id || 'unknown';
-      logger?.warn(
-        `getExitByDirection: Found exit for direction '${directionName}' in location '${locId}', but its targetLocationId is invalid: ${JSON.stringify(
-          exit
-        )}`
-      );
-      return null;
+        logger?.debug(
+            'getExitByDirection: Invalid or empty directionName provided.'
+        );
+        return null;
     }
-  }
-  const locId =
-    typeof locationEntityOrId === 'string'
-      ? locationEntityOrId
-      : locationEntityOrId?.id || 'unknown';
-  logger?.debug(
-    `getExitByDirection: No exit found for direction '${directionName}' in location '${locId}'.`
-  );
-  return null;
+
+    const exitsData = _getExitsComponentData(
+        locationEntityOrId,
+        entityManager,
+        logger
+    );
+    if (!exitsData || exitsData.length === 0) {
+        return null;
+    }
+
+    const normalizedDirName = directionName.toLowerCase().trim();
+    for (const exit of exitsData) {
+        if (
+            exit &&
+            typeof exit.direction === 'string' &&
+            exit.direction.toLowerCase().trim() === normalizedDirName
+        ) {
+            if (
+                typeof exit.target === 'string' && // CHANGED from exit.targetLocationId
+                exit.target.trim() !== ''       // CHANGED from exit.targetLocationId
+            ) {
+                return exit;
+            }
+            const locId =
+                typeof locationEntityOrId === 'string'
+                    ? locationEntityOrId
+                    : locationEntityOrId?.id || 'unknown';
+            logger?.warn(
+                `getExitByDirection: Found exit for direction '${directionName}' in location '${locId}', but its target ID ('target' property) is invalid: ${JSON.stringify( // CHANGED warning message
+                    exit
+                )}`
+            );
+            return null; // Return null if target is invalid for the found direction
+        }
+    }
+    const locId =
+        typeof locationEntityOrId === 'string'
+            ? locationEntityOrId
+            : locationEntityOrId?.id || 'unknown';
+    logger?.debug(
+        `getExitByDirection: No exit found for direction '${directionName}' in location '${locId}'.`
+    );
+    return null;
 }
 
 /**
@@ -145,40 +145,40 @@ export function getExitByDirection(
  * @returns {ExitData[]} Array of valid exit objects.
  */
 export function getAvailableExits(locationEntityOrId, entityManager, logger) {
-  const exitsData = _getExitsComponentData(
-    locationEntityOrId,
-    entityManager,
-    logger
-  );
-  if (!exitsData || exitsData.length === 0) {
-    return [];
-  }
-
-  const validExits = [];
-  const locIdForLog =
-    typeof locationEntityOrId === 'string'
-      ? locationEntityOrId
-      : locationEntityOrId?.id || 'unknown';
-
-  for (const exit of exitsData) {
-    if (
-      exit &&
-      typeof exit === 'object' &&
-      typeof exit.direction === 'string' &&
-      exit.direction.trim() !== '' &&
-      typeof exit.targetLocationId === 'string' &&
-      exit.targetLocationId.trim() !== ''
-    ) {
-      validExits.push(exit);
-    } else {
-      logger?.warn(
-        `getAvailableExits: Invalid exit object found in location '${locIdForLog}': ${JSON.stringify(
-          exit
-        )}. Skipping.`
-      );
+    const exitsData = _getExitsComponentData(
+        locationEntityOrId,
+        entityManager,
+        logger
+    );
+    if (!exitsData || exitsData.length === 0) {
+        return [];
     }
-  }
-  return validExits;
+
+    const validExits = [];
+    const locIdForLog =
+        typeof locationEntityOrId === 'string'
+            ? locationEntityOrId
+            : locationEntityOrId?.id || 'unknown';
+
+    for (const exit of exitsData) {
+        if (
+            exit &&
+            typeof exit === 'object' &&
+            typeof exit.direction === 'string' &&
+            exit.direction.trim() !== '' &&
+            typeof exit.target === 'string' && // CHANGED from exit.targetLocationId
+            exit.target.trim() !== ''       // CHANGED from exit.targetLocationId
+        ) {
+            validExits.push(exit);
+        } else {
+            logger?.warn(
+                `getAvailableExits: Invalid exit object found in location '${locIdForLog}' (expected 'direction' and 'target' to be non-empty strings): ${JSON.stringify( // Enhanced warning message
+                    exit
+                )}. Skipping.`
+            );
+        }
+    }
+    return validExits;
 }
 
-export { _getExitsComponentData };
+export {_getExitsComponentData};
