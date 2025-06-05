@@ -1,5 +1,5 @@
 // ****** REVISED CORRECTED FILE V12 ******
-// src/tests/core/config/registrations/runtimeRegistrations.test.js
+// src/tests/dependencyInjection/registrations/runtimeRegistrations.test.js
 /* eslint-disable jest/no-conditional-expect */
 /* eslint-disable no-unused-vars */
 
@@ -11,11 +11,9 @@
 /** @typedef {import('../../../../actions/actionExecutor.js').default} ActionExecutor */
 /** @typedef {import('../../../src/events/eventBus.js').default} EventBus */
 /** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../../../src/services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+/** @typedef {import('../../../src/data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../../src/systems/actionDiscoverySystem.js').ActionDiscoverySystem} ActionDiscoverySystem */
 /** @typedef {import('../../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-// REMOVED: GameLoop typedef no longer needed in this test context
-// /** @typedef {import('../../../../core/gameLoop.js').default} GameLoop */
 /** @typedef {import('../../../src/setup/inputSetupService.js').default} InputSetupService */
 /** @typedef {import('../../../src/turns/turnManager.js').default} TurnManager */
 /** @typedef {import('../../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
@@ -28,21 +26,16 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 
 // --- Class Under Test ---
-import { registerRuntime } from '../../../src/config/registrations/runtimeRegistrations.js';
+import { registerRuntime } from '../../../src/dependencyInjection/registrations/runtimeRegistrations.js';
 // Import other registration functions needed for dependency setup in tests
-import { registerCoreSystems as _registerCoreSystems } from '../../../src/config/registrations/coreSystemsRegistrations.js';
-import { registerDomainServices as _registerDomainServices } from '../../../src/config/registrations/domainServicesRegistrations.js';
+import { registerCoreSystems as _registerCoreSystems } from '../../../src/dependencyInjection/registrations/coreSystemsRegistrations.js';
+import { registerDomainServices as _registerDomainServices } from '../../../src/dependencyInjection/registrations/domainServicesRegistrations.js';
 
 void _registerCoreSystems;
 void _registerDomainServices;
 
 // --- Dependencies ---
-import { tokens } from '../../../src/config/tokens.js';
-// Import real classes needed for instanceof checks where not mocked
-// import {ActionDiscoverySystem} from '../../../../systems/actionDiscoverySystem.js'; // Now mocked
-// import TurnHandlerResolver from '../../../../core/services/turnHandlerResolver.js'; // Now mocked
-// Import concrete classes for domain services (if needed, but mostly mocked)
-// Import concrete classes for reference only
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
 import CommandParser from '../../../src/commands/commandParser.js';
 import WorldContext from '../../../src/context/worldContext.js';
@@ -53,8 +46,6 @@ void WorldContext;
 void TurnOrderService;
 
 // --- MOCK the Modules (Classes being registered/depended upon) ---
-// REMOVED: GameLoop mock - runtimeRegistrations no longer uses it
-// jest.mock('../../../../core/gameLoop.js');
 jest.mock('../../../src/setup/inputSetupService.js');
 jest.mock('../../../src/turns/turnManager.js');
 jest.mock('../../../src/turns/handlers/playerTurnHandler.js');
@@ -78,8 +69,6 @@ import { TurnOrderService as TurnOrderServiceMock } from '../../../src/turns/ord
 // --- CORRECTION: Import the NAMED export 'ActionDiscoverySystem' and alias it ---
 import { ActionDiscoverySystem as ActionDiscoverySystemMock } from '../../../src/systems/actionDiscoverySystem.js';
 import TurnHandlerResolverMock from '../../../src/turns/services/turnHandlerResolver.js';
-// REMOVED: GameLoop import not needed
-// import GameLoop from '../../../../core/gameLoop.js';
 
 // --- Mock Implementations (Core & External Dependencies) ---
 // Simple object mocks for dependencies NOT registered by coreSystems/runtime/domain

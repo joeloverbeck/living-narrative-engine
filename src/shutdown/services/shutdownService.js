@@ -1,7 +1,7 @@
-// src/core/shutdown/services/shutdownService.js
+// src/shutdown/services/shutdownService.js
 
 // --- Type Imports ---
-/** @typedef {import('../../config/appContainer.js').default} AppContainer */
+/** @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 // REMOVED: GameLoop import no longer needed
@@ -27,8 +27,8 @@
 
 // --- Class Definition ---
 
-import { SHUTDOWNABLE } from '../../config/tags.js';
-import { tokens } from '../../config/tokens.js'; // <<< ADDED for resolving TurnManager
+import { SHUTDOWNABLE } from '../../dependencyInjection/tags.js';
+import { tokens } from '../../dependencyInjection/tokens.js'; // <<< ADDED for resolving TurnManager
 
 /**
  * Service responsible for orchestrating the orderly shutdown of the game engine and its components.

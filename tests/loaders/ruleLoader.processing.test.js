@@ -1,4 +1,4 @@
-// src/tests/core/loaders/ruleLoader.processing.test.js
+// src/tests/loaders/ruleLoader.processing.test.js
 
 // --- Imports ---
 import {

@@ -1,4 +1,4 @@
-// src/tests/core/loading/ruleLoader.test.js
+// src/tests/loaders/ruleLoader.test.js
 
 // --- Imports ---
 import {
@@ -11,7 +11,7 @@ import {
 } from '@jest/globals'; // Assuming Jest environment
 import RuleLoader from '../../src/loaders/ruleLoader.js'; // Adjust path as necessary
 // Import interfaces for JSDoc typing if desired
-// import { IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger } from '../../../core/interfaces/coreServices';
+// import { IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger } from '../../../interfaces/coreServices';
 
 // --- Mock Service Factories (Adapted from ComponentDefinitionLoader tests) ---
 
@@ -491,7 +491,7 @@ describe('RuleLoader (Sub-Ticket 4.1: Test Setup & Mocking)', () => {
     expect(loader).toBeDefined();
     expect(loader).toBeInstanceOf(RuleLoader);
     // Verify that the constructor received the mocks (if they are stored on the instance)
-    // Example: expect(loader.config).toBe(mockConfig);
+    // Example: expect(loader.dependencyInjection).toBe(mockConfig);
     // This depends on the RuleLoader's internal implementation.
   });
 

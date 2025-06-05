@@ -1,4 +1,4 @@
-// src/tests/core/loaders/ruleLoader.manifest.test.js
+// src/tests/loaders/ruleLoader.manifest.test.js
 
 // --- Imports ---
 import {
@@ -214,7 +214,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
     mockRegistry = createMockDataRegistry();
     mockLogger = createMockLogger();
 
-    // Ensure config returns the rule schema ID correctly via base class method
+    // Ensure dependencyInjection returns the rule schema ID correctly via base class method
     mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
       typeName === RULE_TYPE_NAME ? defaultRuleSchemaId : undefined
     );

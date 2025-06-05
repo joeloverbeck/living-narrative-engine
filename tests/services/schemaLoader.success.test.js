@@ -1,4 +1,4 @@
-// src/tests/core/services/schemaLoader.success.test.js
+// src/tests/services/schemaLoader.success.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals'; // Added beforeEach
 import SchemaLoader from '../../src/loaders/schemaLoader.js'; // Adjust path RELATIVE TO THIS NEW FILE

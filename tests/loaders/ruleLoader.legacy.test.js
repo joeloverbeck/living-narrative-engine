@@ -1,4 +1,4 @@
-// src/tests/core/loaders/ruleLoader.legacy.test.js
+// src/tests/loaders/ruleLoader.legacy.test.js
 
 // --- Imports ---
 import {
@@ -379,7 +379,7 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     mockRegistry = createMockDataRegistry(); // Includes helpers
     mockLogger = createMockLogger();
 
-    // Default config for rule schema ID via base class method
+    // Default dependencyInjection for rule schema ID via base class method
     mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
       typeName === RULE_TYPE_NAME ? defaultRuleSchemaId : undefined
     );

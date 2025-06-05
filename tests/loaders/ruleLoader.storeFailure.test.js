@@ -1,4 +1,4 @@
-// src/tests/core/loaders/ruleLoader.storeFailure.test.js
+// src/tests/loaders/ruleLoader.storeFailure.test.js
 
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';

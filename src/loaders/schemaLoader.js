@@ -1,4 +1,4 @@
-// src/core/services/schemaLoader.js
+// src/loaders/schemaLoader.js
 
 /**
  * @file Defines the SchemaLoader class, responsible for loading

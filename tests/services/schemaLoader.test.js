@@ -1,4 +1,4 @@
-// src/tests/core/services/schemaLoader.test.js
+// src/tests/services/schemaLoader.test.js
 
 import {
   describe,

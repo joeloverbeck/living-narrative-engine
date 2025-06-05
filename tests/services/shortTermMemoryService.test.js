@@ -12,7 +12,7 @@
  * Jest is expected as the test runner.
  */
 
-import ShortTermMemoryService from '../../src/services/shortTermMemoryService.js';
+import ShortTermMemoryService from '../../src/ai/shortTermMemoryService.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 
 const ISO_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/; // quick ISO-8601 sanity check

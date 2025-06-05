@@ -1,4 +1,4 @@
-// src/core/services/ruleLoader.js
+// src/loaders/ruleLoader.js
 
 // Import BaseManifestItemLoader
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';

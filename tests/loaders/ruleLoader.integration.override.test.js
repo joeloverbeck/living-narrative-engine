@@ -1,11 +1,11 @@
-// src/tests/core/loaders/ruleLoader.integration.override.test.js
+// src/tests/loaders/ruleLoader.integration.override.test.js
 
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import path from 'path';
 import RuleLoader from '../../src/loaders/ruleLoader.js';
 // Use the actual InMemoryDataRegistry for stateful testing
-import InMemoryDataRegistry from '../../src/services/inMemoryDataRegistry.js'; // Adjust path if necessary
+import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js'; // Adjust path if necessary
 
 // Import interfaces for JSDoc typing
 /**

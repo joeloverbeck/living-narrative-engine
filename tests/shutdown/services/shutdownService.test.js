@@ -1,8 +1,8 @@
-// src/tests/core/shutdown/services/shutdownService.test.js
+// src/tests/shutdown/services/shutdownService.test.js
 
 import ShutdownService from '../../../src/shutdown/services/shutdownService.js';
-import { SHUTDOWNABLE } from '../../../src/config/tags.js';
-import { tokens } from '../../../src/config/tokens.js'; // <<< ADDED
+import { SHUTDOWNABLE } from '../../../src/dependencyInjection/tags.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js'; // <<< ADDED
 import {
   afterEach,
   beforeEach,

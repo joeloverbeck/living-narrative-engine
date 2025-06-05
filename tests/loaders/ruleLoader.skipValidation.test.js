@@ -1,4 +1,4 @@
-// src/tests/core/loaders/ruleLoader.skipValidation.test.js
+// src/tests/loaders/ruleLoader.skipValidation.test.js
 
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';

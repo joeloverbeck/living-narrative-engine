@@ -1,4 +1,4 @@
-// src/core/utils/safeEventDispatcher.js
+// src/events/safeEventDispatcher.js
 // --- FILE START ---
 
 /**

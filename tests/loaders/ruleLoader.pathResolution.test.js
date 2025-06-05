@@ -1,4 +1,4 @@
-// src/tests/core/loaders/ruleLoader.pathResolution.test.js
+// src/tests/loaders/ruleLoader.pathResolution.test.js
 
 // --- Imports ---
 import {
