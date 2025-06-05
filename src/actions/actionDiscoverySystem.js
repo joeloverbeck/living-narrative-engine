@@ -5,13 +5,13 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../actions/validation/actionValidationService.js').ActionValidationService} ActionValidationService */
-/** @typedef {import('../actions/validation/actionValidationService.js').ActionTargetContext} ActionTargetContext */
+/** @typedef {import('./validation/actionValidationService.js').ActionValidationService} ActionValidationService */
+/** @typedef {import('./validation/actionValidationService.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../entities/entityScopeService.js').getEntityIdsForScopes} getEntityIdsForScopesFn */
-/** @typedef {import('../actions/actionFormatter.js').formatActionCommand} formatActionCommandFn */
+/** @typedef {import('./actionFormatter.js').formatActionCommand} formatActionCommandFn */
 /** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain */
-/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */ // Assuming ConsoleLogger implementation
 
 // --- Dependency Imports ---

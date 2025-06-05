@@ -37,7 +37,7 @@
 /** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */ // Assuming this is the concrete class for the interface
 
 // --- System Imports ---
-import { ActionDiscoverySystem } from '../../systems/actionDiscoverySystem.js';
+import { ActionDiscoverySystem } from '../../actions/actionDiscoverySystem.js';
 import TurnManager from '../../turns/turnManager.js';
 
 // --- Handler & Resolver Imports ---

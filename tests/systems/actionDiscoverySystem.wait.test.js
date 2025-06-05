@@ -7,7 +7,7 @@
  */
 
 // --- System Under Test ---
-import { ActionDiscoverySystem } from '../../src/systems/actionDiscoverySystem.js';
+import { ActionDiscoverySystem } from '../../src/actions/actionDiscoverySystem.js';
 
 // --- Core Dependencies to Mock ---
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';

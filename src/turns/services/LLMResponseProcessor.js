@@ -5,6 +5,7 @@
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction}   ITurnAction_Imported */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger}           ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator}  ISchemaValidator */
+/** @typedef {import('../../interfaces/coreServices.js').IEntityManager}     IEntityManager */
 /** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor_Interface_Typedef */
 /** @typedef {import('../../utils/llmUtils.js').JsonProcessingError}        JsonProcessingError */
 
@@ -27,29 +28,31 @@ const BASE_FALLBACK_WAIT_ACTION = {
 
 /**
  * @typedef {object} LlmProcessingFailureInfo
- * @property {string} errorContext
- * @property {string} [rawResponse]
- * @property {string} [cleanedResponse]
- * @property {object} [parsedResponse]
- * @property {Array<object>} [validationErrors]
- * @property {string} [parseErrorStage]
+ * @property {string} errorContext - short identifier of the error type
+ * @property {string} [rawResponse] - raw LLM response string, if available
+ * @property {string} [cleanedResponse] - cleaned JSON string before parsing
+ * @property {object} [parsedResponse] - parsed JSON object attempt
+ * @property {Array<object>} [validationErrors] - validation errors from schema
+ * @property {string} [parseErrorStage] - stage at which parse error occurred
  */
 
 /**
  * @typedef {object} ProcessedTurnAction
- * @property {string} actionDefinitionId
- * @property {string} commandString
- * @property {string} speech
- * @property {LlmProcessingFailureInfo} [llmProcessingFailureInfo]
- * @property {object} [resolvedParameters]
+ * @property {string} actionDefinitionId - system identifier for the chosen action
+ * @property {string} commandString - command string for the game parser
+ * @property {string} speech - character's spoken words
+ * @property {LlmProcessingFailureInfo} [llmProcessingFailureInfo] - detailed failure info if processing failed
+ * @property {object} [resolvedParameters] - any parameters resolved during processing
  */
 
 /* ──────────────────────────  HELPER FUNCTION  ───────────────────────── */
+
 /**
  * Normalise note text for duplicate detection.
- *  • trim → lowercase → strip punctuation → collapse internal whitespace
- * @param {string} text
- * @returns {string}
+ * • trim → lowercase → strip punctuation → collapse internal whitespace
+ *
+ * @param {string} text - original note text
+ * @returns {string} normalized text
  */
 function normalizeNoteText(text) {
   return text
@@ -65,11 +68,15 @@ function normalizeNoteText(text) {
 export class LLMResponseProcessor extends ILLMResponseProcessor {
   /** @type {ISchemaValidator} */
   #schemaValidator;
-  /** @type {IEntityManager}  */ // <- optional, see below
+  /** @type {IEntityManager}  */
   #entityManager;
 
   /**
-   * @param {{schemaValidator: ISchemaValidator}} deps
+   * Constructs a new LLMResponseProcessor.
+   *
+   * @param {{ schemaValidator: ISchemaValidator, entityManager?: IEntityManager }} deps - dependencies object
+   *   @param {ISchemaValidator} deps.schemaValidator - validator for LLM response schemas
+   *   @param {IEntityManager} [deps.entityManager] - optional entity manager for persisting changes
    */
   constructor({ schemaValidator, entityManager = null }) {
     super();
@@ -88,6 +95,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     this.#entityManager = entityManager; // may be null in tests
 
     // Unit tests spy on this warning:
+    // eslint-disable-next-line no-console
     if (!this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_SCHEMA_ID)) {
       console.warn(
         `LLMResponseProcessor: Schema with ID '${LLM_TURN_ACTION_SCHEMA_ID}' is not loaded in the provided schema validator. Validation will fail if this schema is required.`
@@ -99,11 +107,11 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    * Creates a safe fallback action and logs the failure.
    *
    * @private
-   * @param {string} errorContext
-   * @param {string} actorId
-   * @param {ILogger} logger
-   * @param {object|null} [errorDetailsInput]
-   * @returns {ProcessedTurnAction}
+   * @param {string} errorContext - type of error encountered
+   * @param {string} actorId - ID of the actor being processed
+   * @param {ILogger} logger - logger instance
+   * @param {object|null} [errorDetailsInput] - additional error details
+   * @returns {ProcessedTurnAction} fallback action object
    */
   _createProcessingFallbackAction(
     errorContext,
@@ -142,9 +150,9 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       errorContext === 'json_parse_error' ||
       errorContext === 'invalid_input_type'
     ) {
-      // ────── CHANGE BELOW: keep undefined instead of coalescing to null ──────
+      // ────── KEEP undefined instead of coalescing to null ──────
       failureInfo.rawResponse = rawLlmResponse;
-      // ───────────────────────────────────────────────────────────────────────
+      // ──────────────────────────────────────────────────────────
 
       if (cleanedLlmResponse !== undefined) {
         failureInfo.cleanedResponse = cleanedLlmResponse;
@@ -202,12 +210,17 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    * actor’s `core:notes` component with de-duplication and validation.
    *
    * @private
-   * @param {*} notesArray           – Raw value from the LLM payload.
-   * @param {object} actorEntity     – The actor entity instance.
-   * @param {ILogger} logger         – Logger instance.
+   * @param {*} notesArray - raw notes array from LLM; expected to be an array
+   * @param {object} actorEntity - actor entity instance to merge notes into
+   * @param {ILogger} logger - logger instance for logging errors/info
    * @returns {void}
    */
   _mergeNotesIntoEntity(notesArray, actorEntity, logger) {
+    /* --- 1. If notesArray is completely missing (undefined), do nothing --- */
+    if (notesArray === undefined) {
+      return;
+    }
+
     /* ---------- guard: input must be an array ---------- */
     if (!Array.isArray(notesArray)) {
       logger.error("'notes' field is not an array; skipping merge");
@@ -232,7 +245,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       return;
     }
 
-    /* ---------- build normalised set from existing ---------- */
+    /* ---------- build normalized set from existing ---------- */
     const existingSet = new Set(
       notesComp.notes
         .filter((n) => typeof n.text === 'string')
@@ -274,10 +287,10 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    * Parses (with repair), validates, and transforms the LLM’s JSON response
    * string into a safe {@link ProcessedTurnAction}.
    *
-   * @param {string} llmJsonResponse
-   * @param {string} actorId
-   * @param {ILogger} logger
-   * @returns {Promise<ProcessedTurnAction>}
+   * @param {string} llmJsonResponse - raw JSON response string from LLM
+   * @param {string} actorId - ID of the actor for which to process the response
+   * @param {ILogger} logger - logger instance for logging processing steps
+   * @returns {Promise<ProcessedTurnAction>} promise resolving to the final action
    */
   async processResponse(llmJsonResponse, actorId, logger) {
     let parsedJson;
