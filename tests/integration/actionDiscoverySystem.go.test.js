@@ -2,9 +2,7 @@
 // --- FILE START ---
 
 // --- Tell Jest to use Node environment ---
-/**
- * @jest-environment node
- */
+// @jest-environment node
 
 // --- System Under Test ---
 import { ActionDiscoverySystem } from '../../src/actions/actionDiscoverySystem.js';
@@ -16,6 +14,7 @@ import { ActionValidationService } from '../../src/actions/validation/actionVali
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import { formatActionCommand as formatActionCommandFn } from '../../src/actions/actionFormatter.js';
 import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../src/entities/entityScopeService.js';
+import { getAvailableExits } from '../../src/utils/locationUtils.js';
 
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
@@ -37,6 +36,7 @@ jest.mock('../../src/actions/validation/actionValidationService.js');
 jest.mock('../../src/logging/consoleLogger.js');
 jest.mock('../../src/actions/actionFormatter.js');
 jest.mock('../../src/entities/entityScopeService.js');
+jest.mock('../../src/utils/locationUtils.js');
 
 describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
   /** @type {jest.Mocked<ActionDiscoverySystem>} */ // Type it as mocked if you intend to spy on its methods, though usually test SUT directly.
@@ -53,6 +53,10 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
   let mockFormatActionCommandFn;
   /** @type {jest.MockedFunction<typeof getEntityIdsForScopesFn>} */
   let mockGetEntityIdsForScopesFn;
+  /** @type {jest.MockedFunction<typeof getAvailableExits>} */
+  let mockGetAvailableExits;
+  /** @type {Array<any>} */
+  let availableExits;
 
   const HERO_DEFINITION_ID = 'isekai:hero';
   const GUILD_DEFINITION_ID = 'isekai:adventurers_guild';
@@ -106,7 +110,11 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
       'core:name': { text: "Adventurers' Guild" },
       'core:description': { text: "The local adventurers' guild." },
       [EXITS_COMPONENT_ID]: [
-        { direction: 'out to town', target: TOWN_DEFINITION_ID, blocker: null }, // Target is a definition ID
+        {
+          direction: 'out to town',
+          targetLocationId: TOWN_DEFINITION_ID,
+          blocker: null,
+        },
       ],
     },
   };
@@ -135,6 +143,7 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
 
     mockFormatActionCommandFn = formatActionCommandFn; // Already a mock
     mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn; // Already a mock
+    mockGetAvailableExits = getAvailableExits; // Already a mock
 
     // Correctly instantiate Entity objects using new (instanceId, definitionId) signature
     mockHeroEntity = new Entity(HERO_INSTANCE_ID, HERO_DEFINITION_ID);
@@ -198,6 +207,15 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
       }
     );
 
+    availableExits = [
+      {
+        direction: 'out to town',
+        targetLocationId: TOWN_DEFINITION_ID,
+        blocker: null,
+      },
+    ];
+    mockGetAvailableExits.mockReturnValue(availableExits);
+
     mockValidationService.isValid.mockImplementation(
       (actionDef, actor, targetContext) => {
         if (actor.id !== HERO_INSTANCE_ID) return false; // Check against instance ID
@@ -211,9 +229,7 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
             targetContext.direction === 'out to town'
           ) {
             // Simulate prerequisite check (blocker is null)
-            const guildExits =
-              mockAdventurersGuildLocation.getComponentData(EXITS_COMPONENT_ID);
-            const relevantExit = guildExits?.find(
+            const relevantExit = availableExits.find(
               (e) => e.direction === 'out to town'
             );
             return !!relevantExit && relevantExit.blocker === null;
@@ -283,29 +299,24 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
     expect(validActions).toContainEqual(waitAction);
     expect(validActions).toContainEqual(goAction);
 
+    expect(mockGetAvailableExits).toHaveBeenCalledWith(
+      mockAdventurersGuildLocation,
+      mockEntityManager,
+      mockLogger
+    );
+
     // ActionDiscoverySystem logs INSTANCE IDs
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `Checking exits data (component ${EXITS_COMPONENT_ID}) for location: ${GUILD_INSTANCE_ID}`, // Location's instance ID
-      adventurersGuildEntityDefinitionData.components[EXITS_COMPONENT_ID] // The actual component data
+      `Found ${availableExits.length} available exits for location: ${GUILD_INSTANCE_ID} via getAvailableExits.`
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Found ${adventurersGuildEntityDefinitionData.components[EXITS_COMPONENT_ID].length} potential exits from ${EXITS_COMPONENT_ID}. Checking validation...`
-      )
-    );
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `    -> Processing exit direction: out to town`
+      `    -> Processing available exit direction: out to town`
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `    * Found valid action (direction: out to town): '${coreGoActionDefinition.name}' (ID: core:go)`
     );
 
     expect(mockGameDataRepo.getAllActionDefinitions).toHaveBeenCalledTimes(1);
-    // getComponentData is called with the location's INSTANCE ID
-    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
-      GUILD_INSTANCE_ID,
-      EXITS_COMPONENT_ID
-    );
 
     expect(mockValidationService.isValid).toHaveBeenCalledWith(
       coreWaitActionDefinition,

@@ -17,8 +17,8 @@
 // --- Dependency Imports ---
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoverySystem } from '../interfaces/IActionDiscoverySystem.js';
-import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
 import { validateDependency } from '../utils/validationUtils.js';
+import { getAvailableExits } from '../utils/locationUtils.js';
 
 /**
  * @typedef {object} DiscoveredActionInfo
@@ -214,77 +214,64 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
             );
           }
         } else if (domain === 'direction') {
-          const exitsData = this.#entityManager.getComponentData(
-            context.currentLocation?.id,
-            EXITS_COMPONENT_ID
+          const availableExits = getAvailableExits(
+            context.currentLocation,
+            this.#entityManager,
+            this.#logger
           );
+
           this.#logger.debug(
-            `Checking exits data (component ${EXITS_COMPONENT_ID}) for location: ${context.currentLocation?.id}`,
-            exitsData
+            `Found ${availableExits.length} available exits for location: ${context.currentLocation?.id} via getAvailableExits.`
           );
 
-          if (Array.isArray(exitsData) && exitsData.length > 0) {
-            this.#logger.debug(
-              `    - Found ${exitsData.length} potential exits from ${EXITS_COMPONENT_ID}. Checking validation...`
-            );
+          if (availableExits.length > 0) {
+            for (const exit of availableExits) {
+              const direction = exit.direction;
+              this.#logger.debug(
+                `    -> Processing available exit direction: ${direction}`
+              );
+              const targetContext = ActionTargetContext.forDirection(direction);
 
-            for (const exit of exitsData) {
               if (
-                exit &&
-                typeof exit.direction === 'string' &&
-                exit.direction.trim() !== ''
+                this.#actionValidationService.isValid(
+                  actionDef,
+                  actorEntity,
+                  targetContext
+                )
               ) {
-                const direction = exit.direction;
                 this.#logger.debug(
-                  `    -> Processing exit direction: ${direction}`
+                  `      - isValid TRUE for direction ${direction}. Calling formatter.`
                 );
-                const targetContext =
-                  ActionTargetContext.forDirection(direction);
-
-                if (
-                  this.#actionValidationService.isValid(
-                    actionDef,
-                    actorEntity,
-                    targetContext
-                  )
-                ) {
+                const command = this.#formatActionCommandFn(
+                  actionDef,
+                  targetContext,
+                  this.#entityManager,
+                  { logger: this.#logger, debug: true }
+                );
+                if (command !== null) {
+                  validActions.push({
+                    id: actionDef.id,
+                    name: actionDef.name || actionDef.commandVerb,
+                    command: command,
+                    description: actionDef.description || '',
+                  });
                   this.#logger.debug(
-                    `      - isValid TRUE for ${direction}. Calling formatter.`
+                    `    * Found valid action (direction: ${direction}): '${actionDef.name || command}' (ID: ${actionDef.id})`
                   );
-                  const command = this.#formatActionCommandFn(
-                    actionDef,
-                    targetContext,
-                    this.#entityManager,
-                    { logger: this.#logger, debug: true }
-                  );
-                  if (command !== null) {
-                    validActions.push({
-                      id: actionDef.id,
-                      name: actionDef.name || actionDef.commandVerb, // Use name, fallback to commandVerb
-                      command: command,
-                      description: actionDef.description || '', // Provide empty string if undefined
-                    });
-                    this.#logger.debug(
-                      `    * Found valid action (direction: ${direction}): '${actionDef.name || command}' (ID: ${actionDef.id})`
-                    );
-                  } else {
-                    this.#logger.warn(
-                      `    * Action ${actionDef.id} validated for direction ${direction} but formatter returned null.`
-                    );
-                  }
                 } else {
-                  this.#logger.debug(`      - isValid FALSE for ${direction}.`);
+                  this.#logger.warn(
+                    `    * Action ${actionDef.id} validated for direction ${direction} but formatter returned null.`
+                  );
                 }
               } else {
-                this.#logger.warn(
-                  `    - Skipping invalid exit object in ${EXITS_COMPONENT_ID} data for location ${context.currentLocation?.id}:`,
-                  exit
+                this.#logger.debug(
+                  `      - isValid FALSE for direction ${direction}.`
                 );
               }
             }
           } else {
             this.#logger.debug(
-              `    - No ${EXITS_COMPONENT_ID} data found, or it's empty/invalid, on currentLocation ${context.currentLocation?.id}. No potential direction targets for action ${actionDef.id}.`
+              `    - No available exits found on currentLocation ${context.currentLocation?.id} via getAvailableExits for action ${actionDef.id}.`
             );
           }
         } else {
