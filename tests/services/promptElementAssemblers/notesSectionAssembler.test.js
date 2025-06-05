@@ -10,13 +10,13 @@ describe('NotesSectionAssembler', () => {
     expect(out).toBe('');
   });
 
-  it('renders single note with header, list item and suffix/prefix', () => {
+  it('renders single note with prefix/suffix providing header', () => {
     const cfg = { prefix: '', suffix: '' };
     const pd = {
       notesArray: [{ text: 'Buy milk', timestamp: '2000-01-01T00:00:00Z' }],
     };
     const out = assembler.assemble(cfg, pd, mockResolver, undefined);
-    expect(out).toBe('\nImportant Things to Remember:\n\n- Buy milk\n\n');
+    expect(out).toBe('\n- Buy milk\n');
   });
 
   it('sorts by timestamp ascending', () => {
@@ -28,7 +28,7 @@ describe('NotesSectionAssembler', () => {
     };
     const out = assembler.assemble({}, pd, mockResolver, undefined);
     const lines = out.trim().split('\n'); // drop leading blank
-    expect(lines[2]).toBe('- first');
-    expect(lines[3]).toBe('- second');
+    expect(lines[0]).toBe('- first');
+    expect(lines[1]).toBe('- second');
   });
 });

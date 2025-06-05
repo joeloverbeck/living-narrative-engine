@@ -18,8 +18,8 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
           { key: 'intro', prefix: 'Hello:\n', suffix: '\n', condition: null },
           {
             key: 'notes_wrapper',
-            prefix: '',
-            suffix: '',
+            prefix: '\nImportant Things to Remember:\n',
+            suffix: '\n',
             condition: null,
           },
           { key: 'outro', prefix: '\nGoodbye.', suffix: '', condition: null },
@@ -34,7 +34,7 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
   beforeAll(() => {
     const llmConfigService = new FakeLlmConfigService();
     const placeholderResolver = {
-      resolve: (template, data) => {
+      resolve: (template, _data) => {
         // No placeholders used in this test
         return template;
       },
@@ -64,7 +64,8 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
 
     const result = await builder.build('test-llm', promptData);
 
-    expect(result).toContain('Important Things to Remember:');
+    const occurrences = result.match(/Important Things to Remember:/g) || [];
+    expect(occurrences.length).toBe(1);
     expect(result).toContain('- Remember the keycode');
     // Ensure prefix and suffix of intro/outro are intact
     expect(result.startsWith('Hello:\n')).toBe(true);
@@ -77,7 +78,7 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
     const result = await builder.build('test-llm', promptData);
 
     expect(result).not.toContain('Important Things to Remember:');
-    // intro + three new-lines + outro
+    // intro + suffix newline + outro prefix newline
     expect(result).toBe('Hello:\n\n\nGoodbye.');
   });
 
