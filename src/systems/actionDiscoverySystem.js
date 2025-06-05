@@ -18,6 +18,7 @@
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoverySystem } from '../interfaces/IActionDiscoverySystem.js';
 import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 /**
  * @typedef {object} DiscoveredActionInfo
@@ -43,12 +44,12 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
    * Creates an instance of ActionDiscoverySystem.
    *
    * @param {object} dependencies - The required dependencies injected by the container.
-   * @param {GameDataRepository} dependencies.gameDataRepository
-   * @param {EntityManager} dependencies.entityManager
-   * @param {ActionValidationService} dependencies.actionValidationService
-   * @param {ILogger} dependencies.logger
-   * @param {formatActionCommandFn} dependencies.formatActionCommandFn
-   * @param {getEntityIdsForScopesFn} dependencies.getEntityIdsForScopesFn
+   * @param {GameDataRepository} dependencies.gameDataRepository - Repository for retrieving action definitions.
+   * @param {EntityManager} dependencies.entityManager - Provides entity component access.
+   * @param {ActionValidationService} dependencies.actionValidationService - Service to validate actions.
+   * @param {ILogger} dependencies.logger - Logger instance used for diagnostic output.
+   * @param {formatActionCommandFn} dependencies.formatActionCommandFn - Formats an action into a command string.
+   * @param {getEntityIdsForScopesFn} dependencies.getEntityIdsForScopesFn - Returns entity IDs for a given scope list.
    */
   constructor({
     gameDataRepository,
@@ -60,30 +61,72 @@ export class ActionDiscoverySystem extends IActionDiscoverySystem {
   }) {
     super();
 
-    if (
-      !gameDataRepository ||
-      !entityManager ||
-      !actionValidationService ||
-      !logger ||
-      !formatActionCommandFn
-    ) {
-      throw new Error(
-        'ActionDiscoverySystem requires GameDataRepository, EntityManager, ActionValidationService, ILogger, and formatActionCommandFn instances.'
-      );
+    // 1. Validate logger dependency first
+    try {
+      validateDependency(logger, 'ActionDiscoverySystem: logger', console, {
+        requiredMethods: ['info', 'debug', 'warn', 'error'],
+      });
+      this.#logger = logger;
+    } catch (e) {
+      const errorMsg = `ActionDiscoverySystem Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
+      // eslint-disable-next-line no-console
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
-    if (
-      !getEntityIdsForScopesFn ||
-      typeof getEntityIdsForScopesFn !== 'function'
-    ) {
-      throw new Error(
-        'ActionDiscoverySystem requires a valid getEntityIdsForScopesFn function.'
+
+    // 2. Validate other dependencies using the validated logger
+    try {
+      validateDependency(
+        gameDataRepository,
+        'ActionDiscoverySystem: gameDataRepository',
+        this.#logger,
+        {
+          requiredMethods: ['getAllActionDefinitions'],
+        }
       );
+      validateDependency(
+        entityManager,
+        'ActionDiscoverySystem: entityManager',
+        this.#logger,
+        {
+          requiredMethods: ['getComponentData', 'getEntityInstance'],
+        }
+      );
+      validateDependency(
+        actionValidationService,
+        'ActionDiscoverySystem: actionValidationService',
+        this.#logger,
+        {
+          requiredMethods: ['isValid'],
+        }
+      );
+      validateDependency(
+        formatActionCommandFn,
+        'ActionDiscoverySystem: formatActionCommandFn',
+        this.#logger,
+        {
+          isFunction: true,
+        }
+      );
+      validateDependency(
+        getEntityIdsForScopesFn,
+        'ActionDiscoverySystem: getEntityIdsForScopesFn',
+        this.#logger,
+        {
+          isFunction: true,
+        }
+      );
+    } catch (e) {
+      this.#logger.error(
+        `ActionDiscoverySystem Constructor: Dependency validation failed. Error: ${e.message}`
+      );
+      throw e;
     }
 
     this.#gameDataRepository = gameDataRepository;
     this.#entityManager = entityManager;
     this.#actionValidationService = actionValidationService;
-    this.#logger = logger;
+    // this.#logger is already set
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
 
