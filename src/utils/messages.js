@@ -5,6 +5,57 @@ import { getEntityDisplayName } from './entityUtils.js';
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Added for potential future use, though not strictly needed for these helpers
 
+/**
+ * Generates "You need to specify which {itemType}..." messages.
+ *
+ * @param {string} itemType - Type of item (e.g., "item", "equipped item").
+ * @param {string} [domainDetails] - Optional details like "from your inventory".
+ * @returns {string} Formatted error message.
+ */
+export function formatSpecifyItemMessage(itemType, domainDetails = '') {
+  let message = `You need to specify which ${itemType}`;
+  if (domainDetails && domainDetails.trim() !== '') {
+    message += ` ${domainDetails.trim()}`;
+  }
+  message += '.';
+  return message;
+}
+
+/**
+ * Generates "You don't have/see '{nounPhrase}'..." messages.
+ *
+ * @param {string} nounPhrase - The specific item name.
+ * @param {string} context - How/where it's missing (e.g., "in your inventory", "equipped", "here").
+ * @param {object} [options] - Optional parameters.
+ * @param {string} [options.verb] - The verb to use (e.g., "have", "see").
+ * @param {boolean} [options.useAny] - Whether to prefix the nounPhrase with "any ".
+ * @returns {string} Formatted error message.
+ */
+export function formatNounPhraseNotFoundMessage(
+  nounPhrase,
+  context,
+  { verb = 'have', useAny = false } = {}
+) {
+  const anyPrefix = useAny ? 'any ' : '';
+  let currentVerb = verb;
+  if (context?.toLowerCase() === 'here') {
+    currentVerb = 'see';
+  }
+  const safeContext = typeof context === 'string' ? context : '';
+  return `You don't ${currentVerb} ${anyPrefix}"${nounPhrase}" ${safeContext}.`;
+}
+
+/**
+ * Generates "You don't have anything like that..." messages.
+ *
+ * @param {string} context - Where this applies (e.g., "in your inventory", "equipped").
+ * @returns {string} Formatted error message.
+ */
+export function formatNothingOfKindMessage(context) {
+  const safeContext = typeof context === 'string' ? context : '';
+  return `You don't have anything like that ${safeContext}.`;
+}
+
 // getDisplayName helper removed in favor of canonical getEntityDisplayName
 
 /**
