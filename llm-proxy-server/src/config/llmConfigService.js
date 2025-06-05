@@ -1,4 +1,4 @@
-// llm-proxy-server/src/config/llmConfigService.js
+// llm-proxy-server/src/dependencyInjection/llmConfigService.js
 // --- FILE START ---
 
 import * as path from 'node:path';
@@ -48,7 +48,7 @@ import {
  * @typedef {object} LLMConfigurationFileForProxy
  * @description Represents the structure of the parsed llm-configs.json file.
  * @property {string} [defaultConfigId] - The ID of the default LLM configuration.
- * @property {Object.<string, LLMModelConfig>} llms - A dictionary of LLM configurations, keyed by llmId.
+ * @property {{[key: string]: LLMModelConfig}} configs - A dictionary of LLM configurations, keyed by their configId.
  */
 
 /**
@@ -89,7 +89,6 @@ export class LlmConfigService {
 
   /**
    * Constructs an LlmConfigService instance.
-   *
    * @param {IFileSystemReader} fileSystemReader - An IFileSystemReader instance.
    * @param {ILogger} logger - An ILogger instance.
    * @param {AppConfigService} appConfig - An AppConfigService instance.
@@ -111,7 +110,7 @@ export class LlmConfigService {
 
     this.#_defaultLlmConfigPath = path.resolve(
       __dirname,
-      '../../../config/llm-configs.json'
+      '../../../dependencyInjection/llm-configs.json'
     );
 
     this.#logger.debug('LlmConfigService: Instance created.');
@@ -120,7 +119,6 @@ export class LlmConfigService {
   /**
    * Sets the initialization error details and logs the error.
    * Also sets the proxy operational status to false.
-   *
    * @private
    * @param {string} message - The human-readable error message.
    * @param {string} stage - The machine-readable stage of the error.
@@ -177,7 +175,6 @@ export class LlmConfigService {
   /**
    * Initializes the service by loading and validating the LLM configurations.
    * This method should be called once during application startup.
-   *
    * @returns {Promise<void>}
    */
   async initialize() {
@@ -260,7 +257,7 @@ export class LlmConfigService {
       // proxyLlmConfigLoader should check `parsedConfigs.configs` and its JSDoc should use `configs`.
       // Here, `LlmConfigService` should also expect `parsedConfigs.configs`.
       // If `parsedConfigs.llms` was the intended property name in the JSON, the schema is wrong.
-      // Based on the prompt's `config/llm-configs.json`, the key is `configs`.
+      // Based on the prompt's `dependencyInjection/llm-configs.json`, the key is `configs`.
       // So, `proxyLlmConfigLoader.js` also needs adjustment for this.
       // And the JSDoc `LLMConfigurationFileForProxy` should use `configs`.
 
@@ -276,7 +273,7 @@ export class LlmConfigService {
       // And LlmConfigService should use 'configs'.
 
       // For now, proceeding with the current code structure's use of 'llms' but acknowledging this discrepancy.
-      // The original file `config/llm-configs.json` provided uses "configs" as the key for the map.
+      // The original file `dependencyInjection/llm-configs.json` provided uses "configs" as the key for the map.
       // The `proxyLlmConfigLoader.js` file provided checks for `parsedConfigs.llms`.
       // The `LlmConfigService.js` (this file) JSDoc `LLMConfigurationFileForProxy` refers to `llms`.
       // This is a pre-existing inconsistency.
@@ -324,7 +321,6 @@ export class LlmConfigService {
 
   /**
    * Checks if the proxy is operational based on configuration loading success.
-   *
    * @returns {boolean} True if operational, false otherwise.
    */
   isOperational() {
@@ -333,7 +329,6 @@ export class LlmConfigService {
 
   /**
    * Gets all loaded LLM configurations.
-   *
    * @returns {LLMConfigurationFileForProxy | null} The loaded configurations, or null if not loaded/failed.
    */
   getLlmConfigs() {
@@ -342,7 +337,6 @@ export class LlmConfigService {
 
   /**
    * Gets a specific LLM configuration by its ID.
-   *
    * @param {string} llmId - The ID of the LLM to retrieve.
    * @returns {LLMModelConfig | null} The LLM configuration, or null if not found or not loaded.
    */
@@ -366,7 +360,6 @@ export class LlmConfigService {
 
   /**
    * Gets the actual resolved path used for loading the LLM configuration file.
-   *
    * @returns {string | null} The resolved path, or null if not yet determined.
    */
   getResolvedConfigPath() {
@@ -379,12 +372,12 @@ export class LlmConfigService {
    * The `originalError` property from the internal error object is not directly exposed here
    * to avoid leaking potentially large or sensitive error objects to less controlled contexts.
    * The error log within `_setInitializationError` handles logging necessary details from `originalError`.
-   *
    * @returns {StandardizedErrorObject | null} Error details, or null if initialization was successful.
    */
   getInitializationErrorDetails() {
     if (this.#initializationError) {
       // Return a structure that's safe for external use, omitting the direct originalError object.
+      // eslint-disable-next-line no-unused-vars
       const { originalError: _unusedOriginalError, ...safeErrorDetails } =
         this.#initializationError;
       return safeErrorDetails;
@@ -395,7 +388,6 @@ export class LlmConfigService {
   /**
    * Checks if any configured cloud LLM uses apiKeyFileName.
    * This is useful for displaying startup warnings if PROXY_PROJECT_ROOT_PATH is not set.
-   *
    * @returns {boolean} True if any cloud LLM is configured to use an API key file, false otherwise.
    */
   hasFileBasedApiKeys() {

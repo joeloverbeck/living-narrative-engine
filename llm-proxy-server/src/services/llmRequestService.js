@@ -50,7 +50,6 @@ export class LlmRequestService {
 
   /**
    * Constructs an LlmRequestService instance.
-   *
    * @param {ILogger} logger - An ILogger instance.
    */
   constructor(logger) {
@@ -63,7 +62,6 @@ export class LlmRequestService {
 
   /**
    * Constructs the headers for the LLM API request.
-   *
    * @private
    * @param {LLMModelConfig} llmModelConfig - The configuration for the LLM model.
    * @param {object} clientTargetHeaders - Headers provided by the client, to be selectively forwarded.
@@ -126,7 +124,6 @@ export class LlmRequestService {
 
   /**
    * Sanitizes the payload for logging purposes by truncating long string content.
-   *
    * @private
    * @param {object} targetPayload - The payload to be sent to the LLM.
    * @returns {object} A sanitized copy of the payload.
@@ -161,7 +158,6 @@ export class LlmRequestService {
   /**
    * Handles errors that occur during the forwarding process (typically from Workspace_retry).
    * This method populates statusCode, errorStage, errorMessage, and errorDetailsForClient.
-   *
    * @private
    * @param {Error} error - The error object caught from Workspace_retry.
    * @param {string} llmId - The ID of the LLM for which the request was made.
@@ -262,7 +258,6 @@ export class LlmRequestService {
 
   /**
    * Forwards a request to the specified LLM provider.
-   *
    * @param {string} llmId - The ID of the LLM to target.
    * @param {LLMModelConfig} llmModelConfig - The configuration for the LLM model.
    * @param {object} targetPayload - The payload to send to the LLM.

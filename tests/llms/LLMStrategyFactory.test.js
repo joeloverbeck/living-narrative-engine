@@ -34,7 +34,7 @@ const mockHttpClientInstance = () => ({
 
 // Helper function to create a minimal valid LLMModelConfigType
 /**
- * @param {object} overrides - Object to override default mock config properties.
+ * @param {object} overrides - Object to override default mock dependencyInjection properties.
  * @returns {LLMModelConfigType}
  */
 const createMockLlmConfig = (overrides) => {

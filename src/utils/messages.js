@@ -89,8 +89,8 @@ export const TARGET_MESSAGES = {
   /**
    * Feedback when a scope (like location for 'take') contains no items relevant to the action.
    * Used by TargetResolutionService when `filteredEntities.length === 0`.
-   * Can be overridden by `emptyScopeMessage` in resolver config.
-   * Example usage: `takeActionHandler` overrides this via resolver config using `failureMessages.filterEmpty`.
+   * Can be overridden by `emptyScopeMessage` in resolver dependencyInjection.
+   * Example usage: `takeActionHandler` overrides this via resolver dependencyInjection using `failureMessages.filterEmpty`.
    */
   TAKE_EMPTY_LOCATION: "There's nothing here to take.", // Keep as string override example
 

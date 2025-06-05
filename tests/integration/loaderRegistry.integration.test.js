@@ -3,7 +3,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ActionLoader from '../../src/loaders/actionLoader.js'; // Adjust path if needed
 import ComponentLoader from '../../src/loaders/componentLoader.js'; // Adjust path if needed
-import InMemoryDataRegistry from '../../src/services/inMemoryDataRegistry.js'; // Use the real registry
+import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js'; // Use the real registry
 // Import the base class to potentially spy on its methods if needed later
 import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader.js';
 
@@ -13,7 +13,7 @@ import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader
  * Creates a mock IConfiguration service.
  *
  * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../../core/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
+ * @returns {import('../../../../interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
@@ -43,7 +43,7 @@ const createMockConfiguration = (overrides = {}) => ({
  * Creates a mock IPathResolver service.
  *
  * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../../core/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
+ * @returns {import('../../../../interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
  */
 const createMockPathResolver = (overrides = {}) => ({
   // Resolve assuming mocks are relative to a conceptual root
@@ -71,7 +71,7 @@ const createMockPathResolver = (overrides = {}) => ({
  *
  * @param {object} [pathToResponse] - Map of path strings to successful response data.
  * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
- * @returns {import('../../../../core/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
+ * @returns {import('../../../../interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
  */
 const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
   fetch: jest.fn(async (path) => {
@@ -98,7 +98,7 @@ const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
  * Creates a mock ISchemaValidator service.
  *
  * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../../core/interfaces/coreServices.js').ISchemaValidator} Mocked schema validator service.
+ * @returns {import('../../../../interfaces/coreServices.js').ISchemaValidator} Mocked schema validator service.
  */
 const createMockSchemaValidator = (overrides = {}) => {
   const loadedSchemas = new Map();
@@ -177,7 +177,7 @@ const createMockSchemaValidator = (overrides = {}) => {
  * Creates a mock ILogger service.
  *
  * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../../core/interfaces/coreServices.js').ILogger} Mocked logger service.
+ * @returns {import('../../../../interfaces/coreServices.js').ILogger} Mocked logger service.
  */
 const createMockLogger = (overrides = {}) => ({
   // Set default mocks using jest.fn()

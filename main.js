@@ -1,8 +1,8 @@
 // main.js
 
-import { configureContainer } from './src/config/containerConfig.js';
-import { tokens } from './src/config/tokens.js';
-import { AppConfig } from './src/config/appConfig.js';
+import { configureContainer } from './src/dependencyInjection/containerConfig.js';
+import { tokens } from './src/dependencyInjection/tokens.js';
+import { AppConfig } from './src/dependencyInjection/appConfig.js';
 import { displayFatalStartupError } from './src/bootstrapper/errorUtils.js';
 // Import all necessary stages
 import {
@@ -23,7 +23,7 @@ import {
 
   /** @type {import('./src/bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
   let uiElements;
-  /** @type {import('./src/config/appContainer.js').default | undefined} */
+  /** @type {import('./src/dependencyInjection/appContainer.js').default | undefined} */
   let container;
   /** @type {import('./src/interfaces/coreServices.js').ILogger | null} */
   let logger = null;

@@ -1,4 +1,4 @@
-// Filename: src/tests/core/config/registrations/loadersRegistrations.test.js
+// Filename: src/tests/dependencyInjection/registrations/loadersRegistrations.test.js
 // ****** CORRECTED FILE ******
 /* eslint-disable no-unused-vars */
 
@@ -30,10 +30,10 @@ import {
 } from '@jest/globals';
 
 // --- Class Under Test ---
-import { registerLoaders } from '../../../src/config/registrations/loadersRegistrations.js'; // Corrected path
+import { registerLoaders } from '../../../src/dependencyInjection/registrations/loadersRegistrations.js'; // Corrected path
 
 // --- Dependencies ---
-import { tokens } from '../../../src/config/tokens.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import SchemaLoader from '../../../src/loaders/schemaLoader.js'; // Import actual class
 // Import other actual loader classes if needed for instanceof checks
 import RuleLoader from '../../../src/loaders/ruleLoader.js';
@@ -43,11 +43,11 @@ import ModManifestLoader from '../../../src/modding/modManifestLoader.js';
 import ActionLoader from '../../../src/loaders/actionLoader.js';
 import EventLoader from '../../../src/loaders/eventLoader.js';
 import EntityLoader from '../../../src/loaders/entityLoader.js';
-import StaticConfiguration from '../../../src/services/staticConfiguration.js';
-import DefaultPathResolver from '../../../src/services/defaultPathResolver.js';
-import AjvSchemaValidator from '../../../src/services/ajvSchemaValidator.js';
-import InMemoryDataRegistry from '../../../src/services/inMemoryDataRegistry.js';
-import WorkspaceDataFetcher from '../../../src/services/workspaceDataFetcher.js';
+import StaticConfiguration from '../../../src/configuration/staticConfiguration.js';
+import DefaultPathResolver from '../../../src/pathing/defaultPathResolver.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
+import WorkspaceDataFetcher from '../../../src/data/workspaceDataFetcher.js';
 
 // --- Mock Implementations (Core Services) ---
 const mockLogger = {
@@ -64,7 +64,7 @@ const mockConfiguration = {
     .mockReturnValue(['common.schema.json', 'entity.schema.json']),
   getContentTypeSchemaId: jest.fn((typeName) => {
     const map = {
-      /* map based on actual config if needed */
+      /* map based on actual dependencyInjection if needed */
       components: 'http://example.com/schemas/component-definition.schema.json',
       actions: 'http://example.com/schemas/action-definition.schema.json',
       events: 'http://example.com/schemas/event-definition.schema.json',

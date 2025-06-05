@@ -158,7 +158,7 @@ export class LLMConfigService {
    *
    * @private
    * @param {any} config - The configuration object to validate.
-   * @returns {boolean} True if the config is valid, false otherwise.
+   * @returns {boolean} True if the dependencyInjection is valid, false otherwise.
    */
   #isValidConfig(config) {
     if (!config || typeof config !== 'object') {

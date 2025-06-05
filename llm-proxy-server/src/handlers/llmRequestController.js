@@ -59,7 +59,6 @@ export class LlmRequestController {
 
   /**
    * Constructs an LlmRequestController instance.
-   *
    * @param {ILogger} logger - An ILogger instance.
    * @param {LlmConfigService} llmConfigService - Service for LLM configurations.
    * @param {ApiKeyService} apiKeyService - Service for API key management.
@@ -84,7 +83,6 @@ export class LlmRequestController {
 
   /**
    * Validates the incoming request parameters.
-   *
    * @private
    * @param {string} llmId - The LLM ID from the request.
    * @param {any} targetPayload - The target payload from the request.
@@ -120,7 +118,6 @@ export class LlmRequestController {
    * Handles the /api/llm-request route.
    * Orchestrates request validation, configuration lookup, API key retrieval,
    * and forwarding the request to the appropriate LLM provider.
-   *
    * @param {ExpressRequest} req - The Express request object.
    * @param {ExpressResponse} res - The Express response object.
    * @returns {Promise<void>}

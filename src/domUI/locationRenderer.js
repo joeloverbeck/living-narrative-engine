@@ -12,29 +12,29 @@ import {
 } from '../constants/componentIds.js';
 
 /**
- * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
+ * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
- * @typedef {import('../services/EntityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
- * @typedef {import('../core/interfaces/IDataRegistry').IDataRegistry} IDataRegistry
+ * @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
+ * @typedef {import('../interfaces/IDataRegistry').IDataRegistry} IDataRegistry
  */
 
 /**
  * @typedef {object} CoreTurnStartedPayload
- * @property {import('../core/interfaces/CommonTypes').NamespacedId} entityId - ID of the entity starting the turn.
+ * @property {import('../interfaces/CommonTypes').NamespacedId} entityId - ID of the entity starting the turn.
  * @property {'player'|'ai'} entityType - Whether the actor is player-controlled or AI.
  */
 
 /**
- * @typedef {import('../core/interfaces/IEvent.js').IEvent<CoreTurnStartedPayload>} CoreTurnStartedEvent
+ * @typedef {import('../interfaces/IEvent.js').IEvent<CoreTurnStartedPayload>} CoreTurnStartedEvent
  */
 
 /**
  * Represents a character to be displayed.
  *
- * @typedef {import('../services/EntityDisplayDataProvider.js').CharacterDisplayInfo} CharacterDisplayData
+ * @typedef {import('../entities/entityDisplayDataProvider.js').CharacterDisplayInfo} CharacterDisplayData
  */
 
 /**
@@ -45,7 +45,7 @@ import {
  * @property {string} description - The textual description of the location.
  * @property {string | null} [portraitPath] - Optional path to the location's portrait image.
  * @property {string | null} [portraitAltText] - Optional alt text for the location's portrait.
- * @property {Array<import('../services/EntityDisplayDataProvider.js').ProcessedExit>} exits - List of exits from the location.
+ * @property {Array<import('../entities/entityDisplayDataProvider.js').ProcessedExit>} exits - List of exits from the location.
  * @property {Array<CharacterDisplayData>} characters - List of characters present in the location.
  */
 

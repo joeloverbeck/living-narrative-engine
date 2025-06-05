@@ -32,7 +32,7 @@ import {
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
 
-/** @returns {import('../../src/core/interfaces/ILogger.js').ILogger} */
+/** @returns {import('../../src/interfaces/ILogger.js').ILogger} */
 const createMockLogger = () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -137,12 +137,12 @@ const createMockEntityManager = () => ({
   getEntitiesInLocation: jest.fn(() => new Set()),
 });
 
-/** @returns {import('../../src/core/interfaces/IDataRegistry.js').IDataRegistry} */
+/** @returns {import('../../src/interfaces/IDataRegistry.js').IDataRegistry} */
 const createMockDataRegistry = () => ({
   getEntityDefinition: jest.fn(),
 });
 
-/** @returns {import('../../src/services/EntityDisplayDataProvider.js').EntityDisplayDataProvider} */
+/** @returns {import('../../src/entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} */
 const createMockEntityDisplayDataProvider = () => ({
   getEntityLocationId: jest.fn(),
   getLocationDetails: jest.fn(),

@@ -1,4 +1,4 @@
-// src/core/services/loggerConfigLoader.js
+// src/configuration/loggerConfigLoader.js
 // --- FILE START ---
 
 import { Workspace_retry } from '../utils/apiUtils.js';
@@ -9,7 +9,7 @@ import { Workspace_retry } from '../utils/apiUtils.js';
 
 /**
  * @typedef {object} LoggerConfigurationFile
- * @description Represents the structure of the logger-config.json file.
+ * @description Represents the structure of the logger-dependencyInjection.json file.
  * @property {string} [logLevel] - Specifies the desired log level (e.g., "DEBUG", "INFO", "WARN", "ERROR", "NONE").
  * The value is case-insensitive.
  */
@@ -26,7 +26,7 @@ import { Workspace_retry } from '../utils/apiUtils.js';
 
 /**
  * @class LoggerConfigLoader
- * @description Service responsible for loading and parsing the logger-config.json file.
+ * @description Service responsible for loading and parsing the logger-dependencyInjection.json file.
  * It fetches the configuration file, typically served as a static asset.
  */
 export class LoggerConfigLoader {
@@ -40,7 +40,7 @@ export class LoggerConfigLoader {
    * @private
    * @type {string} - Default path to the logger configuration file.
    */
-  #defaultConfigPath = 'config/logger-config.json';
+  #defaultConfigPath = 'dependencyInjection/logger-dependencyInjection.json';
 
   /**
    * @private
@@ -66,7 +66,7 @@ export class LoggerConfigLoader {
    * @param {object} [dependencies] - Optional dependencies.
    * @param {ILogger} [dependencies.logger] - An optional logger instance. Uses `console` for its own logging if not provided,
    * which is important during early bootstrap when the main app logger might not be fully configured.
-   * @param {string} [dependencies.configPath] - Optional override for the default config file path.
+   * @param {string} [dependencies.configPath] - Optional override for the default dependencyInjection file path.
    */
   constructor(dependencies = {}) {
     // Use the provided logger, or fallback to the global console object.
@@ -85,7 +85,7 @@ export class LoggerConfigLoader {
    * or a default path if none is provided.
    *
    * @async
-   * @param {string} [filePath] - The path to the logger-config.json file.
+   * @param {string} [filePath] - The path to the logger-dependencyInjection.json file.
    * If not provided, the configured default path will be used.
    * @returns {Promise<LoggerConfigurationFile | LoadLoggerConfigErrorResult>} A promise that resolves with the parsed
    * JavaScript object representing the logger configuration, or an error object if loading/parsing fails.
@@ -145,7 +145,7 @@ export class LoggerConfigLoader {
         logInfo(
           `[LoggerConfigLoader] Logger configuration file at ${path} is empty or contains an empty JSON object. No log level specified.`
         );
-        // Return empty object, indicates no specific config found but file was parsable
+        // Return empty object, indicates no specific dependencyInjection found but file was parsable
         return {};
       }
 

@@ -8,7 +8,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import { LLMConfigService } from '../../src/services/llmConfigService.js'; // Adjust path as needed
+import { LLMConfigService } from '../../src/llms/llmConfigService.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Adjust path as needed
 
 // Mock IConfigurationProvider
@@ -189,7 +189,7 @@ describe('LLMConfigService', () => {
       promptAssemblyOrder: ['test'],
     };
 
-    it('should consider a config invalid if configId is missing or empty', () => {
+    it('should consider a dependencyInjection invalid if configId is missing or empty', () => {
       service.addOrUpdateConfigs([{ ...baseValidConfig, configId: '' }]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       service.addOrUpdateConfigs([{ ...baseValidConfig, configId: null }]);
@@ -203,7 +203,7 @@ describe('LLMConfigService', () => {
       );
     });
 
-    it('should consider a config invalid if modelIdentifier is missing or empty', () => {
+    it('should consider a dependencyInjection invalid if modelIdentifier is missing or empty', () => {
       service.addOrUpdateConfigs([{ ...baseValidConfig, modelIdentifier: '' }]);
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -212,7 +212,7 @@ describe('LLMConfigService', () => {
       );
     });
 
-    it('should consider a config invalid if promptElements is not an array', () => {
+    it('should consider a dependencyInjection invalid if promptElements is not an array', () => {
       // @ts-ignore
       service.addOrUpdateConfigs([
         { ...baseValidConfig, promptElements: 'not-an-array' },
@@ -223,7 +223,7 @@ describe('LLMConfigService', () => {
         expect.any(Object)
       );
     });
-    it('should consider a config invalid if promptElements contains invalid items', () => {
+    it('should consider a dependencyInjection invalid if promptElements contains invalid items', () => {
       service.addOrUpdateConfigs([
         { ...baseValidConfig, promptElements: [{ noKey: 'bad' }] },
       ]);
@@ -234,7 +234,7 @@ describe('LLMConfigService', () => {
       );
     });
 
-    it('should consider a config invalid if promptAssemblyOrder is not an array', () => {
+    it('should consider a dependencyInjection invalid if promptAssemblyOrder is not an array', () => {
       // @ts-ignore
       service.addOrUpdateConfigs([
         { ...baseValidConfig, promptAssemblyOrder: 'not-an-array' },
@@ -245,7 +245,7 @@ describe('LLMConfigService', () => {
         expect.any(Object)
       );
     });
-    it('should consider a config invalid if promptAssemblyOrder contains non-string keys', () => {
+    it('should consider a dependencyInjection invalid if promptAssemblyOrder contains non-string keys', () => {
       // @ts-ignore
       service.addOrUpdateConfigs([
         { ...baseValidConfig, promptAssemblyOrder: [123] },
@@ -566,7 +566,7 @@ describe('LLMConfigService', () => {
       );
     });
 
-    it('should return config by direct configId match', async () => {
+    it('should return dependencyInjection by direct configId match', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
@@ -581,7 +581,7 @@ describe('LLMConfigService', () => {
       );
     });
 
-    it('should return a copy of the config, not the cached instance', async () => {
+    it('should return a copy of the dependencyInjection, not the cached instance', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
@@ -596,7 +596,7 @@ describe('LLMConfigService', () => {
       expect(originalCachedConfig.displayName).toBe('Model A v1 Config'); // Original should be unchanged
     });
 
-    it('should return config by exact modelIdentifier match if configId fails', async () => {
+    it('should return dependencyInjection by exact modelIdentifier match if configId fails', async () => {
       service = new LLMConfigService({
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
@@ -611,7 +611,7 @@ describe('LLMConfigService', () => {
       );
     });
 
-    it('should return config by wildcard modelIdentifier match (longest prefix wins)', async () => {
+    it('should return dependencyInjection by wildcard modelIdentifier match (longest prefix wins)', async () => {
       const initialConfigs = [
         { ...sampleWildcardConfig },
         { ...sampleLongerWildcardConfig },
@@ -647,7 +647,7 @@ describe('LLMConfigService', () => {
     it('should prioritize direct configId over modelIdentifier matches', async () => {
       // sampleConfig1 has modelIdentifier "provider/model-a-v1"
       // sampleLongerWildcardConfig has modelIdentifier "provider/model*"
-      // If we search for "provider/model-a-v1" which is also a configId of another config
+      // If we search for "provider/model-a-v1" which is also a configId of another dependencyInjection
       const conflictingConfig = {
         configId: 'provider/model-a-v1', // This configId is same as sampleConfig1's modelIdentifier
         modelIdentifier: 'some/other-model',

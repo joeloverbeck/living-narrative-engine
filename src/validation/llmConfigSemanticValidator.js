@@ -1,4 +1,4 @@
-// src/core/validators/llmConfigSemanticValidator.js
+// src/validators/llmConfigSemanticValidator.js
 // --- FILE START ---
 
 /**
@@ -13,9 +13,9 @@
  * @property {string} [problematic_key_ref] - The key reference from promptAssemblyOrder that was not found in promptElements.
  * @property {number} [index_in_assembly_order] - The index of the problematic key_ref within its promptAssemblyOrder array.
  * @property {string[]} [promptAssemblyOrder] - The full promptAssemblyOrder array where the error occurred.
- * @property {string[]} [available_prompt_element_keys] - A list of keys that were available in the promptElements array for this config.
+ * @property {string[]} [available_prompt_element_keys] - A list of keys that were available in the promptElements array for this dependencyInjection.
  * @property {string} message - A human-readable error message.
- * @property {string} [path] - Path to the problematic element relative to the config object (e.g., "promptAssemblyOrder[2]") or an identifier for root issues (e.g., "(root).configs").
+ * @property {string} [path] - Path to the problematic element relative to the dependencyInjection object (e.g., "promptAssemblyOrder[2]") or an identifier for root issues (e.g., "(root).configs").
  * @property {string} [errorType="SEMANTIC_VALIDATION"] - Specific type of semantic error (e.g., "SEMANTIC_VALIDATION_MISSING_ASSEMBLY_KEY", "SEMANTIC_VALIDATION_INVALID_CONFIGS_STRUCTURE").
  */
 
@@ -56,12 +56,12 @@ export function performSemanticValidations(configsMap) {
           path: `(config object root)`, // Path relative to this configId
           errorType: 'SEMANTIC_VALIDATION_INVALID_CONFIG_OBJECT',
         });
-        continue; // Skip this malformed config object
+        continue; // Skip this malformed dependencyInjection object
       }
 
-      // Schema ensures config.configId should ideally match the key `configId`.
+      // Schema ensures dependencyInjection.configId should ideally match the key `configId`.
       // An explicit check could be added here if strict consistency is required beyond schema.
-      // e.g., if (config.configId !== configId) { errors.push(...); }
+      // e.g., if (dependencyInjection.configId !== configId) { errors.push(...); }
 
       const promptElements = Array.isArray(config.promptElements)
         ? config.promptElements
@@ -76,7 +76,7 @@ export function performSemanticValidations(configsMap) {
         errors.push({
           configId: configId,
           message: `In config '${configId}', 'promptElements' array is missing or not an array, but 'promptAssemblyOrder' is defined.`,
-          path: `promptElements`, // Path relative to config object
+          path: `promptElements`, // Path relative to dependencyInjection object
           errorType: 'SEMANTIC_VALIDATION_MISSING_PROMPT_ELEMENTS_FOR_ASSEMBLY',
         });
         // Depending on desired strictness, you might 'continue' here

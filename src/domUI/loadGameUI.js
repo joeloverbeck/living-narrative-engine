@@ -11,7 +11,7 @@ import { FormatUtils } from '../utils/formatUtils.js';
  * @typedef {import('../domUI/domElementFactory.js').default} DomElementFactory
  * @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService
  * @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata
- * @typedef {import('../services/gamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult
+ * @typedef {import('../persistence/gamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  */
 

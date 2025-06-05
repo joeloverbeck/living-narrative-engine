@@ -14,7 +14,7 @@
 
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { parseAndRepairJson } from '../../utils/llmUtils.js';
-import { persistThoughts } from '../../services/thoughtPersistenceHook.js';
+import { persistThoughts } from '../../ai/thoughtPersistenceHook.js';
 
 import {
   LLM_TURN_ACTION_SCHEMA_ID,

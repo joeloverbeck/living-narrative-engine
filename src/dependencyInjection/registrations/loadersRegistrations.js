@@ -1,4 +1,4 @@
-// Filename: src/core/config/registrations/loaderRegistrations.js
+// Filename: src/dependencyInjection/registrations/loaderRegistrations.js
 
 /**
  * @file Registers data loading services and their core dependencies.
@@ -21,18 +21,18 @@
 /** @typedef {import('../../loaders/actionLoader.js').default} ActionLoader */ // <<< ADDED: LOADER-001
 /** @typedef {import('../../loaders/eventLoader.js').default} EventLoader */ // <<< ADDED: LOADER-003
 /** @typedef {import('../../loaders/entityLoader.js').default} EntityLoader */ // <<< ADDED: LOADER-004-F
-/** @typedef {import('../../services/staticConfiguration.js').default} StaticConfiguration */
-/** @typedef {import('../../services/defaultPathResolver.js').default} DefaultPathResolver */
-/** @typedef {import('../../services/ajvSchemaValidator.js').default} AjvSchemaValidator */
-/** @typedef {import('../../services/inMemoryDataRegistry.js').default} InMemoryDataRegistry */
-/** @typedef {import('../../services/workspaceDataFetcher.js').default} WorkspaceDataFetcher */
+/** @typedef {import('../../configuration/staticConfiguration.js').default} StaticConfiguration */
+/** @typedef {import('../../pathing/defaultPathResolver.js').default} DefaultPathResolver */
+/** @typedef {import('../../validation/ajvSchemaValidator.js').default} AjvSchemaValidator */
+/** @typedef {import('../../data/inMemoryDataRegistry.js').default} InMemoryDataRegistry */
+/** @typedef {import('../../data/workspaceDataFetcher.js').default} WorkspaceDataFetcher */
 
 // --- Core Service Imports ---
-import StaticConfiguration from '../../services/staticConfiguration.js';
-import DefaultPathResolver from '../../services/defaultPathResolver.js';
-import AjvSchemaValidator from '../../services/ajvSchemaValidator.js';
-import InMemoryDataRegistry from '../../services/inMemoryDataRegistry.js';
-import WorkspaceDataFetcher from '../../services/workspaceDataFetcher.js';
+import StaticConfiguration from '../../configuration/staticConfiguration.js';
+import DefaultPathResolver from '../../pathing/defaultPathResolver.js';
+import AjvSchemaValidator from '../../validation/ajvSchemaValidator.js';
+import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
+import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 
 // --- Loader Imports ---
 import SchemaLoader from '../../loaders/schemaLoader.js';
@@ -125,7 +125,7 @@ export function registerLoaders(container) {
     tokens.RuleLoader,
     (c) =>
       new RuleLoader(
-        c.resolve(tokens.IConfiguration), // <<< FIXED: RuleLoader needs config too
+        c.resolve(tokens.IConfiguration), // <<< FIXED: RuleLoader needs dependencyInjection too
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
@@ -166,12 +166,6 @@ export function registerLoaders(container) {
   );
   logger.debug(`Loaders Registration: Registered ${tokens.GameConfigLoader}.`);
 
-  // === ADDED: MODLOADER-005 A START ===
-  // ModManifestLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
-  // NOTE: Assuming tokens.ModManifestLoader exists in src/core/tokens.js
-  // If src/core/tokens.js was not provided, you would need to add:
-  // ModManifestLoader: Symbol('ModManifestLoader')
-  // to the tokens object definition in that file.
   registrar.singletonFactory(
     tokens.ModManifestLoader,
     (c) =>
@@ -220,9 +214,6 @@ export function registerLoaders(container) {
   // === END LOADER-003 ===
 
   // === ADDED: LOADER-004-F ===
-  // Register EntityDefinitionLoader (using EntityLoader class)
-  // Dependencies: IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
-  // Assuming tokens.EntityDefinitionLoader exists in src/core/tokens.js
   registrar.singletonFactory(
     tokens.EntityLoader,
     (c) =>
