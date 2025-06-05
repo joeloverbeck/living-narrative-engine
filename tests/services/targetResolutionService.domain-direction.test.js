@@ -3,8 +3,12 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../src/actions/targeting/targetResolutionService.js';
 import { ResolutionStatus } from '../../src/types/resolutionStatus.js';
-import { EXITS_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { getAvailableExits } from '../../src/utils/locationUtils.js';
 import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js'; // Import the constant
+
+jest.mock('../../src/utils/locationUtils.js', () => ({
+  getAvailableExits: jest.fn(),
+}));
 
 // --- Mocks for Dependencies ---
 let mockEntityManager;
@@ -145,20 +149,18 @@ describe("TargetResolutionService - Domain 'direction'", () => {
     });
   });
 
-  // 7.2: Location Has No EXITS_COMPONENT_ID / Component is Empty/Invalid Array
-  describe('7.2: Location Has No EXITS_COMPONENT_ID / Component is Empty/Invalid Array', () => {
+  // 7.2: Location Has No Available Exits
+  describe('7.2: Location Has No Available Exits', () => {
     const mockLocationNoExits = {
       id: 'location1',
-      getComponentData: jest.fn(),
     };
 
     beforeEach(() => {
-      mockLocationNoExits.getComponentData.mockReset();
       mockWorldContext.getCurrentLocation.mockReturnValue(mockLocationNoExits);
+      getAvailableExits.mockReturnValue([]);
     });
 
-    test('should return NOT_FOUND if location has no EXITS_COMPONENT_ID', async () => {
-      mockLocationNoExits.getComponentData.mockReturnValue(undefined);
+    test('should return NOT_FOUND when no exits are available', async () => {
       const actionContext = createActionContext('north');
 
       const result = await service.resolveActionTarget(
@@ -170,67 +172,35 @@ describe("TargetResolutionService - Domain 'direction'", () => {
       expect(result.targetType).toBe('direction');
       expect(result.targetId).toBeNull();
       expect(result.error).toBe('There are no obvious exits from here.');
-      expect(mockLocationNoExits.getComponentData).toHaveBeenCalledWith(
-        EXITS_COMPONENT_ID
+      expect(getAvailableExits).toHaveBeenCalledWith(
+        mockLocationNoExits,
+        mockEntityManager,
+        mockLogger
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`has no '${EXITS_COMPONENT_ID}' component`)
+        `TargetResolutionService.#_resolveDirection: Location '${mockLocationNoExits.id}' has no valid exits according to getAvailableExits.`
       );
-    });
-
-    test('should return NOT_FOUND if exits component is an empty array', async () => {
-      mockLocationNoExits.getComponentData.mockReturnValue([]);
-      const actionContext = createActionContext('north');
-
-      const result = await service.resolveActionTarget(
-        actionDefinition,
-        actionContext
-      );
-
-      expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
-      expect(result.error).toBe('There are no obvious exits from here.');
-    });
-
-    test('should return NOT_FOUND if exits component is not an array (e.g., an object)', async () => {
-      mockLocationNoExits.getComponentData.mockReturnValue({}); // Invalid data type
-      const actionContext = createActionContext('north');
-
-      const result = await service.resolveActionTarget(
-        actionDefinition,
-        actionContext
-      );
-
-      expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
-      expect(result.error).toBe('There are no obvious exits from here.');
     });
   });
 
   // 7.3: exitsComponentData Contains Invalid Exit Objects
-  describe('7.3: exitsComponentData Contains Invalid Exit Objects (skipped, logged)', () => {
+  describe('7.3: exitsComponentData Contains Invalid Exit Objects', () => {
     const mockLocationWithMixedExits = {
       id: 'location2',
-      getComponentData: jest.fn(),
     };
 
     beforeEach(() => {
-      mockLocationWithMixedExits.getComponentData.mockReset();
       mockWorldContext.getCurrentLocation.mockReturnValue(
         mockLocationWithMixedExits
       );
+      getAvailableExits.mockReturnValue([
+        { direction: 'North', targetLocationId: 'locA' },
+        { direction: 'South', targetLocationId: 'locB' },
+      ]);
     });
 
-    test('should skip invalid exit objects and still find valid ones', async () => {
-      const exitsData = [
-        null,
-        { direction: 123 },
-        { direction: 'North' },
-        { direction: '' },
-        { someOtherProp: 'East' },
-        { direction: '  ' },
-        { direction: 'South' },
-      ];
-      mockLocationWithMixedExits.getComponentData.mockReturnValue(exitsData);
-      const actionContext = createActionContext('north'); // Corrected actionContext
+    test('should resolve using valid exits only', async () => {
+      const actionContext = createActionContext('north');
 
       const result = await service.resolveActionTarget(
         actionDefinition,
@@ -239,31 +209,10 @@ describe("TargetResolutionService - Domain 'direction'", () => {
 
       expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetId).toBe('North');
-      expect(mockLogger.warn).toHaveBeenCalledTimes(5);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'invalid exit object or missing/empty direction string: null'
-        )
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'invalid exit object or missing/empty direction string: {"direction":123}'
-        )
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'invalid exit object or missing/empty direction string: {"direction":""}'
-        )
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'invalid exit object or missing/empty direction string: {"someOtherProp":"East"}'
-        )
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'invalid exit object or missing/empty direction string: {"direction":"  "}'
-        )
+      expect(getAvailableExits).toHaveBeenCalledWith(
+        mockLocationWithMixedExits,
+        mockEntityManager,
+        mockLogger
       );
     });
   });
@@ -272,22 +221,17 @@ describe("TargetResolutionService - Domain 'direction'", () => {
   describe('7.4: All Exits in Component are Invalid', () => {
     const mockLocationWithOnlyInvalidExits = {
       id: 'location3',
-      getComponentData: jest.fn(),
     };
 
     beforeEach(() => {
-      mockLocationWithOnlyInvalidExits.getComponentData.mockReset();
       mockWorldContext.getCurrentLocation.mockReturnValue(
         mockLocationWithOnlyInvalidExits
       );
+      getAvailableExits.mockReturnValue([]);
     });
 
-    test('should return NOT_FOUND with "no clearly marked exits" if all exits are invalid', async () => {
-      const exitsData = [{ direction: 123 }, { direction: '' }, null];
-      mockLocationWithOnlyInvalidExits.getComponentData.mockReturnValue(
-        exitsData
-      );
-      const actionContext = createActionContext('north'); // Corrected actionContext
+    test('should return NOT_FOUND when all exits are invalid', async () => {
+      const actionContext = createActionContext('north');
 
       const result = await service.resolveActionTarget(
         actionDefinition,
@@ -297,10 +241,14 @@ describe("TargetResolutionService - Domain 'direction'", () => {
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('direction');
       expect(result.targetId).toBeNull();
-      expect(result.error).toBe('There are no clearly marked exits here.');
-      expect(mockLogger.warn).toHaveBeenCalledTimes(3);
+      expect(result.error).toBe('There are no obvious exits from here.');
+      expect(getAvailableExits).toHaveBeenCalledWith(
+        mockLocationWithOnlyInvalidExits,
+        mockEntityManager,
+        mockLogger
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('no valid direction strings found')
+        `TargetResolutionService.#_resolveDirection: Location '${mockLocationWithOnlyInvalidExits.id}' has no valid exits according to getAvailableExits.`
       );
     });
   });
@@ -309,17 +257,15 @@ describe("TargetResolutionService - Domain 'direction'", () => {
   describe('7.5: No Noun Phrase Provided (valid exits exist)', () => {
     const mockLocationWithValidExits = {
       id: 'location4',
-      getComponentData: jest.fn(),
     };
 
     beforeEach(() => {
-      mockLocationWithValidExits.getComponentData.mockReset();
       mockWorldContext.getCurrentLocation.mockReturnValue(
         mockLocationWithValidExits
       );
-      mockLocationWithValidExits.getComponentData.mockReturnValue([
-        { direction: 'North' },
-        { direction: 'South' },
+      getAvailableExits.mockReturnValue([
+        { direction: 'North', targetLocationId: 'locN' },
+        { direction: 'South', targetLocationId: 'locS' },
       ]);
     });
 
@@ -330,7 +276,7 @@ describe("TargetResolutionService - Domain 'direction'", () => {
       ['   ', 'whitespace string nounPhrase'],
     ])(
       'should return NONE "Which direction...?" for %s',
-      async (nounPhraseValue, _description) => {
+      async (nounPhraseValue) => {
         const actionContext = createActionContext(nounPhraseValue); // Uses the helper which nests correctly
 
         const result = await service.resolveActionTarget(
@@ -353,16 +299,14 @@ describe("TargetResolutionService - Domain 'direction'", () => {
   describe('7.6: Unique Direction Match (Case-Insensitive)', () => {
     const mockLocationWithExits = {
       id: 'location5',
-      getComponentData: jest.fn(),
     };
     beforeEach(() => {
-      mockLocationWithExits.getComponentData.mockReset();
       mockWorldContext.getCurrentLocation.mockReturnValue(
         mockLocationWithExits
       );
-      mockLocationWithExits.getComponentData.mockReturnValue([
-        { direction: 'North' },
-        { direction: 'South-East' },
+      getAvailableExits.mockReturnValue([
+        { direction: 'North', targetLocationId: 'loc1' },
+        { direction: 'South-East', targetLocationId: 'loc2' },
       ]);
     });
 
@@ -410,16 +354,14 @@ describe("TargetResolutionService - Domain 'direction'", () => {
   describe('7.7: No Matching Direction', () => {
     const mockLocationWithExits = {
       id: 'location6',
-      getComponentData: jest.fn(),
     };
     beforeEach(() => {
-      mockLocationWithExits.getComponentData.mockReset();
       mockWorldContext.getCurrentLocation.mockReturnValue(
         mockLocationWithExits
       );
-      mockLocationWithExits.getComponentData.mockReturnValue([
-        { direction: 'West' },
-        { direction: 'Up' },
+      getAvailableExits.mockReturnValue([
+        { direction: 'West', targetLocationId: 'locW' },
+        { direction: 'Up', targetLocationId: 'locU' },
       ]);
     });
 
@@ -445,17 +387,15 @@ describe("TargetResolutionService - Domain 'direction'", () => {
   describe('7.8: Ambiguous Direction Match', () => {
     const mockLocationWithAmbiguousExits = {
       id: 'location7',
-      getComponentData: jest.fn(),
     };
     beforeEach(() => {
-      mockLocationWithAmbiguousExits.getComponentData.mockReset();
       mockWorldContext.getCurrentLocation.mockReturnValue(
         mockLocationWithAmbiguousExits
       );
-      mockLocationWithAmbiguousExits.getComponentData.mockReturnValue([
-        { direction: 'UP' },
-        { direction: 'up' },
-        { direction: 'North' },
+      getAvailableExits.mockReturnValue([
+        { direction: 'UP', targetLocationId: 'locUp1' },
+        { direction: 'up', targetLocationId: 'locUp2' },
+        { direction: 'North', targetLocationId: 'locN' },
       ]);
     });
 
