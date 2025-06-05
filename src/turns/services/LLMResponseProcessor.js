@@ -1,25 +1,21 @@
-// src/turns/services/LLMResponseProcessor.js
 // -----------------------------------------------------------------------------
 // Parses, validates, and transforms LLM JSON responses into ProcessedTurnAction.
-// Validates against the v1 schema first, and—only if the payload contains a
-// `thoughts` property—tries the v2 schema. If both validations fail, it builds
-// a safe fallback action.
 // -----------------------------------------------------------------------------
 
-/** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction_Imported */
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction}   ITurnAction_Imported */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger}           ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator}  ISchemaValidator */
 /** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor_Interface_Typedef */
-/** @typedef {import('../../utils/llmUtils.js').JsonProcessingError} JsonProcessingError */
+/** @typedef {import('../../utils/llmUtils.js').JsonProcessingError}        JsonProcessingError */
 
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { parseAndRepairJson } from '../../utils/llmUtils.js';
 import { persistThoughts } from '../../ai/thoughtPersistenceHook.js';
-
 import {
   LLM_TURN_ACTION_SCHEMA_ID,
   LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID,
 } from '../schemas/llmOutputSchemas.js';
+import { NOTES_COMPONENT_ID } from '../../constants/componentIds.js'; // ← **added**
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -47,6 +43,21 @@ const BASE_FALLBACK_WAIT_ACTION = {
  * @property {LlmProcessingFailureInfo} [llmProcessingFailureInfo]
  * @property {object} [resolvedParameters]
  */
+
+/* ──────────────────────────  HELPER FUNCTION  ───────────────────────── */
+/**
+ * Normalise note text for duplicate detection.
+ *  • trim → lowercase → strip punctuation → collapse internal whitespace
+ * @param {string} text
+ * @returns {string}
+ */
+function normalizeNoteText(text) {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s]|/g, '') // strip punctuation
+    .replace(/\s+/g, ' '); // collapse spaces
+}
 
 /**
  * Concrete implementation of {@link ILLMResponseProcessor}.
@@ -187,6 +198,79 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
   }
 
   /**
+   * Post-processes notes returned by the LLM and merges them into the
+   * actor’s `core:notes` component with de-duplication and validation.
+   *
+   * @private
+   * @param {*} notesArray           – Raw value from the LLM payload.
+   * @param {object} actorEntity     – The actor entity instance.
+   * @param {ILogger} logger         – Logger instance.
+   * @returns {void}
+   */
+  _mergeNotesIntoEntity(notesArray, actorEntity, logger) {
+    /* ---------- guard: input must be an array ---------- */
+    if (!Array.isArray(notesArray)) {
+      logger.error("'notes' field is not an array; skipping merge");
+      return;
+    }
+
+    /* ---------- ensure component exists ---------- */
+    let notesComp = actorEntity.components?.[NOTES_COMPONENT_ID];
+    if (!notesComp) {
+      // create component via the canonical pathway so that schema validation fires
+      this.#entityManager?.addComponent?.(actorEntity.id, NOTES_COMPONENT_ID, {
+        notes: [],
+      });
+      notesComp = actorEntity.components[NOTES_COMPONENT_ID];
+    }
+
+    if (!Array.isArray(notesComp.notes)) {
+      // hard-fail if someone corrupted the component
+      logger.error(
+        `Actor ${actorEntity.id} 'core:notes' component missing 'notes' array`
+      );
+      return;
+    }
+
+    /* ---------- build normalised set from existing ---------- */
+    const existingSet = new Set(
+      notesComp.notes
+        .filter((n) => typeof n.text === 'string')
+        .map((n) => normalizeNoteText(n.text))
+    );
+
+    /* ---------- iterate incoming array ---------- */
+    for (const noteObj of notesArray) {
+      // shape & type validation
+      if (
+        typeof noteObj?.text !== 'string' ||
+        noteObj.text.trim() === '' ||
+        typeof noteObj?.timestamp !== 'string' ||
+        Number.isNaN(Date.parse(noteObj.timestamp))
+      ) {
+        logger.error(`Invalid note skipped: ${JSON.stringify(noteObj)}`);
+        continue;
+      }
+
+      const normalisedIncoming = normalizeNoteText(noteObj.text);
+      if (existingSet.has(normalisedIncoming)) {
+        // duplicate – silently skip
+        continue;
+      }
+
+      // append new note
+      notesComp.notes.push({
+        text: noteObj.text,
+        timestamp: noteObj.timestamp,
+      });
+      logger.info(
+        `[${new Date().toISOString()}] Added note: "${noteObj.text}" at ${noteObj.timestamp}`
+      );
+      existingSet.add(normalisedIncoming);
+    }
+  }
+
+  /**
    * Parses (with repair), validates, and transforms the LLM’s JSON response
    * string into a safe {@link ProcessedTurnAction}.
    *
@@ -241,6 +325,11 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       if (actorEntity) {
         try {
           persistThoughts(parsedJson, actorEntity, logger);
+
+          // NEW: merge any notes returned by the LLM
+          if (parsedJson.notes !== undefined) {
+            this._mergeNotesIntoEntity(parsedJson.notes, actorEntity, logger);
+          }
         } catch (e) {
           logger.warn('STM persist failed', { actorId, err: e });
         }
@@ -283,6 +372,10 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         if (actorEntity) {
           try {
             persistThoughts(parsedJson, actorEntity, logger);
+
+            if (parsedJson.notes !== undefined) {
+              this._mergeNotesIntoEntity(parsedJson.notes, actorEntity, logger);
+            }
           } catch (e) {
             logger.warn('STM persist failed', { actorId, err: e });
           }
