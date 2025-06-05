@@ -1,9 +1,9 @@
-// tests/config/containerConfig.test.js
+// tests/dependencyInjection/containerConfig.test.js
 // ****** MODIFIED FILE ******
 
-import AppContainer from '../../src/config/appContainer.js'; // Adjust path as needed
-import { configureContainer } from '../../src/config/containerConfig.js'; // Adjust path
-import { tokens } from '../../src/config/tokens.js'; // Adjust path
+import AppContainer from '../../src/dependencyInjection/appContainer.js'; // Adjust path as needed
+import { configureContainer } from '../../src/dependencyInjection/containerConfig.js'; // Adjust path
+import { tokens } from '../../src/dependencyInjection/tokens.js'; // Adjust path
 
 // --- Import the classes we want to check ---
 import CommandOutcomeInterpreter from '../../src/commands/interpreters/commandOutcomeInterpreter.js'; // Adjust path

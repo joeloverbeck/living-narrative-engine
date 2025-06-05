@@ -8,7 +8,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import ConsoleLogger, { LogLevel } from '../../src/services/consoleLogger.js';
+import ConsoleLogger, { LogLevel } from '../../src/logging/consoleLogger.js';
 
 describe('ConsoleLogger', () => {
   let logger;

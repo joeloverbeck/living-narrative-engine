@@ -3,6 +3,7 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
 import coreNotesComponent from '../../data/mods/core/components/notes.component.json';
+import { beforeAll, describe, expect, test } from '@jest/globals';
 
 describe('JSON-Schema – core:notes component', () => {
   /** @type {import('ajv').ValidateFunction} */

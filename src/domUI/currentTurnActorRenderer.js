@@ -5,7 +5,7 @@
 /** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../services/EntityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
+/** @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js'; // Adjusted path

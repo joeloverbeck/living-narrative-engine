@@ -1,4 +1,4 @@
-// src/core/services/consoleLogger.js
+// src/logging/consoleLogger.js
 /* eslint-disable no-console */
 
 /**

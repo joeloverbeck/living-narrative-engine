@@ -1,4 +1,4 @@
-// src/config/registrations/coreSystemsRegistrations.js
+// src/dependencyInjection/registrations/coreSystemsRegistrations.js
 // --- FILE START ---
 
 /**
@@ -25,16 +25,16 @@
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
-/** @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
+/** @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter_Interface */
 /** @typedef {import('../../turns/interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
 /** @typedef {import('../../turns/interfaces/factories/IAIPlayerStrategyFactory.js').IAIPlayerStrategyFactory} IAIPlayerStrategyFactory */
 /** @typedef {import('../../turns/interfaces/factories/ITurnContextFactory.js').ITurnContextFactory} ITurnContextFactory */
 /** @typedef {import('../../turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
-/** @typedef {import('../../services/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */ // Assuming this is the concrete class for the interface
+/** @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */ // Assuming this is the concrete class for the interface
 /** @typedef {import('../../turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
-/** @typedef {import('../../services/promptBuilder.js').PromptBuilder} IPromptBuilder */ // Assuming this is the concrete class for the interface
+/** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */ // Assuming this is the concrete class for the interface
 
 // --- System Imports ---
 import { ActionDiscoverySystem } from '../../systems/actionDiscoverySystem.js';
@@ -48,7 +48,7 @@ import TurnHandlerResolver from '../../turns/services/turnHandlerResolver.js';
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
-import { formatActionCommand } from '../../services/actionFormatter.js';
+import { formatActionCommand } from '../../actions/actionFormatter.js';
 import { INITIALIZABLE, SHUTDOWNABLE } from '../tags.js';
 
 /**

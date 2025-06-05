@@ -1,27 +1,23 @@
-// src/core/config/containerConfig.js
+// src/dependencyInjection/containerConfig.js
 
 // --- Import DI tokens & helpers ---
 import { tokens } from './tokens.js';
 import { Registrar } from './registrarHelpers.js';
 
 // --- Import Logger ---
-// Make sure the path to consoleLogger.js is correct.
-// If containerConfig.js is in 'src/core/config/' and consoleLogger.js is in 'src/core/services/',
-// then '../services/consoleLogger.js' is correct.
-import ConsoleLogger, { LogLevel } from '../services/consoleLogger.js';
+import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
 
 // --- Import LoggerConfigLoader ---
-// If loggerConfigLoader.js is in 'src/core/services/', this path is correct.
-import { LoggerConfigLoader } from '../services/loggerConfigLoader.js';
+import { LoggerConfigLoader } from '../configuration/loggerConfigLoader.js';
 
 // --- Import Logger Interface for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 // --- Import necessary types for registry population ---
-/** @typedef {import('../services/systemServiceRegistry.js').SystemServiceRegistry} SystemServiceRegistry */
-/** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../registry/systemServiceRegistry.js').SystemServiceRegistry} SystemServiceRegistry */
+/** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
+/** @typedef {import('../data/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../context/worldContext.js').default} WorldContext */
-/** @typedef {import('../services/perceptionUpdateService.js').default} PerceptionUpdateService */
+/** @typedef {import('../perception/perceptionUpdateService.js').default} PerceptionUpdateService */
 
 // --- Import registration bundle functions ---
 import { registerLoaders } from './registrations/loadersRegistrations.js';
@@ -56,9 +52,9 @@ export function configureContainer(container, uiElements) {
   const { outputDiv, inputElement, titleElement, document: doc } = uiElements;
 
   // --- Bootstrap logger with a default level (e.g., INFO) ---
-  // This logger instance will be updated if a config file is successfully loaded.
+  // This logger instance will be updated if a dependencyInjection file is successfully loaded.
   // Choose a sensible default. LogLevel.INFO is common for production,
-  // LogLevel.DEBUG might be useful during development if not overridden by config.
+  // LogLevel.DEBUG might be useful during development if not overridden by dependencyInjection.
   const initialLogLevel = LogLevel.INFO;
   const appLogger = new ConsoleLogger(initialLogLevel);
   // CORRECTED LINE: Use registrar.instance for pre-built instances
@@ -130,13 +126,13 @@ export function configureContainer(container, uiElements) {
       );
       // Log level will remain as `initialLogLevel`.
     }
-  })(); // End of self-invoking async function for logger config loading
+  })(); // End of self-invoking async function for logger dependencyInjection loading
 
   // --- Continue with other registrations ---
   // These will use the logger, which might still have its initial log level,
   // or an updated one if the async loading was very fast.
   logger.info(
-    '[ContainerConfig] Starting synchronous bundle registration while logger config continues loading in background (if not already done).'
+    '[ContainerConfig] Starting synchronous bundle registration while logger dependencyInjection continues loading in background (if not already done).'
   );
 
   // --- Registration Order ---

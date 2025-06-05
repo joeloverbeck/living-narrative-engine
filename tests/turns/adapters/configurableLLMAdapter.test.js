@@ -223,7 +223,7 @@ describe('ConfigurableLLMAdapter', () => {
       error: true,
       message: 'Failed to load configs',
       stage: 'parsing',
-      path: 'path/to/config.json',
+      path: 'path/to/dependencyInjection.json',
       originalError: new Error('Original parse error'),
     };
 
@@ -302,7 +302,7 @@ describe('ConfigurableLLMAdapter', () => {
       await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
       expect(adapter.isOperational()).toBe(false); // Non-operational
       expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBeNull();
-      await expect(adapter.getCurrentActiveLlmConfig()).rejects.toThrow(); // Accessing config when non-op throws
+      await expect(adapter.getCurrentActiveLlmConfig()).rejects.toThrow(); // Accessing dependencyInjection when non-op throws
       expect(mockLogger.error).toHaveBeenCalledWith(
         // Expect error for unexpected structure
         'ConfigurableLLMAdapter: LLM configuration loading returned an unexpected structure.',
@@ -472,7 +472,7 @@ describe('ConfigurableLLMAdapter', () => {
     });
 
     describe('setActiveLlm()', () => {
-      it('should successfully set an active LLM with a valid ID and update config', async () => {
+      it('should successfully set an active LLM with a valid ID and update dependencyInjection', async () => {
         const result = await adapter.setActiveLlm('test-llm-2');
         expect(result).toBe(true);
         expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe('test-llm-2');
@@ -531,7 +531,7 @@ describe('ConfigurableLLMAdapter', () => {
         });
         mockLlmConfigLoader.loadConfigs.mockResolvedValueOnce({
           error: true,
-          message: 'config error',
+          message: 'dependencyInjection error',
         });
         await nonOpAdapter.init({ llmConfigLoader: mockLlmConfigLoader });
         expect(nonOpAdapter.isOperational()).toBe(false);
@@ -564,7 +564,7 @@ describe('ConfigurableLLMAdapter', () => {
     });
 
     describe('getCurrentActiveLlmConfig()', () => {
-      it('should return the correct config object when an LLM is active', async () => {
+      it('should return the correct dependencyInjection object when an LLM is active', async () => {
         expect(await adapter.getCurrentActiveLlmConfig()).toEqual(
           sampleLlmModelConfig
         );
@@ -605,7 +605,7 @@ describe('ConfigurableLLMAdapter', () => {
         });
         mockLlmConfigLoader.loadConfigs.mockResolvedValueOnce({
           error: true,
-          message: 'config error',
+          message: 'dependencyInjection error',
         });
         await nonOpAdapter.init({ llmConfigLoader: mockLlmConfigLoader });
         expect(nonOpAdapter.isOperational()).toBe(false);
@@ -777,7 +777,7 @@ describe('ConfigurableLLMAdapter', () => {
         expect(freshAdapter.isOperational()).toBe(true);
       });
 
-      it('isOperational() should be false after failed init (config load error)', async () => {
+      it('isOperational() should be false after failed init (dependencyInjection load error)', async () => {
         mockLlmConfigLoader.loadConfigs.mockResolvedValue({
           error: true,
           message: 'fail',
@@ -786,7 +786,7 @@ describe('ConfigurableLLMAdapter', () => {
         expect(freshAdapter.isOperational()).toBe(false);
       });
 
-      it('isOperational() should be false after failed init (config loader invalid - sync throw)', () => {
+      it('isOperational() should be false after failed init (dependencyInjection loader invalid - sync throw)', () => {
         try {
           freshAdapter.init({ llmConfigLoader: null });
         } catch (e) {

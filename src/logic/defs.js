@@ -5,7 +5,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // User confirmed preference
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../services/gameDataRepository.js').default} GameDataRepository */ // <<< CORRECTED PATH based on provided service implementation
+/** @typedef {import('../data/gameDataRepository.js').default} GameDataRepository */ // <<< CORRECTED PATH based on provided service implementation
 
 // --- Existing Type Definitions (Assuming these are up-to-date) ---
 /**

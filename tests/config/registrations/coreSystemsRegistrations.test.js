@@ -1,4 +1,4 @@
-// tests/config/registrations/coreSystemsRegistrations.test.js
+// tests/dependencyInjection/registrations/coreSystemsRegistrations.test.js
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -8,11 +8,14 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 
 // --- Class Under Test ---
-import { registerCoreSystems } from '../../../src/config/registrations/coreSystemsRegistrations.js'; // Adjust path as needed
+import { registerCoreSystems } from '../../../src/dependencyInjection/registrations/coreSystemsRegistrations.js'; // Adjust path as needed
 
 // --- Dependencies ---
-import { tokens } from '../../../src/config/tokens.js';
-import { INITIALIZABLE, SHUTDOWNABLE } from '../../../src/config/tags.js'; // Adjust path if needed
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import {
+  INITIALIZABLE,
+  SHUTDOWNABLE,
+} from '../../../src/dependencyInjection/tags.js'; // Adjust path if needed
 
 // --- Mock Implementations (Core Services) ---
 const mockLogger = {
@@ -203,8 +206,8 @@ describe('registerCoreSystems', () => {
       (call) => call[0] !== tokens.ILogger
     );
     // --- ACTION REQUIRED: Snapshot needs update ---
-    // Run `npx jest src/tests/core/config/registrations/coreSystemsRegistrations.test.js -u`
-    // or your equivalent command (e.g., `npm run test -- src/tests/core/config/registrations/coreSystemsRegistrations.test.js -u`)
+    // Run `npx jest src/tests/dependencyInjection/registrations/coreSystemsRegistrations.test.js -u`
+    // or your equivalent command (e.g., `npm run test -- src/tests/dependencyInjection/registrations/coreSystemsRegistrations.test.js -u`)
     // to update the snapshot after these test code changes.
     expect(callsToSnapshot).toMatchSnapshot();
   });

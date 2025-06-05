@@ -203,7 +203,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
       );
     });
 
-    it('should use defaultConfigId from config if initialLlmId is not provided, and log it', async () => {
+    it('should use defaultConfigId from dependencyInjection if initialLlmId is not provided, and log it', async () => {
       mockLlmConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'default-id',
         configs: {
@@ -227,7 +227,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
       );
     });
 
-    it('should handle cases where defaultConfigId from config is invalid or not found, and log correctly', async () => {
+    it('should handle cases where defaultConfigId from dependencyInjection is invalid or not found, and log correctly', async () => {
       mockLlmConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'non-existent-default-id',
         configs: { 'some-llm': sampleLlmModelConfig1 },
@@ -245,7 +245,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
       );
     });
 
-    it('should handle cases where defaultConfigId from config is an empty string, and log correctly', async () => {
+    it('should handle cases where defaultConfigId from dependencyInjection is an empty string, and log correctly', async () => {
       mockLlmConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: '   ',
         configs: { 'some-llm': sampleLlmModelConfig1 },
@@ -269,7 +269,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
       );
     });
 
-    it('should handle no LLMs in config file, log warning, and have no active LLM', async () => {
+    it('should handle no LLMs in dependencyInjection file, log warning, and have no active LLM', async () => {
       mockLlmConfigLoader.loadConfigs.mockResolvedValue({
         defaultConfigId: 'default-id',
         configs: {},
@@ -433,7 +433,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
       });
       mockLlmConfigLoader.loadConfigs.mockResolvedValueOnce({
         error: true,
-        message: 'config error',
+        message: 'dependencyInjection error',
       });
       await nonOpAdapter.init({ llmConfigLoader: mockLlmConfigLoader });
       expect(nonOpAdapter.isOperational()).toBe(false);
@@ -513,7 +513,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
     it('should return empty array and log warning if adapter is not operational', async () => {
       mockLlmConfigLoader.loadConfigs.mockResolvedValue({
         error: true,
-        message: 'config load failed',
+        message: 'dependencyInjection load failed',
       });
       await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
       expect(adapter.isOperational()).toBe(false);
@@ -591,7 +591,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
     });
 
     it('should return null if no LLM is active (e.g. no default, no setActiveLlm)', async () => {
-      // Mock a scenario where defaultConfigId is missing from the loaded config.
+      // Mock a scenario where defaultConfigId is missing from the loaded dependencyInjection.
       // According to stricter init, this should make the adapter non-operational.
       mockLlmConfigLoader.loadConfigs.mockResolvedValue({
         // No defaultConfigId property here
@@ -619,7 +619,7 @@ describe('ConfigurableLLMAdapter Management Features', () => {
     it('should return null and log warning if adapter is not operational', async () => {
       mockLlmConfigLoader.loadConfigs.mockResolvedValue({
         error: true,
-        message: 'config load failed',
+        message: 'dependencyInjection load failed',
       });
       await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
       expect(adapter.isOperational()).toBe(false);

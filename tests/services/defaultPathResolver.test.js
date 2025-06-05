@@ -1,7 +1,7 @@
-// src/tests/core/services/defaultPathResolver.test.js
+// src/tests/services/defaultPathResolver.test.js
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import DefaultPathResolver from '../../src/services/defaultPathResolver.js'; // Adjust path if necessary
+import DefaultPathResolver from '../../src/pathing/defaultPathResolver.js'; // Adjust path if necessary
 
 // Mock interface for type clarity, actual implementation uses Jest mocks
 /**
@@ -351,7 +351,7 @@ describe('DefaultPathResolver', () => {
           resolver.resolveContentPath(typeName, invalidFilename);
         }).toThrow(expectedErrorMsg);
 
-        // Verify that neither config method was called because validation failed first
+        // Verify that neither dependencyInjection method was called because validation failed first
         expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
         expect(mockConfig.getContentBasePath).not.toHaveBeenCalled();
       }

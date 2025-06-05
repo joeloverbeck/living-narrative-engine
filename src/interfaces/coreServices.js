@@ -1,4 +1,4 @@
-// src/core/interfaces/coreServices.js
+// src/interfaces/coreServices.js
 // --- FILE START ---
 /**
  * @file Defines JSDoc typedefs for core service interfaces,
@@ -132,7 +132,7 @@
  */
 
 // --- Spatial Indexing ---
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Adjusted path assuming coreServices.js is in src/core/interfaces
+/** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Adjusted path assuming coreServices.js is in src/interfaces/
 
 /**
  * Interface for managing a spatial index of entities based on their location.
