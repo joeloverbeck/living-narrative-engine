@@ -1,3 +1,4 @@
+// src/turns/LLMResponseProcessor.js
 // -----------------------------------------------------------------------------
 // Parses, validates, and transforms LLM JSON responses into ProcessedTurnAction.
 // -----------------------------------------------------------------------------
@@ -17,8 +18,6 @@ import {
   LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID,
 } from '../schemas/llmOutputSchemas.js';
 import { NOTES_COMPONENT_ID } from '../../constants/componentIds.js'; // ← **added**
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 const BASE_FALLBACK_WAIT_ACTION = {
   actionDefinitionId: 'core:wait',
@@ -40,7 +39,7 @@ const BASE_FALLBACK_WAIT_ACTION = {
  * @typedef {object} ProcessedTurnAction
  * @property {string} actionDefinitionId - system identifier for the chosen action
  * @property {string} commandString - command string for the game parser
- * @property {string} speech - character's spoken words
+ * @property {string} speech - character’s spoken words
  * @property {LlmProcessingFailureInfo} [llmProcessingFailureInfo] - detailed failure info if processing failed
  * @property {object} [resolvedParameters] - any parameters resolved during processing
  */
@@ -59,7 +58,7 @@ function normalizeNoteText(text) {
     .trim()
     .toLowerCase()
     .replace(/[^\w\s]|/g, '') // strip punctuation
-    .replace(/\s+/g, ' '); // collapse spaces
+    .replace(/\s+/g, ' ');
 }
 
 /**
@@ -95,7 +94,6 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     this.#entityManager = entityManager; // may be null in tests
 
     // Unit tests spy on this warning:
-
     if (!this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_SCHEMA_ID)) {
       console.warn(
         `LLMResponseProcessor: Schema with ID '${LLM_TURN_ACTION_SCHEMA_ID}' is not loaded in the provided schema validator. Validation will fail if this schema is required.`
@@ -322,6 +320,16 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         rawLlmResponse: originalInput,
       });
     }
+
+    /* ─────── NEW CHECK: If parsed JSON contains "goals", log a warning and ignore them ─────── */
+    if (
+      parsedJson &&
+      Object.prototype.hasOwnProperty.call(parsedJson, 'goals')
+    ) {
+      logger.warn('LLM attempted to return goals; ignoring.');
+      // Do NOT merge or persist any goals. Intentionally skip.
+    }
+    /* ──────────────────────────────────────────────────────────────────────────────── */
 
     /* ---------- 2. Validate against v1 schema ----------------------------------- */
     const v1Result = this.#schemaValidator.validate(

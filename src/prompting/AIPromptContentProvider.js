@@ -9,7 +9,7 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 
 /**
- * @typedef {Object} RawPerceptionLogEntry
+ * @typedef {object} RawPerceptionLogEntry
  * @description Represents a single perception log entry from game state or entity component.
  * @property {string} [descriptionText] - The textual description of the perception.
  * @property {string} [perceptionType] - The type/category of perception.
