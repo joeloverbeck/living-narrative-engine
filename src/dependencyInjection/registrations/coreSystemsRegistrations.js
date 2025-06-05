@@ -50,10 +50,13 @@ import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import { formatActionCommand } from '../../actions/actionFormatter.js';
 import { INITIALIZABLE, SHUTDOWNABLE } from '../tags.js';
+import { getEntityIdsForScopes } from '../../entities/entityScopeService.js';
 
 /**
+ * Registers core game systems, turn handlers, and factories.
  *
- * @param container
+ * @param {AppContainer} container - The DI container to register into.
+ * @returns {void}
  */
 export function registerCoreSystems(container) {
   const registrar = new Registrar(container);
@@ -76,7 +79,7 @@ export function registerCoreSystems(container) {
         actionValidationService: c.resolve(tokens.ActionValidationService),
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: () => new Set(),
+        getEntityIdsForScopesFn: getEntityIdsForScopes,
       })
   );
   logger.debug(
