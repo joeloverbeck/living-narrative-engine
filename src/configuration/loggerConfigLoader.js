@@ -9,7 +9,7 @@ import { Workspace_retry } from '../utils/apiUtils.js';
 
 /**
  * @typedef {object} LoggerConfigurationFile
- * @description Represents the structure of the logger-dependencyInjection.json file.
+ * @description Represents the structure of the logger-config.json file.
  * @property {string} [logLevel] - Specifies the desired log level (e.g., "DEBUG", "INFO", "WARN", "ERROR", "NONE").
  * The value is case-insensitive.
  */
@@ -26,7 +26,7 @@ import { Workspace_retry } from '../utils/apiUtils.js';
 
 /**
  * @class LoggerConfigLoader
- * @description Service responsible for loading and parsing the logger-dependencyInjection.json file.
+ * @description Service responsible for loading and parsing the logger-config.json file.
  * It fetches the configuration file, typically served as a static asset.
  */
 export class LoggerConfigLoader {
@@ -40,7 +40,7 @@ export class LoggerConfigLoader {
    * @private
    * @type {string} - Default path to the logger configuration file.
    */
-  #defaultConfigPath = 'dependencyInjection/logger-dependencyInjection.json';
+  #defaultConfigPath = 'dependencyInjection/logger-config.json';
 
   /**
    * @private
@@ -85,7 +85,7 @@ export class LoggerConfigLoader {
    * or a default path if none is provided.
    *
    * @async
-   * @param {string} [filePath] - The path to the logger-dependencyInjection.json file.
+   * @param {string} [filePath] - The path to the logger-config.json file.
    * If not provided, the configured default path will be used.
    * @returns {Promise<LoggerConfigurationFile | LoadLoggerConfigErrorResult>} A promise that resolves with the parsed
    * JavaScript object representing the logger configuration, or an error object if loading/parsing fails.
