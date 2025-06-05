@@ -33,7 +33,6 @@ import { ensureValidLogger } from './loggerUtils.js'; // MODIFIED: Import ensure
 
 /**
  * Sends a standardized JSON error response to the client and logs the error.
- *
  * @param {ExpressResponse} res - The Express Response object.
  * @param {number} httpStatusCode - The HTTP status code to send to the client.
  * @param {string} stage - A machine-readable string indicating the stage where the error occurred.

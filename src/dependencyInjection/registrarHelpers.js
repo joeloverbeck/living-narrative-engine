@@ -1,4 +1,4 @@
-// src/core/config/registrarHelpers.js
+// src/dependencyInjection/registrarHelpers.js
 
 /**
  * @file Helper functions and classes to simplify DI container registration.

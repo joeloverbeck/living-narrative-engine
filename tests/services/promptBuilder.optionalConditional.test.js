@@ -8,15 +8,16 @@ import {
   expect,
   afterEach,
 } from '@jest/globals';
-import { PromptBuilder } from '../../src/services/promptBuilder.js';
-import { LLMConfigService } from '../../src/services/llmConfigService.js';
+import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
+import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler';
 // Import assembler types for JSDoc
-/** @typedef {import('../../src/services/promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
-/** @typedef {import('../../src/services/promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
+/** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
+/** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
 
 /**
- * @typedef {import('../../src/services/llmConfigService.js').LLMConfig} LLMConfig
+ * @typedef {import('../../src/llms/llmConfigService.js').LLMConfig} LLMConfig
  * @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger
  */
 
@@ -114,6 +115,7 @@ describe('PromptBuilder', () => {
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       // Configure the mock StandardElementAssembler for this suite.

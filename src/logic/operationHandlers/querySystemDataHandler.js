@@ -8,7 +8,7 @@
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../../data/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 // This typedef should represent the actual nested structure received by handlers.
 // Let's assume 'ExecutionContext' in defs.js is this nested structure.

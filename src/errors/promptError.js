@@ -1,4 +1,4 @@
-// src/core/errors/promptError.js
+// src/errors/promptError.js
 // --- FILE START ---
 
 /**

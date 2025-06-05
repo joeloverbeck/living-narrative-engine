@@ -1,4 +1,4 @@
-// src/core/errors/promptError.test.js
+// src/errors/promptError.test.js
 // --- FILE START ---
 
 import { PromptError } from '../../src/errors/promptError.js';

@@ -1,4 +1,4 @@
-// llm-proxy-server/src/config/proxyLlmConfigLoader.js
+// llm-proxy-server/src/dependencyInjection/proxyLlmConfigLoader.js
 // --- FILE START ---
 
 import * as path from 'node:path';
@@ -25,7 +25,7 @@ import { ensureValidLogger } from './utils/loggerUtils.js'; // Assuming correct 
  * @typedef {object} LLMConfigurationFileForProxy
  * @description Represents the structure of the parsed llm-configs.json file for the proxy.
  * @property {string} [defaultConfigId] - Specifies the ID of the LLM configuration to use by default.
- * @property {Object<string, LLMModelConfig>} configs - A dictionary of LLM configurations.
+ * @property {{[key: string]: LLMModelConfig}} configs - A dictionary of LLM configurations.
  */
 
 /**
@@ -47,7 +47,6 @@ import { ensureValidLogger } from './utils/loggerUtils.js'; // Assuming correct 
 
 /**
  * Loads and parses the LLM configuration file from the specified path using a file system reader.
- *
  * @async
  * @param {string} configFilePath - The absolute or relative path to the llm-configs.json file.
  * @param {ILogger} logger - A logger instance.

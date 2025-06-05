@@ -6,11 +6,11 @@
  */
 
 /**
- * @typedef {import('./llmConfigService.js').LLMConfigService} LLMConfigService
+ * @typedef {import('../llms/llmConfigService.js').LLMConfigService} LLMConfigService
  */
 
 /**
- * @typedef {import('./llmConfigService.js').LLMConfig} LLMConfig
+ * @typedef {import('../llms/llmConfigService.js').LLMConfig} LLMConfig
  */
 
 /**
@@ -18,11 +18,19 @@
  */
 
 /**
- * @typedef {import('./promptElementAssemblers/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler
+ * @typedef {import('./assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler
  */
 
 /**
- * @typedef {import('./promptElementAssemblers/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler
+ * @typedef {import('./assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler
+ */
+
+/**
+ * @typedef {import('./assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler
+ */
+
+/**
+ * @typedef {import('./assembling/notesSectionAssembler.js').default} NotesSectionAssembler
  */
 
 /**
@@ -63,6 +71,8 @@
  * @property {string} [exampleContentKeyContent] - Example: `systemPromptContent`, `userQueryContent`. (Content for a `promptElements` item with key `example_content_key`).
  * @property {Array<PerceptionLogEntry>} [perceptionLogArray] - An array of perception log entries,
  * processed if 'perception_log_wrapper' is in `promptAssemblyOrder`.
+ * @property {string[]} [thoughtsArray] - An array of thought strings.
+ * @property {string[]} [notesArray] - An array of note strings.
  * @property {boolean} [someConditionFlag] - Example: `enableHistory`, `includeExtendedContext`. (Used by `PromptElementCondition.promptDataFlag`).
  * // Specific properties will depend on the defined `promptElements` in `llm-configs.json`.
  * // For example, if llm-configs.json has a prompt_element with key "character_sheet":
@@ -72,26 +82,27 @@
  */
 
 import { IPromptBuilder } from '../interfaces/IPromptBuilder.js';
-import { StandardElementAssembler } from './promptElementAssemblers/standardElementAssembler.js';
-import { PerceptionLogAssembler } from './promptElementAssemblers/perceptionLogAssembler.js';
-import { ThoughtsSectionAssembler } from './promptElementAssemblers/thoughtsSectionAssembler.js'; // NEW ⬅️
+import { StandardElementAssembler } from './assembling/standardElementAssembler.js';
+import { PerceptionLogAssembler } from './assembling/perceptionLogAssembler.js';
+import { ThoughtsSectionAssembler } from './assembling/thoughtsSectionAssembler.js';
+// import { NotesSectionAssembler } from './promptElementAssemblers/notesSectionAssembler.js'; // Not strictly needed for type checking here if only passed through
 
 // Define constants for special element keys
 const PERCEPTION_LOG_WRAPPER_KEY = 'perception_log_wrapper';
 const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';
-
-// const PERCEPTION_LOG_ENTRY_KEY = 'perception_log_entry'; // No longer needed directly by PromptBuilder
+const NOTES_WRAPPER_KEY = 'notes_wrapper'; // NEW Key for notes
 
 /**
  * @class PromptBuilder
  * @description Central engine for dynamically constructing LLM prompt strings.
  * It orchestrates prompt assembly based on configurations retrieved from an {@link LLMConfigService}
  * and runtime data provided for each LLM interaction via `PromptData`.
- * It now primarily acts as an orchestrator, delegating the detailed assembly of individual
- * prompt elements to specialized assembler components.
+ * It acts as an orchestrator, delegating the detailed assembly of individual
+ * prompt elements to specialized assembler components (Standard, PerceptionLog, Thoughts, Notes).
  * A core principle is that the PromptBuilder must accept structured, semantic input via `PromptData`,
  * rather than pre-formatted strings for individual prompt parts, allowing the assemblers to take full
  * ownership of all formatting and assembly processes based on the provided configuration.
+ * @augments IPromptBuilder
  */
 export class PromptBuilder extends IPromptBuilder {
   /**
@@ -129,7 +140,19 @@ export class PromptBuilder extends IPromptBuilder {
    */
   #perceptionLogAssembler;
 
+  /**
+   * @private
+   * @type {ThoughtsSectionAssembler}
+   * @description Assembler for thoughts section elements.
+   */
   #thoughtsSectionAssembler;
+
+  /**
+   * @private
+   * @type {NotesSectionAssembler}
+   * @description Assembler for notes section elements.
+   */
+  #notesSectionAssembler;
 
   /**
    * Initializes a new instance of the PromptBuilder.
@@ -140,7 +163,8 @@ export class PromptBuilder extends IPromptBuilder {
    * @param {PlaceholderResolver} dependencies.placeholderResolver - Utility for resolving placeholders.
    * @param {StandardElementAssembler} dependencies.standardElementAssembler - Assembler for standard prompt elements.
    * @param {PerceptionLogAssembler} dependencies.perceptionLogAssembler - Assembler for perception log elements.
-   * @param dependencies.thoughtsSectionAssembler
+   * @param {ThoughtsSectionAssembler} dependencies.thoughtsSectionAssembler - Assembler for thoughts section elements.
+   * @param {NotesSectionAssembler} dependencies.notesSectionAssembler - Assembler for notes section elements.
    */
   constructor({
     logger = console,
@@ -149,6 +173,7 @@ export class PromptBuilder extends IPromptBuilder {
     standardElementAssembler,
     perceptionLogAssembler,
     thoughtsSectionAssembler,
+    notesSectionAssembler, // Added notesSectionAssembler to parameters
   }) {
     super();
     this.#logger = logger;
@@ -185,15 +210,29 @@ export class PromptBuilder extends IPromptBuilder {
     }
     this.#perceptionLogAssembler = perceptionLogAssembler;
 
-    // ThoughtsSectionAssembler – if none supplied, create a default instance
     if (!thoughtsSectionAssembler) {
-      this.#thoughtsSectionAssembler = new ThoughtsSectionAssembler({ logger });
+      // Kept the original behavior of defaulting if not provided,
+      // though typically it would be injected.
+      this.#logger.warn(
+        'PromptBuilder: ThoughtsSectionAssembler was not provided, creating default. Ensure it is registered in DI.'
+      );
+      this.#thoughtsSectionAssembler = new ThoughtsSectionAssembler({
+        logger: this.#logger,
+      });
     } else {
       this.#thoughtsSectionAssembler = thoughtsSectionAssembler;
     }
 
+    if (!notesSectionAssembler) {
+      const errorMsg =
+        'PromptBuilder: NotesSectionAssembler is a required dependency.';
+      this.#logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    this.#notesSectionAssembler = notesSectionAssembler;
+
     this.#logger.info(
-      'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers (standard, perception-log, thoughts).'
+      'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers (standard, perception-log, thoughts, notes).'
     );
   }
 
@@ -317,11 +356,14 @@ export class PromptBuilder extends IPromptBuilder {
       let currentElementOutput = '';
       let assemblerToUse;
 
+      // Select the appropriate assembler based on the element key
       if (key === PERCEPTION_LOG_WRAPPER_KEY) {
         assemblerToUse = this.#perceptionLogAssembler;
       } else if (key === THOUGHTS_WRAPPER_KEY) {
-        // NEW ⬅️
-        assemblerToUse = this.#thoughtsSectionAssembler; // NEW ⬅️
+        assemblerToUse = this.#thoughtsSectionAssembler;
+      } else if (key === NOTES_WRAPPER_KEY) {
+        // Added condition for NotesSectionAssembler
+        assemblerToUse = this.#notesSectionAssembler;
       } else {
         assemblerToUse = this.#standardElementAssembler;
       }
@@ -346,8 +388,6 @@ export class PromptBuilder extends IPromptBuilder {
           currentElementOutput = ''; // Ensure graceful failure for this element
         }
       } else {
-        // This case should ideally not be reached if assemblers are correctly injected
-        // and the if/else logic for selecting assemblerToUse is comprehensive.
         this.#logger.warn(
           `PromptBuilder.build: No assembler found or assigned for key '${key}'. This could indicate missing dependencies or an unhandled element type. Skipping element.`,
           {

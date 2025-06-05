@@ -8,16 +8,17 @@ import {
   expect,
   afterEach,
 } from '@jest/globals';
-import { PromptBuilder } from '../../src/services/promptBuilder.js';
-import { LLMConfigService } from '../../src/services/llmConfigService.js';
+import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
+import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler';
 // Import assembler types for JSDoc
-/** @typedef {import('../../src/services/promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
-/** @typedef {import('../../src/services/promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
+/** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
+/** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
 
 /**
- * @typedef {import('../../src/services/llmConfigService.js').LLMConfig} LLMConfig
- * @typedef {import('../../src/services/promptBuilder.js').PromptData} PromptData
+ * @typedef {import('../../src/llms/llmConfigService.js').LLMConfig} LLMConfig
+ * @typedef {import('../../src/prompting/promptBuilder.js').PromptData} PromptData
  * @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger
  */
 
@@ -116,6 +117,7 @@ describe('PromptBuilder', () => {
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       // Mock for standard elements (header, footer)
@@ -182,12 +184,12 @@ describe('PromptBuilder', () => {
           const entryConfig = allPromptElementsMap.get('perception_log_entry');
 
           if (!entryConfig) {
-            // Simulate logging for missing entry config (original tests expect this)
+            // Simulate logging for missing entry dependencyInjection (original tests expect this)
             logger.warn(
               `PromptBuilder.build: Missing 'perception_log_entry' config for perception log in configId "${allPromptElementsMap.get(wrapperConfig.key)?.configId || mockLlmConfigService.getConfig.mock.results[0].value.configId}". Entries will be empty.`
             );
             logger.debug(
-              "PromptBuilder.build: Perception log wrapper for 'perception_log_wrapper' added. Entries were not formatted due to missing 'perception_log_entry' config."
+              "PromptBuilder.build: Perception log wrapper for 'perception_log_wrapper' added. Entries were not formatted due to missing 'perception_log_entry' dependencyInjection."
             );
             return `${resolvedWrapperPrefix}${resolvedWrapperSuffix}`;
           }
@@ -263,7 +265,7 @@ describe('PromptBuilder', () => {
         // For perception log entries
         if (typeof primarySource === 'object' && primarySource !== null) {
           if (currentText.includes('[{timestamp}]')) {
-            // Matches the format in config
+            // Matches the format in dependencyInjection
             // The timestamp from data (e.g., "T1") is *not* used for placeholder values directly by PerceptionLogAssembler
             // It's for cleaning. If {timestamp} remains, it means it's a placeholder to be resolved.
             // Since entryForResolution.timestamp is deleted, this should resolve to empty.
@@ -386,7 +388,7 @@ describe('PromptBuilder', () => {
       );
     });
 
-    test('should process wrapper even if perception_log_entry config is missing (entries will be empty)', async () => {
+    test('should process wrapper even if perception_log_entry dependencyInjection is missing (entries will be empty)', async () => {
       mockLlmConfigService.getConfig.mockResolvedValue(noEntryConfig); // Config without perception_log_entry
       mockPlaceholderResolver.resolve.mockImplementation((text) => text); // Simple pass-through
 
@@ -421,7 +423,7 @@ describe('PromptBuilder', () => {
               `PromptBuilder.build: Missing 'perception_log_entry' config for perception log in configId "${noEntryConfig.configId}". Entries will be empty.`
             );
             logger.debug(
-              "PromptBuilder.build: Perception log wrapper for 'perception_log_wrapper' added. Entries were not formatted due to missing 'perception_log_entry' config."
+              "PromptBuilder.build: Perception log wrapper for 'perception_log_wrapper' added. Entries were not formatted due to missing 'perception_log_entry' dependencyInjection."
             );
           }
           return `${resolvedWrapperPrefix}${resolvedWrapperSuffix}`;
@@ -438,7 +440,7 @@ describe('PromptBuilder', () => {
         `PromptBuilder.build: Missing 'perception_log_entry' config for perception log in configId "no_entry_cfg". Entries will be empty.`
       );
       expect(logger.debug).toHaveBeenCalledWith(
-        "PromptBuilder.build: Perception log wrapper for 'perception_log_wrapper' added. Entries were not formatted due to missing 'perception_log_entry' config."
+        "PromptBuilder.build: Perception log wrapper for 'perception_log_wrapper' added. Entries were not formatted due to missing 'perception_log_entry' dependencyInjection."
       );
     });
 

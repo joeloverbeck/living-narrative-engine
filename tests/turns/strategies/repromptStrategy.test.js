@@ -1,4 +1,4 @@
-// src/core/turns/strategies/repromptStrategy.test.js
+// src/turns/strategies/repromptStrategy.test.js
 
 import RepromptStrategy from '../../../src/turns/strategies/repromptStrategy.js';
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';

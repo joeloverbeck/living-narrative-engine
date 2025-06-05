@@ -8,15 +8,16 @@ import {
   expect,
   afterEach,
 } from '@jest/globals';
-import { PromptBuilder } from '../../src/services/promptBuilder.js';
-import { LLMConfigService } from '../../src/services/llmConfigService.js'; // Added
-import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js'; // Added
+import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
+import { LLMConfigService } from '../../src/llms/llmConfigService.js'; // Added
+import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler'; // Added
 // Import assembler types for JSDoc
-/** @typedef {import('../../src/services/promptElementAssemblers/StandardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
-/** @typedef {import('../../src/services/promptElementAssemblers/PerceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
+/** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
+/** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
 
 /**
- * @typedef {import('../../src/services/llmConfigService.js').LLMConfig} LLMConfig
+ * @typedef {import('../../src/llms/llmConfigService.js').LLMConfig} LLMConfig
  * @typedef {import('../../src/interfaces/coreServices.js').ILogger}     ILogger
  */
 
@@ -27,7 +28,7 @@ import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js'; //
  */
 
 const EXPECTED_INIT_MSG =
-  'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers (standard, perception-log, thoughts).';
+  'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers (standard, perception-log, thoughts, notes).';
 
 /** @returns {jest.Mocked<ILogger>} */
 const mockLoggerInstance = () => ({
@@ -110,6 +111,7 @@ describe('PromptBuilder', () => {
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       expect(pb).toBeInstanceOf(PromptBuilder);
@@ -124,6 +126,7 @@ describe('PromptBuilder', () => {
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -137,6 +140,7 @@ describe('PromptBuilder', () => {
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -150,6 +154,7 @@ describe('PromptBuilder', () => {
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -163,6 +168,7 @@ describe('PromptBuilder', () => {
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -176,6 +182,7 @@ describe('PromptBuilder', () => {
         placeholderResolver: mockPlaceholderResolver,
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
+        notesSectionAssembler: new NotesSectionAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);

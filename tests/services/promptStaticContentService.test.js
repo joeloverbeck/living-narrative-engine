@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
-import { PromptStaticContentService } from '../../src/services/promptStaticContentService.js';
+import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 
 // --- Expected String Constants (derived from PromptStaticContentService.js for verification) ---
 // These are defined here to ensure tests check against the exact values from the service.

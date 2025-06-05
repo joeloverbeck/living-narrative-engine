@@ -8,7 +8,7 @@ import QuerySystemDataHandler from '../../../src/logic/operationHandlers/querySy
 
 // --- Type-hints ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../src/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../../../src/data/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 // This typedef now reflects the NESTED structure handlers receive
 /**
  * @typedef {object} NestedExecutionContextForTest

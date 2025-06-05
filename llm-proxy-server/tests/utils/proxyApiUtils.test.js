@@ -28,7 +28,6 @@ jest.mock('../../src/utils/loggerUtils.js', () => ({
 // this utility would be exported for direct testing.
 /**
  * Simplified copy of the private _calculateRetryDelay used for unit testing.
- *
  * @param {number} currentAttempt - The current attempt number.
  * @param {number} baseDelayMs - Base delay in milliseconds.
  * @param {number} maxDelayMs - Maximum delay in milliseconds.
