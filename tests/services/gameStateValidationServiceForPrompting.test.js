@@ -1,7 +1,7 @@
 // test/services/GameStateValidationServiceForPrompting.test.js
 // --- FILE START ---
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { GameStateValidationServiceForPrompting } from '../../src/services/gameStateValidationServiceForPrompting.js';
+import { GameStateValidationServiceForPrompting } from '../../src/validation/gameStateValidationServiceForPrompting.js';
 import { ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING } from '../../src/constants/textDefaults.js';
 
 // Mock ILogger dependency

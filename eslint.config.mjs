@@ -1,4 +1,4 @@
-// eslint.config.mjs
+// eslint.dependencyInjection.mjs
 
 import globals from 'globals';
 import js from '@eslint/js';
@@ -58,14 +58,14 @@ export default [
       // 'jsdoc/require-param-description': 'warn',
       // 'jsdoc/require-returns-description': 'warn',
       // 'jsdoc/check-tag-names': ['warn', { definedTags: ['see', 'link', 'example', 'throws'] }],
-      // 'jsdoc/require-jsdoc': ['warn', { /* ... your detailed config ... */ }]
+      // 'jsdoc/require-jsdoc': ['warn', { /* ... your detailed dependencyInjection ... */ }]
     },
   },
 
   // 4. Global configuration for your BROWSER source files
   {
     files: ['**/*.js', '**/*.mjs'],
-    // This 'ignores' will prevent this specific browser-focused config
+    // This 'ignores' will prevent this specific browser-focused dependencyInjection
     // from applying to test files, node scripts, and the llm-proxy-server.
     ignores: [
       '**/*.test.js',
@@ -73,9 +73,9 @@ export default [
       '**/__tests__/**',
       'scripts/**',
       'llm-proxy-server/**', // Exclude proxy server from browser globals
-      'eslint.config.mjs', // Typically, config files don't need browser globals
-      'jest.config.js',
-      'babel.config.js',
+      'eslint.dependencyInjection.mjs', // Typically, dependencyInjection files don't need browser globals
+      'jest.dependencyInjection.js',
+      'babel.dependencyInjection.js',
       // Add other specific files/patterns that are JS but not browser app code
     ],
     languageOptions: {
@@ -114,7 +114,11 @@ export default [
 
   // 5a. Configuration for root configuration files using CommonJS
   {
-    files: ['babel.config.js', 'jest.config.js', 'jest.setup.js'],
+    files: [
+      'babel.dependencyInjection.js',
+      'jest.dependencyInjection.js',
+      'jest.setup.js',
+    ],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
@@ -127,8 +131,8 @@ export default [
   // 5b. Configuration for the LLM Proxy Server (Node.js environment)
   // This configuration will apply ONLY to files within 'llm-proxy-server/'
   // assuming the global ignores do NOT include 'llm-proxy-server/'
-  // OR, you can manage this with a separate eslint.config.mjs inside 'llm-proxy-server/'
-  // For now, let's assume you want one root config that also handles this sub-project.
+  // OR, you can manage this with a separate eslint.dependencyInjection.mjs inside 'llm-proxy-server/'
+  // For now, let's assume you want one root dependencyInjection that also handles this sub-project.
   // If 'llm-proxy-server/' is in the global ignores, this block will not apply.
   // To make it apply, remove 'llm-proxy-server/' from the global ignores below,
   // and rely on this block's 'files' pattern.
@@ -161,17 +165,18 @@ export default [
   {
     ignores: [
       'node_modules/',
+      'llm-proxy-server/',
       'dist/',
       'coverage/',
       '.DS_Store',
       '*.log',
       'CONTRIBUTING.md',
       'data/',
-      'config/', // You added this, assuming it's for non-JS config files or generated files
+      'dependencyInjection/', // You added this, assuming it's for non-JS dependencyInjection files or generated files
       // 'llm-proxy-server/', // Add this if you want the root linter to COMPLETELY ignore it.
       // If you want the root linter to process it with specific rules (like block 5b),
       // then REMOVE this line and ensure block 5b's 'files' is correct.
-      // For true separation, put an eslint.config.mjs IN llm-proxy-server/.
+      // For true separation, put an eslint.dependencyInjection.mjs IN llm-proxy-server/.
       // Add any other directories or files that should not be linted
       // e.g., 'vendor/', 'build/', 'temp/'
     ],

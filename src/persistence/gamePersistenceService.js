@@ -10,17 +10,18 @@ import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.j
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('./playtimeTracker.js').default} PlaytimeTracker */
-/** @typedef {import('../core/config/appContainer.js').default} AppContainer */
+/** @typedef {import('../engine/playtimeTracker.js').default} PlaytimeTracker */
+/** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 // WorldLoader import is no longer strictly needed here if activeWorldName is passed in
-/** @typedef {import('../core/services/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 
 // --- Import Tokens ---
-import { tokens } from '../config/tokens.js';
+import { tokens } from '../dependencyInjection/tokens.js';
 // --- MODIFICATION START: Import the component ID constant ---
-import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js'; // Assuming path is correct relative to this file
+import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
+import { CORE_MOD_ID } from '../constants/core'; // Assuming path is correct relative to this file
 // --- MODIFICATION END ---
 
 class GamePersistenceService extends IGamePersistenceService {
@@ -145,14 +146,16 @@ class GamePersistenceService extends IGamePersistenceService {
         'GamePersistenceService: No mod manifests found in registry under "mod_manifests" type. Mod manifest may be incomplete. Using fallback.'
       );
       const coreModManifest = loadedManifestObjects?.find(
-        (m) => m.id === 'core'
+        (m) => m.id === CORE_MOD_ID
       );
       if (coreModManifest) {
         activeModsManifest = [
-          { modId: 'core', version: coreModManifest.version },
+          { modId: CORE_MOD_ID, version: coreModManifest.version },
         ];
       } else {
-        activeModsManifest = [{ modId: 'core', version: 'unknown_fallback' }];
+        activeModsManifest = [
+          { modId: CORE_MOD_ID, version: 'unknown_fallback' },
+        ];
       }
       this.#logger.debug(
         'GamePersistenceService: Used fallback for mod manifest.'

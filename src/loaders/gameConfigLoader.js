@@ -1,4 +1,4 @@
-// src/core/services/gameConfigLoader.js
+// src/loaders/gameConfigLoader.js
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -11,9 +11,11 @@
 
 /** @typedef {import('../../data/schemas/game.schema.json')} GameConfig */ // Assuming this type exists
 
+import { CORE_MOD_ID } from '../constants/core';
+
 /**
  * Service responsible for locating, fetching, validating, and parsing the game configuration file (e.g., game.json).
- * After validation, it ensures 'core' is the first mod and returns the list of mod IDs.
+ * After validation, it ensures CORE_MOD_ID is the first mod and returns the list of mod IDs.
  */
 class GameConfigLoader {
   #configuration;
@@ -109,15 +111,15 @@ class GameConfigLoader {
 
   /**
    * Loads, parses, and validates the game configuration file (e.g., game.json).
-   * If validation is successful, ensures 'core' is the first mod ID and returns the array of mod IDs.
+   * If validation is successful, ensures CORE_MOD_ID is the first mod ID and returns the array of mod IDs.
    * Throws an error if any step fails (file not found, parse error, validation error),
    * halting the loading process.
    *
-   * @returns {Promise<string[]>} A promise that resolves with the array of mod IDs (guaranteed to start with 'core')
+   * @returns {Promise<string[]>} A promise that resolves with the array of mod IDs (guaranteed to start with CORE_MOD_ID)
    * if loading, parsing, and validation succeed. The promise rejects if any step fails.
    * @public
    * @async
-   * @throws {Error} If the config file cannot be found, parsed, or validated.
+   * @throws {Error} If the dependencyInjection file cannot be found, parsed, or validated.
    */
   async loadConfig() {
     let configPath = '';
@@ -232,27 +234,27 @@ class GameConfigLoader {
       }
 
       // --- START: MODLOADER-XXX IMPLEMENTATION ---
-      // Ensure 'core' mod is always first in the list
-      if (!parsedConfig.mods.length || parsedConfig.mods[0] !== 'core') {
-        if (parsedConfig.mods.includes('core')) {
+      // Ensure CORE_MOD_ID mod is always first in the list
+      if (!parsedConfig.mods.length || parsedConfig.mods[0] !== CORE_MOD_ID) {
+        if (parsedConfig.mods.includes(CORE_MOD_ID)) {
           // If Core exists but not first, remove it and prepend
           parsedConfig.mods = parsedConfig.mods.filter(
-            (modId) => modId !== 'core'
+            (modId) => modId !== CORE_MOD_ID
           );
-          parsedConfig.mods.unshift('core');
+          parsedConfig.mods.unshift(CORE_MOD_ID);
           this.#logger.info(
-            `GameConfigLoader: 'core' mod found but was not first; moved to the beginning of the load order.`
+            `GameConfigLoader: CORE_MOD_ID mod found but was not first; moved to the beginning of the load order.`
           );
         } else {
           // If Core is missing entirely, prepend it
-          parsedConfig.mods.unshift('core');
+          parsedConfig.mods.unshift(CORE_MOD_ID);
           this.#logger.info(
-            `GameConfigLoader: Auto-injected 'core' mod at the beginning of the load order.`
+            `GameConfigLoader: Auto-injected CORE_MOD_ID mod at the beginning of the load order.`
           );
         }
       } else {
         this.#logger.debug(
-          `GameConfigLoader: 'core' mod already present at the beginning of the load order.`
+          `GameConfigLoader: CORE_MOD_ID mod already present at the beginning of the load order.`
         );
       }
       // --- END: MODLOADER-XXX IMPLEMENTATION ---

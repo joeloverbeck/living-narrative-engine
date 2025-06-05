@@ -1,4 +1,4 @@
-// src/core/adapters/EventBusPromptAdapter.test.js
+// src/turns/adapters/EventBusPromptAdapter.test.js
 // --- FILE START ---
 
 import { EventBusPromptAdapter } from '../../../src/turns/adapters/eventBusPromptAdapter.js';

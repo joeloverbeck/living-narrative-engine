@@ -1,4 +1,4 @@
-// src/core/constants/eventIds.js
+// src/turns/constants/eventIds.js
 
 // Existing Event IDs
 export const NEW_GAME_STARTED_ID = 'core:new_game_started';

@@ -1,4 +1,4 @@
-// llm-proxy-server/eslint.config.js
+// llm-proxy-server/eslint.dependencyInjection.js
 import eslintJs from '@eslint/js';
 import pluginJest from 'eslint-plugin-jest';
 import pluginJsdoc from 'eslint-plugin-jsdoc';
@@ -141,9 +141,9 @@ export default [
     },
   },
 
-  // 4. Configuration for babel.config.cjs (CommonJS)
+  // 4. Configuration for babel.dependencyInjection.cjs (CommonJS)
   {
-    files: ['babel.config.cjs'],
+    files: ['babel.dependencyInjection.cjs'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: {
@@ -156,9 +156,9 @@ export default [
     },
   },
 
-  // 5. Overrides for specific files allowing console.log (e.g., server startup & config)
+  // 5. Overrides for specific files allowing console.log (e.g., server startup & dependencyInjection)
   {
-    files: ['src/core/server.js', 'src/config/appConfig.js'],
+    files: ['src/core/server.js', 'src/dependencyInjection/appConfig.js'],
     rules: {
       'no-console': 'off',
     },

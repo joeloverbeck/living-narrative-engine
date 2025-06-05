@@ -1,4 +1,4 @@
-// src/core/adapters/eventBusPromptAdapter.js
+// src/turns/adapters/eventBusPromptAdapter.js
 // --- FILE START ---
 
 import { IPromptOutputPort } from '../ports/IPromptOutputPort.js';

@@ -1,6 +1,6 @@
 // src/engine/gameEngine.js
 
-import { tokens } from '../config/tokens.js';
+import { tokens } from '../dependencyInjection/tokens.js';
 import {
   GAME_LOADED_ID,
   GAME_SAVED_ID,
@@ -20,7 +20,7 @@ import {
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../config/appContainer.js').default} AppContainer */
+/** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */

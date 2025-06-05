@@ -1,4 +1,4 @@
-// Filename: src/core/services/eventLoader.js
+// Filename: src/loaders/eventLoader.js
 
 /**
  * @file Defines the EventLoader class, responsible for loading

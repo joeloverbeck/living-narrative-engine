@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/eventLoader.test.js
+// Filename: src/tests/loaders/eventLoader.test.js
 // --- CORRECTIONS APPLIED (Round 2) ---
 
 import {

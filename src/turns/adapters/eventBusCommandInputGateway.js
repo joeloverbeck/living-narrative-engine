@@ -1,4 +1,4 @@
-// src/core/adapters/eventBusCommandInputGateway.js
+// src/turns/adapters/eventBusCommandInputGateway.js
 // --- FILE START ---
 
 import { ICommandInputPort } from '../ports/ICommandInputPort.js';

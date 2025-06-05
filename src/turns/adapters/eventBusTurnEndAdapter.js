@@ -1,4 +1,4 @@
-// src/core/adapters/eventBusTurnEndAdapter.js
+// src/turns/adapters/eventBusTurnEndAdapter.js
 // --- FILE START ---
 
 import { ITurnEndPort } from '../ports/ITurnEndPort.js';

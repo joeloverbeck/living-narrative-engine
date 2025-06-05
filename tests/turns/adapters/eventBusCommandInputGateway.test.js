@@ -1,4 +1,4 @@
-// src/tests/core/adapters/eventBusCommandInputGateway.test.js
+// src/tests/turns/adapters/eventBusCommandInputGateway.test.js
 // --- FILE START (Entire file content as corrected) ---
 
 import { EventBusCommandInputGateway } from '../../../src/turns/adapters/eventBusCommandInputGateway.js';

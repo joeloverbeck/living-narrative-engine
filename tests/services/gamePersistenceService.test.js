@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import GamePersistenceService from '../../src/services/gamePersistenceService.js';
+import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */

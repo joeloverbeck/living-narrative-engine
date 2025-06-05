@@ -1,4 +1,4 @@
-// tests/core/EnvironmentContext.test.js
+// tests/llms/environmentContext.test.js
 // --- FILE START ---
 
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
@@ -7,7 +7,7 @@ import { EnvironmentContext } from '../../src/llms/environmentContext.js'; // Ad
 const DEFAULT_PROXY_SERVER_URL = 'http://localhost:3001/api/llm-request';
 
 /**
- * @returns {jest.Mocked<import('../../src/core/EnvironmentContext.js').ILogger>} // Adjust path for ILogger definition
+ * @returns {jest.Mocked<import('../../src/llms/environmentContext.js').ILogger>} // Adjust path for ILogger definition
  */
 const mockLogger = () => ({
   info: jest.fn(),

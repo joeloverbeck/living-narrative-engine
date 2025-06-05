@@ -8,8 +8,8 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import GameEngine from '../../src/engine/gameEngine.js'; // Corrected path to core
-import { tokens } from '../../src/config/tokens.js';
+import GameEngine from '../../src/engine/gameEngine.js';
+import { tokens } from '../../src/dependencyInjection/tokens.js';
 import {
   GAME_LOADED_ID,
   GAME_SAVED_ID,
@@ -30,7 +30,7 @@ import {
 
 // --- JSDoc Type Imports for Mocks ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../src/config/appContainer.js').default} AppContainer */
+/** @typedef {import('../../src/dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../src/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
