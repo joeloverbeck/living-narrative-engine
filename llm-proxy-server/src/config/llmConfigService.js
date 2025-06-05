@@ -1,4 +1,4 @@
-// llm-proxy-server/src/dependencyInjection/llmConfigService.js
+// llm-proxy-server/src/config/llmConfigService.js
 // --- FILE START ---
 
 import * as path from 'node:path';
@@ -110,7 +110,7 @@ export class LlmConfigService {
 
     this.#_defaultLlmConfigPath = path.resolve(
       __dirname,
-      '../../../dependencyInjection/llm-configs.json'
+      '../../../config/llm-configs.json'
     );
 
     this.#logger.debug('LlmConfigService: Instance created.');
@@ -257,7 +257,7 @@ export class LlmConfigService {
       // proxyLlmConfigLoader should check `parsedConfigs.configs` and its JSDoc should use `configs`.
       // Here, `LlmConfigService` should also expect `parsedConfigs.configs`.
       // If `parsedConfigs.llms` was the intended property name in the JSON, the schema is wrong.
-      // Based on the prompt's `dependencyInjection/llm-configs.json`, the key is `configs`.
+      // Based on the prompt's `config/llm-configs.json`, the key is `configs`.
       // So, `proxyLlmConfigLoader.js` also needs adjustment for this.
       // And the JSDoc `LLMConfigurationFileForProxy` should use `configs`.
 
@@ -273,7 +273,7 @@ export class LlmConfigService {
       // And LlmConfigService should use 'configs'.
 
       // For now, proceeding with the current code structure's use of 'llms' but acknowledging this discrepancy.
-      // The original file `dependencyInjection/llm-configs.json` provided uses "configs" as the key for the map.
+      // The original file `config/llm-configs.json` provided uses "configs" as the key for the map.
       // The `proxyLlmConfigLoader.js` file provided checks for `parsedConfigs.llms`.
       // The `LlmConfigService.js` (this file) JSDoc `LLMConfigurationFileForProxy` refers to `llms`.
       // This is a pre-existing inconsistency.

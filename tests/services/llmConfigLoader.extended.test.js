@@ -49,7 +49,7 @@ const mockConfigurationInstance = () => ({
     .mockReturnValue('http://example.com/schemas/rule.schema.json'),
 });
 
-const defaultLlmConfigPath = 'dependencyInjection/llm-configs.json'; // Renamed for clarity
+const defaultLlmConfigPath = 'config/llm-configs.json'; // Renamed for clarity
 
 // Example valid llm-configs.json content, now as a root object
 const mockValidRootConfig = {

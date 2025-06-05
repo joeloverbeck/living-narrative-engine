@@ -512,7 +512,7 @@ export function registerDomainServices(container) {
     );
     // This path was previously hardcoded in PromptBuilder's factory.
     // It's assumed to be a URL if HttpConfigurationProvider is used.
-    const llmConfigsPath = './dependencyInjection/llm-configs.json';
+    const llmConfigsPath = './config/llm-configs.json';
     log.info(
       `${String(tokens.LLMConfigService)} factory: Using configSourceIdentifier: "${llmConfigsPath}"`
     );

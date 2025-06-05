@@ -115,7 +115,7 @@ export class LlmConfigLoader {
   #logger;
   #schemaValidator;
   #configuration;
-  #defaultConfigPath = 'dependencyInjection/llm-configs.json';
+  #defaultConfigPath = 'config/llm-configs.json';
   #defaultMaxRetries = 3;
   #defaultBaseDelayMs = 500;
   #defaultMaxDelayMs = 5000;
