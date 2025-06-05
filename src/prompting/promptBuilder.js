@@ -9,22 +9,18 @@
  * @typedef {import('./assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler
  * @typedef {import('./assembling/notesSectionAssembler.js').default} NotesSectionAssembler
  * @typedef {import('./assembling/goalsSectionAssembler.js').default} GoalsSectionAssembler
- *
  * @typedef {object} PromptElementCondition
  * @property {string} promptDataFlag - The name of the flag in promptData that this condition checks.
  * @property {any} [expectedValue] - Optional specific value that promptData[promptDataFlag] must equal for the condition to pass.
- *
  * @typedef {object} PromptElement
  * @property {string} key - The unique identifier for this prompt element in the configuration.
  * @property {string} [prefix] - Optional string to prepend before the element content.
  * @property {string} [suffix] - Optional string to append after the element content.
  * @property {PromptElementCondition} [condition] - Condition object that determines whether to include this element.
- *
  * @typedef {object} PerceptionLogEntry
  * @property {string} content - The textual content of the perception log entry.
  * @property {string} [role] - The role associated with this log entry (e.g., 'user', 'system').
  * @property {string} [timestamp] - ISO timestamp indicating when this perception log entry was recorded.
- *
  * @typedef {object} PromptData
  * @property {Array<PerceptionLogEntry>} [perceptionLogArray] - Array of perception log entries to include in the prompt.
  * @property {string[]} [thoughtsArray] - Array of thought strings to include in the prompt.
