@@ -1,4 +1,4 @@
-// src/core/interfaces/ITargetResolutionService.js
+// src/interfaces/ITargetResolutionService.js
 
 /**
  * @interface

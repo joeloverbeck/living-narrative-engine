@@ -1,4 +1,4 @@
-// src/core/interfaces/ISafeEventDispatcher.js
+// src/interfaces/ISafeEventDispatcher.js
 // --- FILE START ---
 
 /**

@@ -1,6 +1,6 @@
-// src/tests/core/services/inMemoryDataRegistry.comprehensive.test.js
+// src/tests/services/inMemoryDataRegistry.comprehensive.test.js
 
-import InMemoryDataRegistry from '../../src/services/inMemoryDataRegistry.js';
+import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js';
 import {
   afterEach,
   beforeEach,

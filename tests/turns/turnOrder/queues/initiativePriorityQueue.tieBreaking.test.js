@@ -1,4 +1,4 @@
-// src/tests/core/turnOrder/queues/initiativePriorityQueue.tieBreaking.test.js
+// src/tests/turns/order/queues/initiativePriorityQueue.tieBreaking.test.js
 
 /**
  * @file Unit tests for the InitiativePriorityQueue class, focusing on priority tie-breaking behavior.

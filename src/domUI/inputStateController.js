@@ -2,12 +2,10 @@
 import { RendererBase } from './rendererBase.js';
 
 /**
- * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
+ * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/IEventSubscription').IEventSubscription} IEventSubscription
- * @typedef {import('../core/interfaces/EventTypes').EventObject<import('../core/validation/schemas/eventPayloads').EventDisableInputPayload>} DisableInputEvent // Type for the whole event object
- * @typedef {import('../core/interfaces/EventTypes').EventObject<import('../core/validation/schemas/eventPayloads').TextUIEnableInputPayload>} EnableInputEvent // Type for the whole event object
+ * @typedef {import('../interfaces/IEventSubscription').IEventSubscription} IEventSubscription
  */
 
 /**

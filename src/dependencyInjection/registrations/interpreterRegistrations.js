@@ -1,4 +1,4 @@
-// src/core/config/registrations/interpreterRegistrations.js
+// src/dependencyInjection/registrations/interpreterRegistrations.js
 // ****** MODIFIED FILE ******
 
 /**
@@ -9,7 +9,7 @@
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../../data/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // For handlers
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // For handlers

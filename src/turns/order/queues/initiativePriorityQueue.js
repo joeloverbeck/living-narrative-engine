@@ -1,4 +1,4 @@
-// src/core/turnOrder/queues/initiativePriorityQueue.js
+// src/turns/order/queues/initiativePriorityQueue.js
 
 /**
  * @file Implements the ITurnOrderQueue interface using a priority queue

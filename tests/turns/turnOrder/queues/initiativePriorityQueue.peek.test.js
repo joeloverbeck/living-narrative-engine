@@ -1,4 +1,4 @@
-// src/tests/core/turnOrder/queues/initiativePriorityQueue.peek.test.js
+// src/tests/turns/order/queues/initiativePriorityQueue.peek.test.js
 
 /**
  * @file Unit tests for the InitiativePriorityQueue class, focusing on the peek() method.

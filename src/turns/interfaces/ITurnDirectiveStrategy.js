@@ -1,4 +1,4 @@
-// src/core/turns/strategies/ITurnDirectiveStrategy.js
+// src/turns/strategies/ITurnDirectiveStrategy.js
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  ITurnDirectiveStrategy  – PTH-STRAT-001

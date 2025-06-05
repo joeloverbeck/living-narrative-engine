@@ -1,4 +1,4 @@
-// src/core/turns/interfaces/ITurnContext.js
+// src/turns/interfaces/ITurnContext.js
 // ──────────────────────────────────────────────────────────────────────────────
 //  ITurnContext Interface Definition
 // ──────────────────────────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@
  * @description Represents the game world or a minimal interface to it.
  */
 /**
- * @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
+ * @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
  * @description Manages subscriptions to events, like command input.
  */
 /**

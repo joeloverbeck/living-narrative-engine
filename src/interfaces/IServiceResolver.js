@@ -1,4 +1,4 @@
-// src/core/interfaces/IServiceResolver.js
+// src/interfaces/IServiceResolver.js
 
 /**
  * @file Defines the IServiceResolver interface for resolving

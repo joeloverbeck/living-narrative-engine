@@ -2,15 +2,15 @@
 
 import InputSetupService from '../../src/setup/inputSetupService.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { tokens } from '../../src/config/tokens.js';
+import { tokens } from '../../src/dependencyInjection/tokens.js';
 
 // --- Mock Imports ---
 // Mocks created inline using jest.fn()
 
 // --- Type Imports for Mocks ---
-/** @typedef {import('../../src/config/appContainer.js').default} AppContainer */
+/** @typedef {import('../../src/dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 // GameLoop type import removed
 /** @typedef {import('../../src/interfaces/IInputHandler.js').IInputHandler} IInputHandler */
 

@@ -1,4 +1,4 @@
-// src/core/services/inMemoryDataRegistry.js
+// src/data/inMemoryDataRegistry.js
 
 /**
  * @file Provides an in-memory implementation for storing and retrieving

@@ -1,4 +1,4 @@
-// src/tests/core/turnOrder/queues/initiativePriorityQueue.toArray.test.js
+// src/tests/turns/order/queues/initiativePriorityQueue.toArray.test.js
 
 /**
  * @file Unit tests for the InitiativePriorityQueue class, focusing on the toArray() method and lazy removal.

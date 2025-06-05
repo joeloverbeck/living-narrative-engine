@@ -1,11 +1,11 @@
-// src/tests/core/config/registrations/interpreterRegistrations.test.js
+// src/tests/dependencyInjection/registrations/interpreterRegistrations.test.js
 // ****** CORRECTED FILE ******
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/events/eventBus.js').default} EventBus */
 /** @typedef {import('../../../src/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../../src/services/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
+/** @typedef {import('../../../src/data/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../../../src/logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */ // Concrete EntityManager for mock
 /** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // Interface for resolving
@@ -18,10 +18,10 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 
 // --- Class Under Test ---
-import { registerInterpreters } from '../../../src/config/registrations/interpreterRegistrations.js';
+import { registerInterpreters } from '../../../src/dependencyInjection/registrations/interpreterRegistrations.js';
 
 // --- Dependencies ---
-import { tokens } from '../../../src/config/tokens.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 // --- Mock Modules ---
 jest.mock('../../../src/logic/operationRegistry.js');

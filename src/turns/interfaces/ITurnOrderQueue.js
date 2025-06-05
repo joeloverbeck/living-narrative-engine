@@ -1,4 +1,4 @@
-// src/core/interfaces/ITurnOrderQueue.js
+// src/interfaces/ITurnOrderQueue.js
 
 /**
  * @file Defines the interface for a turn order queue structure.

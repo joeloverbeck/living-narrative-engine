@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 /**
- * @typedef {import('../services/PerceptionLogFormatter.js').RawPerceptionLogEntry} RawPerceptionLogEntry
+ * @typedef {import('../formatting/perceptionLogFormatter.js').RawPerceptionLogEntry} RawPerceptionLogEntry
  * @description Represents a single entry as it might come from the game state or entity component.
  * This typedef is expected to be defined in PerceptionLogFormatter.js or a central types file.
  * @property {string} [descriptionText] - The main textual content of the log entry.
@@ -15,7 +15,7 @@
  */
 
 /**
- * @typedef {import('../services/PerceptionLogFormatter.js').FormattedPerceptionEntry} FormattedPerceptionEntry
+ * @typedef {import('../formatting/perceptionLogFormatter.js').FormattedPerceptionEntry} FormattedPerceptionEntry
  * @description Represents a perception log entry after formatting for prompt data.
  * This typedef is expected to be defined in PerceptionLogFormatter.js or a central types file.
  * @property {string} content - The main textual content of the log entry.

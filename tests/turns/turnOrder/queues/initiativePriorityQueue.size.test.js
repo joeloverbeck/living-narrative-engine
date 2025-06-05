@@ -1,4 +1,4 @@
-// src/tests/core/turnOrder/queues/initiativePriorityQueue.size.test.js
+// src/tests/turns/order/queues/initiativePriorityQueue.size.test.js
 
 /**
  * @file Unit tests for the InitiativePriorityQueue class, focusing on the size() method considering lazy removal.

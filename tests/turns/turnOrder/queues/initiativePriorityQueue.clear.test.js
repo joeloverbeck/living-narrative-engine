@@ -1,4 +1,4 @@
-// src/tests/core/turnOrder/queues/initiativePriorityQueue.clear.test.js
+// src/tests/turns/order/queues/initiativePriorityQueue.clear.test.js
 
 /**
  * @file Unit tests for the InitiativePriorityQueue class, focusing on the clear() method.

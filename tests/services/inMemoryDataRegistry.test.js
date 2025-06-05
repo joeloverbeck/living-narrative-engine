@@ -1,7 +1,7 @@
-// src/tests/core/services/inMemoryDataRegistry.test.js
+// src/tests/services/inMemoryDataRegistry.test.js
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import InMemoryDataRegistry from '../../src/services/inMemoryDataRegistry.js'; // Adjust path as needed
+import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js'; // Adjust path as needed
 
 describe('InMemoryDataRegistry', () => {
   let registry;

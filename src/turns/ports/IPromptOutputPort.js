@@ -1,4 +1,4 @@
-// src/core/ports/IPromptOutputPort.js
+// src/turns/ports/IPromptOutputPort.js
 // --- FILE START ---
 
 /**

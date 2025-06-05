@@ -1,5 +1,5 @@
-// llm-proxy-server/interfaces/IServerUtils.js
-// --- NEW FILE START ---
+// llm-proxy-server/src/interfaces/IServerUtils.js
+// --- FILE START ---
 
 /**
  * @file Defines interfaces for server-side utility abstractions,
@@ -16,12 +16,9 @@
 export class IFileSystemReader {
   /**
    * Asynchronously reads the entire contents of a file.
-   *
    * @async
-   * @param {string} filePath - The path to the file to be read.
-   * @param _filePath
-   * @param _encoding
-   * @param {string} encoding - The character encoding to use (e.g., 'utf-8').
+   * @param {string} _filePath - The path to the file to be read.
+   * @param {string} _encoding - The character encoding to use (e.g., 'utf-8').
    * @returns {Promise<string>} A Promise that resolves with the file content as a string.
    * @throws {Error} If the file cannot be read (e.g., not found, insufficient permissions, or other I/O errors).
    * Implementations should allow specific errors from the underlying file system module to propagate.
@@ -38,9 +35,7 @@ export class IFileSystemReader {
 export class IEnvironmentVariableReader {
   /**
    * Retrieves the value of an environment variable.
-   *
-   * @param {string} variableName - The name of the environment variable.
-   * @param _variableName
+   * @param {string} _variableName - The name of the environment variable.
    * @returns {string | undefined} The value of the environment variable if set, otherwise undefined.
    */
   getEnv(_variableName) {
@@ -50,4 +45,4 @@ export class IEnvironmentVariableReader {
   }
 }
 
-// --- NEW FILE END ---
+// --- FILE END ---

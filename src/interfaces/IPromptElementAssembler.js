@@ -8,12 +8,12 @@
  */
 
 /**
- * @typedef {import('../services/promptBuilder.js').PromptElement} PromptElement
+ * @typedef {import('../prompting/promptBuilder.js').PromptElement} PromptElement
  * @description The configuration object for a specific prompt element.
  */
 
 /**
- * @typedef {import('../services/promptBuilder.js').PromptData} PromptData
+ * @typedef {import('../prompting/promptBuilder.js').PromptData} PromptData
  * @description The global PromptData object containing all raw content and flags.
  */
 
