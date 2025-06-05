@@ -43,6 +43,8 @@ class StubLLMConfigService {
   /**
    * Pretend to fetch a configuration that has two elements: notes_wrapper and goals_wrapper
    * and places them in the assembly order (no other elements).
+   *
+   * @param llmId
    */
   async getConfig(llmId) {
     return {

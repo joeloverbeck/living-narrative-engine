@@ -37,6 +37,10 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
   });
 
   // Helper to build the minimal gameStateDto
+  /**
+   *
+   * @param components
+   */
   function makeBaseDto(components) {
     return {
       actorState: { components },
