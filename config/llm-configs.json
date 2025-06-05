@@ -68,6 +68,11 @@
           "suffix": "\n"
         },
         {
+          "key": "goals_wrapper",
+          "prefix": "\nYour Goals:\n",
+          "suffix": "\n"
+        },
+        {
           "key": "thoughts_entry",
           "prefix": "<thought type=\"{type}\">\n",
           "suffix": "\n</thought>\n"
@@ -102,6 +107,7 @@
         "perception_log_wrapper",
         "thoughts_wrapper",
         "notes_wrapper",
+        "goals_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -116,11 +122,6 @@
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "anthropic/claude-sonnet-4",
       "apiType": "openrouter",
-      "providerSpecificHeaders": {
-        "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "Living Narrative Engine"
-      },
-      "contextTokenLimit": 200000,
       "jsonOutputStrategy": {
         "method": "openrouter_json_schema",
         "jsonSchema": {}
@@ -128,6 +129,11 @@
       "defaultParameters": {
         "temperature": 1.0
       },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "Living Narrative Engine"
+      },
+      "contextTokenLimit": 200000,
       "promptElements": [
         {
           "key": "task_definition",
@@ -175,6 +181,11 @@
           "suffix": "\n"
         },
         {
+          "key": "goals_wrapper",
+          "prefix": "\nYour Goals:\n",
+          "suffix": "\n"
+        },
+        {
           "key": "thoughts_entry",
           "prefix": "<thought type=\"{type}\">\n",
           "suffix": "\n</thought>\n"
@@ -209,6 +220,7 @@
         "perception_log_wrapper",
         "thoughts_wrapper",
         "notes_wrapper",
+        "goals_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -223,10 +235,6 @@
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "qwen/qwen3-235b-a22b",
       "apiType": "openrouter",
-      "providerSpecificHeaders": {
-        "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "Living Narrative Engine"
-      },
       "jsonOutputStrategy": {
         "method": "openrouter_json_schema",
         "jsonSchema": {}
@@ -234,6 +242,11 @@
       "defaultParameters": {
         "temperature": 1.0
       },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "Living Narrative Engine"
+      },
+      "contextTokenLimit": 200000,
       "promptElements": [
         {
           "key": "task_definition",
@@ -281,6 +294,11 @@
           "suffix": "\n"
         },
         {
+          "key": "goals_wrapper",
+          "prefix": "\nYour Goals:\n",
+          "suffix": "\n"
+        },
+        {
           "key": "thoughts_entry",
           "prefix": "<thought type=\"{type}\">\n",
           "suffix": "\n</thought>\n"
@@ -315,6 +333,7 @@
         "perception_log_wrapper",
         "thoughts_wrapper",
         "notes_wrapper",
+        "goals_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -329,10 +348,6 @@
       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
       "modelIdentifier": "thedrummer/valkyrie-49b-v1",
       "apiType": "openrouter",
-      "providerSpecificHeaders": {
-        "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "Living Narrative Engine"
-      },
       "jsonOutputStrategy": {
         "method": "openrouter_json_schema",
         "jsonSchema": {}
@@ -340,6 +355,11 @@
       "defaultParameters": {
         "temperature": 1.0
       },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "Living Narrative Engine"
+      },
+      "contextTokenLimit": 200000,
       "promptElements": [
         {
           "key": "task_definition",
@@ -387,6 +407,11 @@
           "suffix": "\n"
         },
         {
+          "key": "goals_wrapper",
+          "prefix": "\nYour Goals:\n",
+          "suffix": "\n"
+        },
+        {
           "key": "thoughts_entry",
           "prefix": "<thought type=\"{type}\">\n",
           "suffix": "\n</thought>\n"
@@ -421,6 +446,7 @@
         "perception_log_wrapper",
         "thoughts_wrapper",
         "notes_wrapper",
+        "goals_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",

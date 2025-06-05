@@ -50,6 +50,7 @@ import { GameStateValidationServiceForPrompting } from '../../validation/gameSta
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
 import ThoughtsSectionAssembler from '../../prompting/assembling/thoughtsSectionAssembler.js';
 import NotesSectionAssembler from '../../prompting/assembling/notesSectionAssembler.js';
+import GoalsSectionAssembler from '../../prompting/assembling/goalsSectionAssembler.js';
 // +++ TICKET 11 IMPORTS END +++
 
 // --- Type Imports for JSDoc ---
@@ -572,6 +573,14 @@ export function registerDomainServices(container) {
   );
   // +++ TICKET 11 REGISTRATION END +++
 
+  r.singletonFactory(tokens.GoalsSectionAssembler, (c) => {
+    const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+    return new GoalsSectionAssembler({ logger });
+  });
+  log.debug(
+    `Domain Services Registration: Registered ${String(tokens.GoalsSectionAssembler)}.`
+  );
+
   // PromptBuilder registration
   r.singletonFactory(tokens.IPromptBuilder, (c) => {
     const logger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
@@ -598,6 +607,10 @@ export function registerDomainServices(container) {
         c.resolve(tokens.NotesSectionAssembler) // Correctly resolve NotesSectionAssembler
       );
 
+    const goalsSectionAssembler = /** @type {GoalsSectionAssembler} */ (
+      c.resolve(tokens.GoalsSectionAssembler)
+    );
+
     log.info(
       `${String(tokens.IPromptBuilder)} factory: Creating PromptBuilder with new dependencies.`
     );
@@ -609,6 +622,7 @@ export function registerDomainServices(container) {
       perceptionLogAssembler,
       thoughtsSectionAssembler,
       notesSectionAssembler, // Now notesSectionAssembler is a defined variable
+      goalsSectionAssembler,
     });
   });
   log.debug(
