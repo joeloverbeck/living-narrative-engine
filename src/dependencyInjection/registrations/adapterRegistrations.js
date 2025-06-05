@@ -1,4 +1,4 @@
-// src/core/config/registrations/adapterRegistrations.js
+// src/dependencyInjection/registrations/adapterRegistrations.js
 // --- FILE START ---
 /* eslint-env node */
 

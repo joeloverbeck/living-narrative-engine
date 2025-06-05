@@ -16,7 +16,7 @@ import {
 } from '@jest/globals';
 
 // --- Service Under Test ---
-import { ActionValidationService } from '../../src/services/actionValidationService.js';
+import { ActionValidationService } from '../../src/actions/validation/actionValidationService.js';
 
 // --- Models/Types ---
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
@@ -24,13 +24,13 @@ import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 // import { Entity } from '../../entities/entity.js'; // Optional: if needed for typing or complex mocks
 
 // --- Dependencies to Mock ---
-import { PrerequisiteEvaluationService } from '../../src/services/prerequisiteEvaluationService.js';
+import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js';
 // NOTE: We do NOT mock ActionValidationContextBuilder or JsonLogicEvaluationService here,
 // as AVS does not directly depend on them anymore.
 
 // --- Mocks Needed ---
 // Mock the PES service (which encapsulates context building and rule evaluation)
-jest.mock('../../src/services/prerequisiteEvaluationService.js');
+jest.mock('../../src/actions/validation/prerequisiteEvaluationService.js');
 
 // --- Test Suite ---
 describe('ActionValidationService: Orchestration Logic', () => {

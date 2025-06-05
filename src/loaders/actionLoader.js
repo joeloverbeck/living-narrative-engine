@@ -1,4 +1,4 @@
-// Filename: src/core/services/actionLoader.js
+// Filename: src/loaders/actionLoader.js
 
 /**
  * @file Defines the ActionLoader class, responsible for loading

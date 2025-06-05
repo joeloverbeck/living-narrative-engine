@@ -62,7 +62,6 @@ export class ApiKeyService {
 
   /**
    * Constructs an ApiKeyService instance.
-   *
    * @param {ILogger} logger - An ILogger instance.
    * @param {IFileSystemReader} fileSystemReader - An IFileSystemReader instance.
    * @param {AppConfigService} appConfigService - An AppConfigService instance.
@@ -87,13 +86,12 @@ export class ApiKeyService {
 
   /**
    * Creates a standardized error object.
-   *
    * @private
    * @param {string} message - The primary error message.
    * @param {string} stage - The stage code for the error.
    * @param {object} detailsContext - Contextual details for the error, including llmId and other specifics.
    * @param {Error} [originalError] - The original error object, if any, for internal logging.
-   * @returns {StandardizedErrorObject}
+   * @returns {StandardizedErrorObject} The created standardized error object.
    */
   _createErrorDetails(message, stage, detailsContext, originalError = null) {
     // Ensure originalErrorMessage is populated if originalError is provided
@@ -131,7 +129,6 @@ export class ApiKeyService {
 
   /**
    * Checks if an API key is required for the given LLM configuration.
-   *
    * @param {LLMModelConfig | null | undefined} llmModelConfig - The LLM model configuration.
    * @returns {boolean} True if an API key is required, false otherwise.
    */
@@ -155,7 +152,6 @@ export class ApiKeyService {
 
   /**
    * Reads an API key from a specified file.
-   *
    * @private
    * @param {string} fileName - The name of the file (e.g., "api_key.txt").
    * @param {string} projectRootPath - The root path where the key file is located.
@@ -258,7 +254,6 @@ export class ApiKeyService {
 
   /**
    * Retrieves the API key for a given LLM configuration and ID.
-   *
    * @param {LLMModelConfig} llmModelConfig - The configuration for the LLM.
    * @param {string} llmId - The ID of the LLM.
    * @returns {Promise<ApiKeyResult>} An object containing the API key, error details (if any), and the source of the key.

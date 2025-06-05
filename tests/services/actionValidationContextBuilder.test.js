@@ -5,7 +5,7 @@
  * @jest-environment node
  */
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
-import { ActionValidationContextBuilder } from '../../src/services/actionValidationContextBuilder.js'; // Adjust path as needed
+import { ActionValidationContextBuilder } from '../../src/actions/validation/actionValidationContextBuilder.js'; // Adjust path as needed
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js'; // Adjust path as needed
 // --- BEGIN FIX: Import component IDs for mocking ---
 import {

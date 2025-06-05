@@ -1,7 +1,7 @@
-// src/tests/core/services/ajvSchemaValidator.test.js
+// src/tests/services/ajvSchemaValidator.test.js
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import AjvSchemaValidator from '../../src/services/ajvSchemaValidator.js'; // Adjust path as needed
+import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js'; // Adjust path as needed
 
 // --- Task 1: Prepare Test Assets ---
 
@@ -441,7 +441,7 @@ describe('AjvSchemaValidator', () => {
       // Optionally, you could check if the internal #ajv property is set,
       // but that tests internal implementation details. Accessing private fields
       // in tests is generally discouraged but sometimes necessary.
-      // Example (may require specific Jest/babel config for private fields):
+      // Example (may require specific Jest/babel dependencyInjection for private fields):
       // expect(validator['#ajv']).toBeDefined();
       // expect(validator['#ajv']).not.toBeNull();
     });

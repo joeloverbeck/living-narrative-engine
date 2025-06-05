@@ -1,4 +1,4 @@
-// Filename: src/tests/core/services/actionLoader.test.js
+// Filename: src/tests/services/actionLoader.test.js
 
 import {
   describe,

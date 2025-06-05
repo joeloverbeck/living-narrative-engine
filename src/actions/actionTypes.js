@@ -58,17 +58,6 @@
  */
 
 /**
- * Defines the structure for signaling required changes to the core game state
- * managed by `GameLoop`. Handlers return this within `ActionResult` instead
- * of directly modifying `GameLoop` state variables like `currentLocation`.
- * `GameLoop` is responsible for processing this structure.
- *
- * @typedef {object} ActionNewState
- * @property {string} [currentLocationId] - If present, signals the GameLoop to change the *acting entity's* location to the entity with this ID.
- * // Add other state change signals here if needed (e.g., playerRespawn: true)
- */
-
-/**
  * The result object returned by every action handler function.
  * It communicates the outcome, messages for the player, and any
  * required changes to the core game state.

@@ -3,7 +3,7 @@
 /**
  * @jest-environment node
  */
-import { ActionValidationService } from '../../src/services/actionValidationService.js';
+import { ActionValidationService } from '../../src/actions/validation/actionValidationService.js';
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import {
   afterAll,
@@ -18,7 +18,7 @@ import {
 import { DomainContextCompatibilityChecker } from '../../src/validation/domainContextCompatibilityChecker.js';
 import { createMockPrerequisiteEvaluationService } from '../testUtils.js';
 // --- Type Imports for Mocks (Optional but good practice) ---
-/** @typedef {import('../../src/services/prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
+/** @typedef {import('../../src/actions/validation/prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 
 // --- Mock Logger ---
 const mockLogger = {

@@ -6,7 +6,7 @@
 /**
  * @jest-environment node
  */
-import { ActionValidationService } from '../../src/services/actionValidationService.js';
+import { ActionValidationService } from '../../src/actions/validation/actionValidationService.js';
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import {
   afterAll,
@@ -21,7 +21,7 @@ import {
 // --- Service and Function Imports ---
 // REMOVED: import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js'; // No longer directly used/mocked here
 // ADDED: Import the service ActionValidationService now delegates to
-import { PrerequisiteEvaluationService } from '../../src/services/prerequisiteEvaluationService.js';
+import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js';
 // REMOVED: import {createActionValidationContext} from '../../logic/createActionValidationContext.js'; // AVS no longer takes this directly
 // --- Import the checker ACTUALLY used by ActionValidationService ---
 import { DomainContextCompatibilityChecker } from '../../src/validation/domainContextCompatibilityChecker.js';
@@ -165,7 +165,7 @@ const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
 
 // --- Mock PrerequisiteEvaluationService ---
 // ADDED: Mock the new dependency
-jest.mock('../../src/services/prerequisiteEvaluationService.js');
+jest.mock('../../src/actions/validation/prerequisiteEvaluationService.js');
 // ADDED: Declare variable for the mock instance
 let mockPrerequisiteEvaluationServiceInstance;
 

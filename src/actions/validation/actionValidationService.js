@@ -1,15 +1,15 @@
-// src/services/actionValidationService.js
+// src/actions/validation/actionValidationService.js
 
 /* type-only imports */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
-/** @typedef {import('../validation/domainContextCompatibilityChecker.js').DomainContextCompatibilityChecker} DomainContextCompatibilityChecker */
-/** @typedef {import('../actions/actionTypes.js').ActionAttemptPseudoEvent} ActionAttemptPseudoEvent */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../validation/domainContextCompatibilityChecker.js').DomainContextCompatibilityChecker} DomainContextCompatibilityChecker */
+/** @typedef {import('../actionTypes.js').ActionAttemptPseudoEvent} ActionAttemptPseudoEvent */
 /** @typedef {import('./prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 
-import { ActionTargetContext } from '../models/actionTargetContext.js';
+import { ActionTargetContext } from '../../models/actionTargetContext.js';
 // NOTE: PrerequisiteEvaluationService import is kept as it's still used.
 import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
 // --- Refactor-AVS-3.4: Remove dependency ---

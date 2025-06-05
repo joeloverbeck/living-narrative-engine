@@ -1,7 +1,7 @@
 // tests/services/AIPromptContentProvider.test.js
 // --- FILE START ---
 
-import { AIPromptContentProvider } from '../../src/services/AIPromptContentProvider.js';
+import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_LOCATION_NAME,
@@ -35,7 +35,7 @@ import {
 /** @typedef {import('../../src/interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../../src/turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
 /** @typedef {import('../../src/types/promptData.js').PromptData} PromptData */
-/** @typedef {import('../../src/services/AIPromptContentProvider.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
+/** @typedef {import('../../src/prompting/AIPromptContentProvider.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
 
 /**
  * @returns {jest.Mocked<ILogger>}

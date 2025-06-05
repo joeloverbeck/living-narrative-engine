@@ -1,20 +1,20 @@
-// src/services/actionValidationContextBuilder.js
+// src/actions/validation/actionValidationContextBuilder.js
 // --- FILE START ---
 
 /* type-only imports */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
-/** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
-/** @typedef {import('../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
+/** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 // --- BEGIN FIX ---
 // Import constants for component IDs
 import {
   EXITS_COMPONENT_ID,
   POSITION_COMPONENT_ID,
-} from '../constants/componentIds.js'; // Adjust path if necessary
+} from '../../constants/componentIds.js'; // Adjust path if necessary
 // --- END FIX ---
 
 /**

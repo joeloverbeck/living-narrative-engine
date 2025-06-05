@@ -1,5 +1,5 @@
 // tests/services/AIPromptContentProvider.test.js
-import { AIPromptContentProvider } from '../../src/services/AIPromptContentProvider.js';
+import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 
 describe('AIPromptContentProvider.getPromptData → notesArray', () => {

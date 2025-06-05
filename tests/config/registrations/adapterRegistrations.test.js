@@ -1,16 +1,16 @@
-// tests/config/registrations/adapterRegistrations.test.js
+// tests/dependencyInjection/registrations/adapterRegistrations.test.js
 // --- FILE START ---
 
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
-import { registerAdapters } from '../../../src/config/registrations/adapterRegistrations.js';
-import { tokens } from '../../../src/config/tokens.js';
+import { registerAdapters } from '../../../src/dependencyInjection/registrations/adapterRegistrations.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 // --- JSDoc Type Imports ---
-/** @typedef {import('../../../src/core/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../src/core/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-/** @typedef {import('../../../src/core/interfaces/coreServices.js').IConfiguration} IConfiguration */
-/** @typedef {import('../../../src/core/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
-/** @typedef {import('../../../src/core/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
+/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../../src/interfaces/coreServices.js').IConfiguration} IConfiguration */
+/** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
+/** @typedef {import('../../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
 /** @typedef {ReturnType<typeof createMockContainer>} MockAppContainer */
 
 // --- MOCK DEFINITIONS ---

@@ -1,4 +1,4 @@
-// src/core/turns/handlers/aiTurnHandler.js
+// src/turns/handlers/aiTurnHandler.js
 // ──────────────────────────────────────────────────────────────────────────────
 //  AITurnHandler Class (Refactored for Dependency Injection)
 // ──────────────────────────────────────────────────────────────────────────────
@@ -12,10 +12,10 @@
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
- * @typedef {import('../../services/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
+ * @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../../interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem} IActionDiscoverySystem
- * @typedef {import('../../services/promptBuilder.js').PromptBuilder} IPromptBuilder
+ * @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder
  */
 
 /**
@@ -23,7 +23,7 @@
  * @typedef {import('../interfaces/factories/IAIPlayerStrategyFactory.js').IAIPlayerStrategyFactory} IAIPlayerStrategyFactory
  * @typedef {import('../interfaces/factories/ITurnContextFactory.js').ITurnContextFactory} ITurnContextFactory
  * @typedef {import('../interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider
- * @typedef {import('../../services/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider
+ * @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider
  * @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor
  */
 
@@ -114,7 +114,6 @@ export class AITurnHandler extends BaseTurnHandler {
   }) {
     super({ logger, turnStateFactory }); // Pass turnStateFactory to BaseTurnHandler
 
-    // Validate core dependencies
     if (!turnEndPort) throw new Error('AITurnHandler: Invalid ITurnEndPort');
     if (!gameWorldAccess)
       throw new Error('AITurnHandler: Missing gameWorldAccess');

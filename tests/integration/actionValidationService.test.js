@@ -8,16 +8,16 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 
 // --- System Under Test (SUT) ---
-import { ActionValidationService } from '../../src/services/actionValidationService.js'; // Adjust path if needed
+import { ActionValidationService } from '../../src/actions/validation/actionValidationService.js'; // Adjust path if needed
 
 // --- Mock Dependencies ---
-import { PrerequisiteEvaluationService } from '../../src/services/prerequisiteEvaluationService.js'; // Import PES
+import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js'; // Import PES
 import Entity from '../../src/entities/entity.js'; // Needed for test inputs
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import { createMockPrerequisiteEvaluationService } from '../testUtils.js'; // Needed for test inputs
 
 // --- Mock Modules ---
-jest.mock('../../src/services/prerequisiteEvaluationService.js'); // Mock PES module
+jest.mock('../../src/actions/validation/prerequisiteEvaluationService.js'); // Mock PES module
 
 // --- Type Imports ---
 /** @typedef {import('../../src/types/actionDefinition.js').ActionDefinition} ActionDefinition */

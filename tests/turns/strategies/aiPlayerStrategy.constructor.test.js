@@ -19,7 +19,7 @@ import {
 /** @typedef {import('../../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 /** @typedef {import('../../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
 /** @typedef {import('../../../src/turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
-/** @typedef {import('../../../src/services/promptBuilder.js').PromptBuilder} PromptBuilder */
+/** @typedef {import('../../../src/prompting/promptBuilder.js').PromptBuilder} PromptBuilder */
 /** @typedef {import('../../../src/turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 // Removed unused typedefs for PromptData and AIGameStateDTO_Test as they are not relevant for constructor tests

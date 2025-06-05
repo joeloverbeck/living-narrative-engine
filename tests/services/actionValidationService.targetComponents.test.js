@@ -4,7 +4,7 @@
 /**
  * @jest-environment node
  */
-import { ActionValidationService } from '../../src/services/actionValidationService.js';
+import { ActionValidationService } from '../../src/actions/validation/actionValidationService.js';
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import {
   afterAll,
@@ -26,8 +26,8 @@ jest.mock('../../src/validation/domainContextCompatibilityChecker.js'); // <<< K
 // import {createActionValidationContext} from '../../logic/createActionValidationContext.js';
 
 // +++ Import PrerequisiteEvaluationService and mock it +++
-import { PrerequisiteEvaluationService } from '../../src/services/prerequisiteEvaluationService.js'; // Adjust path if necessary
-jest.mock('../../src/services/prerequisiteEvaluationService.js'); // Mock the service AVS now delegates to
+import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js'; // Adjust path if necessary
+jest.mock('../../src/actions/validation/prerequisiteEvaluationService.js'); // Mock the service AVS now delegates to
 
 // Assuming a simple mock logger, replace with your actual logger/mocking library if needed
 const mockLogger = {
