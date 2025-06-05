@@ -82,7 +82,7 @@ describe('TargetResolutionService', () => {
     test('should throw error when options object is null (logger effectively missing)', () => {
       const options = null;
       const expectedErrorMsg =
-        'TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Requires methods: info, error, debug, warn.';
+        'TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Dependency validation utility reported: Missing required dependency: TargetResolutionService: logger.';
 
       expect(() => new TargetResolutionService(options)).toThrow(
         expectedErrorMsg
@@ -99,7 +99,7 @@ describe('TargetResolutionService', () => {
         // logger is missing
       };
       const expectedErrorMsg =
-        'TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Requires methods: info, error, debug, warn.';
+        'TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Dependency validation utility reported: Missing required dependency: TargetResolutionService: logger.';
 
       expect(() => new TargetResolutionService(options)).toThrow(
         expectedErrorMsg
@@ -116,8 +116,8 @@ describe('TargetResolutionService', () => {
       gameDataRepository: mockGameDataRepository,
       getEntityIdsForScopes: getEntityIdsForScopes, // Added for completeness
     };
-    const expectedErrorMsg =
-      'TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Requires methods: info, error, debug, warn.';
+    const baseErrorMsg =
+      'TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Dependency validation utility reported:';
 
     test('should throw if logger is missing "info" method', () => {
       const invalidLogger = {
@@ -126,6 +126,7 @@ describe('TargetResolutionService', () => {
         warn: jest.fn(),
       };
       const options = { ...baseOptions, logger: invalidLogger };
+      const expectedErrorMsg = `${baseErrorMsg} Invalid or missing method 'info' on dependency 'TargetResolutionService: logger'.`;
       expect(() => new TargetResolutionService(options)).toThrow(
         expectedErrorMsg
       );
@@ -138,6 +139,7 @@ describe('TargetResolutionService', () => {
         warn: jest.fn(),
       };
       const options = { ...baseOptions, logger: invalidLogger };
+      const expectedErrorMsg = `${baseErrorMsg} Invalid or missing method 'error' on dependency 'TargetResolutionService: logger'.`;
       expect(() => new TargetResolutionService(options)).toThrow(
         expectedErrorMsg
       );
@@ -150,6 +152,7 @@ describe('TargetResolutionService', () => {
         warn: jest.fn(),
       };
       const options = { ...baseOptions, logger: invalidLogger };
+      const expectedErrorMsg = `${baseErrorMsg} Invalid or missing method 'debug' on dependency 'TargetResolutionService: logger'.`;
       expect(() => new TargetResolutionService(options)).toThrow(
         expectedErrorMsg
       );
@@ -162,6 +165,7 @@ describe('TargetResolutionService', () => {
         debug: jest.fn(),
       };
       const options = { ...baseOptions, logger: invalidLogger };
+      const expectedErrorMsg = `${baseErrorMsg} Invalid or missing method 'warn' on dependency 'TargetResolutionService: logger'.`;
       expect(() => new TargetResolutionService(options)).toThrow(
         expectedErrorMsg
       );
@@ -196,37 +200,14 @@ describe('TargetResolutionService', () => {
       'should throw and log error via logger if %s is missing',
       (dependencyName) => {
         const options = createOptions(dependencyName);
-        let expectedErrorMsg;
-        if (dependencyName === 'getEntityIdsForScopes') {
-          // For function type check, the message is slightly different if it's null vs undefined and not a function
-          // The constructor validation is:
-          // 1. Check if dependency exists (if (!dependency)) -> "Missing required dependency"
-          // 2. If isFunction flag is true, check typeof dependency !== 'function' -> "must be a function"
-          // If `getEntityIdsForScopes` is null, it hits the first error.
-          expectedErrorMsg = `TargetResolutionService Constructor: Missing required dependency: ${dependencyName}.`;
-        } else {
-          expectedErrorMsg = `TargetResolutionService Constructor: Missing required dependency: ${dependencyName}.`;
-        }
+        const expectedErrorMsg = `Missing required dependency: TargetResolutionService: ${dependencyName}.`;
 
         expect(() => new TargetResolutionService(options)).toThrow(
           expectedErrorMsg
         );
-        if (
-          mockLogger.error.mock.calls.some(
-            (call) => call[0] === expectedErrorMsg
-          )
-        ) {
-          expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
-        } else {
-          // If the error is "must be a function", it's also logged.
-          // This handles the case where the dependency is present but not a function.
-          // For this test, we primarily care about it throwing.
-          // The exact logger message might vary based on null vs malformed.
-          // Given the current validation, "Missing required dependency" is expected for null.
-          expect(consoleErrorSpy).toHaveBeenCalledWith(
-            expect.stringContaining(dependencyName)
-          );
-        }
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          `TargetResolutionService Constructor: Dependency validation failed. Error: ${expectedErrorMsg}`
+        );
       }
     );
 
@@ -238,11 +219,14 @@ describe('TargetResolutionService', () => {
         logger: mockLogger,
         getEntityIdsForScopes: 'not-a-function',
       };
-      const expectedErrorMsg = `TargetResolutionService Constructor: Dependency 'getEntityIdsForScopes' must be a function.`;
+      const expectedErrorMsg =
+        "Dependency 'TargetResolutionService: getEntityIdsForScopes' must be a function, but got string.";
       expect(() => new TargetResolutionService(options)).toThrow(
         expectedErrorMsg
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `TargetResolutionService Constructor: Dependency validation failed. Error: ${expectedErrorMsg}`
+      );
     });
   });
 
@@ -336,12 +320,14 @@ describe('TargetResolutionService', () => {
       'should throw if $depName is missing method $method',
       ({ depName, method, getOptions }) => {
         const options = getOptions();
-        const expectedErrorMsg = `TargetResolutionService Constructor: Invalid or missing method '${method}' on dependency '${depName}'.`;
+        const expectedErrorMsg = `Invalid or missing method '${method}' on dependency 'TargetResolutionService: ${depName}'.`;
 
         expect(() => new TargetResolutionService(options)).toThrow(
           expectedErrorMsg
         );
-        expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          `TargetResolutionService Constructor: Dependency validation failed. Error: ${expectedErrorMsg}`
+        );
       }
     );
   });
