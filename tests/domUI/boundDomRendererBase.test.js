@@ -119,7 +119,7 @@ describe('BoundDomRendererBase', () => {
     expect(renderer.elements).toEqual({});
   });
 
-  it('should bind required elements successfully using shorthand and full config', () => {
+  it('should bind required elements successfully using shorthand and full dependencyInjection', () => {
     const mockTitleElement = {
       nodeType: 1,
       tagName: 'H1',

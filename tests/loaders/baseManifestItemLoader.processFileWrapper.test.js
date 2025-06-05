@@ -1,4 +1,4 @@
-// src/tests/core/loaders/baseManifestItemLoader.processFileWrapper.test.js
+// src/tests/loaders/baseManifestItemLoader.processFileWrapper.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // Adjust the import path as necessary
@@ -123,7 +123,7 @@ beforeEach(() => {
   mockLogger = createMockLogger();
   // Recreate validator mock after clearAllMocks (especially isSchemaLoaded)
   mockValidator = createMockSchemaValidator();
-  // Recreate config mock after clearAllMocks (especially getContentTypeSchemaId)
+  // Recreate dependencyInjection mock after clearAllMocks (especially getContentTypeSchemaId)
   mockConfig = createMockConfiguration();
 
   // Instantiate the loader with the new signature <<< MODIFIED

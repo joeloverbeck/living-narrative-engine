@@ -1,4 +1,4 @@
-// babel.config.cjs
+// babel.dependencyInjection.cjs
 module.exports = {
   presets: [
     [

@@ -26,7 +26,7 @@ export class BaseCompletionLLMStrategy extends BaseLLMStrategy {
   /**
    * Constructs the prompt payload for completion-based LLM APIs.
    * The `gameSummary` parameter is now the `finalPromptString` produced by `PromptBuilder`.
-   * The `promptFrame` from `llmConfig` (adapter's config) is ignored for completion models,
+   * The `promptFrame` from `llmConfig` (adapter's dependencyInjection) is ignored for completion models,
    * as `PromptBuilder` is responsible for the entire prompt structure.
    *
    * @protected

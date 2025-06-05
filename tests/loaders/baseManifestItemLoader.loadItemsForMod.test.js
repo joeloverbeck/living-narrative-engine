@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/baseManifestItemLoader.loadItemsForMod.test.js
+// Filename: src/tests/loaders/baseManifestItemLoader.loadItemsForMod.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader.js'; // Adjust path if necessary

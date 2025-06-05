@@ -97,7 +97,7 @@ export class BoundDomRendererBase extends RendererBase {
           configValue !== null &&
           typeof configValue.selector === 'string'
         ) {
-          // Full config object
+          // Full dependencyInjection object
           entry = {
             ...configValue,
             required:
@@ -108,7 +108,7 @@ export class BoundDomRendererBase extends RendererBase {
             `${this._logPrefix} Invalid configuration for element key '${key}'. Skipping.`,
             { configValue }
           );
-          this.elements[key] = null; // Ensure key exists even if invalid config
+          this.elements[key] = null; // Ensure key exists even if invalid dependencyInjection
           continue;
         }
 

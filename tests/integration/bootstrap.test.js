@@ -3,11 +3,11 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 // --- Core Components Under Test ---
-import AppContainer from '../../src/config/appContainer.js';
-import { configureContainer } from '../../src/config/containerConfig.js';
-import { tokens } from '../../src/config/tokens.js';
+import AppContainer from '../../src/dependencyInjection/appContainer.js';
+import { configureContainer } from '../../src/dependencyInjection/containerConfig.js';
+import { tokens } from '../../src/dependencyInjection/tokens.js';
 import SystemInitializer from '../../src/initializers/systemInitializer.js'; // Need the class for type checking
-import { INITIALIZABLE } from '../../src/config/tags.js'; // Need the tag for SystemInitializer context
+import { INITIALIZABLE } from '../../src/dependencyInjection/tags.js'; // Need the tag for SystemInitializer context
 
 describe('Application Bootstrap Integration Test', () => {
   let container;
@@ -26,11 +26,6 @@ describe('Application Bootstrap Integration Test', () => {
 
     // 2. Create a fresh AppContainer instance for each test
     container = new AppContainer();
-
-    // 3. Configure the container - This is the core action being tested indirectly
-    // We wrap this in a try/catch *only* for the first basic test,
-    // otherwise, we let errors propagate to fail the relevant test case.
-    // configureContainer itself populates the 'container' instance.
   });
 
   it('should configure the container without throwing immediate errors', () => {

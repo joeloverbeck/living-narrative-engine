@@ -133,7 +133,7 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
     } else {
       // This case implies llmConfig.apiType is missing or invalid, which might be an issue itself,
       // but the primary role here is to check cloud services.
-      // A more general config validation might catch missing/invalid apiType elsewhere.
+      // A more general dependencyInjection validation might catch missing/invalid apiType elsewhere.
       this.#logger.debug(
         `ClientApiKeyProvider.getKey (${llmId}): LLM apiType is missing or not a string. Assuming non-cloud or misconfigured. Skipping key identifier checks.`
       );

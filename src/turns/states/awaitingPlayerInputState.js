@@ -1,4 +1,4 @@
-// src/core/turns/states/awaitingPlayerInputState.js
+// src/turns/states/awaitingPlayerInputState.js
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**

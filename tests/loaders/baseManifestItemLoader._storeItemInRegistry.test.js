@@ -1,4 +1,4 @@
-// Filename: src/tests/core/loaders/baseManifestItemLoader._storeItemInRegistry.test.js
+// Filename: src/tests/loaders/baseManifestItemLoader._storeItemInRegistry.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader.js'; // Adjust path if necessary
@@ -167,7 +167,7 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
     testLoader._schemaValidator = mockValidator;
     testLoader._dataRegistry = mockRegistry;
     testLoader._logger = mockLogger;
-    // Ensure primarySchemaId is set based on the mock config for the TEST_CONTENT_TYPE
+    // Ensure primarySchemaId is set based on the mock dependencyInjection for the TEST_CONTENT_TYPE
     testLoader._primarySchemaId =
       mockConfig.getContentTypeSchemaId(TEST_CONTENT_TYPE);
   });

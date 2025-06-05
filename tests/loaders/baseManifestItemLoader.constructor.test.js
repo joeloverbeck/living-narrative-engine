@@ -1,4 +1,4 @@
-// src/tests/core/loaders/baseManifestItemLoader.constructor.test.js
+// src/tests/loaders/baseManifestItemLoader.constructor.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // Adjust the import path as necessary
@@ -123,7 +123,7 @@ beforeEach(() => {
   mockLogger = createMockLogger();
   // Recreate validator mock after clearAllMocks (especially isSchemaLoaded)
   mockValidator = createMockSchemaValidator();
-  // Recreate config mock after clearAllMocks (especially getContentTypeSchemaId)
+  // Recreate dependencyInjection mock after clearAllMocks (especially getContentTypeSchemaId)
   mockConfig = createMockConfiguration();
 
   // Instantiate the loader with the new signature <<< MODIFIED
@@ -156,7 +156,7 @@ beforeEach(() => {
 
 describe('BaseManifestItemLoader Constructor', () => {
   it('should instantiate successfully with valid contentType and dependencies', () => {
-    // Arrange: Mocks are created in beforeEach, config mock returns a default schema ID
+    // Arrange: Mocks are created in beforeEach, dependencyInjection mock returns a default schema ID
     const schemaId = 'http://example.com/schemas/default.schema.json';
     mockConfig.getContentTypeSchemaId.mockReturnValue(schemaId);
 
@@ -350,7 +350,7 @@ describe('BaseManifestItemLoader Constructor', () => {
 
   // --- Dependency Validation Failure Tests (Adapt slightly for logger usage) ---
   describe('IConfiguration Validation', () => {
-    it('should throw TypeError and log error if config is null', () => {
+    it('should throw TypeError and log error if dependencyInjection is null', () => {
       const validLogger = createMockLogger();
       expect(
         () =>
@@ -373,7 +373,7 @@ describe('BaseManifestItemLoader Constructor', () => {
       );
     });
 
-    it('should throw TypeError and log error if config is not an object', () => {
+    it('should throw TypeError and log error if dependencyInjection is not an object', () => {
       const validLogger = createMockLogger();
       expect(
         () =>
@@ -396,7 +396,7 @@ describe('BaseManifestItemLoader Constructor', () => {
       );
     });
 
-    it('should throw TypeError and log error if config is missing getModsBasePath', () => {
+    it('should throw TypeError and log error if dependencyInjection is missing getModsBasePath', () => {
       const incompleteConfig = {
         ...createMockConfiguration(),
         getModsBasePath: undefined,
@@ -423,7 +423,7 @@ describe('BaseManifestItemLoader Constructor', () => {
       );
     });
 
-    it('should throw TypeError and log error if config is missing getContentTypeSchemaId', () => {
+    it('should throw TypeError and log error if dependencyInjection is missing getContentTypeSchemaId', () => {
       const incompleteConfig = {
         ...createMockConfiguration(),
         getContentTypeSchemaId: undefined,

@@ -1,4 +1,4 @@
-// Filename: src/core/loaders/baseManifestItemLoader.js
+// Filename: src/loaders/baseManifestItemLoader.js
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration

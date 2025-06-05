@@ -1,4 +1,4 @@
-// src/core/config/appContainer.js
+// src/dependencyInjection/appContainer.js
 // ****** CORRECTED FILE ******
 /* eslint-disable no-console */
 /** @typedef {import('./tokens.js').DiToken} DiToken */
@@ -26,7 +26,7 @@
  * A lightweight Dependency Injection (DI) container.
  * Manages instantiation and lifecycle of registered services/systems.
  *
- * @implements {import('../core/interfaces/container.js').IServiceResolver}
+ * @implements {import('../interfaces/container.js').IServiceResolver}
  */
 class AppContainer {
   /** @type {Map<string, { registration: FactoryFunction | ClassConstructor | any, options: RegistrationOptions }>} */

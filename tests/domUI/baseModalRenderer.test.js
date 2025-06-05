@@ -312,7 +312,7 @@ describe('BaseModalRenderer', () => {
       );
     });
 
-    it('should log error if closeButton specified in config is not found', () => {
+    it('should log error if closeButton specified in dependencyInjection is not found', () => {
       const tempDocContext = {
         ...mockDocumentContextService,
         query: jest.fn((selector) =>
@@ -335,7 +335,7 @@ describe('BaseModalRenderer', () => {
       );
     });
 
-    it('should log warning if closeButton is not specified in config', () => {
+    it('should log warning if closeButton is not specified in dependencyInjection', () => {
       const { closeButton, ...configWithoutClose } = elementsConfig;
       const tempDocContextQuery = jest.fn((selector) => {
         if (selector === '#modal') return mockModalElement;

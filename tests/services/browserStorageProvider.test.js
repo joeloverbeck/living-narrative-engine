@@ -11,7 +11,7 @@ import {
   afterEach,
   test,
 } from '@jest/globals';
-import { BrowserStorageProvider } from '../../src/services/browserStorageProvider'; // Adjust path as needed
+import { BrowserStorageProvider } from '../../src/storage/browserStorageProvider'; // Adjust path as needed
 
 // --- Mock ILogger ---
 const mockLogger = {

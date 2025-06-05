@@ -136,7 +136,7 @@ describe('BaseListDisplayComponent', () => {
       logger: mockLogger,
       documentContext: mockDocumentContext,
       validatedEventDispatcher: mockValidatedEventDispatcher,
-      elementsConfig: { listContainerElement: '#list-container' }, // Correct config
+      elementsConfig: { listContainerElement: '#list-container' }, // Correct dependencyInjection
       domElementFactory: mockDomElementFactory,
     });
 

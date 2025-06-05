@@ -1,4 +1,4 @@
-// src/core/turnStates/awaitingExternalTurnEndState.js
+// src/turns/states/awaitingExternalTurnEndState.js
 // --- FILE START ---
 
 /**
