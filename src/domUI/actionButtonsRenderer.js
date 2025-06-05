@@ -4,10 +4,10 @@ import { BaseListDisplayComponent } from './baseListDisplayComponent.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
 
 /**
- * @typedef {import('../core/interfaces/ILogger').ILogger} ILogger
+ * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../core/interfaces/CommonTypes').NamespacedId} NamespacedId
+ * @typedef {import('../interfaces/CommonTypes').NamespacedId} NamespacedId
  * @typedef {import('./domElementFactory.js').default} DomElementFactoryType
  * @typedef {import('./boundDomRendererBase.js').ElementConfigEntry} ElementConfigEntry
  * @typedef {import('./boundDomRendererBase.js').ElementsConfig} ElementsConfig

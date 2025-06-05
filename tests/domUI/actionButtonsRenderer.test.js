@@ -13,11 +13,11 @@ import { JSDOM } from 'jsdom';
 import { ActionButtonsRenderer } from '../../src/domUI'; // Using index import
 import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
-import ConsoleLogger from '../../src/services/consoleLogger.js';
+import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
 
 // Mock dependencies
-jest.mock('../../src/services/consoleLogger.js');
+jest.mock('../../src/logging/consoleLogger.js');
 jest.mock('../../src/events/validatedEventDispatcher.js');
 jest.mock('../../src/domUI/domElementFactory.js');
 

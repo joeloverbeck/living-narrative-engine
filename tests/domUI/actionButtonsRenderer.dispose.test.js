@@ -12,10 +12,10 @@ import { JSDOM } from 'jsdom';
 import { ActionButtonsRenderer } from '../../src/domUI';
 // import DocumentContext from '../../src/domUI/documentContext.js'; // Will use TestSpecificDocumentContext
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
-import ConsoleLogger from '../../src/services/consoleLogger.js';
+import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
 
-jest.mock('../../src/services/consoleLogger.js');
+jest.mock('../../src/logging/consoleLogger.js');
 jest.mock('../../src/events/validatedEventDispatcher.js');
 jest.mock('../../src/domUI/domElementFactory.js');
 

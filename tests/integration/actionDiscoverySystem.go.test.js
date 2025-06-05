@@ -10,12 +10,12 @@
 import { ActionDiscoverySystem } from '../../src/systems/actionDiscoverySystem.js';
 
 // --- Core Dependencies to Mock ---
-import { GameDataRepository } from '../../src/services/gameDataRepository.js';
+import { GameDataRepository } from '../../src/data/gameDataRepository.js';
 import EntityManager from '../../src/entities/entityManager.js';
-import { ActionValidationService } from '../../src/services/actionValidationService.js';
-import ConsoleLogger from '../../src/services/consoleLogger.js';
-import { formatActionCommand as formatActionCommandFn } from '../../src/services/actionFormatter.js';
-import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../src/services/entityScopeService.js';
+import { ActionValidationService } from '../../src/actions/validation/actionValidationService.js';
+import ConsoleLogger from '../../src/logging/consoleLogger.js';
+import { formatActionCommand as formatActionCommandFn } from '../../src/actions/actionFormatter.js';
+import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../src/entities/entityScopeService.js';
 
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
@@ -28,15 +28,15 @@ import {
 
 /** @typedef {import('../../src/types/actionDefinition.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../src/actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../../src/services/consoleLogger.js').default} ILogger */
+/** @typedef {import('../../src/logging/consoleLogger.js').default} ILogger */
 
 // --- Mocking Dependencies ---
-jest.mock('../../src/services/gameDataRepository.js');
+jest.mock('../../src/data/gameDataRepository.js');
 jest.mock('../../src/entities/entityManager.js');
-jest.mock('../../src/services/actionValidationService.js');
-jest.mock('../../src/services/consoleLogger.js');
-jest.mock('../../src/services/actionFormatter.js');
-jest.mock('../../src/services/entityScopeService.js');
+jest.mock('../../src/actions/validation/actionValidationService.js');
+jest.mock('../../src/logging/consoleLogger.js');
+jest.mock('../../src/actions/actionFormatter.js');
+jest.mock('../../src/entities/entityScopeService.js');
 
 describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
   /** @type {jest.Mocked<ActionDiscoverySystem>} */ // Type it as mocked if you intend to spy on its methods, though usually test SUT directly.
