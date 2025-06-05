@@ -7,7 +7,7 @@
 //   • commandString: non‐empty string
 //   • speech: string (may be empty)
 //   • thoughts: string
-//   • notes (optional): array of { text: string (minLength:1), timestamp: date‐time }, no extra props
+//   • notes (optional): array of strings (minLength: 1)
 // -----------------------------------------------------------------------------
 
 /**
@@ -35,15 +35,7 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
     notes: {
       type: 'array',
       minItems: 0,
-      items: {
-        type: 'object',
-        properties: {
-          text: { type: 'string', minLength: 1 },
-          timestamp: { type: 'string', format: 'date-time' },
-        },
-        required: ['text', 'timestamp'],
-        additionalProperties: false,
-      },
+      items: { type: 'string', minLength: 1 },
     },
   },
   required: ['actionDefinitionId', 'commandString', 'speech', 'thoughts'],

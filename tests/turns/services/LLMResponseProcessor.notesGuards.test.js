@@ -7,6 +7,9 @@ import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 
 /**
  * Simple in-memory “entity” that mimics the minimal shape of an IEntityManager-backed entity.
+ *
+ * @param {string} id - identifier for the fake entity
+ * @returns {object} simple entity object
  */
 function createFakeActorEntity(id) {
   return {
@@ -41,7 +44,7 @@ describe('LLMResponseProcessor - merge notes logic', () => {
     // Fake entity manager with spies
     entityManagerMock = {
       getEntityInstance: jest.fn(),
-      addComponent: jest.fn((entityId, compId, data) => {
+      addComponent: jest.fn(() => {
         // we’ll call actorEntity.addComponent manually from the entity
       }),
       saveEntity: jest.fn().mockResolvedValue(undefined),
@@ -71,15 +74,19 @@ describe('LLMResponseProcessor - merge notes logic', () => {
       notes: [{ text: 'Existing note', timestamp: '2025-06-01T12:00:00Z' }],
     };
 
+    jest
+      .spyOn(Date.prototype, 'toISOString')
+      .mockReturnValue('2025-06-02T15:00:00Z');
+
     const validJson = {
       actionDefinitionId: 'some:action',
       commandString: 'do something',
       speech: 'hello',
       thoughts: 'thinking...',
       notes: [
-        { text: 'New note', timestamp: '2025-06-02T15:00:00Z' },
+        'New note',
         // duplicate text (normalized) should be skipped
-        { text: 'existing NOTE', timestamp: '2025-06-03T16:00:00Z' },
+        'existing NOTE',
       ],
     };
 

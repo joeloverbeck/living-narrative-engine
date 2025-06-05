@@ -95,6 +95,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     if (
       !this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_RESPONSE_SCHEMA_ID)
     ) {
+      // eslint-disable-next-line no-console
       console.warn(
         `LLMResponseProcessor: Schema with ID '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}' is not loaded in the provided schema validator. Validation will fail.`
       );
@@ -208,6 +209,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    * @private
    * @async
    * @param {*} notesArray - raw notes array from LLM; expected to be an array
+   *   of strings
    * @param {object} actorEntity - actor entity instance to merge notes into
    * @param {ILogger} logger - logger instance for logging errors/info
    * @returns {Promise<void>}
@@ -245,28 +247,21 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         .map((n) => normalizeNoteText(n.text))
     );
 
-    for (const noteObj of notesArray) {
-      if (
-        typeof noteObj?.text !== 'string' ||
-        noteObj.text.trim() === '' ||
-        typeof noteObj?.timestamp !== 'string' ||
-        Number.isNaN(Date.parse(noteObj.timestamp))
-      ) {
-        logger.error(`Invalid note skipped: ${JSON.stringify(noteObj)}`);
+    for (const noteText of notesArray) {
+      if (typeof noteText !== 'string' || noteText.trim() === '') {
+        logger.error(`Invalid note skipped: ${JSON.stringify(noteText)}`);
         continue;
       }
 
-      const normalisedIncoming = normalizeNoteText(noteObj.text);
+      const normalisedIncoming = normalizeNoteText(noteText);
       if (existingSet.has(normalisedIncoming)) {
         continue;
       }
 
-      notesComp.notes.push({
-        text: noteObj.text,
-        timestamp: noteObj.timestamp,
-      });
+      const timestamp = new Date().toISOString();
+      notesComp.notes.push({ text: noteText, timestamp });
       logger.info(
-        `[${new Date().toISOString()}] Added note: "${noteObj.text}" at ${noteObj.timestamp}`
+        `[${new Date().toISOString()}] Added note: "${noteText}" at ${timestamp}`
       );
       existingSet.add(normalisedIncoming);
     }
