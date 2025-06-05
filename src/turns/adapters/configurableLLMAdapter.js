@@ -69,7 +69,7 @@ import {
 
 /** @typedef {import('../../llms/services/llmConfigLoader.js').LoadConfigsErrorResult} LoadConfigsErrorResult */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../schemas/llmOutputSchemas.js').LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA} LLM_TURN_ACTION_SCHEMA_TYPE */
+/** @typedef {import('../schemas/llmOutputSchemas.js').LLM_TURN_ACTION_RESPONSE_SCHEMA} LLM_TURN_ACTION_SCHEMA_TYPE */
 /** @typedef {import('../../llms/environmentContext.js').EnvironmentContext} EnvironmentContext */
 /** @typedef {import('../../llms/interfaces/IApiKeyProvider.js').IApiKeyProvider} IApiKeyProvider */
 /** @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory */

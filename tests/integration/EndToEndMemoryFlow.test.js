@@ -9,7 +9,7 @@ import { PerceptionLogAssembler } from '../../src/prompting/assembling/perceptio
 import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
-import { LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID } from '../../src/turns/schemas/llmOutputSchemas.js';
+import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../../src/turns/schemas/llmOutputSchemas.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler';
@@ -145,7 +145,7 @@ describe('End-to-End Short-Term Memory Flow', () => {
     };
 
     const validationResult = schemaValidator.validate(
-      LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID,
+      LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
       mockResponse
     );
     expect(validationResult.isValid).toBe(true);

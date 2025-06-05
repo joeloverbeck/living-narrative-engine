@@ -6,12 +6,10 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
-// ── IMPORT BOTH v1 AND v2 TURN-ACTION SCHEMAS ─────────────────────────────────
+// ── IMPORT v3 TURN‐ACTION SCHEMA ─────────────────────────────────────────────
 import {
-  LLM_TURN_ACTION_SCHEMA,
-  LLM_TURN_ACTION_SCHEMA_ID,
-  LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA,
-  LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA,
+  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
 } from '../turns/schemas/llmOutputSchemas.js';
 // ───────────────────────────────────────────────────────────────────────────────
 
@@ -23,7 +21,7 @@ import {
 
 /**
  * Implements the ISchemaValidator interface using Ajv.
- * Preloads both the v1 and v2 turn‐action schemas so they can be retrieved by ID.
+ * Preloads the consolidated v3 turn‐action schema so it can be retrieved by ID.
  */
 class AjvSchemaValidator {
   #ajv = null;
@@ -47,56 +45,33 @@ class AjvSchemaValidator {
     this.#logger = logger;
 
     try {
-      this.#ajv = new Ajv({
-        allErrors: true,
-        strictTypes: false,
-      });
+      this.#ajv = new Ajv({ allErrors: true, strictTypes: false });
       addFormats(this.#ajv);
       this.#logger.debug(
         'AjvSchemaValidator: Ajv instance created and formats added.'
       );
 
-      // ── PRELOAD v1 TURN-ACTION SCHEMA ─────────────────────────────────────────
+      // ── PRELOAD v3 TURN‐ACTION SCHEMA ─────────────────────────────────────────
       try {
-        if (!this.#ajv.getSchema(LLM_TURN_ACTION_SCHEMA_ID)) {
-          this.#ajv.addSchema(LLM_TURN_ACTION_SCHEMA);
+        if (!this.#ajv.getSchema(LLM_TURN_ACTION_RESPONSE_SCHEMA_ID)) {
+          this.#ajv.addSchema(
+            LLM_TURN_ACTION_RESPONSE_SCHEMA,
+            LLM_TURN_ACTION_RESPONSE_SCHEMA_ID
+          );
           this.#logger.info(
-            `AjvSchemaValidator: Successfully preloaded core schema '${LLM_TURN_ACTION_SCHEMA_ID}'.`
+            `AjvSchemaValidator: Successfully preloaded schema '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}'.`
           );
         } else {
           this.#logger.debug(
-            `AjvSchemaValidator: Core schema '${LLM_TURN_ACTION_SCHEMA_ID}' already loaded. Skipping.`
+            `AjvSchemaValidator: Schema '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}' already loaded. Skipping.`
           );
         }
       } catch (preloadError) {
         this.#logger.error(
-          `AjvSchemaValidator: Failed to preload core schema '${LLM_TURN_ACTION_SCHEMA_ID}'. Error: ${preloadError.message}`,
+          `AjvSchemaValidator: Failed to preload schema '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}'. Error: ${preloadError.message}`,
           {
-            schemaId: LLM_TURN_ACTION_SCHEMA_ID,
+            schemaId: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
             error: preloadError,
-          }
-        );
-      }
-      // ───────────────────────────────────────────────────────────────────────────
-
-      // ── PRELOAD v2 TURN-ACTION WITH THOUGHTS SCHEMA ────────────────────────────
-      try {
-        if (!this.#ajv.getSchema(LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID)) {
-          this.#ajv.addSchema(LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA);
-          this.#logger.info(
-            `AjvSchemaValidator: Successfully preloaded core schema '${LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID}'.`
-          );
-        } else {
-          this.#logger.debug(
-            `AjvSchemaValidator: Core schema '${LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID}' already loaded. Skipping.`
-          );
-        }
-      } catch (preloadError2) {
-        this.#logger.error(
-          `AjvSchemaValidator: Failed to preload core schema '${LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID}'. Error: ${preloadError2.message}`,
-          {
-            schemaId: LLM_TURN_ACTION_WITH_THOUGHTS_SCHEMA_ID,
-            error: preloadError2,
           }
         );
       }

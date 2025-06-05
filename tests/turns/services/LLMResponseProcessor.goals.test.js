@@ -1,4 +1,4 @@
-// tests/LLMResponseProcessor.test.js
+// tests/turns/services/LLMResponseProcessor.goals.test.js
 
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
