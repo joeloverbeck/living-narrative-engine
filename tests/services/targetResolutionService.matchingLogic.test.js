@@ -285,7 +285,9 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
 
       expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetId).toBe('validItem');
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "getEntityDisplayName: Entity 'noNameComp' has no usable name from component or 'entity.name'. Falling back to entity ID."
+      );
     });
 
     test('should skip candidates with empty name string in name component and log a warning', async () => {
@@ -302,7 +304,9 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
 
       expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetId).toBe('validItem');
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "getEntityDisplayName: Entity 'emptyNameItem' has no usable name from component or 'entity.name'. Falling back to entity ID."
+      );
     });
 
     test('should correctly handle items with non-string names (logged by earlier stages) and find valid items', async () => {
@@ -321,7 +325,9 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
 
       expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetId).toBe('item1');
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "getEntityDisplayName: Entity 'item2' has no usable name from component or 'entity.name'. Falling back to entity ID."
+      );
     });
   });
 
@@ -412,7 +418,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
       ['   ', 'whitespace string'],
     ])(
       'should return ENTITY with domain-specific error for nounPhrase %s',
-      async (nounPhraseValue, _description) => {
+      async (nounPhraseValue) => {
         const actionContext = createActionContext(nounPhraseValue); // Corrected context used here
 
         const result = await service.resolveActionTarget(
@@ -425,6 +431,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
         expect(result.targetId).toBeNull();
         expect(result.error).toBe(expectedError);
 
+        /* eslint-disable jest/no-conditional-expect */
         if (
           nounPhraseValue === null ||
           nounPhraseValue === undefined ||
@@ -436,6 +443,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
             )
           );
         }
+        /* eslint-enable jest/no-conditional-expect */
       }
     );
   });

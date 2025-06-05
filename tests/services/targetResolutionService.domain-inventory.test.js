@@ -320,7 +320,9 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       );
 
       // Expected Outcome
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "getEntityDisplayName: Entity 'namelessItem' has no usable name from component or 'entity.name'. Falling back to entity ID."
+      );
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBeNull();

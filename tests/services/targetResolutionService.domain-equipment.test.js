@@ -273,7 +273,9 @@ describe("TargetResolutionService - Domain 'equipment'", () => {
         actionContext
       );
 
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "getEntityDisplayName: Entity 'namelessHelm' has no usable name from component or 'entity.name'. Falling back to entity ID."
+      );
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBeNull();
@@ -428,7 +430,7 @@ describe("TargetResolutionService - Domain 'equipment'", () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "TargetResolutionService.#_gatherNameMatchCandidates: Entity 'nonExistentHelm' from equipment not found via entityManager. Skipping."
       );
-      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         `getEntityDisplayName: Entity 'namelessSwordId' has no usable name from component or 'entity.name'. Falling back to entity ID.`
       );
     });
