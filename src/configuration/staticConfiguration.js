@@ -1,4 +1,4 @@
-// src/core/services/staticConfiguration.js
+// src/configuration/staticConfiguration.js
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 

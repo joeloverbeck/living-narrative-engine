@@ -1,4 +1,4 @@
-// src/core/spatialIndexManager.js
+// src/entities/spatialIndexManager.js
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 

@@ -1,7 +1,7 @@
-// src/tests/core/services/staticConfiguration.test.js
+// src/tests/services/staticConfiguration.test.js
 
 import { describe, it, expect, beforeEach } from '@jest/globals'; // Or '@vitest/globals'
-import StaticConfiguration from '../../src/services/staticConfiguration.js';
+import StaticConfiguration from '../../src/configuration/staticConfiguration.js';
 
 // --- Replicate Constants/Expected Values from staticConfiguration.js for Verification ---
 // Source: const BASE_DATA_PATH = './data';

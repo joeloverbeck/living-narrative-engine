@@ -1,4 +1,4 @@
-// src/core/turnOrder/queue/simpleRoundRobinQueue.js
+// src/turns/order/queue/simpleRoundRobinQueue.js
 
 /**
  * @file Implements a simple First-In, First-Out (FIFO) turn order queue.

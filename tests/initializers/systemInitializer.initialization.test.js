@@ -1,10 +1,10 @@
-// src/tests/core/initializers/systemInitializer.initialization.test.js
+// src/tests/initializers/systemInitializer.initialization.test.js
 
 // --- Imports ---
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 // Adjust path as needed
 import SystemInitializer from '../../src/initializers/systemInitializer.js';
-import { INITIALIZABLE } from '../../src/config/tags.js'; // Corrected import path for tags
+import { INITIALIZABLE } from '../../src/dependencyInjection/tags.js'; // Corrected import path for tags
 
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../../core/interfaces/container.js').IServiceResolver} IServiceResolver */

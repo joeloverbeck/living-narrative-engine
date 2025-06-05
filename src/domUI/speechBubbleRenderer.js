@@ -10,8 +10,8 @@ import { PLAYER_COMPONENT_ID } from '../constants/componentIds.js'; // Added imp
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
- * @typedef {import('../services/EntityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
- * @typedef {import('../core/interfaces/IEvent.js').IEvent} IEvent
+ * @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
+ * @typedef {import('../interfaces/IEvent.js').IEvent} IEvent
  * @typedef {import('../entities/entity.js').default} Entity
  */
 

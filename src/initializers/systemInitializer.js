@@ -1,4 +1,4 @@
-// src/core/initializers/systemInitializer.js
+// src/initializers/systemInitializer.js
 
 /**
  * @file Defines the SystemInitializer class, responsible for
@@ -7,7 +7,7 @@
  */
 
 // Type imports for JSDoc
-/** @typedef {import('../core/interfaces/container.js').IServiceResolver} IServiceResolver */
+/** @typedef {import('../interfaces/container.js').IServiceResolver} IServiceResolver */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
 

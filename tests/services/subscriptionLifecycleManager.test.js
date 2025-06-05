@@ -1,7 +1,7 @@
-// src/tests/core/services/subscriptionLifecycleManager.test.js
+// src/tests/services/subscriptionLifecycleManager.test.js
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-import SubscriptionLifecycleManager from '../../src/services/subscriptionLifecycleManager.js';
+import SubscriptionLifecycleManager from '../../src/events/subscriptionLifecycleManager.js';
 import { TURN_ENDED_ID } from '../../src/constants/eventIds.js';
 
 // --- Mock Dependencies ---

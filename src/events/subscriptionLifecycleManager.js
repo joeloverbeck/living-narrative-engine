@@ -1,4 +1,4 @@
-// src/core/services/subscriptionLifecycleManager.js
+// src/events/subscriptionLifecycleManager.js
 // --- FILE START ---
 // --- Interface Imports for JSDoc ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */

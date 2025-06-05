@@ -1,7 +1,7 @@
-// src/tests/core/services/systemDataRegistry.test.js
+// src/tests/services/systemDataRegistry.test.js
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { SystemDataRegistry } from '../../src/services/systemDataRegistry.js'; // Adjust path as needed
+import { SystemDataRegistry } from '../../src/data/systemDataRegistry.js'; // Adjust path as needed
 
 // --- Mock Implementations ---
 

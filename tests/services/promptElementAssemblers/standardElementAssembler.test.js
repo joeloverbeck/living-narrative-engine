@@ -8,7 +8,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import { StandardElementAssembler } from '../../../src/services/promptElementAssemblers/standardElementAssembler.js'; // Adjust path as needed
+import { StandardElementAssembler } from '../../../src/prompting/assembling/standardElementAssembler.js'; // Adjust path as needed
 import { createMockLogger } from '../../testUtils.js'; // Adjust path for your test utils
 // We will use the actual snakeToCamel from textUtils since it's a utility function
 import { snakeToCamel } from '../../../src/utils/textUtils.js';

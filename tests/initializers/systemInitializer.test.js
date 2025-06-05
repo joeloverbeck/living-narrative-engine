@@ -1,4 +1,4 @@
-// src/tests/core/initializers/systemInitializer.test.js
+// src/tests/initializers/systemInitializer.test.js
 
 // --- Imports ---
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SystemInitializer from '../../src/initializers/systemInitializer.js';
 // Assuming INITIALIZABLE is still relevant for getting a test tag value
 // If not, replace with a simple string constant.
-import { INITIALIZABLE } from '../../src/config/tags.js'; // Corrected path assuming it's relative to root or configured base URL
+import { INITIALIZABLE } from '../../src/dependencyInjection/tags.js'; // Corrected path assuming it's relative to root or configured base URL
 
 // --- Type Imports for Mocks ---
 // Using correct interface types based on SystemInitializer's constructor

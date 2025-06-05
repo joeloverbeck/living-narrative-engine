@@ -2,18 +2,18 @@
 /* eslint-disable no-console */
 // --- FILE START ---
 import { UIBootstrapper } from './UIBootstrapper.js';
-import AppContainer from '../config/appContainer.js'; // Corrected path assuming appContainer.js is in ../config/
+import AppContainer from '../dependencyInjection/appContainer.js'; // Corrected path assuming appContainer.js is in ../dependencyInjection/
 import GameEngine from '../engine/gameEngine.js';
 
 // eslint-disable-next-line no-unused-vars
-import { tokens } from '../config/tokens.js'; // Corrected path assuming tokens.js is in ../config/
+import { tokens } from '../dependencyInjection/tokens.js'; // Corrected path assuming tokens.js is in ../dependencyInjection/
 
 /**
  * @typedef {import('./UIBootstrapper.js').EssentialUIElements} EssentialUIElements
  */
 
 /**
- * @typedef {import('../config/containerConfig.js').ConfigureContainerFunction} ConfigureContainerFunction
+ * @typedef {import('../dependencyInjection/containerConfig.js').ConfigureContainerFunction} ConfigureContainerFunction
  */
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -164,7 +164,7 @@ export async function initializeGameEngineStage(container, logger) {
  * @param {AppContainer} container - The configured AppContainer instance.
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
  * @param {ILogger} logger - The resolved ILogger instance.
- * @param {TokensObject} diTokens - The DI tokens object from src/config/tokens.js.
+ * @param {TokensObject} diTokens - The DI tokens object from src/dependencyInjection/tokens.js.
  * @returns {Promise<void>} A promise that resolves when the stage is complete.
  */
 export async function initializeAuxiliaryServicesStage(
