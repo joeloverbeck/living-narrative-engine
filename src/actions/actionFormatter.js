@@ -92,8 +92,8 @@ export function formatActionCommand(
         const targetEntity = entityManager.getEntityInstance(targetId);
 
         if (targetEntity) {
-          // Use getEntityDisplayName utility, which handles its own fallback to ID or 'unknown entity'
-          targetName = getEntityDisplayName(targetEntity, logger);
+          // Use getEntityDisplayName utility with ID as fallback and pass logger
+          targetName = getEntityDisplayName(targetEntity, targetId, logger);
           if (debug) {
             logger.debug(
               ` -> Found entity ${targetId}, display name: "${targetName}"`
