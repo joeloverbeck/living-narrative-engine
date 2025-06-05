@@ -288,7 +288,9 @@ describe("TargetResolutionService - Domain 'environment'", () => {
         actionContext
       );
 
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "getEntityDisplayName: Entity 'namelessThing' has no usable name from component or 'entity.name'. Falling back to entity ID."
+      );
       expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBe(namelessEntity.id);

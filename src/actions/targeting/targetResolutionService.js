@@ -72,7 +72,7 @@ class TargetResolutionService extends ITargetResolutionService {
       this.#logger = logger;
     } catch (e) {
       const errorMsg = `TargetResolutionService Constructor: CRITICAL - Invalid or missing ILogger instance. Dependency validation utility reported: ${e.message}`;
-      console.error(errorMsg);
+      console.error(errorMsg); // eslint-disable-line no-console
       throw new Error(errorMsg);
     }
 
@@ -223,12 +223,16 @@ class TargetResolutionService extends ITargetResolutionService {
       const itemEntity = this.#entityManager.getEntityInstance(itemId);
 
       if (itemEntity) {
-        const name = getEntityDisplayName(itemEntity, this.#logger);
+        const name = getEntityDisplayName(
+          itemEntity,
+          itemEntity.id,
+          this.#logger
+        );
         if (name && typeof name === 'string' && name.trim() !== '') {
           candidates.push({ id: itemEntity.id, name: name });
         } else {
           this.#logger.warn(
-            `TargetResolutionService.#_gatherNameMatchCandidates: Entity '${itemId}' in ${domainContextForLogging} has no valid name. Skipping.`
+            `TargetResolutionService.#_gatherNameMatchCandidates: Entity '${itemId}' in ${domainContextForLogging} returned no valid name from getEntityDisplayName. Skipping. Name resolved to: ${name}`
           );
         }
       } else {
