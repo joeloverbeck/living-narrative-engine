@@ -1,4 +1,4 @@
-// src/core/interfaces/IValidatedEventDispatcher.js
+// src/interfaces/IValidatedEventDispatcher.js
 
 /** @typedef {import('../events/eventBus.js').EventListener} EventListener */
 /** @typedef {() => void} UnsubscribeFn */ // Assuming UnsubscribeFn is a function that takes no args and returns void. Adjust if defined elsewhere differently.

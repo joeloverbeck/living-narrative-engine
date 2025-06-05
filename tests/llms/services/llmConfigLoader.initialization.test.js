@@ -49,7 +49,7 @@ const mockConfigurationInstance = () => ({
 
 const LLM_CONFIG_SCHEMA_ID =
   'http://example.com/schemas/llm-configs.schema.json';
-const MOCK_LLM_CONFIG_PATH = 'config/llm-configs.json';
+const MOCK_LLM_CONFIG_PATH = 'dependencyInjection/llm-configs.json';
 const MOCK_RAW_LLM_CONFIG_DATA = {
   defaultConfigId: 'test-llm',
   configs: {

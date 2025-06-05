@@ -49,7 +49,7 @@ const mockConfigurationInstance = () => ({
     .mockReturnValue('http://example.com/schemas/rule.schema.json'),
 });
 
-const defaultLlmConfigPath = 'config/llm-configs.json'; // Renamed for clarity
+const defaultLlmConfigPath = 'dependencyInjection/llm-configs.json'; // Renamed for clarity
 
 // Example valid llm-configs.json content, now as a root object
 const mockValidRootConfig = {
@@ -212,7 +212,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
   });
 
   describe('Individual Configuration Object Parsing (within root.configs)', () => {
-    test('should parse correctly if all required fields in a config object are present', async () => {
+    test('should parse correctly if all required fields in a dependencyInjection object are present', async () => {
       const singleEntryRootConfig = {
         defaultConfigId: 'test_config_001',
         configs: {
@@ -365,7 +365,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
         'non_existent_key'
       );
       expect(firstSemanticError.message).toContain("'non_existent_key'");
-      // Path should be absolute, pointing to the specific location within the config
+      // Path should be absolute, pointing to the specific location within the dependencyInjection
       expect(firstSemanticError.path).toBe(
         'configs.bad_order_config.promptAssemblyOrder[0]'
       );

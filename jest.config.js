@@ -1,3 +1,5 @@
+// jest.config.js
+
 /* eslint-env node */
 
 /**
@@ -8,23 +10,52 @@ module.exports = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['./jest.setup.js'],
 
-  // --- ADD THIS SECTION ---
-  // By default, Jest ignores node_modules. We need to tell it *not* to ignore 'tinyqueue'
-  // so that Babel (or whichever transformer you use) can process its ESM syntax.
   transformIgnorePatterns: [
     // Ignore node_modules except for 'tinyqueue'
     '/node_modules/(?!tinyqueue/)',
-
-    // You might also need to keep other default ignores if applicable,
-    // like the one for Yarn PnP:
     '\\.pnp\\.[^\\/]+$',
   ],
-  // --- END ADDED SECTION ---
 
-  // Optional: Ensure a transformer is configured if not relying on defaults
-  // If you have a babel.config.js or similar, Jest often picks it up automatically.
-  // If not, you might need to specify it explicitly:
-  // transform: {
-  //   '^.+\\.(js|jsx|mjs|cjs|ts|tsx)$': 'babel-jest', // or 'ts-jest' for TypeScript
-  // },
+  // --- Paths to ignore for test execution ---
+  // Jest will not look for tests in these paths.
+  // We include '/node_modules/' as it's a default we want to keep.
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/llm-proxy-server/', // Exclude the sub-project directory
+  ],
+
+  // --- MOCK CONFIGURATION ---
+  clearMocks: true, // Automatically clear mock calls and instances before every test
+
+  // --- COVERAGE CONFIGURATION ---
+  coverageDirectory: 'coverage',
+  coverageReporters: ['json', 'lcov', 'text', 'html'],
+
+  // An array of glob patterns indicating a set of files for which coverage information should be collected.
+  // IMPORTANT: Adjust these patterns to match your project's source file locations.
+  collectCoverageFrom: [
+    '**/*.js', // Collect from all .js files IN THE CURRENT PROJECT CONTEXT
+    '!**/node_modules/**', // Exclude dependencies
+    '!<rootDir>/llm-proxy-server/**', // Exclude all files within the sub-project from coverage
+    '!**/vendor/**', // Example: if you have a third-party vendor directory
+    '!jest.config.js', // Exclude Jest's own configuration file
+    '!jest.setup.js', // Exclude Jest's setup file
+    '!babel.config.js', // Exclude Babel configuration if you have one
+    '!**/dist/**', // Exclude build output directory
+    '!**/coverage/**', // Exclude the coverage report directory itself
+    '!**/scripts/**', // Exclude non-source utility scripts (like validateMods.mjs) unless they are also tested
+    // If your source code is in a specific directory, e.g., 'src', use:
+    // 'src/**/*.js',
+  ],
+
+  // Optional: Enforce coverage levels. Uncomment and adjust as needed.
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: -500,
+    },
+  },
+  // --- END COVERAGE CONFIGURATION ---
 };

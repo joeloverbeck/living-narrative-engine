@@ -115,7 +115,7 @@ export class LlmConfigLoader {
   #logger;
   #schemaValidator;
   #configuration;
-  #defaultConfigPath = 'config/llm-configs.json';
+  #defaultConfigPath = 'dependencyInjection/llm-configs.json';
   #defaultMaxRetries = 3;
   #defaultBaseDelayMs = 500;
   #defaultMaxDelayMs = 5000;
@@ -250,7 +250,7 @@ export class LlmConfigLoader {
       standardizedPath = `configs.${standardizedConfigId}`;
       if (
         relativeSemanticPath &&
-        relativeSemanticPath !== '(config object root)'
+        relativeSemanticPath !== '(dependencyInjection object root)'
       ) {
         standardizedPath += `.${relativeSemanticPath}`;
       }

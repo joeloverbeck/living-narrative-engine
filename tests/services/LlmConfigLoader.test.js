@@ -58,7 +58,7 @@ const mockConfigurationInstance = () => ({
     .mockReturnValue('http://example.com/schemas/rule.schema.json'),
 });
 
-const defaultLlmConfigPath = 'config/llm-configs.json';
+const defaultLlmConfigPath = 'dependencyInjection/llm-configs.json';
 
 // New: Valid root object content for llm-configs.json
 const mockValidRootLLMConfig = {
@@ -220,7 +220,7 @@ describe('LlmConfigLoader', () => {
       consoleInfoSpy.mockRestore();
     });
 
-    test('should use default config path if none provided (verified by loadConfigs call)', async () => {
+    test('should use default dependencyInjection path if none provided (verified by loadConfigs call)', async () => {
       Workspace_retry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
@@ -521,7 +521,7 @@ describe('LlmConfigLoader', () => {
     });
 
     test('should use custom file path if provided to loadConfigs method', async () => {
-      const customPath = 'another/prompt-config.json';
+      const customPath = 'another/prompt-dependencyInjection.json';
       Workspace_retry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );

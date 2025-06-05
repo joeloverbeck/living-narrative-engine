@@ -1,4 +1,4 @@
-// src/core/turnStates/ITurnState.js
+// src/turns/states/ITurnState.js
 // --- FILE START ---
 
 /**

@@ -1,4 +1,4 @@
-// src/core/interfaces/IWorldContext.js
+// src/interfaces/IWorldContext.js
 // --- FILE START ---
 
 /** @typedef {import('../entities/entity.js').default} Entity */
