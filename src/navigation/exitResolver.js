@@ -5,7 +5,8 @@
 
 import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
-import { getDisplayName, TARGET_MESSAGES } from '../utils/messages.js';
+import { TARGET_MESSAGES } from '../utils/messages.js';
+import { getEntityDisplayName } from '../utils/entityUtils.js';
 
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
@@ -13,18 +14,19 @@ import { getDisplayName, TARGET_MESSAGES } from '../utils/messages.js';
 
 /**
  * @typedef {object} FetchedExitData
- * @property {string} direction
- * @property {import('../entities/entity.js').default|null} targetLocationEntity
- * @property {import('../entities/entity.js').default|null} blockerEntity
+ * @property {string} direction - Normalized direction string.
+ * @property {import('../entities/entity.js').default|null} targetLocationEntity - Resolved location entity the exit leads to.
+ * @property {import('../entities/entity.js').default|null} blockerEntity - Entity blocking the exit, if any.
  */
 
 /**
  * Find exits whose direction or display-name matches the user’s phrase.
  * Returns two buckets: exact‐direction matches and name/alias matches.
  *
- * @param {ActionContext} context
- * @param {string} rawPhrase
- * @param {ILogger} logger
+ * @param {ActionContext} context - Action context containing location and entity manager.
+ * @param {string} rawPhrase - Raw phrase entered by the user.
+ * @param {ILogger} logger - Logger instance for warnings.
+ * @returns {FetchedExitData[]} Buckets of matching exits by direction and name.
  */
 function findPotentialExitMatches(context, rawPhrase, logger) {
   const results = { directionMatches: [], nameMatches: [] };
@@ -108,11 +110,11 @@ function findPotentialExitMatches(context, rawPhrase, logger) {
  * or `null` if not found / ambiguous. Callers that previously expected a
  * connection-entity ID now read `resolvedExit.target`.
  *
- * @param {ActionContext & { validatedEventDispatcher: ValidatedEventDispatcher, logger: ILogger }} context
- * @param {string}   rawPhrase
- * @param {string}   actionVerb           – verb for ambiguity prompts (“go”, “enter”, …)
- * @param {Function} findFn               – injected for unit tests
- * @returns {Promise<null|FetchedExitData>}
+ * @param {ActionContext & { validatedEventDispatcher: ValidatedEventDispatcher, logger: ILogger }} context - Context including dispatcher and logger.
+ * @param {string} rawPhrase - User-entered phrase describing the exit.
+ * @param {string} [actionVerb] - Verb used in ambiguity prompts.
+ * @param {Function} [findFn] - Dependency-injected matcher for tests.
+ * @returns {Promise<null|FetchedExitData>} Resolves with exit data or null.
  */
 export async function resolveTargetExit(
   context,
@@ -123,7 +125,7 @@ export async function resolveTargetExit(
   const { validatedEventDispatcher: bus, logger } = context;
 
   if (!bus || !logger) {
-    console.error(
+    logger?.error(
       'exitResolver: context missing validatedEventDispatcher or logger'
     );
     return null;
@@ -157,7 +159,12 @@ export async function resolveTargetExit(
   // 4. ambiguous name
   if (nameMatches.length > 1) {
     const disp = nameMatches
-      .map((m) => getDisplayName(m.targetLocationEntity) || m.direction)
+      .map((m) =>
+        getEntityDisplayName(
+          m.targetLocationEntity,
+          m.targetLocationEntity?.id || m.direction
+        )
+      )
       .join(', ');
     await bus.dispatchValidated('textUI:display_message', {
       text: TARGET_MESSAGES.TARGET_AMBIGUOUS_CONTEXT

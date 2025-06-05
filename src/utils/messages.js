@@ -1,48 +1,11 @@
 // src/utils/messages.js
 
-// --- TICKET 4.4 REFACTOR: Import correct component IDs ---
-import { NAME_COMPONENT_ID } from '../constants/componentIds.js'; // Adjust path if needed
-// --- END TICKET 4.4 REFACTOR ---
+import { getEntityDisplayName } from './entityUtils.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */ // Added for potential future use, though not strictly needed for these helpers
 
-// --- TICKET 4.4 REFACTOR: Updated getDisplayName helper ---
-/**
- * Gets the display name for an entity.
- * Retrieves data from the 'core:name' component via entity.getComponentData.
- * Falls back to entity ID or a default string if the component or name value is missing.
- *
- * @param {Entity | null | undefined} entity - The entity instance.
- * @param {string} [fallback] - The string to return if no name or ID is found.
- * @returns {string} The entity's display name or a fallback string.
- */
-export const getDisplayName = (entity, fallback = 'unknown entity') => {
-  if (!entity || typeof entity.getComponentData !== 'function') {
-    // Handle cases where entity is null, undefined, or not a valid Entity object
-    return entity?.id || fallback;
-  }
-  // AC: Data is accessed using entity.getComponentData(entityId, "core:name") (via entity instance)
-  const nameComponentData = entity.getComponentData(NAME_COMPONENT_ID);
-  // AC: Default values or fallback logic are handled appropriately if components are missing.
-  // Support both { text: "Entity Name" } and legacy { value: "Entity Name" } structures.
-  if (nameComponentData) {
-    if (
-      typeof nameComponentData.text === 'string' &&
-      nameComponentData.text.trim() !== ''
-    ) {
-      return nameComponentData.text;
-    }
-    if (
-      typeof nameComponentData.value === 'string' &&
-      nameComponentData.value.trim() !== ''
-    ) {
-      return nameComponentData.value;
-    }
-  }
-  return entity.id ?? fallback;
-};
-// --- END TICKET 4.4 REFACTOR ---
+// getDisplayName helper removed in favor of canonical getEntityDisplayName
 
 /**
  * A collection of message templates for user feedback, particularly related to
@@ -71,7 +34,7 @@ export const TARGET_MESSAGES = {
    * Target not found in the current location specifically for taking.
    *
    * @param {string} targetName - The name of the item being looked for.
-   * @returns {string}
+   * @returns {string} Message text describing the result.
    */
   NOT_FOUND_TAKEABLE: (targetName) =>
     `You don't see any '${targetName}' here to take.`, // Param name standardized
@@ -81,7 +44,7 @@ export const TARGET_MESSAGES = {
    * Consider using `NOT_FOUND_NEARBY` as the default if consistency is desired.
    *
    * @param {string} targetName - The description/name of the target being looked for.
-   * @returns {string}
+   * @returns {string} Message text describing the result.
    */
   TARGET_NOT_FOUND_CONTEXT: (targetName) =>
     `Could not find '${targetName}' nearby to target.`, // Param name standardized
@@ -104,11 +67,17 @@ export const TARGET_MESSAGES = {
    * @param {string} actionVerb - The combined verb phrase (e.g., "use Potion on").
    * @param {string} targetName - The ambiguous name/description of the target.
    * @param {Entity[]} candidates - Array of matching entities.
-   * @returns {string}
+   * @returns {string} Message text listing the ambiguous options.
    */
   TARGET_AMBIGUOUS_CONTEXT: (actionVerb, targetName, candidates) => {
-    // TICKET 4.4: Uses refactored getDisplayName
-    const names = candidates.map((m) => getDisplayName(m)).join(', ');
+    const names = candidates
+      .map((m) =>
+        getEntityDisplayName(
+          m,
+          m && typeof m.id === 'string' ? m.id : 'an item'
+        )
+      )
+      .join(', ');
     return `Which '${targetName}' did you want to ${actionVerb}? (${names})`;
   },
 
@@ -118,7 +87,7 @@ export const TARGET_MESSAGES = {
    *
    * @param {string} directionInput - The ambiguous direction string entered by the user (e.g., 'west').
    * @param {string[]} connectionNames - An array of display names for the matching connection entities (e.g., ['West Gate', 'Western Arch']).
-   * @returns {string}
+   * @returns {string} Message text listing direction options.
    */
   AMBIGUOUS_DIRECTION: (directionInput, connectionNames) => {
     const namesList =
@@ -136,7 +105,7 @@ export const TARGET_MESSAGES = {
    * Prompt when an action requires a target but none was provided.
    *
    * @param {string} verb - The action verb (e.g., 'Attack', 'Take').
-   * @returns {string} Example: "Attack what?"
+   * @returns {string} Example message like "Attack what?"
    */
   PROMPT_WHAT: (verb) =>
     `${verb.charAt(0).toUpperCase() + verb.slice(1)} what?`,
@@ -148,7 +117,7 @@ export const TARGET_MESSAGES = {
    * Error indicating a required component is missing on the player or relevant entity.
    *
    * @param {string} compName - Name of the missing component (e.g., 'Inventory', 'Position').
-   * @returns {string}
+   * @returns {string} Error message for missing component.
    */
   INTERNAL_ERROR_COMPONENT: (compName) =>
     `(Internal Error: Player is missing ${compName} capability.)`,
@@ -174,7 +143,7 @@ export const TARGET_MESSAGES = {
    * Default feedback when looking at an entity that has no specific DescriptionComponent text.
    *
    * @param {string} targetName - The display name of the target entity. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Fallback description message.
    */
   // TICKET 4.4: This message is a fallback if the *description* component is missing.
   // The LOOK_DEFAULT_DESCRIPTION *itself* shouldn't call getDisplayDescription.
@@ -199,14 +168,14 @@ export const TARGET_MESSAGES = {
    * Feedback when trying to move in a direction that is locked. Can be overridden by connection data.
    *
    * @param {string} direction - The direction attempted.
-   * @returns {string}
+   * @returns {string} Message text for locked direction.
    */
   MOVE_LOCKED: (direction) => `The way ${direction} is locked.`,
   /**
    * Feedback when connection data for a direction is invalid (e.g., missing target).
    *
    * @param {string} direction - The direction attempted.
-   * @returns {string}
+   * @returns {string} Message for invalid connection data.
    */
   MOVE_INVALID_CONNECTION: (direction) =>
     `The way ${direction} seems improperly constructed.`,
@@ -214,7 +183,7 @@ export const TARGET_MESSAGES = {
    * Feedback when the target location definition for a connection is missing or invalid.
    *
    * @param {string} direction - The direction attempted.
-   * @returns {string}
+   * @returns {string} Message when target definition is invalid.
    */
   MOVE_BAD_TARGET_DEF: (direction) =>
     `Something is wrong with the passage leading ${direction}.`,
@@ -226,17 +195,21 @@ export const TARGET_MESSAGES = {
    * Feedback when movement is blocked because the blocking entity is locked.
    *
    * @param {string} blockerName - The display name of the blocking entity. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Message when movement is blocked by the entity.
    */
   MOVE_BLOCKED_LOCKED: (blockerName) => `The ${blockerName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
   /**
    * Generic feedback when movement is blocked by an entity (e.g., closed door).
    *
    * @param {string} blockerName - The display name of the blocking entity. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Message when movement is blocked.
    */
   MOVE_BLOCKED_GENERIC: (blockerName) => `The ${blockerName} blocks the way.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
-  /** Feedback when movement is blocked because the referenced blocker entity could not be found. */
+  /**
+   * Feedback when movement is blocked because the referenced blocker entity could not be found.
+   *
+   * @returns {string} Message indicating the blocker entity is missing.
+   */
   MOVE_BLOCKER_NOT_FOUND: () =>
     "The way seems blocked by something that isn't there anymore.",
 
@@ -244,7 +217,7 @@ export const TARGET_MESSAGES = {
    * Feedback when an entity is successfully opened.
    *
    * @param {string} targetName - The display name of the opened entity. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Confirmation text for a successful open.
    */
   OPEN_SUCCESS: (targetName) => `You open the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
@@ -252,7 +225,7 @@ export const TARGET_MESSAGES = {
    * Default feedback when opening an entity fails for an unspecified or default reason.
    *
    * @param {string} targetName - The display name of the entity that failed to open. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Message when entity cannot be opened.
    */
   OPEN_FAILED_DEFAULT: (targetName) => `You cannot open the ${targetName}.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
@@ -260,7 +233,7 @@ export const TARGET_MESSAGES = {
    * Feedback when attempting to open an entity that is already open.
    *
    * @param {string} targetName - The display name of the already open entity. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Message indicating entity is already open.
    */
   OPEN_FAILED_ALREADY_OPEN: (targetName) =>
     `The ${targetName} is already open.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
@@ -269,7 +242,7 @@ export const TARGET_MESSAGES = {
    * Feedback when attempting to open an entity that is locked.
    *
    * @param {string} targetName - The display name of the locked entity. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Message indicating entity is locked.
    */
   OPEN_FAILED_LOCKED: (targetName) => `The ${targetName} is locked.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
 
@@ -277,7 +250,7 @@ export const TARGET_MESSAGES = {
    * Feedback when attempting to open an entity that lacks the OpenableComponent or capability.
    *
    * @param {string} targetName - The display name of the entity that cannot be opened. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Message when entity cannot be opened at all.
    */
   OPEN_FAILED_NOT_OPENABLE: (targetName) =>
     `The ${targetName} cannot be opened.`, // TICKET 4.4: Relies on caller passing result of getDisplayName
@@ -289,7 +262,7 @@ export const TARGET_MESSAGES = {
    * Feedback when an item requires an explicit target but none was provided or resolved.
    *
    * @param {string} itemName - The display name of the item. (Uses getDisplayName upstream)
-   * @returns {string}
+   * @returns {string} Message prompting for a target entity.
    */
   USE_REQUIRES_TARGET: (itemName) =>
     `What do you want to use the ${itemName} on?`, // TICKET 4.4: Relies on caller passing result of getDisplayName
