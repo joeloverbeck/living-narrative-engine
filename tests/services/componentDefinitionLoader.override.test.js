@@ -1,9 +1,10 @@
-// src/tests/core/services/componentDefinitionLoader.override.test.js
+// src/tests/services/componentDefinitionLoader.override.test.js
 
 // --- Imports (remain the same) ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ComponentLoader from '../../src/loaders/componentLoader.js'; // Corrected import name
-import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader.js'; // Added base class import
+import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader.js';
+import { CORE_MOD_ID } from '../../src/constants/core'; // Added base class import
 
 // --- Mock Service Factories (remain the same) ---
 // [Mocks omitted for brevity - use the ones provided]
@@ -237,13 +238,12 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
   // --- Shared Test Data ---
   const sharedComponentIdFromFile = 'shared:position';
   const baseComponentId = 'position';
-  const coreModId = 'core';
   const fooModId = 'foo';
   const sharedFilename = 'position.component.json';
   const componentDefSchemaId =
     'http://example.com/schemas/component-definition.schema.json';
   const registryCategory = 'components';
-  const coreQualifiedId = `${coreModId}:${baseComponentId}`;
+  const coreQualifiedId = `${CORE_MOD_ID}:${baseComponentId}`;
   const fooQualifiedId = `${fooModId}:${baseComponentId}`;
   const coreSharedPositionPath = `./data/mods/core/components/${sharedFilename}`;
   const coreSharedPositionDef = createMockComponentDefinition(
@@ -255,7 +255,7 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     },
     'Core Position Definition'
   );
-  const coreManifest = createMockModManifest(coreModId, [sharedFilename]);
+  const coreManifest = createMockModManifest(CORE_MOD_ID, [sharedFilename]);
   const fooSharedPositionPath = `./data/mods/foo/components/${sharedFilename}`;
   const fooSharedPositionDef = createMockComponentDefinition(
     sharedComponentIdFromFile,
@@ -309,7 +309,7 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     mockResolver.resolveModContentPath.mockImplementation(
       (modId, typeName, filename) => {
         if (
-          modId === coreModId &&
+          modId === CORE_MOD_ID &&
           typeName === registryCategory &&
           filename === sharedFilename
         )
@@ -333,13 +333,13 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     console.log('--- Starting Phase 1 Load ---');
     // Base class loadItemsForMod returns a summary object
     const loadResultCore = await loader.loadItemsForMod(
-      coreModId,
+      CORE_MOD_ID,
       coreManifest,
       'components',
       'components',
       'components'
     );
-    expect(loadResultCore.count).toBe(1); // Verify core loaded 1 item
+    expect(loadResultCore.count).toBe(1);
     expect(loadResultCore.errors).toBe(0);
     expect(loadResultCore.overrides).toBe(0);
     console.log('--- Finished Phase 1 Load ---');
@@ -348,7 +348,7 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     const expectedStoredCoreObject = {
       ...coreSharedPositionDef,
       id: coreQualifiedId,
-      modId: coreModId,
+      modId: CORE_MOD_ID,
       _sourceFile: sharedFilename,
     };
     expect(mockRegistry.store).toHaveBeenCalledTimes(1);

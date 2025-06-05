@@ -1,4 +1,4 @@
-// src/core/turns/factories/ConcreteTurnStateFactory.js
+// src/turns/factories/ConcreteTurnStateFactory.js
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { ITurnStateFactory } from '../interfaces/ITurnStateFactory.js';

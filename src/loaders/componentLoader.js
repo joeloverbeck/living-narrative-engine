@@ -1,4 +1,4 @@
-// src/core/loaders/componentLoader.js
+// src/loaders/componentLoader.js
 
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 

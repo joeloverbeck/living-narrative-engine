@@ -1,4 +1,4 @@
-// src/core/commandProcessor.js
+// src/commands/commandProcessor.js
 
 // --- Static Imports ---
 import ResolutionStatus from '../types/resolutionStatus.js';
@@ -16,9 +16,9 @@ import ResolutionStatus from '../types/resolutionStatus.js';
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../services/targetResolutionService.js').default} TargetResolutionService_Default */
-/** @typedef {import('../services/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
-/** @typedef {import('../services/targetResolutionService.js').TargetResolutionResult} TargetResolutionResult */
+/** @typedef {import('../actions/targeting/targetResolutionService.js').default} TargetResolutionService_Default */
+/** @typedef {import('../actions/targeting/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
+/** @typedef {import('../actions/targeting/targetResolutionService.js').TargetResolutionResult} TargetResolutionResult */
 
 // --- Type Definitions ---
 /**

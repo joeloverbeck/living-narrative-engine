@@ -1,4 +1,4 @@
-// src/core/interpreters/commandOutcomeInterpreter.js
+// src/commands/interpreters/commandOutcomeInterpreter.js
 
 /**
  * @file Implements the CommandOutcomeInterpreter class responsible for

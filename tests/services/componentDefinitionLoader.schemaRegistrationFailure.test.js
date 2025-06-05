@@ -1,4 +1,4 @@
-// src/tests/core/services/componentDefinitionLoader.schemaRegistrationFailure.test.js
+// src/tests/services/componentDefinitionLoader.schemaRegistrationFailure.test.js
 
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';

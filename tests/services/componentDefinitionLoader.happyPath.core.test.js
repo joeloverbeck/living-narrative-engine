@@ -1,7 +1,8 @@
-// src/tests/core/services/componentDefinitionLoader.happyPath.core.test.js
+// src/tests/services/componentDefinitionLoader.happyPath.core.test.js
 
 import ComponentLoader from '../../src/loaders/componentLoader.js'; // Corrected path based on project structure
-import { beforeEach, describe, expect, jest, test } from '@jest/globals'; // Import Jest utilities
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { CORE_MOD_ID } from '../../src/constants/core'; // Import Jest utilities
 
 /**
  * @typedef {import('../../src/interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -287,9 +288,9 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
     },
   };
 
-  // --- Define the 'core' mod manifest ---
+  // --- Define the CORE_MOD_ID mod manifest ---
   const mockCoreManifest = {
-    id: 'core',
+    id: CORE_MOD_ID,
     name: 'Core Content',
     version: '1.0.0',
     content: { components: [coreHealthFilename, corePositionFilename] },
@@ -324,7 +325,7 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
     // Resolver: Ensure it returns the expected paths (already done by default mock, but explicit is ok too)
     mockResolver.resolveModContentPath.mockImplementation(
       (modId, contentTypeDir, filename) => {
-        if (modId === 'core' && contentTypeDir === 'components') {
+        if (modId === CORE_MOD_ID && contentTypeDir === 'components') {
           if (filename === coreHealthFilename) return coreHealthPath;
           if (filename === corePositionFilename) return corePositionPath;
         }
@@ -387,7 +388,7 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
     // --- Action ---
     // Call loadItemsForMod with all required arguments
     const promise = componentLoader.loadItemsForMod(
-      'core', // modId
+      CORE_MOD_ID, // modId
       mockCoreManifest, // modManifest
       'components', // contentKey
       'components', // contentTypeDir
@@ -413,14 +414,14 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
     expect(componentLoader._storeItemInRegistry).toHaveBeenCalledTimes(2);
     expect(componentLoader._storeItemInRegistry).toHaveBeenCalledWith(
       'components',
-      'core',
+      CORE_MOD_ID,
       coreHealthBaseId,
       coreHealthDef,
       coreHealthFilename
     );
     expect(componentLoader._storeItemInRegistry).toHaveBeenCalledWith(
       'components',
-      'core',
+      CORE_MOD_ID,
       corePositionBaseId,
       corePositionDef,
       corePositionFilename
@@ -433,13 +434,13 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
     const expectedStoredHealth = {
       ...coreHealthDef,
       id: coreHealthFinalId,
-      modId: 'core',
+      modId: CORE_MOD_ID,
       _sourceFile: coreHealthFilename,
     };
     const expectedStoredPosition = {
       ...corePositionDef,
       id: corePositionFinalId,
-      modId: 'core',
+      modId: CORE_MOD_ID,
       _sourceFile: corePositionFilename,
     };
     expect(mockRegistry.store).toHaveBeenCalledWith(
@@ -474,13 +475,13 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
     expect(componentLoader._validatePrimarySchema).toHaveBeenCalledWith(
       coreHealthDef,
       coreHealthFilename,
-      'core',
+      CORE_MOD_ID,
       coreHealthPath
     );
     expect(componentLoader._validatePrimarySchema).toHaveBeenCalledWith(
       corePositionDef,
       corePositionFilename,
-      'core',
+      CORE_MOD_ID,
       corePositionPath
     );
 

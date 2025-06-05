@@ -1,4 +1,4 @@
-// src/tests/core/services/componentDefinitionLoader.manifestErrors.test.js
+// src/tests/services/componentDefinitionLoader.manifestErrors.test.js
 
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';

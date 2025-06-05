@@ -1,4 +1,4 @@
-// tests/core/services/componentDefinitionLoader.test.js
+// tests/services/componentDefinitionLoader.test.js
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ComponentLoader from '../../src/loaders/componentLoader.js';

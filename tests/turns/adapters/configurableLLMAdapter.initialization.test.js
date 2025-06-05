@@ -73,7 +73,7 @@ describe('ConfigurableLLMAdapter - Initialization Handling', () => {
       error: true,
       message: 'LLM Prompt configuration schema validation failed.',
       stage: 'validation',
-      path: 'config/llm-configs.json',
+      path: 'dependencyInjection/llm-configs.json',
       validationErrors: [
         {
           errorType: 'SCHEMA_VALIDATION',

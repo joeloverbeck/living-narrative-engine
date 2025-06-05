@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import CommandParser from '../../src/commands/commandParser.js'; // Class under test
 // Import the actual dependency for type hinting and mocking purposes
-import GameDataRepository from '../../src/services/gameDataRepository.js';
+import GameDataRepository from '../../src/data/gameDataRepository.js';
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../src/actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -13,7 +13,7 @@ import GameDataRepository from '../../src/services/gameDataRepository.js';
 const mockGetAllActionDefinitions = jest.fn();
 
 // Mock the entire GameDataRepository module
-jest.mock('../../src/services/gameDataRepository.js', () => {
+jest.mock('../../src/data/gameDataRepository.js', () => {
   // Mock constructor function for GameDataRepository
   return jest.fn().mockImplementation(() => {
     // Instances created via 'new GameDataRepository()' in tests will have this structure

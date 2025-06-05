@@ -40,7 +40,7 @@ const mockLlmStrategy = {
   execute: jest.fn(),
 };
 
-// Base sample LLM config with all required fields for LLMModelConfig
+// Base sample LLM dependencyInjection with all required fields for LLMModelConfig
 const createBaseModelConfig = (id, overrides = {}) => ({
   configId: id,
   displayName: `Display ${id}`,
@@ -210,7 +210,7 @@ describe('ConfigurableLLMAdapter', () => {
 
         mockLogger.error.mockClear();
         const expectedErrorMessage =
-          'No active LLM configuration is set. Use setActiveLlm() or ensure a valid defaultConfigId is in the config file.';
+          'No active LLM configuration is set. Use setActiveLlm() or ensure a valid defaultConfigId is in the dependencyInjection file.';
         await expect(
           adapterWithNoActiveLLM.getAIDecision(gameSummary)
         ).rejects.toThrow(
@@ -226,7 +226,7 @@ describe('ConfigurableLLMAdapter', () => {
 
     describe('Active Configuration Validation (Ticket 21)', () => {
       const createInvalidTestSetup = async (invalidFieldOverride) => {
-        const baseConfigId = 'config-under-test';
+        const baseConfigId = 'dependencyInjection-under-test';
         // The configId that will be in the map key.
         // If invalidFieldOverride contains 'configId', that's the property inside the object.
         const internalConfigId = invalidFieldOverride.hasOwnProperty('configId')
@@ -264,9 +264,9 @@ describe('ConfigurableLLMAdapter', () => {
         await testAdapter.init({ llmConfigLoader: mockLlmConfigLoader });
         expect(testAdapter.isOperational()).toBe(true);
 
-        // This assertion should check the configId *property* of the loaded active config
+        // This assertion should check the configId *property* of the loaded active dependencyInjection
         const activeConfig = await testAdapter.getCurrentActiveLlmConfig();
-        // Corrected Assertion: The active config's internal configId should be what we set it to via invalidFieldOverride
+        // Corrected Assertion: The active dependencyInjection's internal configId should be what we set it to via invalidFieldOverride
         expect(activeConfig?.configId).toBe(internalConfigId);
 
         mockLogger.error.mockClear();
@@ -295,12 +295,12 @@ describe('ConfigurableLLMAdapter', () => {
           try {
             await testAdapter.getAIDecision(gameSummary);
           } catch (e) {
-            // The ID used in the error message for "Active LLM config '...' is invalid" should be the configId property of the active config
+            // The ID used in the error message for "Active LLM dependencyInjection '...' is invalid" should be the configId property of the active dependencyInjection
             const actualConfigIdInError = invalidFieldOverride.hasOwnProperty(
               'configId'
             )
               ? invalidFieldOverride.configId
-              : 'config-under-test';
+              : 'dependencyInjection-under-test';
             const displayIdInErrorMessage =
               actualConfigIdInError === null ||
               String(actualConfigIdInError).trim() === ''

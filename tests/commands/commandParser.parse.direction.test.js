@@ -1,12 +1,12 @@
-// src/tests/core/commands/commandParser.parse.direction.test.js
+// src/tests/commands/commandParser.parse.direction.test.js
 
 // --- Imports ---
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import CommandParser from '../../src/commands/commandParser.js'; // Adjusted path to CommandParser
-import { GameDataRepository } from '../../src/services/gameDataRepository.js'; // Adjusted path for GameDataRepository
+import { GameDataRepository } from '../../src/data/gameDataRepository.js'; // Adjusted path for GameDataRepository
 
 // --- Type Imports ---
-// Adjust paths assuming this test file is in src/tests/core/commands/
+// Adjust paths assuming this test file is in src/tests/commands/
 /** @typedef {import('../../../../actions/actionTypes.js').ParsedCommand} ParsedCommand */
 /** @typedef {import('../../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
@@ -15,7 +15,7 @@ import { GameDataRepository } from '../../src/services/gameDataRepository.js'; /
 const mockGetAllActionDefinitions = jest.fn();
 
 // Mock the GameDataRepository module
-jest.mock('../../src/services/gameDataRepository.js', () => {
+jest.mock('../../src/data/gameDataRepository.js', () => {
   // Adjusted path for mocking
   // Define the mock constructor function for GameDataRepository
   const MockGameDataRepository = jest.fn().mockImplementation(() => {

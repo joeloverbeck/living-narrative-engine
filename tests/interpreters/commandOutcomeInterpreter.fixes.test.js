@@ -1,4 +1,4 @@
-// src/tests/core/interpreters/commandOutcomeInterpreter.fixes.test.js
+// src/tests/interpreters/commandOutcomeInterpreter.fixes.test.js
 // --- FILE START ---
 
 import CommandOutcomeInterpreter from '../../src/commands/interpreters/commandOutcomeInterpreter.js';

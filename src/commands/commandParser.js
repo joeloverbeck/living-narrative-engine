@@ -1,8 +1,8 @@
-// src/core/commandParser.js
+// src/commands/commandParser.js
 
 // *** [REFACTOR-014-SUB-11] Updated Type Import ***
 // Add GameDataRepository import
-/** @typedef {import('../services/gameDataRepository.js').GameDataRepository} GameDataRepository */
+/** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 
 // Import ParsedCommand definition for return type hinting
 /** @typedef {import('../actions/actionTypes.js').ParsedCommand} ParsedCommand */
