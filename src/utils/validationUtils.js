@@ -6,10 +6,10 @@
  *
  * @param {*} dependency - The dependency instance to validate.
  * @param {string} dependencyName - The name of the dependency (for logging and error messages).
- * @param {object} [logger=console] - A logger instance (conforming to ILogger: info, error, debug, warn methods). Defaults to console.
- * @param {object} [options={}] - Validation options.
- * @param {string[]} [options.requiredMethods=[]] - An array of method names that must exist on the dependency.
- * @param {boolean} [options.isFunction=false] - Whether the dependency is expected to be a function.
+ * @param {object} [logger] - A logger instance (conforming to ILogger: info, error, debug, warn methods). Defaults to console.
+ * @param {object} [options] - Validation options.
+ * @param {string[]} [options.requiredMethods] - An array of method names that must exist on the dependency.
+ * @param {boolean} [options.isFunction] - Whether the dependency is expected to be a function.
  * @throws {Error} If the dependency is missing or does not meet validation criteria.
  */
 export function validateDependency(

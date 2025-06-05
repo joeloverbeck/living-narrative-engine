@@ -20,7 +20,8 @@ truly living narratives.
 
 ## Getting Started
 
-This project primarily runs in the browser using JavaScript, with a Node.js-based proxy server for handling requests to Large Language Models (LLMs).
+This project primarily runs in the browser using JavaScript, with a Node.js-based proxy server for handling requests to
+Large Language Models (LLMs).
 
 ### Prerequisites
 
@@ -28,34 +29,35 @@ Ensure you have Node.js and npm installed. You can download them from [https://n
 
 ### Installation & Setup
 
-1.  **Clone the repository (if you haven't already)**
+1. **Clone the repository (if you haven't already)**
 
-    git clone https://github.com/joeloverbeck/living-narrative-engine.git
-    cd living-narrative-engine
+   git clone https://github.com/joeloverbeck/living-narrative-engine.git
+   cd living-narrative-engine
 
-2.  **Install root project dependencies**
-    Navigate to the root directory of the cloned project (e.g., `living-narrative-engine`) and run:
+2. **Install root project dependencies**
+   Navigate to the root directory of the cloned project (e.g., `living-narrative-engine`) and run:
 
-    npm install
+   npm install
 
-3.  **Install LLM Proxy Server dependencies**
-    Navigate to the `llm-proxy-server` subdirectory within the project:
+3. **Install LLM Proxy Server dependencies**
+   Navigate to the `llm-proxy-server` subdirectory within the project:
 
-    cd llm-proxy-server
+   cd llm-proxy-server
 
-    Then, install its specific dependencies:
+   Then, install its specific dependencies:
 
-    npm install
+   npm install
 
-    Once done, return to the root project directory:
+   Once done, return to the root project directory:
 
-    cd ..
+   cd ..
 
 ### Running locally
 
-To run the application, you will need to start two separate processes in two different command line terminals or "windows":
+To run the application, you will need to start two separate processes in two different command line terminals or "
+windows":
 
-1.  **Start the LLM Proxy Server:**
+1. **Start the LLM Proxy Server:**
 
 - Open a new command line terminal.
 - Navigate to the `llm-proxy-server` directory:
@@ -68,7 +70,7 @@ To run the application, you will need to start two separate processes in two dif
 
   This server will handle API requests related to LLM interactions. Keep this terminal window open.
 
-2.  **Start the Main Application:**
+2. **Start the Main Application:**
 
 - Open a separate new command line terminal.
 - Navigate to the root directory of the project (e.g., `living-narrative-engine`):
@@ -79,7 +81,8 @@ To run the application, you will need to start two separate processes in two dif
 
   npm run start
 
-  This will typically open the application in your default web browser (e.g., at a URL like `http://localhost:3000` or similar, depending on your project's `start` script configuration). Check the terminal output for the exact URL.
+  This will typically open the application in your default web browser (e.g., at a URL like `http://localhost:3000` or
+  similar, depending on your project's `start` script configuration). Check the terminal output for the exact URL.
 
 ## Configuration
 

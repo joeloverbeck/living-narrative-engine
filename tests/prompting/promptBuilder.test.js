@@ -11,7 +11,7 @@ import {
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { LLMConfigService } from '../../src/llms/llmConfigService.js'; // Added
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
-import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler'; // Added
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js'; // Added
 // Import assembler types for JSDoc
 /** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
 /** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */

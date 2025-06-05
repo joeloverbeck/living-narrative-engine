@@ -12,7 +12,7 @@ import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { HttpConfigurationProvider } from '../../src/configuration/httpConfigurationProvider.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
-import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler'; // For mocking
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js'; // For mocking
 // Import assembler types for JSDoc
 /** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
 /** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */

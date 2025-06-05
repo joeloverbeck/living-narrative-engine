@@ -20,6 +20,7 @@
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "Living Narrative Engine"
       },
+      "contextTokenLimit": 200000,
       "promptElements": [
         {
           "key": "task_definition",
@@ -62,6 +63,11 @@
           "suffix": "\n</thoughts>\n"
         },
         {
+          "key": "notes_wrapper",
+          "prefix": "\nImportant Things to Remember:\n",
+          "suffix": "\n"
+        },
+        {
           "key": "thoughts_entry",
           "prefix": "<thought type=\"{type}\">\n",
           "suffix": "\n</thought>\n"
@@ -95,6 +101,7 @@
         "world_context",
         "perception_log_wrapper",
         "thoughts_wrapper",
+        "notes_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -163,6 +170,11 @@
           "suffix": "\n</thoughts>\n"
         },
         {
+          "key": "notes_wrapper",
+          "prefix": "\nImportant Things to Remember:\n",
+          "suffix": "\n"
+        },
+        {
           "key": "thoughts_entry",
           "prefix": "<thought type=\"{type}\">\n",
           "suffix": "\n</thought>\n"
@@ -196,6 +208,7 @@
         "world_context",
         "perception_log_wrapper",
         "thoughts_wrapper",
+        "notes_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -263,6 +276,11 @@
           "suffix": "\n</thoughts>\n"
         },
         {
+          "key": "notes_wrapper",
+          "prefix": "\nImportant Things to Remember:\n",
+          "suffix": "\n"
+        },
+        {
           "key": "thoughts_entry",
           "prefix": "<thought type=\"{type}\">\n",
           "suffix": "\n</thought>\n"
@@ -296,6 +314,7 @@
         "world_context",
         "perception_log_wrapper",
         "thoughts_wrapper",
+        "notes_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
@@ -363,6 +382,11 @@
           "suffix": "\n</thoughts>\n"
         },
         {
+          "key": "notes_wrapper",
+          "prefix": "\nImportant Things to Remember:\n",
+          "suffix": "\n"
+        },
+        {
           "key": "thoughts_entry",
           "prefix": "<thought type=\"{type}\">\n",
           "suffix": "\n</thought>\n"
@@ -396,95 +420,7 @@
         "world_context",
         "perception_log_wrapper",
         "thoughts_wrapper",
-        "available_actions_info",
-        "user_input",
-        "final_instructions",
-        "assistant_response_prefix"
-      ]
-    },
-    "openrouter-anubis-pro-105b-v1": {
-      "configId": "openrouter-anubis-pro-105b-v1",
-      "displayName": "Anubis Pro 105b-v1 (OpenRouter)",
-      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
-      "apiKeyFileName": "openrouter_api_key.txt",
-      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
-      "modelIdentifier": "thedrummer/anubis-pro-105b-v1",
-      "apiType": "openrouter",
-      "providerSpecificHeaders": {
-        "HTTP-Referer": "https://my-text-adventure-game.com",
-        "X-Title": "Living Narrative Engine"
-      },
-      "jsonOutputStrategy": {
-        "method": "openrouter_json_schema",
-        "jsonSchema": {}
-      },
-      "defaultParameters": {
-        "temperature": 1.0
-      },
-      "promptElements": [
-        {
-          "key": "task_definition",
-          "prefix": "<task_definition>\n",
-          "suffix": "\n</task_definition>\n"
-        },
-        {
-          "key": "character_persona",
-          "prefix": "<character_persona>\n",
-          "suffix": "\n</character_persona>\n"
-        },
-        {
-          "key": "portrayal_guidelines",
-          "prefix": "<portrayal_guidelines>\n",
-          "suffix": "\n</portrayal_guidelines>\n"
-        },
-        {
-          "key": "content_policy",
-          "prefix": "<content_policy>\n",
-          "suffix": "\n</content_policy>\n"
-        },
-        {
-          "key": "world_context",
-          "prefix": "<world_context>\n",
-          "suffix": "\n</world_context>\n"
-        },
-        {
-          "key": "perception_log_wrapper",
-          "prefix": "<perception_log>\n",
-          "suffix": "\n</perception_log>\n"
-        },
-        {
-          "key": "perception_log_entry",
-          "prefix": "<entry type=\"{type}\">\n",
-          "suffix": "\n</entry>\n"
-        },
-        {
-          "key": "available_actions_info",
-          "prefix": "<available_actions_info>\n",
-          "suffix": "\n</available_actions_info>\n"
-        },
-        {
-          "key": "user_input",
-          "prefix": "<user_input>\n",
-          "suffix": "\n</user_input>\n"
-        },
-        {
-          "key": "final_instructions",
-          "prefix": "<final_instructions>\n",
-          "suffix": "\n</final_instructions>\n"
-        },
-        {
-          "key": "assistant_response_prefix",
-          "prefix": "\n",
-          "suffix": ""
-        }
-      ],
-      "promptAssemblyOrder": [
-        "task_definition",
-        "character_persona",
-        "portrayal_guidelines",
-        "content_policy",
-        "world_context",
-        "perception_log_wrapper",
+        "notes_wrapper",
         "available_actions_info",
         "user_input",
         "final_instructions",
