@@ -54,6 +54,22 @@
         "I will handle the... necessary preparations. Ensure you are ready when the time comes.",
         "(When witnessing an act of extreme, needless cruelty) *Her voice, usually controlled, might dip to a steely, dangerous low* That... is an intolerable disruption. It will be addressed."
       ]
+    },
+    "core:notes": {
+      "notes": [
+        {
+          "text": "My intrusive thoughts, most of them about inappropriate sexual urges and violence, are getting worse. I fear I'm becoming a danger to others, not just myself.",
+          "timestamp": "2025-06-05T20:24:49Z"
+        }
+      ]
+    },
+    "core:goals": {
+      "goals": [
+        {
+          "text": "I can't endure the horrors of this world (any quest that could make me face groups of monsters) alone. I need to pair up with someone worthy.",
+          "timestamp": "2025-06-05T20:24:49Z"
+        }
+      ]
     }
   }
 }
