@@ -225,13 +225,18 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     }
 
     // Create or retrieve existing notes component
-    let notesComp = actorEntity.components?.[NOTES_COMPONENT_ID];
+    const getNotesComp = () =>
+      typeof actorEntity.getComponentData === 'function'
+        ? actorEntity.getComponentData(NOTES_COMPONENT_ID)
+        : actorEntity.components?.[NOTES_COMPONENT_ID];
+
+    let notesComp = getNotesComp();
     if (!notesComp) {
       // Create via the canonical pathway so that schema validation fires
       this.#entityManager?.addComponent?.(actorEntity.id, NOTES_COMPONENT_ID, {
         notes: [],
       });
-      notesComp = actorEntity.components[NOTES_COMPONENT_ID];
+      notesComp = getNotesComp();
     }
 
     if (!Array.isArray(notesComp.notes)) {
