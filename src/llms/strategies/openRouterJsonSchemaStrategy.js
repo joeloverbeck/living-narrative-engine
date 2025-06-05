@@ -180,7 +180,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
         { llmId }
       );
       const toolCall = message.tool_calls[0];
-      // Using the constant name here, as the json_schema mode doesn't have a 'toolName' in its config.
+      // Using the constant name here, as the json_schema mode doesn't have a 'toolName' in its dependencyInjection.
       // This fallback assumes a specific tool structure if 'json_schema' mode fails to populate 'message.content'.
       const expectedToolNameForFallback =
         OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name;

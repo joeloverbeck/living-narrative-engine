@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-// tests/core/services/modVersionValidator.test.js
+// tests/services/modVersionValidator.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { cloneDeep } from 'lodash'; // Using lodash cloneDeep as requested

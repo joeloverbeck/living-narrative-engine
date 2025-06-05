@@ -1,4 +1,4 @@
-// src/core/services/modLoadOrderResolver.js
+// src/modding/modLoadOrderResolver.js
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger}  ILogger
@@ -6,6 +6,7 @@
  */
 
 import ModDependencyError from '../errors/modDependencyError.js';
+import { CORE_MOD_ID } from '../constants/core';
 
 /*─────────────────────────────────────────────────────────────────────────*/
 /* Helper – addEdge                                                        */
@@ -52,15 +53,15 @@ function buildDependencyGraph(requestedIds, manifestsMap) {
 
   const nodes = new Set();
   const edges = new Map();
-  originalCase('core');
+  originalCase(CORE_MOD_ID);
 
   for (const reqId of requestedIds) {
     const orig = originalCase(reqId);
     nodes.add(orig);
 
-    if (orig.toLowerCase() !== 'core') {
-      nodes.add('core');
-      addEdge(edges, 'core', orig);
+    if (orig.toLowerCase() !== CORE_MOD_ID) {
+      nodes.add(CORE_MOD_ID);
+      addEdge(edges, CORE_MOD_ID, orig);
     }
   }
 
@@ -202,7 +203,7 @@ function resolveOrder(requestedIds, manifestsMap, logger) {
     if (!reqIndex.has(lc)) reqIndex.set(lc, i);
   });
   const priorityOf = (id) =>
-    id.toLowerCase() === 'core'
+    id.toLowerCase() === CORE_MOD_ID
       ? -1
       : (reqIndex.get(id.toLowerCase()) ?? Number.MAX_SAFE_INTEGER);
 
@@ -246,10 +247,9 @@ function resolveOrder(requestedIds, manifestsMap, logger) {
     const seen = new Set();
     const order = [];
 
-    // inject core first if it will exist in the final list
-    if (sorted.some((id) => id.toLowerCase() === 'core')) {
-      order.push('core');
-      seen.add('core');
+    if (sorted.some((id) => id.toLowerCase() === CORE_MOD_ID)) {
+      order.push(CORE_MOD_ID);
+      seen.add(CORE_MOD_ID);
     }
 
     for (const id of requestedIds) {

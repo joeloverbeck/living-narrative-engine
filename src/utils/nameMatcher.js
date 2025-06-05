@@ -2,7 +2,7 @@
 
 import { ResolutionStatus } from '../types/resolutionStatus.js';
 
-/** @typedef {import('../core/interfaces/ILogger.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
 
 /**
  * @description Represents a candidate item for name matching.

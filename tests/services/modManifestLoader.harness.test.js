@@ -1,4 +1,4 @@
-// tests/core/services/modManifestLoader.harness.test.js
+// tests/services/modManifestLoader.harness.test.js
 // -----------------------------------------------------------------------------
 // MODLOADER‑005 F — exhaustive branch & integration harness
 // -----------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ModManifestLoader from '../../src/modding/modManifestLoader.js';
-import AjvSchemaValidator from '../../src/services/ajvSchemaValidator.js';
+import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 
 /* -------------------------------------------------------------------------- */
 /* Local helper factories (kept small to avoid cross‑test bleed)               */

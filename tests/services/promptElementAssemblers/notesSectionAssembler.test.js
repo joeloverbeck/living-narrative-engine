@@ -1,4 +1,4 @@
-import { NotesSectionAssembler } from '../../../src/services/promptElementAssemblers/notesSectionAssembler.js';
+import { NotesSectionAssembler } from '../../../src/prompting/assembling/notesSectionAssembler.js';
 import { describe, expect, it } from '@jest/globals';
 
 const assembler = new NotesSectionAssembler({ logger: console });

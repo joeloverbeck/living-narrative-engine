@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 // Core services under test
 import WorldLoader from '../../src/loaders/worldLoader.js';
 import ModManifestLoader from '../../src/modding/modManifestLoader.js';
-import AjvSchemaValidator from '../../src/services/ajvSchemaValidator.js';
+import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
 
 /* -------------------------------------------------------------------------- */
@@ -134,7 +134,7 @@ const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
       };
     }
 
-    // Match game config fetch - THIS SHOULD NOT BE HIT IN THIS TEST due to gameConfigLoader mock
+    // Match game dependencyInjection fetch - THIS SHOULD NOT BE HIT IN THIS TEST due to gameConfigLoader mock
     if (path.includes('/game.json')) {
       console.warn('Fetcher mock was unexpectedly asked to fetch game.json!'); // Add warning
       return { mods: ['basegame', 'badmod'] }; // Return something valid anyway

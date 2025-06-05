@@ -1,4 +1,4 @@
-// src/core/errors/modDependencyError.js
+// src/errors/modDependencyError.js
 
 /**
  * Custom error class for fatal mod dependency issues.

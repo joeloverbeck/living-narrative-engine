@@ -13,7 +13,6 @@ export class NodeFileSystemReader {
   /**
    * Asynchronously reads the entire contents of a file using Node.js `fs.readFile`.
    * This method fulfills the contract of IFileSystemReader#readFile.
-   *
    * @async
    * @param {string} filePath - The path to the file to be read.
    * @param {string} encoding - The character encoding to use (e.g., 'utf-8').

@@ -1,4 +1,4 @@
-// src/core/services/modeManifestLoader.js
+// src/modding/modManifestLoader.js
 
 /**
  * @file Defines the ModManifestLoader class, responsible for

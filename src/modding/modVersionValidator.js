@@ -1,4 +1,4 @@
-// src/core/services/modVersionValidator.js
+// src/modding/modVersionValidator.js
 
 import engineVersionSatisfies from '../utils/engineVersionSatisfies.js';
 import ModDependencyError from '../errors/modDependencyError.js';

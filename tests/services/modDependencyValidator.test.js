@@ -1,4 +1,4 @@
-// tests/core/services/modDependencyValidator.test.js
+// tests/services/modDependencyValidator.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ModDependencyValidator from '../../src/modding/modDependencyValidator.js';

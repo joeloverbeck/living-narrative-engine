@@ -1,4 +1,4 @@
-// src/core/services/modDependencyValidator.js
+// src/modding/modDependencyValidator.js
 
 import semver from 'semver'; // AC: Use semver@^7
 import ModDependencyError from '../errors/modDependencyError.js'; // AC: Use custom Error type

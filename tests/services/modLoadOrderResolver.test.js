@@ -1,4 +1,4 @@
-// src/tests/core/services/modLoadOrderResolver.test.js
+// src/tests/services/modLoadOrderResolver.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
@@ -6,6 +6,7 @@ import {
   resolveOrder,
 } from '../../src/modding/modLoadOrderResolver.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 
 /**
  * Convenience factory for a minimal manifest object.
@@ -153,8 +154,8 @@ describe('buildDependencyGraph (Ticket T‑2)', () => {
     const requested = ['modX'];
     const manifests = createEmptyManifestMap();
     const graph = buildDependencyGraph(requested, manifests);
-    expect(graph.edges.get('core')).toBeDefined();
-    expect(graph.edges.get('core').has('modX')).toBe(true);
+    expect(graph.edges.get(CORE_MOD_ID)).toBeDefined();
+    expect(graph.edges.get(CORE_MOD_ID).has('modX')).toBe(true);
   });
 
   it('does NOT mutate the input requestedIds array or manifestsMap', () => {
@@ -191,7 +192,7 @@ describe('resolveOrder (Ticket T‑3)', () => {
       ['c', makeManifest('C')],
     ]);
     const order = resolveOrder(requested, manifests, mockLogger);
-    expect(order).toEqual(['core', 'A', 'B', 'C']);
+    expect(order).toEqual([CORE_MOD_ID, 'A', 'B', 'C']);
   });
 
   it('cycle A↔B throws ModDependencyError containing both IDs', () => {
@@ -224,7 +225,6 @@ describe('resolveOrder (Ticket T‑3)', () => {
     const order = resolveOrder(requested, manifests, mockLogger);
     const durationMs = Date.now() - start;
 
-    // core + N mods
     expect(order.length).toBe(N + 1);
     // should finish well under a second on typical CI machines
     expect(durationMs).toBeLessThan(500);

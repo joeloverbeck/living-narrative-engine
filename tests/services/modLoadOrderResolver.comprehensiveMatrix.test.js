@@ -1,8 +1,9 @@
-// src/tests/core/services/modLoadOrderResolver.comprehensiveMatrix.test.js
+// src/tests/services/modLoadOrderResolver.comprehensiveMatrix.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { resolveOrder } from '../../src/modding/modLoadOrderResolver.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
+import { CORE_MOD_ID } from '../../src/constants/core';
 
 /**
  * Convenience factory for a minimal manifest object.
@@ -49,10 +50,10 @@ describe('T‑7 Comprehensive Matrix – happy paths', () => {
   });
 
   it('single‑mod scenario: requested=[core] yields [core]', () => {
-    const requested = ['core'];
-    const manifests = new Map([['core', makeManifest('core')]]);
+    const requested = [CORE_MOD_ID];
+    const manifests = new Map([[CORE_MOD_ID, makeManifest(CORE_MOD_ID)]]);
     const order = resolveOrder(requested, manifests, logger);
-    expect(order).toEqual(['core']);
+    expect(order).toEqual([CORE_MOD_ID]);
   });
 
   it('linear chain A→B→C resolves to [core,A,B,C]', () => {
@@ -63,7 +64,7 @@ describe('T‑7 Comprehensive Matrix – happy paths', () => {
       ['c', makeManifest('C', [{ id: 'B', required: true }])],
     ]);
     const order = resolveOrder(requested, manifests, logger);
-    expect(order).toEqual(['core', 'A', 'B', 'C']);
+    expect(order).toEqual([CORE_MOD_ID, 'A', 'B', 'C']);
   });
 
   it('branch graph (A→C, B→C) keeps original relative order', () => {
@@ -80,7 +81,7 @@ describe('T‑7 Comprehensive Matrix – happy paths', () => {
       ],
     ]);
     const order = resolveOrder(requested, manifests, logger);
-    expect(order).toEqual(['core', 'A', 'B', 'C']);
+    expect(order).toEqual([CORE_MOD_ID, 'A', 'B', 'C']);
   });
 
   it('optional dependency present – B (optional→A) with A requested', () => {
@@ -90,7 +91,7 @@ describe('T‑7 Comprehensive Matrix – happy paths', () => {
       ['b', makeManifest('B', [{ id: 'A', required: false }])],
     ]);
     const order = resolveOrder(requested, manifests, logger);
-    expect(order).toEqual(['core', 'A', 'B']);
+    expect(order).toEqual([CORE_MOD_ID, 'A', 'B']);
   });
 
   it('optional dependency absent – B (optional→A) without A requested', () => {
@@ -99,7 +100,7 @@ describe('T‑7 Comprehensive Matrix – happy paths', () => {
       ['b', makeManifest('B', [{ id: 'A', required: false }])],
     ]);
     const order = resolveOrder(requested, manifests, logger);
-    expect(order).toEqual(['core', 'B']);
+    expect(order).toEqual([CORE_MOD_ID, 'B']);
     // ensure A was not implicitly introduced
     expect(order).not.toContain('A');
   });
@@ -155,7 +156,7 @@ describe('T‑7 Comprehensive Matrix – failure paths', () => {
     const requested = ['A'];
     const manifests = new Map([['a', makeManifest('A')]]);
     const order = resolveOrder(requested, manifests, logger);
-    expect(order[0].toLowerCase()).toBe('core');
-    expect(order).toEqual(['core', 'A']);
+    expect(order[0].toLowerCase()).toBe(CORE_MOD_ID);
+    expect(order).toEqual([CORE_MOD_ID, 'A']);
   });
 });
