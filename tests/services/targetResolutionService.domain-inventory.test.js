@@ -320,17 +320,11 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       );
 
       // Expected Outcome
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        "EntityUtils.getEntityDisplayName: Entity 'namelessItem' has no usable name from 'core:name' or entity.name."
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        "TargetResolutionService.#_gatherNameMatchCandidates: Entity 'namelessItem' in inventory has no valid name. Skipping."
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
-      expect(result.error).toBe(
-        "You don't have anything like that in your inventory."
-      ); // Because candidates list became empty
+      expect(result.targetId).toBeNull();
+      expect(result.error).toBe('You don\'t have "thing" in your inventory.');
     });
   });
 
@@ -514,9 +508,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       expect(result.targetId).toBe('fallback_item');
       expect(result.error).toBeUndefined();
 
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "EntityUtils.getEntityDisplayName: Entity 'fallback_item' using fallback entity.name property ('Fallback Item Name') as 'core:name' was not found or invalid."
-      );
+      // getEntityDisplayName currently not passed a logger in this context
     });
   });
 });

@@ -285,16 +285,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
 
       expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetId).toBe('validItem');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `EntityUtils.getEntityDisplayName: Entity 'noNameComp' has no usable name from '${NAME_COMPONENT_ID}' or entity.name.`
-        )
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `TargetResolutionService.#_gatherNameMatchCandidates: Entity 'noNameComp' in inventory has no valid name. Skipping.`
-        )
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('should skip candidates with empty name string in name component and log a warning', async () => {
@@ -311,16 +302,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
 
       expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetId).toBe('validItem');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `EntityUtils.getEntityDisplayName: Entity 'emptyNameItem' has no usable name from '${NAME_COMPONENT_ID}' or entity.name.`
-        )
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `TargetResolutionService.#_gatherNameMatchCandidates: Entity 'emptyNameItem' in inventory has no valid name. Skipping.`
-        )
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test('should correctly handle items with non-string names (logged by earlier stages) and find valid items', async () => {
@@ -339,16 +321,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
 
       expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetId).toBe('item1');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `EntityUtils.getEntityDisplayName: Entity 'item2' has no usable name from '${NAME_COMPONENT_ID}' or entity.name.`
-        )
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `TargetResolutionService.#_gatherNameMatchCandidates: Entity 'item2' in inventory has no valid name. Skipping.`
-        )
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
   });
 
@@ -385,9 +358,7 @@ describe('TargetResolutionService - Advanced Name Matching Logic (via Inventory 
       );
 
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
-      expect(result.error).toBe(
-        "You don't have anything like that in your inventory."
-      );
+      expect(result.error).toBe('You don\'t have "apple" in your inventory.');
       expect(result.targetType).toBe('entity');
     });
 

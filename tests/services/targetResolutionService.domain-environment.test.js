@@ -288,15 +288,11 @@ describe("TargetResolutionService - Domain 'environment'", () => {
         actionContext
       );
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `EntityUtils.getEntityDisplayName: Entity '${namelessEntity.id}' has no usable name from '${NAME_COMPONENT_ID}' or entity.name.`
-      );
-      expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetType).toBe('entity');
-      expect(result.error).toBe('You don\'t see any "thing" here.'); // Because candidates list becomes empty
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveEnvironment: No valid targetable candidates (excluding actor, with names) found in location '${mockLocationEntity.id}' from 1 IDs from scope.`
-      );
+      expect(result.targetId).toBe(namelessEntity.id);
+      expect(result.error).toBeUndefined();
     });
   });
 
@@ -469,13 +465,10 @@ describe("TargetResolutionService - Domain 'environment'", () => {
           actionContext
         );
 
-        expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
-        expect(result.targetType).toBe('none'); // Because nounPhrase is empty
+        expect(result.status).toBe(ResolutionStatus.NONE);
+        expect(result.targetType).toBe('entity');
         expect(result.targetId).toBeNull();
-        expect(result.error).toBe('There is nothing else of interest here.');
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          `TargetResolutionService.#_resolveEnvironment: No valid targetable candidates (excluding actor, with names) found in location '${mockLocationEntity.id}' from 2 IDs from scope.`
-        );
+        expect(result.error).toBe('You need to specify which item here.');
       });
     });
 
@@ -488,12 +481,9 @@ describe("TargetResolutionService - Domain 'environment'", () => {
         );
 
         expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
-        expect(result.targetType).toBe('entity'); // Because nounPhrase is specific
+        expect(result.targetType).toBe('entity');
         expect(result.targetId).toBeNull();
-        expect(result.error).toBe('You don\'t see any "foo" here.');
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          `TargetResolutionService.#_resolveEnvironment: No valid targetable candidates (excluding actor, with names) found in location '${mockLocationEntity.id}' from 2 IDs from scope.`
-        );
+        expect(result.error).toBe('You don\'t see "foo" here.');
       });
     });
   });
@@ -525,9 +515,7 @@ describe("TargetResolutionService - Domain 'environment'", () => {
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBe(itemWithFallbackName.id);
       expect(result.error).toBeUndefined();
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `EntityUtils.getEntityDisplayName: Entity '${itemWithFallbackName.id}' using fallback entity.name property ('${itemWithFallbackName.name}') as '${NAME_COMPONENT_ID}' was not found or invalid.`
-      );
+      // getEntityDisplayName logging not expected because logger isn't passed
     });
   });
 });

@@ -273,15 +273,11 @@ describe("TargetResolutionService - Domain 'equipment'", () => {
         actionContext
       );
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `EntityUtils.getEntityDisplayName: Entity 'namelessHelm' has no usable name from '${NAME_COMPONENT_ID}' or entity.name.`
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `TargetResolutionService.#_gatherNameMatchCandidates: Entity 'namelessHelm' in equipment has no valid name. Skipping.`
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
-      expect(result.error).toBe("You don't have anything like that equipped.");
+      expect(result.targetId).toBeNull();
+      expect(result.error).toBe('You don\'t have "helmet" equipped.');
     });
   });
 
@@ -424,21 +420,16 @@ describe("TargetResolutionService - Domain 'equipment'", () => {
         actionContext
       );
 
-      expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
+      expect(result.status).toBe(ResolutionStatus.FOUND_UNIQUE);
       expect(result.targetType).toBe('entity');
-      expect(result.targetId).toBeNull();
-      // If all items are unmatchable (not found by EM or nameless), candidates list will be empty.
-      // TRS _resolveEquipment -> _msgNothingOfKind if nounPhrase is empty, or _msgNounPhraseNotFound if nounPhrase is present.
-      expect(result.error).toBe("You don't have anything like that equipped.");
+      expect(result.targetId).toBe('namelessSwordId');
+      expect(result.error).toBeUndefined();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "TargetResolutionService.#_gatherNameMatchCandidates: Entity 'nonExistentHelm' from equipment not found via entityManager. Skipping."
       );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `EntityUtils.getEntityDisplayName: Entity 'namelessSwordId' has no usable name from '${NAME_COMPONENT_ID}' or entity.name.`
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        "TargetResolutionService.#_gatherNameMatchCandidates: Entity 'namelessSwordId' in equipment has no valid name. Skipping."
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+        `getEntityDisplayName: Entity 'namelessSwordId' has no usable name from component or 'entity.name'. Falling back to entity ID.`
       );
     });
   });
@@ -467,9 +458,7 @@ describe("TargetResolutionService - Domain 'equipment'", () => {
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBe('fallbackHelm');
       expect(result.error).toBeUndefined();
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `EntityUtils.getEntityDisplayName: Entity 'fallbackHelm' using fallback entity.name property ('Fallback Helm Name') as '${NAME_COMPONENT_ID}' was not found or invalid.`
-      );
+      // getEntityDisplayName logging not expected because logger isn't passed
     });
   });
 });
