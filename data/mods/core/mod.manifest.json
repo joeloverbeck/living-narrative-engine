@@ -30,10 +30,7 @@
     "characters": [],
     "items": [],
     "locations": [],
-    "actions": [
-      "wait.action.json",
-      "go.action.json"
-    ],
+    "actions": ["wait.action.json", "go.action.json"],
     "rules": [
       "turn_started.rule.json",
       "turn_ended.rule.json",
