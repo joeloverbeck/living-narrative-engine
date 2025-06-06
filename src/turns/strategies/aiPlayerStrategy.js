@@ -9,17 +9,14 @@
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder */
-/** @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
-/** @typedef {import('../../types/promptData.js').PromptData} PromptData */
-/** @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
+/** @typedef {import('../../prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline */
 /** @typedef {import('../../interfaces/coreServices.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
 
 import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
 import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
-import { IAIGameStateProvider } from '../interfaces/IAIGameStateProvider.js';
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
+import { IAIPromptPipeline } from '../../prompting/interfaces/IAIPromptPipeline.js';
 
 /**
  * @class AIPlayerStrategy
@@ -28,9 +25,7 @@ import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
  */
 export class AIPlayerStrategy extends IActorTurnStrategy {
   #llmAdapter;
-  #gameStateProvider;
-  #promptContentProvider;
-  #promptBuilder;
+  #aiPromptPipeline;
   #llmResponseProcessor;
   #logger;
   #aiFallbackActionFactory;
@@ -40,18 +35,14 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
    *
    * @param {object} dependencies - The dependencies for this strategy.
    * @param {ILLMAdapter} dependencies.llmAdapter - Adapter for LLM communication.
-   * @param {IAIGameStateProvider} dependencies.gameStateProvider - Provider for AI game state.
-   * @param {IAIPromptContentProvider} dependencies.promptContentProvider - Provider for prompt content pieces.
-   * @param {IPromptBuilder} dependencies.promptBuilder - Builder for assembling the final prompt string.
+   * @param {IAIPromptPipeline} dependencies.aiPromptPipeline - Facade for generating the final prompt.
    * @param {ILLMResponseProcessor} dependencies.llmResponseProcessor - Processor for LLM responses.
    * @param {ILogger} dependencies.logger - Logger instance.
    * @throws {Error} If any dependency is invalid.
    */
   constructor({
     llmAdapter,
-    gameStateProvider,
-    promptContentProvider,
-    promptBuilder,
+    aiPromptPipeline,
     llmResponseProcessor,
     aiFallbackActionFactory,
     logger,
@@ -68,29 +59,11 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
       );
     }
     if (
-      !gameStateProvider ||
-      typeof gameStateProvider.buildGameState !== 'function'
+      !aiPromptPipeline ||
+      typeof aiPromptPipeline.generatePrompt !== 'function'
     ) {
       throw new Error(
-        'AIPlayerStrategy: Constructor requires a valid IAIGameStateProvider.'
-      );
-    }
-    // MODIFICATION: Updated validation for promptContentProvider
-    // The constructor check should ensure promptContentProvider has getPromptData.
-    // If validateGameStateForPrompting needed to be called directly by AIPlayerStrategy,
-    // we'd add a check for it here, but it's internal to getPromptData now.
-    if (
-      !promptContentProvider ||
-      typeof promptContentProvider.getPromptData !== 'function'
-    ) {
-      throw new Error(
-        'AIPlayerStrategy: Constructor requires a valid IAIPromptContentProvider instance with a getPromptData method.'
-      );
-    }
-    // MODIFICATION: Updated validation for promptBuilder
-    if (!promptBuilder || typeof promptBuilder.build !== 'function') {
-      throw new Error(
-        'AIPlayerStrategy: Constructor requires a valid IPromptBuilder instance with a build method.'
+        'AIPlayerStrategy: Constructor requires a valid IAIPromptPipeline.'
       );
     }
     if (
@@ -116,9 +89,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     }
 
     this.#llmAdapter = llmAdapter;
-    this.#gameStateProvider = gameStateProvider;
-    this.#promptContentProvider = promptContentProvider;
-    this.#promptBuilder = promptBuilder;
+    this.#aiPromptPipeline = aiPromptPipeline;
     this.#llmResponseProcessor = llmResponseProcessor;
     this.#aiFallbackActionFactory = aiFallbackActionFactory;
     this.#logger = logger;
@@ -139,44 +110,14 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
       actorId = actor.id;
       this.#logger.info(`AIPlayerStrategy: decideAction for actor ${actorId}.`);
 
-      // 1. Get current LLM ID for PromptBuilder
-      const currentLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
-      if (!currentLlmId) {
-        throw new Error('Could not determine active LLM ID.');
-      }
-      this.#logger.debug(
-        `AIPlayerStrategy: Active LLM ID for prompt construction: ${currentLlmId}`
-      );
-
-      // 2. Build Game State DTO
-      const gameStateDto = await this.#gameStateProvider.buildGameState(
+      const finalPromptString = await this.#aiPromptPipeline.generatePrompt(
         actor,
-        context,
-        this.#logger
-      );
-
-      // 3. Assemble promptData using AIPromptContentProvider
-      // The call to getPromptData will now internally validate gameStateDto and throw an error if it's invalid.
-      const promptData = await this.#promptContentProvider.getPromptData(
-        gameStateDto,
-        this.#logger
-      );
-      this.#logger.debug(
-        `AIPlayerStrategy: promptData received for actor ${actorId}.`
-      );
-
-      // 4. Build the final prompt string using PromptBuilder
-      const finalPromptString = await this.#promptBuilder.build(
-        currentLlmId,
-        promptData
+        context
       );
 
       if (!finalPromptString) {
         throw new Error('PromptBuilder returned an empty or invalid prompt.');
       }
-      this.#logger.info(
-        `AIPlayerStrategy: Generated final prompt string for actor ${actorId} using LLM config for '${currentLlmId}'.`
-      );
       this.#logger.debug(
         `AIPlayerStrategy: Final Prompt String for ${actorId}:\n${finalPromptString}`
       );

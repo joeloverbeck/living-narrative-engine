@@ -12,9 +12,7 @@ import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
 
 // --- Typedefs for Mocks ---
 /** @typedef {import('../../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
-/** @typedef {import('../../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
-/** @typedef {import('../../../src/turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
-/** @typedef {import('../../../src/prompting/promptBuilder.js').PromptBuilder} PromptBuilder */
+/** @typedef {import('../../../src/prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline */
 /** @typedef {import('../../../src/turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/types/promptData.js').PromptData} PromptData */
@@ -44,25 +42,10 @@ const mockLlmAdapter = () => ({
 });
 
 /**
- * @returns {jest.Mocked<IAIGameStateProvider>}
+ * @returns {jest.Mocked<IAIPromptPipeline>}
  */
-const mockGameStateProvider = () => ({
-  buildGameState: jest.fn(),
-});
-
-/**
- * @returns {jest.Mocked<IAIPromptContentProvider>}
- */
-const mockAIPromptContentProvider = () => ({
-  getPromptData: jest.fn(),
-  // validateGameStateForPrompting: jest.fn(), // Not spied on/called directly by AIPlayerStrategy
-});
-
-/**
- * @returns {jest.Mocked<PromptBuilder>}
- */
-const mockPromptBuilder = () => ({
-  build: jest.fn(),
+const mockAiPromptPipeline = () => ({
+  generatePrompt: jest.fn(),
 });
 
 /**
@@ -110,12 +93,8 @@ const createMockActor = (id = 'actor1') => {
 describe('AIPlayerStrategy', () => {
   /** @type {ReturnType<typeof mockLlmAdapter>} */
   let llmAdapter;
-  /** @type {ReturnType<typeof mockGameStateProvider>} */
-  let gameStateProvider;
-  /** @type {ReturnType<typeof mockAIPromptContentProvider>} */
-  let promptContentProvider;
-  /** @type {ReturnType<typeof mockPromptBuilder>} */
-  let promptBuilder;
+  /** @type {ReturnType<typeof mockAiPromptPipeline>} */
+  let aiPromptPipeline;
   /** @type {ReturnType<typeof mockLlmResponseProcessor>} */
   let llmResponseProcessor;
   /** @type {ReturnType<typeof mockLogger>} */
@@ -126,9 +105,7 @@ describe('AIPlayerStrategy', () => {
 
   beforeEach(() => {
     llmAdapter = mockLlmAdapter();
-    gameStateProvider = mockGameStateProvider();
-    promptContentProvider = mockAIPromptContentProvider();
-    promptBuilder = mockPromptBuilder();
+    aiPromptPipeline = mockAiPromptPipeline();
     llmResponseProcessor = mockLlmResponseProcessor();
     currentLoggerMock = mockLogger();
 
@@ -145,12 +122,8 @@ describe('AIPlayerStrategy', () => {
     let instance_da;
     /** @type {ReturnType<typeof mockLlmAdapter>} */
     let da_llmAdapter;
-    /** @type {ReturnType<typeof mockGameStateProvider>} */
-    let da_gameStateProvider;
-    /** @type {ReturnType<typeof mockAIPromptContentProvider>} */
-    let da_promptContentProvider;
-    /** @type {ReturnType<typeof mockPromptBuilder>} */
-    let da_promptBuilder;
+    /** @type {ReturnType<typeof mockAiPromptPipeline>} */
+    let da_aiPromptPipeline;
     /** @type {ReturnType<typeof mockLlmResponseProcessor>} */
     let da_llmResponseProcessor;
     /** @type {AIFallbackActionFactory} */
@@ -197,9 +170,7 @@ describe('AIPlayerStrategy', () => {
 
     beforeEach(() => {
       da_llmAdapter = llmAdapter;
-      da_gameStateProvider = gameStateProvider;
-      da_promptContentProvider = promptContentProvider;
-      da_promptBuilder = promptBuilder;
+      da_aiPromptPipeline = aiPromptPipeline;
       da_llmResponseProcessor = llmResponseProcessor;
       da_logger = currentLoggerMock;
       da_aiFallbackActionFactory = new AIFallbackActionFactory({
@@ -208,9 +179,7 @@ describe('AIPlayerStrategy', () => {
 
       instance_da = new AIPlayerStrategy({
         llmAdapter: da_llmAdapter,
-        gameStateProvider: da_gameStateProvider,
-        promptContentProvider: da_promptContentProvider,
-        promptBuilder: da_promptBuilder,
+        aiPromptPipeline: da_aiPromptPipeline,
         llmResponseProcessor: da_llmResponseProcessor,
         aiFallbackActionFactory: da_aiFallbackActionFactory,
         logger: da_logger,
@@ -285,15 +254,9 @@ describe('AIPlayerStrategy', () => {
         notes: ['This object is shiny.', 'It might be important.'],
       };
 
-      da_llmAdapter.getCurrentActiveLlmId.mockResolvedValue(mockLlmId_da);
-      da_gameStateProvider.buildGameState.mockResolvedValue(
-        mockGameStateDto_da
+      da_aiPromptPipeline.generatePrompt.mockResolvedValue(
+        mockFinalPromptString_da
       );
-      da_promptContentProvider.getPromptData.mockResolvedValue(
-        mockPromptDataObject_da
-      );
-
-      da_promptBuilder.build.mockResolvedValue(mockFinalPromptString_da);
       da_llmAdapter.getAIDecision.mockResolvedValue(mockLlmJsonResponse_da);
 
       da_llmResponseProcessor.processResponse.mockResolvedValue({
@@ -371,27 +334,6 @@ describe('AIPlayerStrategy', () => {
       );
     });
 
-    test('should return fallback if llmAdapter.getCurrentActiveLlmId returns null or undefined', async () => {
-      da_llmAdapter.getCurrentActiveLlmId.mockResolvedValue(null);
-      const context = createLocalMockContext_da(mockActor_da);
-      const error = new Error('Could not determine active LLM ID.');
-      const result = await instance_da.decideAction(context);
-
-      expect(result.action.actionDefinitionId).toBe(
-        DEFAULT_FALLBACK_ACTION.actionDefinitionId
-      );
-      expect(result.action.resolvedParameters?.isFallback).toBe(true);
-      expect(result.action.resolvedParameters?.failureReason).toBe(
-        'unhandled_orchestration_error'
-      );
-      expect(
-        result.action.resolvedParameters?.diagnostics?.originalMessage
-      ).toBe(error.message);
-      expect(da_logger.error).toHaveBeenCalledWith(
-        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
-        expect.any(Object)
-      );
-    });
 
     test('HAPPY PATH: should orchestrate calls, trigger persistence, and return action from processor', async () => {
       const context = createLocalMockContext_da(mockActor_da);
@@ -401,19 +343,9 @@ describe('AIPlayerStrategy', () => {
       expect(da_logger.info).toHaveBeenCalledWith(
         `AIPlayerStrategy: decideAction for actor ${mockActor_da.id}.`
       );
-      expect(da_llmAdapter.getCurrentActiveLlmId).toHaveBeenCalled();
-      expect(da_gameStateProvider.buildGameState).toHaveBeenCalledWith(
+      expect(da_aiPromptPipeline.generatePrompt).toHaveBeenCalledWith(
         mockActor_da,
-        context,
-        da_logger
-      );
-      expect(da_promptContentProvider.getPromptData).toHaveBeenCalledWith(
-        mockGameStateDto_da,
-        da_logger
-      );
-      expect(da_promptBuilder.build).toHaveBeenCalledWith(
-        mockLlmId_da,
-        mockPromptDataObject_da
+        context
       );
       expect(da_llmAdapter.getAIDecision).toHaveBeenCalledWith(
         mockFinalPromptString_da
@@ -467,10 +399,10 @@ describe('AIPlayerStrategy', () => {
       expect(persistNotes).not.toHaveBeenCalled();
     });
 
-    test('should return fallback if gameStateProvider.buildGameState throws', async () => {
+    test('should return fallback if aiPromptPipeline.generatePrompt throws', async () => {
       const context = createLocalMockContext_da(mockActor_da);
-      const error = new Error('GameStateProvider Error');
-      da_gameStateProvider.buildGameState.mockRejectedValue(error);
+      const error = new Error('Pipeline Error');
+      da_aiPromptPipeline.generatePrompt.mockRejectedValue(error);
 
       const result = await instance_da.decideAction(context);
       expect(result.action.actionDefinitionId).toBe(
@@ -486,35 +418,9 @@ describe('AIPlayerStrategy', () => {
       );
     });
 
-    test('should return fallback if promptContentProvider.getPromptData throws', async () => {
+    test('should return fallback if aiPromptPipeline.generatePrompt returns null', async () => {
       const context = createLocalMockContext_da(mockActor_da);
-      const error = new Error('GetPromptDataFailedDueToValidationOrOther');
-      da_promptContentProvider.getPromptData.mockRejectedValue(error);
-
-      const result = await instance_da.decideAction(context);
-
-      expect(result.action.actionDefinitionId).toBe(
-        DEFAULT_FALLBACK_ACTION.actionDefinitionId
-      );
-      expect(result.action.resolvedParameters?.isFallback).toBe(true);
-      expect(
-        result.action.resolvedParameters?.diagnostics?.originalMessage
-      ).toBe(error.message);
-      expect(da_logger.error).toHaveBeenCalledWith(
-        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
-        expect.objectContaining({ error })
-      );
-      // Ensure buildGameState was called before getPromptData
-      expect(da_gameStateProvider.buildGameState).toHaveBeenCalledWith(
-        mockActor_da,
-        context,
-        da_logger
-      );
-    });
-
-    test('should return fallback if promptBuilder.build returns null', async () => {
-      const context = createLocalMockContext_da(mockActor_da);
-      da_promptBuilder.build.mockResolvedValue(null);
+      da_aiPromptPipeline.generatePrompt.mockResolvedValue(null);
       const error = new Error(
         'PromptBuilder returned an empty or invalid prompt.'
       );
@@ -536,9 +442,9 @@ describe('AIPlayerStrategy', () => {
       );
     });
 
-    test('should return fallback if promptBuilder.build returns an empty string', async () => {
+    test('should return fallback if aiPromptPipeline.generatePrompt returns an empty string', async () => {
       const context = createLocalMockContext_da(mockActor_da);
-      da_promptBuilder.build.mockResolvedValue('');
+      da_aiPromptPipeline.generatePrompt.mockResolvedValue('');
       const error = new Error(
         'PromptBuilder returned an empty or invalid prompt.'
       );
@@ -560,10 +466,10 @@ describe('AIPlayerStrategy', () => {
       );
     });
 
-    test('should return fallback if promptBuilder.build throws', async () => {
+    test('should return fallback if aiPromptPipeline.generatePrompt throws error', async () => {
       const context = createLocalMockContext_da(mockActor_da);
       const error = new Error('PromptBuilder Error');
-      da_promptBuilder.build.mockRejectedValue(error);
+      da_aiPromptPipeline.generatePrompt.mockRejectedValue(error);
 
       const result = await instance_da.decideAction(context);
       expect(result.action.actionDefinitionId).toBe(

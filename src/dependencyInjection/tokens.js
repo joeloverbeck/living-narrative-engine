@@ -264,6 +264,7 @@ export const tokens = Object.freeze({
   IPromptBuilder: 'IPromptBuilder',
   IAIGameStateProvider: 'IAIGameStateProvider',
   IAIPromptContentProvider: 'IAIPromptContentProvider',
+  IAIPromptPipeline: 'IAIPromptPipeline',
   ILLMResponseProcessor: 'ILLMResponseProcessor',
   IAIFallbackActionFactory: 'IAIFallbackActionFactory',
 
