@@ -1,27 +1,48 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json",
   "id": "core:system_error_occurred",
-  "description": "Fired when a general system-level error or notable warning occurs that isn't tied to a specific action failure.",
+  "description": "Fired when a general system‐level error occurs that isn’t tied to a specific action failure.",
   "payloadSchema": {
     "title": "Core: System Error Occurred Event Payload",
-    "description": "Defines the payload structure for the 'core:system_error_occurred' event, used for reporting general system-level errors or warnings.",
+    "description": "Defines the payload structure for the 'core:system_error_occurred' event, used for reporting general system‐level errors.",
     "type": "object",
     "properties": {
       "message": {
         "type": "string",
-        "description": "Required. A user-facing message describing the error or warning."
-      },
-      "type": {
-        "type": "string",
-        "description": "Required. The severity level of the message.",
-        "enum": ["error", "warning"]
+        "description": "Required. A user‐facing message describing the error."
       },
       "details": {
-        "type": "string",
-        "description": "Optional. Additional technical details about the error, suitable for logging or debugging, but potentially not for direct user display."
+        "type": "object",
+        "description": "Optional. Additional technical details about the error.",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "description": "Optional. Numeric code (e.g., HTTP status) associated with the error."
+          },
+          "url": {
+            "type": "string",
+            "description": "Optional. URI related to the error, if applicable."
+          },
+          "raw": {
+            "type": "string",
+            "description": "Optional. Raw error text or payload for debugging."
+          },
+          "stack": {
+            "type": "string",
+            "description": "Optional. Stack trace string for debugging."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional. ISO 8601 timestamp of when the error occurred."
+          }
+        },
+        "additionalProperties": false
       }
     },
-    "required": ["message", "type"],
+    "required": [
+      "message"
+    ],
     "additionalProperties": false
   }
 }

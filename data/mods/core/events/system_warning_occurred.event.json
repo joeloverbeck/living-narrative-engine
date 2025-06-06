@@ -1,0 +1,44 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:system_warning_occurred",
+  "description": "Fired when a general system‐level warning occurs that isn’t tied to a specific action failure.",
+  "payloadSchema": {
+    "title": "Core: System Warning Occurred Event Payload",
+    "description": "Defines the payload structure for the 'core:system_warning_occurred' event, used for reporting general system‐level warnings.",
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "description": "Required. A user‐facing message describing the warning."
+      },
+      "details": {
+        "type": "object",
+        "description": "Optional. Additional technical details about the warning.",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "description": "Optional. Numeric code (e.g., HTTP status) associated with the warning."
+          },
+          "url": {
+            "type": "string",
+            "description": "Optional. URI related to the warning, if applicable."
+          },
+          "raw": {
+            "type": "string",
+            "description": "Optional. Raw diagnostic text or payload for debugging."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional. ISO 8601 timestamp of when the warning occurred."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "message"
+    ],
+    "additionalProperties": false
+  }
+}

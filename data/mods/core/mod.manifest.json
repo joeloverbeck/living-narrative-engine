@@ -30,7 +30,10 @@
     "characters": [],
     "items": [],
     "locations": [],
-    "actions": ["wait.action.json", "go.action.json"],
+    "actions": [
+      "wait.action.json",
+      "go.action.json"
+    ],
     "rules": [
       "turn_started.rule.json",
       "turn_ended.rule.json",
@@ -48,6 +51,7 @@
       "command_parse_failed.event.json",
       "action_executed.event.json",
       "action_failed.event.json",
+      "system_warning_occurred.event.json",
       "system_error_occurred.event.json",
       "submit_command.event.json",
       "attempt_action.event.json",
