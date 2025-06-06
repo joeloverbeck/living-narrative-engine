@@ -101,6 +101,14 @@ describe('InitializationService', () => {
             return mockSchemaValidator;
           case tokens.IConfiguration:
             return mockConfiguration;
+          case tokens.ISafeEventDispatcher:
+            return {
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+              dispatchSafely: jest.fn(),
+            };
+          case tokens.IEntityManager:
+            return { getEntityInstance: jest.fn() };
           default:
             return undefined;
         }
@@ -186,6 +194,8 @@ describe('InitializationService', () => {
         tokens.SystemInitializer,
         tokens.WorldInitializer,
         tokens.InputSetupService,
+        tokens.ISafeEventDispatcher,
+        tokens.IEntityManager,
         tokens.DomUiFacade,
       ]);
 
