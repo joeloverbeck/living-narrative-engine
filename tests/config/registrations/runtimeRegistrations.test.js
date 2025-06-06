@@ -13,7 +13,7 @@
 /** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../../src/data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../../src/actions/actionDiscoveryService.js').ActionDiscoveryService} ActionDiscoverySystem */
-/** @typedef {import('../../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../../src/events/safeEventDispatcher.js').SafeEventDispatcher} SafeEventDispatcher */
 /** @typedef {import('../../../src/setup/inputSetupService.js').default} InputSetupService */
 /** @typedef {import('../../../src/turns/turnManager.js').default} TurnManager */
 /** @typedef {import('../../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
@@ -95,8 +95,8 @@ const mockGameDataRepository = {
   getAllActionDefinitions: jest.fn(() => []),
 }; // Mock getAllActionDefinitions
 // REMOVED: mockActionDiscoverySystemObject - using imported mock now
-const mockValidatedEventDispatcher = {
-  dispatchValidated: jest.fn(),
+const mockSafeEventDispatcher = {
+  dispatch: jest.fn(),
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
 };
@@ -319,8 +319,8 @@ describe('registerRuntime', () => {
       lifecycle: 'singleton',
     });
     mockContainer.register(
-      tokens.IValidatedEventDispatcher,
-      mockValidatedEventDispatcher,
+      tokens.ISafeEventDispatcher,
+      mockSafeEventDispatcher,
       { lifecycle: 'singleton' }
     );
 
@@ -401,9 +401,7 @@ describe('registerRuntime', () => {
     Object.values(mockEntityManager).forEach((fn) => fn?.mockClear?.());
     Object.values(mockGameDataRepository).forEach((fn) => fn?.mockClear?.());
     // REMOVED: Clearing mockActionDiscoverySystemObject
-    Object.values(mockValidatedEventDispatcher).forEach((fn) =>
-      fn?.mockClear?.()
-    );
+    Object.values(mockSafeEventDispatcher).forEach((fn) => fn?.mockClear?.());
     Object.values(mockTurnHandlerResolverObject).forEach((fn) =>
       fn?.mockClear?.()
     );
@@ -485,8 +483,8 @@ describe('registerRuntime', () => {
       lifecycle: 'singleton',
     });
     mockContainer.register(
-      tokens.IValidatedEventDispatcher,
-      mockValidatedEventDispatcher,
+      tokens.ISafeEventDispatcher,
+      mockSafeEventDispatcher,
       { lifecycle: 'singleton' }
     );
 
@@ -510,7 +508,7 @@ describe('registerRuntime', () => {
       expect.objectContaining({
         container: mockContainer, // The factory passes the container itself
         logger: mockLogger, // The factory resolves ILogger -> returns mockLogger
-        validatedEventDispatcher: mockValidatedEventDispatcher, // Factory resolves IValidatedEventDispatcher -> returns mockValidatedEventDispatcher
+        safeEventDispatcher: mockSafeEventDispatcher, // Factory resolves ISafeEventDispatcher -> returns mockSafeEventDispatcher
       })
     );
 
@@ -519,7 +517,7 @@ describe('registerRuntime', () => {
     // It should have been called internally by the factory function
     expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
     expect(mockContainer.resolve).toHaveBeenCalledWith(
-      tokens.IValidatedEventDispatcher
+      tokens.ISafeEventDispatcher
     );
 
     // Check that other potentially indirect dependencies were NOT resolved *directly* by this factory's execution

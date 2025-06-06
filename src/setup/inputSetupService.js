@@ -3,7 +3,7 @@
 // --- Type Imports ---
 /** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../events/safeEventDispatcher.js').SafeEventDispatcher} SafeEventDispatcher */
 // GameLoop import removed
 /** @typedef {import('../interfaces/IInputHandler.js').IInputHandler} IInputHandler */ // Use Interface type
 
@@ -18,7 +18,7 @@ import { tokens } from '../dependencyInjection/tokens.js';
 class InputSetupService {
   #container;
   #logger;
-  #validatedEventDispatcher;
+  #safeEventDispatcher;
 
   // #gameLoop field removed
 
@@ -28,22 +28,22 @@ class InputSetupService {
    * @param {object} options - The dependencies.
    * @param {AppContainer} options.container
    * @param {ILogger} options.logger
-   * @param {ValidatedEventDispatcher} options.validatedEventDispatcher
+   * @param {SafeEventDispatcher} options.safeEventDispatcher
    * // gameLoop option removed
    * @throws {Error} If dependencies are missing.
    */
-  constructor({ container, logger, validatedEventDispatcher }) {
+  constructor({ container, logger, safeEventDispatcher }) {
     // gameLoop removed
     // Simplified validation for brevity, assume checks pass
     if (!container) throw new Error("InputSetupService: Missing 'container'.");
     if (!logger) throw new Error("InputSetupService: Missing 'logger'.");
-    if (!validatedEventDispatcher)
-      throw new Error("InputSetupService: Missing 'validatedEventDispatcher'.");
+    if (!safeEventDispatcher)
+      throw new Error("InputSetupService: Missing 'safeEventDispatcher'.");
     // gameLoop validation removed
 
     this.#container = container;
     this.#logger = logger;
-    this.#validatedEventDispatcher = validatedEventDispatcher;
+    this.#safeEventDispatcher = safeEventDispatcher;
     // #gameLoop assignment removed
 
     this.#logger.info('InputSetupService: Instance created.');
@@ -80,8 +80,8 @@ class InputSetupService {
         this.#logger.debug(
           `InputSetupService: Dispatching core:submit_command for command "${command}"`
         );
-        this.#validatedEventDispatcher
-          .dispatchValidated('core:submit_command', { command })
+        this.#safeEventDispatcher
+          .dispatch('core:submit_command', { command })
           .catch((e) =>
             this.#logger.error(
               `Failed dispatching core:submit_command for command "${command}"`,

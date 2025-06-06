@@ -10,14 +10,14 @@ import { tokens } from '../../src/dependencyInjection/tokens.js';
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../src/dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../src/events/safeEventDispatcher.js').SafeEventDispatcher} SafeEventDispatcher */
 // GameLoop type import removed
 /** @typedef {import('../../src/interfaces/IInputHandler.js').IInputHandler} IInputHandler */
 
 describe('InputSetupService', () => {
   /** @type {AppContainer} */ let mockContainer;
   /** @type {ILogger} */ let mockLogger;
-  /** @type {ValidatedEventDispatcher} */ let mockvalidatedEventDispatcher;
+  /** @type {SafeEventDispatcher} */ let mockSafeEventDispatcher;
   // mockGameLoop removed
   /** @type {IInputHandler} */ let mockInputHandler;
   /** @type {Function | null} */ let capturedCallback = null;
@@ -34,9 +34,9 @@ describe('InputSetupService', () => {
       debug: jest.fn(),
     };
 
-    mockvalidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(true),
-      // Add subscribe/unsubscribe if needed by other tests using VED mock, though not directly by InputSetupService
+    mockSafeEventDispatcher = {
+      dispatch: jest.fn().mockResolvedValue(true),
+      // Add subscribe/unsubscribe if needed by other tests using SafeED mock, though not directly by InputSetupService
       subscribe: jest.fn(),
       unsubscribe: jest.fn(),
     };
@@ -71,7 +71,7 @@ describe('InputSetupService', () => {
         // gameLoop removed
         container: mockContainer,
         logger: mockLogger,
-        validatedEventDispatcher: mockvalidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
       });
       expect(service).toBeInstanceOf(InputSetupService);
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -85,7 +85,7 @@ describe('InputSetupService', () => {
           // gameLoop removed
           // container: undefined,
           logger: mockLogger,
-          validatedEventDispatcher: mockvalidatedEventDispatcher,
+          safeEventDispatcher: mockSafeEventDispatcher,
         });
       }).toThrow("InputSetupService: Missing 'container'.");
     });
@@ -96,20 +96,20 @@ describe('InputSetupService', () => {
           // gameLoop removed
           container: mockContainer,
           // logger: undefined,
-          validatedEventDispatcher: mockvalidatedEventDispatcher,
+          safeEventDispatcher: mockSafeEventDispatcher,
         });
       }).toThrow("InputSetupService: Missing 'logger'.");
     });
 
-    it('should throw an error if validatedEventDispatcher is missing', () => {
+    it('should throw an error if safeEventDispatcher is missing', () => {
       expect(() => {
         new InputSetupService({
           // gameLoop removed
           container: mockContainer,
           logger: mockLogger,
-          // validatedEventDispatcher: undefined,
+          // safeEventDispatcher: undefined,
         });
-      }).toThrow("InputSetupService: Missing 'validatedEventDispatcher'.");
+      }).toThrow("InputSetupService: Missing 'safeEventDispatcher'.");
     });
 
     // Test for missing gameLoop removed as it's no longer a dependency
@@ -124,7 +124,7 @@ describe('InputSetupService', () => {
         // gameLoop removed
         container: mockContainer,
         logger: mockLogger,
-        validatedEventDispatcher: mockvalidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
       });
     });
 
@@ -188,30 +188,29 @@ describe('InputSetupService', () => {
         // gameLoop removed
         container: mockContainer,
         logger: mockLogger,
-        validatedEventDispatcher: mockvalidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
       });
       service.configureInputHandler(); // Set up the callback
       // mockGameLoop.isRunning state setting removed
       if (!capturedCallback) {
         throw new Error('Test setup failed: Callback was not captured.');
       }
-      // Clear mocks for VED dispatch calls specifically for this suite's tests
+      // Clear mocks for dispatch calls specifically for this suite's tests
       // to ensure counts are isolated to the callback execution.
-      mockvalidatedEventDispatcher.dispatchValidated.mockClear();
+      mockSafeEventDispatcher.dispatch.mockClear();
     });
 
     // REMOVED: Test for 'textUI:command_echo' as it's no longer dispatched by InputSetupService.
 
     // --- UPDATED: Check for 'core:submit_command' dispatch ---
-    it('should call validatedEventDispatcher.dispatchValidated with core:submit_command', async () => {
+    it('should call safeEventDispatcher.dispatch with core:submit_command', async () => {
       await capturedCallback(testCommand);
-      expect(
-        mockvalidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith('core:submit_command', { command: testCommand });
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:submit_command',
+        { command: testCommand }
+      );
       // Check it was called exactly once during the callback execution.
-      expect(
-        mockvalidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(1); // CHANGED from 2
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(1); // CHANGED from 2
     });
     // --- END UPDATED ---
 
