@@ -2,17 +2,12 @@
 // --- FILE START ---
 
 import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
-import {
-  jest,
-  describe,
-  beforeEach,
-  test,
-  expect,
-  afterEach,
-} from '@jest/globals';
+import { describe, beforeEach, test, expect, afterEach } from '@jest/globals';
 import { DEFAULT_FALLBACK_ACTION } from '../../../src/llms/constants/llmConstants.js';
 // AIPromptContentProvider import is not needed here as we are not spying on its static methods anymore.
 // import {AIPromptContentProvider} from "../../../src/services/AIPromptContentProvider.js";
+import { persistThoughts } from '../../../src/ai/thoughtPersistenceHook.js';
+import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
 
 // --- Typedefs for Mocks ---
 /** @typedef {import('../../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
@@ -24,6 +19,17 @@ import { DEFAULT_FALLBACK_ACTION } from '../../../src/llms/constants/llmConstant
 /** @typedef {import('../../../src/types/promptData.js').PromptData} PromptData */
 /** @typedef {import('../../../src/turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO_Test */
 /** @typedef {import('../../../src/turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
+/** @typedef {import('../../../src/interfaces/coreServices.js').IEntityManager} IEntityManager */
+
+// --- Mocking Persistence Hooks ---
+// These are hoisted by Jest and will run before imports are resolved.
+// They must rely on the global `jest` object.
+jest.mock('../../../src/ai/thoughtPersistenceHook.js', () => ({
+  persistThoughts: jest.fn(),
+}));
+jest.mock('../../../src/ai/notesPersistenceHook.js', () => ({
+  persistNotes: jest.fn(),
+}));
 
 // --- Mock Implementations ---
 
@@ -162,6 +168,10 @@ describe('AIPlayerStrategy', () => {
     let mockProcessedAction_da;
     /** @type {string} */
     let mockLlmId_da;
+    /** @type {{thoughts: string, notes: string[]}} */
+    let mockExtractedData_da;
+    /** @type {jest.Mocked<IEntityManager>} */
+    let mockEntityManager_da;
 
     /**
      * @param {MockEntity | null} actorEntity
@@ -169,10 +179,14 @@ describe('AIPlayerStrategy', () => {
      * @returns {ITurnContext}
      */
     const createLocalMockContext_da = (actorEntity, overrides = {}) => {
+      mockEntityManager_da = {
+        getEntityInstance: jest.fn().mockReturnValue(actorEntity),
+      };
       // @ts-ignore
       return {
         getActor: jest.fn(() => actorEntity),
         getLogger: jest.fn(() => da_logger), // Ensure context provides logger if needed by tested code path
+        getEntityManager: jest.fn(() => mockEntityManager_da),
         ...overrides,
       };
     };
@@ -258,6 +272,11 @@ describe('AIPlayerStrategy', () => {
         speech: 'I will check this shiny object.',
       };
 
+      mockExtractedData_da = {
+        thoughts: 'I should examine this object.',
+        notes: ['This object is shiny.', 'It might be important.'],
+      };
+
       da_llmAdapter.getCurrentActiveLlmId.mockResolvedValue(mockLlmId_da);
       da_gameStateProvider.buildGameState.mockResolvedValue(
         mockGameStateDto_da
@@ -268,39 +287,55 @@ describe('AIPlayerStrategy', () => {
 
       da_promptBuilder.build.mockResolvedValue(mockFinalPromptString_da);
       da_llmAdapter.getAIDecision.mockResolvedValue(mockLlmJsonResponse_da);
-      da_llmResponseProcessor.processResponse.mockResolvedValue(
-        mockProcessedAction_da
-      );
+
+      da_llmResponseProcessor.processResponse.mockResolvedValue({
+        action: mockProcessedAction_da,
+        extractedData: mockExtractedData_da,
+      });
     });
 
     test('should return fallback action if context is null', async () => {
+      const error = new Error('Critical - ITurnContext is null.');
       const result = await instance_da.decideAction(null);
+
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
       expect(result.commandString).toBe(DEFAULT_FALLBACK_ACTION.commandString);
       expect(result.speech).toBe(
-        'I encountered an unexpected issue and will wait.'
+        'I encountered an unexpected issue and will wait for a moment.'
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        'AI Error for UnknownActor: null_turn_context. Waiting.'
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.failureReason).toBe(
+        'unhandled_orchestration_error'
+      );
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        'AIPlayerStrategy: Critical - ITurnContext is null.'
+        'AIPlayerStrategy: Creating canonical fallback action for actor UnknownActor due to unhandled_orchestration_error.',
+        expect.any(Object)
       );
     });
 
     test('should return fallback action if context.getActor() returns null', async () => {
       const context = createLocalMockContext_da(null);
+      const error = new Error('Critical - Actor not available in context.');
       const result = await instance_da.decideAction(context);
+
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        'AI Error for UnknownActor: missing_actor_in_context. Waiting.'
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.failureReason).toBe(
+        'unhandled_orchestration_error'
+      );
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        'AIPlayerStrategy: Critical - Actor not available in context.'
+        'AIPlayerStrategy: Creating canonical fallback action for actor UnknownActor due to unhandled_orchestration_error.',
+        expect.any(Object)
       );
     });
 
@@ -308,88 +343,122 @@ describe('AIPlayerStrategy', () => {
       const actorWithoutId = new MockEntity(undefined);
       actorWithoutId.id = null; // Explicitly set id to null
       const context = createLocalMockContext_da(actorWithoutId);
+      const error = new Error('Critical - Actor not available in context.');
       const result = await instance_da.decideAction(context);
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        'AI Error for UnknownActor: missing_actor_in_context. Waiting.'
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.failureReason).toBe(
+        'unhandled_orchestration_error'
+      );
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        'AIPlayerStrategy: Critical - Actor not available in context.'
+        'AIPlayerStrategy: Creating canonical fallback action for actor UnknownActor due to unhandled_orchestration_error.',
+        expect.any(Object)
       );
     });
 
     test('should return fallback if llmAdapter.getCurrentActiveLlmId returns null or undefined', async () => {
       da_llmAdapter.getCurrentActiveLlmId.mockResolvedValue(null);
       const context = createLocalMockContext_da(mockActor_da);
+      const error = new Error('Could not determine active LLM ID.');
       const result = await instance_da.decideAction(context);
+
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for ${mockActor_da.id}: missing_active_llm_id. Waiting.`
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.failureReason).toBe(
+        'unhandled_orchestration_error'
+      );
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Could not determine active LLM ID for actor ${mockActor_da.id}. Cannot build prompt.`
+        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        expect.any(Object)
       );
     });
 
-    test('HAPPY PATH: should orchestrate calls and return action from processor', async () => {
+    test('HAPPY PATH: should orchestrate calls, trigger persistence, and return action from processor', async () => {
       const context = createLocalMockContext_da(mockActor_da);
       const resultAction = await instance_da.decideAction(context);
 
+      // --- Orchestration Assertions ---
       expect(da_logger.info).toHaveBeenCalledWith(
         `AIPlayerStrategy: decideAction for actor ${mockActor_da.id}.`
       );
       expect(da_llmAdapter.getCurrentActiveLlmId).toHaveBeenCalled();
-      expect(da_logger.debug).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Active LLM ID for prompt construction: ${mockLlmId_da}`
-      );
       expect(da_gameStateProvider.buildGameState).toHaveBeenCalledWith(
         mockActor_da,
         context,
         da_logger
       );
-
-      // The direct call to checkCriticalGameState is removed from AIPlayerStrategy, so this assertion is removed.
-      // expect(checkCriticalGameStateSpy).toHaveBeenCalledWith(mockGameStateDto_da, da_logger);
-
       expect(da_promptContentProvider.getPromptData).toHaveBeenCalledWith(
         mockGameStateDto_da,
         da_logger
       );
-      expect(da_logger.debug).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Requesting PromptData from AIPromptContentProvider for actor ${mockActor_da.id}.`
-      );
-      expect(da_logger.debug).toHaveBeenCalledWith(
-        `AIPlayerStrategy: promptData received for actor ${mockActor_da.id}. Keys: ${Object.keys(mockPromptDataObject_da).join(', ')}`
-      );
-
       expect(da_promptBuilder.build).toHaveBeenCalledWith(
         mockLlmId_da,
         mockPromptDataObject_da
       );
-      expect(da_logger.info).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Generated final prompt string for actor ${mockActor_da.id} using LLM config for '${mockLlmId_da}'. Length: ${mockFinalPromptString_da.length}.`
-      );
-      expect(da_logger.debug).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Final Prompt String for ${mockActor_da.id} (LLM: ${mockLlmId_da}):\n${mockFinalPromptString_da}`
-      );
-
       expect(da_llmAdapter.getAIDecision).toHaveBeenCalledWith(
         mockFinalPromptString_da
-      );
-      expect(da_logger.debug).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Received LLM JSON response for actor ${mockActor_da.id}: ${mockLlmJsonResponse_da}`
       );
       expect(da_llmResponseProcessor.processResponse).toHaveBeenCalledWith(
         mockLlmJsonResponse_da,
         mockActor_da.id,
         da_logger
       );
-      expect(resultAction).toBe(mockProcessedAction_da);
+
+      // --- Persistence Assertions ---
+      expect(context.getEntityManager).toHaveBeenCalled();
+      expect(mockEntityManager_da.getEntityInstance).toHaveBeenCalledWith(
+        mockActor_da.id
+      );
+      expect(persistThoughts).toHaveBeenCalledWith(
+        { thoughts: mockExtractedData_da.thoughts },
+        mockActor_da,
+        da_logger
+      );
+      expect(persistNotes).toHaveBeenCalledWith(
+        { notes: mockExtractedData_da.notes },
+        mockActor_da,
+        da_logger
+      );
+
+      // --- Final Result Assertions ---
+      expect(resultAction).toEqual(mockProcessedAction_da);
       expect(da_logger.error).not.toHaveBeenCalled();
+    });
+
+    test('should not call persistence hooks when processor returns a fallback without extracted data', async () => {
+      const mockFallbackFromProcessor = {
+        actionDefinitionId: 'core:wait',
+        commandString: 'wait',
+        speech: 'Processor decided to wait.',
+        resolvedParameters: { errorContext: 'processor_internal_logic' },
+      };
+      // Simulate a "soft fail" where the processor returns a fallback, but doesn't throw
+      da_llmResponseProcessor.processResponse.mockResolvedValue({
+        action: mockFallbackFromProcessor,
+        extractedData: undefined, // No thoughts/notes
+      });
+
+      const context = createLocalMockContext_da(mockActor_da);
+      const resultAction = await instance_da.decideAction(context);
+
+      expect(resultAction).toEqual(mockFallbackFromProcessor);
+
+      // --- Logger Assertions ---
+      expect(da_logger.warn).not.toHaveBeenCalled(); // No warning for this case in the new logic
+
+      // --- Persistence Assertions ---
+      expect(persistThoughts).not.toHaveBeenCalled();
+      expect(persistNotes).not.toHaveBeenCalled();
     });
 
     test('should return fallback if gameStateProvider.buildGameState throws', async () => {
@@ -401,18 +470,19 @@ describe('AIPlayerStrategy', () => {
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for ${mockActor_da.id}: unhandled_orchestration_error: ${error.message}. Waiting.`
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Unhandled error for actor ${mockActor_da.id}: ${error.message}`,
-        expect.objectContaining({ errorDetails: error, stack: error.stack })
+        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        expect.objectContaining({ error })
       );
     });
 
     test('should return fallback if promptContentProvider.getPromptData throws', async () => {
       const context = createLocalMockContext_da(mockActor_da);
-      const error = new Error('GetPromptDataFailedDueToValidationOrOther'); // Renamed for clarity
+      const error = new Error('GetPromptDataFailedDueToValidationOrOther');
       da_promptContentProvider.getPromptData.mockRejectedValue(error);
 
       const result = await instance_da.decideAction(context);
@@ -420,12 +490,13 @@ describe('AIPlayerStrategy', () => {
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for ${mockActor_da.id}: unhandled_orchestration_error: ${error.message}. Waiting.`
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Unhandled error for actor ${mockActor_da.id}: ${error.message}`,
-        expect.objectContaining({ errorDetails: error, stack: error.stack })
+        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        expect.objectContaining({ error })
       );
       // Ensure buildGameState was called before getPromptData
       expect(da_gameStateProvider.buildGameState).toHaveBeenCalledWith(
@@ -435,44 +506,51 @@ describe('AIPlayerStrategy', () => {
       );
     });
 
-    // This test is obsolete as the static method is no longer called directly by AIPlayerStrategy
-    // test('should still call static checkCriticalGameState even if getPromptData is going to throw', async () => { ... });
-
     test('should return fallback if promptBuilder.build returns null', async () => {
       const context = createLocalMockContext_da(mockActor_da);
       da_promptBuilder.build.mockResolvedValue(null);
+      const error = new Error(
+        'PromptBuilder returned an empty or invalid prompt.'
+      );
 
       const result = await instance_da.decideAction(context);
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
       expect(result.speech).toBe(
-        'I encountered an unexpected issue and will wait.'
+        'I encountered an unexpected issue and will wait for a moment.'
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for ${mockActor_da.id}: prompt_builder_empty_result. Waiting.`
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: PromptBuilder returned an empty or invalid prompt for LLM ${mockLlmId_da}, actor ${mockActor_da.id}.`
+        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        expect.any(Object)
       );
     });
 
     test('should return fallback if promptBuilder.build returns an empty string', async () => {
       const context = createLocalMockContext_da(mockActor_da);
       da_promptBuilder.build.mockResolvedValue('');
+      const error = new Error(
+        'PromptBuilder returned an empty or invalid prompt.'
+      );
 
       const result = await instance_da.decideAction(context);
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
       expect(result.speech).toBe(
-        'I encountered an unexpected issue and will wait.'
+        'I encountered an unexpected issue and will wait for a moment.'
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for ${mockActor_da.id}: prompt_builder_empty_result. Waiting.`
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: PromptBuilder returned an empty or invalid prompt for LLM ${mockLlmId_da}, actor ${mockActor_da.id}.`
+        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        expect.any(Object)
       );
     });
 
@@ -485,12 +563,13 @@ describe('AIPlayerStrategy', () => {
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for ${mockActor_da.id}: unhandled_orchestration_error: ${error.message}. Waiting.`
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Unhandled error for actor ${mockActor_da.id}: ${error.message}`,
-        expect.objectContaining({ errorDetails: error, stack: error.stack })
+        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        expect.objectContaining({ error })
       );
     });
 
@@ -503,12 +582,13 @@ describe('AIPlayerStrategy', () => {
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for ${mockActor_da.id}: unhandled_orchestration_error: ${error.message}. Waiting.`
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Unhandled error for actor ${mockActor_da.id}: ${error.message}`,
-        expect.objectContaining({ errorDetails: error, stack: error.stack })
+        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        expect.objectContaining({ error })
       );
     });
 
@@ -521,15 +601,13 @@ describe('AIPlayerStrategy', () => {
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for ${mockActor_da.id}: unhandled_orchestration_error: ${processorError.message}. Waiting.`
+      expect(result.resolvedParameters?.isFallback).toBe(true);
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        processorError.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Unhandled error for actor ${mockActor_da.id}: ${processorError.message}`,
-        expect.objectContaining({
-          errorDetails: processorError,
-          stack: processorError.stack,
-        })
+        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        expect.objectContaining({ error: processorError })
       );
     });
 
@@ -540,6 +618,7 @@ describe('AIPlayerStrategy', () => {
           throw actorError;
         }),
         getLogger: jest.fn(() => da_logger),
+        getEntityManager: jest.fn(),
       };
 
       // @ts-ignore
@@ -547,17 +626,14 @@ describe('AIPlayerStrategy', () => {
       expect(result.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.errorContext).toBe(
-        `AI Error for UnknownActor: unhandled_orchestration_error: ${actorError.message}. Waiting.`
-      );
-      // @ts-ignore
+      expect(result.resolvedParameters?.isFallback).toBe(true);
       expect(result.resolvedParameters?.actorId).toBe('UnknownActor');
+      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
+        actorError.message
+      );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Unhandled error for actor UnknownActor: ${actorError.message}`,
-        expect.objectContaining({
-          errorDetails: actorError,
-          stack: actorError.stack,
-        })
+        `AIPlayerStrategy: Creating canonical fallback action for actor UnknownActor due to unhandled_orchestration_error.`,
+        expect.objectContaining({ error: actorError })
       );
     });
   });

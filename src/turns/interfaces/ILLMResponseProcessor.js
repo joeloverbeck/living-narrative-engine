@@ -2,8 +2,8 @@
 // --- FILE START ---
 
 /** @typedef {import('./IActorTurnStrategy.js').ITurnAction} ITurnAction */
-
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../services/LLMResponseProcessor.js').LlmProcessingResult} LlmProcessingResult */
 
 /**
  * @interface ILLMResponseProcessor
@@ -26,8 +26,8 @@ export class ILLMResponseProcessor {
    * Used for logging and potentially in fallback actions.
    * @param {ILogger} logger - An instance of the logger for recording information, warnings,
    * or errors during response processing.
-   * @returns {Promise<ITurnAction>} A Promise that resolves to a valid ITurnAction derived
-   * from the LLM response, or a fallback ITurnAction if processing fails.
+   * @returns {Promise<LlmProcessingResult>} A Promise that resolves to a result object
+   * containing the processed action and any extracted data.
    */
   async processResponse(llmJsonResponse, actorId, logger) {
     // This is an interface; concrete classes will implement this.

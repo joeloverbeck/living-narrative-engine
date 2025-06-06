@@ -3,7 +3,7 @@ import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProv
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
 import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
-import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -24,10 +24,18 @@ describe('Prompt Assembly with short-term memory', () => {
   /** @type {jest.Mocked<any>} */
   let llmConfigService;
 
+  // FIX: Updated the testConfig to include the required prefix and suffix
+  // that the refactored ThoughtsSectionAssembler now expects.
   const testConfig = {
     configId: 'thoughts_only',
     modelIdentifier: 'test/model',
-    promptElements: [{ key: 'thoughts_wrapper' }],
+    promptElements: [
+      {
+        key: 'thoughts_wrapper',
+        prefix: '\nYour most recent thoughts (oldest first):\n\n',
+        suffix: '\n\n',
+      },
+    ],
     promptAssemblyOrder: ['thoughts_wrapper'],
   };
 
@@ -58,6 +66,7 @@ describe('Prompt Assembly with short-term memory', () => {
       logger,
       llmConfigService,
       placeholderResolver,
+      // goalsSectionAssembler is not provided, so a default will be created
       standardElementAssembler: { assemble: jest.fn().mockReturnValue('') },
       perceptionLogAssembler: { assemble: jest.fn().mockReturnValue('') },
       thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
@@ -94,12 +103,12 @@ describe('Prompt Assembly with short-term memory', () => {
 
   test('Entity with one thought includes the formatted section', async () => {
     const prompt = await buildPrompt(['OnlyThought']);
+    // Note: The expected output format is slightly different due to how the
+    // assembler now pieces together prefix, content, and suffix.
     const expected =
-      '\n' +
-      'Your most recent thoughts (oldest first):\n' +
-      '\n' +
-      '- OnlyThought\n' +
-      '\n';
+      '\nYour most recent thoughts (oldest first):\n\n' +
+      '- OnlyThought' +
+      '\n\n';
     expect(prompt).toBe(expected);
     expect((prompt.match(/Your most recent thoughts/g) || []).length).toBe(1);
   });
@@ -107,17 +116,13 @@ describe('Prompt Assembly with short-term memory', () => {
   test('Entity with multiple thoughts lists them oldest to newest', async () => {
     const prompt = await buildPrompt(['T1', 'T2', 'T3']);
     const expected =
-      '\n' +
-      'Your most recent thoughts (oldest first):\n' +
-      '\n' +
+      '\nYour most recent thoughts (oldest first):\n\n' +
       '- T1\n' +
       '- T2\n' +
-      '- T3\n' +
-      '\n';
+      '- T3' +
+      '\n\n';
     expect(prompt).toBe(expected);
     expect(prompt.indexOf('- T1')).toBeLessThan(prompt.indexOf('- T2'));
     expect(prompt.indexOf('- T2')).toBeLessThan(prompt.indexOf('- T3'));
   });
 });
-
-// --- FILE END ---

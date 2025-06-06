@@ -1,27 +1,23 @@
-// src/turns/services/LLMResponseProcessor.js
-// -----------------------------------------------------------------------------
-// Parses, validates, and transforms LLM JSON responses into ProcessedTurnAction.
-// Uses the consolidated “v3” schema (including `notes`) instead of v1/v2.
-// -----------------------------------------------------------------------------
+// --- FILE START: src/turns/services/LLMResponseProcessor.js ---
 
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction}   ITurnAction_Imported */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger}           ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator}  ISchemaValidator */
-/** @typedef {import('../../interfaces/coreServices.js').IEntityManager}     IEntityManager */
 /** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor_Interface_Typedef */
 /** @typedef {import('../../utils/llmUtils.js').JsonProcessingError}        JsonProcessingError */
 
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { parseAndRepairJson } from '../../utils/llmUtils.js';
-import { persistThoughts } from '../../ai/thoughtPersistenceHook.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
-import { NOTES_COMPONENT_ID } from '../../constants/componentIds.js';
 
-const BASE_FALLBACK_WAIT_ACTION = {
-  actionDefinitionId: 'core:wait',
-  commandString: 'wait',
-  speech: '',
-};
+/**
+ * @typedef {object} LlmProcessingResult
+ * @property {boolean} success - Indicates if processing was successful.
+ * @property {ProcessedTurnAction} action - The final, usable action. If success is false, this will be a fallback action.
+ * @property {object} [extractedData] - Raw data extracted from the LLM response for side-effects. Only present if success is true.
+ * @property {string} [extractedData.thoughts] - The 'thoughts' string, if present.
+ * @property {Array<string>} [extractedData.notes] - The 'notes' array, if present.
+ */
 
 /**
  * @typedef {object} LlmProcessingFailureInfo
@@ -42,21 +38,20 @@ const BASE_FALLBACK_WAIT_ACTION = {
  * @property {object} [resolvedParameters] - any parameters resolved during processing
  */
 
-/* ──────────────────────────  HELPER FUNCTION  ───────────────────────── */
-
 /**
- * Normalize note text for duplicate detection.
- * • trim → lowercase → strip punctuation → collapse internal whitespace
- *
- * @param {string} text - original note text
- * @returns {string} normalized text
+ * Thrown by LLMResponseProcessor when LLM output fails parsing or validation.
+ * Contains detailed diagnostic information.
  */
-function normalizeNoteText(text) {
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/[^\w\s]|/g, '')
-    .replace(/\s+/g, ' ');
+class LLMProcessingError extends Error {
+  /**
+   * @param {string} message - The error message.
+   * @param {object} details - The diagnostic details.
+   */
+  constructor(message, details) {
+    super(message);
+    this.name = 'LLMProcessingError';
+    this.details = details;
+  }
 }
 
 /**
@@ -65,17 +60,14 @@ function normalizeNoteText(text) {
 export class LLMResponseProcessor extends ILLMResponseProcessor {
   /** @type {ISchemaValidator} */
   #schemaValidator;
-  /** @type {IEntityManager}  */
-  #entityManager;
 
   /**
    * Constructs a new LLMResponseProcessor.
    *
-   * @param {{ schemaValidator: ISchemaValidator, entityManager?: IEntityManager }} deps - dependencies object
-   *   @param {ISchemaValidator} deps.schemaValidator - validator for LLM response schemas
-   *   @param {IEntityManager} [deps.entityManager] - optional entity manager for persisting changes
+   * @param {{ schemaValidator: ISchemaValidator }} deps - dependencies object
+   * @param {ISchemaValidator} deps.schemaValidator - validator for LLM response schemas
    */
-  constructor({ schemaValidator, entityManager = null }) {
+  constructor({ schemaValidator }) {
     super();
 
     if (
@@ -89,7 +81,6 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     }
 
     this.#schemaValidator = schemaValidator;
-    this.#entityManager = entityManager;
 
     // Unit tests may spy on this warning:
     if (
@@ -103,188 +94,15 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
   }
 
   /**
-   * Creates a safe fallback action and logs the failure.
-   *
-   * @private
-   * @param {string} errorContext - type of error encountered
-   * @param {string} actorId - ID of the actor being processed
-   * @param {ILogger} logger - logger instance
-   * @param {object|null} [errorDetailsInput] - additional error details
-   * @returns {ProcessedTurnAction} fallback action object
-   */
-  _createProcessingFallbackAction(
-    errorContext,
-    actorId,
-    logger,
-    errorDetailsInput = null
-  ) {
-    const loggableErrorReason = `AI LLM Processing Error for ${actorId}: ${errorContext}.`;
-
-    /** @type {LlmProcessingFailureInfo} */
-    const failureInfo = { errorContext };
-    let problematicOutputDetailsForLog = errorDetailsInput;
-
-    const rawLlmResponse =
-      typeof errorDetailsInput === 'object' && errorDetailsInput !== null
-        ? errorDetailsInput.rawLlmResponse
-        : undefined;
-    const cleanedLlmResponse =
-      typeof errorDetailsInput === 'object' && errorDetailsInput !== null
-        ? errorDetailsInput.cleanedLlmResponse
-        : undefined;
-    const parsedJsonAttempt =
-      typeof errorDetailsInput === 'object' && errorDetailsInput !== null
-        ? errorDetailsInput.parsedJsonAttempt
-        : undefined;
-    const validationErrors =
-      typeof errorDetailsInput === 'object' && errorDetailsInput !== null
-        ? errorDetailsInput.validationErrors
-        : undefined;
-    const parseErrorStage =
-      typeof errorDetailsInput === 'object' && errorDetailsInput !== null
-        ? errorDetailsInput.parseErrorStage
-        : undefined;
-
-    if (
-      errorContext === 'json_parse_error' ||
-      errorContext === 'invalid_input_type'
-    ) {
-      failureInfo.rawResponse = rawLlmResponse;
-
-      if (cleanedLlmResponse !== undefined) {
-        failureInfo.cleanedResponse = cleanedLlmResponse;
-        problematicOutputDetailsForLog = cleanedLlmResponse;
-      } else {
-        problematicOutputDetailsForLog = failureInfo.rawResponse;
-      }
-
-      if (parseErrorStage) {
-        failureInfo.parseErrorStage = parseErrorStage;
-      }
-    } else if (errorContext === 'json_schema_validation_error') {
-      if (rawLlmResponse !== undefined)
-        failureInfo.rawResponse = rawLlmResponse;
-      if (cleanedLlmResponse !== undefined)
-        failureInfo.cleanedResponse = cleanedLlmResponse;
-      if (parsedJsonAttempt !== undefined)
-        failureInfo.parsedResponse = parsedJsonAttempt;
-      if (validationErrors !== undefined)
-        failureInfo.validationErrors = validationErrors;
-
-      problematicOutputDetailsForLog = parsedJsonAttempt;
-    } else if (errorContext === 'schema_validator_unavailable') {
-      if (rawLlmResponse !== undefined)
-        failureInfo.rawResponse = rawLlmResponse;
-      if (cleanedLlmResponse !== undefined)
-        failureInfo.cleanedResponse = cleanedLlmResponse;
-      if (parsedJsonAttempt !== undefined)
-        failureInfo.parsedResponse = parsedJsonAttempt;
-
-      problematicOutputDetailsForLog = parsedJsonAttempt;
-    }
-
-    const fallbackAction = {
-      ...BASE_FALLBACK_WAIT_ACTION,
-      llmProcessingFailureInfo: failureInfo,
-    };
-
-    logger.error(
-      `LLMResponseProcessor: ${loggableErrorReason} Creating fallback action.`,
-      {
-        actorId,
-        errorContext,
-        problematicOutputDetails: problematicOutputDetailsForLog,
-        llmFailureInfo: failureInfo,
-        fallbackActionTaken: fallbackAction,
-      }
-    );
-
-    return fallbackAction;
-  }
-
-  /**
-   * Post-processes notes returned by the LLM and merges them into the
-   * actor’s `core:notes` component with de-duplication and validation.
-   *
-   * @private
-   * @async
-   * @param {*} notesArray - raw notes array from LLM; expected to be an array
-   *   of strings
-   * @param {object} actorEntity - actor entity instance to merge notes into
-   * @param {ILogger} logger - logger instance for logging errors/info
-   * @returns {Promise<void>}
-   */
-  async _mergeNotesIntoEntity(notesArray, actorEntity, logger) {
-    if (notesArray === undefined) {
-      return;
-    }
-
-    if (!Array.isArray(notesArray)) {
-      logger.error("'notes' field is not an array; skipping merge");
-      return;
-    }
-
-    // Create or retrieve existing notes component
-    const getNotesComp = () =>
-      typeof actorEntity.getComponentData === 'function'
-        ? actorEntity.getComponentData(NOTES_COMPONENT_ID)
-        : actorEntity.components?.[NOTES_COMPONENT_ID];
-
-    let notesComp = getNotesComp();
-    if (!notesComp) {
-      // Create via the canonical pathway so that schema validation fires
-      this.#entityManager?.addComponent?.(actorEntity.id, NOTES_COMPONENT_ID, {
-        notes: [],
-      });
-      notesComp = getNotesComp();
-    }
-
-    if (!Array.isArray(notesComp.notes)) {
-      logger.error(
-        `Actor ${actorEntity.id} 'core:notes' component missing 'notes' array`
-      );
-      return;
-    }
-
-    const existingSet = new Set(
-      notesComp.notes
-        .filter((n) => typeof n.text === 'string')
-        .map((n) => normalizeNoteText(n.text))
-    );
-
-    for (const noteText of notesArray) {
-      if (typeof noteText !== 'string' || noteText.trim() === '') {
-        logger.error(`Invalid note skipped: ${JSON.stringify(noteText)}`);
-        continue;
-      }
-
-      const normalisedIncoming = normalizeNoteText(noteText);
-      if (existingSet.has(normalisedIncoming)) {
-        continue;
-      }
-
-      const timestamp = new Date().toISOString();
-      notesComp.notes.push({ text: noteText, timestamp });
-      logger.info(
-        `[${new Date().toISOString()}] Added note: "${noteText}" at ${timestamp}`
-      );
-      existingSet.add(normalisedIncoming);
-    }
-
-    // Persist the updated actorEntity to storage
-    if (typeof this.#entityManager?.saveEntity === 'function') {
-      await this.#entityManager.saveEntity(actorEntity);
-    }
-  }
-
-  /**
    * Parses (with repair), validates, and transforms the LLM’s JSON response
-   * string into a safe {@link ProcessedTurnAction}.
+   * string into a safe {@link ProcessedTurnAction}. Throws on failure.
    *
+   * @override
    * @param {string} llmJsonResponse - raw JSON response string from LLM
    * @param {string} actorId - ID of the actor for which to process the response
    * @param {ILogger} logger - logger instance for logging processing steps
-   * @returns {Promise<ProcessedTurnAction>} promise resolving to the final action
+   * @returns {Promise<{action: ProcessedTurnAction, extractedData: object}>} promise resolving to the final result object
+   * @throws {LLMProcessingError} if parsing, validation, or transformation fails.
    */
   async processResponse(llmJsonResponse, actorId, logger) {
     let parsedJson;
@@ -294,38 +112,31 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     try {
       parsedJson = await parseAndRepairJson(llmJsonResponse, logger);
     } catch (e) {
-      const ctx =
+      const errorContext =
         e.name === 'TypeError' ? 'invalid_input_type' : 'json_parse_error';
-
-      const baseMsg =
-        ctx === 'invalid_input_type'
+      const message =
+        errorContext === 'invalid_input_type'
           ? 'Invalid input type for LLM JSON response'
           : 'Failed to parse/repair LLM JSON response';
-
       logger.error(
-        `LLMResponseProcessor: ${baseMsg} for actor ${actorId}. Error: ${e.message}.`,
-        {
-          rawResponse: originalInput,
-          actorId,
-          errorName: e.name,
-          errorMessage: e.message,
-        }
+        `LLMResponseProcessor: ${message} for actor ${actorId}. Error: ${e.message}.`,
+        { rawResponse: originalInput, actorId, errorName: e.name }
       );
-
-      return this._createProcessingFallbackAction(ctx, actorId, logger, {
+      throw new LLMProcessingError(message, {
+        errorContext,
         rawLlmResponse: originalInput,
       });
     }
 
-    // ─────── Re‐insert “ignore goals” logic ───────
     if (
       parsedJson &&
       Object.prototype.hasOwnProperty.call(parsedJson, 'goals')
     ) {
-      logger.warn('LLM attempted to return goals; ignoring.');
+      logger.warn(
+        `LLMResponseProcessor: LLM for actor ${actorId} attempted to return goals; ignoring.`
+      );
       // Do NOT merge or persist any goals. Intentionally skip.
     }
-    // ──────────────────────────────────────────────
 
     // 2. Validate against v3 schema (consolidated)
     const validationResult = this.#schemaValidator.validate(
@@ -334,26 +145,8 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     );
 
     if (validationResult.isValid) {
-      // Persist STM if we can resolve the entity
-      const actorEntity = this.#entityManager?.getEntityInstance?.(actorId);
-
-      if (actorEntity) {
-        try {
-          persistThoughts(parsedJson, actorEntity, logger);
-
-          if ('notes' in parsedJson) {
-            await this._mergeNotesIntoEntity(
-              parsedJson.notes,
-              actorEntity,
-              logger
-            );
-          }
-        } catch (e) {
-          logger.warn('STM persist failed', { actorId, err: e });
-        }
-      }
-
-      const { actionDefinitionId, commandString, speech } = parsedJson;
+      const { actionDefinitionId, commandString, speech, thoughts, notes } =
+        parsedJson;
       const finalAction = {
         actionDefinitionId: actionDefinitionId.trim(),
         commandString: commandString.trim(),
@@ -365,27 +158,29 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       );
       logger.debug(
         `LLMResponseProcessor: Transformed ProcessedTurnAction details for ${actorId}:`,
-        { actorId, action: finalAction }
+        { actorId, action: finalAction, extractedData: { thoughts, notes } }
       );
 
-      return finalAction;
+      return {
+        success: true,
+        action: finalAction,
+        extractedData: { thoughts, notes },
+      };
     }
 
-    // 3. Schema validation failed → fallback
-    logger.error(
-      `LLMResponseProcessor: LLM response JSON schema validation failed for actor ${actorId}. Errors:`,
-      { validationErrors: validationResult.errors, parsedJson, actorId }
-    );
-
-    return this._createProcessingFallbackAction(
-      'json_schema_validation_error',
+    // 3. Schema validation failed → throw detailed error
+    const validationErrorMsg = `LLM response JSON schema validation failed for actor ${actorId}.`;
+    logger.error(`LLMResponseProcessor: ${validationErrorMsg}`, {
+      validationErrors: validationResult.errors,
+      parsedJson,
       actorId,
-      logger,
-      {
-        rawLlmResponse: originalInput,
-        parsedJsonAttempt: parsedJson,
-        validationErrors: validationResult.errors,
-      }
-    );
+    });
+
+    throw new LLMProcessingError(validationErrorMsg, {
+      errorContext: 'json_schema_validation_error',
+      rawLlmResponse: originalInput,
+      parsedJsonAttempt: parsedJson,
+      validationErrors: validationResult.errors,
+    });
   }
 }

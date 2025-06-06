@@ -2,15 +2,15 @@
 
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+// Import the custom error type to assert against it specifically
+import { LLMProcessingError } from '../../../src/turns/services/LLMResponseProcessor.js';
 
-describe('LLMResponseProcessor – “Ignore returned goals” behavior', () => {
+describe('LLMResponseProcessor – Handling of disallowed properties', () => {
   let mockLogger;
   let mockSchemaValidator;
-  let mockEntityManager;
   let processor;
 
   beforeEach(() => {
-    // 1. Mock logger with spies
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -18,79 +18,56 @@ describe('LLMResponseProcessor – “Ignore returned goals” behavior', () => 
       error: jest.fn(),
     };
 
-    // 2. Mock schemaValidator: always return isValid: false
     mockSchemaValidator = {
-      validate: jest.fn(() => ({
-        isValid: false,
-        errors: [{ message: 'extra property: goals' }],
-      })),
+      validate: jest.fn((schemaId, data) => {
+        if (Object.prototype.hasOwnProperty.call(data, 'goals')) {
+          return {
+            isValid: false,
+            errors: [{ message: 'extra property: goals' }],
+          };
+        }
+        return { isValid: true, errors: [] };
+      }),
       isSchemaLoaded: jest.fn(() => true),
     };
 
-    // 3. Prepare a fake actorEntity with a pre-existing core:goals component
-    const existingGoals = [
-      { text: 'existing', timestamp: '2025-06-05T00:00:00Z' },
-    ];
-    const actorEntity = {
-      id: 'actor-123',
-      components: {
-        'core:goals': { goals: existingGoals.slice() },
-      },
-    };
-
-    // 4. Mock entityManager.getEntityInstance to return our actorEntity
-    mockEntityManager = {
-      getEntityInstance: jest.fn(() => actorEntity),
-    };
-
-    // 5. Instantiate the processor
     processor = new LLMResponseProcessor({
       schemaValidator: mockSchemaValidator,
-      entityManager: mockEntityManager,
     });
-
-    // Save reference to actorEntity for assertions
-    processor._test_actorEntity = actorEntity;
   });
 
-  test('logs a warning and does not mutate core:goals if “goals” is present in the LLM payload', async () => {
-    const actorEntity = processor._test_actorEntity;
-    const originalGoalsCopy = JSON.parse(
-      JSON.stringify(actorEntity.components['core:goals'])
-    );
-
-    // 1. Build a JSON string that includes a "goals" array plus required fields to pass parse
+  // FIX: The test is updated to assert that an error is thrown, instead of checking a return value.
+  test('should warn, then throw a validation error if "goals" property is present', async () => {
+    const actorId = 'actor-123';
     const payloadWithGoals = JSON.stringify({
       actionDefinitionId: 'core:wait',
       commandString: 'wait',
       speech: '',
       goals: [{ text: 'newGoal', timestamp: '2025-06-05T12:00:00Z' }],
+      thoughts: 'This is a test thought.',
     });
 
-    // 2. Call processResponse
-    const result = await processor.processResponse(
-      payloadWithGoals,
-      actorEntity.id,
-      mockLogger
-    );
+    // 1. Assert that the promise rejects with the correct error type
+    await expect(
+      processor.processResponse(payloadWithGoals, actorId, mockLogger)
+    ).rejects.toThrow(LLMProcessingError);
 
-    // 3. Assert: logger.warn was called exactly once with the expected message
+    // 2. Assert: A specific warning for 'goals' was logged before the error was thrown.
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      'LLM attempted to return goals; ignoring.'
+      `LLMResponseProcessor: LLM for actor ${actorId} attempted to return goals; ignoring.`
     );
 
-    // 4. Assert: actorEntity.components['core:goals'] remains unchanged
-    expect(actorEntity.components['core:goals']).toEqual(originalGoalsCopy);
-
-    // 5. Because our schemaValidator always rejects, we expect a fallback wait-action
-    expect(result).toHaveProperty('actionDefinitionId', 'core:wait');
-    expect(result).toHaveProperty('commandString', 'wait');
-    expect(result).toHaveProperty('speech', '');
-    // And the fallback action should have an `llmProcessingFailureInfo` property
-    expect(result).toHaveProperty('llmProcessingFailureInfo');
-    expect(result.llmProcessingFailureInfo.errorContext).toBe(
-      'json_schema_validation_error'
-    );
+    // 3. To inspect the error's details, we can use a try/catch block
+    try {
+      await processor.processResponse(payloadWithGoals, actorId, mockLogger);
+    } catch (e) {
+      // 4. Assert: The error has the correct context and includes validation details.
+      expect(e.details.errorContext).toBe('json_schema_validation_error');
+      expect(e.details.validationErrors).toBeDefined();
+      expect(e.details.validationErrors[0].message).toContain(
+        'extra property: goals'
+      );
+    }
   });
 });

@@ -663,7 +663,6 @@ export function registerDomainServices(container) {
   r.singletonFactory(tokens.ILLMResponseProcessor, (c) => {
     return new LLMResponseProcessor({
       schemaValidator: c.resolve(tokens.ISchemaValidator),
-      entityManager: c.resolve(tokens.IEntityManager), // new
     });
   });
   log.debug(

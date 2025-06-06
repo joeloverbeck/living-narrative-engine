@@ -1,5 +1,9 @@
-// src/turns/strategies/aiPlayerStrategy.js
-// --- FILE START ---
+// --- FILE START: src/turns/strategies/aiPlayerStrategy.js ---
+
+/**
+ * @file This module implements the IActorTurnStrategy for AI-controlled characters
+ * @see src/turns/strategies/aiPlayerStrategy.js
+ */
 
 /** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
@@ -9,12 +13,15 @@
 /** @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
 /** @typedef {import('../../types/promptData.js').PromptData} PromptData */
 /** @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
+/** @typedef {import('../../interfaces/coreServices.js').IEntityManager} IEntityManager */
 
 import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
 import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
 import { IAIGameStateProvider } from '../interfaces/IAIGameStateProvider.js';
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { DEFAULT_FALLBACK_ACTION } from '../../llms/constants/llmConstants.js';
+import { persistThoughts } from '../../ai/thoughtPersistenceHook.js';
+import { persistNotes } from '../../ai/notesPersistenceHook.js';
 
 /**
  * @class AIPlayerStrategy
@@ -108,26 +115,55 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     this.#logger = logger;
   }
 
-  _createFallbackAction(errorContext, actorId = 'UnknownActor') {
-    const detailedErrorContext = `AI Error for ${actorId}: ${errorContext}. Waiting.`;
-    this.#logger.debug(
-      `AIPlayerStrategy: Creating fallback action. Error: "${errorContext}", Actor: ${actorId}`
+  /**
+   * Creates a single, canonical fallback action when any part of the AI
+   * decision-making pipeline fails. This method centralizes fallback logic.
+   *
+   * @private
+   * @param {string} failureContext - A high-level string describing where the failure occurred.
+   * @param {Error} error - The caught error object.
+   * @param {string} actorId - The ID of the actor for whom the action failed.
+   * @returns {ITurnAction} The canonical fallback action.
+   */
+  _createCanonicalFallbackAction(failureContext, error, actorId) {
+    this.#logger.error(
+      `AIPlayerStrategy: Creating canonical fallback action for actor ${actorId} due to ${failureContext}.`,
+      {
+        actorId,
+        error,
+        errorMessage: error.message,
+        stack: error.stack,
+      }
     );
+
     let userFriendlyErrorBrief = 'an unexpected issue';
     if (
-      typeof errorContext === 'string' &&
-      errorContext.toLowerCase().includes('http error 500')
+      typeof error.message === 'string' &&
+      error.message.toLowerCase().includes('http error 500')
     ) {
-      userFriendlyErrorBrief = 'a connection problem';
+      userFriendlyErrorBrief = 'a server connection problem';
+    } else if (failureContext === 'llm_response_processing') {
+      userFriendlyErrorBrief = 'a communication issue';
     }
-    const speechMessage = `I encountered ${userFriendlyErrorBrief} and will wait.`;
+
+    const speechMessage = `I encountered ${userFriendlyErrorBrief} and will wait for a moment.`;
+
+    // Construct a detailed diagnostics object for logging and debugging.
+    const diagnostics = {
+      originalMessage: error.message,
+      ...(error.details || {}), // Spread details from LLMProcessingError if present
+      stack: error.stack?.split('\n'),
+    };
+
     return {
       actionDefinitionId: DEFAULT_FALLBACK_ACTION.actionDefinitionId,
       commandString: DEFAULT_FALLBACK_ACTION.commandString,
       speech: speechMessage,
       resolvedParameters: {
-        errorContext: detailedErrorContext,
-        actorId: actorId,
+        actorId,
+        isFallback: true,
+        failureReason: failureContext,
+        diagnostics,
       },
     };
   }
@@ -138,17 +174,11 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
 
     try {
       if (!context) {
-        this.#logger.error(
-          'AIPlayerStrategy: Critical - ITurnContext is null.'
-        );
-        return this._createFallbackAction('null_turn_context');
+        throw new Error('Critical - ITurnContext is null.');
       }
       actor = context.getActor();
       if (!actor || !actor.id) {
-        this.#logger.error(
-          'AIPlayerStrategy: Critical - Actor not available in context.'
-        );
-        return this._createFallbackAction('missing_actor_in_context');
+        throw new Error('Critical - Actor not available in context.');
       }
       actorId = actor.id;
       this.#logger.info(`AIPlayerStrategy: decideAction for actor ${actorId}.`);
@@ -156,10 +186,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
       // 1. Get current LLM ID for PromptBuilder
       const currentLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
       if (!currentLlmId) {
-        this.#logger.error(
-          `AIPlayerStrategy: Could not determine active LLM ID for actor ${actorId}. Cannot build prompt.`
-        );
-        return this._createFallbackAction('missing_active_llm_id', actorId);
+        throw new Error('Could not determine active LLM ID.');
       }
       this.#logger.debug(
         `AIPlayerStrategy: Active LLM ID for prompt construction: ${currentLlmId}`
@@ -172,20 +199,14 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         this.#logger
       );
 
-      // The call to AIPromptContentProvider.checkCriticalGameState(gameStateDto, this.#logger);
-      // has been REMOVED from here. Validation is now handled internally by getPromptData.
-
       // 3. Assemble promptData using AIPromptContentProvider
-      this.#logger.debug(
-        `AIPlayerStrategy: Requesting PromptData from AIPromptContentProvider for actor ${actorId}.`
-      );
       // The call to getPromptData will now internally validate gameStateDto and throw an error if it's invalid.
       const promptData = await this.#promptContentProvider.getPromptData(
         gameStateDto,
         this.#logger
       );
       this.#logger.debug(
-        `AIPlayerStrategy: promptData received for actor ${actorId}. Keys: ${Object.keys(promptData).join(', ')}`
+        `AIPlayerStrategy: promptData received for actor ${actorId}.`
       );
 
       // 4. Build the final prompt string using PromptBuilder
@@ -195,20 +216,13 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
       );
 
       if (!finalPromptString) {
-        // Covers null, undefined, and empty string ''
-        this.#logger.error(
-          `AIPlayerStrategy: PromptBuilder returned an empty or invalid prompt for LLM ${currentLlmId}, actor ${actorId}.`
-        );
-        return this._createFallbackAction(
-          'prompt_builder_empty_result',
-          actorId
-        );
+        throw new Error('PromptBuilder returned an empty or invalid prompt.');
       }
       this.#logger.info(
-        `AIPlayerStrategy: Generated final prompt string for actor ${actorId} using LLM config for '${currentLlmId}'. Length: ${finalPromptString.length}.`
+        `AIPlayerStrategy: Generated final prompt string for actor ${actorId} using LLM config for '${currentLlmId}'.`
       );
       this.#logger.debug(
-        `AIPlayerStrategy: Final Prompt String for ${actorId} (LLM: ${currentLlmId}):\n${finalPromptString}`
+        `AIPlayerStrategy: Final Prompt String for ${actorId}:\n${finalPromptString}`
       );
 
       // 5. Call LLM Adapter with the final prompt string
@@ -218,29 +232,60 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         `AIPlayerStrategy: Received LLM JSON response for actor ${actorId}: ${llmJsonResponse}`
       );
 
-      // 6. Process LLM Response
-      return await this.#llmResponseProcessor.processResponse(
-        llmJsonResponse,
-        actorId,
-        this.#logger
-      );
-    } catch (error) {
-      const errorMessage = error?.message || 'Unknown error object';
-      this.#logger.error(
-        `AIPlayerStrategy: Unhandled error for actor ${actorId}: ${errorMessage}`,
-        {
-          errorDetails: error,
-          stack: error?.stack,
+      // 6. Process LLM Response. This now throws a detailed error on failure.
+      const { action, extractedData } =
+        await this.#llmResponseProcessor.processResponse(
+          llmJsonResponse,
+          actorId,
+          this.#logger
+        );
+
+      // 7. Handle successful result and persist data
+      const entityManager = context.getEntityManager();
+      const actorEntity = entityManager?.getEntityInstance(actorId);
+
+      if (actorEntity && extractedData) {
+        this.#logger.debug(
+          `Persisting thoughts and notes for actor ${actorId}.`
+        );
+        try {
+          if (extractedData.thoughts) {
+            persistThoughts(
+              { thoughts: extractedData.thoughts },
+              actorEntity,
+              this.#logger
+            );
+          }
+          if (extractedData.notes && extractedData.notes.length > 0) {
+            persistNotes(
+              { notes: extractedData.notes },
+              actorEntity,
+              this.#logger
+            );
+          }
+        } catch (e) {
+          this.#logger.warn(
+            'Persistence of thoughts or notes failed post-processing',
+            { actorId, err: e }
+          );
         }
-      );
-      // The existing try...catch block will catch errors thrown by getPromptData (due to validation failure)
-      // or any other part of the process.
-      return this._createFallbackAction(
-        `unhandled_orchestration_error: ${errorMessage}`,
+      }
+
+      return action; // Return the clean action on success
+    } catch (error) {
+      // MASTER ERROR HANDLER: All errors from the try block are caught here.
+      // This includes prompt building, LLM calls, and response processing.
+      const failureContext =
+        error.name === 'LLMProcessingError'
+          ? 'llm_response_processing'
+          : 'unhandled_orchestration_error';
+
+      // The canonical fallback action is created here, centralizing all fallback logic.
+      return this._createCanonicalFallbackAction(
+        failureContext,
+        error,
         actorId
       );
     }
   }
 }
-
-// --- FILE END ---

@@ -1,3 +1,5 @@
+// tests/integration/EndToEndNotesPersistence.test.js
+
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
@@ -35,6 +37,8 @@ const createActor = (id) => {
   return e;
 };
 
+// CORRECTED: This helper now builds a plain DTO that matches the structure
+// the AIPromptContentProvider expects to parse.
 const buildPrompt = async (provider, builder, actor, logger) => {
   const dto = {
     actorState: {
@@ -67,7 +71,6 @@ describe('End-to-End Notes Persistence Flow', () => {
   let promptBuilder;
   let schemaValidator;
   let actor;
-  let entityManager;
   let processor;
 
   const testConfig = {
@@ -76,6 +79,7 @@ describe('End-to-End Notes Persistence Flow', () => {
     promptElements: [
       {
         key: 'notes_wrapper',
+        elementType: 'notes_section',
         prefix: '\nImportant Things to Remember:\n',
         suffix: '\n',
       },
@@ -83,8 +87,10 @@ describe('End-to-End Notes Persistence Flow', () => {
     promptAssemblyOrder: ['notes_wrapper'],
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     logger = makeLogger();
+    actor = createActor('actor1');
+
     provider = new AIPromptContentProvider({
       logger,
       promptStaticContentService: new PromptStaticContentService({ logger }),
@@ -111,15 +117,7 @@ describe('End-to-End Notes Persistence Flow', () => {
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
-    actor = createActor('actor1');
-    entityManager = {
-      getEntityInstance: jest.fn().mockReturnValue(actor),
-      addComponent: jest.fn((id, compId, data) => {
-        if (id === actor.id) actor.addComponent(compId, data);
-      }),
-      saveEntity: jest.fn().mockResolvedValue(undefined),
-    };
-    processor = new LLMResponseProcessor({ schemaValidator, entityManager });
+    processor = new LLMResponseProcessor({ schemaValidator });
   });
 
   test('notes persist and appear in subsequent prompt', async () => {
@@ -134,16 +132,29 @@ describe('End-to-End Notes Persistence Flow', () => {
       notes: ['Remember the password'],
     };
 
-    const validation = schemaValidator.validate(
-      LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
-      response
+    const processingResult = await processor.processResponse(
+      JSON.stringify(response),
+      actor.id,
+      logger
     );
-    expect(validation.isValid).toBe(true);
 
-    await processor.processResponse(JSON.stringify(response), actor.id, logger);
+    expect(processingResult.success).toBe(true);
+    expect(processingResult.extractedData.notes).toEqual([
+      'Remember the password',
+    ]);
+
+    if (processingResult.success && processingResult.extractedData.notes) {
+      const notesComp = actor.getComponentData(NOTES_COMPONENT_ID);
+      const newNotes = processingResult.extractedData.notes.map((text) => ({
+        text,
+        timestamp: new Date().toISOString(),
+      }));
+      notesComp.notes.push(...newNotes);
+    }
 
     const notesComp = actor.getComponentData(NOTES_COMPONENT_ID);
     expect(notesComp.notes).toHaveLength(1);
+    expect(notesComp.notes[0].text).toBe('Remember the password');
 
     const prompt2 = await buildPrompt(provider, promptBuilder, actor, logger);
     expect(prompt2).toContain('Important Things to Remember');

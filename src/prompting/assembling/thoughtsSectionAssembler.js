@@ -64,7 +64,6 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
       return '';
     }
 
-    // Resolve optional prefix / suffix (default empty strings)
     const resolvedPrefix = elementCfg?.prefix
       ? placeholderResolver.resolve(elementCfg.prefix, promptData)
       : '';
@@ -72,20 +71,22 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
       ? placeholderResolver.resolve(elementCfg.suffix, promptData)
       : '';
 
-    const header = 'Your most recent thoughts (oldest first):';
-    // Build thought lines, convert non‑string values using String(), skip null/undefined
     const thoughtLines = arr
       .filter((th) => th !== null && th !== undefined && th !== '')
       .map((th) => `- ${String(th)}`)
       .join('\n');
 
-    // Core of the section (header + blank line + list + trailing newline)
-    const sectionCore = `${header}\n\n${thoughtLines}\n`;
+    // **FIX:** The `sectionCore` no longer contains a hardcoded header.
+    // It is now just the list of thoughts. The prefix from the config
+    // is expected to contain the header.
+    const sectionCore = thoughtLines;
 
-    // Surround with exactly one blank line before and after.
-    const sectionWithFrame = `\n${resolvedPrefix}${sectionCore}${resolvedSuffix}\n`;
+    // If there's content, wrap it in the prefix and suffix.
+    if (sectionCore) {
+      return `${resolvedPrefix}${sectionCore}${resolvedSuffix}`;
+    }
 
-    return sectionWithFrame;
+    return '';
   }
 }
 
