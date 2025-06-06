@@ -86,7 +86,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * successfully dispatched by the underlying dispatcher, and `false` otherwise
    * (due to validation failure, dispatch error, or exception).
    */
-  async dispatchSafely(eventName, payload, options = {}) {
+  async dispatch(eventName, payload, options = {}) {
     // Added options parameter
     try {
       // Pass the options object to dispatchValidated

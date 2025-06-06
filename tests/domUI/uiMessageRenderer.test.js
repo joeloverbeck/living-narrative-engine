@@ -281,7 +281,7 @@ describe('UiMessageRenderer', () => {
       );
     });
 
-    it('should handle core:system_error_occurred event', () => {
+    it('should handle SYSTEM_ERROR_OCCURRED event', () => {
       const renderer = createRenderer();
       const payload = { message: 'VED Fatal Error' };
       const fatalHandler = mockVed.subscribe.mock.calls.find(
@@ -373,7 +373,7 @@ describe('UiMessageRenderer', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(3); // 3 from handler + potentially others if not cleared
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Received invalid 'core:system_error_occurred' payload."
+          'Received invalid ' + SYSTEM_ERROR_OCCURRED_ID + ' payload.'
         ),
         expect.anything()
       );

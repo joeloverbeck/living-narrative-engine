@@ -2,6 +2,7 @@
 
 // --- Static Imports ---
 import ResolutionStatus from '../types/resolutionStatus.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -121,7 +122,7 @@ class CommandProcessor {
         ['dispatchValidated']
       ); // Used by ActionContext shim
       this.#_validateDependency(safeEventDispatcher, 'safeEventDispatcher', [
-        'dispatchSafely',
+        'dispatch',
       ]);
       this.#_validateDependency(worldContext, 'worldContext', [
         'getLocationOfEntity',
@@ -442,10 +443,10 @@ class CommandProcessor {
       this.#logger.error(
         `CommandProcessor.#_dispatchActionAttempt: ${internalMsg}`
       );
-      // #dispatchSystemError is already called by #dispatchWithErrorHandling if dispatchSafely fails and logs
+      // #dispatchSystemError is already called by #dispatchWithErrorHandling if dispatch fails and logs
       // So, we might not need to call it again here, but ensure the errorResult is correct.
-      // However, #dispatchWithErrorHandling doesn't call #dispatchSystemError for a 'false' return from dispatchSafely, only for exceptions *during* dispatchSafely.
-      // So, if dispatchSafely returns false (VED failure), we should dispatch a system error.
+      // However, #dispatchWithErrorHandling doesn't call #dispatchSystemError for a 'false' return from dispatch, only for exceptions *during* dispatch.
+      // So, if dispatch returns false (VED failure), we should dispatch a system error.
       await this.#dispatchSystemError(
         userMsg,
         `Failed to dispatch core:attempt_action (VED validation likely). Payload: ${JSON.stringify(payload)}`
@@ -559,7 +560,7 @@ class CommandProcessor {
       `CommandProcessor.#dispatchWithErrorHandling: Attempting dispatch: ${loggingContextName} ('${eventName}')`
     );
     try {
-      // The SafeEventDispatcher.dispatchSafely expects (eventName, payload)
+      // The SafeEventDispatcher.dispatch expects (eventName, payload)
       // The payload here should NOT contain 'eventName' if the schema for 'eventName'
       // (e.g. core:attempt_action) requires 'eventName' within its payload.
       // If the schema for event 'eventName' *requires* an 'eventName' field inside its payload,
@@ -568,7 +569,7 @@ class CommandProcessor {
       // was missing it.
       // The 'payload' constructed in #_dispatchActionAttempt *does* include eventName.
 
-      const success = await this.#safeEventDispatcher.dispatchSafely(
+      const success = await this.#safeEventDispatcher.dispatch(
         eventName,
         payload
       );
@@ -578,7 +579,7 @@ class CommandProcessor {
           `CommandProcessor.#dispatchWithErrorHandling: Dispatch successful for ${loggingContextName}.`
         );
       } else {
-        // This 'else' means dispatchSafely returned false, likely because VED returned false.
+        // This 'else' means dispatch returned false, likely because VED returned false.
         this.#logger.warn(
           `CommandProcessor.#dispatchWithErrorHandling: SafeEventDispatcher reported failure for ${loggingContextName} (likely VED validation failure). Payload: ${JSON.stringify(payload)}`
         );
@@ -586,13 +587,13 @@ class CommandProcessor {
       return success;
     } catch (dispatchError) {
       this.#logger.error(
-        `CommandProcessor.#dispatchWithErrorHandling: CRITICAL - Error during dispatchSafely for ${loggingContextName}. Error: ${dispatchError.message}`,
+        `CommandProcessor.#dispatchWithErrorHandling: CRITICAL - Error during dispatch for ${loggingContextName}. Error: ${dispatchError.message}`,
         dispatchError
       );
-      // If dispatchSafely itself throws, it's a more fundamental issue.
+      // If dispatch itself throws, it's a more fundamental issue.
       await this.#dispatchSystemError(
         'System error during event dispatch.',
-        `Exception in dispatchSafely for ${eventName}`,
+        `Exception in dispatch for ${eventName}`,
         dispatchError
       );
       return false;
@@ -623,14 +624,14 @@ class CommandProcessor {
       this.#logger.error(`CommandProcessor System Error: ${internalDetails}`);
     }
 
-    const dispatchSuccess = await this.#safeEventDispatcher.dispatchSafely(
-      'core:system_error_occurred',
+    const dispatchSuccess = await this.#safeEventDispatcher.dispatch(
+      SYSTEM_ERROR_OCCURRED_ID,
       payload
     );
 
     if (!dispatchSuccess) {
       this.#logger.error(
-        `CommandProcessor: CRITICAL FAILURE - Failed to dispatch 'core:system_error_occurred' event itself. Context: UserMessage='${userMessage}', InternalDetails='${internalDetails}'.`
+        `CommandProcessor: CRITICAL FAILURE - Failed to dispatch SYSTEM_ERROR_OCCURRED_ID event itself. Context: UserMessage='${userMessage}', InternalDetails='${internalDetails}'.`
       );
     }
   }

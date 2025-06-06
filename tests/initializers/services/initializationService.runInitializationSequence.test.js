@@ -105,7 +105,7 @@ describe('InitializationService', () => {
             return {
               subscribe: jest.fn(),
               unsubscribe: jest.fn(),
-              dispatchSafely: jest.fn(),
+              dispatch: jest.fn(),
             };
           case tokens.IEntityManager:
             return { getEntityInstance: jest.fn() };

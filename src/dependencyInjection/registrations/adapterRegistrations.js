@@ -1,5 +1,4 @@
 // src/dependencyInjection/registrations/adapterRegistrations.js
-// --- FILE START ---
 /* eslint-env node */
 
 /**
@@ -20,9 +19,6 @@
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 /** @typedef {import('../../llms/interfaces/IApiKeyProvider.js').IApiKeyProvider} IApiKeyProvider */
 /** @typedef {import('../../llms/interfaces/IHttpClient.js').IHttpClient} IHttpClient */
-// IFileSystemReader and IEnvironmentVariableReader are no longer needed here as they were server-specific
-// /** @typedef {import('../../../interfaces/IServerUtils.js').IFileSystemReader} IFileSystemReader */
-// /** @typedef {import('../../../interfaces/IServerUtils.js').IEnvironmentVariableReader} IEnvironmentVariableReader */
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -37,13 +33,11 @@ import EventBusTurnEndAdapter from '../../turns/adapters/eventBusTurnEndAdapter.
 // --- New LLM Related Imports ---
 import { ConfigurableLLMAdapter } from '../../turns/adapters/configurableLLMAdapter.js';
 import { EnvironmentContext } from '../../llms/environmentContext.js';
-// NodeFileSystemReader, ProcessEnvReader, ServerApiKeyProvider are removed as they are server-specific
 import { ClientApiKeyProvider } from '../../llms/clientApiKeyProvider.js';
 import { RetryHttpClient } from '../../llms/retryHttpClient.js';
 import { LLMStrategyFactory } from '../../llms/LLMStrategyFactory.js';
-// LlmConfigLoader import is removed here as it's not directly instantiated in this file anymore
-// for the adapter's immediate initialization. It will be needed by the code that calls init().
-// import {LlmConfigLoader} from '../../llms/services/llmConfigLoader.js';
+
+// Note: LlmConfigLoader is NOT instantiated here (deferred until init).
 
 /**
  * Registers the default port adapters and the ConfigurableLLMAdapter with its dependencies
@@ -72,10 +66,14 @@ export function registerAdapters(container) {
           `Missing dependency ${tokens.IValidatedEventDispatcher} for EventBusCommandInputGateway`
         );
       }
-      return new EventBusCommandInputGateway({ validatedEventDispatcher: ved });
+      return new EventBusCommandInputGateway({
+        validatedEventDispatcher: ved,
+      });
     });
   logger.debug(
-    `Adapter Registration: Registered EventBusCommandInputGateway as ${tokens.ICommandInputPort} tagged with ${SHUTDOWNABLE.join(', ')}.`
+    `Adapter Registration: Registered EventBusCommandInputGateway as ${tokens.ICommandInputPort} tagged with ${SHUTDOWNABLE.join(
+      ', '
+    )}.`
   );
 
   // --- Register EventBusPromptAdapter ---
@@ -131,79 +129,91 @@ export function registerAdapters(container) {
     `Adapter Registration: Registered EventBusTurnEndAdapter as ${tokens.ITurnEndPort}.`
   );
 
-  // --- LLM Adapter Integration (Ticket 24) ---
-  logger.info(
-    'Adapter Registrations: Starting LLM Adapter setup for CLIENT environment...'
-  );
-
-  // 1. Instantiate Core Services and Context
-  const executionEnv = 'client';
-  const projectRoot = null;
-
-  let proxyUrl = undefined;
-  if (globalThis.process && globalThis.process.env) {
-    proxyUrl = globalThis.process.env.PROXY_URL || undefined;
-  }
-
-  const environmentContext = new EnvironmentContext({
-    logger,
-    executionEnvironment: executionEnv,
-    projectRootPath: projectRoot,
-    proxyServerUrl: proxyUrl,
+  // --- Register RetryHttpClient as a singleton factory, resolving dispatchers only if they are registered ---
+  registrar.singletonFactory(tokens.IHttpClient, (c) => {
+    let dispatcher = null;
+    if (c.isRegistered(tokens.ISafeEventDispatcher)) {
+      dispatcher = /** @type {ISafeEventDispatcher} */ (
+        c.resolve(tokens.ISafeEventDispatcher)
+      );
+    } else if (c.isRegistered(tokens.IValidatedEventDispatcher)) {
+      dispatcher = /** @type {IValidatedEventDispatcher} */ (
+        c.resolve(tokens.IValidatedEventDispatcher)
+      );
+    } else {
+      logger.warn(
+        `Adapter Registration: Neither ${tokens.ISafeEventDispatcher} nor ${tokens.IValidatedEventDispatcher} available for IHttpClient; passing null dispatcher.`
+      );
+    }
+    const httpLogger = /** @type {ILogger} */ (c.resolve(tokens.ILogger));
+    return new RetryHttpClient({
+      logger: httpLogger,
+      dispatcher: dispatcher,
+    });
   });
   logger.debug(
-    `Adapter Registration: EnvironmentContext instantiated. Environment: ${environmentContext.getExecutionEnvironment()}, Proxy URL: ${proxyUrl || 'Not configured'}`
+    `Adapter Registration: Registered RetryHttpClient as ${tokens.IHttpClient}.`
   );
 
-  // 2. Instantiate IApiKeyProvider - Always ClientApiKeyProvider for this bundle
-  /** @type {IApiKeyProvider} */
-  let apiKeyProvider;
+  // --- Register ConfigurableLLMAdapter lazily ---
+  registrar.singletonFactory(tokens.ILLMAdapter, (c) => {
+    logger.info(
+      'Adapter Registration: Starting LLM Adapter setup for CLIENT environment...'
+    );
 
-  if (environmentContext.isClient()) {
-    apiKeyProvider = new ClientApiKeyProvider({ logger });
-    logger.debug('Adapter Registration: ClientApiKeyProvider instantiated.');
-  } else {
-    const errorMessage = `Adapter Registration: Critical error - Expected client environment for APIKeyProvider, but got '${environmentContext.getExecutionEnvironment()}'. This bundle is intended for client-side only.`;
-    logger.error(errorMessage);
-    throw new Error(errorMessage);
-  }
+    // 1. Instantiate Core Services and Context
+    const executionEnv = 'client';
+    const projectRoot = null;
 
-  // 3. Instantiate IHttpClient (RetryHttpClient)
-  const retryHttpClient = new RetryHttpClient({
-    logger,
-  });
-  logger.debug('Adapter Registration: RetryHttpClient instantiated.');
+    let proxyUrl = undefined;
+    if (globalThis.process && globalThis.process.env) {
+      proxyUrl = globalThis.process.env.PROXY_URL || undefined;
+    }
 
-  // 4. Instantiate LLMStrategyFactory
-  const llmStrategyFactory = new LLMStrategyFactory({
-    httpClient: retryHttpClient,
-    logger,
-  });
-  logger.debug('Adapter Registration: LLMStrategyFactory instantiated.');
+    const environmentContext = new EnvironmentContext({
+      logger,
+      executionEnvironment: executionEnv,
+      projectRootPath: projectRoot,
+      proxyServerUrl: proxyUrl,
+    });
+    logger.debug(
+      `Adapter Registration: EnvironmentContext instantiated. Environment: ${environmentContext.getExecutionEnvironment()}, Proxy URL: ${
+        proxyUrl || 'Not configured'
+      }`
+    );
 
-  // 5. LlmConfigLoader is NOT instantiated here for the adapter's init.
-  //    The code that calls adapter.init() later will be responsible for
-  //    creating/providing LlmConfigLoader, ensuring it gets an ISchemaValidator
-  //    instance that has all necessary schemas loaded.
+    // 2. Instantiate IApiKeyProvider
+    /** @type {IApiKeyProvider} */
+    let apiKeyProvider;
+    if (environmentContext.isClient()) {
+      apiKeyProvider = new ClientApiKeyProvider({ logger });
+      logger.debug('Adapter Registration: ClientApiKeyProvider instantiated.');
+    } else {
+      const errorMessage = `Adapter Registration: Critical error – Expected client environment for APIKeyProvider, but got '${environmentContext.getExecutionEnvironment()}'. This bundle is intended for client-side only.`;
+      logger.error(errorMessage);
+      throw new Error(errorMessage);
+    }
 
-  // 6. Instantiate ConfigurableLLMAdapter (without immediate initialization)
-  registrar.singletonFactory(tokens.ILLMAdapter, () => {
-    // Dependencies for ConfigurableLLMAdapter constructor are resolved here or taken from above.
+    // 3. Resolve IHttpClient and instantiate LLMStrategyFactory
+    const httpClient = c.resolve(tokens.IHttpClient);
+    const llmStrategyFactory = new LLMStrategyFactory({
+      httpClient: httpClient,
+      logger: logger,
+    });
+    logger.debug('Adapter Registration: LLMStrategyFactory instantiated.');
+
+    // 4. Instantiate ConfigurableLLMAdapter (without immediate .init())
     const adapterInstance = new ConfigurableLLMAdapter({
-      logger: container.resolve(tokens.ILogger), // Resolve a fresh logger instance if appropriate, or use the existing 'logger'
+      logger: c.resolve(tokens.ILogger),
       environmentContext,
       apiKeyProvider,
       llmStrategyFactory,
-      // initialLlmId: null // Or get from a configuration if needed
+      // initialLlmId: null // Or get from config if needed
     });
 
     logger.info(
-      `Adapter Registration: ConfigurableLLMAdapter instance (token: ${tokens.ILLMAdapter}) created. It must be initialized explicitly later in the application's bootstrap sequence, after all schemas have been loaded by SchemaLoader.`
+      `Adapter Registration: ConfigurableLLMAdapter instance (token: ${tokens.ILLMAdapter}) created. It must be initialized explicitly later in the application's bootstrap sequence, after all schemas have been loaded.`
     );
-
-    // CRITICAL CHANGE: DO NOT call adapterInstance.init() here.
-    // The init() call and its associated .then().catch() logic will be handled
-    // by the component/service responsible for orchestrating the initialization sequence.
 
     return adapterInstance;
   });
@@ -211,10 +221,5 @@ export function registerAdapters(container) {
     `Adapter Registration: Registered ConfigurableLLMAdapter factory as ${tokens.ILLMAdapter}. Deferred (explicit) initialization is required.`
   );
 
-  logger.info(
-    'Adapter Registrations: LLM Adapter setup complete (instance created, not initialized).'
-  );
   logger.info('Adapter Registrations: All registrations complete.');
 }
-
-// --- FILE END ---

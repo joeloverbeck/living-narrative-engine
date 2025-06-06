@@ -52,39 +52,25 @@ export function configureContainer(container, uiElements) {
   const { outputDiv, inputElement, titleElement, document: doc } = uiElements;
 
   // --- Bootstrap logger with a default level (e.g., INFO) ---
-  // This logger instance will be updated if a dependencyInjection file is successfully loaded.
-  // Choose a sensible default. LogLevel.INFO is common for production,
-  // LogLevel.DEBUG might be useful during development if not overridden by dependencyInjection.
   const initialLogLevel = LogLevel.INFO;
   const appLogger = new ConsoleLogger(initialLogLevel);
-  // CORRECTED LINE: Use registrar.instance for pre-built instances
   registrar.instance(tokens.ILogger, appLogger);
 
-  // Get the logger instance (cast to ConsoleLogger to access setLogLevel later)
   const logger = /** @type {ConsoleLogger} */ (
     container.resolve(tokens.ILogger)
   );
-
-  // Log that we're attempting to load the remote configuration.
-  // This message will use the `initialLogLevel`.
   logger.debug(
     `[ContainerConfig] Initial logger registered with level: ${initialLogLevel}. Attempting to load remote logger configuration...`
   );
 
   // --- Asynchronously load logger configuration and update level ---
-  // This is a self-invoking async function so it doesn't block configureContainer.
   (async () => {
     try {
-      // The LoggerConfigLoader will use the `appLogger` instance (which currently has `initialLogLevel`).
-      // Its own logs during loading will thus adhere to `initialLogLevel`.
       const loggerConfigLoader = new LoggerConfigLoader({ logger: logger });
-
-      // This log message from containerConfig itself will use the `initialLogLevel`.
       logger.debug(
         '[ContainerConfig] Starting asynchronous load of logger configuration...'
       );
-
-      const loggerConfigResult = await loggerConfigLoader.loadConfig(); // loadConfig() is defined in LoggerConfigLoader
+      const loggerConfigResult = await loggerConfigLoader.loadConfig();
 
       if (
         loggerConfigResult &&
@@ -92,13 +78,10 @@ export function configureContainer(container, uiElements) {
         loggerConfigResult.logLevel !== undefined
       ) {
         if (typeof loggerConfigResult.logLevel === 'string') {
-          // Log before changing level (will use current level)
           logger.debug(
             `[ContainerConfig] Logger configuration loaded successfully. Requested level: '${loggerConfigResult.logLevel}'. Applying...`
           );
-          // Update the log level of the existing singleton logger instance
           logger.setLogLevel(loggerConfigResult.logLevel);
-          // The setLogLevel method in ConsoleLogger already logs the change if it occurs.
         } else {
           logger.warn(
             `[ContainerConfig] Logger configuration loaded, but 'logLevel' is not a string: ${loggerConfigResult.logLevel}. Retaining current log level.`
@@ -109,13 +92,11 @@ export function configureContainer(container, uiElements) {
           `[ContainerConfig] Failed to load logger configuration from '${loggerConfigResult.path || 'default path'}'. Error: ${loggerConfigResult.message}. Stage: ${loggerConfigResult.stage || 'N/A'}. Retaining current log level.`
         );
       } else {
-        // This case means the file was loaded but either empty, or logLevel property was missing.
         logger.info(
           '[ContainerConfig] Logger configuration file loaded but no specific logLevel found or file was empty. Retaining current log level.'
         );
       }
     } catch (error) {
-      // Catch any unexpected errors during the async loading/processing.
       logger.error(
         '[ContainerConfig] CRITICAL ERROR during asynchronous logger configuration loading:',
         {
@@ -124,20 +105,18 @@ export function configureContainer(container, uiElements) {
           errorObj: error,
         }
       );
-      // Log level will remain as `initialLogLevel`.
     }
-  })(); // End of self-invoking async function for logger dependencyInjection loading
+  })();
 
-  // --- Continue with other registrations ---
-  // These will use the logger, which might still have its initial log level,
-  // or an updated one if the async loading was very fast.
   logger.info(
     '[ContainerConfig] Starting synchronous bundle registration while logger dependencyInjection continues loading in background (if not already done).'
   );
 
-  // --- Registration Order ---
+  // --- *** CORRECTED REGISTRATION ORDER *** ---
+  // Infrastructure (like dispatchers, storage) must be registered before
+  // services that depend on them (like adapters).
   registerLoaders(container);
-  registerInfrastructure(container);
+  registerInfrastructure(container); // Provides ISafeEventDispatcher
   registerUI(container, {
     outputDiv,
     inputElement,
@@ -146,17 +125,18 @@ export function configureContainer(container, uiElements) {
   });
   registerDomainServices(container);
   registerInterpreters(container);
-  registerAdapters(container);
+  registerAdapters(container); // Consumes ISafeEventDispatcher - MUST be after registerInfrastructure
   registerCoreSystems(container);
   registerInitializers(container);
   registerRuntime(container);
   registerOrchestration(container);
+  // --- *** END CORRECTION *** ---
 
   logger.info('[ContainerConfig] All core bundles registered.');
 
   // --- Populate Registries (Post-Registration Steps) ---
   try {
-    logger.debug('[ContainerConfig] Populating SystemDataRegistry...'); // This debug log will respect the current log level
+    logger.debug('[ContainerConfig] Populating SystemDataRegistry...');
     const systemDataRegistry = /** @type {SystemDataRegistry} */ (
       container.resolve(tokens.SystemDataRegistry)
     );
@@ -214,5 +194,3 @@ export function configureContainer(container, uiElements) {
     '[ContainerConfig] Configuration and registry population complete.'
   );
 }
-
-// --- FILE END ---

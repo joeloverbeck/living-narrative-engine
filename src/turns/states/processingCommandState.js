@@ -190,7 +190,7 @@ export class ProcessingCommandState extends AbstractTurnState {
         /** @type {ISafeEventDispatcher | undefined} */
         const eventDispatcher = turnCtx.getSafeEventDispatcher();
         if (eventDispatcher) {
-          await eventDispatcher.dispatchSafely(ENTITY_SPOKE_ID, {
+          await eventDispatcher.dispatch(ENTITY_SPOKE_ID, {
             entityId: actorId,
             speechContent: speechContent,
             // Consider adding these if the ENTITY_SPOKE_ID event schema/handlers expect them:
@@ -206,9 +206,9 @@ export class ProcessingCommandState extends AbstractTurnState {
           );
         }
       } catch (eventDispatchError) {
-        // This catch should ideally not be hit if dispatchSafely adheres to its non-throwing contract.
+        // This catch should ideally not be hit if dispatch adheres to its non-throwing contract.
         logger.error(
-          `${this.getStateName()}: Unexpected error when trying to use dispatchSafely for ${ENTITY_SPOKE_ID} for actor ${actorId}: ${eventDispatchError.message}`,
+          `${this.getStateName()}: Unexpected error when trying to use dispatch for ${ENTITY_SPOKE_ID} for actor ${actorId}: ${eventDispatchError.message}`,
           eventDispatchError
         );
       }
@@ -497,7 +497,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       this._handler &&
       typeof this._handler.safeEventDispatcher === 'object' &&
       this._handler.safeEventDispatcher !== null &&
-      typeof this._handler.safeEventDispatcher.dispatchSafely === 'function'
+      typeof this._handler.safeEventDispatcher.dispatch === 'function'
     ) {
       logger.warn(
         `${this.getStateName()}: SafeEventDispatcher not found on TurnContext for actor ${currentActorIdForLog}. Attempting to use this._handler.safeEventDispatcher.`
@@ -507,8 +507,8 @@ export class ProcessingCommandState extends AbstractTurnState {
 
     if (systemErrorDispatcher) {
       try {
-        // dispatchSafely should not throw
-        await systemErrorDispatcher.dispatchSafely(SYSTEM_ERROR_OCCURRED_ID, {
+        // dispatch should not throw
+        await systemErrorDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `System error in ${this.getStateName()} for actor ${currentActorIdForLog}: ${error.message}`,
           type: 'error',
           details: `OriginalError: ${error.name} - ${error.message}${

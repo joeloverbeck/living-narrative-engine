@@ -1,5 +1,6 @@
 // src/dom-ui/titleRenderer.js
 import { RendererBase } from './rendererBase.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -153,10 +154,7 @@ export class TitleRenderer extends RendererBase {
 
     // System Fatal Error (Could also trigger title change)
     this._addSubscription(
-      ved.subscribe(
-        'core:system_error_occurred',
-        this.#handleFatalError.bind(this)
-      )
+      ved.subscribe(SYSTEM_ERROR_OCCURRED_ID, this.#handleFatalError.bind(this))
     );
 
     this.logger.debug(
@@ -271,7 +269,7 @@ export class TitleRenderer extends RendererBase {
   }
 
   /**
-   * Handles 'core:system_error_occurred' (example).
+   * Handles SYSTEM_ERROR_OCCURRED_ID (example).
    * Sets a generic error title.
    *
    * @private

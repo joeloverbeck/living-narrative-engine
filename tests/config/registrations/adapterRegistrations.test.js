@@ -198,7 +198,7 @@ describe('Adapter Registrations - registerAdapters', () => {
     };
 
     mockSafeEventDispatcher = {
-      dispatchSafely: jest.fn(),
+      dispatch: jest.fn(),
     };
 
     mockValidatedEventDispatcher = {

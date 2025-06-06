@@ -47,7 +47,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       throw new Error('CommandOutcomeInterpreter: Invalid ILogger dependency.');
     }
     this.#logger = logger;
-    if (!dispatcher || typeof dispatcher.dispatchSafely !== 'function') {
+    if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
       this.#logger.error(
         'CommandOutcomeInterpreter Constructor: Invalid ISafeEventDispatcher.'
       );
@@ -65,7 +65,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!turnContext || typeof turnContext.getActor !== 'function') {
       const errorMsg = `CommandOutcomeInterpreter: Invalid turnContext provided.`;
       this.#logger.error(errorMsg, { receivedContextType: typeof turnContext });
-      await this.#dispatcher.dispatchSafely(SYSTEM_ERROR_OCCURRED_ID, {
+      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: 'Invalid turn context received by CommandOutcomeInterpreter.',
         type: 'error',
         details: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
@@ -77,7 +77,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!actor || !actor.id) {
       const errorMsg = `CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.`;
       this.#logger.error(errorMsg, { actorInContext: actor });
-      await this.#dispatcher.dispatchSafely(SYSTEM_ERROR_OCCURRED_ID, {
+      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: 'Invalid actor in turn context for CommandOutcomeInterpreter.',
         type: 'error',
         details: `Actor object in context was ${JSON.stringify(actor)}.`,
@@ -90,7 +90,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!result || typeof result.success !== 'boolean') {
       const baseErrorMsg = `CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: ${actorId}.`;
       this.#logger.error(baseErrorMsg, { receivedResult: result });
-      await this.#dispatcher.dispatchSafely(SYSTEM_ERROR_OCCURRED_ID, {
+      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: baseErrorMsg,
         type: 'error',
         details: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
@@ -190,7 +190,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     this.#logger.debug(
       `CommandOutcomeInterpreter: Dispatching event '${eventName}' for actor ${actorId}.`
     );
-    await this.#dispatcher.dispatchSafely(eventName, eventPayload);
+    await this.#dispatcher.dispatch(eventName, eventPayload);
 
     this.#logger.debug(
       `CommandOutcomeInterpreter: Returning directive '${directive}' for actor ${actorId}.`

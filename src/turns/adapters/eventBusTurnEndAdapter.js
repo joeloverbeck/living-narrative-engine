@@ -27,7 +27,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
   }) {
     super();
 
-    if (safeEventDispatcher?.dispatchSafely) {
+    if (safeEventDispatcher?.dispatch) {
       this.#dispatcher = safeEventDispatcher;
       this.#isSafe = true;
     } else if (validatedEventDispatcher?.dispatchValidated) {
@@ -82,7 +82,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
 
     try {
       if (this.#isSafe) {
-        await this.#dispatcher.dispatchSafely(TURN_ENDED_ID, payload);
+        await this.#dispatcher.dispatch(TURN_ENDED_ID, payload);
       } else {
         // Type assertion for IValidatedDispatcher if #isSafe is false
         await /** @type {IValidatedDispatcher} */ (

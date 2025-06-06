@@ -147,7 +147,7 @@ const mockValidatedEventDispatcher = {
   subscribe: jest.fn(),
 };
 const mockSafeEventDispatcher = {
-  dispatchSafely: jest.fn(),
+  dispatch: jest.fn(),
   subscribe: jest.fn(),
 };
 const mockGameDataRepository = {

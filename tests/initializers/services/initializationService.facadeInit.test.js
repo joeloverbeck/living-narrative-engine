@@ -108,7 +108,7 @@ beforeEach(() => {
   container.register(tokens.ISafeEventDispatcher, {
     subscribe: jest.fn(),
     unsubscribe: jest.fn(),
-    dispatchSafely: jest.fn(),
+    dispatch: jest.fn(),
   });
   container.register(tokens.IEntityManager, { getEntityInstance: jest.fn() });
 

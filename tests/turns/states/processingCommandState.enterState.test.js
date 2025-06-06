@@ -50,7 +50,7 @@ const mockCommandOutcomeInterpreter = {
 };
 
 const mockSafeEventDispatcher = {
-  dispatchSafely: jest.fn(),
+  dispatch: jest.fn(),
 };
 
 const mockTurnDirectiveStrategy = {
@@ -233,7 +233,7 @@ describe('ProcessingCommandState', () => {
     mockLogger.info.mockClear();
     mockLogger.warn.mockClear();
     mockLogger.error.mockClear();
-    mockSafeEventDispatcher.dispatchSafely.mockClear();
+    mockSafeEventDispatcher.dispatch.mockClear();
     mockTurnContext.endTurn.mockClear();
 
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});

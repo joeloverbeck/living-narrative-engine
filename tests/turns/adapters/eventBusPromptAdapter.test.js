@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- Mocks ---
 const mockSafeDispatcher = {
-  dispatchSafely: jest.fn().mockResolvedValue(true), // Default mock success
+  dispatch: jest.fn().mockResolvedValue(true), // Default mock success
 };
 
 const mockVed = {
@@ -101,7 +101,7 @@ describe('EventBusPromptAdapter', () => {
     );
   });
 
-  it('should call dispatchSafely with correct arguments when using ISafeEventDispatcher', async () => {
+  it('should call dispatch with correct arguments when using ISafeEventDispatcher', async () => {
     const adapter = new EventBusPromptAdapter({
       safeEventDispatcher: mockSafeDispatcher,
     });
@@ -114,8 +114,8 @@ describe('EventBusPromptAdapter', () => {
 
     await adapter.prompt(entityId, actions, errorMsg);
 
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledWith(
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       'core:player_turn_prompt',
       {
         entityId: entityId,
@@ -125,7 +125,7 @@ describe('EventBusPromptAdapter', () => {
     );
   });
 
-  it('should call dispatchSafely without error property if error is null or empty', async () => {
+  it('should call dispatch without error property if error is null or empty', async () => {
     const adapter = new EventBusPromptAdapter({
       safeEventDispatcher: mockSafeDispatcher,
     });
@@ -133,8 +133,8 @@ describe('EventBusPromptAdapter', () => {
     const actions = [{ id: 'act3', command: 'do act3' }];
 
     await adapter.prompt(entityId, actions, null);
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledWith(
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       'core:player_turn_prompt',
       {
         entityId: entityId,
@@ -143,10 +143,10 @@ describe('EventBusPromptAdapter', () => {
       }
     );
 
-    mockSafeDispatcher.dispatchSafely.mockClear();
+    mockSafeDispatcher.dispatch.mockClear();
     await adapter.prompt(entityId, actions, ''); // Empty string error
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledWith(
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       'core:player_turn_prompt',
       {
         entityId: entityId,
@@ -155,10 +155,10 @@ describe('EventBusPromptAdapter', () => {
       }
     );
 
-    mockSafeDispatcher.dispatchSafely.mockClear();
+    mockSafeDispatcher.dispatch.mockClear();
     await adapter.prompt(entityId, actions, '   '); // Whitespace only error
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledWith(
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       'core:player_turn_prompt',
       {
         entityId: entityId,
@@ -187,11 +187,11 @@ describe('EventBusPromptAdapter', () => {
         error: errorMsg,
       }
     );
-    expect(mockSafeDispatcher.dispatchSafely).not.toHaveBeenCalled(); // Ensure safe wasn't called
+    expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled(); // Ensure safe wasn't called
   });
 
-  it('should resolve void even if dispatchSafely returns false', async () => {
-    mockSafeDispatcher.dispatchSafely.mockResolvedValueOnce(false); // Simulate dispatch failure
+  it('should resolve void even if dispatch returns false', async () => {
+    mockSafeDispatcher.dispatch.mockResolvedValueOnce(false); // Simulate dispatch failure
     const adapter = new EventBusPromptAdapter({
       safeEventDispatcher: mockSafeDispatcher,
     });
@@ -200,7 +200,7 @@ describe('EventBusPromptAdapter', () => {
 
     // Expect the promise to resolve successfully (void)
     await expect(adapter.prompt(entityId, actions)).resolves.toBeUndefined();
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
   });
 
   it('should resolve void if dispatchValidated succeeds', async () => {

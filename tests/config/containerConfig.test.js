@@ -1,5 +1,4 @@
-// tests/dependencyInjection/containerConfig.test.js
-// ****** MODIFIED FILE ******
+// tests/config/containerConfig.test.js
 
 import AppContainer from '../../src/dependencyInjection/appContainer.js'; // Adjust path as needed
 import { configureContainer } from '../../src/dependencyInjection/containerConfig.js'; // Adjust path
@@ -9,7 +8,14 @@ import { tokens } from '../../src/dependencyInjection/tokens.js'; // Adjust path
 import CommandOutcomeInterpreter from '../../src/commands/interpreters/commandOutcomeInterpreter.js'; // Adjust path
 import PlayerTurnHandler from '../../src/turns/handlers/playerTurnHandler.js'; // Adjust path
 import TurnManager from '../../src/turns/turnManager.js';
-import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'; // Adjust path
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals'; // Adjust path
 
 // Mock external dependencies (DOM elements, document)
 const mockOutputDiv = document.createElement('div');
@@ -21,8 +27,27 @@ describe('Dependency Injection Container Configuration', () => {
   let container;
 
   beforeEach(() => {
-    // Create a fresh container and configure it for each test
+    // Create a fresh container and register dummy dispatchers before configuring
     container = new AppContainer();
+
+    // Register dummy dispatchers so that RetryHttpClient and other adapters can resolve their dependencies
+    container.register(
+      tokens.ISafeEventDispatcher,
+      {
+        dispatch: jest.fn(),
+      },
+      { lifecycle: 'singleton' }
+    );
+
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      {
+        dispatch: jest.fn(),
+      },
+      { lifecycle: 'singleton' }
+    );
+
+    // Now configure the container with all registrations
     configureContainer(container, {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
@@ -40,10 +65,7 @@ describe('Dependency Injection Container Configuration', () => {
 
   // Test 1: Verify CommandOutcomeInterpreter can be resolved
   it('should resolve CommandOutcomeInterpreter successfully', () => {
-    // VVVVVV MODIFIED LINE VVVVVV
-    // Resolve using the interface token, as this seems to be how CommandOutcomeInterpreter is registered.
     const instance = container.resolve(tokens.ICommandOutcomeInterpreter);
-    // ^^^^^^ MODIFIED LINE ^^^^^^
     expect(instance).toBeInstanceOf(CommandOutcomeInterpreter);
     expect(typeof instance.interpret).toBe('function'); // public API check
   });

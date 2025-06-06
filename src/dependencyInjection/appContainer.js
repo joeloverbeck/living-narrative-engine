@@ -1,5 +1,5 @@
 // src/dependencyInjection/appContainer.js
-// ****** CORRECTED FILE ******
+
 /* eslint-disable no-console */
 /** @typedef {import('./tokens.js').DiToken} DiToken */
 
@@ -153,6 +153,20 @@ class AppContainer {
     }
   }
 
+  // ****** ADDED THIS METHOD TO FIX THE ERROR ******
+  /**
+   * Checks if a service is registered with the container.
+   *
+   * @param {DiToken} key - The unique identifier of the service.
+   * @returns {boolean} True if the service is registered, false otherwise.
+   */
+  isRegistered(key) {
+    const registrationKey = String(key);
+    return this.#registrations.has(registrationKey);
+  }
+
+  // ************************************************
+
   /**
    * Internal helper to create an instance based on registration info.
    *
@@ -163,7 +177,6 @@ class AppContainer {
    * @returns {any} The created instance.
    */
   _createInstance(key, factoryOrValueOrClass, options) {
-    // --- VVVVVV MODIFIED LOGIC VVVVVV ---
     // Determine registration type:
     // It's a class registration if it's a function AND the 'dependencies' key exists in options
     // (Registrar.single/transient always add this key, even if empty array).
@@ -173,7 +186,6 @@ class AppContainer {
 
     const isFactoryFunction =
       typeof factoryOrValueOrClass === 'function' && !isClassRegistration;
-    // --- ^^^^^^ MODIFIED LOGIC ^^^^^^ ---
 
     if (isClassRegistration) {
       // --- Handle Class constructor (from .single/.transient) ---

@@ -14,6 +14,7 @@ import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // --- Mock Dependencies ---
 const mockLogger = {
@@ -231,7 +232,7 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     // Check dispatch event and payload
     expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
     expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:system_error_occurred',
+      SYSTEM_ERROR_OCCURRED_ID,
       {
         message:
           'Internal Error: Turn order inconsistency detected. Stopping game.',
@@ -276,7 +277,7 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
       thrownError // Check that the original error object was logged
     );
     expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:system_error_occurred',
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: 'System Error during turn advancement. Stopping game.',
         type: 'error',

@@ -151,7 +151,7 @@ class GameEngine {
     this.#logger.info(
       'GameEngine._executeInitializationSequence: Dispatching UI event for initialization start.'
     );
-    await this.#safeEventDispatcher.dispatchSafely(
+    await this.#safeEventDispatcher.dispatch(
       ENGINE_INITIALIZING_UI,
       { worldName },
       { allowSchemaNotFound: true }
@@ -217,14 +217,14 @@ class GameEngine {
       );
     }
 
-    await this.#safeEventDispatcher.dispatchSafely(NEW_GAME_STARTED_ID, {
+    await this.#safeEventDispatcher.dispatch(NEW_GAME_STARTED_ID, {
       worldName,
     });
 
     this.#logger.info(
       'GameEngine._finalizeNewGameSuccess: Dispatching UI event for game ready.'
     );
-    await this.#safeEventDispatcher.dispatchSafely(ENGINE_READY_UI, {
+    await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
       activeWorld: this.#activeWorld, // #activeWorld should be set by _prepareForNewGameSession
       message: 'Enter command...',
     });
@@ -272,7 +272,7 @@ class GameEngine {
       'GameEngine._handleNewGameFailure: Dispatching UI event for operation failed.'
     );
 
-    await this.#safeEventDispatcher.dispatchSafely(ENGINE_OPERATION_FAILED_UI, {
+    await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
       errorMessage: `Failed to start new game: ${error.message}`,
       errorTitle: 'Initialization Error',
     });
@@ -370,7 +370,7 @@ class GameEngine {
       );
     }
 
-    await this.#safeEventDispatcher.dispatchSafely(ENGINE_STOPPED_UI, {
+    await this.#safeEventDispatcher.dispatch(ENGINE_STOPPED_UI, {
       inputDisabledMessage: 'Game stopped. Engine is inactive.',
     });
     this.#logger.info('GameEngine.stop: ENGINE_STOPPED_UI event dispatched.');
@@ -384,7 +384,7 @@ class GameEngine {
       );
     }
 
-    await this.#safeEventDispatcher.dispatchSafely(GAME_STOPPED_ID, {});
+    await this.#safeEventDispatcher.dispatch(GAME_STOPPED_ID, {});
     this.#logger.info('GameEngine.stop: GAME_STOPPED_ID event dispatched.');
 
     this.#isEngineInitialized = false;
@@ -411,7 +411,7 @@ class GameEngine {
     if (!this.#isEngineInitialized) {
       const errorMsg = 'Game engine is not initialized. Cannot save game.';
       this.#logger.error(`GameEngine.triggerManualSave: ${errorMsg}`);
-      await this.#safeEventDispatcher.dispatchSafely(
+      await this.#safeEventDispatcher.dispatch(
         ENGINE_MESSAGE_DISPLAY_REQUESTED,
         {
           message: errorMsg,
@@ -425,7 +425,7 @@ class GameEngine {
       const errorMsg =
         'GamePersistenceService is not available. Cannot save game.';
       this.#logger.error(`GameEngine.triggerManualSave: ${errorMsg}`);
-      await this.#safeEventDispatcher.dispatchSafely(
+      await this.#safeEventDispatcher.dispatch(
         ENGINE_MESSAGE_DISPLAY_REQUESTED,
         {
           message: errorMsg,
@@ -442,7 +442,7 @@ class GameEngine {
       this.#logger.info(
         `GameEngine.triggerManualSave: Dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save: "${saveName}".`
       );
-      await this.#safeEventDispatcher.dispatchSafely(
+      await this.#safeEventDispatcher.dispatch(
         ENGINE_OPERATION_IN_PROGRESS_UI,
         {
           titleMessage: 'Saving...',
@@ -463,7 +463,7 @@ class GameEngine {
           `GameEngine.triggerManualSave: Save successful. Name: "${saveName}", Path: ${saveResult.filePath || 'N/A'}`
         );
 
-        await this.#safeEventDispatcher.dispatchSafely(GAME_SAVED_ID, {
+        await this.#safeEventDispatcher.dispatch(GAME_SAVED_ID, {
           saveName: saveName,
           path: saveResult.filePath,
           type: 'manual',
@@ -472,7 +472,7 @@ class GameEngine {
           `GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`
         );
 
-        await this.#safeEventDispatcher.dispatchSafely(
+        await this.#safeEventDispatcher.dispatch(
           ENGINE_MESSAGE_DISPLAY_REQUESTED,
           {
             message: successMsg,
@@ -487,7 +487,7 @@ class GameEngine {
         this.#logger.error(
           `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${saveResult.error}`
         );
-        await this.#safeEventDispatcher.dispatchSafely(
+        await this.#safeEventDispatcher.dispatch(
           ENGINE_MESSAGE_DISPLAY_REQUESTED,
           {
             message: errorMsg,
@@ -511,7 +511,7 @@ class GameEngine {
         error: `Unexpected error during save: ${caughtErrorMsg}`,
       };
 
-      await this.#safeEventDispatcher.dispatchSafely(
+      await this.#safeEventDispatcher.dispatch(
         ENGINE_MESSAGE_DISPLAY_REQUESTED,
         {
           message: `Save operation encountered an unexpected error for "${saveName}": ${caughtErrorMsg}`,
@@ -525,7 +525,7 @@ class GameEngine {
       this.#logger.info(
         `GameEngine.triggerManualSave: Dispatching ENGINE_READY_UI after save attempt for "${saveName}".`
       );
-      await this.#safeEventDispatcher.dispatchSafely(ENGINE_READY_UI, {
+      await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
         activeWorld: this.#activeWorld,
         message: 'Save operation finished. Ready.',
       });
@@ -559,13 +559,10 @@ class GameEngine {
       'GameEngine._prepareForLoadGameSession: Dispatching UI event for load operation in progress.'
     );
     const shortSaveName = saveIdentifier.split(/[/\\]/).pop() || saveIdentifier;
-    await this.#safeEventDispatcher.dispatchSafely(
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      {
-        titleMessage: `Loading ${shortSaveName}...`,
-        inputDisabledMessage: `Loading game from ${shortSaveName}...`,
-      }
-    );
+    await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
+      titleMessage: `Loading ${shortSaveName}...`,
+      inputDisabledMessage: `Loading game from ${shortSaveName}...`,
+    });
   }
 
   /**
@@ -620,10 +617,10 @@ class GameEngine {
       );
     }
 
-    await this.#safeEventDispatcher.dispatchSafely(GAME_LOADED_ID, {
+    await this.#safeEventDispatcher.dispatch(GAME_LOADED_ID, {
       saveIdentifier,
     });
-    await this.#safeEventDispatcher.dispatchSafely(LOADED_GAME_STARTED_ID, {
+    await this.#safeEventDispatcher.dispatch(LOADED_GAME_STARTED_ID, {
       saveIdentifier,
       worldName: this.#activeWorld,
     });
@@ -631,7 +628,7 @@ class GameEngine {
     this.#logger.info(
       'GameEngine._finalizeLoadSuccess: Dispatching UI event for game ready (after load).'
     );
-    await this.#safeEventDispatcher.dispatchSafely(ENGINE_READY_UI, {
+    await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
       activeWorld: this.#activeWorld,
       message: 'Enter command...',
     });
@@ -681,13 +678,10 @@ class GameEngine {
       'GameEngine._handleLoadFailure: Dispatching UI event for operation failed (load).'
     );
     if (this.#safeEventDispatcher) {
-      await this.#safeEventDispatcher.dispatchSafely(
-        ENGINE_OPERATION_FAILED_UI,
-        {
-          errorMessage: `Failed to load game: ${errorMessageString}`,
-          errorTitle: 'Load Failed',
-        }
-      );
+      await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
+        errorMessage: `Failed to load game: ${errorMessageString}`,
+        errorTitle: 'Load Failed',
+      });
     } else {
       this.#logger.error(
         'GameEngine._handleLoadFailure: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
@@ -723,13 +717,10 @@ class GameEngine {
       const errorMsg =
         'GamePersistenceService is not available. Cannot load game.';
       this.#logger.error(`GameEngine.loadGame: ${errorMsg}`);
-      await this.#safeEventDispatcher.dispatchSafely(
-        ENGINE_OPERATION_FAILED_UI,
-        {
-          errorMessage: errorMsg,
-          errorTitle: 'Load Failed',
-        }
-      );
+      await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
+        errorMessage: errorMsg,
+        errorTitle: 'Load Failed',
+      });
       this.#isEngineInitialized = false;
       this.#isGameLoopRunning = false;
       this.#activeWorld = null;
@@ -780,14 +771,11 @@ class GameEngine {
       this.#logger.error(
         'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
       );
-      this.#safeEventDispatcher.dispatchSafely(
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        {
-          message:
-            'Cannot open save menu: GamePersistenceService is unavailable.',
-          type: 'error',
-        }
-      );
+      this.#safeEventDispatcher.dispatch(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
+        message:
+          'Cannot open save menu: GamePersistenceService is unavailable.',
+        type: 'error',
+      });
       return;
     }
 
@@ -799,7 +787,7 @@ class GameEngine {
       );
       // --- FIX START ---
       // Provide an empty object as the payload to satisfy the schema.
-      this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_SAVE_GAME_UI, {});
+      this.#safeEventDispatcher.dispatch(REQUEST_SHOW_SAVE_GAME_UI, {});
       // --- FIX END ---
     } else {
       this.#logger.warn(
@@ -807,7 +795,7 @@ class GameEngine {
       );
       // As per ticket: "Dispatch the CANNOT_SAVE_GAME_INFO event (or ENGINE_MESSAGE_DISPLAY_REQUESTED with the specific message: "Cannot save at this moment...")."
       // Sticking with CANNOT_SAVE_GAME_INFO as it's more specific.
-      this.#safeEventDispatcher.dispatchSafely(CANNOT_SAVE_GAME_INFO); // Assuming CANNOT_SAVE_GAME_INFO also expects an empty payload or handles undefined gracefully. If it also has a schema requiring an object, it should also be {}.
+      this.#safeEventDispatcher.dispatch(CANNOT_SAVE_GAME_INFO); // Assuming CANNOT_SAVE_GAME_INFO also expects an empty payload or handles undefined gracefully. If it also has a schema requiring an object, it should also be {}.
     }
   }
 
@@ -825,20 +813,17 @@ class GameEngine {
       this.#logger.error(
         'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
       );
-      this.#safeEventDispatcher.dispatchSafely(
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        {
-          message:
-            'Cannot open load menu: GamePersistenceService is unavailable.',
-          type: 'error',
-        }
-      );
+      this.#safeEventDispatcher.dispatch(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
+        message:
+          'Cannot open load menu: GamePersistenceService is unavailable.',
+        type: 'error',
+      });
       return;
     }
     this.#logger.info(
       'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
     );
-    this.#safeEventDispatcher.dispatchSafely(REQUEST_SHOW_LOAD_GAME_UI, {});
+    this.#safeEventDispatcher.dispatch(REQUEST_SHOW_LOAD_GAME_UI, {});
   }
 
   getEngineStatus() {

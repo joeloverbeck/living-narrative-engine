@@ -51,7 +51,7 @@ beforeEach(() => {
     _currentState: null,
     // Provide a fallback safeEventDispatcher on handler
     safeEventDispatcher: {
-      dispatchSafely: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     },
   };
 
@@ -112,9 +112,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
   test('should handle missing actor via handleProcessingException and dispatch SYSTEM_ERROR_OCCURRED_ID then endTurn', async () => {
     processingState['_isProcessing'] = false;
 
-    // Create a single eventDispatcher and spy on its dispatchSafely
+    // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
-      dispatchSafely: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockTurnContext = {
@@ -127,7 +127,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     // Capture the spyDispatch from that same eventDispatcher
-    const spyDispatch = mockEventDispatcher.dispatchSafely;
+    const spyDispatch = mockEventDispatcher.dispatch;
     const spyEndTurn = mockTurnContext.endTurn;
 
     await processingState.enterState(mockHandler, null);
@@ -152,9 +152,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     processingState['_isProcessing'] = false;
     const actor = new MockActor('actorA');
 
-    // Create a single eventDispatcher and spy on its dispatchSafely
+    // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
-      dispatchSafely: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockTurnContext = {
@@ -173,7 +173,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     mockHandler._currentState = customState;
     customState['_isProcessing'] = false;
 
-    const spyDispatch = mockEventDispatcher.dispatchSafely;
+    const spyDispatch = mockEventDispatcher.dispatch;
     const spyEndTurn = mockTurnContext.endTurn;
 
     await customState.enterState(mockHandler, null);
@@ -195,9 +195,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     processingState['_isProcessing'] = false;
     const actor = new MockActor('actorB');
 
-    // Create a single eventDispatcher and spy on its dispatchSafely
+    // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
-      dispatchSafely: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockTurnContext = {
@@ -209,7 +209,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    const spyDispatch = mockEventDispatcher.dispatchSafely;
+    const spyDispatch = mockEventDispatcher.dispatch;
     const spyEndTurn = mockTurnContext.endTurn;
 
     await processingState.enterState(mockHandler, null);
@@ -232,9 +232,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const actor = new MockActor('actorC');
     const badAction = { actionDefinitionId: '', commandString: 'someCmd' };
 
-    // Create a single eventDispatcher and spy on its dispatchSafely
+    // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
-      dispatchSafely: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockTurnContext = {
@@ -246,7 +246,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    const spyDispatch = mockEventDispatcher.dispatchSafely;
+    const spyDispatch = mockEventDispatcher.dispatch;
     const spyEndTurn = mockTurnContext.endTurn;
 
     await processingState.enterState(mockHandler, null);
@@ -273,9 +273,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       commandString: 'speakCmd',
       speech: 'Hello, world!',
     };
-    // Create a single eventDispatcher and spy on its dispatchSafely
+    // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
-      dispatchSafely: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockTurnContext = {
@@ -309,7 +309,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     await stateWithSpeech.enterState(mockHandler, null);
 
     // ENTITY_SPOKE_ID should have been dispatched with actorId and speechContent
-    expect(mockEventDispatcher.dispatchSafely).toHaveBeenCalledWith(
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
       ENTITY_SPOKE_ID,
       expect.objectContaining({
         entityId: actor.id,
@@ -339,8 +339,8 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
       getLogger: () => mockLogger,
       // getCommandProcessor is undefined
     };
-    // Spy on handler.safeEventDispatcher.dispatchSafely
-    const spyDispatch = mockHandler.safeEventDispatcher.dispatchSafely;
+    // Spy on handler.safeEventDispatcher.dispatch
+    const spyDispatch = mockHandler.safeEventDispatcher.dispatch;
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     const result = await processingState['_getServiceFromContext'](
@@ -369,7 +369,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     const actor = new MockActor('actorG');
     // Create a single eventDispatcher on turnCtx
     const mockEventDispatcher = {
-      dispatchSafely: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockTurnContext = {
@@ -387,7 +387,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     );
     expect(result).toBeNull();
     expect(processingState['_isProcessing']).toBe(false);
-    const spyDispatch = mockEventDispatcher.dispatchSafely;
+    const spyDispatch = mockEventDispatcher.dispatch;
     expect(spyDispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({

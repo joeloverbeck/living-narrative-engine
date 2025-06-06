@@ -71,10 +71,10 @@ export default class ShortTermMemoryService {
     // 5. Emit domain event --------------------------------------------------
     if (
       this.eventDispatcher &&
-      typeof this.eventDispatcher.dispatchSafely === 'function'
+      typeof this.eventDispatcher.dispatch === 'function'
     ) {
       // Fire-and-forget so addThought() stays synchronous.
-      this.eventDispatcher.dispatchSafely('ThoughtAdded', {
+      this.eventDispatcher.dispatch('ThoughtAdded', {
         entityId: mem.entityId ?? null,
         text: newText,
         timestamp: newEntry.timestamp,

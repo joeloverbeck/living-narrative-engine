@@ -7,7 +7,7 @@ import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 
 // --- Mocks ---
 const mockSafeDispatcher = {
-  dispatchSafely: jest.fn().mockResolvedValue(true), // Default mock success
+  dispatch: jest.fn().mockResolvedValue(true), // Default mock success
 };
 
 const mockVed = {
@@ -29,7 +29,7 @@ describe('EventBusTurnEndAdapter', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     // Reset mocks to default behavior for each test
-    mockSafeDispatcher.dispatchSafely.mockResolvedValue(true);
+    mockSafeDispatcher.dispatch.mockResolvedValue(true);
     mockVed.dispatchValidated.mockResolvedValue(true);
   });
 
@@ -90,7 +90,7 @@ describe('EventBusTurnEndAdapter', () => {
     );
   });
 
-  it('should call dispatchSafely with correct arguments when using ISafeEventDispatcher', async () => {
+  it('should call dispatch with correct arguments when using ISafeEventDispatcher', async () => {
     const adapter = new EventBusTurnEndAdapter({
       safeEventDispatcher: mockSafeDispatcher,
       logger: mockLogger,
@@ -100,9 +100,9 @@ describe('EventBusTurnEndAdapter', () => {
 
     await adapter.notifyTurnEnded(entityId, success);
 
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
     // Test that the payload dispatched now includes 'entityId' and 'success'
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledWith(
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       TURN_ENDED_ID,
       { entityId, success } // Adjusted expectation
     );
@@ -135,7 +135,7 @@ describe('EventBusTurnEndAdapter', () => {
       TURN_ENDED_ID,
       { entityId, success } // Adjusted expectation
     );
-    expect(mockSafeDispatcher.dispatchSafely).not.toHaveBeenCalled();
+    expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled();
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         `Received notifyTurnEnded for ${entityId} with success=${success}`
@@ -149,8 +149,8 @@ describe('EventBusTurnEndAdapter', () => {
     );
   });
 
-  it('should resolve void even if dispatchSafely returns false', async () => {
-    mockSafeDispatcher.dispatchSafely.mockResolvedValueOnce(false);
+  it('should resolve void even if dispatch returns false', async () => {
+    mockSafeDispatcher.dispatch.mockResolvedValueOnce(false);
     const adapter = new EventBusTurnEndAdapter({
       safeEventDispatcher: mockSafeDispatcher,
       logger: mockLogger,
@@ -159,7 +159,7 @@ describe('EventBusTurnEndAdapter', () => {
     const expectedSuccess = true; // turnEnded always calls notifyTurnEnded with true
 
     await expect(adapter.turnEnded(entityId)).resolves.toBeUndefined();
-    expect(mockSafeDispatcher.dispatchSafely).toHaveBeenCalledTimes(1);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
     // Adjusted log message expectation to include the success status
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(

@@ -83,11 +83,11 @@ describe('SafeEventDispatcher', () => {
     );
   });
 
-  // --- dispatchSafely Tests ---
+  // --- dispatch Tests ---
 
   const testEventName = 'test:event';
   const testPayload = { data: 'value' };
-  const expectedDefaultOptions = {}; // The default options object passed when none are provided to dispatchSafely
+  const expectedDefaultOptions = {}; // The default options object passed when none are provided to dispatch
 
   it('AC1: should return true and not log error when VED.dispatchValidated resolves true', async () => {
     mockVed.dispatchValidated.mockResolvedValue(true);
@@ -96,8 +96,8 @@ describe('SafeEventDispatcher', () => {
       logger: mockLogger,
     });
 
-    // Call dispatchSafely with two arguments
-    const result = await dispatcher.dispatchSafely(testEventName, testPayload);
+    // Call dispatch with two arguments
+    const result = await dispatcher.dispatch(testEventName, testPayload);
 
     expect(result).toBe(true);
     // Expect VED.dispatchValidated to be called with three arguments (eventName, payload, defaultOptions)
@@ -119,8 +119,8 @@ describe('SafeEventDispatcher', () => {
       logger: mockLogger,
     });
 
-    // Call dispatchSafely with two arguments
-    const result = await dispatcher.dispatchSafely(testEventName, testPayload);
+    // Call dispatch with two arguments
+    const result = await dispatcher.dispatch(testEventName, testPayload);
 
     expect(result).toBe(false);
     // Expect VED.dispatchValidated to be called with three arguments
@@ -145,8 +145,8 @@ describe('SafeEventDispatcher', () => {
       logger: mockLogger,
     });
 
-    // Call dispatchSafely with two arguments
-    const result = await dispatcher.dispatchSafely(testEventName, testPayload);
+    // Call dispatch with two arguments
+    const result = await dispatcher.dispatch(testEventName, testPayload);
 
     expect(result).toBe(false);
     // Expect VED.dispatchValidated to be called with three arguments

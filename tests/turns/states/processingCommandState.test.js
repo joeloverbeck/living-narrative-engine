@@ -51,7 +51,7 @@ const mockCommandOutcomeInterpreter = {
 };
 
 const mockSafeEventDispatcher = {
-  dispatchSafely: jest.fn(),
+  dispatch: jest.fn(),
 };
 
 const mockTurnDirectiveStrategy = {

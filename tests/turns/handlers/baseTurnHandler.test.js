@@ -284,7 +284,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
         interpret: jest.fn().mockReturnValue('defaultDirective'),
       },
       safeEventDispatcher: {
-        dispatchSafely: jest.fn().mockResolvedValue(undefined),
+        dispatch: jest.fn().mockResolvedValue(undefined),
       },
     };
 

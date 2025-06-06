@@ -279,7 +279,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
   }
 
   /**
-   * Handles the 'core:system_error_occurred' event.
+   * Handles the SYSTEM_ERROR_OCCURRED_ID event.
    *
    * @param {IEvent<any>} eventObject The full event object.
    */
@@ -287,7 +287,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
     const payload = eventObject?.payload;
     if (!payload || typeof payload.message !== 'string') {
       this.logger.error(
-        `${this._logPrefix} Received invalid 'core:system_error_occurred' payload.`,
+        `${this._logPrefix} Received invalid ${SYSTEM_ERROR_OCCURRED_ID} payload.`,
         eventObject
       );
       this.render('An unspecified fatal system error occurred.', 'fatal');

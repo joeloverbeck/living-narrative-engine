@@ -14,7 +14,7 @@ const mockLogger = {
 };
 
 const mockDispatcher = {
-  dispatchSafely: jest.fn(),
+  dispatch: jest.fn(),
 };
 
 // New mock for TurnContext
@@ -27,9 +27,7 @@ describe('CommandOutcomeInterpreter', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockDispatcher.dispatchSafely.mockImplementation(() =>
-      Promise.resolve(true)
-    );
+    mockDispatcher.dispatch.mockImplementation(() => Promise.resolve(true));
 
     // Initialize mockActor and mockTurnContext for each test
     // This ensures a clean state and allows actorId to be set per test/describe block
@@ -104,7 +102,7 @@ describe('CommandOutcomeInterpreter', () => {
         },
       };
       await interpreter.interpret(commandResult, mockTurnContext);
-      expect(mockDispatcher.dispatchSafely).toHaveBeenCalledWith(
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:action_executed',
         expect.objectContaining({
           actorId: successActorId,
@@ -127,7 +125,7 @@ describe('CommandOutcomeInterpreter', () => {
         actionResult: { actionId: 'test:action' }, // No top-level message, no actionResult.messages
       };
       await interpreter.interpret(commandResult, mockTurnContext);
-      expect(mockDispatcher.dispatchSafely).toHaveBeenCalledWith(
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:action_executed',
         expect.objectContaining({
           actorId: successActorId,

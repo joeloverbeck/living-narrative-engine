@@ -1,7 +1,8 @@
 // tests/domUI/titleRenderer.subscriptions.test.js
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { TitleRenderer } from '../../src/domUI/index.js'; // Corrected import path if needed
-import { RendererBase } from '../../src/domUI/index.js'; // Needed for checking super.dispose
+import { RendererBase } from '../../src/domUI/index.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js'; // Needed for checking super.dispose
 
 // --- Mock Dependencies ---
 
@@ -397,12 +398,12 @@ describe('TitleRenderer', () => {
       );
     });
 
-    it('should handle "core:system_error_occurred" fatal event', () => {
+    it('should handle SYSTEM_ERROR_OCCURRED_ID fatal event', () => {
       const payload = {
         message: 'Critical failure',
         error: new Error('Disk full'),
       };
-      simulateEvent('core:system_error_occurred', payload);
+      simulateEvent(SYSTEM_ERROR_OCCURRED_ID, payload);
       expect(renderer.set).toHaveBeenCalledWith('System Error');
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('System fatal error occurred'),

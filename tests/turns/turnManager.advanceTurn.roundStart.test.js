@@ -11,6 +11,7 @@ import {
 } from '@jest/globals';
 import TurnManager from '../../src/turns/turnManager.js';
 import { ACTOR_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // Mocks for dependencies
 const mockLogger = {
@@ -175,7 +176,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     // Check dispatch and stop from the advanceTurn call
     expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
     expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:system_error_occurred',
+      SYSTEM_ERROR_OCCURRED_ID,
       {
         message:
           'System Error: No active actors found to start a round. Stopping game.',
@@ -223,7 +224,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     // Check dispatch and stop from the advanceTurn call
     expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
     expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:system_error_occurred',
+      SYSTEM_ERROR_OCCURRED_ID,
       {
         message:
           'System Error: No active actors found to start a round. Stopping game.',
@@ -347,7 +348,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     );
     // Ensure no system error dispatches
     expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
-      'core:system_error_occurred',
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.anything()
     );
   });

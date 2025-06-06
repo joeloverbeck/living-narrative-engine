@@ -93,7 +93,7 @@ describe('ShortTermMemoryService – ThoughtAdded domain event', () => {
 
   /** @type {import("jest").Mock} */
   let dispatchSpy;
-  /** @type {{dispatchSafely: Function}} */
+  /** @type {{dispatch: Function}} */
   let stubDispatcher;
   /** @type {ShortTermMemoryService} */
   let service;
@@ -102,7 +102,7 @@ describe('ShortTermMemoryService – ThoughtAdded domain event', () => {
 
   beforeEach(() => {
     dispatchSpy = jest.fn().mockResolvedValue(true);
-    stubDispatcher = { dispatchSafely: dispatchSpy };
+    stubDispatcher = { dispatch: dispatchSpy };
     service = new ShortTermMemoryService({
       eventDispatcher: stubDispatcher,
       defaultMaxEntries: 10,

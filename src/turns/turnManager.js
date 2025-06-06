@@ -21,7 +21,7 @@ import {
   TURN_ENDED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../constants/eventIds.js';
-import { ITurnManager } from './interfaces/ITurnManager.js'; // Assuming TURN_ENDED_ID is 'core:turn_ended' and SYSTEM_ERROR_OCCURRED_ID is 'core:system_error_occurred'
+import { ITurnManager } from './interfaces/ITurnManager.js';
 
 /**
  * @class TurnManager
@@ -29,7 +29,7 @@ import { ITurnManager } from './interfaces/ITurnManager.js'; // Assuming TURN_EN
  * @classdesc Manages the overall turn lifecycle. Determines the next actor,
  * initiates their turn via the appropriate handler, and waits for a turn completion
  * event (`core:turn_ended`) before advancing to the next turn or round.
- * Dispatches semantic events like 'core:turn_started' and 'core:system_error_occurred'.
+ * Dispatches semantic events like 'core:turn_started' and SYSTEM_ERROR_OCCURRED_ID.
  * Includes logic to stop if a round completes with no successful turns.
  */
 class TurnManager extends ITurnManager {
@@ -251,7 +251,7 @@ class TurnManager extends ITurnManager {
    * Advances the game state to the next entity's turn, or starts a new round.
    * Resolves the handler, calls its `startTurn` method, and then *waits* for the
    * `core:turn_ended` event before proceeding.
-   * Handles system-level errors by dispatching 'core:system_error_occurred'.
+   * Handles system-level errors by dispatching SYSTEM_ERROR_OCCURRED_ID.
    * **Includes logic to stop if a round completes with no successful turns.**
    *
    * @async

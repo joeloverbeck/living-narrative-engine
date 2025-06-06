@@ -41,7 +41,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
     super();
     if (
       safeEventDispatcher &&
-      typeof safeEventDispatcher.dispatchSafely === 'function'
+      typeof safeEventDispatcher.dispatch === 'function'
     ) {
       this.#dispatcher = safeEventDispatcher;
       this.#isSafeDispatcher = true;
@@ -105,9 +105,10 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
       // Using ISafeEventDispatcher - it handles logging errors internally
       // We don't need to await the boolean result unless downstream specifically needs it.
       // Returning Promise<void> after the *attempt* is usually sufficient.
-      await /** @type {ISafeEventDispatcher} */ (
-        this.#dispatcher
-      ).dispatchSafely('core:player_turn_prompt', payload);
+      await /** @type {ISafeEventDispatcher} */ (this.#dispatcher).dispatch(
+        'core:player_turn_prompt',
+        payload
+      );
       return Promise.resolve(); // Resolve void after attempt
     } else {
       // Using IValidatedEventDispatcher directly

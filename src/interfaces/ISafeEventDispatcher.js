@@ -28,11 +28,9 @@ export class ISafeEventDispatcher {
    * successfully dispatched by the underlying dispatcher, and `false` otherwise
    * (due to validation failure, dispatch error, or exception).
    */
-  async dispatchSafely(eventName, payload, options) {
+  async dispatch(eventName, payload, options) {
     // Added options parameter
-    throw new Error(
-      'ISafeEventDispatcher.dispatchSafely method not implemented.'
-    );
+    throw new Error('ISafeEventDispatcher.dispatch method not implemented.');
   }
 
   /**
