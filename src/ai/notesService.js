@@ -3,6 +3,7 @@
 /**
  * Normalizes note text for duplicate detection by trimming, lower-casing,
  * stripping punctuation, and collapsing internal whitespace.
+ *
  * @param {string} text - The original note text.
  * @returns {string} The normalized text.
  */
@@ -21,6 +22,7 @@ function normalizeNoteText(text) {
 export default class NotesService {
   /**
    * Creates a new NotesService.
+   *
    * @param {object} [options] - Configuration options. Currently unused.
    */
   constructor(options = {}) {

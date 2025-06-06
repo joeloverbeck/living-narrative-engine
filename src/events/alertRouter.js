@@ -18,7 +18,6 @@
  *
  *   All internal operations are wrapped in `try/catch` to avoid crashes; exceptions
  *   are logged via `console.error(...)`.
- *
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher
  *   An instance of `SafeEventDispatcher` used to subscribe to core events and dispatch UI events.
  */

@@ -23,6 +23,7 @@ const makeLogger = () => ({
 
 /**
  * Creates a mock schema validator.
+ *
  * @param {boolean} isValid - The desired validation outcome.
  * @returns {import('../../src/interfaces/coreServices.js').ISchemaValidator} A mock validator instance.
  */

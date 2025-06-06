@@ -35,6 +35,9 @@ const {
 } = require('../../src/constants/eventIds.js');
 
 /* ── Tiny in-memory logger stub (fulfils ILogger) ─────────────────────────── */
+/**
+ *
+ */
 function createTestLogger() {
   const noop = () => {};
   return {

@@ -26,6 +26,7 @@ const mockLogger = () => ({
 
 /**
  * Minimal helper to create a new character entity with short-term memory.
+ *
  * @param {string} id - Identifier for the new character.
  * @returns {object} Plain object representing the character.
  */
@@ -43,6 +44,7 @@ const createNewCharacter = (id) => ({
 
 /**
  * Build a PromptData object and final prompt string for the given character.
+ *
  * @param {AIPromptContentProvider} provider - Content provider instance.
  * @param {PromptBuilder} builder - PromptBuilder under test.
  * @param {object} character - The character entity.
