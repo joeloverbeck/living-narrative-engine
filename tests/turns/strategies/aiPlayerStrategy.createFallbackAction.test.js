@@ -1,7 +1,7 @@
 // tests/turns/strategies/aiPlayerStrategy.createFallbackAction.test.js
 // --- FILE START ---
 
-import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
+import { AIFallbackActionFactory } from '../../../src/turns/services/AIFallbackActionFactory.js';
 import {
   jest,
   describe,
@@ -13,40 +13,9 @@ import {
 import { DEFAULT_FALLBACK_ACTION } from '../../../src/llms/constants/llmConstants.js';
 
 // --- Typedefs for Mocks ---
-/** @typedef {import('../../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
-/** @typedef {import('../../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
-/** @typedef {import('../../../src/turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
-/** @typedef {import('../../../src/prompting/promptBuilder.js').PromptBuilder} PromptBuilder */
-/** @typedef {import('../../../src/turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 
 // --- Mock Implementations ---
-
-/** @returns {jest.Mocked<ILLMAdapter>} */
-const mockLlmAdapter = () => ({
-  getAIDecision: jest.fn(),
-  getCurrentActiveLlmId: jest.fn(),
-});
-
-/** @returns {jest.Mocked<IAIGameStateProvider>} */
-const mockGameStateProvider = () => ({
-  buildGameState: jest.fn(),
-});
-
-/** @returns {jest.Mocked<IAIPromptContentProvider>} */
-const mockAIPromptContentProvider = () => ({
-  getPromptData: jest.fn(),
-});
-
-/** @returns {jest.Mocked<PromptBuilder>} */
-const mockPromptBuilder = () => ({
-  build: jest.fn(),
-});
-
-/** @returns {jest.Mocked<ILLMResponseProcessor>} */
-const mockLlmResponseProcessor = () => ({
-  processResponse: jest.fn(),
-});
 
 /** @returns {jest.Mocked<ILogger>} */
 const mockLogger = () => ({
@@ -56,26 +25,11 @@ const mockLogger = () => ({
   debug: jest.fn(),
 });
 
-describe('AIPlayerStrategy', () => {
-  /** @type {ReturnType<typeof mockLlmAdapter>} */
-  let llmAdapter;
-  /** @type {ReturnType<typeof mockGameStateProvider>} */
-  let gameStateProvider;
-  /** @type {ReturnType<typeof mockAIPromptContentProvider>} */
-  let promptContentProvider;
-  /** @type {ReturnType<typeof mockPromptBuilder>} */
-  let promptBuilder;
-  /** @type {ReturnType<typeof mockLlmResponseProcessor>} */
-  let llmResponseProcessor;
+describe('AIFallbackActionFactory', () => {
   /** @type {ReturnType<typeof mockLogger>} */
   let currentLoggerMock;
 
   beforeEach(() => {
-    llmAdapter = mockLlmAdapter();
-    gameStateProvider = mockGameStateProvider();
-    promptContentProvider = mockAIPromptContentProvider();
-    promptBuilder = mockPromptBuilder();
-    llmResponseProcessor = mockLlmResponseProcessor();
     currentLoggerMock = mockLogger();
     jest.clearAllMocks();
   });
@@ -84,19 +38,11 @@ describe('AIPlayerStrategy', () => {
     jest.restoreAllMocks();
   });
 
-  // FIX: Test the new canonical fallback creation method
-  describe('_createCanonicalFallbackAction', () => {
-    /** @type {AIPlayerStrategy} */
-    let instance_cf;
+  describe('create', () => {
+    /** @type {AIFallbackActionFactory} */
+    let factory;
     beforeEach(() => {
-      instance_cf = new AIPlayerStrategy({
-        llmAdapter,
-        gameStateProvider,
-        promptContentProvider,
-        promptBuilder,
-        llmResponseProcessor,
-        logger: currentLoggerMock,
-      });
+      factory = new AIFallbackActionFactory({ logger: currentLoggerMock });
     });
 
     // FIX: Updated test case for the new method signature and return structure
@@ -105,12 +51,7 @@ describe('AIPlayerStrategy', () => {
       const error = new Error('A test error occurred.');
       const actorId = 'actor-test-123';
 
-      // @ts-ignore - Testing a private method
-      const fallbackAction = instance_cf._createCanonicalFallbackAction(
-        failureContext,
-        error,
-        actorId
-      );
+      const fallbackAction = factory.create(failureContext, error, actorId);
 
       expect(fallbackAction).toEqual({
         actionDefinitionId: DEFAULT_FALLBACK_ACTION.actionDefinitionId,
@@ -128,7 +69,7 @@ describe('AIPlayerStrategy', () => {
       });
 
       expect(currentLoggerMock.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${actorId} due to ${failureContext}.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${actorId} due to ${failureContext}.`,
         expect.objectContaining({
           actorId,
           error,
@@ -143,12 +84,7 @@ describe('AIPlayerStrategy', () => {
       const error = new Error('Oh no, HTTP error 500 from upstream!');
       const actorId = 'actor-http-456';
 
-      // @ts-ignore - Testing a private method
-      const fallbackAction = instance_cf._createCanonicalFallbackAction(
-        failureContext,
-        error,
-        actorId
-      );
+      const fallbackAction = factory.create(failureContext, error, actorId);
 
       expect(fallbackAction.speech).toBe(
         'I encountered a server connection problem and will wait for a moment.'
@@ -168,12 +104,7 @@ describe('AIPlayerStrategy', () => {
       error.name = 'LLMProcessingError'; // Simulate a specific error type if needed
       const actorId = 'actor-proc-789';
 
-      // @ts-ignore - Testing a private method
-      const fallbackAction = instance_cf._createCanonicalFallbackAction(
-        failureContext,
-        error,
-        actorId
-      );
+      const fallbackAction = factory.create(failureContext, error, actorId);
 
       expect(fallbackAction.speech).toBe(
         'I encountered a communication issue and will wait for a moment.'

@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
+import { AIFallbackActionFactory } from '../../../src/turns/services/AIFallbackActionFactory.js';
 import { describe, beforeEach, test, expect, afterEach } from '@jest/globals';
 import { DEFAULT_FALLBACK_ACTION } from '../../../src/llms/constants/llmConstants.js';
 // AIPromptContentProvider import is not needed here as we are not spying on its static methods anymore.
@@ -18,6 +19,7 @@ import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/types/promptData.js').PromptData} PromptData */
 /** @typedef {import('../../../src/turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO_Test */
+/** @typedef {import('../../../src/turns/interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
 /** @typedef {import('../../../src/turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../../src/interfaces/coreServices.js').IEntityManager} IEntityManager */
 
@@ -151,6 +153,8 @@ describe('AIPlayerStrategy', () => {
     let da_promptBuilder;
     /** @type {ReturnType<typeof mockLlmResponseProcessor>} */
     let da_llmResponseProcessor;
+    /** @type {AIFallbackActionFactory} */
+    let da_aiFallbackActionFactory;
     /** @type {ReturnType<typeof mockLogger>} */
     let da_logger;
 
@@ -198,6 +202,9 @@ describe('AIPlayerStrategy', () => {
       da_promptBuilder = promptBuilder;
       da_llmResponseProcessor = llmResponseProcessor;
       da_logger = currentLoggerMock;
+      da_aiFallbackActionFactory = new AIFallbackActionFactory({
+        logger: da_logger,
+      });
 
       instance_da = new AIPlayerStrategy({
         llmAdapter: da_llmAdapter,
@@ -205,6 +212,7 @@ describe('AIPlayerStrategy', () => {
         promptContentProvider: da_promptContentProvider,
         promptBuilder: da_promptBuilder,
         llmResponseProcessor: da_llmResponseProcessor,
+        aiFallbackActionFactory: da_aiFallbackActionFactory,
         logger: da_logger,
       });
 
@@ -313,7 +321,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        'AIPlayerStrategy: Creating canonical fallback action for actor UnknownActor due to unhandled_orchestration_error.',
+        'AIFallbackActionFactory: Creating fallback for actor UnknownActor due to unhandled_orchestration_error.',
         expect.any(Object)
       );
     });
@@ -334,7 +342,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        'AIPlayerStrategy: Creating canonical fallback action for actor UnknownActor due to unhandled_orchestration_error.',
+        'AIFallbackActionFactory: Creating fallback for actor UnknownActor due to unhandled_orchestration_error.',
         expect.any(Object)
       );
     });
@@ -356,7 +364,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        'AIPlayerStrategy: Creating canonical fallback action for actor UnknownActor due to unhandled_orchestration_error.',
+        'AIFallbackActionFactory: Creating fallback for actor UnknownActor due to unhandled_orchestration_error.',
         expect.any(Object)
       );
     });
@@ -378,7 +386,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.any(Object)
       );
     });
@@ -475,7 +483,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error })
       );
     });
@@ -495,7 +503,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error })
       );
       // Ensure buildGameState was called before getPromptData
@@ -525,7 +533,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.any(Object)
       );
     });
@@ -549,7 +557,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.any(Object)
       );
     });
@@ -568,7 +576,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error })
       );
     });
@@ -587,7 +595,7 @@ describe('AIPlayerStrategy', () => {
         error.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error })
       );
     });
@@ -606,7 +614,7 @@ describe('AIPlayerStrategy', () => {
         processorError.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error: processorError })
       );
     });
@@ -632,7 +640,7 @@ describe('AIPlayerStrategy', () => {
         actorError.message
       );
       expect(da_logger.error).toHaveBeenCalledWith(
-        `AIPlayerStrategy: Creating canonical fallback action for actor UnknownActor due to unhandled_orchestration_error.`,
+        `AIFallbackActionFactory: Creating fallback for actor UnknownActor due to unhandled_orchestration_error.`,
         expect.objectContaining({ error: actorError })
       );
     });

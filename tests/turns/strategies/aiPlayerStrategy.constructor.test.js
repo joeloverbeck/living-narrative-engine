@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
+import { AIFallbackActionFactory } from '../../../src/turns/services/AIFallbackActionFactory.js';
 import {
   jest,
   describe,
@@ -22,6 +23,7 @@ import {
 /** @typedef {import('../../../src/prompting/promptBuilder.js').PromptBuilder} PromptBuilder */
 /** @typedef {import('../../../src/turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/turns/interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
 // Removed unused typedefs for PromptData and AIGameStateDTO_Test as they are not relevant for constructor tests
 // /** @typedef {import('../../../src/types/promptData.js').PromptData} PromptData */
 // /** @typedef {import('../../../src/turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO_Test */
@@ -66,6 +68,13 @@ const mockLlmResponseProcessor = () => ({
 });
 
 /**
+ * @returns {jest.Mocked<IAIFallbackActionFactory>}
+ */
+const mockAIFallbackActionFactory = () => ({
+  create: jest.fn(),
+});
+
+/**
  * @returns {jest.Mocked<ILogger>}
  */
 const mockLogger = () => ({
@@ -88,6 +97,8 @@ describe('AIPlayerStrategy', () => {
   let promptBuilder;
   /** @type {ReturnType<typeof mockLlmResponseProcessor>} */
   let llmResponseProcessor;
+  /** @type {ReturnType<typeof mockAIFallbackActionFactory>} */
+  let aiFallbackActionFactory;
   /** @type {ReturnType<typeof mockLogger>} */
   let currentLoggerMock;
   // Removed checkCriticalGameStateSpy as it's not relevant for constructor tests
@@ -100,6 +111,7 @@ describe('AIPlayerStrategy', () => {
     promptContentProvider = mockAIPromptContentProvider();
     promptBuilder = mockPromptBuilder();
     llmResponseProcessor = mockLlmResponseProcessor();
+    aiFallbackActionFactory = mockAIFallbackActionFactory();
     currentLoggerMock = mockLogger();
 
     jest.clearAllMocks();
@@ -121,6 +133,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).not.toThrow();
@@ -130,6 +143,7 @@ describe('AIPlayerStrategy', () => {
         promptContentProvider,
         promptBuilder,
         llmResponseProcessor,
+        aiFallbackActionFactory,
         logger: currentLoggerMock,
       });
       expect(instance).toBeInstanceOf(AIPlayerStrategy);
@@ -146,6 +160,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonILLMAdapterError);
@@ -159,6 +174,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonILLMAdapterError);
@@ -173,6 +189,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonILLMAdapterError);
@@ -190,6 +207,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonILLMAdapterError);
@@ -204,6 +222,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonILLMAdapterError);
@@ -221,6 +240,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonILLMAdapterError);
@@ -237,6 +257,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonIAIGameStateProviderError);
@@ -250,6 +271,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonIAIGameStateProviderError);
@@ -264,6 +286,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonIAIGameStateProviderError);
@@ -278,6 +301,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonIAIGameStateProviderError);
@@ -294,6 +318,7 @@ describe('AIPlayerStrategy', () => {
             // promptContentProvider missing
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonAIPromptContentProviderError);
@@ -307,6 +332,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider: null,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonAIPromptContentProviderError);
@@ -321,6 +347,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider: {}, // Missing getPromptData
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonAIPromptContentProviderError);
@@ -335,6 +362,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider: { getPromptData: 'not-a-function' },
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonAIPromptContentProviderError);
@@ -351,6 +379,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             // promptBuilder missing
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonPromptBuilderError);
@@ -364,6 +393,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder: null,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonPromptBuilderError);
@@ -378,6 +408,7 @@ describe('AIPlayerStrategy', () => {
             // @ts-ignore
             promptBuilder: {}, // Missing build method
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonPromptBuilderError);
@@ -392,6 +423,7 @@ describe('AIPlayerStrategy', () => {
             // @ts-ignore
             promptBuilder: { build: 'not-a-function' },
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonPromptBuilderError);
@@ -449,9 +481,56 @@ describe('AIPlayerStrategy', () => {
             promptBuilder,
             // @ts-ignore
             llmResponseProcessor: { processResponse: 'not-a-function' },
+            aiFallbackActionFactory,
             logger: currentLoggerMock,
           })
       ).toThrow(commonILLMResponseProcessorError);
+    });
+
+    const commonAIFallbackFactoryError =
+      'AIPlayerStrategy: Constructor requires a valid IAIFallbackActionFactory.';
+    test('should throw an error if aiFallbackActionFactory is not provided', () => {
+      expect(
+        () =>
+          new AIPlayerStrategy({
+            llmAdapter,
+            gameStateProvider,
+            promptContentProvider,
+            promptBuilder,
+            llmResponseProcessor,
+            // aiFallbackActionFactory missing
+            logger: currentLoggerMock,
+          })
+      ).toThrow(commonAIFallbackFactoryError);
+    });
+    test('should throw an error if aiFallbackActionFactory is null', () => {
+      expect(
+        () =>
+          new AIPlayerStrategy({
+            llmAdapter,
+            gameStateProvider,
+            promptContentProvider,
+            promptBuilder,
+            llmResponseProcessor,
+            aiFallbackActionFactory: null,
+            logger: currentLoggerMock,
+          })
+      ).toThrow(commonAIFallbackFactoryError);
+    });
+    test('should throw an error if aiFallbackActionFactory.create is not a function', () => {
+      expect(
+        () =>
+          new AIPlayerStrategy({
+            llmAdapter,
+            gameStateProvider,
+            promptContentProvider,
+            promptBuilder,
+            llmResponseProcessor,
+            // @ts-ignore
+            aiFallbackActionFactory: {},
+            logger: currentLoggerMock,
+          })
+      ).toThrow(commonAIFallbackFactoryError);
     });
 
     const commonILoggerError =
@@ -465,6 +544,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             // logger missing
           })
       ).toThrow(commonILoggerError);
@@ -478,6 +558,7 @@ describe('AIPlayerStrategy', () => {
             promptContentProvider,
             promptBuilder,
             llmResponseProcessor,
+            aiFallbackActionFactory,
             logger: null,
           })
       ).toThrow(commonILoggerError);
@@ -493,6 +574,7 @@ describe('AIPlayerStrategy', () => {
             llmResponseProcessor,
             // @ts-ignore
             logger: { error: jest.fn(), debug: jest.fn(), warn: jest.fn() }, // Missing info
+            aiFallbackActionFactory,
           })
       ).toThrow(commonILoggerError);
     });
@@ -507,6 +589,7 @@ describe('AIPlayerStrategy', () => {
             llmResponseProcessor,
             // @ts-ignore
             logger: { info: 'not-a-function' },
+            aiFallbackActionFactory,
           })
       ).toThrow(commonILoggerError);
     });
