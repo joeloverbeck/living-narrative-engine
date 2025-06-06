@@ -46,6 +46,12 @@
  */
 
 /**
+ * @typedef {object} AIStrategyDecision
+ * @property {ITurnAction} action - The decided action.
+ * @property {object | null} extractedData - Additional data from the LLM response.
+ */
+
+/**
  * @interface IActorTurnStrategy
  * @description
  * Defines the contract for how an actor (human, AI, item with agency, etc.)
@@ -128,10 +134,11 @@ export class IActorTurnStrategy {
    * `context.getPlayerPromptService()`, `context.getGame()`,
    * a service to query available/valid actions)
    * that the strategy might need to make an informed decision.
-   * @returns {Promise<ITurnAction>} A Promise that resolves to an {@link ITurnAction}
-   * object. This object identifies the data-defined action chosen
-   * (e.g., via `actionDefinitionId`) and includes any parameters
-   * resolved for this specific instance (e.g., `resolvedParameters`).
+   * @returns {Promise<ITurnAction | AIStrategyDecision>} A Promise that resolves to
+   * either an {@link ITurnAction} or an {@link AIStrategyDecision}. When an
+   * AIStrategyDecision is returned, the `action` property contains the chosen
+   * {@link ITurnAction} and `extractedData` contains any additional data
+   * extracted from the LLM response.
    * If the actor decides to take no overt action (e.g., a "pass turn"
    * scenario, often represented by a "core:wait" or "core:pass" action),
    * the strategy should still resolve with an appropriate

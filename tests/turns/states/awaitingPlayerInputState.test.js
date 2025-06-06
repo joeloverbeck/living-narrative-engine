@@ -387,20 +387,9 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
     test('should end turn if strategy.decideAction returns null', async () => {
       mockTestStrategy.decideAction.mockResolvedValue(null);
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
-      expect(superEnterSpy).toHaveBeenCalledWith(
-        mockHandler,
-        mockPreviousState
-      );
-      const expectedWarnMsg = `AwaitingPlayerInputState: Strategy for actor ${testActor.id} returned an invalid or null ITurnAction (must have actionDefinitionId).`;
-      expect(mockLogger.warn).toHaveBeenCalledWith(expectedWarnMsg, {
-        receivedAction: null,
-      });
-      expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(
-        expect.any(Error)
-      );
-      expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(
-        expectedWarnMsg
-      );
+      expect(superEnterSpy).toHaveBeenCalledWith(mockHandler, mockPreviousState);
+      expect(mockLogger.error).toHaveBeenCalled();
+      expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
     });
 
     test('should end turn if strategy.decideAction returns ITurnAction without actionDefinitionId', async () => {

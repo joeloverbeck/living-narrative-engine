@@ -20,9 +20,6 @@ import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
 import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
 import { IAIGameStateProvider } from '../interfaces/IAIGameStateProvider.js';
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
-import { IAIFallbackActionFactory } from '../interfaces/IAIFallbackActionFactory.js';
-import { persistThoughts } from '../../ai/thoughtPersistenceHook.js';
-import { persistNotes } from '../../ai/notesPersistenceHook.js';
 
 /**
  * @class AIPlayerStrategy
@@ -199,38 +196,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
           this.#logger
         );
 
-      // 7. Handle successful result and persist data
-      const entityManager = context.getEntityManager();
-      const actorEntity = entityManager?.getEntityInstance(actorId);
-
-      if (actorEntity && extractedData) {
-        this.#logger.debug(
-          `Persisting thoughts and notes for actor ${actorId}.`
-        );
-        try {
-          if (extractedData.thoughts) {
-            persistThoughts(
-              { thoughts: extractedData.thoughts },
-              actorEntity,
-              this.#logger
-            );
-          }
-          if (extractedData.notes && extractedData.notes.length > 0) {
-            persistNotes(
-              { notes: extractedData.notes },
-              actorEntity,
-              this.#logger
-            );
-          }
-        } catch (e) {
-          this.#logger.warn(
-            'Persistence of thoughts or notes failed post-processing',
-            { actorId, err: e }
-          );
-        }
-      }
-
-      return action; // Return the clean action on success
+      return { action, extractedData };
     } catch (error) {
       // MASTER ERROR HANDLER: All errors from the try block are caught here.
       // This includes prompt building, LLM calls, and response processing.
@@ -239,12 +205,12 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
           ? 'llm_response_processing'
           : 'unhandled_orchestration_error';
 
-      // Delegate fallback creation to dedicated factory
-      return this.#aiFallbackActionFactory.create(
+      const fallbackAction = this.#aiFallbackActionFactory.create(
         failureContext,
         error,
         actorId
       );
+      return { action: fallbackAction, extractedData: null };
     }
   }
 }

@@ -306,20 +306,22 @@ describe('AIPlayerStrategy', () => {
       const error = new Error('Critical - ITurnContext is null.');
       const result = await instance_da.decideAction(null);
 
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.commandString).toBe(DEFAULT_FALLBACK_ACTION.commandString);
-      expect(result.speech).toBe(
+      expect(result.action.commandString).toBe(
+        DEFAULT_FALLBACK_ACTION.commandString
+      );
+      expect(result.action.speech).toBe(
         'I encountered an unexpected issue and will wait for a moment.'
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.failureReason).toBe(
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(result.action.resolvedParameters?.failureReason).toBe(
         'unhandled_orchestration_error'
       );
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         'AIFallbackActionFactory: Creating fallback for actor UnknownActor due to unhandled_orchestration_error.',
         expect.any(Object)
@@ -331,16 +333,16 @@ describe('AIPlayerStrategy', () => {
       const error = new Error('Critical - Actor not available in context.');
       const result = await instance_da.decideAction(context);
 
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.failureReason).toBe(
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(result.action.resolvedParameters?.failureReason).toBe(
         'unhandled_orchestration_error'
       );
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         'AIFallbackActionFactory: Creating fallback for actor UnknownActor due to unhandled_orchestration_error.',
         expect.any(Object)
@@ -353,16 +355,16 @@ describe('AIPlayerStrategy', () => {
       const context = createLocalMockContext_da(actorWithoutId);
       const error = new Error('Critical - Actor not available in context.');
       const result = await instance_da.decideAction(context);
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.failureReason).toBe(
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(result.action.resolvedParameters?.failureReason).toBe(
         'unhandled_orchestration_error'
       );
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         'AIFallbackActionFactory: Creating fallback for actor UnknownActor due to unhandled_orchestration_error.',
         expect.any(Object)
@@ -375,16 +377,16 @@ describe('AIPlayerStrategy', () => {
       const error = new Error('Could not determine active LLM ID.');
       const result = await instance_da.decideAction(context);
 
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.failureReason).toBe(
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(result.action.resolvedParameters?.failureReason).toBe(
         'unhandled_orchestration_error'
       );
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.any(Object)
@@ -393,7 +395,7 @@ describe('AIPlayerStrategy', () => {
 
     test('HAPPY PATH: should orchestrate calls, trigger persistence, and return action from processor', async () => {
       const context = createLocalMockContext_da(mockActor_da);
-      const resultAction = await instance_da.decideAction(context);
+      const result = await instance_da.decideAction(context);
 
       // --- Orchestration Assertions ---
       expect(da_logger.info).toHaveBeenCalledWith(
@@ -422,24 +424,17 @@ describe('AIPlayerStrategy', () => {
         da_logger
       );
 
-      // --- Persistence Assertions ---
-      expect(context.getEntityManager).toHaveBeenCalled();
-      expect(mockEntityManager_da.getEntityInstance).toHaveBeenCalledWith(
-        mockActor_da.id
-      );
-      expect(persistThoughts).toHaveBeenCalledWith(
-        { thoughts: mockExtractedData_da.thoughts },
-        mockActor_da,
-        da_logger
-      );
-      expect(persistNotes).toHaveBeenCalledWith(
-        { notes: mockExtractedData_da.notes },
-        mockActor_da,
-        da_logger
-      );
+      // --- Persistence Assertions (none expected) ---
+      expect(context.getEntityManager).not.toHaveBeenCalled();
+      expect(mockEntityManager_da.getEntityInstance).not.toHaveBeenCalled();
+      expect(persistThoughts).not.toHaveBeenCalled();
+      expect(persistNotes).not.toHaveBeenCalled();
 
       // --- Final Result Assertions ---
-      expect(resultAction).toEqual(mockProcessedAction_da);
+      expect(result).toEqual({
+        action: mockProcessedAction_da,
+        extractedData: mockExtractedData_da,
+      });
       expect(da_logger.error).not.toHaveBeenCalled();
     });
 
@@ -457,9 +452,12 @@ describe('AIPlayerStrategy', () => {
       });
 
       const context = createLocalMockContext_da(mockActor_da);
-      const resultAction = await instance_da.decideAction(context);
+      const result = await instance_da.decideAction(context);
 
-      expect(resultAction).toEqual(mockFallbackFromProcessor);
+      expect(result).toEqual({
+        action: mockFallbackFromProcessor,
+        extractedData: undefined,
+      });
 
       // --- Logger Assertions ---
       expect(da_logger.warn).not.toHaveBeenCalled(); // No warning for this case in the new logic
@@ -475,13 +473,13 @@ describe('AIPlayerStrategy', () => {
       da_gameStateProvider.buildGameState.mockRejectedValue(error);
 
       const result = await instance_da.decideAction(context);
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error })
@@ -495,13 +493,13 @@ describe('AIPlayerStrategy', () => {
 
       const result = await instance_da.decideAction(context);
 
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error })
@@ -522,16 +520,16 @@ describe('AIPlayerStrategy', () => {
       );
 
       const result = await instance_da.decideAction(context);
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.speech).toBe(
+      expect(result.action.speech).toBe(
         'I encountered an unexpected issue and will wait for a moment.'
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.any(Object)
@@ -546,16 +544,16 @@ describe('AIPlayerStrategy', () => {
       );
 
       const result = await instance_da.decideAction(context);
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.speech).toBe(
+      expect(result.action.speech).toBe(
         'I encountered an unexpected issue and will wait for a moment.'
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.any(Object)
@@ -568,13 +566,13 @@ describe('AIPlayerStrategy', () => {
       da_promptBuilder.build.mockRejectedValue(error);
 
       const result = await instance_da.decideAction(context);
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error })
@@ -587,13 +585,13 @@ describe('AIPlayerStrategy', () => {
       da_llmAdapter.getAIDecision.mockRejectedValue(error);
 
       const result = await instance_da.decideAction(context);
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        error.message
-      );
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(error.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error })
@@ -606,13 +604,13 @@ describe('AIPlayerStrategy', () => {
       da_llmResponseProcessor.processResponse.mockRejectedValue(processorError);
 
       const result = await instance_da.decideAction(context);
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        processorError.message
-      );
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(processorError.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor ${mockActor_da.id} due to unhandled_orchestration_error.`,
         expect.objectContaining({ error: processorError })
@@ -631,14 +629,14 @@ describe('AIPlayerStrategy', () => {
 
       // @ts-ignore
       const result = await instance_da.decideAction(faultyContext);
-      expect(result.actionDefinitionId).toBe(
+      expect(result.action.actionDefinitionId).toBe(
         DEFAULT_FALLBACK_ACTION.actionDefinitionId
       );
-      expect(result.resolvedParameters?.isFallback).toBe(true);
-      expect(result.resolvedParameters?.actorId).toBe('UnknownActor');
-      expect(result.resolvedParameters?.diagnostics?.originalMessage).toBe(
-        actorError.message
-      );
+      expect(result.action.resolvedParameters?.isFallback).toBe(true);
+      expect(result.action.resolvedParameters?.actorId).toBe('UnknownActor');
+      expect(
+        result.action.resolvedParameters?.diagnostics?.originalMessage
+      ).toBe(actorError.message);
       expect(da_logger.error).toHaveBeenCalledWith(
         `AIFallbackActionFactory: Creating fallback for actor UnknownActor due to unhandled_orchestration_error.`,
         expect.objectContaining({ error: actorError })
