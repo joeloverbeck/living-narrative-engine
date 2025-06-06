@@ -17,7 +17,7 @@ import InputSetupService from '../../setup/inputSetupService.js';
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Assuming EntityManager is concrete
 /** @typedef {import('../../data/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Assuming concrete
 /** @typedef {import('../../../interfaces/coreServices.js').IActionDiscoverySystem} IActionDiscoverySystem */
-/** @typedef {import('../../../interfaces/coreServices.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../../interfaces/coreServices.js').ITurnManager} ITurnManager */
 /** @typedef {import('../../turns/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */
 
@@ -49,7 +49,7 @@ export function registerRuntime(container) {
       new InputSetupService({
         container: c,
         logger: c.resolve(tokens.ILogger),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         // REMOVED: GameLoop injection - InputSetupService no longer interacts directly with GameLoop.
         // gameLoop: c.resolve(tokens.GameLoop) // <<< LINE REMOVED
       })
