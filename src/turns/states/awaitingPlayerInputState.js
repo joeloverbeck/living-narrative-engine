@@ -112,7 +112,9 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
 
     /* ---------- decide action -------------------------------------------------- */
     try {
-      const action = await strategy.decideAction(turnContext);
+      const decision = await strategy.decideAction(turnContext);
+      const action = decision.action || decision;
+      const extractedData = decision.extractedData || null;
 
       /* validate ITurnAction */
       if (!action || typeof action.actionDefinitionId !== 'string') {
@@ -120,6 +122,25 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
         logger.warn(warnMsg, { receivedAction: action });
         turnContext.endTurn(new Error(warnMsg));
         return;
+      }
+
+      // Dispatch event for side-effects
+      if (extractedData) {
+        try {
+          const eventDispatcher = turnContext.getSafeEventDispatcher();
+          eventDispatcher.dispatch('core:ai_action_decided', {
+            actor,
+            extractedData,
+          });
+          logger.debug(
+            `Dispatched core:ai_action_decided for actor ${actor.id}`
+          );
+        } catch (e) {
+          logger.error(
+            `Failed to dispatch core:ai_action_decided event for actor ${actor.id}`,
+            e
+          );
+        }
       }
 
       logger.info(
