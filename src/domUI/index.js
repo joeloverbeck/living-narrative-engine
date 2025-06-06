@@ -4,6 +4,7 @@
 export * from '../interfaces/IDocumentContext.js'; // Assuming this file exists and exports IDocumentContext
 export { RendererBase } from './rendererBase.js'; // Ensure RendererBase export is correct
 export { BoundDomRendererBase } from './boundDomRendererBase.js'; // Added BoundDomRendererBase
+export * from './chatAlertRenderer.js';
 export { BaseListDisplayComponent } from './baseListDisplayComponent.js'; // Added BaseListDisplayComponent
 export { BaseModalRenderer } from './baseModalRenderer.js'; // Added BaseModalRenderer
 

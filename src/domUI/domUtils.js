@@ -103,9 +103,27 @@ export const DomUtils = {
     }
     element.style.display = 'none';
   },
-};
 
-// For CommonJS environments if ever needed, though ES module is standard.
-// if (typeof module !== 'undefined' && module.exports) {
-//     module.exports = DomUtils;
-// }
+  /**
+   * Escapes HTML special characters in a string to prevent XSS.
+   * Replaces '&', '<', '>', '"', and "'".
+   * Gracefully handles non-string inputs by returning an empty string.
+   *
+   * @param {any} str - The input value to escape.
+   * @returns {string} The escaped string, or an empty string if the input is not a string.
+   * @example
+   * const userInput = '<script>alert("XSS")</script>';
+   * const safeHtml = DomUtils.escapeHtml(userInput); // "&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;"
+   */
+  escapeHtml(str) {
+    if (typeof str !== 'string') {
+      return '';
+    }
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  },
+};
