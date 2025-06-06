@@ -105,6 +105,12 @@ beforeEach(() => {
   container.register(tokens.ILLMAdapter, mockLlmAdapterInstance);
   container.register(tokens.ISchemaValidator, mockSchemaValidatorInstance);
   container.register(tokens.IConfiguration, mockConfigurationInstance);
+  container.register(tokens.ISafeEventDispatcher, {
+    subscribe: jest.fn(),
+    unsubscribe: jest.fn(),
+    dispatchSafely: jest.fn(),
+  });
+  container.register(tokens.IEntityManager, { getEntityInstance: jest.fn() });
 
   initializationService = new InitializationService({
     container,

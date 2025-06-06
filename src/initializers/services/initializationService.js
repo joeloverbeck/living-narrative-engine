@@ -8,12 +8,15 @@
 /** @typedef {import('../systemInitializer.js').default} SystemInitializer */
 /** @typedef {import('../worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../setup/inputSetupService.js').default} InputSetupService */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 // --- Interface Imports for JSDoc & `extends` ---
 /** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 import { IInitializationService } from '../../interfaces/IInitializationService.js';
 import { tokens } from '../../dependencyInjection/tokens.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
+import { ThoughtPersistenceListener } from '../../ai/ThoughtPersistenceListener.js';
+import { NotesPersistenceListener } from '../../ai/NotesPersistenceListener.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
@@ -215,6 +218,32 @@ class InitializationService extends IInitializationService {
       );
       inputSetupService.configureInputHandler();
       this.#logger.info('InitializationService: Input handler configured.');
+
+      // Register AI persistence listeners
+      const dispatcher =
+        /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ (
+          this.#container.resolve(tokens.ISafeEventDispatcher)
+        );
+      const entityManager = /** @type {IEntityManager} */ (
+        this.#container.resolve(tokens.IEntityManager)
+      );
+      const thoughtListener = new ThoughtPersistenceListener({
+        logger: this.#logger,
+        entityManager,
+      });
+      const notesListener = new NotesPersistenceListener({
+        logger: this.#logger,
+        entityManager,
+      });
+      dispatcher.subscribe(
+        'core:ai_action_decided',
+        thoughtListener.handleEvent.bind(thoughtListener)
+      );
+      dispatcher.subscribe(
+        'core:ai_action_decided',
+        notesListener.handleEvent.bind(notesListener)
+      );
+      this.#logger.info('Registered AI persistence listeners.');
 
       this.#logger.debug(
         'Resolving DomUiFacade to ensure UI components can be instantiated...'
