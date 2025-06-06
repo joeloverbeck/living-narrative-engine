@@ -25,6 +25,7 @@
  * @typedef {import('../interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider
  * @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider
  * @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor
+ * @typedef {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory
  */
 
 import { BaseTurnHandler } from './baseTurnHandler.js';
@@ -57,6 +58,8 @@ export class AITurnHandler extends BaseTurnHandler {
 
   /** @type {IPromptBuilder} */
   #promptBuilder;
+  /** @type {IAIFallbackActionFactory} */
+  #aiFallbackActionFactory;
   /** @type {IAIPlayerStrategyFactory} */
   #aiPlayerStrategyFactory;
   /** @type {ITurnContextFactory} */
@@ -92,6 +95,7 @@ export class AITurnHandler extends BaseTurnHandler {
    * @param {IAIGameStateProvider} dependencies.gameStateProvider
    * @param {IAIPromptContentProvider} dependencies.promptContentProvider
    * @param {ILLMResponseProcessor} dependencies.llmResponseProcessor
+   * @param dependencies.aiFallbackActionFactory
    */
   constructor({
     logger,
@@ -106,6 +110,7 @@ export class AITurnHandler extends BaseTurnHandler {
     entityManager,
     actionDiscoverySystem,
     promptBuilder,
+    aiFallbackActionFactory,
     aiPlayerStrategyFactory,
     turnContextFactory,
     gameStateProvider,
@@ -132,6 +137,8 @@ export class AITurnHandler extends BaseTurnHandler {
       throw new Error('AITurnHandler: Invalid IActionDiscoverySystem');
     if (!promptBuilder)
       throw new Error('AITurnHandler: Invalid IPromptBuilder');
+    if (!aiFallbackActionFactory)
+      throw new Error('AITurnHandler: Invalid IAIFallbackActionFactory');
     if (!aiPlayerStrategyFactory)
       throw new Error('AITurnHandler: Invalid IAIPlayerStrategyFactory');
     if (!turnContextFactory)
@@ -153,6 +160,7 @@ export class AITurnHandler extends BaseTurnHandler {
     this.#entityManager = entityManager;
     this.#actionDiscoverySystem = actionDiscoverySystem;
     this.#promptBuilder = promptBuilder;
+    this.#aiFallbackActionFactory = aiFallbackActionFactory;
     this.#aiPlayerStrategyFactory = aiPlayerStrategyFactory;
     this.#turnContextFactory = turnContextFactory;
     this.#gameStateProvider = gameStateProvider;
@@ -226,6 +234,7 @@ export class AITurnHandler extends BaseTurnHandler {
       promptContentProvider: this.#promptContentProvider,
       promptBuilder: this.#promptBuilder,
       llmResponseProcessor: this.#llmResponseProcessor,
+      aiFallbackActionFactory: this.#aiFallbackActionFactory,
       logger: this._logger,
     });
 

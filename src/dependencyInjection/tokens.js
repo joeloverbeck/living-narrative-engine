@@ -265,6 +265,7 @@ export const tokens = Object.freeze({
   IAIGameStateProvider: 'IAIGameStateProvider',
   IAIPromptContentProvider: 'IAIPromptContentProvider',
   ILLMResponseProcessor: 'ILLMResponseProcessor',
+  IAIFallbackActionFactory: 'IAIFallbackActionFactory',
 
   // --- Concrete Service Tokens (if needed for direct registration before interface mapping) ---
   PromptBuilder: 'PromptBuilder',

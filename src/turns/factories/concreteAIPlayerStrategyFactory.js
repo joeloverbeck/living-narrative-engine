@@ -12,6 +12,7 @@ import { AIPlayerStrategy } from '../strategies/aiPlayerStrategy.js';
  * @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
+ * @typedef {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory
  */
 
 /**
@@ -30,6 +31,7 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
    * @param {IAIPromptContentProvider} dependencies.promptContentProvider
    * @param {IPromptBuilder} dependencies.promptBuilder
    * @param {ILLMResponseProcessor} dependencies.llmResponseProcessor
+   * @param {IAIFallbackActionFactory} dependencies.aiFallbackActionFactory
    * @param {ILogger} dependencies.logger
    * @returns {IActorTurnStrategy} The created AIPlayerStrategy.
    */
@@ -39,6 +41,7 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
     promptContentProvider,
     promptBuilder,
     llmResponseProcessor,
+    aiFallbackActionFactory,
     logger,
   }) {
     return new AIPlayerStrategy({
@@ -47,6 +50,7 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
       promptContentProvider,
       promptBuilder,
       llmResponseProcessor,
+      aiFallbackActionFactory,
       logger,
     });
   }

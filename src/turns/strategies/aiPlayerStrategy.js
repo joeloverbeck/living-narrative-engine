@@ -14,12 +14,13 @@
 /** @typedef {import('../../types/promptData.js').PromptData} PromptData */
 /** @typedef {import('../interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
 /** @typedef {import('../../interfaces/coreServices.js').IEntityManager} IEntityManager */
+/** @typedef {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
 
 import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
 import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
 import { IAIGameStateProvider } from '../interfaces/IAIGameStateProvider.js';
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
-import { DEFAULT_FALLBACK_ACTION } from '../../llms/constants/llmConstants.js';
+import { IAIFallbackActionFactory } from '../interfaces/IAIFallbackActionFactory.js';
 import { persistThoughts } from '../../ai/thoughtPersistenceHook.js';
 import { persistNotes } from '../../ai/notesPersistenceHook.js';
 
@@ -35,6 +36,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
   #promptBuilder;
   #llmResponseProcessor;
   #logger;
+  #aiFallbackActionFactory;
 
   /**
    * Creates an instance of AIPlayerStrategy.
@@ -54,6 +56,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     promptContentProvider,
     promptBuilder,
     llmResponseProcessor,
+    aiFallbackActionFactory,
     logger,
   }) {
     super();
@@ -101,6 +104,14 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         'AIPlayerStrategy: Constructor requires a valid ILLMResponseProcessor.'
       );
     }
+    if (
+      !aiFallbackActionFactory ||
+      typeof aiFallbackActionFactory.create !== 'function'
+    ) {
+      throw new Error(
+        'AIPlayerStrategy: Constructor requires a valid IAIFallbackActionFactory.'
+      );
+    }
     if (!logger || typeof logger.info !== 'function') {
       throw new Error(
         'AIPlayerStrategy: Constructor requires a valid ILogger instance.'
@@ -112,60 +123,8 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     this.#promptContentProvider = promptContentProvider;
     this.#promptBuilder = promptBuilder;
     this.#llmResponseProcessor = llmResponseProcessor;
+    this.#aiFallbackActionFactory = aiFallbackActionFactory;
     this.#logger = logger;
-  }
-
-  /**
-   * Creates a single, canonical fallback action when any part of the AI
-   * decision-making pipeline fails. This method centralizes fallback logic.
-   *
-   * @private
-   * @param {string} failureContext - A high-level string describing where the failure occurred.
-   * @param {Error} error - The caught error object.
-   * @param {string} actorId - The ID of the actor for whom the action failed.
-   * @returns {ITurnAction} The canonical fallback action.
-   */
-  _createCanonicalFallbackAction(failureContext, error, actorId) {
-    this.#logger.error(
-      `AIPlayerStrategy: Creating canonical fallback action for actor ${actorId} due to ${failureContext}.`,
-      {
-        actorId,
-        error,
-        errorMessage: error.message,
-        stack: error.stack,
-      }
-    );
-
-    let userFriendlyErrorBrief = 'an unexpected issue';
-    if (
-      typeof error.message === 'string' &&
-      error.message.toLowerCase().includes('http error 500')
-    ) {
-      userFriendlyErrorBrief = 'a server connection problem';
-    } else if (failureContext === 'llm_response_processing') {
-      userFriendlyErrorBrief = 'a communication issue';
-    }
-
-    const speechMessage = `I encountered ${userFriendlyErrorBrief} and will wait for a moment.`;
-
-    // Construct a detailed diagnostics object for logging and debugging.
-    const diagnostics = {
-      originalMessage: error.message,
-      ...(error.details || {}), // Spread details from LLMProcessingError if present
-      stack: error.stack?.split('\n'),
-    };
-
-    return {
-      actionDefinitionId: DEFAULT_FALLBACK_ACTION.actionDefinitionId,
-      commandString: DEFAULT_FALLBACK_ACTION.commandString,
-      speech: speechMessage,
-      resolvedParameters: {
-        actorId,
-        isFallback: true,
-        failureReason: failureContext,
-        diagnostics,
-      },
-    };
   }
 
   async decideAction(context) {
@@ -280,8 +239,8 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
           ? 'llm_response_processing'
           : 'unhandled_orchestration_error';
 
-      // The canonical fallback action is created here, centralizing all fallback logic.
-      return this._createCanonicalFallbackAction(
+      // Delegate fallback creation to dedicated factory
+      return this.#aiFallbackActionFactory.create(
         failureContext,
         error,
         actorId

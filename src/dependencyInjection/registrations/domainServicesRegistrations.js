@@ -31,6 +31,7 @@ import { ConcreteTurnStateFactory } from '../../turns/factories/concreteTurnStat
 import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.js';
 import { AIPromptContentProvider } from '../../prompting/AIPromptContentProvider.js';
 import { AIGameStateProvider } from '../../turns/services/AIGameStateProvider.js';
+import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
 
 // --- PromptBuilder and its dependencies (NEW IMPORTS) ---
 import { PromptBuilder } from '../../prompting/promptBuilder.js'; // Corrected path
@@ -667,6 +668,15 @@ export function registerDomainServices(container) {
   });
   log.debug(
     `Domain Services Registration: Registered ${String(tokens.ILLMResponseProcessor)}.`
+  );
+
+  r.singletonFactory(tokens.IAIFallbackActionFactory, (c) => {
+    return new AIFallbackActionFactory({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  log.debug(
+    `Domain Services Registration: Registered ${String(tokens.IAIFallbackActionFactory)}.`
   );
 
   // --- Register Turn System Factories ---
