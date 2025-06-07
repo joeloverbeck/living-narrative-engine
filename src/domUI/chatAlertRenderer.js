@@ -4,6 +4,7 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { escapeHtml } from '../utils/rendererUtils.js';
 import { Throttler } from '../alerting/throttler.js';
 import { generateKey } from '../alerting/throttleUtils.js';
+import { getUserFriendlyMessage } from '../alerting/statusCodeMapper.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -65,7 +66,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     alertRouter,
     alertMessageFormatter,
   }) {
-    // **FIX**: Pass the safe dispatcher to the parent under the key it expects.
     super({
       logger,
       documentContext,
@@ -75,7 +75,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       },
     });
 
-    // --- Dependency Validation ---
     if (!safeEventDispatcher) {
       throw new Error(
         `${this._logPrefix} ISafeEventDispatcher dependency is required.`
@@ -100,15 +99,12 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     this.#alertMessageFormatter = alertMessageFormatter;
     this.#domElementFactory = domElementFactory;
 
-    // --- Throttler Instantiation ---
-    // **FIX**: Use the explicitly requested safe dispatcher.
     this.#warningThrottler = new Throttler(
       this.#safeEventDispatcher,
       'warning'
     );
     this.#errorThrottler = new Throttler(this.#safeEventDispatcher, 'error');
 
-    // --- DOM Detection and Readiness Notification ---
     this.#hasPanel = !!this.elements.chatPanel;
 
     if (this.#hasPanel) {
@@ -127,8 +123,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       );
     }
 
-    // --- Event Subscriptions ---
-    // **FIX**: Use the safe dispatcher for subscriptions for consistency.
     this._addSubscription(
       this.#safeEventDispatcher.subscribe(
         'ui:display_warning',
@@ -145,7 +139,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     this.logger.debug(`${this._logPrefix} Initialized.`);
   }
 
-  // ... rest of the class methods (createAndAppendBubble, handleWarning, etc.) are unchanged ...
   /**
    * Scrolls the chat panel to the bottom to ensure the latest message is visible.
    * @private
@@ -268,7 +261,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     });
     if (titleElement) contentWrapper.appendChild(titleElement);
 
-    // --- Message Truncation Logic ---
     const messageElement = this.#domElementFactory.p('chat-alert-message');
     if (messageElement) {
       messageElement.id = messageId;
@@ -302,7 +294,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       }
     }
 
-    // --- Developer Details Collapsible Section ---
     if (developerDetails) {
       const detailsContainer = this.#domElementFactory.div(
         'chat-alert-details-container'
@@ -319,10 +310,10 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
         });
 
         const preElement = this.#domElementFactory.create('pre', {
-          cls: 'chat-alert-details', // Let CSS handle visibility via [hidden]
+          cls: 'chat-alert-details',
           id: detailsId,
         });
-        preElement.hidden = true; // Hidden by default
+        preElement.hidden = true;
 
         const codeElement = this.#domElementFactory.create('code', {
           text: developerDetails,
@@ -346,13 +337,19 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
    * @param {IEvent<DisplayWarningPayload>} event The event object containing the warning details.
    */
   #handleWarning(event) {
-    const { message, details } = event.payload;
+    const { message: eventMessage, details } = event.payload;
 
-    // Format the message from details, which gives a canonical display message.
-    const formatResult = this.#alertMessageFormatter.format(details);
-    // A summary event from the throttler will have a `message` property. Prioritize it.
-    const displayMessage = message || formatResult.displayMessage;
-    const developerDetails = formatResult.developerDetails;
+    const { displayMessage: generatedMessage, devDetails: developerDetails } =
+      getUserFriendlyMessage(details, eventMessage);
+
+    // Heuristic: A summary message from the throttler has a recognizable pattern.
+    // This is the only reliable way to distinguish it from a regular event that happens
+    // to also have a message and a status code.
+    const isSummary =
+      eventMessage && eventMessage.includes(' more times in the last ');
+
+    // If it's a summary, the event's message wins. Otherwise, the status code mapped message wins.
+    const displayMessage = isSummary ? eventMessage : generatedMessage;
 
     if (!this.#hasPanel) {
       const consoleMessage = `[UI WARNING] ${displayMessage}${
@@ -362,19 +359,19 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       return;
     }
 
-    // --- Throttling Logic ---
     const escapedMessage = escapeHtml(displayMessage);
     const key = generateKey(escapedMessage, details);
+
     const shouldRender = this.#warningThrottler.allow(key, {
-      // For the summary, use the canonical message from the formatter, not the summary's own text.
-      message: formatResult.displayMessage,
+      // For creating future summaries, the throttler needs the CANONICAL message,
+      // not the summary text. So we pass the `generatedMessage`.
+      message: generatedMessage,
       details: details,
     });
 
     if (!shouldRender) {
       return; // Suppress the alert
     }
-    // --- End Throttling Logic ---
 
     this.#createAndAppendBubble({
       type: 'warning',
@@ -389,11 +386,17 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
    * @param {IEvent<DisplayErrorPayload>} event The event object containing the error details.
    */
   #handleError(event) {
-    const { message, details } = event.payload;
+    const { message: eventMessage, details } = event.payload;
 
-    const formatResult = this.#alertMessageFormatter.format(details);
-    const displayMessage = message || formatResult.displayMessage;
-    const developerDetails = formatResult.developerDetails;
+    const { displayMessage: generatedMessage, devDetails: developerDetails } =
+      getUserFriendlyMessage(details, eventMessage);
+
+    // Heuristic to detect summary messages.
+    const isSummary =
+      eventMessage && eventMessage.includes(' more times in the last ');
+
+    // If it's a summary, the event's message wins. Otherwise, the status code mapped message wins.
+    const displayMessage = isSummary ? eventMessage : generatedMessage;
 
     if (!this.#hasPanel) {
       const consoleMessage = `[UI ERROR] ${displayMessage}${
@@ -403,18 +406,18 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       return;
     }
 
-    // --- Throttling Logic ---
     const escapedMessage = escapeHtml(displayMessage);
     const key = generateKey(escapedMessage, details);
+
     const shouldRender = this.#errorThrottler.allow(key, {
-      message: formatResult.displayMessage,
+      // For creating future summaries, the throttler needs the CANONICAL message.
+      message: generatedMessage,
       details: details,
     });
 
     if (!shouldRender) {
       return; // Suppress the alert
     }
-    // --- End Throttling Logic ---
 
     this.#createAndAppendBubble({
       type: 'error',

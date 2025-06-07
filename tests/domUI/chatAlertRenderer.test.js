@@ -1,4 +1,5 @@
 // tests/domUI/chatAlertRenderer.test.js
+
 import {
   describe,
   it,
@@ -197,11 +198,6 @@ describe('ChatAlertRenderer', () => {
     const localMocks = {
       logger: createMockLogger(),
       documentContext: createMockDocumentContext(panelExists),
-      /**
-       * **THE FIX**: Renamed `validatedEventDispatcher` to `safeEventDispatcher`.
-       * This now matches the updated constructor signature of `ChatAlertRenderer`,
-       * ensuring the correct dependency is passed during test setup.
-       */
       safeEventDispatcher: createMockSafeEventDispatcher(),
       domElementFactory: createMockDomElementFactory(),
       alertRouter: createMockAlertRouter(),
@@ -252,6 +248,7 @@ describe('ChatAlertRenderer', () => {
     it('should NOT render a warning bubble if warning throttler returns false', () => {
       mockWarningAllow.mockReturnValue(false);
       mocks.safeEventDispatcher.trigger('ui:display_warning', {
+        message: 'test',
         details: {},
       });
       expect(mockWarningAllow).toHaveBeenCalled();
@@ -262,6 +259,7 @@ describe('ChatAlertRenderer', () => {
     it('should NOT render an error bubble if error throttler returns false', () => {
       mockErrorAllow.mockReturnValue(false);
       mocks.safeEventDispatcher.trigger('ui:display_error', {
+        message: 'test',
         details: {},
       });
       expect(mockErrorAllow).toHaveBeenCalled();
@@ -273,17 +271,15 @@ describe('ChatAlertRenderer', () => {
   describe('DOM & Logic Tests', () => {
     it('should render a warning bubble when panel is present and throttler allows', () => {
       const message = 'This is a test warning.';
-      mocks.alertMessageFormatter.format.mockReturnValue({
-        displayMessage: message,
-        developerDetails: null,
-      });
       mocks.safeEventDispatcher.trigger('ui:display_warning', {
-        details: { message },
+        message: message,
+        details: {},
       });
 
       expect(mocks.mockChatPanel.appendChild).toHaveBeenCalledTimes(1);
       const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
       expect(bubble.classList.contains('chat-warning-bubble')).toBe(true);
+      expect(bubble.textContent).toContain(message);
     });
 
     it('should log to console when panel is not present', () => {
@@ -291,11 +287,13 @@ describe('ChatAlertRenderer', () => {
       mockWarningAllow.mockReturnValue(true);
 
       const message = 'Console warning.';
-      localMocks.alertMessageFormatter.format.mockReturnValue({
-        displayMessage: message,
-        developerDetails: null,
-      });
+      // **FIX**: The `alertMessageFormatter` mock is no longer needed here as the
+      // renderer now generates its own message.
+
+      // **FIX**: The event payload must match what the handler expects. It needs a `message`
+      // property to use as a fallback when `details` has no status code.
       localMocks.safeEventDispatcher.trigger('ui:display_warning', {
+        message: message,
         details: {},
       });
 

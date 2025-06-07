@@ -30,6 +30,8 @@ const mockAlertRouter = {
   notifyUIReady: jest.fn(),
 };
 
+// This mock is no longer used by the renderer but we keep its definition here
+// to avoid having to remove it from the constructor call. It has no effect.
 const mockAlertMessageFormatter = {
   format: jest.fn(),
 };
@@ -66,12 +68,6 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       unsubscribe: jest.fn(),
     };
 
-    // Set a default behavior for the formatter mock
-    mockAlertMessageFormatter.format.mockImplementation((details) => ({
-      displayMessage: `Formatted message for ${details?.url || 'unknown'}`,
-      developerDetails: `Details: ${JSON.stringify(details)}`,
-    }));
-
     // Wrap JSDOM's document in the expected context object interface
     testDocumentContext = {
       query: (selector) => document.querySelector(selector),
@@ -85,7 +81,7 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       safeEventDispatcher: mockSafeEventDispatcher,
       domElementFactory: new DomElementFactory(testDocumentContext),
       alertRouter: mockAlertRouter,
-      alertMessageFormatter: mockAlertMessageFormatter,
+      alertMessageFormatter: mockAlertMessageFormatter, // No longer used, but constructor expects it
     });
   });
 
@@ -118,14 +114,12 @@ describe('ChatAlertRenderer Throttling Integration', () => {
     it('should suppress identical warnings and render a summary bubble after 10s', () => {
       // --- Arrange ---
       const warningPayload = {
+        message: 'Original event message, should be ignored.', // Ignored due to statusCode
         details: { statusCode: 408, url: '/api/data' },
       };
-
-      // The throttler's key and summary message depend on the formatter's output.
-      mockAlertMessageFormatter.format.mockReturnValue({
-        displayMessage: 'Connection timed out.',
-        developerDetails: 'Status: 408, URL: /api/data',
-      });
+      // **FIX**: The expected message now comes from statusCodeMapper, not a mock.
+      // 408 is an unmapped code.
+      const expectedDisplayMessage = 'An unexpected error occurred.';
 
       // --- Act: Dispatch three identical events in quick succession ---
       fireEvent('ui:display_warning', warningPayload);
@@ -137,7 +131,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       const firstBubble = chatPanel.children[0];
       expect(firstBubble.classList.contains('chat-warning-bubble')).toBe(true);
       expect(firstBubble.textContent).toContain('Warning');
-      expect(firstBubble.textContent).toContain('Connection timed out.');
+      // **FIX**: Assert against the message from the status code mapper.
+      expect(firstBubble.textContent).toContain(expectedDisplayMessage);
+      expect(firstBubble.textContent).toContain('408 at /api/data');
 
       // The throttler should not have dispatched a summary event yet.
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
@@ -149,10 +145,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       // The throttler's timeout should have fired, dispatching a summary event.
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
 
-      // **FIX**: The expected message must match the actual output from the Throttler.
+      // **FIX**: The expected summary message must be based on the actual display message.
       const expectedSummaryPayload = {
-        message:
-          "Warning: 'Connection timed out.' occurred 2 more times in the last 10 seconds.",
+        message: `Warning: '${expectedDisplayMessage}' occurred 2 more times in the last 10 seconds.`,
         details: warningPayload.details, // Details are carried over.
       };
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -173,12 +168,11 @@ describe('ChatAlertRenderer Throttling Integration', () => {
     it('should render two separate bubbles for a warning and an error with the same content', () => {
       // --- Arrange ---
       const payload = {
+        message: 'This message is overridden by the status code.',
         details: { statusCode: 500, url: '/api/critical' },
       };
-      mockAlertMessageFormatter.format.mockReturnValue({
-        displayMessage: 'Same message content.',
-        developerDetails: 'Status: 500',
-      });
+      // **FIX**: The expected message comes from the mapped status code 500.
+      const expectedDisplayMessage = 'Server error. Please try again later.';
 
       // --- Act ---
       fireEvent('ui:display_warning', payload);
@@ -198,9 +192,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       expect(bubble1IsWarning).toBe(true);
       expect(bubble2IsError).toBe(true);
 
-      // Verify the content is present in both.
-      expect(bubble1.textContent).toContain('Same message content.');
-      expect(bubble2.textContent).toContain('Same message content.');
+      // **FIX**: Verify the mapped content is present in both.
+      expect(bubble1.textContent).toContain(expectedDisplayMessage);
+      expect(bubble2.textContent).toContain(expectedDisplayMessage);
 
       // Advance time and assert that no summary is generated for either.
       jest.advanceTimersByTime(10000);
@@ -213,12 +207,11 @@ describe('ChatAlertRenderer Throttling Integration', () => {
     it('should render a single error bubble and NOT a summary for a one-off event', () => {
       // --- Arrange ---
       const finalErrorPayload = {
+        message: 'This original message will be ignored.',
         details: { statusCode: 504, url: '/api/flaky-service' },
       };
-      mockAlertMessageFormatter.format.mockReturnValue({
-        displayMessage: 'Final attempt failed after 3 retries.',
-        developerDetails: 'Status: 504',
-      });
+      // **FIX**: The expected message is for an unmapped status code.
+      const expectedDisplayMessage = 'An unexpected error occurred.';
 
       // --- Act: Dispatch a single, final error event ---
       fireEvent('ui:display_error', finalErrorPayload);
@@ -228,9 +221,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       expect(chatPanel.children.length).toBe(1);
       const errorBubble = chatPanel.children[0];
       expect(errorBubble.classList.contains('chat-error-bubble')).toBe(true);
-      expect(errorBubble.textContent).toContain(
-        'Final attempt failed after 3 retries.'
-      );
+      // **FIX**: Assert against the message from the status code mapper.
+      expect(errorBubble.textContent).toContain(expectedDisplayMessage);
+      expect(errorBubble.textContent).toContain('504 at /api/flaky-service');
 
       // --- Act: Advance time past the throttle window ---
       jest.advanceTimersByTime(10000);
