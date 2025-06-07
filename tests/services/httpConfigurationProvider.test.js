@@ -61,10 +61,10 @@ describe('HttpConfigurationProvider', () => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(global.fetch).toHaveBeenCalledWith(url);
       expect(result).toEqual(mockData);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `HttpConfigurationProvider: Attempting to load configurations from ${url}`
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `HttpConfigurationProvider: Successfully fetched and parsed configuration from ${url}.`
       );
       expect(mockLogger.error).not.toHaveBeenCalled();

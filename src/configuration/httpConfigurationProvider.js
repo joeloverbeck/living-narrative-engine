@@ -64,7 +64,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
       throw new Error(errorMessage);
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `HttpConfigurationProvider: Attempting to load configurations from ${sourceUrl}`
     );
 
@@ -102,7 +102,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
         );
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `HttpConfigurationProvider: Successfully fetched and parsed configuration from ${sourceUrl}.`
       );
       return jsonData;

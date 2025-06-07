@@ -271,7 +271,7 @@ function resolveOrder(requestedIds, manifestsMap, logger) {
     );
 
   if (differs) {
-    logger.info(
+    logger.debug(
       [
         'Mod load order adjusted to satisfy dependencies.',
         `Original: ${originalOrder.join(', ')}`,
