@@ -439,12 +439,11 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       (action) => {
         const systemId = action.id || DEFAULT_FALLBACK_ACTION_ID;
         const baseCommand = action.command || DEFAULT_FALLBACK_ACTION_COMMAND;
-        const nameDisplay = action.name || DEFAULT_FALLBACK_ACTION_NAME;
         let description =
           action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
         description = ensureTerminalPunctuation(description);
 
-        return `- "${nameDisplay}" (actionDefinitionId: "${systemId}", commandString: "${baseCommand}"). Description: ${description}`;
+        return `- "(actionDefinitionId: "${systemId}", commandString: "${baseCommand}"). Description: ${description}`;
       },
       noActionsMessage,
       this.#logger

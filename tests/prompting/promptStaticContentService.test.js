@@ -36,7 +36,7 @@ Your primary directive is authentic character portrayal and storytelling within 
 
 const FINAL_LLM_INSTRUCTION_TEXT_EXPECTED =
   'NOTES RULES\n' +
-  '- Only record brand-new, critical facts (locations, allies, threats, etc.)\n' +
+  '- Only record brand-new, critical facts (locations, allies, threats, etc.) that may determine your survival, well-being, or prosperity.\n' +
   '- No internal musings, only hard data.\n\n' +
   "Now, based on all the information provided, decide on your character's action and what they will say. Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.";
 
