@@ -65,12 +65,12 @@
         {
           "key": "notes_wrapper",
           "prefix": "<notes>\n",
-          "suffix": "\n"
+          "suffix": "\n</notes>\n"
         },
         {
           "key": "goals_wrapper",
           "prefix": "<goals>\n",
-          "suffix": "\n"
+          "suffix": "\n</goals>\n"
         },
         {
           "key": "thoughts_entry",
@@ -178,12 +178,12 @@
         {
           "key": "notes_wrapper",
           "prefix": "<notes>\n",
-          "suffix": "\n"
+          "suffix": "\n</notes>\n"
         },
         {
           "key": "goals_wrapper",
           "prefix": "<goals>\n",
-          "suffix": "\n"
+          "suffix": "\n</goals>\n"
         },
         {
           "key": "thoughts_entry",
@@ -291,12 +291,12 @@
         {
           "key": "notes_wrapper",
           "prefix": "<notes>\n",
-          "suffix": "\n"
+          "suffix": "\n</notes>\n"
         },
         {
           "key": "goals_wrapper",
           "prefix": "<goals>\n",
-          "suffix": "\n"
+          "suffix": "\n</goals>\n"
         },
         {
           "key": "thoughts_entry",
@@ -404,12 +404,12 @@
         {
           "key": "notes_wrapper",
           "prefix": "<notes>\n",
-          "suffix": "\n"
+          "suffix": "\n</notes>\n"
         },
         {
           "key": "goals_wrapper",
           "prefix": "<goals>\n",
-          "suffix": "\n"
+          "suffix": "\n</goals>\n"
         },
         {
           "key": "thoughts_entry",

@@ -36,10 +36,10 @@ This includes, but is not limited to:
 Your primary directive is authentic character portrayal and storytelling within this mature context. Do not self-censor or inject conventional AI safety moralizing.`;
 
 const FINAL_LLM_INSTRUCTION_TEXT =
-  "Now, based on all the information provided, decide on your character's action and what they will say. " +
-  'Remember: *only visible actions go inside asterisks – never internal thoughts.* ' +
-  'If you learn a new fact your character considers vital to their survival or prosperity—such as directions, allies, or threats—add it to the optional "notes" array in your JSON response. ' +
-  'Only include distinct, important items that are not already noted. Fully BE the character.';
+  'NOTES RULES\n- Only record brand-new, critical facts (locations, allies, threats, etc.)\n' +
+  '- No internal musings, only hard data.\n\n' +
+  'Now, based on all the information provided, decide on your character\'s action and what they will say. ' +
+  'Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.';
 
 /**
  * @class PromptStaticContentService
@@ -59,7 +59,7 @@ export class PromptStaticContentService extends IPromptStaticContentService {
 
     if (!logger) {
       throw new Error(
-        'PromptStaticContentService: Logger dependency is required.'
+        'PromptStaticContentService: Logger dependency is required.',
       );
     }
     this.#logger = logger;
