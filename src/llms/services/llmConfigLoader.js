@@ -296,7 +296,8 @@ export class LlmConfigLoader {
         { method: 'GET', headers: { Accept: 'application/json' } },
         this.#defaultMaxRetries,
         this.#defaultBaseDelayMs,
-        this.#defaultMaxDelayMs
+        this.#defaultMaxDelayMs,
+        this.#logger
       );
       this.#logger.info(
         `LlmConfigLoader: Successfully fetched and parsed LLM Prompt configurations from ${currentPath}.`

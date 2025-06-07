@@ -121,7 +121,8 @@ export class LoggerConfigLoader {
         { method: 'GET', headers: { Accept: 'application/json' } },
         this.#defaultMaxRetries,
         this.#defaultBaseDelayMs,
-        this.#defaultMaxDelayMs
+        this.#defaultMaxDelayMs,
+        this.#logger
       );
 
       logInfo(

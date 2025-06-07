@@ -120,7 +120,8 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
       expect.any(Object),
       expect.any(Number),
       expect.any(Number),
-      expect.any(Number)
+      expect.any(Number),
+      loggerMock
     );
     expect(configurationMock.getContentTypeSchemaId).toHaveBeenCalledWith(
       'llm-configs'
