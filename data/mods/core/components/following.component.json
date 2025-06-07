@@ -1,0 +1,16 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:following",
+  "description": "Authoritative component that marks an entity as following another. This is the single source of truth for the relationship. Its presence on an entity indicates that entity is a follower.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["leaderId"],
+    "properties": {
+      "leaderId": {
+        "$ref": "common.schema.json#/definitions/namespacedId",
+        "description": "The namespaced ID of the entity being followed (the leader)."
+      }
+    }
+  }
+}

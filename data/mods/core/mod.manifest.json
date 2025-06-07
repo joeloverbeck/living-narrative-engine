@@ -25,12 +25,14 @@
       "portrait.component.json",
       "short_term_memory.component.json",
       "notes.component.json",
-      "goals.component.json"
+      "goals.component.json",
+      "following.component.json",
+      "leading.component.json"
     ],
     "characters": [],
     "items": [],
     "locations": [],
-    "actions": ["wait.action.json", "go.action.json"],
+    "actions": ["wait.action.json", "go.action.json", "follow.action.json"],
     "rules": [
       "turn_started.rule.json",
       "turn_ended.rule.json",

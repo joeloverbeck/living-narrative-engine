@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:leading",
+  "description": "Derived cache component that lists the followers of a leader. This component's data is non-authoritative and is rebuilt automatically by SystemRules. It MUST NOT be mutated directly.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["followers"],
+    "properties": {
+      "followers": {
+        "description": "An array of namespaced IDs for all entities currently following this one.",
+        "type": "array",
+        "items": {
+          "$ref": "common.schema.json#/definitions/namespacedId"
+        },
+        "default": []
+      }
+    }
+  }
+}
