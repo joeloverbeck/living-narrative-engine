@@ -1,4 +1,4 @@
-// src/services/exitResolver.js
+// src/navigation/exitResolver.js
 //
 // Replaces the legacy connectionResolver.
 // Resolves exits stored directly on the location’s `core:exits` component.
