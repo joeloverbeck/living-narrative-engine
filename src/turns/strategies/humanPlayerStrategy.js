@@ -143,7 +143,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
       };
       // --- END MODIFIED ITurnAction CONSTRUCTION ---
 
-      logger.info(
+      logger.debug(
         `HumanPlayerStrategy: Constructed ITurnAction for actor ${actor.id} with actionDefinitionId "${turnAction.actionDefinitionId}".`
       );
       logger.debug(
@@ -180,7 +180,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
       }
 
       if (error && error.name === 'AbortError') {
-        logger.info(
+        logger.debug(
           `HumanPlayerStrategy.decideAction: Operation for actor ${actorIdForLog} was cancelled (aborted). Error: ${error.message}`
         );
       } else {

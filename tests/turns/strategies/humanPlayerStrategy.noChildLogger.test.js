@@ -86,7 +86,7 @@ describe('HumanPlayerStrategy', () => {
       expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor, {
         cancellationSignal: undefined,
       });
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `HumanPlayerStrategy: Constructed ITurnAction for actor ${mockActor.id} with actionDefinitionId "${playerData.action.id}".`
       );
 

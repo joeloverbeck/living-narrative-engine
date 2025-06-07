@@ -384,7 +384,7 @@ describe('BaseModalRenderer', () => {
         'aria-hidden',
         'false'
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `${getExpectedLogPrefix(baseModalInstance)} Modal shown.`
       );
     });
@@ -486,7 +486,7 @@ describe('BaseModalRenderer', () => {
       );
       jest.runAllTimers();
       expect(mockModalElement.style.display).toBe('none');
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `${getExpectedLogPrefix(baseModalInstance)} Modal hidden.`
       );
     });
@@ -865,7 +865,7 @@ describe('BaseModalRenderer', () => {
 
     it('should log that it was destroyed', () => {
       baseModalInstance.destroy();
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `${getExpectedLogPrefix(baseModalInstance)} Destroyed.`
       );
     });

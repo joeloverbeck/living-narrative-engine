@@ -86,7 +86,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
       );
     }
     this.#sessionStartTime = Date.now();
-    this.#logger.info(
+    this.#logger.debug(
       `PlaytimeTracker: Session started at ${this.#sessionStartTime}`
     );
   }
@@ -104,11 +104,11 @@ class PlaytimeTracker extends IPlaytimeTracker {
         (Date.now() - this.#sessionStartTime) / 1000
       );
       this.#accumulatedPlaytimeSeconds += currentSessionDuration;
-      this.#logger.info(
+      this.#logger.debug(
         `PlaytimeTracker: Session ended. Duration: ${currentSessionDuration}s. Accumulated playtime: ${this.#accumulatedPlaytimeSeconds}s.`
       );
     } else {
-      this.#logger.info(
+      this.#logger.debug(
         'PlaytimeTracker: endSessionAndAccumulate called but no active session was found.'
       );
     }
@@ -154,7 +154,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
 
     this.#accumulatedPlaytimeSeconds = seconds;
     this.#sessionStartTime = 0; // Reset session start time
-    this.#logger.info(
+    this.#logger.debug(
       `PlaytimeTracker: Accumulated playtime set to ${seconds}s.`
     );
   }
