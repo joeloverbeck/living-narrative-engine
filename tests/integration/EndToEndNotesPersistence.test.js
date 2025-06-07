@@ -80,7 +80,7 @@ describe('End-to-End Notes Persistence Flow', () => {
       {
         key: 'notes_wrapper',
         elementType: 'notes_section',
-        prefix: '\nImportant Things to Remember:\n',
+        prefix: '<notes>\n',
         suffix: '\n',
       },
     ],
@@ -122,7 +122,7 @@ describe('End-to-End Notes Persistence Flow', () => {
 
   test('notes persist and appear in subsequent prompt', async () => {
     const prompt1 = await buildPrompt(provider, promptBuilder, actor, logger);
-    expect(prompt1).not.toContain('Important Things to Remember');
+    expect(prompt1).not.toContain('<notes>');
 
     const response = {
       actionDefinitionId: 'core:wait',
@@ -157,7 +157,7 @@ describe('End-to-End Notes Persistence Flow', () => {
     expect(notesComp.notes[0].text).toBe('Remember the password');
 
     const prompt2 = await buildPrompt(provider, promptBuilder, actor, logger);
-    expect(prompt2).toContain('Important Things to Remember');
+    expect(prompt2).toContain('<notes>');
     expect(prompt2).toContain('- Remember the password');
   });
 });

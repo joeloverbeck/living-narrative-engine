@@ -18,7 +18,7 @@ import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssemble
  *
  * Output example (two goals G1, G2):
  * ```
- * \nYour Goals:\n
+ * <goals>\n
  * - G1
  * - G2
  *
@@ -67,7 +67,7 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
 
     if (goalLines === '') return '';
 
-    // resolvedPrefix contains the header string (e.g. "\nYour Goals:\n")
+    // resolvedPrefix contains the header string (e.g. "<goals>\n")
     const sectionCore = `${resolvedPrefix}\n${goalLines}\n${resolvedSuffix}`;
     return sectionCore;
   }

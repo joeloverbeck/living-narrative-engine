@@ -18,7 +18,7 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
           { key: 'intro', prefix: 'Hello:\n', suffix: '\n', condition: null },
           {
             key: 'notes_wrapper',
-            prefix: '\nImportant Things to Remember:\n',
+            prefix: '<notes>:',
             suffix: '\n',
             condition: null,
           },
@@ -55,7 +55,7 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
     });
   });
 
-  test('includes "Important Things to Remember" and bullet when notesArray is non-empty', async () => {
+  test('includes "<notes>:" and bullet when notesArray is non-empty', async () => {
     const promptData = {
       notesArray: [
         { text: 'Remember the keycode', timestamp: '2025-06-01T12:00:00Z' },
@@ -64,7 +64,7 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
 
     const result = await builder.build('test-llm', promptData);
 
-    const occurrences = result.match(/Important Things to Remember:/g) || [];
+    const occurrences = result.match(/<notes>:/g) || [];
     expect(occurrences.length).toBe(1);
     expect(result).toContain('- Remember the keycode');
     // Ensure prefix and suffix of intro/outro are intact
@@ -77,7 +77,7 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
 
     const result = await builder.build('test-llm', promptData);
 
-    expect(result).not.toContain('Important Things to Remember:');
+    expect(result).not.toContain('<notes>:');
     // intro + suffix newline + outro prefix newline
     expect(result).toBe('Hello:\n\n\nGoodbye.');
   });
@@ -87,7 +87,7 @@ describe('PromptBuilder – NotesSectionAssembler integration', () => {
 
     const result = await builder.build('test-llm', promptData);
 
-    expect(result).not.toContain('Important Things to Remember:');
+    expect(result).not.toContain('<notes>:');
     expect(result).toBe('Hello:\n\n\nGoodbye.');
   });
 });

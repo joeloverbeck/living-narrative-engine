@@ -1,5 +1,5 @@
 /**
- * @file Assembles the “Important Things to Remember” notes block for LLM prompts.
+ * @file Assembles the “<notes>” notes block for LLM prompts.
  * Mirrors ThoughtsSectionAssembler but works on promptData.notesArray.
  */
 

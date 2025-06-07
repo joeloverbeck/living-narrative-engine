@@ -130,7 +130,7 @@ describe('PromptBuilder – missing notesArray/goalsArray', () => {
     expect(typeof result).toBe('string');
 
     // Should not contain either section header
-    expect(result).not.toContain('Important Things to Remember:');
-    expect(result).not.toContain('Your Goals:');
+    expect(result).not.toContain('<notes>:');
+    expect(result).not.toContain('<goals>:');
   });
 });

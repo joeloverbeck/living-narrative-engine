@@ -64,12 +64,12 @@
         },
         {
           "key": "notes_wrapper",
-          "prefix": "\nImportant Things to Remember:\n",
+          "prefix": "<notes>\n",
           "suffix": "\n"
         },
         {
           "key": "goals_wrapper",
-          "prefix": "\nYour Goals:\n",
+          "prefix": "<goals>\n",
           "suffix": "\n"
         },
         {
@@ -177,12 +177,12 @@
         },
         {
           "key": "notes_wrapper",
-          "prefix": "\nImportant Things to Remember:\n",
+          "prefix": "<notes>\n",
           "suffix": "\n"
         },
         {
           "key": "goals_wrapper",
-          "prefix": "\nYour Goals:\n",
+          "prefix": "<goals>\n",
           "suffix": "\n"
         },
         {
@@ -290,12 +290,12 @@
         },
         {
           "key": "notes_wrapper",
-          "prefix": "\nImportant Things to Remember:\n",
+          "prefix": "<notes>\n",
           "suffix": "\n"
         },
         {
           "key": "goals_wrapper",
-          "prefix": "\nYour Goals:\n",
+          "prefix": "<goals>\n",
           "suffix": "\n"
         },
         {
@@ -403,12 +403,12 @@
         },
         {
           "key": "notes_wrapper",
-          "prefix": "\nImportant Things to Remember:\n",
+          "prefix": "<notes>\n",
           "suffix": "\n"
         },
         {
           "key": "goals_wrapper",
-          "prefix": "\nYour Goals:\n",
+          "prefix": "<goals>\n",
           "suffix": "\n"
         },
         {

@@ -41,14 +41,14 @@ core:notes
 Purpose: Persistent “mental notes”—important items or facts the character deems crucial (e.g., “Joel Overbeck is
 untrustworthy”).  
 Lifecycle: Uncapped; duplicates filtered out on merge.  
-Included in Prompt: Under “Important Things to Remember” (only if non-empty).  
+Included in Prompt: Under “<notes>” (only if non-empty).  
 Schema ID: core:notes → `./data/mods/core/notes.component.json`
 
 core:goals
 
 Purpose: Short- or long-term goals defined by designers (not LLM-generated).  
 Lifecycle: Uncapped; only designer-driven.  
-Included in Prompt: Under “Your Goals” (only if non-empty).  
+Included in Prompt: Under “<goals>” (only if non-empty).  
 Schema ID: core:goals → `./data/mods/core/goals.component.json`
 
 ## Getting Started

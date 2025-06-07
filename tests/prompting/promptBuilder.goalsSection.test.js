@@ -1,5 +1,3 @@
-// tests/promptBuilderGoalsSection.test.js
-
 /**
  * Integration tests for PromptBuilder with GoalsSectionAssembler
  */
@@ -61,7 +59,7 @@ describe('PromptBuilder → GoalsSectionAssembler integration', () => {
     promptElements: [
       {
         key: 'goals_wrapper',
-        prefix: '\nYour Goals:\n',
+        prefix: '<goals>:',
         suffix: '\n',
       },
     ],
@@ -98,7 +96,7 @@ describe('PromptBuilder → GoalsSectionAssembler integration', () => {
     });
   });
 
-  test('Non‐empty goalsArray should include "Your Goals:" section', async () => {
+  test('Non‐empty goalsArray should include "<goals>:" section', async () => {
     const promptData = {
       goalsArray: [
         { text: 'G1', timestamp: '2025-01-01T00:00:00Z' },
@@ -108,15 +106,15 @@ describe('PromptBuilder → GoalsSectionAssembler integration', () => {
 
     const result = await promptBuilder.build('anyLlmId', promptData);
 
-    const occurrences = result.match(/Your Goals:/g) || [];
+    const occurrences = result.match(/<goals>:/g) || [];
     expect(occurrences.length).toBe(1);
     expect(result).toContain('- G1');
     expect(result).toContain('- G2');
     // The result should begin with a newline (from prefix)
-    expect(result.startsWith('\n')).toBe(true);
+    expect(result.startsWith('<goals>:')).toBe(true);
   });
 
-  test('Empty goalsArray should produce an empty string (no "Your Goals:")', async () => {
+  test('Empty goalsArray should produce an empty string (no "<goals>:")', async () => {
     const promptData = {
       goalsArray: [],
     };
