@@ -99,7 +99,7 @@ class SystemInitializer {
         );
         resolvedSystems = [];
       }
-      this.#logger.info(
+      this.#logger.debug(
         `SystemInitializer: Found ${resolvedSystems.length} systems tagged with '${this.#initializationTag}'.`
       );
       return resolvedSystems;

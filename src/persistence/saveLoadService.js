@@ -384,7 +384,9 @@ class SaveLoadService extends ISaveLoadService {
    */
   async loadGameData(saveIdentifier) {
     //
-    this.#logger.info(`Attempting to load game data from: "${saveIdentifier}"`);
+    this.#logger.debug(
+      `Attempting to load game data from: "${saveIdentifier}"`
+    );
 
     if (
       !saveIdentifier ||

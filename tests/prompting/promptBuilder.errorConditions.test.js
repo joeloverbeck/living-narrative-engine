@@ -193,7 +193,7 @@ describe('PromptBuilder', () => {
           aContent: 'Data for A',
         })
       ).toBe('');
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Successfully assembled prompt for llmId: vendor/empty_order_model using config ${cfg.configId}. Length: 0`
         )

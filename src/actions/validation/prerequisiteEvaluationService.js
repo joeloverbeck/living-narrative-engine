@@ -88,7 +88,7 @@ export class PrerequisiteEvaluationService {
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#actionValidationContextBuilder = actionValidationContextBuilder;
 
-    this.#logger.info(
+    this.#logger.debug(
       'PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder).'
     );
   }

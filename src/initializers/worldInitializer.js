@@ -131,7 +131,7 @@ class WorldInitializer {
    * @private
    */
   async #_instantiateAllEntitiesFromDefinitions() {
-    this.#logger.info(
+    this.#logger.debug(
       'WorldInitializer (Pass 1): Instantiating entities from definitions...'
     );
     let totalInstantiatedCount = 0;
@@ -186,7 +186,7 @@ class WorldInitializer {
         );
       }
     }
-    this.#logger.info(
+    this.#logger.debug(
       `WorldInitializer (Pass 1): Completed. Instantiated ${totalInstantiatedCount} total entities.`
     );
     return { entities: instantiatedEntities, count: totalInstantiatedCount };
@@ -381,7 +381,7 @@ class WorldInitializer {
    * @private
    */
   async #_resolveReferencesAndPopulateSpatialIndex(instantiatedEntities) {
-    this.#logger.info(
+    this.#logger.debug(
       'WorldInitializer (Pass 2): Resolving component references and populating spatial index for entities...'
     );
     let entitiesAddedToSpatialIndex = 0;
@@ -394,7 +394,7 @@ class WorldInitializer {
       }
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `WorldInitializer (Pass 2): Completed entity processing. Processed ${instantiatedEntities.length} entities. Added ${entitiesAddedToSpatialIndex} entities to spatial index.`
     );
   }
@@ -409,7 +409,7 @@ class WorldInitializer {
    * @throws {Error} If a critical error occurs during initialization that should stop the process.
    */
   async initializeWorldEntities() {
-    this.#logger.info(
+    this.#logger.debug(
       'WorldInitializer: Starting world entity initialization process...'
     );
     // Event 'initialization:world_initializer:started' could be dispatched here if needed.
@@ -423,12 +423,12 @@ class WorldInitializer {
           instantiatedEntities
         );
       } else {
-        this.#logger.info(
+        this.#logger.debug(
           'WorldInitializer (Pass 2): Skipped. No entities were instantiated in Pass 1.'
         );
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         'WorldInitializer: World entity initialization and spatial indexing complete.'
       );
       // Event 'initialization:world_initializer:completed' could be dispatched here.

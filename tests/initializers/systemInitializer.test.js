@@ -477,7 +477,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `SystemInitializer: resolveByTag for tag '${testInitializationTag}' did not return an array. Treating as empty.`
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `SystemInitializer: Found 0 systems tagged with '${testInitializationTag}'.`
       );
 
