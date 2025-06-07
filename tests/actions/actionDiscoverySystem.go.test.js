@@ -7,6 +7,10 @@
 // --- System Under Test ---
 import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
 
+// --- Action Definitions ---
+import coreGoActionDefinition from '../../data/mods/core/actions/go.action.json';
+import coreWaitActionDefinition from '../../data/mods/core/actions/wait.action.json';
+
 // --- Core Dependencies to Mock ---
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';
 import EntityManager from '../../src/entities/entityManager.js';
@@ -65,33 +69,6 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   const HERO_INSTANCE_ID = 'hero-instance-uuid-integration-1';
   const GUILD_INSTANCE_ID = 'guild-instance-uuid-integration-1';
   // const TOWN_INSTANCE_ID = "town-instance-uuid-integration-1"; // If town was an actual entity instance
-
-  /** @type {ActionDefinition} */
-  const coreGoActionDefinition = {
-    id: 'core:go',
-    commandVerb: 'go',
-    name: 'Go',
-    target_domain: 'direction',
-    prerequisites: [
-      {
-        logic: {
-          '==': [{ var: 'target.blocker' }, null],
-        },
-        failure_message: 'The way is blocked.',
-      },
-    ],
-    template: 'go {direction}',
-  };
-
-  /** @type {ActionDefinition} */
-  const coreWaitActionDefinition = {
-    id: 'core:wait',
-    commandVerb: 'wait',
-    name: 'Wait',
-    target_domain: 'none',
-    prerequisites: [],
-    template: 'wait',
-  };
 
   // These are definition data objects, not Entity instances
   const heroEntityDefinitionData = {
@@ -283,18 +260,22 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(validActions).toBeDefined();
     expect(Array.isArray(validActions)).toBe(true);
 
+    // --- FIX ---
+    // Updated the description fields to match the data from the imported JSON files.
     const waitAction = {
       id: 'core:wait',
       name: 'Wait',
       command: 'wait',
-      description: '',
+      description: 'Passes your turn without performing any action.',
     };
     const goAction = {
       id: 'core:go',
       name: 'Go',
       command: 'go out to town',
-      description: '',
+      description:
+        'Moves your character in the specified direction, if the way is clear.',
     };
+    // --- END FIX ---
 
     expect(validActions).toContainEqual(waitAction);
     expect(validActions).toContainEqual(goAction);

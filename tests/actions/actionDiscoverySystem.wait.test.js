@@ -6,6 +6,8 @@
  * @jest-environment node
  */
 
+import coreWaitActionDefinition from '../../data/mods/core/actions/wait.action.json';
+
 // --- System Under Test ---
 import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
 
@@ -54,17 +56,6 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   const ACTOR_INSTANCE_ID = 'actor1-instance-wait';
   const LOCATION_INSTANCE_ID = 'location1-instance-wait';
   const DUMMY_DEFINITION_ID = 'def:dummy-wait-test';
-
-  /** @type {ActionDefinition} */
-  const coreWaitActionDefinition = {
-    $schema: 'http://example.com/schemas/action-definition.schema.json',
-    id: 'core:wait',
-    commandVerb: 'wait',
-    name: 'Wait',
-    target_domain: 'none',
-    prerequisites: [],
-    template: 'wait',
-  };
 
   /** @type {Entity} */
   let mockActorEntity;
@@ -157,7 +148,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
         id: 'core:wait',
         name: 'Wait',
         command: 'wait',
-        description: '',
+        description: 'Passes your turn without performing any action.',
       },
     ]);
 
@@ -266,7 +257,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
         id: 'core:wait',
         name: 'Wait',
         command: 'wait',
-        description: '',
+        description: 'Passes your turn without performing any action.',
       },
     ]);
     // --- FIX ---: isValid is called once for each action, so 2 times total.
