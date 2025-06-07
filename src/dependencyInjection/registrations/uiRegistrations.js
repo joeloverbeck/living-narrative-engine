@@ -11,7 +11,6 @@ import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler (Updated Dependency)
 import AlertRouter from '../../alerting/alertRouter.js';
-import { AlertMessageFormatter } from '../../alerting/alertMessageFormatter.js';
 
 // --- NEW DOM UI Component Imports ---
 import {
@@ -45,7 +44,6 @@ import { EngineUIManager } from '../../domUI'; // Corrected import path if Engin
 /** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
-/** @typedef {import('../../interfaces/IAlertMessageFormatter.js').IAlertMessageFormatter} IAlertMessageFormatter */
 
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
@@ -96,11 +94,6 @@ export function registerUI(
     tokens.ISafeEventDispatcher,
   ]);
   logger.debug(`UI Registrations: Registered ${tokens.AlertRouter}.`);
-
-  registrar.single(tokens.IAlertMessageFormatter, AlertMessageFormatter);
-  logger.debug(
-    `UI Registrations: Registered ${tokens.IAlertMessageFormatter}.`
-  );
 
   // --- 2. Register Individual Renderers / Controllers / Services ---
 
@@ -271,7 +264,6 @@ export function registerUI(
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
         alertRouter: c.resolve(tokens.AlertRouter),
-        alertMessageFormatter: c.resolve(tokens.IAlertMessageFormatter),
       })
   );
   logger.debug(`UI Registrations: Registered ${tokens.ChatAlertRenderer}.`);

@@ -102,15 +102,11 @@ describe('registerUI', () => {
   });
 
   it('should register alerting services via registrar.single()', () => {
-    // Check that AlertRouter and IAlertMessageFormatter are registered correctly
+    // Check that AlertRouter is registered correctly
     expect(mockSingle).toHaveBeenCalledWith(
       tokens.AlertRouter,
       expect.any(Function),
       [tokens.ISafeEventDispatcher]
-    );
-    expect(mockSingle).toHaveBeenCalledWith(
-      tokens.IAlertMessageFormatter,
-      expect.any(Function)
     );
   });
 

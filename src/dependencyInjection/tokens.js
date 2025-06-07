@@ -108,7 +108,6 @@
  * @property {DiToken} IStorageProvider - Token for the storage provider interface.
  * @property {DiToken} IInitializationService - Token for the game initialization service interface.
  * @property {DiToken} ILLMAdapter - Token for the LLM adapter service interface.
- * @property {DiToken} IAlertMessageFormatter - Token for the service that formats alert/error messages.
  *
  * --- Initialization & Orchestration ---
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
@@ -237,7 +236,6 @@ export const tokens = Object.freeze({
   IStorageProvider: 'IStorageProvider',
   IInitializationService: 'IInitializationService',
   ILLMAdapter: 'ILLMAdapter',
-  IAlertMessageFormatter: 'IAlertMessageFormatter',
 
   // Initialization & Orchestration
   WorldInitializer: 'WorldInitializer',
