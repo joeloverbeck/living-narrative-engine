@@ -93,7 +93,7 @@ class SystemLogicInterpreter {
     this.#entityManager = entityManager;
     this.#operationInterpreter = operationInterpreter;
     this.#boundEventHandler = this.#handleEvent.bind(this);
-    this.#logger.info(
+    this.#logger.debug(
       'SystemLogicInterpreter instance created. Ready for initialization.'
     );
   }
@@ -140,7 +140,7 @@ class SystemLogicInterpreter {
         `Cached rule '${rule.rule_id || 'NO_ID'}' for event type '${eventType}'`
       );
     }
-    this.#logger.info(
+    this.#logger.debug(
       `Finished caching rules. ${this.#ruleCache.size} event types have associated rules.`
     );
   }
@@ -424,7 +424,7 @@ class SystemLogicInterpreter {
       const reason = evaluationResult.evaluationErrorOccurred
         ? 'due to error during condition evaluation'
         : 'due to condition evaluating to false';
-      this.#logger.info(
+      this.#logger.debug(
         `Rule '${ruleId}' actions skipped for event '${event.type}' ${reason}.`
       );
     }
@@ -543,7 +543,7 @@ class SystemLogicInterpreter {
           jsonLogicDataForIfCondition
         );
       }
-      this.#logger.info(
+      this.#logger.debug(
         `---> [${parentIfDesc}] IF condition evaluation result: ${conditionResult}`
       );
     } catch (evalError) {
@@ -603,7 +603,7 @@ class SystemLogicInterpreter {
     ) {
       try {
         this.#eventBus.unsubscribe('*', this.#boundEventHandler);
-        this.#logger.info(
+        this.#logger.debug(
           "SystemLogicInterpreter: Unsubscribed from all events ('*') on the EventBus."
         );
       } catch (error) {

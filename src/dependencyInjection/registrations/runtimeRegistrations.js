@@ -55,12 +55,12 @@ export function registerRuntime(container) {
         // gameLoop: c.resolve(tokens.GameLoop) // <<< LINE REMOVED
       })
   );
-  log.info(
+  log.debug(
     `Runtime Registration: Registered ${tokens.InputSetupService} (Singleton).`
   );
 
   // Note: Other runtime services like TurnManager, TurnHandlerResolver etc.
   // are assumed to be registered elsewhere (e.g., serviceRegistrations.js or coreRegistrations.js)
 
-  log.info('Runtime Registration: complete.');
+  log.debug('Runtime Registration: complete.');
 }

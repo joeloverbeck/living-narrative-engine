@@ -934,7 +934,7 @@ describe('JsonLogicEvaluationService', () => {
 
       expect(addOpSpy).toHaveBeenCalledTimes(1);
       expect(addOpSpy).toHaveBeenCalledWith(operationName, operationFunc);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `Custom JSON Logic operation "${operationName}" added successfully.`
       );
       expect(mockLogger.error).not.toHaveBeenCalled();

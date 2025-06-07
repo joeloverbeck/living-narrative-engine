@@ -154,7 +154,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
     const currentLocationInstanceId = positionComponent?.locationId;
 
     if (!currentLocationInstanceId) {
-      logger.info(
+      logger.debug(
         `AIGameStateProvider: Actor ${actor.id} has no position component or locationId. Cannot generate location summary.`
       );
       return null;
@@ -431,13 +431,13 @@ export class AIGameStateProvider extends IAIGameStateProvider {
             `AIGameStateProvider: Retrieved ${perceptionLogDto.length} perception log entries for actor ${actor.id}.`
           );
         } else {
-          logger.info(
+          logger.debug(
             `AIGameStateProvider: Actor ${actor.id} has '${PERCEPTION_LOG_COMPONENT_ID}' but 'logEntries' are missing or malformed. Data:`,
             { perceptionData }
           );
         }
       } else {
-        logger.info(
+        logger.debug(
           `AIGameStateProvider: Actor ${actor.id} does not have a '${PERCEPTION_LOG_COMPONENT_ID}' component. No perception log included.`
         );
       }
@@ -496,7 +496,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
       perceptionLog,
     };
 
-    logger.info(
+    logger.debug(
       `AIGameStateProvider: Successfully built game state for actor ${actor.id}.`
     );
     logger.debug(`AIGameStateProvider: GameState DTO for ${actor.id}:`, {

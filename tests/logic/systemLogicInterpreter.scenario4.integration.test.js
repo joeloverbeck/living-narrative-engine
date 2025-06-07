@@ -265,10 +265,10 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 4: Invalid Condi
       // AC: Error Logged (Related) - Verify info log message for skipping due to error
       const expectedSkipLogMessage = `Rule '${rule.rule_id}' actions skipped for event '${event.type}' due to error during condition evaluation.`;
       const skipLog = logs.find(
-        (log) => log.level === 'info' && log.message === expectedSkipLogMessage
+        (log) => log.level === 'debug' && log.message === expectedSkipLogMessage
       );
       expect(skipLog).toBeDefined();
-      expect(skipLog.level).toBe('info');
+      expect(skipLog.level).toBe('debug');
 
       // AC4: Assertions validate correct operations/context
       // -> In this case, the crucial validation is that *no* operations were executed

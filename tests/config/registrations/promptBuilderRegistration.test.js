@@ -190,7 +190,7 @@ describe('IPromptBuilder Registration and Resolution', () => {
       );
 
     // Use the global mockLogger for this test, as 'log.info' would be from the registration file's scope
-    mockLogger.info(
+    mockLogger.debug(
       `${String(tokens.IPromptBuilder)} factory: Creating PromptBuilder with new dependencies.`
     );
     return new PromptBuilder({
@@ -264,7 +264,7 @@ describe('IPromptBuilder Registration and Resolution', () => {
     expect(resolvedPromptBuilder).toBe(mockPromptBuilderInstance);
 
     // Verify that the factory logged its message (optional, but good for completeness)
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `${String(tokens.IPromptBuilder)} factory: Creating PromptBuilder with new dependencies.`
     );
   });

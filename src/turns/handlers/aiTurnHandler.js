@@ -290,7 +290,7 @@ export class AITurnHandler extends BaseTurnHandler {
       }
     }
     await this._currentState.startTurn(this, actor);
-    this._logger.info(
+    this._logger.debug(
       `${this.constructor.name}.startTurn: Turn for AI actor ${actor.id} delegated.`
     );
   }

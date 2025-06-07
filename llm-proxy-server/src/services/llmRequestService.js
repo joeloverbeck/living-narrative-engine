@@ -242,7 +242,7 @@ export class LlmRequestService {
       );
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `LlmRequestService: Processed forwarding error for llmId '${llmId}'. Client Status: ${statusCodeToClient}, Stage: '${errorStage}', Message: '${errorMessageToClient}'.`,
       { detailsForClient }
     );
@@ -277,7 +277,7 @@ export class LlmRequestService {
       apiType: llmModelConfig.apiType,
       displayName: llmModelConfig.displayName,
     };
-    this.#logger.info(
+    this.#logger.debug(
       `LlmRequestService: forwardRequest invoked.`,
       initialLogContext
     );
@@ -338,7 +338,7 @@ export class LlmRequestService {
     const sanitizedPayloadForLog =
       this._sanitizePayloadForLogging(targetPayload);
 
-    this.#logger.info(
+    this.#logger.debug(
       `LlmRequestService: Preparing to forward request to LLM provider '${llmModelConfig.displayName}'.`,
       {
         llmId,
@@ -352,7 +352,7 @@ export class LlmRequestService {
     });
 
     try {
-      this.#logger.info(
+      this.#logger.debug(
         `LlmRequestService: Initiating call via Workspace_retry to ${targetUrl} for llmId '${llmId}'.`,
         { llmId }
       );

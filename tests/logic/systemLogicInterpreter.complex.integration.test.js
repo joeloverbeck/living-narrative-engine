@@ -366,7 +366,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     mockDataRegistry.getAllSystemRules.mockReturnValue(rules);
     interpreter.initialize();
     expect(mockDataRegistry.getAllSystemRules).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         'Finished caching rules. 2 event types have associated rules.'
       )
@@ -520,7 +520,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
       expectedFlatCtx
     );
     expect(executeSpy).not.toHaveBeenCalled();
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringMatching(
         /Rule 'RULE_INVISIBILITY_BUFF' actions skipped for event 'ENEMY_SPOTTED' due to condition evaluating to false/
       )
@@ -556,7 +556,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
       ),
       evaluationError
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringMatching(
         /Rule 'RULE_INVALID_CONDITION' actions skipped for event 'DOOR_OPENED' due to error during condition evaluation/
       )

@@ -451,7 +451,7 @@ describe('AIGameStateProvider', () => {
           logger
         );
         expect(gameState.currentLocation).toBeNull();
-        expect(logger.info).toHaveBeenCalledWith(
+        expect(logger.debug).toHaveBeenCalledWith(
           `AIGameStateProvider: Actor ${mockActor.id} has no position component or locationId. Cannot generate location summary.`
         );
       });
@@ -768,7 +768,7 @@ describe('AIGameStateProvider', () => {
           logger
         );
         expect(gameState.perceptionLog).toEqual([]);
-        expect(logger.info).toHaveBeenCalledWith(
+        expect(logger.debug).toHaveBeenCalledWith(
           `AIGameStateProvider: Actor ${mockActor.id} does not have a '${PERCEPTION_LOG_COMPONENT_ID}' component. No perception log included.`
         );
         mockActor.hasComponent = originalHasComponent; // Restore
@@ -783,7 +783,7 @@ describe('AIGameStateProvider', () => {
           logger
         );
         expect(gameState.perceptionLog).toEqual([]);
-        expect(logger.info).toHaveBeenCalledWith(
+        expect(logger.debug).toHaveBeenCalledWith(
           `AIGameStateProvider: Actor ${mockActor.id} has '${PERCEPTION_LOG_COMPONENT_ID}' but 'logEntries' are missing or malformed. Data:`,
           { perceptionData }
         );

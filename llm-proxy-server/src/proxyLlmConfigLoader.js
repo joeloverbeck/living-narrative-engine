@@ -77,7 +77,7 @@ export async function loadProxyLlmConfigs(
   }
 
   const resolvedPath = path.resolve(configFilePath);
-  effectiveLogger.info(
+  effectiveLogger.debug(
     `Attempting to load LLM configurations from: ${resolvedPath}`
   );
 
@@ -111,7 +111,7 @@ export async function loadProxyLlmConfigs(
       };
     }
 
-    effectiveLogger.info(
+    effectiveLogger.debug(
       `LLM configurations loaded and validated successfully from ${resolvedPath}. Found ${Object.keys(parsedConfigs.configs).length} LLM configurations.`
     );
     return {
