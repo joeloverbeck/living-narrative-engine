@@ -2,7 +2,7 @@
  * @file Tests for AlertRouter behavior.
  */
 
-import AlertRouter from '../../src/events/alertRouter.js';
+import AlertRouter from '../../src/alerting/alertRouter.js';
 import {
   afterEach,
   beforeEach,

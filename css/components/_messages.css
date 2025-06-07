@@ -145,3 +145,87 @@
 #error-output.error:not(:empty) {
   display: block;
 }
+
+/* --- Alert Bubble Styles --- */
+.chat-alert {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  border: var(--border-width) solid;
+  font-family: var(--font-ui);
+}
+
+.chat-alert-icon {
+  font-size: var(--font-size-large);
+  margin-right: var(--spacing-md);
+  flex-shrink: 0;
+  line-height: 1.2; /* Adjust vertical alignment */
+}
+
+.chat-alert-content {
+  flex-grow: 1;
+}
+
+.chat-alert-title {
+  font-weight: 700;
+  margin: 0 0 var(--spacing-xs) 0;
+  display: block; /* Ensures it's on its own line */
+}
+
+.chat-alert-message {
+  margin: 0;
+  line-height: var(--line-height-base);
+}
+
+.chat-alert-details {
+  margin-top: var(--spacing-sm);
+}
+
+.chat-alert-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  outline: none; /* Handled by focus-visible */
+}
+
+.chat-alert-details summary:focus-visible {
+  text-decoration: underline;
+}
+
+.chat-alert-details code {
+  display: block;
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background-color: var(--secondary-bg-color);
+  border-radius: var(--border-radius-sm);
+  font-family: var(--font-monospace);
+  font-size: var(--font-size-small);
+  color: var(--primary-text-color);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Warning Bubble Theme */
+.chat-warning-bubble {
+  background-color: #fffbeb; /* Light yellow */
+  border-color: #f59e0b; /* Amber */
+  color: #92400e; /* Dark yellow/brown for text */
+}
+
+.chat-warning-bubble .chat-alert-title {
+  color: #b45309; /* Slightly darker amber */
+}
+
+/* Error Bubble Theme */
+.chat-error-bubble {
+  background-color: var(--error-bg-color, #fee2e2); /* Light red */
+  border-color: var(--error-text-color, #ef4444); /* Red */
+  color: #991b1b; /* Dark red for text */
+}
+
+.chat-error-bubble .chat-alert-title {
+  color: var(--error-text-color, #b91c1c); /* Darker red */
+}

@@ -51,4 +51,32 @@ export function snakeToCamel(str) {
   return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
 }
 
+/**
+ * Escapes HTML special characters in a string.
+ * Replaces '&', '<', '>', '"', and "'" with their corresponding HTML entities.
+ * @param {string | null | undefined} str The string to escape.
+ * @returns {string} The escaped string, or an empty string if input is null/undefined.
+ */
+export function escapeHtml(str) {
+  if (str == null) {
+    return '';
+  }
+  return String(str).replace(/[&<>"']/g, (match) => {
+    switch (match) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      case '"':
+        return '&quot;';
+      case "'":
+        return '&#39;';
+      default:
+        return match;
+    }
+  });
+}
+
 // --- FILE END ---

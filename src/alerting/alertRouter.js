@@ -1,8 +1,13 @@
 /**
  * @file Implements the AlertRouter class, which routes system warning and error events
  * to the UI or console depending on UI readiness.
- * @see src/events/alertRouter.js
+ * @see src/alerting/alertRouter.js
  */
+
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  SYSTEM_WARNING_OCCURRED_ID,
+} from '../constants/eventIds.js';
 
 /**
  * @class
@@ -40,11 +45,11 @@ export default class AlertRouter {
     try {
       // Subscribe to both warning and error events right away
       this.dispatcher.subscribe(
-        'core:system_warning_occurred',
+        SYSTEM_WARNING_OCCURRED_ID,
         this.handleEvent.bind(this)
       );
       this.dispatcher.subscribe(
-        'core:system_error_occurred',
+        SYSTEM_ERROR_OCCURRED_ID,
         this.handleEvent.bind(this)
       );
     } catch (err) {
@@ -104,9 +109,9 @@ export default class AlertRouter {
               // Malformed payload: no 'message' string
               throw new Error('Missing or invalid `message` in payload');
             }
-            if (name === 'core:system_warning_occurred') {
+            if (name === SYSTEM_WARNING_OCCURRED_ID) {
               console.warn(message);
-            } else if (name === 'core:system_error_occurred') {
+            } else if (name === SYSTEM_ERROR_OCCURRED_ID) {
               console.error(message);
             }
           } catch (innerErr) {
@@ -151,13 +156,13 @@ export default class AlertRouter {
    *
    * @private
    * @param {string} name
-   *   Either 'core:system_warning_occurred' or 'core:system_error_occurred'.
+   *   Either SYSTEM_WARNING_OCCURRED_ID or SYSTEM_ERROR_OCCURRED_ID.
    * @param {object} payload
    */
   forwardToUI(name, payload) {
     try {
       const uiEvent =
-        name === 'core:system_warning_occurred'
+        name === SYSTEM_WARNING_OCCURRED_ID
           ? 'ui:display_warning'
           : 'ui:display_error';
       this.dispatcher.dispatch(uiEvent, payload);
