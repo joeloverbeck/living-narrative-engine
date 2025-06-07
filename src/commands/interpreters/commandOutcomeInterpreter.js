@@ -69,6 +69,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
         message: 'Invalid turn context received by CommandOutcomeInterpreter.',
         details: {
           raw: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
+          stack: new Error().stack,
           timestamp: new Date().toISOString(),
         },
       });
@@ -83,6 +84,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
         message: 'Invalid actor in turn context for CommandOutcomeInterpreter.',
         details: {
           raw: `Actor object in context was ${JSON.stringify(actor)}.`,
+          stack: new Error().stack,
           timestamp: new Date().toISOString(),
         },
       });
@@ -98,6 +100,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
         message: baseErrorMsg,
         details: {
           raw: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
+          stack: new Error().stack,
           timestamp: new Date().toISOString(),
         },
       });
