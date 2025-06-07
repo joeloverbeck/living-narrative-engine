@@ -835,6 +835,15 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     }
 
     try {
+      if (this.#environmentContext.isClient()) {
+        const llmIdForPromptLog =
+          activeConfig.modelIdentifier || activeConfig.configId || 'unknown';
+        // eslint-disable-next-line no-console
+        console.info(
+          `[PromptLog][Model: ${llmIdForPromptLog}] Final assembled prompt being sent to proxy:\n${gameSummary}`
+        );
+      }
+
       const validationErrors = this.#validateConfig(activeConfig);
       if (validationErrors.length > 0) {
         const errorDetailsMessage = validationErrors
