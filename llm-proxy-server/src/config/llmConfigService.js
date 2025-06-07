@@ -178,7 +178,7 @@ export class LlmConfigService {
    * @returns {Promise<void>}
    */
   async initialize() {
-    this.#logger.info('LlmConfigService: Initialization started.');
+    this.#logger.debug('LlmConfigService: Initialization started.');
     this.#isProxyOperational = false; // Default to not operational until success
 
     const customPath = this.#appConfig.getLlmConfigPath();

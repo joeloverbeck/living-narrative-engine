@@ -716,7 +716,7 @@ describe('GameEngine', () => {
     it('should successfully orchestrate loading a game and call helpers in order', async () => {
       const result = await gameEngine.loadGame(SAVE_ID);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `GameEngine: loadGame called for identifier: ${SAVE_ID}`
       );
       expect(prepareSpy).toHaveBeenCalledWith(SAVE_ID);
@@ -898,7 +898,7 @@ describe('GameEngine', () => {
       mockGamePersistenceService.isSavingAllowed.mockReturnValue(true);
       gameEngine.showSaveGameUI(); // Method is now sync
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
       );
       expect(mockGamePersistenceService.isSavingAllowed).toHaveBeenCalledWith(
@@ -982,7 +982,7 @@ describe('GameEngine', () => {
     it('should dispatch REQUEST_SHOW_LOAD_GAME_UI and log intent if persistence service is available', () => {
       gameEngine.showLoadGameUI(); // Method is now sync
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
       );
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(

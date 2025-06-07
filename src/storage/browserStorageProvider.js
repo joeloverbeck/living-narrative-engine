@@ -50,7 +50,7 @@ export class BrowserStorageProvider extends IStorageProvider {
         (await this.#rootHandle.requestPermission({ mode: 'readwrite' })) ===
         'granted'
       ) {
-        this.#logger.info('Permission re-granted to root directory.');
+        this.#logger.debug('Permission re-granted to root directory.');
         return this.#rootHandle;
       }
       this.#logger.warn(

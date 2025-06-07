@@ -65,7 +65,7 @@ class GamePersistenceService extends IGamePersistenceService {
     this.#dataRegistry = dataRegistry;
     this.#playtimeTracker = playtimeTracker;
     this.#container = container;
-    this.#logger.info('GamePersistenceService: Instance created.');
+    this.#logger.debug('GamePersistenceService: Instance created.');
   }
 
   /**

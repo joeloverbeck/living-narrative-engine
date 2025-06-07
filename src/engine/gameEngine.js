@@ -481,7 +481,7 @@ class GameEngine {
             type: 'info',
           }
         );
-        this.#logger.info(
+        this.#logger.debug(
           `GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (info) for "${saveName}".`
         );
       } else {
@@ -649,7 +649,7 @@ class GameEngine {
       );
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine._finalizeLoadSuccess: Game loaded from "${saveIdentifier}" (World: ${this.#activeWorld}) and resumed.`
     );
     return { success: true, data: loadedSaveData };
@@ -711,7 +711,7 @@ class GameEngine {
    * @memberof GameEngine
    */
   async loadGame(saveIdentifier) {
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine: loadGame called for identifier: ${saveIdentifier}`
     );
 
@@ -784,7 +784,7 @@ class GameEngine {
     if (
       this.#gamePersistenceService.isSavingAllowed(this.#isEngineInitialized)
     ) {
-      this.#logger.info(
+      this.#logger.debug(
         'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
       );
       // --- FIX START ---
@@ -822,7 +822,7 @@ class GameEngine {
       });
       return;
     }
-    this.#logger.info(
+    this.#logger.debug(
       'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
     );
     this.#safeEventDispatcher.dispatch(REQUEST_SHOW_LOAD_GAME_UI, {});

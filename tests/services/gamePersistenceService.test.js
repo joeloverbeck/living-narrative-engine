@@ -52,9 +52,10 @@ describe('GamePersistenceService', () => {
       playtimeTracker: mockPlaytimeTracker,
       container: mockAppContainer,
     });
-    // Clear the logger.info call made by the constructor, if any,
+    // Clear the logger.info/debug calls made by the constructor, if any,
     // to not interfere with test-specific logger assertions.
     mockLogger.info.mockClear();
+    mockLogger.debug.mockClear();
   });
 
   describe('isSavingAllowed(isEngineInitialized)', () => {

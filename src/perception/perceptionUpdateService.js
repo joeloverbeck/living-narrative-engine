@@ -86,7 +86,7 @@ class PerceptionUpdateService {
 
     this.#logger = logger;
     this.#entityManager = entityManager;
-    this.#logger.info('PerceptionUpdateService: Instance created.');
+    this.#logger.debug('PerceptionUpdateService: Instance created.');
   }
 
   /**

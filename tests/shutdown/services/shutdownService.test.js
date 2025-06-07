@@ -346,9 +346,9 @@ describe('ShutdownService', () => {
       ); // Index: 10 + 1 = 11
 
       // 6. Final logs and events (Index 12 for log, check event dispatch)
-      expect(loggerInfoCalls[12]).toBe(
+      expect(loggerDebugCalls).toContain(
         'ShutdownService: Shutdown sequence finished.'
-      ); // Index: 11 + 1 = 12
+      );
       // Check completed event dispatch (should be the 3rd dispatch call overall)
       expect(dispatchCalls[2][0]).toBe('shutdown:shutdown_service:completed');
       expect(loggerDebugCalls).toContain(
@@ -364,8 +364,8 @@ describe('ShutdownService', () => {
       );
 
       // Verify total info calls match expected count
-      // Constructor(1) + Seq Start(1) + TM Resolve/Stop(2) + Resolve Systems(2) + Sys1(1) + Sys2(1) + Finished Sys(1) + Dispose Check/Attempt/Success(3) + Finished Seq(1) = 13
-      expect(mockLogger.info).toHaveBeenCalledTimes(13);
+      // Constructor(1) + Seq Start(1) + TM Resolve/Stop(2) + Resolve Systems(2) + Sys1(1) + Sys2(1) + Finished Sys(1) + Dispose Check/Attempt/Success(3) = 12
+      expect(mockLogger.info).toHaveBeenCalledTimes(12);
     });
 
     // REMOVED: Test for game loop already stopped - now redundant as TurnManager is always resolved/stopped unless resolve fails.
@@ -404,7 +404,7 @@ describe('ShutdownService', () => {
       expect(mockContainer.disposeSingletons).toHaveBeenCalledTimes(1);
 
       // Verify sequence completes successfully overall (error was contained)
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -466,7 +466,7 @@ describe('ShutdownService', () => {
       expect(mockContainer.disposeSingletons).toHaveBeenCalledTimes(1);
 
       // Verify sequence completes successfully overall
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -507,7 +507,7 @@ describe('ShutdownService', () => {
       expect(mockContainer.disposeSingletons).toHaveBeenCalledTimes(1);
 
       // Verify sequence completes successfully overall
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -545,7 +545,7 @@ describe('ShutdownService', () => {
       );
 
       // Verify sequence still "finishes" and dispatches completed event
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -597,7 +597,7 @@ describe('ShutdownService', () => {
       expect(mockContainer.resolveByTag).toHaveBeenCalledWith(SHUTDOWNABLE[0]);
       expect(mockShutdownableSystem1.shutdown).toHaveBeenCalledTimes(1); // Assuming resolveByTag succeeded
       expect(mockContainer.disposeSingletons).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
       // *** CORRECTED: Only 1 error expected now (the TM stop error) ***
@@ -654,7 +654,7 @@ describe('ShutdownService', () => {
       // Verify sequence ran fully
       expect(mockTurnManager.stop).toHaveBeenCalled(); // <<< CHECK ADDED
       expect(mockContainer.disposeSingletons).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
 

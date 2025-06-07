@@ -65,7 +65,7 @@ export function persistNotes(action, actorEntity, logger) {
 
   if (wasModified) {
     addedNotes.forEach((note) => {
-      logger.info(`Added note: "${note.text}" at ${note.timestamp}`);
+      logger.debug(`Added note: "${note.text}" at ${note.timestamp}`);
     });
 
     if (typeof actorEntity?.addComponent === 'function') {
