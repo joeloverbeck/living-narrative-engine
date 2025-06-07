@@ -32,10 +32,11 @@
 /** @typedef {import('../../turns/interfaces/factories/IAIPlayerStrategyFactory.js').IAIPlayerStrategyFactory} IAIPlayerStrategyFactory */
 /** @typedef {import('../../turns/interfaces/factories/ITurnContextFactory.js').ITurnContextFactory} ITurnContextFactory */
 /** @typedef {import('../../turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
-/** @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */ // Assuming this is the concrete class for the interface
+/** @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */
 /** @typedef {import('../../turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
-/** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */ // Assuming this is the concrete class for the interface
+/** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */
 /** @typedef {import('../../turns/interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
+/** @typedef {import('../../prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline_Interface */
 
 // --- System Imports ---
 import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
@@ -81,10 +82,10 @@ export function registerCoreSystems(container) {
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
-      })
+      }),
   );
   logger.debug(
-    `Core Systems Registration: Registered ${String(tokens.IActionDiscoveryService)} tagged with ${INITIALIZABLE.join(', ')}.`
+    `Core Systems Registration: Registered ${String(tokens.IActionDiscoveryService)} tagged with ${INITIALIZABLE.join(', ')}.`,
   );
   registrationCount++;
 
@@ -112,13 +113,13 @@ export function registerCoreSystems(container) {
           c.resolve(tokens.ISafeEventDispatcher)
         ),
         subscriptionLifecycleManager:
-          /** @type {SubscriptionLifecycleManager} */ (
-            c.resolve(tokens.SubscriptionLifecycleManager)
-          ),
-      })
+        /** @type {SubscriptionLifecycleManager} */ (
+          c.resolve(tokens.SubscriptionLifecycleManager)
+        ),
+      }),
   );
   logger.debug(
-    `Core Systems Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`
+    `Core Systems Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`,
   );
   registrationCount++;
 
@@ -156,7 +157,6 @@ export function registerCoreSystems(container) {
       promptBuilder: /** @type {IPromptBuilder} */ (
         c.resolve(tokens.IPromptBuilder)
       ),
-      // Fix: Add the missing aiFallbackActionFactory dependency
       aiFallbackActionFactory: /** @type {IAIFallbackActionFactory} */ (
         c.resolve(tokens.IAIFallbackActionFactory)
       ),
@@ -175,10 +175,14 @@ export function registerCoreSystems(container) {
       llmResponseProcessor: /** @type {ILLMResponseProcessor} */ (
         c.resolve(tokens.ILLMResponseProcessor)
       ),
+      // FIX: Add the missing IAIPromptPipeline dependency
+      aiPromptPipeline: /** @type {IAIPromptPipeline_Interface} */ (
+        c.resolve(tokens.IAIPromptPipeline)
+      ),
     });
   });
   logger.debug(
-    `Core Systems Registration: Registered ${tokens.AITurnHandler}.`
+    `Core Systems Registration: Registered ${tokens.AITurnHandler}.`,
   );
   registrationCount++;
 
@@ -205,9 +209,9 @@ export function registerCoreSystems(container) {
           c.resolve(tokens.ISafeEventDispatcher)
         ),
         subscriptionLifecycleManager:
-          /** @type {SubscriptionLifecycleManager} */ (
-            c.resolve(tokens.SubscriptionLifecycleManager)
-          ),
+        /** @type {SubscriptionLifecycleManager} */ (
+          c.resolve(tokens.SubscriptionLifecycleManager)
+        ),
       });
 
     const createAiHandlerFactory = () => {
@@ -241,13 +245,12 @@ export function registerCoreSystems(container) {
           c.resolve(tokens.IEntityManager)
         ),
         actionDiscoverySystem:
-          /** @type {IActionDiscoveryService_Interface} */ (
-            c.resolve(tokens.IActionDiscoveryService)
-          ),
+        /** @type {IActionDiscoveryService_Interface} */ (
+          c.resolve(tokens.IActionDiscoveryService)
+        ),
         promptBuilder: /** @type {IPromptBuilder} */ (
           c.resolve(tokens.IPromptBuilder)
         ),
-        // Fix: Add the missing aiFallbackActionFactory dependency here as well
         aiFallbackActionFactory: /** @type {IAIFallbackActionFactory} */ (
           c.resolve(tokens.IAIFallbackActionFactory)
         ),
@@ -266,6 +269,10 @@ export function registerCoreSystems(container) {
         llmResponseProcessor: /** @type {ILLMResponseProcessor} */ (
           c.resolve(tokens.ILLMResponseProcessor)
         ),
+        // FIX: Add the missing IAIPromptPipeline dependency here as well
+        aiPromptPipeline: /** @type {IAIPromptPipeline_Interface} */ (
+          c.resolve(tokens.IAIPromptPipeline)
+        ),
       });
     };
 
@@ -276,7 +283,7 @@ export function registerCoreSystems(container) {
     });
   });
   logger.debug(
-    `Core Systems Registration: Registered ${tokens.TurnHandlerResolver} (with handler factories).`
+    `Core Systems Registration: Registered ${tokens.TurnHandlerResolver} (with handler factories).`,
   );
   registrationCount++;
 
@@ -297,10 +304,10 @@ export function registerCoreSystems(container) {
         turnHandlerResolver: /** @type {TurnHandlerResolver_Concrete} */ (
           c.resolve(tokens.TurnHandlerResolver)
         ),
-      })
+      }),
   );
   logger.debug(
-    `Core Systems Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`
+    `Core Systems Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`,
   );
   registrationCount++;
 
@@ -313,7 +320,7 @@ export function registerCoreSystems(container) {
 
     if (!turnManager) {
       localLogger.warn(
-        `ITurnContext Factory: ${String(tokens.ITurnManager)} could not be resolved. Returning null.`
+        `ITurnContext Factory: ${String(tokens.ITurnManager)} could not be resolved. Returning null.`,
       );
       return null;
     }
@@ -324,18 +331,18 @@ export function registerCoreSystems(container) {
       return context;
     } else if (activeHandler) {
       localLogger.warn(
-        `ITurnContext Factory: Active handler (${activeHandler.constructor.name}) found, but getTurnContext is not a function. Returning null.`
+        `ITurnContext Factory: Active handler (${activeHandler.constructor.name}) found, but getTurnContext is not a function. Returning null.`,
       );
     }
     return null;
   });
   logger.debug(
-    `Core Systems Registration: Registered transient factory for ${String(tokens.ITurnContext)}.`
+    `Core Systems Registration: Registered transient factory for ${String(tokens.ITurnContext)}.`,
   );
   registrationCount++;
 
   logger.info(
-    `Core Systems Registration: Completed registering ${registrationCount} systems, handlers, services, and providers.`
+    `Core Systems Registration: Completed registering ${registrationCount} systems, handlers, services, and providers.`,
   );
 }
 
