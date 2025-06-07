@@ -64,7 +64,6 @@ export class EnvironmentContext {
     // Validate logger
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.warn !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function'
@@ -127,7 +126,7 @@ export class EnvironmentContext {
           // Validate if it's a proper URL
           new URL(proxyServerUrl.trim());
           this.#proxyServerUrl = proxyServerUrl.trim();
-          this.#logger.info(
+          this.#logger.debug(
             `EnvironmentContext: Client-side proxy URL configured to: '${this.#proxyServerUrl}'.`
           );
         } catch (e) {
@@ -139,7 +138,7 @@ export class EnvironmentContext {
       } else {
         this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
         if (proxyServerUrl === null || proxyServerUrl === undefined) {
-          this.#logger.info(
+          this.#logger.debug(
             `EnvironmentContext: Client-side proxyServerUrl not provided. Using default: '${this.#proxyServerUrl}'.`
           );
         } else {
@@ -181,7 +180,7 @@ export class EnvironmentContext {
         }
       }
     }
-    this.#logger.info(
+    this.#logger.debug(
       `EnvironmentContext: Instance created. Execution environment: ${this.#executionEnvironment}.`
     );
   }

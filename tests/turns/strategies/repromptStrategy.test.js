@@ -86,10 +86,7 @@ describe('RepromptStrategy', () => {
     await strategy.execute(mockTurnContext, directive, cmdProcResult);
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
-    expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1); // Called once to get the actor for logging
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `RepromptStrategy: Re-prompting actor ${mockActor.id}; requesting transition to AwaitingPlayerInputState.`
-    );
+    expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
       AwaitingPlayerInputState
     );
@@ -154,9 +151,6 @@ describe('RepromptStrategy', () => {
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `RepromptStrategy: Re-prompting actor ${mockActor.id}; requesting transition to AwaitingPlayerInputState.`
-    );
     expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
       AwaitingPlayerInputState
     );

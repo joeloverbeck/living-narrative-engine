@@ -82,7 +82,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         'AIPlayerStrategy: Constructor requires a valid IAIFallbackActionFactory.'
       );
     }
-    if (!logger || typeof logger.info !== 'function') {
+    if (!logger) {
       throw new Error(
         'AIPlayerStrategy: Constructor requires a valid ILogger instance.'
       );
@@ -108,7 +108,9 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         throw new Error('Critical - Actor not available in context.');
       }
       actorId = actor.id;
-      this.#logger.info(`AIPlayerStrategy: decideAction for actor ${actorId}.`);
+      this.#logger.debug(
+        `AIPlayerStrategy: decideAction for actor ${actorId}.`
+      );
 
       const finalPromptString = await this.#aiPromptPipeline.generatePrompt(
         actor,

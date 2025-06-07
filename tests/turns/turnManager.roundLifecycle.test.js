@@ -158,20 +158,10 @@ describe('TurnManager - Round Lifecycle and Turn Advancement', () => {
     jest.runAllTimers();
     await Promise.resolve();
 
-    expect(logger.info).toHaveBeenCalledWith('Turn Manager started.');
-    expect(logger.info).toHaveBeenCalledWith(
-      'Turn queue is empty. Preparing for new round or stopping.'
-    );
-    expect(logger.info).toHaveBeenCalledWith(
-      'Attempting to start a new round.'
-    );
     expect(entityManager.activeEntities.size).toBe(2);
     expect(turnOrderService.startNewRound).toHaveBeenCalledWith(
       expect.arrayContaining([mockActor1, mockPlayerActor]),
       'round-robin'
-    );
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Successfully started a new round with 2 actors')
     );
     expect(logger.debug).toHaveBeenCalledWith(
       'New round started, recursively calling advanceTurn() to process the first turn.'
@@ -194,13 +184,6 @@ describe('TurnManager - Round Lifecycle and Turn Advancement', () => {
     jest.runAllTimers();
     await Promise.resolve();
 
-    expect(logger.info).toHaveBeenCalledWith('Turn Manager started.');
-    expect(logger.info).toHaveBeenCalledWith(
-      'Turn queue is empty. Preparing for new round or stopping.'
-    );
-    expect(logger.info).toHaveBeenCalledWith(
-      'Attempting to start a new round.'
-    );
     expect(logger.error).toHaveBeenCalledWith(
       'Cannot start a new round: No active entities with an Actor component found.'
     );
@@ -213,7 +196,6 @@ describe('TurnManager - Round Lifecycle and Turn Advancement', () => {
         timestamp: expect.any(String),
       },
     });
-    expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
     expect(mockUnsubscribeFunction).toHaveBeenCalled();
     expect(stopSpy).toHaveBeenCalledTimes(1);
   });

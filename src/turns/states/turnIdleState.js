@@ -90,7 +90,7 @@ export class TurnIdleState extends AbstractTurnState {
     const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
 
     const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ENTITY';
-    logger.info(
+    logger.debug(
       `${this.getStateName()}: Received startTurn for actor ${actorIdForLog}.`
     );
 
@@ -144,7 +144,7 @@ export class TurnIdleState extends AbstractTurnState {
       // This part correctly uses direct instantiation as it's a prescribed next state,
       // not a generic recovery to idle.
       await handler._transitionToState(new AwaitingPlayerInputState(handler));
-      logger.info(
+      logger.debug(
         `${this.getStateName()}: Successfully transitioned to AwaitingPlayerInputState for actor ${contextActor.id}.`
       );
     } catch (error) {
@@ -212,7 +212,7 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async destroy(handler) {
     const logger = handler.getLogger();
-    logger.info(
+    logger.debug(
       `${this.getStateName()}: BaseTurnHandler is being destroyed while in idle state.`
     );
     await super.destroy(handler);

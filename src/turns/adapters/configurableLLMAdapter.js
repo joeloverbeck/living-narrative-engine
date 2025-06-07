@@ -155,11 +155,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   }) {
     super();
 
-    if (
-      !logger ||
-      typeof logger.info !== 'function' ||
-      typeof logger.error !== 'function'
-    ) {
+    if (!logger || typeof logger.error !== 'function') {
       const errorMsg =
         'ConfigurableLLMAdapter: Constructor requires a valid ILogger instance.';
       if (logger && typeof logger.error === 'function') {
@@ -213,7 +209,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
       this.#initialLlmIdFromConstructor = initialLlmId;
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `ConfigurableLLMAdapter: Instance created. Execution environment: ${this.#environmentContext.getExecutionEnvironment()}. Initial LLM ID from constructor: '${this.#initialLlmIdFromConstructor || 'not set'}'. Ready for initialization call.`
     );
   }
@@ -250,7 +246,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
       if (targetConfig) {
         this.#currentActiveLlmId = this.#initialLlmIdFromConstructor;
         this.#currentActiveLlmConfig = targetConfig;
-        this.#logger.info(
+        this.#logger.debug(
           `ConfigurableLLMAdapter: LLM configuration '${this.#currentActiveLlmId}' (${targetConfig.displayName || 'N/A'}) set as active by initialLlmId from constructor.`
         );
         llmSelected = true;
@@ -273,7 +269,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         if (targetConfig) {
           this.#currentActiveLlmId = defaultConfigId;
           this.#currentActiveLlmConfig = targetConfig;
-          this.#logger.info(
+          this.#logger.debug(
             `ConfigurableLLMAdapter: LLM configuration '${this.#currentActiveLlmId}' (${targetConfig.displayName || 'N/A'}) set as active by defaultConfigId from file.`
           );
           llmSelected = true;
@@ -291,7 +287,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         );
       } else {
         // defaultConfigId is null or undefined (either missing from file or was null/invalid type)
-        this.#logger.info(
+        this.#logger.debug(
           `ConfigurableLLMAdapter: No "defaultConfigId" specified in configurations. No LLM is set as active by default.`
         );
       }
@@ -733,7 +729,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     }
 
     if (apiKey) {
-      this.#logger.info(`API key retrieved for LLM '${config.configId}'.`);
+      this.#logger.debug(`API key retrieved for LLM '${config.configId}'.`);
     } else if (requiresApiKey) {
       throw new ConfigurationError(
         `Critical: API key for LLM '${config.configId}' required but unavailable.`,

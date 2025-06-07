@@ -50,45 +50,45 @@ import {
     console.log(`main.js: Executing ${currentPhaseForError} stage...`);
     const coreServices = await resolveCoreServicesStage(container, tokens);
     logger = coreServices.logger; // Assign the resolved logger
-    logger.info(
+    logger.debug(
       `main.js: ${currentPhaseForError} stage completed. Logger is now available.`
     );
 
     // STAGE 4: Initialize Game Engine
     currentPhaseForError = 'Game Engine Initialization';
-    logger.info(`main.js: Executing ${currentPhaseForError} stage...`);
+    logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
     gameEngine = await initializeGameEngineStage(container, logger);
-    logger.info(`main.js: ${currentPhaseForError} stage completed.`);
+    logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 5: Initialize Auxiliary Services
     currentPhaseForError = 'Auxiliary Services Initialization';
-    logger.info(`main.js: Executing ${currentPhaseForError} stage...`);
+    logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
     await initializeAuxiliaryServicesStage(
       container,
       gameEngine,
       logger,
       tokens
     );
-    logger.info(`main.js: ${currentPhaseForError} stage completed.`);
+    logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 6: Setup Menu Button Event Listeners
     currentPhaseForError = 'Menu Button Listeners Setup';
-    logger.info(`main.js: Executing ${currentPhaseForError} stage...`);
+    logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
     await setupMenuButtonListenersStage(gameEngine, logger, document);
     // The stage itself logs its completion.
-    logger.info(`main.js: ${currentPhaseForError} stage call completed.`);
+    logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
 
     // STAGE 7: Setup Global Event Listeners (e.g., beforeunload)
     currentPhaseForError = 'Global Event Listeners Setup';
-    logger.info(`main.js: Executing ${currentPhaseForError} stage...`);
+    logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
     // Pass gameEngine, logger, and the global window object
     await setupGlobalEventListenersStage(gameEngine, logger, window);
     // The stage itself logs its completion.
-    logger.info(`main.js: ${currentPhaseForError} stage call completed.`);
+    logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
 
     // STAGE 8: Start Game
     currentPhaseForError = 'Start Game'; // Updated phase name
-    logger.info(`main.js: Executing ${currentPhaseForError} stage...`);
+    logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
     if (!gameEngine) {
       // This check should be redundant if initializeGameEngineStage is robust
       const errMsg =
@@ -98,9 +98,9 @@ import {
     }
     await startGameStage(gameEngine, AppConfig.ACTIVE_WORLD, logger);
     // The startGameStage function logs its own completion or errors.
-    logger.info(`main.js: ${currentPhaseForError} stage call completed.`);
+    logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
 
-    logger.info('main.js: Application bootstrap completed successfully.');
+    logger.debug('main.js: Application bootstrap completed successfully.');
   } catch (bootstrapError) {
     // Centralized error handling for all bootstrap stages
     const detectedPhase =

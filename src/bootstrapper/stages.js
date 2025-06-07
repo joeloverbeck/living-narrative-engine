@@ -100,7 +100,7 @@ export async function resolveCoreServicesStage(container, diTokens) {
 
   try {
     logger = container.resolve(diTokens.ILogger);
-    if (!logger || typeof logger.info !== 'function') {
+    if (!logger) {
       throw new Error('ILogger resolved to an invalid object.');
     }
   } catch (resolveError) {
@@ -113,7 +113,7 @@ export async function resolveCoreServicesStage(container, diTokens) {
     );
     throw stageError;
   }
-  logger.info(
+  logger.debug(
     'Bootstrap Stage: Resolving core services (Logger)... DONE. Logger resolved successfully.'
   );
   return { logger };
@@ -130,17 +130,17 @@ export async function resolveCoreServicesStage(container, diTokens) {
  * @throws {Error} If GameEngine instantiation fails. The error will have a `phase` property set to 'GameEngine Initialization'.
  */
 export async function initializeGameEngineStage(container, logger) {
-  logger.info('Bootstrap Stage: Initializing GameEngine...');
+  logger.debug('Bootstrap Stage: Initializing GameEngine...');
   const currentPhase = 'GameEngine Initialization';
   /** @type {GameEngineInstance} */
   let gameEngine;
   try {
-    logger.info('GameEngine Stage: Creating GameEngine instance...');
+    logger.debug('GameEngine Stage: Creating GameEngine instance...');
     gameEngine = new GameEngine({ container: container });
     if (!gameEngine) {
       throw new Error('GameEngine constructor returned null or undefined.');
     }
-    logger.info('GameEngine Stage: GameEngine instance created successfully.');
+    logger.debug('GameEngine Stage: GameEngine instance created successfully.');
   } catch (engineCreationError) {
     logger.error(
       'GameEngine Stage: Fatal error during GameEngine instantiation.',
@@ -151,7 +151,7 @@ export async function initializeGameEngineStage(container, logger) {
     stageError.phase = currentPhase;
     throw stageError;
   }
-  logger.info(
+  logger.debug(
     `Bootstrap Stage: Initializing GameEngine... DONE. GameEngine instance available.`
   );
   return gameEngine;
@@ -174,11 +174,11 @@ export async function initializeAuxiliaryServicesStage(
   diTokens
 ) {
   const stageName = 'Auxiliary Services Initialization';
-  logger.info(`Bootstrap Stage: Starting ${stageName}...`);
+  logger.debug(`Bootstrap Stage: Starting ${stageName}...`);
 
   // EngineUIManager Initialization
   try {
-    logger.info(`${stageName}: Initializing EngineUIManager...`);
+    logger.debug(`${stageName}: Initializing EngineUIManager...`);
     const engineUIManager = container.resolve(diTokens.EngineUIManager);
     if (!engineUIManager) {
       throw new Error(
@@ -191,7 +191,7 @@ export async function initializeAuxiliaryServicesStage(
       );
     }
     engineUIManager.initialize();
-    logger.info(`${stageName}: EngineUIManager initialized successfully.`);
+    logger.debug(`${stageName}: EngineUIManager initialized successfully.`);
   } catch (eumError) {
     logger.error(
       `${stageName}: CRITICAL error during EngineUIManager resolution or initialization. UI may not function as expected.`,
@@ -201,7 +201,7 @@ export async function initializeAuxiliaryServicesStage(
 
   // SaveGameUI Initialization
   try {
-    logger.info(`${stageName}: Initializing SaveGameUI...`);
+    logger.debug(`${stageName}: Initializing SaveGameUI...`);
     const saveGameUIInstance = container.resolve(diTokens.SaveGameUI);
     if (saveGameUIInstance) {
       if (typeof saveGameUIInstance.init !== 'function') {
@@ -210,7 +210,7 @@ export async function initializeAuxiliaryServicesStage(
         );
       }
       saveGameUIInstance.init(gameEngine);
-      logger.info(`${stageName}: SaveGameUI initialized with GameEngine.`);
+      logger.debug(`${stageName}: SaveGameUI initialized with GameEngine.`);
     } else {
       logger.warn(
         `${stageName}: SaveGameUI instance could not be resolved for init. Save functionality may be unavailable.`
@@ -225,7 +225,7 @@ export async function initializeAuxiliaryServicesStage(
 
   // LoadGameUI Initialization
   try {
-    logger.info(`${stageName}: Initializing LoadGameUI...`);
+    logger.debug(`${stageName}: Initializing LoadGameUI...`);
     const loadGameUIInstance = container.resolve(diTokens.LoadGameUI);
     if (loadGameUIInstance) {
       if (typeof loadGameUIInstance.init !== 'function') {
@@ -234,7 +234,7 @@ export async function initializeAuxiliaryServicesStage(
         );
       }
       loadGameUIInstance.init(gameEngine);
-      logger.info(`${stageName}: LoadGameUI initialized with GameEngine.`);
+      logger.debug(`${stageName}: LoadGameUI initialized with GameEngine.`);
     } else {
       logger.warn(
         `${stageName}: LoadGameUI instance could not be resolved for init. Load functionality may be unavailable.`
@@ -249,12 +249,12 @@ export async function initializeAuxiliaryServicesStage(
 
   // LlmSelectionModal Initialization
   try {
-    logger.info(`${stageName}: Resolving LlmSelectionModal...`);
+    logger.debug(`${stageName}: Resolving LlmSelectionModal...`);
     const llmSelectionModalInstance = container.resolve(
       diTokens.LlmSelectionModal
     );
     if (llmSelectionModalInstance) {
-      logger.info(
+      logger.debug(
         `${stageName}: LlmSelectionModal resolved and initialized successfully.`
       );
     } else {
@@ -271,12 +271,12 @@ export async function initializeAuxiliaryServicesStage(
 
   // CurrentTurnActorRenderer Initialization
   try {
-    logger.info(`${stageName}: Resolving CurrentTurnActorRenderer...`);
+    logger.debug(`${stageName}: Resolving CurrentTurnActorRenderer...`);
     const currentTurnActorRendererInstance = container.resolve(
       diTokens.CurrentTurnActorRenderer
     );
     if (currentTurnActorRendererInstance) {
-      logger.info(
+      logger.debug(
         `${stageName}: CurrentTurnActorRenderer resolved and initialized successfully (via constructor).`
       );
     } else {
@@ -293,12 +293,12 @@ export async function initializeAuxiliaryServicesStage(
 
   // SpeechBubbleRenderer Initialization
   try {
-    logger.info(`${stageName}: Resolving SpeechBubbleRenderer...`);
+    logger.debug(`${stageName}: Resolving SpeechBubbleRenderer...`);
     const speechBubbleRendererInstance = container.resolve(
       diTokens.SpeechBubbleRenderer
     );
     if (speechBubbleRendererInstance) {
-      logger.info(
+      logger.debug(
         `${stageName}: SpeechBubbleRenderer resolved and initialized successfully (via constructor).`
       );
     } else {
@@ -315,12 +315,12 @@ export async function initializeAuxiliaryServicesStage(
 
   // ProcessingIndicatorController Initialization // <<< ADDED
   try {
-    logger.info(`${stageName}: Resolving ProcessingIndicatorController...`);
+    logger.debug(`${stageName}: Resolving ProcessingIndicatorController...`);
     const processingIndicatorControllerInstance = container.resolve(
       diTokens.ProcessingIndicatorController
     );
     if (processingIndicatorControllerInstance) {
-      logger.info(
+      logger.debug(
         `${stageName}: ProcessingIndicatorController resolved and initialized successfully (via constructor).`
       );
     } else {
@@ -335,7 +335,7 @@ export async function initializeAuxiliaryServicesStage(
     );
   }
 
-  logger.info(`Bootstrap Stage: ${stageName} completed.`);
+  logger.debug(`Bootstrap Stage: ${stageName} completed.`);
 }
 
 /**
@@ -353,7 +353,7 @@ export async function setupMenuButtonListenersStage(
   documentRef
 ) {
   const stageName = 'Menu Button Listeners Setup';
-  logger.info(`Bootstrap Stage: Starting ${stageName}...`);
+  logger.debug(`Bootstrap Stage: Starting ${stageName}...`);
 
   try {
     const openSaveGameButton = documentRef.getElementById(
@@ -364,7 +364,7 @@ export async function setupMenuButtonListenersStage(
         logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
         gameEngine.showSaveGameUI();
       });
-      logger.info(
+      logger.debug(
         `${stageName}: Save Game UI button listener attached to #open-save-game-button.`
       );
     } else {
@@ -386,7 +386,7 @@ export async function setupMenuButtonListenersStage(
         logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
         gameEngine.showLoadGameUI();
       });
-      logger.info(
+      logger.debug(
         `${stageName}: Load Game UI button listener attached to #open-load-game-button.`
       );
     } else {
@@ -399,7 +399,7 @@ export async function setupMenuButtonListenersStage(
           `${stageName}: GameEngine not available for #open-load-game-button listener.`
         );
     }
-    logger.info(`Bootstrap Stage: ${stageName} completed successfully.`);
+    logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
   } catch (error) {
     logger.error(
       `Bootstrap Stage: ${stageName} encountered an unexpected error during listener setup.`,
@@ -430,7 +430,7 @@ export async function setupGlobalEventListenersStage(
 ) {
   const stageName = 'Global Event Listeners Setup';
   const eventName = 'beforeunload';
-  logger.info(
+  logger.debug(
     `Bootstrap Stage: Setting up global event listeners (${eventName})...`
   );
 
@@ -451,7 +451,7 @@ export async function setupGlobalEventListenersStage(
         typeof gameEngine.getEngineStatus === 'function' &&
         gameEngine.getEngineStatus().isLoopRunning
       ) {
-        logger.info(
+        logger.debug(
           `${stageName}: '${eventName}' event triggered. Attempting to stop game engine.`
         );
         gameEngine.stop().catch((stopError) => {
@@ -466,7 +466,7 @@ export async function setupGlobalEventListenersStage(
         typeof gameEngine.getEngineStatus === 'function' &&
         !gameEngine.getEngineStatus().isLoopRunning
       ) {
-        logger.info(
+        logger.debug(
           `${stageName}: '${eventName}' event triggered, but game engine loop is not running. No action taken to stop.`
         );
       } else if (!gameEngine) {
@@ -476,10 +476,10 @@ export async function setupGlobalEventListenersStage(
       }
     });
 
-    logger.info(
+    logger.debug(
       `${stageName}: '${eventName}' event listener attached successfully.`
     );
-    logger.info(`Bootstrap Stage: ${stageName} completed.`);
+    logger.debug(`Bootstrap Stage: ${stageName} completed.`);
   } catch (error) {
     logger.error(
       `Bootstrap Stage: ${stageName} encountered an unexpected error during '${eventName}' listener setup.`,
@@ -506,7 +506,7 @@ export async function setupGlobalEventListenersStage(
  */
 export async function startGameStage(gameEngine, activeWorldName, logger) {
   const stageName = 'Start Game';
-  logger.info(
+  logger.debug(
     `Bootstrap Stage: ${stageName}: Starting new game with world: ${activeWorldName}...`
   );
 
@@ -533,7 +533,7 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
 
   try {
     await gameEngine.startNewGame(activeWorldName);
-    logger.info(
+    logger.debug(
       `Bootstrap Stage: ${stageName}: Game started successfully with world: ${activeWorldName}.`
     );
   } catch (startGameError) {
@@ -548,7 +548,7 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
     stageError.phase = stageName;
     throw stageError;
   }
-  logger.info(`Bootstrap Stage: ${stageName} completed.`);
+  logger.debug(`Bootstrap Stage: ${stageName} completed.`);
 }
 
 // --- FILE END ---

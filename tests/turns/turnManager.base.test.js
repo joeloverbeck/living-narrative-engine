@@ -127,11 +127,7 @@ describe('TurnManager', () => {
 
     expect(TurnManager).toBeDefined();
     expect(instance).toBeInstanceOf(TurnManager);
-    // Check if constructor logging still occurs
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'TurnManager initialized successfully.'
-    );
-    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Ensure only called once here
+    expect(mockLogger.info).toHaveBeenCalledTimes(0); // Ensure only called once here
   });
 
   test('mock entities should behave as configured', () => {

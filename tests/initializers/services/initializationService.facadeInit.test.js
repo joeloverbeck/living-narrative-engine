@@ -123,9 +123,6 @@ describe('InitializationService', () => {
   describe('constructor', () => {
     it('should instantiate correctly with valid dependencies', () => {
       expect(initializationService).toBeInstanceOf(InitializationService);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Instance created successfully')
-      );
     });
 
     it('should throw if container is missing', () => {
@@ -205,31 +202,6 @@ describe('InitializationService', () => {
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
       expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalled();
       expect(mockInputSetupService.configureInputHandler).toHaveBeenCalled();
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Starting runInitializationSequence for world: ${testWorldName}`
-        )
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('World data loaded successfully for world:')
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Attempting to initialize ConfigurableLLMAdapter...'
-        )
-      );
-      // Check based on the default successful mock of init and isOperational
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'ConfigurableLLMAdapter initialized successfully and is operational.'
-        )
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'SystemInitializer resolved. Initializing tagged systems...'
-        )
-      );
     });
 
     it('should resolve DomUiFacade using the correct token from tokens.js', async () => {
@@ -431,11 +403,6 @@ describe('InitializationService', () => {
         expect.objectContaining({
           message: expect.stringContaining('Fatal error during initialization'),
         })
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Dispatched ui:show_fatal_error and textUI:disable_input events.'
-        )
       );
     });
 

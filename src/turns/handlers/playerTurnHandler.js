@@ -226,7 +226,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
       );
       return;
     }
-    this._logger.info(
+    this._logger.debug(
       `${this.constructor.name}.destroy() invoked (Player specific part). Current state: ${this._currentState?.getStateName()}`
     );
     await super.destroy();

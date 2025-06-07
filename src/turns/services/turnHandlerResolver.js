@@ -100,7 +100,7 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
     );
 
     if (actor.hasComponent(PLAYER_COMPONENT_ID)) {
-      this.#logger.info(
+      this.#logger.debug(
         `TurnHandlerResolver: Creating new PlayerTurnHandler for actor ${actor.id}.`
       );
       try {
@@ -124,7 +124,7 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
       actor.hasComponent(ACTOR_COMPONENT_ID) &&
       !actor.hasComponent(PLAYER_COMPONENT_ID)
     ) {
-      this.#logger.info(
+      this.#logger.debug(
         `TurnHandlerResolver: Creating new AITurnHandler for actor ${actor.id}.`
       );
       try {
@@ -145,7 +145,7 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
         return null;
       }
     } else {
-      this.#logger.info(
+      this.#logger.debug(
         `TurnHandlerResolver: No specific turn handler factory found for actor ${actor.id}. Returning null.`
       );
       return null;

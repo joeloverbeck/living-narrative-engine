@@ -96,10 +96,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
     }).not.toThrow();
 
     expect(turnManager).toBeInstanceOf(TurnManager);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'TurnManager initialized successfully.'
-    );
-    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Called only once
+    expect(mockLogger.info).toHaveBeenCalledTimes(0); // Called only once
     expect(turnManager.getCurrentActor()).toBeNull(); // Check initial state
     // isRunning is private, cannot check directly without hacks
   });

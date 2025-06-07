@@ -33,11 +33,7 @@ export default function validateModEngineVersions(manifests, logger) {
       'validateModEngineVersions: Input `manifests` must be a Map.'
     );
   }
-  if (
-    !logger ||
-    typeof logger.info !== 'function' ||
-    typeof logger.error !== 'function'
-  ) {
+  if (!logger || typeof logger.error !== 'function') {
     // Basic type check for the logger
     throw new Error(
       'validateModEngineVersions: Input `logger` must be a valid ILogger instance.'
@@ -106,5 +102,5 @@ export default function validateModEngineVersions(manifests, logger) {
   }
 
   // If we reach here, all checked mods are compatible.
-  logger.info('ModVersionValidator: all mods compatible with current engine.');
+  logger.debug('ModVersionValidator: all mods compatible with current engine.');
 }

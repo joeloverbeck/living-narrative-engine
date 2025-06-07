@@ -97,7 +97,6 @@ class CommandProcessor {
 
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function' ||
       typeof logger.warn !== 'function'

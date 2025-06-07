@@ -112,7 +112,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
       if (typeof returnedUnsubscribeFn === 'function') {
         this.#unsubscribeTurnEndedFn = returnedUnsubscribeFn; // Store the token
-        logger.info(
+        logger.debug(
           `${this.getStateName()}: Successfully initiated subscription via SubscriptionLifecycleManager – awaiting ${TURN_ENDED_ID} for actor ${actorId}.`
         );
       } else {
@@ -290,7 +290,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     }
 
     // Conditions met: Event is for the correct actor, and the context is still awaiting.
-    logger.info(
+    logger.debug(
       `${this.getStateName()}: Matched ${TURN_ENDED_ID} for actor ${payloadActorId}. Ending turn via ITurnContext.`
     );
     const errorForTurnEnd =
@@ -429,7 +429,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     // The "Handler destroyed while awaiting..." original log message is an observation.
     // It indicates this state was active when handler.destroy() was called.
     // This can be normal if TurnManager is cleaning up.
-    logger.info(
+    logger.debug(
       `${this.getStateName()}: State instance destroy() called for actor ${actorIdForLog}. Performing state-specific cleanup. Handler is being destroyed: ${handler._isDestroyed}.`
     );
 

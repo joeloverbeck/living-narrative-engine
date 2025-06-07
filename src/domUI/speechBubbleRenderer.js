@@ -301,6 +301,6 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     this.logger.debug(`${this._logPrefix} Disposing.`);
     super.dispose();
     this.effectiveSpeechContainer = null;
-    this.logger.info(`${this._logPrefix} Disposed.`);
+    this.logger.debug(`${this._logPrefix} Disposed.`);
   }
 }

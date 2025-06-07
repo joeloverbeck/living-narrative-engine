@@ -737,7 +737,7 @@ class LoadGameUI extends BaseModalRenderer {
     this.gameEngine = null;
     this.selectedSlotData = null;
     this.currentSlotsDisplayData = [];
-    this.logger.info(`${this._logPrefix} LoadGameUI disposed.`);
+    this.logger.debug(`${this._logPrefix} LoadGameUI disposed.`);
   }
 }
 

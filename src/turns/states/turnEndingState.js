@@ -118,7 +118,7 @@ export class TurnEndingState extends AbstractTurnState {
     const contextActorIdFromCtx = turnCtxForEndingTurn?.getActor()?.id; // Renamed to avoid conflict
 
     // This is an INFO log, will not appear in mockLogger.debug.mock.calls unless logger level is debug
-    logger.info(
+    logger.debug(
       `${this.getStateName()}: Entered for target actor ${this.#actorToEndId} (turn result: ${statusTxt}). ` +
         `Context actor: ${contextActorIdFromCtx ?? 'None'}. Error: ${this.#turnError ? `"${this.#turnError.message}"` : 'null'}.`
     );
@@ -197,7 +197,7 @@ export class TurnEndingState extends AbstractTurnState {
     await handler._transitionToState(new TurnIdleState(handler)); // TurnIdleState constructor takes the handler instance.
 
     // This is an INFO log
-    logger.info(
+    logger.debug(
       `${this.getStateName()}: Processing for actor ${this.#actorToEndId} complete. Handler now in Idle state.`
     );
   }

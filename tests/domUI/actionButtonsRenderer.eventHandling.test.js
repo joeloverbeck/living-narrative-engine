@@ -394,9 +394,6 @@ describe('ActionButtonsRenderer', () => {
       expect(instance.availableActions).toEqual(validActions);
       expect(instance.selectedAction).toBeNull();
       expect(refreshListSpy).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Actions received for actor ID: ${MOCK_ACTOR_ID}`
-      );
     });
 
     it('should filter invalid actions, set valid ones, and call refreshList', async () => {
@@ -517,11 +514,6 @@ describe('ActionButtonsRenderer', () => {
       // Scenario 1: No action selected
       instance.selectedAction = null;
       instance._onListRendered(instance.availableActions, mockContainer); // Pass available actions and container
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `${CLASS_PREFIX} Rendered 1 action buttons. Selected action: none.`
-        )
-      );
       expect(mockSendButton.disabled).toBe(true);
 
       mockLogger.info.mockClear(); // Clear for next part of the test
@@ -534,11 +526,6 @@ describe('ActionButtonsRenderer', () => {
 
       instance._onListRendered(instance.availableActions, mockContainer); // Call SUT method
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `${CLASS_PREFIX} Rendered 1 action buttons. Selected action: '${action.name}'`
-        )
-      );
       expect(mockSendButton.disabled).toBe(false);
       expect(mockActionButton.classList.add).toHaveBeenCalledWith('selected'); // Check if selected class is added
     });
@@ -565,9 +552,6 @@ describe('ActionButtonsRenderer', () => {
       // A simpler check might be that the logger message for clearing is present.
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Cleared listContainerElement content during dispose.`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} ActionButtonsRenderer disposed.`
       );
       // Check if DOM listeners on sendButtonElement were removed (if it existed)
       // This is handled by super.dispose() and relies on _addDomListener being used.

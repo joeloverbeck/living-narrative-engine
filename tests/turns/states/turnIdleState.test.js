@@ -246,17 +246,11 @@ describe('TurnIdleState', () => {
 
       expect(mockValidContext.getLogger).toHaveBeenCalled();
       expect(mockValidContext.getActor).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnIdleState: Received startTurn for actor ${testActor.id}.`
-      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnIdleState: ITurnContext confirmed for actor ${testActor.id}. Transitioning to AwaitingPlayerInputState.`
       );
       expect(mockHandler._transitionToState).toHaveBeenCalledWith(
         expect.any(AwaitingPlayerInputState)
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnIdleState: Successfully transitioned to AwaitingPlayerInputState for actor ${testActor.id}.`
       );
     });
 
@@ -469,9 +463,6 @@ describe('TurnIdleState', () => {
 
       await turnIdleState.destroy(mockHandler);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnIdleState: BaseTurnHandler is being destroyed while in idle state.'
-      );
       expect(AbstractTurnState.prototype.destroy).toHaveBeenCalledWith(
         mockHandler
       );

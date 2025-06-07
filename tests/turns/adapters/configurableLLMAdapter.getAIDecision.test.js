@@ -413,19 +413,6 @@ describe('ConfigurableLLMAdapter', () => {
           expect.objectContaining({ apiKey: null })
         );
       });
-
-      it('should log info if API key is retrieved successfully', async () => {
-        const llmId = 'test-llm-cloud-server-requires-key';
-        await adapter.setActiveLlm(llmId);
-        mockApiKeyProvider.getKey.mockResolvedValue('a-valid-key-123');
-        mockEnvironmentContext.isServer.mockReturnValue(true);
-        mockLogger.info.mockClear();
-
-        await adapter.getAIDecision(gameSummary);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `API key retrieved for LLM '${llmId}'.`
-        );
-      });
     });
 
     describe('Strategy Factory Interaction', () => {

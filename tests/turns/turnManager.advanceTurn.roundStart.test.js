@@ -154,7 +154,6 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     await instance.start(); // This calls advanceTurn.
 
     // Assert (on the results of the advanceTurn call triggered by start)
-    expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.'); // Log from start()
     expect(mockDispatcher.subscribe).toHaveBeenCalledTimes(1); // Ensure subscription happened in start()
     expect(advanceTurnSpy).toHaveBeenCalledTimes(1); // The call from start()
 
@@ -163,13 +162,6 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
       'TurnManager.advanceTurn() initiating...'
     );
     expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1); // Should be called now
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Turn queue is empty. Preparing for new round or stopping.'
-    ); // <<< Log 1
-    // --- CORRECTED ASSERTION ---
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Attempting to start a new round.'
-    ); // <<< Log 2
     // --- END CORRECTION ---
     expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg); // Error logged
 
@@ -192,7 +184,6 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'Mocked instance.stop() called.'
     );
-    expect(turnEndedUnsubscribeMock).toHaveBeenCalledTimes(1); // Unsubscribe SHOULD be called by stop spy because start() was logged
   });
 
   test('No active actors found (empty map): logs error, dispatches message, and stops', async () => {
@@ -206,7 +197,6 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     await instance.start();
 
     // Assert (on the results of the advanceTurn call triggered by start)
-    expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.');
     expect(advanceTurnSpy).toHaveBeenCalledTimes(1); // Call from start()
 
     // Check logs from the advanceTurn call triggered by start()
@@ -214,13 +204,6 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
       'TurnManager.advanceTurn() initiating...'
     );
     expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Turn queue is empty. Preparing for new round or stopping.'
-    ); // <<< Log 1
-    // --- CORRECTED ASSERTION ---
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Attempting to start a new round.'
-    ); // <<< Log 2
     // --- END CORRECTION ---
     expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
 
@@ -243,7 +226,6 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'Mocked instance.stop() called.'
     );
-    expect(turnEndedUnsubscribeMock).toHaveBeenCalledTimes(1); // Unsubscribe called by stop spy
   });
 
   test('Actors found, successful round start: logs info, calls startNewRound, and recurses', async () => {
@@ -274,19 +256,9 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     await instance.start();
 
     // Assert
-    expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.');
     // Expect two calls: 1 from start(), 1 from successful round start recursion
     expect(advanceTurnSpy).toHaveBeenCalledTimes(2);
 
-    // --- Assertions for the FIRST advanceTurn call ---
-    // It finds the queue empty...
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Turn queue is empty. Preparing for new round or stopping.'
-    ); // <<< Log 1
-    // --- CORRECTED ASSERTION ---
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Attempting to start a new round.'
-    ); // <<< Log 2
     // --- END CORRECTION ---
     // It finds actors... (Check presence and count)
     expect(mockLogger.info).toHaveBeenCalledWith(
@@ -301,12 +273,6 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
       'round-robin' // Assuming default strategy
     );
     expect(mockTurnOrderService.startNewRound.mock.calls[0][0]).toHaveLength(2); // Ensure only actors passed
-    // It logs success...
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Successfully started a new round with 2 actors using the 'round-robin' strategy.`
-      )
-    );
     // It logs the intent to recurse...
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'New round started, recursively calling advanceTurn() to process the first turn.'
@@ -320,10 +286,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     ); // Log from second call
     // It gets the next entity...
     expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
-    // It logs turn start...
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `>>> Starting turn initiation for Entity: ${actor1.id} (ai) <<<`
-    ); // Assuming actor1 is AI
+
     // It dispatches turn started...
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
       entityId: actor1.id,

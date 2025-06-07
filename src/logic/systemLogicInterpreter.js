@@ -46,7 +46,7 @@ class SystemLogicInterpreter {
     entityManager,
     operationInterpreter,
   }) {
-    if (!logger || typeof logger.info !== 'function') {
+    if (!logger) {
       throw new Error(
         'SystemLogicInterpreter requires a valid ILogger instance.'
       );
@@ -106,13 +106,13 @@ class SystemLogicInterpreter {
     this.#loadAndCacheRules();
     this.#subscribeToEvents();
     this.#initialized = true;
-    this.#logger.info(
+    this.#logger.debug(
       'SystemLogicInterpreter successfully initialized and subscribed to events.'
     );
   }
 
   #loadAndCacheRules() {
-    this.#logger.info('Loading and caching system rules by event type...');
+    this.#logger.debug('Loading and caching system rules by event type...');
     this.#ruleCache.clear();
     const allRules = this.#dataRegistry.getAllSystemRules();
 
@@ -155,7 +155,7 @@ class SystemLogicInterpreter {
         return;
       }
       this.#eventBus.subscribe('*', this.#boundEventHandler);
-      this.#logger.info("Subscribed to all events ('*') using the EventBus.");
+      this.#logger.debug("Subscribed to all events ('*') using the EventBus.");
     } else {
       this.#logger.warn(
         'No system rules loaded or cached. SystemLogicInterpreter will not actively listen for specific events.'
@@ -492,7 +492,7 @@ class SystemLogicInterpreter {
         break;
       }
     }
-    this.#logger.info(`Finished action sequence for: ${scopeDescription}.`);
+    this.#logger.debug(`Finished action sequence for: ${scopeDescription}.`);
   }
 
   #handleIfOperation(
@@ -595,7 +595,7 @@ class SystemLogicInterpreter {
   }
 
   shutdown() {
-    this.#logger.info('SystemLogicInterpreter: Shutting down...');
+    this.#logger.debug('SystemLogicInterpreter: Shutting down...');
     if (
       this.#eventBus &&
       typeof this.#eventBus.unsubscribe === 'function' &&
@@ -626,7 +626,7 @@ class SystemLogicInterpreter {
     this.#ruleCache.clear();
     this.#initialized = false;
     this.#boundEventHandler = null;
-    this.#logger.info('SystemLogicInterpreter: Shutdown complete.');
+    this.#logger.debug('SystemLogicInterpreter: Shutdown complete.');
   }
 }
 

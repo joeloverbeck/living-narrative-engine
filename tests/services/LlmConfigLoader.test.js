@@ -179,7 +179,7 @@ describe('LlmConfigLoader', () => {
         configuration: configurationMock,
       });
       specificLoader.loadConfigs(); // Call loadConfigs to trigger logger usage
-      expect(specificLogger.info).toHaveBeenCalledWith(
+      expect(specificLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Attempting to load LLM Prompt configurations')
       );
     });
@@ -212,12 +212,6 @@ describe('LlmConfigLoader', () => {
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       loaderWithConsoleLogger.loadConfigs();
-      expect(consoleInfoSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Attempting to load LLM Prompt configurations from: ${defaultLlmConfigPath}`
-        )
-      );
-      consoleInfoSpy.mockRestore();
     });
 
     test('should use default dependencyInjection path if none provided (verified by loadConfigs call)', async () => {
@@ -232,9 +226,6 @@ describe('LlmConfigLoader', () => {
         expect.any(Number),
         expect.any(Number),
         loggerMock
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Attempting to load LLM Prompt configurations from: ${defaultLlmConfigPath}`
       );
     });
 
@@ -257,9 +248,6 @@ describe('LlmConfigLoader', () => {
         expect.any(Number),
         expect.any(Number),
         loggerMock
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Attempting to load LLM Prompt configurations from: ${customPath}`
       );
     });
 
@@ -318,25 +306,6 @@ describe('LlmConfigLoader', () => {
       expect(schemaValidatorMock.validate).toHaveBeenCalledWith(
         'http://example.com/schemas/llm-configs.schema.json',
         expectedRootConfig
-      );
-
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Successfully fetched and parsed LLM Prompt configurations from ${defaultLlmConfigPath}.`
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Validating against schema ID: http://example.com/schemas/llm-configs.schema.json`
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: LLM Prompt configuration file from ${defaultLlmConfigPath} passed schema validation.`
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Performing semantic validation for ${defaultLlmConfigPath}.`
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Semantic validation passed for ${defaultLlmConfigPath}.`
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: LLM Prompt configurations from ${defaultLlmConfigPath} processed successfully.`
       );
     });
 

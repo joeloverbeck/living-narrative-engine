@@ -172,14 +172,6 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
         'user_input',
         'assistant_response_prefix',
       ]);
-
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Semantic validation passed for ${defaultLlmConfigPath}.`
-      );
-      // Also check the final success log to be thorough
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: LLM Prompt configurations from ${defaultLlmConfigPath} processed successfully.`
-      );
     });
 
     test('should handle a minimal valid root configuration (e.g., empty configs map)', async () => {
@@ -201,14 +193,6 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
       expect(typeof result).toBe('object');
       expect(result.defaultConfigId).toBe('some_default_or_placeholder');
       expect(result.configs).toEqual({});
-      // CORRECTED LOG EXPECTATION:
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Semantic validation passed for ${defaultLlmConfigPath}.`
-      );
-      // Also check the final success log
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: LLM Prompt configurations from ${defaultLlmConfigPath} processed successfully.`
-      );
     });
   });
 
@@ -248,14 +232,6 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
       );
       expect(result.configs['test_config_001'].modelIdentifier).toBe(
         'test/model-v1'
-      );
-      // CORRECTED LOG EXPECTATION:
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: Semantic validation passed for ${defaultLlmConfigPath}.`
-      );
-      // Also check the final success log
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `LlmConfigLoader: LLM Prompt configurations from ${defaultLlmConfigPath} processed successfully.`
       );
     });
   });

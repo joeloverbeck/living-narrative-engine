@@ -118,11 +118,8 @@ describe('ValidatedEventDispatcher', () => {
     test('should log info message on successful instantiation', () => {
       // FIX: No need to re-instantiate, beforeEach already did.
       // The instance created in beforeEach triggered the log.
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ValidatedEventDispatcher: Instance created.'
-      );
       // Check it's called only once by the beforeEach setup
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
+      expect(mockLogger.info).toHaveBeenCalledTimes(0);
     });
   });
 

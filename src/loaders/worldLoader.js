@@ -256,7 +256,7 @@ class WorldLoader {
 
       // --- Step 2: Load All Core Schemas ---
       await this.#schemaLoader.loadAndCompileAllSchemas();
-      this.#logger.info('WorldLoader: Schema loading phase completed.');
+      this.#logger.debug('WorldLoader: Schema loading phase completed.');
 
       // --- Step 3: Essential Schema Guard ---
       const essentials = [

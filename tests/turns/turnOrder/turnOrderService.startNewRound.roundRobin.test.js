@@ -136,22 +136,6 @@ describe('TurnOrderService', () => {
       expect(mockAdd).toHaveBeenNthCalledWith(3, newEntity); // Check the 3rd call specifically
 
       // 4. Logging
-      // Base logs (constructor is excluded as it's in beforeEach)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${strategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      ); // From clearCurrentRound
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Populated SimpleRoundRobinQueue with ${entities.length} entities.`
-      ); // From startNewRound
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: New round successfully started with ${entities.length} active entities.`
-      ); // From startNewRound (uses size())
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Entity "${newEntity.id}" successfully added to the turn order.`
-      ); // From addEntity
 
       // Debug logs
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
@@ -163,7 +147,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: Adding entity "${newEntity.id}" to the end of the round-robin queue.`
       ); // From addEntity
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2); // init + add
+      expect(mockLogger.debug).toHaveBeenCalledTimes(4); // init + add
 
       expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -236,19 +220,6 @@ describe('TurnOrderService', () => {
       expect(mockAdd).toHaveBeenNthCalledWith(3, secondEntities[2]);
 
       // 4. Logging (Focus on logs for the *second* call)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${secondStrategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      ); // Logged by clearCurrentRound during *second* call
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Populated SimpleRoundRobinQueue with ${secondEntities.length} entities.`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: New round successfully started with ${secondEntities.length} active entities.`
-      ); // Uses size()
-      expect(mockLogger.info).toHaveBeenCalledTimes(4); // Make sure no other info logs fired
 
       // Debug logs for the *second* call
       // This clear log *should* have fired because #currentQueue was not null before clearCurrentRound was called
@@ -258,7 +229,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: Initialized SimpleRoundRobinQueue.'
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2); // Both debug logs expected this time
+      expect(mockLogger.debug).toHaveBeenCalledTimes(3); // Both debug logs expected this time
 
       // Check size mock calls specifically for the second phase
       expect(mockSize).toHaveBeenCalledTimes(1); // Only for the final log in the second startNewRound
@@ -286,17 +257,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'TurnOrderService.startNewRound: Failed - entities array must be a non-empty array.'
       );
-      // Check logs from clearCurrentRound (called before error)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${strategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      );
-      // Check population/init logs were not called
-      expect(mockLogger.info).not.toHaveBeenCalledWith(
-        expect.stringContaining('Populated SimpleRoundRobinQueue')
-      );
+
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         'TurnOrderService: Initialized SimpleRoundRobinQueue.'
       );
@@ -327,17 +288,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'TurnOrderService.startNewRound: Failed - entities array contains invalid entities (missing or invalid id).'
       );
-      // Check logs from clearCurrentRound (called before error)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${strategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      );
-      // Check population/init logs were not called
-      expect(mockLogger.info).not.toHaveBeenCalledWith(
-        expect.stringContaining('Populated SimpleRoundRobinQueue')
-      );
+
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         'TurnOrderService: Initialized SimpleRoundRobinQueue.'
       );

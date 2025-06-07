@@ -75,7 +75,7 @@ export class CurrentTurnActorRenderer extends BoundDomRendererBase {
     }
     this.#entityDisplayDataProvider = entityDisplayDataProvider;
 
-    this.logger.info(`${this._logPrefix} Initializing...`); // Moved after super and EDDP check
+    this.logger.debug(`${this._logPrefix} Initializing...`); // Moved after super and EDDP check
 
     // Check if elements were bound correctly by BoundDomRendererBase
     if (
@@ -99,7 +99,7 @@ export class CurrentTurnActorRenderer extends BoundDomRendererBase {
           this.handleTurnStarted.bind(this)
         )
       );
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Initialized and subscribed to ${TURN_STARTED_ID}.`
       );
     } catch (error) {

@@ -22,6 +22,7 @@ jest.mock('../../src/domUI/domElementFactory.js');
 // Test-specific DocumentContext to simplify and isolate potential issues
 class TestSpecificDocumentContext {
   #doc;
+
   constructor(docInstance) {
     this.#doc = docInstance;
     if (!this.#doc) {
@@ -31,6 +32,7 @@ class TestSpecificDocumentContext {
       );
     }
   }
+
   query(selector) {
     if (!this.#doc) {
       // console.warn(`TestSpecificDocumentContext query: No document for selector "${selector}"`);
@@ -41,10 +43,12 @@ class TestSpecificDocumentContext {
     // console.log(`TestSpecificDocumentContext: Found for "${selector}": ${result ? 'Element' : 'null'}`);
     return result;
   }
+
   create(tagName) {
     if (!this.#doc) return null;
     return this.#doc.createElement(tagName);
   }
+
   get document() {
     return this.#doc;
   }
@@ -405,15 +409,10 @@ describe('ActionButtonsRenderer', () => {
         expect(boundSendButton.removeEventListener).toHaveBeenCalledTimes(1);
       }
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `${CLASS_PREFIX} ActionButtonsRenderer disposed.`
-        )
-      );
       const disposeLogCalls = mockLogger.info.mock.calls.filter((call) =>
         call[0].includes(`${CLASS_PREFIX} ActionButtonsRenderer disposed.`)
       );
-      expect(disposeLogCalls.length).toBe(1);
+      expect(disposeLogCalls.length).toBe(0);
     });
 
     it('should clear action buttons container and reset internal state', () => {

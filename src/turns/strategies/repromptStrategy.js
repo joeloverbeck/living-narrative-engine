@@ -61,7 +61,7 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
     // is no longer needed as the explicit `actor` parameter has been removed.
     // The primary concern now is the existence of `contextActor`.
 
-    logger.info(
+    logger.debug(
       `${className}: Re-prompting actor ${contextActor.id}; requesting transition to AwaitingPlayerInputState.`
     );
 

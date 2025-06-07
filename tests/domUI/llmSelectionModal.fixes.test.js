@@ -263,16 +263,6 @@ describe('LlmSelectionModal', () => {
         );
       });
 
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        '[LlmSelectionModal] _onShow hook called. Rendering LLM list.'
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        '[LlmSelectionModal] Modal shown.'
-      );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `[LlmSelectionModal] LLM list populated with 0 valid options. Active: ${currentActiveId}.`
-      );
-
       const llmItemCreations = domElementFactoryMock.create.mock.calls.filter(
         (call) => call[0] === 'li' && call[1]?.cls?.includes('llm-item')
       );
@@ -325,9 +315,6 @@ describe('LlmSelectionModal', () => {
       expect(loggerMock.warn).toHaveBeenCalledWith(
         '[LlmSelectionModal] LLM list is empty or failed to load. Displaying empty/error message.'
       );
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `[LlmSelectionModal] LLM list populated with 0 valid options. Active: none.`
-      );
       expect(closeModalButtonMock.focus).toHaveBeenCalled();
     });
 
@@ -362,9 +349,6 @@ describe('LlmSelectionModal', () => {
         true
       );
 
-      expect(loggerMock.info).toHaveBeenCalledWith(
-        `[LlmSelectionModal] LLM list populated with 0 valid options. Active: none.`
-      );
       expect(closeModalButtonMock.focus).toHaveBeenCalled();
     });
   });

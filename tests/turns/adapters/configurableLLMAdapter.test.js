@@ -92,12 +92,6 @@ describe('ConfigurableLLMAdapter', () => {
         llmStrategyFactory: mockLlmStrategyFactory,
       });
       expect(adapter).toBeInstanceOf(ConfigurableLLMAdapter);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('ConfigurableLLMAdapter: Instance created.')
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Execution environment: server.')
-      );
     });
 
     it('should throw an Error if logger is missing', () => {
@@ -252,24 +246,6 @@ describe('ConfigurableLLMAdapter', () => {
       expect(await adapter.getCurrentActiveLlmConfig()).toEqual(
         sampleLlmModelConfig
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Actual asynchronous initialization started with LlmConfigLoader.'
-        )
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ConfigurableLLMAdapter: LLM configurations loaded successfully.',
-        expect.objectContaining({
-          numberOfConfigs: 2,
-          defaultConfigId: 'test-llm-1',
-        }) // Changed
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "ConfigurableLLMAdapter: LLM configuration 'test-llm-1' (Test LLM 1) set as active by defaultConfigId from file." // Changed
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ConfigurableLLMAdapter: Initialization attempt complete and adapter is operational.'
-      );
     });
 
     it('should successfully initialize and set no default LLM if defaultConfigId is not in configs', async () => {
@@ -407,14 +383,10 @@ describe('ConfigurableLLMAdapter', () => {
 
       expect(adapter.isOperational()).toBe(true); // Ensure first init was operational
       expect(mockLlmConfigLoader.loadConfigs).toHaveBeenCalledTimes(1);
-      mockLogger.info.mockClear();
 
       await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
 
       expect(mockLlmConfigLoader.loadConfigs).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ConfigurableLLMAdapter: Already initialized and operational from a previous successful call. Skipping re-initialization logic.'
-      );
     });
 
     it('should throw an error if attempting to re-initialize after a critical configuration loading failure', async () => {
@@ -466,7 +438,6 @@ describe('ConfigurableLLMAdapter', () => {
       );
       await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
       expect(adapter.isOperational()).toBe(true); // Verify operational before each sub-test
-      mockLogger.info.mockClear();
       mockLogger.warn.mockClear();
       mockLogger.error.mockClear();
     });
@@ -478,16 +449,6 @@ describe('ConfigurableLLMAdapter', () => {
         expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe('test-llm-2');
         expect(await adapter.getCurrentActiveLlmConfig()).toEqual(
           sampleLlmModelConfig2
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          "ConfigurableLLMAdapter.setActiveLlm: Active LLM configuration changed from 'test-llm-1' to 'test-llm-2' (Test LLM 2 (Cloud))."
-        );
-      });
-
-      it('should log display name as N/A if not present when setting active LLM', async () => {
-        await adapter.setActiveLlm('llm-no-display');
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          "ConfigurableLLMAdapter.setActiveLlm: Active LLM configuration changed from 'test-llm-1' to 'llm-no-display' (N/A)."
         );
       });
 
@@ -620,20 +581,13 @@ describe('ConfigurableLLMAdapter', () => {
     describe('#setDefaultActiveLlm (tested via init outcomes)', () => {
       it('should set default LLM if defaultConfigId is present and valid in configs during init', async () => {
         // This test uses the 'adapter' instance that was set up in the parent describe's beforeEach.
-        // That beforeEach already called adapter.init() with mockFullConfigPayload,
-        // and mockLogger.info was cleared AFTER that init.
+        // That beforeEach already called adapter.init() with mockFullConfigPayload.
         // So, we are checking the state of 'adapter' after its init.
         expect(adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe('test-llm-1');
         expect(await adapter.getCurrentActiveLlmConfig()).toEqual(
           sampleLlmModelConfig
         );
 
-        // To check the log specifically for this default selection, we'd need to look at the calls
-        // made during the adapter.init() in the parent beforeEach.
-        // However, mockLogger.info was cleared.
-        // For this test to be robust about the LOG, it should re-init a local adapter.
-        // Re-doing with a local adapter to isolate log checking:
-        mockLogger.info.mockClear(); // Clear again just to be sure for localAdapter logs
         const localAdapter = new ConfigurableLLMAdapter({
           logger: mockLogger,
           environmentContext: mockEnvironmentContext,
@@ -651,9 +605,6 @@ describe('ConfigurableLLMAdapter', () => {
         );
         expect(await localAdapter.getCurrentActiveLlmConfig()).toEqual(
           sampleLlmModelConfig
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          "ConfigurableLLMAdapter: LLM configuration 'test-llm-1' (Test LLM 1) set as active by defaultConfigId from file."
         );
       });
 
@@ -680,7 +631,6 @@ describe('ConfigurableLLMAdapter', () => {
       });
 
       it('should set no default LLM if defaultConfigId is not specified in configs during init', async () => {
-        mockLogger.info.mockClear();
         const localAdapter = new ConfigurableLLMAdapter({
           logger: mockLogger,
           environmentContext: mockEnvironmentContext,
@@ -703,7 +653,6 @@ describe('ConfigurableLLMAdapter', () => {
 
       it('should NOT warn from #selectInitialActiveLlm about unloaded configs if init proceeds normally and configs are loaded', async () => {
         mockLogger.warn.mockClear();
-        mockLogger.info.mockClear();
         const localAdapter = new ConfigurableLLMAdapter({
           logger: mockLogger,
           environmentContext: mockEnvironmentContext,

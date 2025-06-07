@@ -94,7 +94,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
     this.#llmAdapter = llmAdapter;
     this.#domElementFactory = domElementFactory; // Store for list item rendering
 
-    this.logger.info(`${this._logPrefix} Initializing...`);
+    this.logger.debug(`${this._logPrefix} Initializing...`);
 
     // Bind external trigger button
     this.#changeLlmButton = this.documentContext.query('#change-llm-button');
@@ -108,7 +108,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
     }
     // Note: #bindDomElements and #attachEventListeners for modal's own elements are handled by BaseModalRenderer/BoundDomRendererBase
 
-    this.logger.info(`${this._logPrefix} Initialized successfully.`);
+    this.logger.debug(`${this._logPrefix} Initialized successfully.`);
   }
 
   /**
@@ -118,7 +118,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
    * Fetches and renders the list of LLM options.
    */
   async _onShow() {
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} _onShow hook called. Rendering LLM list.`
     );
     await this.renderLlmList();
@@ -298,7 +298,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
     if (!focused && items.length > 0) {
       items[0].setAttribute('tabindex', '0'); // Focus the first item if none selected
     }
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} LLM list populated with ${items.length} valid options. Active: ${listData?.currentActiveLlmId || 'none'}.`
     );
   }
@@ -393,12 +393,12 @@ export class LlmSelectionModal extends BaseModalRenderer {
       return;
     }
 
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} User selected LLM ID: ${selectedLlmId} ("${clickedItem.textContent?.trim()}").`
     );
     this._displayStatusMessage(
       `Switching to ${clickedItem.textContent?.trim()}...`,
-      'info'
+      'debug'
     );
     this._setOperationInProgress(true); // Disable buttons during operation
 
@@ -425,7 +425,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
       const success = await this.#llmAdapter.setActiveLlm(selectedLlmId);
 
       if (success) {
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} setActiveLlm successful for LLM ID: ${selectedLlmId}. Closing modal.`
         );
         // Success message is cleared on hide by BaseModalRenderer's show calling _clearStatusMessage
@@ -464,7 +464,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
     // The listener on #changeLlmButton, if added via _addDomListener, will be cleaned up by super.dispose().
     // If this.#changeLlmButton had listeners added *not* through _addDomListener, they would need manual removal.
     super.dispose(); // Handles VED subscriptions, DOM listeners added via _addDomListener, and BoundDOMRenderer elements.
-    this.logger.info(`${this._logPrefix} LlmSelectionModal disposed.`);
+    this.logger.debug(`${this._logPrefix} LlmSelectionModal disposed.`);
   }
 }
 

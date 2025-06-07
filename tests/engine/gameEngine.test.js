@@ -137,9 +137,6 @@ describe('GameEngine', () => {
     it('should instantiate and resolve all core services successfully', () => {
       gameEngine = new GameEngine({ container: mockContainer }); // Instantiation for this test
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'GameEngine: Constructor called.'
-      );
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
       expect(mockContainer.resolve).toHaveBeenCalledWith(
@@ -150,9 +147,6 @@ describe('GameEngine', () => {
       );
       expect(mockContainer.resolve).toHaveBeenCalledWith(
         tokens.ISafeEventDispatcher
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'GameEngine: Core services resolved.'
       );
     });
 

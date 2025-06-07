@@ -131,15 +131,9 @@ describe('HumanPlayerStrategy', () => {
         humanPlayerStrategy.decideAction(mockTurnContext)
       ).rejects.toThrow(abortError);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Prompt for actor ${mockActor.id} was cancelled (aborted).`
-      );
       expect(mockLogger.error).not.toHaveBeenCalledWith(
         `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${mockActor.id}.`,
         expect.anything()
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `HumanPlayerStrategy.decideAction: Operation for actor ${mockActor.id} was cancelled (aborted). Error: ${abortError.message}`
       );
       expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
     });

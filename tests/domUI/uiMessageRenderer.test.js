@@ -309,20 +309,9 @@ describe('UiMessageRenderer', () => {
             return document.getElementById('outputDiv');
           return originalDocQuery.call(docContext, selector);
         });
-      mockLogger.info.mockClear(); // Clear previous info logs
 
       createRenderer();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '#message-list element not found by selector. Attempting to create it inside #outputDivElement.'
-        )
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          '#message-list created dynamically inside #outputDivElement and assigned to this.elements.messageList.'
-        )
-      );
       expect(mockDomElementFactoryInstance.create).toHaveBeenCalledWith('ul', {
         id: 'message-list',
         attrs: { 'aria-live': 'polite' },
@@ -346,7 +335,6 @@ describe('UiMessageRenderer', () => {
           return dom.window.document.querySelector(selector); // Fallback
         });
       mockLogger.error.mockClear(); // Clear previous error logs
-      mockLogger.info.mockClear();
 
       createRenderer();
 

@@ -342,13 +342,6 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
     expect(interpreter).toBeInstanceOf(SystemLogicInterpreter);
   });
 
-  it('should use the mocked logger for internal logging', () => {
-    interpreter.initialize();
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Loading and caching system rules')
-    );
-  });
-
   it('should subscribe to the EventBus during initialization if rules are loaded', () => {
     mockDataRegistry.getAllSystemRules.mockReturnValue([
       MOCK_RULE_NO_CONDITION,

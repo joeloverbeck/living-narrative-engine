@@ -47,7 +47,6 @@ class JsonLogicEvaluationService {
   constructor({ logger }) {
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function'
     ) {
@@ -56,7 +55,7 @@ class JsonLogicEvaluationService {
       );
     }
     this.#logger = logger;
-    this.#logger.info('JsonLogicEvaluationService initialized.');
+    this.#logger.debug('JsonLogicEvaluationService initialized.');
   }
 
   /**

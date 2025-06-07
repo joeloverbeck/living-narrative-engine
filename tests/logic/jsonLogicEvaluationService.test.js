@@ -99,10 +99,6 @@ describe('JsonLogicEvaluationService', () => {
       expect(() => {
         new JsonLogicEvaluationService({ logger: mockLogger });
       }).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'JsonLogicEvaluationService initialized.'
-      );
     });
 
     test('should throw an error if logger dependency is missing or invalid', () => {

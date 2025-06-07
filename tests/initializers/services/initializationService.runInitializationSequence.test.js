@@ -171,13 +171,6 @@ describe('InitializationService', () => {
     it('should run the full initialization sequence successfully', async () => {
       const result = await service.runInitializationSequence(MOCK_WORLD_NAME);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `InitializationService: Starting runInitializationSequence for world: ${MOCK_WORLD_NAME}.`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `InitializationService: Initialization sequence for world '${MOCK_WORLD_NAME}' completed successfully (GameLoop resolution removed).`
-      );
-
       const resolveCallArgs = mockContainer.resolve.mock.calls;
       const resolveOrder = resolveCallArgs.map((call) => call[0]);
       const serviceResolveOrder = resolveOrder.filter(
@@ -285,9 +278,6 @@ describe('InitializationService', () => {
           {
             message: 'Fatal error during initialization. Cannot continue.',
           }
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          'InitializationService: Dispatched ui:show_fatal_error and textUI:disable_input events.'
         );
       }
 

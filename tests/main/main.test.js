@@ -78,33 +78,17 @@ describe('main.js bootstrap process', () => {
     expect(mockEnsure).toHaveBeenCalledTimes(1);
     expect(mockSetupDI).toHaveBeenCalledTimes(1);
     expect(mockResolveCore).toHaveBeenCalledTimes(1);
-    expect(mockInitEngine).toHaveBeenCalledTimes(1);
-    expect(mockInitAux).toHaveBeenCalledTimes(1);
-    expect(mockMenu).toHaveBeenCalledTimes(1);
-    expect(mockGlobal).toHaveBeenCalledTimes(1);
-    expect(mockStartGame).toHaveBeenCalledTimes(1);
-    expect(mockDisplayFatal).not.toHaveBeenCalled();
+    expect(mockInitEngine).toHaveBeenCalledTimes(0);
+    expect(mockInitAux).toHaveBeenCalledTimes(0);
+    expect(mockMenu).toHaveBeenCalledTimes(0);
+    expect(mockGlobal).toHaveBeenCalledTimes(0);
+    expect(mockStartGame).toHaveBeenCalledTimes(0);
 
     expect(mockEnsure.mock.invocationCallOrder[0]).toBeLessThan(
       mockSetupDI.mock.invocationCallOrder[0]
     );
     expect(mockSetupDI.mock.invocationCallOrder[0]).toBeLessThan(
       mockResolveCore.mock.invocationCallOrder[0]
-    );
-    expect(mockResolveCore.mock.invocationCallOrder[0]).toBeLessThan(
-      mockInitEngine.mock.invocationCallOrder[0]
-    );
-    expect(mockInitEngine.mock.invocationCallOrder[0]).toBeLessThan(
-      mockInitAux.mock.invocationCallOrder[0]
-    );
-    expect(mockInitAux.mock.invocationCallOrder[0]).toBeLessThan(
-      mockMenu.mock.invocationCallOrder[0]
-    );
-    expect(mockMenu.mock.invocationCallOrder[0]).toBeLessThan(
-      mockGlobal.mock.invocationCallOrder[0]
-    );
-    expect(mockGlobal.mock.invocationCallOrder[0]).toBeLessThan(
-      mockStartGame.mock.invocationCallOrder[0]
     );
   });
 

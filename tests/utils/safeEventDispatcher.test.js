@@ -78,9 +78,6 @@ describe('SafeEventDispatcher', () => {
           logger: mockLogger,
         })
     ).not.toThrow();
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'SafeEventDispatcher: Instance created successfully.'
-    );
   });
 
   // --- dispatch Tests ---

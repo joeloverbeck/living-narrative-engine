@@ -339,9 +339,6 @@ describe('AIPlayerStrategy', () => {
       const result = await instance_da.decideAction(context);
 
       // --- Orchestration Assertions ---
-      expect(da_logger.info).toHaveBeenCalledWith(
-        `AIPlayerStrategy: decideAction for actor ${mockActor_da.id}.`
-      );
       expect(da_aiPromptPipeline.generatePrompt).toHaveBeenCalledWith(
         mockActor_da,
         context

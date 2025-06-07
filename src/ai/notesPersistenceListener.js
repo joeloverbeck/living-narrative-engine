@@ -20,6 +20,7 @@ export class NotesPersistenceListener {
    * @param {{ actorId: string, extractedData: { notes?: string[] } }} payload
    */
   handleEvent({ actorId, extractedData }) {
+    this.logger.info('Notes listener has received: ' + extractedData);
     if (
       !Array.isArray(extractedData?.notes) ||
       extractedData.notes.length === 0
@@ -29,6 +30,7 @@ export class NotesPersistenceListener {
 
     const actorEntity = this.entityManager.getEntityInstance(actorId);
     if (actorEntity) {
+      this.logger.info('Will persist notes: ' + extractedData.notes);
       persistNotes({ notes: extractedData.notes }, actorEntity, this.logger);
     } else {
       this.logger.warn(

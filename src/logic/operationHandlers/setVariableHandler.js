@@ -48,7 +48,6 @@ class SetVariableHandler {
     if (
       !logger ||
       typeof logger.debug !== 'function' ||
-      typeof logger.info !== 'function' ||
       typeof logger.warn !== 'function' ||
       typeof logger.error !== 'function'
     ) {

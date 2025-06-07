@@ -46,7 +46,7 @@ class InputSetupService {
     this.#safeEventDispatcher = safeEventDispatcher;
     // #gameLoop assignment removed
 
-    this.#logger.info('InputSetupService: Instance created.');
+    this.#logger.debug('InputSetupService: Instance created.');
   }
 
   /**

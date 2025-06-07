@@ -47,7 +47,6 @@ class InitializationService extends IInitializationService {
     }
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function'
     ) {
@@ -78,7 +77,7 @@ class InitializationService extends IInitializationService {
     this.#container = container;
     this.#validatedEventDispatcher = validatedEventDispatcher;
 
-    this.#logger.info(
+    this.#logger.debug(
       'InitializationService: Instance created successfully with dependencies.'
     );
   }
@@ -91,7 +90,7 @@ class InitializationService extends IInitializationService {
    * @returns {Promise<InitializationResult>} The result of the initialization attempt.
    */
   async runInitializationSequence(worldName) {
-    this.#logger.info(
+    this.#logger.debug(
       `InitializationService: Starting runInitializationSequence for world: ${worldName}.`
     );
 
@@ -114,14 +113,14 @@ class InitializationService extends IInitializationService {
       const worldLoader = /** @type {WorldLoader} */ (
         this.#container.resolve(tokens.WorldLoader)
       );
-      this.#logger.info('WorldLoader resolved. Loading world data...');
+      this.#logger.debug('WorldLoader resolved. Loading world data...');
       await worldLoader.loadWorld(worldName); // Schemas are loaded by this point
-      this.#logger.info(
+      this.#logger.debug(
         `InitializationService: World data loaded successfully for world: ${worldName}.`
       );
 
       // ***** START: Initialize ConfigurableLLMAdapter *****
-      this.#logger.info(
+      this.#logger.debug(
         'InitializationService: Attempting to initialize ConfigurableLLMAdapter...'
       );
       try {
@@ -141,7 +140,7 @@ class InitializationService extends IInitializationService {
           typeof llmAdapter.isInitialized === 'function' &&
           llmAdapter.isInitialized()
         ) {
-          this.#logger.info(
+          this.#logger.debug(
             'InitializationService: ConfigurableLLMAdapter already initialized. Skipping re-initialization.'
           );
         } else {
@@ -160,7 +159,7 @@ class InitializationService extends IInitializationService {
             typeof llmAdapter.isOperational === 'function' &&
             llmAdapter.isOperational()
           ) {
-            this.#logger.info(
+            this.#logger.debug(
               `InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.`
             );
           } else {
@@ -187,11 +186,11 @@ class InitializationService extends IInitializationService {
       const systemInitializer = /** @type {SystemInitializer} */ (
         this.#container.resolve(tokens.SystemInitializer)
       );
-      this.#logger.info(
+      this.#logger.debug(
         'SystemInitializer resolved. Initializing tagged systems...'
       );
       await systemInitializer.initializeAll();
-      this.#logger.info(
+      this.#logger.debug(
         'InitializationService: Tagged system initialization complete.'
       );
 
@@ -199,14 +198,14 @@ class InitializationService extends IInitializationService {
       const worldInitializer = /** @type {WorldInitializer} */ (
         this.#container.resolve(tokens.WorldInitializer)
       );
-      this.#logger.info(
+      this.#logger.debug(
         'WorldInitializer resolved. Initializing world entities...'
       );
       const worldInitSuccess = await worldInitializer.initializeWorldEntities();
       if (!worldInitSuccess) {
         throw new Error('World initialization failed via WorldInitializer.');
       }
-      this.#logger.info(
+      this.#logger.debug(
         'InitializationService: Initial world entities instantiated and spatial index built.'
       );
 
@@ -214,11 +213,11 @@ class InitializationService extends IInitializationService {
       const inputSetupService = /** @type {InputSetupService} */ (
         this.#container.resolve(tokens.InputSetupService)
       );
-      this.#logger.info(
+      this.#logger.debug(
         'InputSetupService resolved. Configuring input handler...'
       );
       inputSetupService.configureInputHandler();
-      this.#logger.info('InitializationService: Input handler configured.');
+      this.#logger.debug('InitializationService: Input handler configured.');
 
       // Register AI persistence listeners
       const dispatcher =
@@ -244,14 +243,14 @@ class InitializationService extends IInitializationService {
         'core:ai_action_decided',
         notesListener.handleEvent.bind(notesListener)
       );
-      this.#logger.info('Registered AI persistence listeners.');
+      this.#logger.debug('Registered AI persistence listeners.');
 
       this.#logger.debug(
         'Resolving DomUiFacade to ensure UI components can be instantiated...'
       );
       try {
         this.#container.resolve(tokens.DomUiFacade);
-        this.#logger.info(
+        this.#logger.debug(
           'InitializationService: DomUiFacade resolved, UI components instantiated.'
         );
       } catch (uiResolveError) {
@@ -261,7 +260,7 @@ class InitializationService extends IInitializationService {
         );
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `InitializationService: Initialization sequence for world '${worldName}' completed successfully (GameLoop resolution removed).`
       );
 
@@ -310,7 +309,7 @@ class InitializationService extends IInitializationService {
         await this.#validatedEventDispatcher.dispatch('textUI:disable_input', {
           message: 'Fatal error during initialization. Cannot continue.',
         });
-        this.#logger.info(
+        this.#logger.debug(
           'InitializationService: Dispatched ui:show_fatal_error and textUI:disable_input events.'
         );
       } catch (dispatchError) {

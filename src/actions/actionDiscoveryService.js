@@ -130,7 +130,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
 
-    this.#logger.info('ActionDiscoveryService initialized.');
+    this.#logger.debug('ActionDiscoveryService initialized.');
   }
 
   /**

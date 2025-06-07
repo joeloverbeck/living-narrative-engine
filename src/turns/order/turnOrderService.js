@@ -60,7 +60,6 @@ export class TurnOrderService extends ITurnOrderService {
 
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.warn !== 'function'
     ) {
@@ -75,7 +74,7 @@ export class TurnOrderService extends ITurnOrderService {
     this.#currentQueue = null;
     this.#currentStrategy = null;
 
-    this.#logger.info('TurnOrderService initialized.');
+    this.#logger.debug('TurnOrderService initialized.');
   }
 
   // --- Basic Methods (Implemented in TASK-TURN-ORDER-001.4) ---
@@ -130,7 +129,7 @@ export class TurnOrderService extends ITurnOrderService {
     }
     this.#currentQueue = null;
     this.#currentStrategy = null;
-    this.#logger.info('TurnOrderService: Current round state cleared.');
+    this.#logger.debug('TurnOrderService: Current round state cleared.');
   }
 
   // --- Core Interface Methods ---

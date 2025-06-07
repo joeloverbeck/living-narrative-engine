@@ -113,7 +113,6 @@ class TurnManager extends ITurnManager {
     }
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.warn !== 'function' ||
       typeof logger.error !== 'function'
     ) {
@@ -155,7 +154,7 @@ class TurnManager extends ITurnManager {
     this.#roundInProgress = false; // Initialize new flag
     // --- End State Initialization ---
 
-    this.#logger.info('TurnManager initialized successfully.');
+    this.#logger.debug('TurnManager initialized successfully.');
   }
 
   /**
@@ -174,7 +173,7 @@ class TurnManager extends ITurnManager {
     this.#isRunning = true;
     this.#roundInProgress = false; // Reset on start
     this.#roundHadSuccessfulTurn = false; // Reset on start
-    this.#logger.info('Turn Manager started.');
+    this.#logger.debug('Turn Manager started.');
 
     this.#subscribeToTurnEnd(); // Subscribe when manager starts
     await this.advanceTurn();
@@ -188,7 +187,7 @@ class TurnManager extends ITurnManager {
    */
   async stop() {
     if (!this.#isRunning) {
-      this.#logger.info(
+      this.#logger.debug(
         'TurnManager.stop() called but manager is already stopped.'
       );
       return;
@@ -226,7 +225,7 @@ class TurnManager extends ITurnManager {
         error
       );
     }
-    this.#logger.info('Turn Manager stopped.');
+    this.#logger.debug('Turn Manager stopped.');
   }
 
   /**
@@ -281,7 +280,7 @@ class TurnManager extends ITurnManager {
       const isQueueEmpty = await this.#turnOrderService.isEmpty();
 
       if (isQueueEmpty) {
-        this.#logger.info(
+        this.#logger.debug(
           'Turn queue is empty. Preparing for new round or stopping.'
         );
 
@@ -300,7 +299,7 @@ class TurnManager extends ITurnManager {
         // --- END NEW CHECK ---
 
         // --- Reset for new round ---
-        this.#logger.info('Attempting to start a new round.');
+        this.#logger.debug('Attempting to start a new round.');
         this.#roundHadSuccessfulTurn = false; // Reset success tracker *before* starting new round
         // #roundInProgress will be set to true *after* startNewRound succeeds below
         // --- End Reset ---
@@ -333,7 +332,7 @@ class TurnManager extends ITurnManager {
         // Start the new round in the service
         await this.#turnOrderService.startNewRound(actors, strategy);
         this.#roundInProgress = true; // Mark round as officially in progress *after* successful start
-        this.#logger.info(
+        this.#logger.debug(
           `Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`
         );
 
@@ -364,7 +363,7 @@ class TurnManager extends ITurnManager {
         const isPlayer = this.#currentActor.hasComponent(PLAYER_COMPONENT_ID);
         const entityType = isPlayer ? 'player' : 'ai';
 
-        this.#logger.info(
+        this.#logger.debug(
           `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
         );
         try {
@@ -605,7 +604,7 @@ class TurnManager extends ITurnManager {
       this.#roundHadSuccessfulTurn = true;
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus === undefined ? 'N/A' : successStatus}). Advancing turn...`
     );
 

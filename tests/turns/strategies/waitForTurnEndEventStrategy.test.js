@@ -89,9 +89,6 @@ describe('WaitForTurnEndEventStrategy', () => {
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `WaitForTurnEndEventStrategy: Actor ${mockActor.id} to wait for external event (e.g., ${TURN_ENDED_ID}). Requesting transition to AwaitingExternalTurnEndState.`
-    );
     expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
       AwaitingExternalTurnEndState
     );
@@ -154,9 +151,6 @@ describe('WaitForTurnEndEventStrategy', () => {
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1); // For initial, info, and error logs
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `WaitForTurnEndEventStrategy: Actor ${mockActor.id} to wait for external event (e.g., ${TURN_ENDED_ID}). Requesting transition to AwaitingExternalTurnEndState.`
-    );
     expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
       AwaitingExternalTurnEndState
     );

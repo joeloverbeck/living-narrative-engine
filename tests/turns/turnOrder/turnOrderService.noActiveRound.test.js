@@ -51,8 +51,6 @@ describe('TurnOrderService (No Active Round)', () => {
       'TurnOrderService.getNextEntity: Called when no round is active.'
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).not.toHaveBeenCalled();
-    expect(mockLogger.info).not.toHaveBeenCalled();
   });
 
   it('Test Case 11.12.2: peekNextEntity should return null and not log a warning', () => {
@@ -64,8 +62,6 @@ describe('TurnOrderService (No Active Round)', () => {
     // No warning is expected for peek when no round is active
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).not.toHaveBeenCalled();
-    expect(mockLogger.info).not.toHaveBeenCalled();
   });
 
   it('Test Case 11.12.3: isEmpty should return true', () => {
@@ -76,7 +72,6 @@ describe('TurnOrderService (No Active Round)', () => {
     expect(result).toBe(true);
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).not.toHaveBeenCalled();
     expect(mockLogger.info).not.toHaveBeenCalled();
   });
 
@@ -90,7 +85,6 @@ describe('TurnOrderService (No Active Round)', () => {
     expect(Object.isFrozen(order)).toBe(true); // Check if the array is frozen
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).not.toHaveBeenCalled();
     expect(mockLogger.info).not.toHaveBeenCalled();
   });
 
@@ -110,7 +104,6 @@ describe('TurnOrderService (No Active Round)', () => {
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMessage);
     expect(mockLogger.warn).not.toHaveBeenCalled();
-    expect(mockLogger.debug).not.toHaveBeenCalled();
     expect(mockLogger.info).not.toHaveBeenCalled();
   });
 
@@ -130,7 +123,6 @@ describe('TurnOrderService (No Active Round)', () => {
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     expect(mockLogger.warn).toHaveBeenCalledWith(expectedLogMessage);
     expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).not.toHaveBeenCalled();
     expect(mockLogger.info).not.toHaveBeenCalled();
   });
 }); // End describe('TurnOrderService (No Active Round)')

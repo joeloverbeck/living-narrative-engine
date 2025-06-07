@@ -171,9 +171,6 @@ describe('LLMStrategyFactory', () => {
           expect(strategy).toBeInstanceOf(ExpectedStrategy);
           expect(ExpectedStrategy).toHaveBeenCalledTimes(1);
           expect(ExpectedStrategy).toHaveBeenCalledWith({ httpClient, logger });
-          expect(logger.info).toHaveBeenCalledWith(
-            `LLMStrategyFactory: Selected strategy '${ExpectedStrategy.name}' for LLM ID '${mockConfig.configId}'. Details: apiType='${expectedApiTypeLog}', effectiveMethod='${expectedEffectiveMethod}', configuredMethod='${expectedConfiguredMethodLog}'.`
-          );
         });
       }
     );
@@ -538,9 +535,6 @@ describe('LLMStrategyFactory', () => {
           configuredJsonMethod: 'openrouter_json_schema',
           fullConfigJsonStrategy: mockConfig.jsonOutputStrategy,
         })
-      );
-      expect(logger.info).toHaveBeenCalledWith(
-        `LLMStrategyFactory: Selected strategy 'OpenRouterJsonSchemaStrategy' for LLM ID '${mockConfig.configId}'. Details: apiType='openrouter', effectiveMethod='openrouter_json_schema', configuredMethod='openrouter_json_schema'.`
       );
     });
   });

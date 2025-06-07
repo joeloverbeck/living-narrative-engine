@@ -51,7 +51,7 @@ describe('EnvironmentContext', () => {
         );
       });
 
-      ['info', 'warn', 'error', 'debug'].forEach((method) => {
+      ['warn', 'error', 'debug'].forEach((method) => {
         test(`should throw error if logger is missing ${method} method`, () => {
           const incompleteLogger = { ...mockLogger() };
           delete incompleteLogger[method];
@@ -254,9 +254,6 @@ describe('EnvironmentContext', () => {
           proxyServerUrl: ` ${url} `,
         });
         expect(context.getProxyServerUrl()).toBe(url);
-        expect(logger.info).toHaveBeenCalledWith(
-          `EnvironmentContext: Client-side proxy URL configured to: '${url}'.`
-        );
       });
 
       test('client env: should use default proxyServerUrl and log info if null', () => {
@@ -266,9 +263,6 @@ describe('EnvironmentContext', () => {
           proxyServerUrl: null,
         });
         expect(context.getProxyServerUrl()).toBe(DEFAULT_PROXY_SERVER_URL);
-        expect(logger.info).toHaveBeenCalledWith(
-          `EnvironmentContext: Client-side proxyServerUrl not provided. Using default: '${DEFAULT_PROXY_SERVER_URL}'.`
-        );
       });
 
       test('client env: should use default proxyServerUrl and log warning if empty string', () => {
@@ -475,15 +469,6 @@ describe('EnvironmentContext', () => {
       });
       expect(unknownContext.isServer()).toBe(false);
     });
-  });
-
-  test('should log final info message on successful instantiation', () => {
-    new EnvironmentContext({ logger, executionEnvironment: 'client' });
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'EnvironmentContext: Instance created. Execution environment: client.'
-      )
-    );
   });
 });
 

@@ -57,7 +57,7 @@ export class BaseTurnHandler {
     if (this._currentTurnContext) {
       try {
         const ctxLogger = this._currentTurnContext.getLogger();
-        if (ctxLogger && typeof ctxLogger.info === 'function') return ctxLogger;
+        if (ctxLogger) return ctxLogger;
       } catch (e) {
         this._logger.warn(
           `Error accessing logger from TurnContext: ${e.message}. Falling back to base logger.`
@@ -396,7 +396,7 @@ export class BaseTurnHandler {
     }
 
     this._isDestroying = true;
-    logger.info(
+    logger.debug(
       `${name}.destroy() invoked. Current state: ${
         this._currentState?.getStateName() ?? 'N/A'
       }`
@@ -460,7 +460,7 @@ export class BaseTurnHandler {
 
     this._isDestroyed = true;
     this._isDestroying = false;
-    logger.info(
+    logger.debug(
       `${name}.destroy() complete. Final state: ${this._currentState?.getStateName() ?? 'N/A'}`
     );
   }

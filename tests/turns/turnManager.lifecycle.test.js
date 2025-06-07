@@ -146,7 +146,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
 
     it('should set running state, subscribe to TURN_ENDED_ID, call advanceTurn, and log success', async () => {
       await turnManager.start();
-      expect(logger.info).toHaveBeenCalledWith('Turn Manager started.');
       expect(dispatcher.subscribe).toHaveBeenCalledTimes(1);
       expect(dispatcher.subscribe).toHaveBeenCalledWith(
         TURN_ENDED_ID,
@@ -279,7 +278,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
         await turnManager.stop();
 
         // Check Logs
-        expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
         // Check the specific debug log content if needed:
         expect(logger.debug).toHaveBeenCalledWith(
           expect.stringContaining('Calling destroy() on current handler')
@@ -316,7 +314,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
         expect(turnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
         expect(turnManager.getCurrentActor()).toBeNull();
         expect(turnManager.getActiveTurnHandler()).toBeNull();
-        expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
       });
 
       it('should proceed if currentHandler has no destroy method', async () => {
@@ -333,7 +330,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
         // Check other actions
         expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(1);
         expect(turnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
-        expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
       });
 
       it('should correctly reset state when stopped shortly after starting a turn', async () => {
@@ -349,7 +345,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
         // Assert state after stop
         expect(turnManager.getCurrentActor()).toBeNull();
         expect(turnManager.getActiveTurnHandler()).toBeNull();
-        expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
         expect(turnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
         expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(1);
         expect(handlerInstance.destroy).toHaveBeenCalledTimes(1);
@@ -363,7 +358,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
         expect(logger.warn).not.toHaveBeenCalledWith(
           expect.stringContaining('already running')
         );
-        expect(logger.info).toHaveBeenCalledWith('Turn Manager started.');
         expect(advanceTurnSpy).toHaveBeenCalledTimes(1); // From second start
         expect(dispatcher.subscribe).toHaveBeenCalledTimes(1); // From second start
       });
@@ -383,9 +377,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
 
       await turnManager.stop(); // Call stop again
 
-      expect(logger.info).toHaveBeenCalledWith(
-        'TurnManager.stop() called but manager is already stopped.'
-      );
       expect(mockUnsubscribeFunction).not.toHaveBeenCalled();
       expect(turnOrderService.clearCurrentRound).not.toHaveBeenCalled();
     });
@@ -414,7 +405,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
       );
       expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(1);
       expect(turnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
-      expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
     });
 
     it('should log error and continue if unsubscribe function throws', async () => {
@@ -445,7 +435,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
       );
       expect(turnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1); // Should still clear round
       expect(turnManager.getCurrentActor()).toBeNull();
-      expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
     });
 
     it('should log error and continue if turnOrderService.clearCurrentRound fails', async () => {
@@ -471,7 +460,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
       );
       expect(mockUnsubscribeFunction).toHaveBeenCalledTimes(1); // Should still unsubscribe
       expect(turnManager.getCurrentActor()).toBeNull();
-      expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
     });
   }); // End describe stop()
 });

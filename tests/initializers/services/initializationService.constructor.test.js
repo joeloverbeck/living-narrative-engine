@@ -153,9 +153,6 @@ describe('InitializationService', () => {
             validatedEventDispatcher: mockValidatedEventDispatcher,
           })
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'InitializationService: Instance created successfully with dependencies.'
-      );
     });
 
     it('should throw an error if container is missing', () => {

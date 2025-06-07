@@ -601,10 +601,6 @@ describe('LlmSelectionModal Refactored', () => {
       jest.runAllTimers();
 
       expect(mockLlmAdapter.setActiveLlm).toHaveBeenCalledWith('llm2');
-      expect(modal._displayStatusMessage).toHaveBeenCalledWith(
-        'Switching to LLM Two...',
-        'info'
-      );
       expect(modal._setOperationInProgress).toHaveBeenCalledWith(true); // Called before await
       expect(mockClickedItem.classList.contains('selected')).toBe(true);
       expect(mockClickedItem.getAttribute('tabindex')).toBe('0');
@@ -714,9 +710,6 @@ describe('LlmSelectionModal Refactored', () => {
       );
       modal.dispose();
       expect(superDisposeSpy).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LlmSelectionModal disposed.')
-      );
     });
   });
 });

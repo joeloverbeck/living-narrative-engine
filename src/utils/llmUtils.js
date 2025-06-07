@@ -183,7 +183,7 @@ export async function parseAndRepairJson(jsonString, logger) {
 
       // Attempt to parse the repaired string
       const repairedObject = JSON.parse(repairedString); // [cite: 1, 1000]
-      if (logger && typeof logger.info === 'function') {
+      if (logger) {
         logger.info(
           'parseAndRepairJson: Successfully parsed JSON after repair.',
           {

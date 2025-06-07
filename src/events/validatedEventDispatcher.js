@@ -63,7 +63,7 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
     this.#schemaValidator = schemaValidator;
     this.#logger = logger;
 
-    this.#logger.info('ValidatedEventDispatcher: Instance created.');
+    this.#logger.debug('ValidatedEventDispatcher: Instance created.');
   }
 
   /**

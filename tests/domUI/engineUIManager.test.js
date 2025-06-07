@@ -83,9 +83,6 @@ describe('EngineUIManager', () => {
         logger: mockLogger,
       });
       expect(manager).toBeInstanceOf(EngineUIManager);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EngineUIManager: Service instantiated.'
-      );
     });
 
     it('should throw an error if ISafeEventDispatcher is missing and not log an error message via the instance logger', () => {
@@ -148,10 +145,6 @@ describe('EngineUIManager', () => {
     it('should subscribe to all designated UI events and log initialization steps', () => {
       manager.initialize();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EngineUIManager: Initializing...'
-      );
-
       const expectedEventIds = [
         ENGINE_INITIALIZING_UI,
         ENGINE_READY_UI,
@@ -176,9 +169,6 @@ describe('EngineUIManager', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'EngineUIManager: Subscribed to all designated UI events.'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EngineUIManager: Initialization complete. Event subscriptions active.'
       );
     });
   });
@@ -215,9 +205,6 @@ describe('EngineUIManager', () => {
         expect(mockLogger.debug).toHaveBeenCalledWith(
           `EngineUIManager: Received ${ENGINE_INITIALIZING_UI}`,
           validPayload
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: Handled ${ENGINE_INITIALIZING_UI}. UI updated for world: ${worldName}.`
         );
       });
 
@@ -257,9 +244,6 @@ describe('EngineUIManager', () => {
           true,
           message
         );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: Handled ${ENGINE_READY_UI}. UI set to ready state. Active world: ${activeWorld}.`
-        );
       });
 
       it('should set title to "Game Ready" if activeWorld is null', () => {
@@ -269,9 +253,6 @@ describe('EngineUIManager', () => {
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           true,
           message
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: Handled ${ENGINE_READY_UI}. UI set to ready state. Active world: N/A.`
         );
       });
 
@@ -311,9 +292,6 @@ describe('EngineUIManager', () => {
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           false,
           inputDisabledMessage
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: Handled ${ENGINE_OPERATION_IN_PROGRESS_UI}. Title: "${titleMessage}". Input disabled.`
         );
       });
 
@@ -378,9 +356,6 @@ describe('EngineUIManager', () => {
           inputDisabledMessage
         );
         expect(mockDomUiFacade.title.set).toHaveBeenCalledWith('Game Stopped');
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: Handled ${ENGINE_STOPPED_UI}. Input disabled. Title set to "Game Stopped".`
-        );
       });
 
       it('should log warning on invalid payload (missing inputDisabledMessage)', () => {

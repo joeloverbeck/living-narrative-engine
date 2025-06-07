@@ -78,7 +78,6 @@ class GameConfigLoader {
     }
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function'
     ) {
@@ -91,7 +90,7 @@ class GameConfigLoader {
     this.#schemaValidator = schemaValidator;
     this.#logger = logger;
 
-    this.#logger.info('GameConfigLoader: Instance created.');
+    this.#logger.debug('GameConfigLoader: Instance created.');
   }
 
   /**

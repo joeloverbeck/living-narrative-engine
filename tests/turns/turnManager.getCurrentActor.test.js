@@ -157,10 +157,6 @@ describe('TurnManager', () => {
     });
     expect(TurnManager).toBeDefined();
     expect(instance).toBeInstanceOf(TurnManager);
-    // Constructor log check (assuming logger wasn't cleared AFTER this specific instantiation)
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'TurnManager initialized successfully.'
-    );
   });
 
   test('mock entities should behave as configured', () => {
@@ -205,7 +201,6 @@ describe('TurnManager', () => {
       expect(turnManager.getCurrentActor()).toBe(mockActor);
 
       // Verify logs and calls related to setting the actor and initiating the turn
-      expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager started.');
       expect(mockDispatcher.subscribe).toHaveBeenCalledTimes(1); // Called by start
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnManager.advanceTurn() initiating...'
@@ -215,9 +210,6 @@ describe('TurnManager', () => {
       );
       expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
       // Check actor set log
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `>>> Starting turn initiation for Entity: ${mockActor.id} (${entityType}) <<<`
-      );
       // Check core:turn_started event was dispatched
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:turn_started',
@@ -285,7 +277,6 @@ describe('TurnManager', () => {
 
       // --- Assert results of stop() ---
       expect(turnManager.getCurrentActor()).toBeNull(); // Actor should be cleared
-      expect(mockLogger.info).toHaveBeenCalledWith('Turn Manager stopped.');
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Turn order service current round cleared.'
       );

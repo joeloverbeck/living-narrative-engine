@@ -313,6 +313,6 @@ export class UiMessageRenderer extends BoundDomRendererBase {
     super.dispose();
     // No need to nullify #domElementFactory, #messageList, #outputDivElement, or #subscriptions
     // as they are either constructor-injected and not owned, or managed by the base class.
-    this.logger.info(`${this._logPrefix} UiMessageRenderer disposed.`);
+    this.logger.debug(`${this._logPrefix} UiMessageRenderer disposed.`);
   }
 }

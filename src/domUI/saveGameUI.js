@@ -163,7 +163,7 @@ export class SaveGameUI extends BaseModalRenderer {
       return;
     }
     this.gameEngine = gameEngineInstance;
-    this.logger.info(`${this._logPrefix} GameEngine instance received.`);
+    this.logger.debug(`${this._logPrefix} GameEngine instance received.`);
   }
 
   /**
@@ -774,7 +774,7 @@ export class SaveGameUI extends BaseModalRenderer {
     this.gameEngine = null;
     this.selectedSlotData = null;
     this.currentSlotsDisplayData = [];
-    this.logger.info(`${this._logPrefix} SaveGameUI disposed.`);
+    this.logger.debug(`${this._logPrefix} SaveGameUI disposed.`);
   }
 }
 

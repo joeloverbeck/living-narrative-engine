@@ -80,7 +80,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
       return;
     }
 
-    logger.info(
+    logger.debug(
       `${this.name}: Actor ${actor.id}. Attempting to retrieve turn strategy.`
     ); // This log might be redundant if super.enterState logs similar info
 
@@ -106,7 +106,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
 
     /* log the strategy name */
     const strategyName = strategy.constructor?.name ?? 'Object';
-    logger.info(
+    logger.debug(
       `${this.name}: Strategy ${strategyName} obtained for actor ${actor.id}. Requesting action decision.`
     );
 
@@ -144,7 +144,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
         }
       }
 
-      logger.info(
+      logger.debug(
         `${this.name}: Actor ${actor.id} decided action: ${action.actionDefinitionId}. Storing action.`
       );
 
@@ -163,7 +163,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
           ? action.commandString
           : action.actionDefinitionId;
 
-      logger.info(
+      logger.debug(
         `${this.name}: Transitioning to ProcessingCommandState for actor ${actor.id}.`
       );
       await turnContext.requestTransition(ProcessingCommandState, [
@@ -172,7 +172,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
       ]);
     } catch (error) {
       if (error?.name === 'AbortError') {
-        logger.info(
+        logger.debug(
           `${this.name}: Action decision for actor ${actor.id} was cancelled (aborted). Ending turn gracefully.`
         );
         turnContext.endTurn(null);
@@ -271,7 +271,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
     const evtId = payload?.entityId;
 
     if (ctxActor && ctxActor.id === evtId) {
-      logger.info(
+      logger.debug(
         `${this.name}: core:turn_ended event received for current actor ${ctxActor.id}. Ending turn.`
       );
       turnContext.endTurn(payload.error || null);
@@ -300,7 +300,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
           `${this.name}: Handler (actor ${actorInCtx.id}) is already being destroyed. Skipping turnContext.endTurn().`
         );
       } else {
-        logger.info(
+        logger.debug(
           `${this.name}: Handler destroyed while state was active for actor ${actorInCtx.id}. Ending turn via turnContext (may trigger AbortError if prompt was active).`
         );
         turnContext.endTurn(

@@ -129,7 +129,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       );
     });
 
-    this.logger.info(`${this._logPrefix} Initialized.`);
+    this.logger.debug(`${this._logPrefix} Initialized.`);
   }
 
   /**
@@ -422,6 +422,6 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
     this.logger.debug(`${this._logPrefix} Disposing PerceptionLogRenderer.`);
     super.dispose();
     this.#currentActorId = null;
-    this.logger.info(`${this._logPrefix} PerceptionLogRenderer disposed.`);
+    this.logger.debug(`${this._logPrefix} PerceptionLogRenderer disposed.`);
   }
 }

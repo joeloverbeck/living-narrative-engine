@@ -175,9 +175,6 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'Queue not empty, retrieving next entity.'
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `>>> Starting turn initiation for Entity: ${nextActor.id} (${entityType}) <<<`
-    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `Resolving turn handler for entity ${nextActor.id}...`
     );
@@ -317,9 +314,6 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     expect(instance.getCurrentActor()).toBe(nonActorEntity); // Current actor is set
 
     // Verify it logs the start initiation
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `>>> Starting turn initiation for Entity: ${nonActorEntity.id} (${entityType}) <<<`
-    );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
       entityId: nonActorEntity.id,
       entityType: entityType,

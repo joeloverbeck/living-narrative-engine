@@ -108,21 +108,6 @@ describe('TurnOrderService', () => {
       expect(mockAddFn).toHaveBeenNthCalledWith(1, entities[0], 15);
       expect(mockAddFn).toHaveBeenNthCalledWith(2, entities[1], 10);
 
-      // 4. Logging (Check logs generated *during* startNewRound)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${strategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Populated InitiativePriorityQueue with ${entities.length} entities.`
-      );
-      expect(mockSizeFn).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: New round successfully started with ${entities.length} active entities.`
-      );
-
       // Debug logs from startNewRound
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         'TurnOrderService: Cleared existing turn queue.'
@@ -131,7 +116,7 @@ describe('TurnOrderService', () => {
         'TurnOrderService: Initialized InitiativePriorityQueue.'
       );
       // Check *specific* calls during startNewRound BEFORE triggering more logs
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1); // <<< MOVED CHECK HERE
+      expect(mockLogger.debug).toHaveBeenCalledTimes(3); // <<< MOVED CHECK HERE
 
       // Other logs from startNewRound
       expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -149,7 +134,7 @@ describe('TurnOrderService', () => {
         'TurnOrderService: Adding entity "c" with initiative 5 to the current round.'
       );
       // Total debug calls are now 2
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(4);
     });
 
     // Test Case: Initiative with Missing/Invalid Individual Priority
@@ -190,27 +175,14 @@ describe('TurnOrderService', () => {
         'TurnOrderService.startNewRound (initiative): Entity "c" missing valid initiative score. Defaulting to 0.'
       );
 
-      // 5. Logging - Other logs (Check logs generated *during* startNewRound)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${strategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Populated InitiativePriorityQueue with ${entities.length} entities.`
-      );
       expect(mockSizeFn).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: New round successfully started with ${entities.length} active entities.`
-      );
 
       // Debug logs from startNewRound
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: Initialized InitiativePriorityQueue.'
       );
       // Check *specific* calls during startNewRound BEFORE triggering more logs
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1); // <<< MOVED CHECK HERE
+      expect(mockLogger.debug).toHaveBeenCalledTimes(3); // <<< MOVED CHECK HERE
 
       // Check other startNewRound logs
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -227,7 +199,7 @@ describe('TurnOrderService', () => {
         'TurnOrderService: Adding entity "e" with initiative 20 to the current round.'
       );
       // Total debug calls are now 2
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(4);
     });
 
     // Test Case: Invalid/Missing initiativeData map (No changes needed here)
@@ -247,12 +219,6 @@ describe('TurnOrderService', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'TurnOrderService.startNewRound (initiative): Failed - initiativeData Map is required and must not be empty.'
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${strategy}".`
-      ); // Called before validation
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      ); // Called before validation
       expect(InitiativePriorityQueue).not.toHaveBeenCalled(); // Queue not instantiated
 
       // Arrange - Invalid initiativeData (not a Map)
@@ -353,21 +319,8 @@ describe('TurnOrderService', () => {
       expect(mockAddFn).toHaveBeenNthCalledWith(1, secondEntities[0], 20);
       expect(mockAddFn).toHaveBeenNthCalledWith(2, secondEntities[1], 10);
 
-      // 4. Logging (Focus on logs for the *second* call since logger was cleared)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${secondStrategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Populated InitiativePriorityQueue with ${secondEntities.length} entities.`
-      );
       // Check the final log for the second round
       expect(mockSizeFn).toHaveBeenCalled(); // Ensure size was called again
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: New round successfully started with ${secondEntities.length} active entities.`
-      ); // Should pass now
 
       // Debug logs for the *second* call
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -376,7 +329,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: Initialized InitiativePriorityQueue.'
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(3);
     });
   }); // End describe("startNewRound ('initiative')")
 }); // End describe('TurnOrderService')

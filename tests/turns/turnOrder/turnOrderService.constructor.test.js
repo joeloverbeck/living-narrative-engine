@@ -52,14 +52,10 @@ describe('TurnOrderService', () => {
       // No direct way to check #currentStrategy, but its initialization alongside #currentQueue is implied by the above checks.
 
       // Verify logger interaction
-      expect(validLogger.info).toHaveBeenCalledTimes(1);
-      expect(validLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService initialized.'
-      );
+      expect(validLogger.info).toHaveBeenCalledTimes(0);
       // Ensure other log levels weren't called during construction
       expect(validLogger.warn).not.toHaveBeenCalled();
       expect(validLogger.error).not.toHaveBeenCalled();
-      expect(validLogger.debug).not.toHaveBeenCalled();
     });
 
     // Test Case: Missing Logger (undefined)

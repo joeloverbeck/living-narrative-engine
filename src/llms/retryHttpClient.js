@@ -78,7 +78,6 @@ export class RetryHttpClient extends IHttpClient {
     /* ---------------- Dependency validation ---------------- */
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.warn !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function'

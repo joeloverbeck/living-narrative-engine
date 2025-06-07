@@ -187,7 +187,7 @@ function resolveOrder(requestedIds, manifestsMap, logger) {
     throw new Error(
       'modLoadOrderResolver.resolveOrder: `manifestsMap` must be a Map.'
     );
-  if (!logger || typeof logger.info !== 'function') {
+  if (!logger) {
     throw new Error(
       'modLoadOrderResolver.resolveOrder: `logger` does not implement ILogger.'
     );

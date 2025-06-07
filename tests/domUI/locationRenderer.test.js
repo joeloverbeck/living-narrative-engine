@@ -909,9 +909,6 @@ describe('LocationRenderer', () => {
 
       renderer.dispose(); // Call again
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1); // Still only once
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[LocationRenderer] LocationRenderer disposed.'
-      );
     });
   });
 });

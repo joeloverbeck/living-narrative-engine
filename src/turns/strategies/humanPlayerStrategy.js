@@ -87,7 +87,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
         cancellationSignal = undefined;
       }
 
-      logger.info(
+      logger.debug(
         `HumanPlayerStrategy: Initiating decideAction for actor ${actor.id}.`
       );
 
@@ -105,7 +105,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
         );
       } catch (promptError) {
         if (promptError && promptError.name === 'AbortError') {
-          logger.info(
+          logger.debug(
             `HumanPlayerStrategy: Prompt for actor ${actor.id} was cancelled (aborted).`
           );
         } else {
@@ -227,7 +227,6 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
 
     if (
       !loggerInstance ||
-      typeof loggerInstance.info !== 'function' ||
       typeof loggerInstance.error !== 'function' ||
       typeof loggerInstance.debug !== 'function' ||
       typeof loggerInstance.warn !== 'function'

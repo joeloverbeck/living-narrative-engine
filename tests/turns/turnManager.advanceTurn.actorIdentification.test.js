@@ -164,9 +164,6 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
 
     expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1);
     expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `>>> Starting turn initiation for Entity: ${playerActor.id} (${entityType}) <<<`
-    );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
       entityId: playerActor.id,
       entityType: entityType,
@@ -206,9 +203,6 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
 
     expect(mockTurnOrderService.isEmpty).toHaveBeenCalledTimes(1);
     expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `>>> Starting turn initiation for Entity: ${aiActor.id} (${entityType}) <<<`
-    );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
       entityId: aiActor.id,
       entityType: entityType,

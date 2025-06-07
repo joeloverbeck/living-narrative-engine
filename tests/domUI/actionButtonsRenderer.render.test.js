@@ -288,16 +288,6 @@ describe('ActionButtonsRenderer', () => {
       expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled();
 
       // Assuming SUT's _onListRendered is changed to count 'button.action-button'
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /\[ActionButtonsRenderer\] Rendered 0 action buttons. Selected action: none./
-        )
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /\[ActionButtonsRenderer\] List data is empty or not an array. Displaying empty message./
-        )
-      );
       const emptyMessageP = actionButtonsContainer.querySelector(
         'p.empty-list-message'
       );
@@ -369,12 +359,6 @@ describe('ActionButtonsRenderer', () => {
           expect.any(Function)
         );
       });
-      // Assuming SUT's _onListRendered is changed
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `${CLASS_PREFIX} Rendered ${actions.length} action buttons. Selected action: none.`
-        )
-      );
     });
 
     it('should skip invalid actions (e.g., missing name/command/description) and log warning', async () => {
@@ -662,12 +646,6 @@ describe('ActionButtonsRenderer', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Failed to create button element for action: "fail_command" (ID: test:fail) using domElementFactory.`
-      );
-      // Assuming SUT's _onListRendered is changed
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `${CLASS_PREFIX} Rendered ${expectedFinalButtonCount} action buttons. Selected action: none.`
-        )
       );
     });
   });

@@ -306,7 +306,7 @@ export class AITurnHandler extends BaseTurnHandler {
 
   async destroy() {
     if (this._isDestroyed) return;
-    this._logger.info(`${this.constructor.name}.destroy() invoked.`);
+    this._logger.debug(`${this.constructor.name}.destroy() invoked.`);
     if (
       this.#llmAdapter && // FIXED: Corrected property name
       typeof this.#llmAdapter.cancelOngoingOperations === 'function' // FIXED: Corrected property name

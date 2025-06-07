@@ -196,9 +196,6 @@ describe('TurnHandlerResolver', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempting to resolve turn handler for actor player1...'
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnHandlerResolver: Creating new PlayerTurnHandler for actor player1.'
-      ); // Log message updated
       // Verify hasComponent was called correctly
       expect(playerEntity.hasComponent).toHaveBeenCalledWith(
         PLAYER_COMPONENT_ID
@@ -231,9 +228,6 @@ describe('TurnHandlerResolver', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempting to resolve turn handler for actor ai1...'
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnHandlerResolver: Creating new AITurnHandler for actor ai1.'
-      ); // Log message updated
       // Verify hasComponent was called correctly (order matters)
       expect(aiEntity.hasComponent).toHaveBeenCalledWith(PLAYER_COMPONENT_ID); // Checked first
       expect(aiEntity.hasComponent).toHaveBeenCalledWith(ACTOR_COMPONENT_ID); // Checked second
@@ -253,9 +247,6 @@ describe('TurnHandlerResolver', () => {
       // Verify logging (debug and info)
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempting to resolve turn handler for actor ai2...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnHandlerResolver: Creating new AITurnHandler for actor ai2.'
       );
       // Verify factory call
       expect(mockCreateAITurnHandler).toHaveBeenCalledTimes(1);
@@ -279,9 +270,6 @@ describe('TurnHandlerResolver', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempting to resolve turn handler for actor item1...'
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnHandlerResolver: No specific turn handler factory found for actor item1. Returning null.'
-      ); // Log message updated
       // Verify hasComponent was called correctly
       expect(nonActorEntity.hasComponent).toHaveBeenCalledWith(
         PLAYER_COMPONENT_ID
@@ -314,9 +302,6 @@ describe('TurnHandlerResolver', () => {
       // Check logging
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempting to resolve turn handler for actor playerActor...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnHandlerResolver: Creating new PlayerTurnHandler for actor playerActor.'
       );
       // Verify hasComponent calls (should short-circuit after player)
       expect(playerActorEntity.hasComponent).toHaveBeenCalledWith(
@@ -355,9 +340,6 @@ describe('TurnHandlerResolver', () => {
       // Check logging
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempting to resolve turn handler for actor scenery1...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnHandlerResolver: No specific turn handler factory found for actor scenery1. Returning null.'
       );
       // Verify hasComponent checks
       expect(sceneryEntity.hasComponent).toHaveBeenCalledWith(

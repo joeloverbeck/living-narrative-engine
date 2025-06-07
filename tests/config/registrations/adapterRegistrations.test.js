@@ -271,9 +271,6 @@ describe('Adapter Registrations - registerAdapters', () => {
       mockValidatedEventDispatcher
     );
     expect(constructorArgs.logger).toBe(mockLogger);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Adapter Registrations: Starting...'
-    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `Adapter Registration: Registered EventBusTurnEndAdapter as ${tokens.ITurnEndPort}.`
     );

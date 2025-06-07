@@ -123,7 +123,7 @@ export class EngineUIManager {
     this.#domUiFacade = domUiFacade;
     this.#logger = logger;
 
-    this.#logger.info('EngineUIManager: Service instantiated.');
+    this.#logger.debug('EngineUIManager: Service instantiated.');
   }
 
   /**
@@ -133,9 +133,9 @@ export class EngineUIManager {
    * @returns {void}
    */
   initialize() {
-    this.#logger.info('EngineUIManager: Initializing...');
+    this.#logger.debug('EngineUIManager: Initializing...');
     this.#subscribeToEvents();
-    this.#logger.info(
+    this.#logger.debug(
       'EngineUIManager: Initialization complete. Event subscriptions active.'
     );
   }
@@ -214,7 +214,7 @@ export class EngineUIManager {
     const titleMessage = `Initializing ${payload.worldName}...`;
     this.#domUiFacade.title.set(titleMessage);
     this.#domUiFacade.input.setEnabled(false, titleMessage);
-    this.#logger.info(
+    this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_INITIALIZING_UI}. UI updated for world: ${payload.worldName}.`
     );
   }
@@ -239,7 +239,7 @@ export class EngineUIManager {
 
     this.#domUiFacade.title.set(payload.activeWorld || 'Game Ready');
     this.#domUiFacade.input.setEnabled(true, payload.message);
-    this.#logger.info(
+    this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_READY_UI}. UI set to ready state. Active world: ${payload.activeWorld || 'N/A'}.`
     );
   }
@@ -271,7 +271,7 @@ export class EngineUIManager {
 
     this.#domUiFacade.title.set(payload.titleMessage);
     this.#domUiFacade.input.setEnabled(false, payload.inputDisabledMessage);
-    this.#logger.info(
+    this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_OPERATION_IN_PROGRESS_UI}. Title: "${payload.titleMessage}". Input disabled.`
     );
   }
@@ -332,7 +332,7 @@ export class EngineUIManager {
 
     this.#domUiFacade.input.setEnabled(false, payload.inputDisabledMessage);
     this.#domUiFacade.title.set('Game Stopped'); // Optional update as per ticket
-    this.#logger.info(
+    this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_STOPPED_UI}. Input disabled. Title set to "Game Stopped".`
     );
   }

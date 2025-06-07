@@ -43,10 +43,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -56,9 +52,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -67,9 +60,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -78,9 +68,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -89,9 +76,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -103,9 +87,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -118,9 +99,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -134,9 +112,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -147,9 +122,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(() =>
         validateModEngineVersions(manifests, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModVersionValidator: all mods compatible with current engine.'
-      );
     });
   });
 
@@ -303,14 +275,6 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
     it('should throw an Error if logger is missing or invalid (null)', () => {
       const manifests = createManifestMap([]);
       expect(() => validateModEngineVersions(manifests, null)).toThrow(
-        'validateModEngineVersions: Input `logger` must be a valid ILogger instance.'
-      );
-    });
-
-    it('should throw an Error if logger is invalid (missing info method)', () => {
-      const manifests = createManifestMap([]);
-      const badLogger = { error: jest.fn() }; // missing info
-      expect(() => validateModEngineVersions(manifests, badLogger)).toThrow(
         'validateModEngineVersions: Input `logger` must be a valid ILogger instance.'
       );
     });

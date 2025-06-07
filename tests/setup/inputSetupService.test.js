@@ -74,9 +74,6 @@ describe('InputSetupService', () => {
         safeEventDispatcher: mockSafeEventDispatcher,
       });
       expect(service).toBeInstanceOf(InputSetupService);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'InputSetupService: Instance created.'
-      );
     });
 
     it('should throw an error if container is missing', () => {

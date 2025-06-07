@@ -109,7 +109,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     }
 
     const actorId = actor.id;
-    logger.info(`${this.getStateName()}: Entered for actor ${actorId}.`);
+    logger.debug(`${this.getStateName()}: Entered for actor ${actorId}.`);
     logger.debug(
       `${this.getStateName()}: Entering with command: "${this.#commandStringForLog}" for actor: ${actorId}`
     );
@@ -341,7 +341,7 @@ export class ProcessingCommandState extends AbstractTurnState {
         commandResult,
         activeTurnCtx
       );
-      logger.info(
+      logger.debug(
         `${this.getStateName()}: Actor ${actorId} - Command result interpreted to directive: ${directiveType}`
       );
 
@@ -532,7 +532,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     if (shouldEndTurn) {
       // Always attempt to call turnCtx.endTurn(error), even if getActor() was null
       if (turnCtx && typeof turnCtx.endTurn === 'function') {
-        logger.info(
+        logger.debug(
           `${this.getStateName()}: Ending turn (no valid actor or error state) due to processing exception.`
         );
         try {
@@ -600,7 +600,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     const actorId = turnCtx?.getActor?.()?.id ?? 'N/A_on_exit';
 
     if (wasProcessing) {
-      logger.info(
+      logger.debug(
         `${this.getStateName()}: Exiting for actor ${actorId} while _isProcessing was true (now false). Transitioning to ${nextState?.getStateName() ?? 'None'}.`
       );
     } else {

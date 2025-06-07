@@ -278,7 +278,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
       if (this.selectedAction && this.selectedAction.id === clickedAction.id) {
         button.classList.remove('selected');
         this.selectedAction = null;
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} Action deselected: '${clickedAction.name}' (ID: ${clickedAction.id})`
         );
       } else {
@@ -293,7 +293,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         }
         button.classList.add('selected');
         this.selectedAction = clickedAction;
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} Action selected: '${this.selectedAction.name}' (ID: ${this.selectedAction.id})`
         );
       }
@@ -324,7 +324,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     );
     const childCount = actualActionButtons.length;
 
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} Rendered ${childCount} action buttons. Selected action: ${this.selectedAction ? `'${this.selectedAction.name}' (ID: ${this.selectedAction.id})` : 'none'}.`
     );
 
@@ -374,7 +374,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     ) {
       const innerPayload = eventObject.payload;
       this.#currentActorId = innerPayload.actorId;
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Actions received for actor ID: ${this.#currentActorId}`
       );
 
@@ -466,7 +466,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
 
     const actionId = this.selectedAction.id;
     const actionName = this.selectedAction.name;
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} Attempting to send action: '${actionName}' (ID: ${actionId}) for actor ${this.#currentActorId}, Speech: "${speechText}"`
     );
 
@@ -554,7 +554,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     this.availableActions = [];
     this.#currentActorId = null;
 
-    this.logger.info(`${this._logPrefix} ActionButtonsRenderer disposed.`);
+    this.logger.debug(`${this._logPrefix} ActionButtonsRenderer disposed.`);
     this.#isDisposed = true;
   }
 }

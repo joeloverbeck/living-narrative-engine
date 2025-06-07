@@ -116,7 +116,7 @@ export class AbstractTurnState extends ITurnState {
       if (actor && typeof actor.id !== 'undefined') actorIdForLog = actor.id;
     }
 
-    if (logger && typeof logger.info === 'function') {
+    if (logger) {
       logger.info(
         `${this.getStateName()}: Entered. Actor: ${actorIdForLog}. Previous state: ${previousState?.getStateName() ?? 'None'}.`
       );
@@ -157,7 +157,7 @@ export class AbstractTurnState extends ITurnState {
       if (actor && typeof actor.id !== 'undefined') actorIdForLog = actor.id;
     }
 
-    if (logger && typeof logger.info === 'function') {
+    if (logger) {
       logger.info(
         `${this.getStateName()}: Exiting. Actor: ${actorIdForLog}. Transitioning to ${nextState?.getStateName() ?? 'None'}.`
       );

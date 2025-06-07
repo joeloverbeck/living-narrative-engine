@@ -246,12 +246,6 @@ describe('TurnEndingState', () => {
         expect(superEnterSpy).toHaveBeenCalledWith(mockHandler, null);
       });
 
-      it('should use context logger for primary logging', () => {
-        expect(mockContextSpecificLogger.info).toHaveBeenCalledWith(
-          `TurnEndingState: Entered for target actor ${actorId} (turn result: SUCCESS). Context actor: ${actorId}. Error: null.`
-        );
-      });
-
       it('should call ITurnEndPort.notifyTurnEnded with correct parameters via ITurnContext', () => {
         expect(testTurnContext.getTurnEndPort).toHaveBeenCalled();
         // Corrected expectation: second argument should be true (isSuccess)
@@ -305,12 +299,6 @@ describe('TurnEndingState', () => {
           expect.any(TurnIdleState)
         );
       });
-
-      it('should log the failure status using context logger', () => {
-        expect(mockContextSpecificLogger.info).toHaveBeenCalledWith(
-          `TurnEndingState: Entered for target actor ${actorId} (turn result: FAILURE). Context actor: ${actorId}. Error: "${error.message}".`
-        );
-      });
     });
 
     describe('ITurnContext Missing on Handler', () => {
@@ -320,15 +308,6 @@ describe('TurnEndingState', () => {
 
         turnEndingState = createTestState(actorId, null);
         await turnEndingState.enterState(mockHandler, null);
-      });
-
-      it('should use handler logger for logging (TurnEndingState specific logs)', () => {
-        expect(mockSystemLogger.info).toHaveBeenCalledWith(
-          `TurnEndingState: Entered for target actor ${actorId} (turn result: SUCCESS). Context actor: None. Error: null.`
-        );
-        expect(mockSystemLogger.info).toHaveBeenCalledWith(
-          `TurnEndingState: Processing for actor ${actorId} complete. Handler now in Idle state.`
-        );
       });
 
       it('should NOT call ITurnEndPort.notifyTurnEnded and log a warning', () => {
@@ -368,12 +347,6 @@ describe('TurnEndingState', () => {
 
         turnEndingState = createTestState(actorId, null); // Ending turn for actorId
         await turnEndingState.enterState(mockHandler, null);
-      });
-
-      it('should use context logger (of mismatched context)', () => {
-        expect(mockContextSpecificLogger.info).toHaveBeenCalledWith(
-          `TurnEndingState: Entered for target actor ${actorId} (turn result: SUCCESS). Context actor: ${differentActorId}. Error: null.`
-        );
       });
 
       it('should NOT call ITurnEndPort.notifyTurnEnded and log warning', () => {

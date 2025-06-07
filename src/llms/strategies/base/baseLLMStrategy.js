@@ -73,7 +73,7 @@ export class BaseLLMStrategy extends ILLMStrategyBase {
    */
   constructor(logger) {
     super();
-    if (!logger || typeof logger.info !== 'function') {
+    if (!logger) {
       throw new Error(
         "BaseLLMStrategy constructor: Valid logger instance (ILogger, with at least an 'info' method) is required."
       );

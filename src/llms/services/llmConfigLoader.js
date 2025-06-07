@@ -284,7 +284,7 @@ export class LlmConfigLoader {
       typeof filePathValue === 'string' && filePathValue.trim() !== ''
         ? filePathValue.trim()
         : this.#defaultConfigPath;
-    this.#logger.info(
+    this.#logger.debug(
       `LlmConfigLoader: Attempting to load LLM Prompt configurations from: ${currentPath}`
     );
 
@@ -299,7 +299,7 @@ export class LlmConfigLoader {
         this.#defaultMaxDelayMs,
         this.#logger
       );
-      this.#logger.info(
+      this.#logger.debug(
         `LlmConfigLoader: Successfully fetched and parsed LLM Prompt configurations from ${currentPath}.`
       );
 
@@ -320,7 +320,7 @@ export class LlmConfigLoader {
         };
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `LlmConfigLoader: Validating against schema ID: ${schemaId}`
       );
       const validationResult = this.#schemaValidator.validate(
@@ -356,14 +356,14 @@ export class LlmConfigLoader {
           validationErrors: standardizedSchemaErrors,
         };
       }
-      this.#logger.info(
+      this.#logger.debug(
         `LlmConfigLoader: LLM Prompt configuration file from ${currentPath} passed schema validation.`
       );
       const validatedRootConfig = /** @type {LLMRootConfiguration} */ (
         parsedResponse
       );
 
-      this.#logger.info(
+      this.#logger.debug(
         `LlmConfigLoader: Performing semantic validation for ${currentPath}.`
       ); // Test uses "on LLM Prompt configurations from"
       const originalSemanticErrors = performSemanticValidations(
@@ -397,12 +397,12 @@ export class LlmConfigLoader {
           semanticErrors: standardizedSemanticErrors,
         };
       }
-      this.#logger.info(
+      this.#logger.debug(
         `LlmConfigLoader: Semantic validation passed for ${currentPath}.`
       ); // This should be "LLM Prompt configuration file from ${currentPath} passed semantic validation." for the other test suite.
       // Let's keep "Semantic validation passed for..." for now as per LlmConfigLoader.extended.test.js passing.
 
-      this.#logger.info(
+      this.#logger.debug(
         `LlmConfigLoader: LLM Prompt configurations from ${currentPath} processed successfully.`
       );
       return validatedRootConfig;

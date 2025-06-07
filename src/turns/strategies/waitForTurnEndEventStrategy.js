@@ -59,7 +59,7 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
     // as the explicit `actor` parameter has been removed. The primary concern is now the existence of `contextActor`.
 
     // Logging and State Transition Logic
-    logger.info(
+    logger.debug(
       `${className}: Actor ${contextActor.id} to wait for external event (e.g., ${TURN_ENDED_ID}). Requesting transition to AwaitingExternalTurnEndState.`
     );
 

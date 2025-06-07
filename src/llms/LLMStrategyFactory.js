@@ -55,7 +55,6 @@ export class LLMStrategyFactory {
   constructor({ httpClient, logger }) {
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.warn !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function'
@@ -194,7 +193,7 @@ export class LLMStrategyFactory {
     }
 
     // Adjusted log message to include 'effectiveMethod' (same as configuredMethod here) to match test expectations.
-    this.#logger.info(
+    this.#logger.debug(
       `LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod='${configuredMethod}', configuredMethod='${configuredMethod}'.`
     );
 

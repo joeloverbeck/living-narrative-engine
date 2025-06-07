@@ -61,7 +61,6 @@ describe('TurnOrderService', () => {
       inputs.forEach((invalidEntities) => {
         // Arrange
         mockLogger.error.mockClear(); // Clear log mock for each iteration
-        mockLogger.info.mockClear();
         mockLogger.debug.mockClear();
         mockLogger.warn.mockClear(); // Also clear warn
 
@@ -77,14 +76,6 @@ describe('TurnOrderService', () => {
         expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMsg);
 
         // Assert internal state remained cleared
-        // Info logs *after* mockClear(): Start Round + Clear 1
-        expect(mockLogger.info).toHaveBeenCalledTimes(2);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `TurnOrderService: Starting new round with strategy "${strategy}".`
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          'TurnOrderService: Current round state cleared.'
-        );
         // Debug log for clearing *existing* queue should NOT be called
         expect(mockLogger.debug).not.toHaveBeenCalledWith(
           'TurnOrderService: Cleared existing turn queue.'
@@ -137,15 +128,6 @@ describe('TurnOrderService', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMsg);
 
-      // Assert internal state remained cleared
-      // Info logs *after* mockClear(): Start Round + Clear 1
-      expect(mockLogger.info).toHaveBeenCalledTimes(2);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${strategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      );
       // Debug log for clearing *existing* queue should NOT be called
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         'TurnOrderService: Cleared existing turn queue.'
@@ -176,7 +158,6 @@ describe('TurnOrderService', () => {
       inputs.forEach((invalidData) => {
         // Arrange
         mockLogger.error.mockClear(); // Clear log mock for each iteration
-        mockLogger.info.mockClear(); // Clear info log mock for each iteration
         mockLogger.debug.mockClear();
 
         // Act & Assert
@@ -195,15 +176,6 @@ describe('TurnOrderService', () => {
           expect.any(Error)
         );
 
-        // Assert internal state remained cleared
-        // Info logs *after* mockClear(): Start Round + Clear 1 + Clear 2 (in catch)
-        expect(mockLogger.info).toHaveBeenCalledTimes(3);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `TurnOrderService: Starting new round with strategy "${strategy}".`
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          'TurnOrderService: Current round state cleared.'
-        ); // Called twice
         expect(mockLogger.debug).not.toHaveBeenCalledWith(
           'TurnOrderService: Cleared existing turn queue.'
         ); // Still no *existing* queue cleared
@@ -231,7 +203,6 @@ describe('TurnOrderService', () => {
       inputs.forEach((invalidData) => {
         // Arrange
         mockLogger.error.mockClear(); // Clear log mock for each iteration
-        mockLogger.info.mockClear(); // Clear info log mock for each iteration
         mockLogger.debug.mockClear();
 
         // Act & Assert
@@ -251,15 +222,6 @@ describe('TurnOrderService', () => {
           expect.any(Error)
         );
 
-        // Assert internal state remained cleared
-        // Info logs *after* mockClear(): Start Round + Clear 1 + Clear 2 (in catch)
-        expect(mockLogger.info).toHaveBeenCalledTimes(3);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `TurnOrderService: Starting new round with strategy "${strategy}".`
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          'TurnOrderService: Current round state cleared.'
-        ); // Called twice
         expect(mockLogger.debug).not.toHaveBeenCalledWith(
           'TurnOrderService: Cleared existing turn queue.'
         );
@@ -298,18 +260,6 @@ describe('TurnOrderService', () => {
         expect.any(Error)
       );
 
-      // Assert internal state remained cleared
-      // Info logs: Constructor + Start Round + Clear 1 + Clear 2 (in catch)
-      expect(mockLogger.info).toHaveBeenCalledTimes(4);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService initialized.'
-      ); // Constructor log
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `TurnOrderService: Starting new round with strategy "${unsupportedStrategy}".`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'TurnOrderService: Current round state cleared.'
-      ); // Called twice
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         'TurnOrderService: Cleared existing turn queue.'
       );

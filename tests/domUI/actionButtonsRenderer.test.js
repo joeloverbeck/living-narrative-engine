@@ -435,11 +435,6 @@ describe('ActionButtonsRenderer', () => {
       expect(renderer.selectedAction).toEqual(actionToSelect);
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
       expect(mockVed.dispatch).not.toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `${CLASS_PREFIX} Action selected: '${actionToSelect.name}' (ID: ${actionToSelect.id})`
-        )
-      );
       expect(mockExamineButton.classList.add).toHaveBeenCalledWith('selected');
     });
 
@@ -743,9 +738,6 @@ describe('ActionButtonsRenderer', () => {
       expect(rendererInstance.renderList).toHaveBeenCalled();
       expect(rendererInstance.availableActions).toEqual([validAction]);
       expect(rendererInstance._getTestCurrentActorId()).toBe(testActorId);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Actions received for actor ID: ${testActorId}`
-      );
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
@@ -807,9 +799,6 @@ describe('ActionButtonsRenderer', () => {
       expect(rendererInstance.renderList).toHaveBeenCalled();
       expect(rendererInstance.availableActions).toEqual(expectedFiltered);
       expect(rendererInstance._getTestCurrentActorId()).toBe(testActorId);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Actions received for actor ID: ${testActorId}`
-      );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Received '${UPDATE_ACTIONS_EVENT_TYPE}' with some invalid items. Only valid actions will be rendered.`
       );

@@ -699,9 +699,6 @@ describe('SpeechBubbleRenderer', () => {
       expect(logger.debug).toHaveBeenCalledWith(
         `${renderer._logPrefix} Disposing.`
       );
-      expect(logger.info).toHaveBeenCalledWith(
-        `${renderer._logPrefix} Disposed.`
-      );
       superDisposeSpy.mockRestore();
     });
   });

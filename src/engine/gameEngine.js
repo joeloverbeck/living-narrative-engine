@@ -64,7 +64,7 @@ class GameEngine {
       console.error('GameEngine: CRITICAL - Logger not resolved.', e);
       throw new Error('GameEngine requires a logger.');
     }
-    this.#logger.info('GameEngine: Constructor called.');
+    this.#logger.debug('GameEngine: Constructor called.');
     try {
       this.#entityManager = container.resolve(tokens.IEntityManager);
       this.#turnManager = container.resolve(tokens.ITurnManager);
@@ -86,7 +86,7 @@ class GameEngine {
         `GameEngine: Failed to resolve core services. ${e.message}`
       );
     }
-    this.#logger.info('GameEngine: Core services resolved.');
+    this.#logger.debug('GameEngine: Core services resolved.');
   }
 
   _resetCoreGameState() {

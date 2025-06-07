@@ -151,7 +151,7 @@ class EntityManager extends IEntityManager {
     this.#spatialIndexManager = spatialIndexManager;
     this.#definitionToPrimaryInstanceMap = new Map();
 
-    this.#logger.info('EntityManager initialised.');
+    this.#logger.debug('EntityManager initialised.');
   }
 
   /**

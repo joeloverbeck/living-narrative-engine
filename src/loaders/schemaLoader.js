@@ -67,7 +67,6 @@ class SchemaLoader {
     }
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function'
     ) {

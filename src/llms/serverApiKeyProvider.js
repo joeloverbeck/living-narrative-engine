@@ -23,7 +23,6 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
     super();
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.warn !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function'

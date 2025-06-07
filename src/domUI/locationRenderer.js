@@ -545,7 +545,7 @@ export class LocationRenderer extends BoundDomRendererBase {
   dispose() {
     this.logger.debug(`${this._logPrefix} Disposing LocationRenderer.`);
     super.dispose();
-    this.logger.info(`${this._logPrefix} LocationRenderer disposed.`);
+    this.logger.debug(`${this._logPrefix} LocationRenderer disposed.`);
   }
 }
 
