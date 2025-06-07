@@ -404,7 +404,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
         `[Rule ${RULE_COND_FALSE_BASIC.rule_id}] Condition evaluation raw result: false`
       )
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         `Rule '${RULE_COND_FALSE_BASIC.rule_id}' actions skipped for event '${RULE_COND_FALSE_BASIC.event_type}' due to condition evaluating to false.`
       )

@@ -105,7 +105,7 @@ describe('loadProxyLlmConfigs', () => {
         MOCK_RESOLVED_CONFIG_FILE_PATH,
         'utf-8'
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `Attempting to load LLM configurations from: ${MOCK_RESOLVED_CONFIG_FILE_PATH}`
       );
       expect(logger.debug).toHaveBeenCalledWith(
@@ -117,7 +117,7 @@ describe('loadProxyLlmConfigs', () => {
         `Successfully parsed JSON content from ${MOCK_RESOLVED_CONFIG_FILE_PATH}.`
       );
       // This log message correctly refers to the number of keys in the 'configs' object.
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLM configurations loaded and validated successfully from ${MOCK_RESOLVED_CONFIG_FILE_PATH}. Found 2 LLM configurations.`
       );
       expect(result).toEqual({
@@ -151,7 +151,7 @@ describe('loadProxyLlmConfigs', () => {
         llmConfigs: mockLlmConfigsFileContent, // SUT returns the entire parsed object
       });
       // This log message correctly refers to the number of keys in the 'configs' object.
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLM configurations loaded and validated successfully from ${MOCK_RESOLVED_CONFIG_FILE_PATH}. Found 1 LLM configurations.`
       );
       expect(logger.error).not.toHaveBeenCalled();
@@ -170,7 +170,7 @@ describe('loadProxyLlmConfigs', () => {
         mockFileSystemReader
       );
 
-      expect(consoleSpies.info).toHaveBeenCalledWith(
+      expect(consoleSpies.debug).toHaveBeenCalledWith(
         'ProxyLlmConfigLoader: ',
         `Attempting to load LLM configurations from: ${MOCK_RESOLVED_CONFIG_FILE_PATH}`
       );
@@ -184,7 +184,7 @@ describe('loadProxyLlmConfigs', () => {
         'ProxyLlmConfigLoader: ',
         `Successfully parsed JSON content from ${MOCK_RESOLVED_CONFIG_FILE_PATH}.`
       );
-      expect(consoleSpies.info).toHaveBeenCalledWith(
+      expect(consoleSpies.debug).toHaveBeenCalledWith(
         'ProxyLlmConfigLoader: ',
         `LLM configurations loaded and validated successfully from ${MOCK_RESOLVED_CONFIG_FILE_PATH}. Found 1 LLM configurations.`
       );
@@ -211,7 +211,7 @@ describe('loadProxyLlmConfigs', () => {
         'ProxyLlmConfigLoader: ',
         'An invalid logger instance was provided. Falling back to console logging with prefix "ProxyLlmConfigLoader".'
       );
-      expect(consoleSpies.info).toHaveBeenCalledWith(
+      expect(consoleSpies.debug).toHaveBeenCalledWith(
         'ProxyLlmConfigLoader: ',
         `Attempting to load LLM configurations from: ${MOCK_RESOLVED_CONFIG_FILE_PATH}`
       );

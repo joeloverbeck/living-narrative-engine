@@ -128,7 +128,7 @@ export class LlmRequestController {
       hasTargetPayload: !!req.body?.targetPayload,
       hasTargetHeaders: !!req.body?.targetHeaders,
     };
-    this.#logger.info(
+    this.#logger.debug(
       `LlmRequestController: Received POST request on /api/llm-request from ${req.ip}.`,
       { payloadSummary: clientPayloadSummary }
     );
@@ -201,7 +201,7 @@ export class LlmRequestController {
       sendProxyError(res, 400, stage, message, details, llmId, this.#logger);
       return;
     }
-    this.#logger.info(
+    this.#logger.debug(
       `LlmRequestController: Retrieved LLMModelConfig for llmId '${llmId}': DisplayName: ${llmModelConfig.displayName}.`,
       { llmId }
     );
@@ -220,7 +220,7 @@ export class LlmRequestController {
     const requiresKey = this.#apiKeyService.isApiKeyRequired(llmModelConfig);
 
     if (requiresKey) {
-      this.#logger.info(
+      this.#logger.debug(
         `LlmRequestController: API key is required for llmId '${llmId}'. Invoking ApiKeyService.`,
         { llmId }
       );
@@ -281,12 +281,12 @@ export class LlmRequestController {
         sendProxyError(res, 500, stage, message, details, llmId, this.#logger);
         return;
       }
-      this.#logger.info(
+      this.#logger.debug(
         `LlmRequestController: API key successfully obtained for llmId '${llmId}' from source: ${apiKeySourceForLog}.`,
         { llmId }
       );
     } else {
-      this.#logger.info(
+      this.#logger.debug(
         `LlmRequestController: LLM '${llmId}' (apiType: ${llmModelConfig.apiType}) does not require a proxy-managed API key.`,
         { llmId }
       );
@@ -299,7 +299,7 @@ export class LlmRequestController {
 
     // 5. Forward Request to LLM Provider
     try {
-      this.#logger.info(
+      this.#logger.debug(
         `LlmRequestController: Handing off request for llmId '${llmId}' to LlmRequestService.`,
         { llmId }
       );
@@ -313,7 +313,7 @@ export class LlmRequestController {
 
       // 6. Process Service Response
       if (result.success) {
-        this.#logger.info(
+        this.#logger.debug(
           `LlmRequestController: LlmRequestService returned success for llmId '${llmId}'. Relaying to client with status ${result.statusCode}.`,
           { llmId }
         );

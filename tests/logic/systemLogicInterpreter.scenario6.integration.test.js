@@ -291,7 +291,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 6: Context Acces
     expect(executeActionsSpy).not.toHaveBeenCalled();
     const skipLog = mockLogger.loggedMessages.find(
       (log) =>
-        log.level === 'info' &&
+        log.level === 'debug' &&
         log.message.includes(`Rule '${rule.rule_id}' actions skipped`) &&
         log.message.includes('condition evaluating to false')
     );

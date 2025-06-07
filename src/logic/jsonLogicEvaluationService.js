@@ -130,7 +130,7 @@ class JsonLogicEvaluationService {
   addOperation(name, func) {
     try {
       jsonLogic.add_operation(name, func);
-      this.#logger.info(
+      this.#logger.debug(
         `Custom JSON Logic operation "${name}" added successfully.`
       );
     } catch (error) {

@@ -339,11 +339,11 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
     const logs = mockLogger.loggedMessages;
     const expectedLogMessage = `Rule '${rule.rule_id}' actions skipped for event '${event.type}' due to condition evaluating to false.`;
     const skipLog = logs.find(
-      (log) => log.level === 'info' && log.message === expectedLogMessage
+      (log) => log.level === 'debug' && log.message === expectedLogMessage
     );
 
     expect(skipLog).toBeDefined(); // Ensure the log message exists
-    expect(skipLog.level).toBe('info');
+    expect(skipLog.level).toBe('debug');
     // Optionally use stringContaining for less brittle assertion:
     // expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`Rule '${rule.rule_id}' actions skipped`));
     // expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`event '${event.type}'`));

@@ -336,7 +336,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
     // Verify Rule A was skipped and logged appropriately
     const skipLogForRuleA = mockLogger.loggedMessages.find(
       (log) =>
-        log.level === 'info' &&
+        log.level === 'debug' &&
         log.message.includes(
           `Rule '${MOCK_RULE_A_ENEMY_DEATH.rule_id}' actions skipped`
         ) &&
