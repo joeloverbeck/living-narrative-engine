@@ -426,45 +426,76 @@ class TargetResolutionService extends ITargetResolutionService {
     return trResult;
   }
 
-  async #_resolveInventoryDomain(actorEntity, nounPhrase, minimalContext) {
-    this.#logger.debug(
-      `TargetResolutionService.#_resolveInventoryDomain called for actor: '${actorEntity.id}', nounPhrase: "${nounPhrase}"`
-    );
-    // actorEntity is guaranteed non-null for this domain.
+  /**
+   * @private
+   * @description Generic helper to resolve targets from common entity domains
+   *   like inventory, equipment or environment.
+   * @param {Entity} actorEntity - The acting entity performing the action.
+   * @param {string} nounPhrase - Raw noun phrase from the command.
+   * @param {ActionContext} minimalContext - Minimal context for scope lookups.
+   * @param {object} domainOptions - Configuration for domain specific behaviour.
+   * @param {string} domainOptions.scopeName - Scope name used with getEntityIdsForScopes.
+   * @param {string} domainOptions.loggingContext - Context string for log messages.
+   * @param {string} domainOptions.errorMsg_SpecifyItem - Message when noun phrase is missing.
+   * @param {string} domainOptions.errorMsg_NothingOfKind - Message when nothing of that kind exists.
+   * @param {string} domainOptions.errorMsg_NounPhraseNotFoundContext - Context for formatNounPhraseNotFoundMessage.
+   * @param {boolean} [domainOptions.excludeActor] - Exclude actor from candidates.
+   * @param {Function} [domainOptions.emptyScopeCheck] - Optional handler when initial ID set is empty.
+   *   Should return a TargetResolutionResult or null.
+   * @param {Function} [domainOptions.candidateEmptyCheck] - Optional handler when
+   *   no valid candidates are found after gathering.
+   *   Should return a TargetResolutionResult or null.
+   * @returns {Promise<TargetResolutionResult>} Resolution result for the domain.
+   */
+  async #_resolveEntityDomainTarget(
+    actorEntity,
+    nounPhrase,
+    minimalContext,
+    domainOptions
+  ) {
+    const {
+      scopeName,
+      loggingContext,
+      errorMsg_SpecifyItem,
+      errorMsg_NothingOfKind,
+      errorMsg_NounPhraseNotFoundContext,
+      excludeActor = false,
+      emptyScopeCheck,
+      candidateEmptyCheck,
+    } = domainOptions;
 
-    const itemIdsSet = this.#getEntityIdsForScopes('inventory', minimalContext);
+    const idsSet = this.#getEntityIdsForScopes(scopeName, minimalContext);
 
-    if (itemIdsSet.size === 0) {
-      const inventoryComponent = actorEntity.getComponentData(
-        INVENTORY_COMPONENT_ID
-      );
-      if (!inventoryComponent) {
-        this.#logger.warn(
-          `TargetResolutionService.#_resolveInventoryDomain: Actor '${actorEntity.id}' is missing '${INVENTORY_COMPONENT_ID}' component (checked after getEntityIdsForScopes returned empty).`
-        );
-        return {
-          status: ResolutionStatus.NOT_FOUND,
-          targetType: 'entity',
-          targetId: null,
-          error: 'You are not carrying anything.',
-        };
+    if (idsSet.size === 0) {
+      if (typeof emptyScopeCheck === 'function') {
+        const early = emptyScopeCheck({
+          actorEntity,
+          nounPhrase,
+          minimalContext,
+          idsSet,
+        });
+        if (early) return early;
       }
-      this.#logger.debug(
-        `TargetResolutionService.#_resolveInventoryDomain: Actor '${actorEntity.id}' inventory is empty (getEntityIdsForScopes returned empty set).`
-      );
-      return {
-        status: ResolutionStatus.NOT_FOUND,
-        targetType: 'entity',
-        targetId: null,
-        error: 'Your inventory is empty.',
-      };
     }
 
-    const getEntityIdsFn = () => itemIdsSet;
+    const getEntityIdsFn = () => idsSet;
     const candidates = await this.#_gatherNameMatchCandidates(
       getEntityIdsFn,
-      'inventory'
+      loggingContext,
+      excludeActor ? actorEntity.id : undefined
     );
+
+    if (candidates.length === 0 && typeof candidateEmptyCheck === 'function') {
+      const early = candidateEmptyCheck({
+        actorEntity,
+        nounPhrase,
+        minimalContext,
+        idsSet,
+        candidates,
+      });
+      if (early) return early;
+    }
+
     const matcherResult = matchNames(candidates, nounPhrase, this.#logger);
     let finalResult = this.#_buildTargetResolutionResultFromMatcher(
       matcherResult,
@@ -472,111 +503,127 @@ class TargetResolutionService extends ITargetResolutionService {
     );
 
     if (finalResult.status === ResolutionStatus.NONE) {
-      finalResult.error = formatSpecifyItemMessage(
-        'item',
-        'from your inventory'
-      );
+      finalResult.error = errorMsg_SpecifyItem;
       finalResult.targetType = 'entity';
     } else if (finalResult.status === ResolutionStatus.NOT_FOUND) {
       finalResult.targetType = 'entity';
       if (nounPhrase && nounPhrase.trim() !== '') {
-        if (candidates.length === 0 && itemIdsSet.size > 0) {
-          this.#logger.debug(
-            `TargetResolutionService.#_resolveInventoryDomain: No valid named item candidates found in actor '${actorEntity.id}'s inventory (original item IDs count from scope: ${itemIdsSet.size}) when searching for "${nounPhrase}".`
-          );
-          finalResult.error = formatNothingOfKindMessage('in your inventory');
+        if (candidates.length === 0 && idsSet.size > 0) {
+          if (errorMsg_NothingOfKind) {
+            finalResult.error = errorMsg_NothingOfKind;
+          }
         } else {
           finalResult.error = formatNounPhraseNotFoundMessage(
             nounPhrase,
-            'in your inventory'
+            errorMsg_NounPhraseNotFoundContext
           );
         }
-      } else {
-        this.#logger.debug(
-          `TargetResolutionService.#_resolveInventoryDomain: No valid named item candidates found in actor '${actorEntity.id}'s inventory for empty nounPhrase. ItemIds count from scope: ${itemIdsSet.size}, Candidates count: ${candidates.length}`
-        );
-        finalResult.error = formatNothingOfKindMessage('in your inventory');
+      } else if (errorMsg_NothingOfKind) {
+        finalResult.error = errorMsg_NothingOfKind;
       }
     }
+
     return finalResult;
+  }
+
+  async #_resolveInventoryDomain(actorEntity, nounPhrase, minimalContext) {
+    this.#logger.debug(
+      `TargetResolutionService.#_resolveInventoryDomain called for actor: '${actorEntity.id}', nounPhrase: "${nounPhrase}"`
+    );
+
+    const domainOptions = {
+      scopeName: 'inventory',
+      loggingContext: 'inventory',
+      errorMsg_SpecifyItem: formatSpecifyItemMessage(
+        'item',
+        'from your inventory'
+      ),
+      errorMsg_NothingOfKind: formatNothingOfKindMessage('in your inventory'),
+      errorMsg_NounPhraseNotFoundContext: 'in your inventory',
+      emptyScopeCheck: ({ idsSet }) => {
+        if (idsSet.size === 0) {
+          const inventoryComponent = actorEntity.getComponentData(
+            INVENTORY_COMPONENT_ID
+          );
+          if (!inventoryComponent) {
+            this.#logger.warn(
+              `TargetResolutionService.#_resolveInventoryDomain: Actor '${actorEntity.id}' is missing '${INVENTORY_COMPONENT_ID}' component (checked after getEntityIdsForScopes returned empty).`
+            );
+            return {
+              status: ResolutionStatus.NOT_FOUND,
+              targetType: 'entity',
+              targetId: null,
+              error: 'You are not carrying anything.',
+            };
+          }
+          this.#logger.debug(
+            `TargetResolutionService.#_resolveInventoryDomain: Actor '${actorEntity.id}' inventory is empty (getEntityIdsForScopes returned empty set).`
+          );
+          return {
+            status: ResolutionStatus.NOT_FOUND,
+            targetType: 'entity',
+            targetId: null,
+            error: 'Your inventory is empty.',
+          };
+        }
+        return null;
+      },
+    };
+
+    return this.#_resolveEntityDomainTarget(
+      actorEntity,
+      nounPhrase,
+      minimalContext,
+      domainOptions
+    );
   }
 
   async #_resolveEquipment(actorEntity, nounPhrase, minimalContext) {
     this.#logger.debug(
       `TargetResolutionService.#_resolveEquipment called for actor: ${actorEntity.id}, noun: "${nounPhrase}"`
     );
-    // actorEntity is guaranteed non-null.
-
-    const equippedItemIdsSet = this.#getEntityIdsForScopes(
-      'equipment',
-      minimalContext
-    );
-
-    if (equippedItemIdsSet.size === 0) {
-      const equipmentComponent = actorEntity.getComponentData(
-        EQUIPMENT_COMPONENT_ID
-      );
-      if (!equipmentComponent) {
-        this.#logger.warn(
-          `TargetResolutionService.#_resolveEquipment: Actor '${actorEntity.id}' is missing '${EQUIPMENT_COMPONENT_ID}' component.`
-        );
-        return {
-          status: ResolutionStatus.NOT_FOUND,
-          targetType: 'entity',
-          targetId: null,
-          error: 'You are not wearing or wielding anything.',
-        };
-      }
-      this.#logger.debug(
-        `TargetResolutionService.#_resolveEquipment: Actor '${actorEntity.id}' has nothing equipped (getEntityIdsForScopes returned empty set).`
-      );
-      return {
-        status: ResolutionStatus.NOT_FOUND,
-        targetType: 'entity',
-        targetId: null,
-        error: 'You have nothing equipped.',
-      };
-    }
-
-    const getEntityIdsFn = () => equippedItemIdsSet;
-    const candidates = await this.#_gatherNameMatchCandidates(
-      getEntityIdsFn,
-      'equipment'
-    );
-    const matcherResult = matchNames(candidates, nounPhrase, this.#logger);
-    let finalResult = this.#_buildTargetResolutionResultFromMatcher(
-      matcherResult,
-      'entity'
-    );
-
-    if (finalResult.status === ResolutionStatus.NONE) {
-      finalResult.error = formatSpecifyItemMessage('equipped item');
-      finalResult.targetType = 'entity';
-    } else if (finalResult.status === ResolutionStatus.NOT_FOUND) {
-      finalResult.targetType = 'entity';
-      if (nounPhrase && nounPhrase.trim() !== '') {
-        if (candidates.length === 0 && equippedItemIdsSet.size > 0) {
+    const domainOptions = {
+      scopeName: 'equipment',
+      loggingContext: 'equipment',
+      errorMsg_SpecifyItem: formatSpecifyItemMessage('equipped item'),
+      errorMsg_NothingOfKind: formatNothingOfKindMessage('equipped'),
+      errorMsg_NounPhraseNotFoundContext: 'equipped',
+      emptyScopeCheck: ({ idsSet }) => {
+        if (idsSet.size === 0) {
+          const equipmentComponent = actorEntity.getComponentData(
+            EQUIPMENT_COMPONENT_ID
+          );
+          if (!equipmentComponent) {
+            this.#logger.warn(
+              `TargetResolutionService.#_resolveEquipment: Actor '${actorEntity.id}' is missing '${EQUIPMENT_COMPONENT_ID}' component.`
+            );
+            return {
+              status: ResolutionStatus.NOT_FOUND,
+              targetType: 'entity',
+              targetId: null,
+              error: 'You are not wearing or wielding anything.',
+            };
+          }
           this.#logger.debug(
-            `TargetResolutionService.#_resolveEquipment: Searched for "${nounPhrase}", but no nameable/valid candidates found from ${equippedItemIdsSet.size} equipped item IDs (from scope).`
+            `TargetResolutionService.#_resolveEquipment: Actor '${actorEntity.id}' has nothing equipped (getEntityIdsForScopes returned empty set).`
           );
-          finalResult.error = formatNothingOfKindMessage('equipped');
-        } else {
-          this.#logger.debug(
-            `TargetResolutionService.#_resolveEquipment: Searched for "${nounPhrase}". Candidates count: ${candidates.length}, initial item IDs from scope: ${equippedItemIdsSet.size}. No match found.`
-          );
-          finalResult.error = formatNounPhraseNotFoundMessage(
-            nounPhrase,
-            'equipped'
-          );
+          return {
+            status: ResolutionStatus.NOT_FOUND,
+            targetType: 'entity',
+            targetId: null,
+            error: 'You have nothing equipped.',
+          };
         }
-      } else {
-        this.#logger.debug(
-          `TargetResolutionService.#_resolveEquipment: No nounPhrase and no nameable candidates found. Initial item IDs from scope: ${equippedItemIdsSet.size}.`
-        );
-        finalResult.error = formatNothingOfKindMessage('equipped');
-      }
-    }
-    return finalResult;
+        return null;
+      },
+    };
+
+    return this.#_resolveEntityDomainTarget(
+      actorEntity,
+      nounPhrase,
+      minimalContext,
+      domainOptions
+    );
   }
 
   async #_resolveEnvironment(actorEntity, nounPhrase, minimalContext) {
@@ -612,69 +659,61 @@ class TargetResolutionService extends ITargetResolutionService {
     this.#logger.debug(
       `TargetResolutionService.#_resolveEnvironment: Actor '${actorEntity.id}' is in location '${actorLocationId}'. Using 'location' scope.`
     );
-    const entityIdsInLocationSet = this.#getEntityIdsForScopes(
-      'location',
-      minimalContext
+
+    const domainOptions = {
+      scopeName: 'location',
+      loggingContext: 'environment',
+      errorMsg_SpecifyItem: formatSpecifyItemMessage('item', 'here'),
+      errorMsg_NothingOfKind: null,
+      errorMsg_NounPhraseNotFoundContext: 'here',
+      excludeActor: true,
+      emptyScopeCheck: ({ idsSet }) => {
+        if (idsSet.size === 0) {
+          this.#logger.debug(
+            `TargetResolutionService.#_resolveEnvironment: No entities (excluding actor) found in location '${actorLocationId}' via scope 'location'.`
+          );
+          const isSearchingSpecific = nounPhrase && nounPhrase.trim() !== '';
+          return {
+            status: ResolutionStatus.NOT_FOUND,
+            targetType: isSearchingSpecific ? 'entity' : 'none',
+            targetId: null,
+            error: isSearchingSpecific
+              ? formatNounPhraseNotFoundMessage(nounPhrase, 'here', {
+                  useAny: true,
+                })
+              : 'There is nothing here.',
+          };
+        }
+        return null;
+      },
+      candidateEmptyCheck: ({ candidates, idsSet }) => {
+        if (candidates.length === 0) {
+          this.#logger.debug(
+            `TargetResolutionService.#_resolveEnvironment: No valid targetable candidates (excluding actor, with names) found in location '${actorLocationId}' from ${idsSet.size} IDs from scope.`
+          );
+          const isSearchingSpecific = nounPhrase && nounPhrase.trim() !== '';
+          return {
+            status: ResolutionStatus.NOT_FOUND,
+            targetType: isSearchingSpecific ? 'entity' : 'none',
+            targetId: null,
+            error: isSearchingSpecific
+              ? formatNounPhraseNotFoundMessage(nounPhrase, 'here', {
+                  useAny: true,
+                })
+              : 'There is nothing else of interest here.',
+          };
+        }
+        return null;
+      },
+    };
+
+    const result = await this.#_resolveEntityDomainTarget(
+      actorEntity,
+      nounPhrase,
+      minimalContext,
+      domainOptions
     );
-
-    if (entityIdsInLocationSet.size === 0) {
-      this.#logger.debug(
-        `TargetResolutionService.#_resolveEnvironment: No entities (excluding actor) found in location '${actorLocationId}' via scope 'location'.`
-      );
-      const isSearchingSpecific = nounPhrase && nounPhrase.trim() !== '';
-      return {
-        status: ResolutionStatus.NOT_FOUND,
-        targetType: isSearchingSpecific ? 'entity' : 'none',
-        targetId: null,
-        error: isSearchingSpecific
-          ? formatNounPhraseNotFoundMessage(nounPhrase, 'here', {
-              useAny: true,
-            })
-          : 'There is nothing here.',
-      };
-    }
-
-    const getEntityIdsFn = () => entityIdsInLocationSet;
-    const candidates = await this.#_gatherNameMatchCandidates(
-      getEntityIdsFn,
-      'environment',
-      actorEntity.id
-    );
-
-    if (candidates.length === 0) {
-      this.#logger.debug(
-        `TargetResolutionService.#_resolveEnvironment: No valid targetable candidates (excluding actor, with names) found in location '${actorLocationId}' from ${entityIdsInLocationSet.size} IDs from scope.`
-      );
-      const isSearchingSpecific = nounPhrase && nounPhrase.trim() !== '';
-      return {
-        status: ResolutionStatus.NOT_FOUND,
-        targetType: isSearchingSpecific ? 'entity' : 'none',
-        targetId: null,
-        error: isSearchingSpecific
-          ? formatNounPhraseNotFoundMessage(nounPhrase, 'here', {
-              useAny: true,
-            })
-          : 'There is nothing else of interest here.',
-      };
-    }
-
-    this.#logger.debug(
-      `TargetResolutionService.#_resolveEnvironment: Gathered ${candidates.length} candidates in location '${actorLocationId}' for matching against "${nounPhrase}".`
-    );
-    const matcherResult = matchNames(candidates, nounPhrase, this.#logger);
-    let finalResult = this.#_buildTargetResolutionResultFromMatcher(
-      matcherResult,
-      'entity'
-    );
-
-    if (finalResult.status === ResolutionStatus.NONE) {
-      finalResult.error = formatSpecifyItemMessage('item', 'here');
-      finalResult.targetType = 'entity';
-    } else if (finalResult.status === ResolutionStatus.NOT_FOUND) {
-      finalResult.targetType = 'entity';
-      finalResult.error = formatNounPhraseNotFoundMessage(nounPhrase, 'here'); // No useAny here, direct not found.
-    }
-    return finalResult;
+    return result;
   }
 
   #_resolveDirection(nounPhrase, actorEntity) {
