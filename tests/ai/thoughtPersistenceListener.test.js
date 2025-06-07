@@ -30,8 +30,10 @@ describe('ThoughtPersistenceListener', () => {
     entityManager.getEntityInstance.mockReturnValue(actorEntity);
 
     listener.handleEvent({
-      actorId: 'a1',
-      extractedData: { thoughts: 'hi' },
+      payload: {
+        actorId: 'a1',
+        extractedData: { thoughts: 'hi' },
+      },
     });
 
     expect(entityManager.getEntityInstance).toHaveBeenCalledWith('a1');
@@ -46,21 +48,26 @@ describe('ThoughtPersistenceListener', () => {
     entityManager.getEntityInstance.mockReturnValue(null);
 
     listener.handleEvent({
-      actorId: 'a1',
-      extractedData: { thoughts: 'hi' },
+      payload: {
+        actorId: 'a1',
+        extractedData: { thoughts: 'hi' },
+      },
     });
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'ThoughtPersistenceListener: Could not find entity for actor ID a1.'
+      'ThoughtPersistenceListener: entity not found for actor a1'
     );
     expect(persistThoughts).not.toHaveBeenCalled();
   });
 
   test('does nothing when thoughts missing', () => {
     listener.handleEvent({
-      actorId: 'a1',
-      extractedData: null,
+      payload: {
+        actorId: 'a1',
+        extractedData: null,
+      },
     });
+
     expect(persistThoughts).not.toHaveBeenCalled();
   });
 });

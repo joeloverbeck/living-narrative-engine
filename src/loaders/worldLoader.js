@@ -543,7 +543,9 @@ class WorldLoader {
         this.#logger.info(summaryMessage);
         // --- End Per-Mod Summary Logging ---
 
-        this.#logger.debug(`--- Finished loading content for mod: ${modId} ---`);
+        this.#logger.debug(
+          `--- Finished loading content for mod: ${modId} ---`
+        );
       } // End outer loop (finalOrder)
       this.#logger.debug(
         `WorldLoader: Completed content loading loop for all mods in final order.`

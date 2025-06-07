@@ -3,13 +3,15 @@
 import { persistNotes } from './notesPersistenceHook.js';
 
 /**
- * @class NotesPersistenceListener
- * @description Consumes AI decision events and merges generated notes into the actor's notes component.
+ * Consumes 'core:ai_action_decided' and merges generated notes into the
+ * actor’s notes component.
  */
 export class NotesPersistenceListener {
   /**
-   * @param {{ logger: import('../interfaces/coreServices.js').ILogger,
-   *            entityManager: import('../interfaces/IEntityManager.js').IEntityManager }}
+   * @param {{
+   *   logger: import('../interfaces/coreServices.js').ILogger,
+   *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager
+   * }} deps
    */
   constructor({ logger, entityManager }) {
     this.logger = logger;
@@ -17,24 +19,33 @@ export class NotesPersistenceListener {
   }
 
   /**
-   * @param {{ actorId: string, extractedData: { notes?: string[] } }} payload
+   * @param {{ type: string, payload: { actorId: string, extractedData?: { notes?: string[] } } }} event
    */
-  handleEvent({ actorId, extractedData }) {
-    this.logger.info('Notes listener has received: ' + extractedData);
+  handleEvent(event) {
+    if (!event || !event.payload) return;
+
+    const { actorId, extractedData } = event.payload;
+    this.logger.debug(
+      `NotesPersistenceListener → event received: ${JSON.stringify(event)}`
+    );
+
     if (
       !Array.isArray(extractedData?.notes) ||
       extractedData.notes.length === 0
-    ) {
+    )
       return;
-    }
 
     const actorEntity = this.entityManager.getEntityInstance(actorId);
     if (actorEntity) {
-      this.logger.info('Will persist notes: ' + extractedData.notes);
+      this.logger.info(
+        `Persisting notes for ${actorId}: ${JSON.stringify(
+          extractedData.notes
+        )}`
+      );
       persistNotes({ notes: extractedData.notes }, actorEntity, this.logger);
     } else {
       this.logger.warn(
-        `NotesPersistenceListener: Could not find entity for actor ID ${actorId}.`
+        `NotesPersistenceListener: entity not found for actor ${actorId}`
       );
     }
   }

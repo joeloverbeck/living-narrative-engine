@@ -40,12 +40,12 @@ export async function ensureCriticalDOMElementsStage(doc) {
   } catch (error) {
     const stageError = new Error(
       `UI Element Validation Failed: ${error.message}`,
-      { cause: error },
+      { cause: error }
     );
     stageError.phase = 'UI Element Validation';
     console.error(
       `Bootstrap Stage: ensureCriticalDOMElementsStage failed. ${stageError.message}`,
-      error,
+      error
     );
     throw stageError;
   }
@@ -72,7 +72,7 @@ export async function setupDIContainerStage(uiReferences, containerConfigFunc) {
     stageError.phase = 'DI Container Setup';
     console.error(
       `Bootstrap Stage: setupDIContainerStage failed. ${errorMsg}`,
-      registrationError,
+      registrationError
     );
     throw stageError;
   }
@@ -105,12 +105,12 @@ export async function resolveCoreServicesStage(container, diTokens) {
     stageError.phase = 'Core Services Resolution';
     console.error(
       `Bootstrap Stage: resolveCoreServicesStage failed. ${errorMsg}`,
-      resolveError,
+      resolveError
     );
     throw stageError;
   }
   logger.debug(
-    'Bootstrap Stage: Resolving core services (Logger)... DONE. Logger resolved successfully.',
+    'Bootstrap Stage: Resolving core services (Logger)... DONE. Logger resolved successfully.'
   );
   return { logger };
 }
@@ -140,7 +140,7 @@ export async function initializeGameEngineStage(container, logger) {
   } catch (engineCreationError) {
     logger.error(
       'GameEngine Stage: Fatal error during GameEngine instantiation.',
-      engineCreationError,
+      engineCreationError
     );
     const errorMsg = `Fatal Error during GameEngine instantiation: ${engineCreationError.message}.`;
     const stageError = new Error(errorMsg, { cause: engineCreationError });
@@ -148,7 +148,7 @@ export async function initializeGameEngineStage(container, logger) {
     throw stageError;
   }
   logger.debug(
-    `Bootstrap Stage: Initializing GameEngine... DONE. GameEngine instance available.`,
+    `Bootstrap Stage: Initializing GameEngine... DONE. GameEngine instance available.`
   );
   return gameEngine;
 }
@@ -167,7 +167,7 @@ export async function initializeAuxiliaryServicesStage(
   container,
   gameEngine,
   logger,
-  diTokens,
+  diTokens
 ) {
   const stageName = 'Auxiliary Services Initialization';
   logger.debug(`Bootstrap Stage: Starting ${stageName}...`);
@@ -178,12 +178,12 @@ export async function initializeAuxiliaryServicesStage(
     const engineUIManager = container.resolve(diTokens.EngineUIManager);
     if (!engineUIManager) {
       throw new Error(
-        'EngineUIManager instance could not be resolved from container (resolved as null/undefined).',
+        'EngineUIManager instance could not be resolved from container (resolved as null/undefined).'
       );
     }
     if (typeof engineUIManager.initialize !== 'function') {
       throw new Error(
-        'EngineUIManager instance resolved, but does not have an initialize() method.',
+        'EngineUIManager instance resolved, but does not have an initialize() method.'
       );
     }
     engineUIManager.initialize();
@@ -191,7 +191,7 @@ export async function initializeAuxiliaryServicesStage(
   } catch (eumError) {
     logger.error(
       `${stageName}: CRITICAL error during EngineUIManager resolution or initialization. UI may not function as expected.`,
-      eumError,
+      eumError
     );
   }
 
@@ -202,20 +202,20 @@ export async function initializeAuxiliaryServicesStage(
     if (saveGameUIInstance) {
       if (typeof saveGameUIInstance.init !== 'function') {
         throw new Error(
-          'SaveGameUI instance resolved, but does not have an init(gameEngine) method.',
+          'SaveGameUI instance resolved, but does not have an init(gameEngine) method.'
         );
       }
       saveGameUIInstance.init(gameEngine);
       logger.debug(`${stageName}: SaveGameUI initialized with GameEngine.`);
     } else {
       logger.warn(
-        `${stageName}: SaveGameUI instance could not be resolved for init. Save functionality may be unavailable.`,
+        `${stageName}: SaveGameUI instance could not be resolved for init. Save functionality may be unavailable.`
       );
     }
   } catch (sgUiError) {
     logger.error(
       `${stageName}: Error resolving or initializing SaveGameUI. Save functionality may be impaired.`,
-      sgUiError,
+      sgUiError
     );
   }
 
@@ -226,20 +226,20 @@ export async function initializeAuxiliaryServicesStage(
     if (loadGameUIInstance) {
       if (typeof loadGameUIInstance.init !== 'function') {
         throw new Error(
-          'LoadGameUI instance resolved, but does not have an init(gameEngine) method.',
+          'LoadGameUI instance resolved, but does not have an init(gameEngine) method.'
         );
       }
       loadGameUIInstance.init(gameEngine);
       logger.debug(`${stageName}: LoadGameUI initialized with GameEngine.`);
     } else {
       logger.warn(
-        `${stageName}: LoadGameUI instance could not be resolved for init. Load functionality may be unavailable.`,
+        `${stageName}: LoadGameUI instance could not be resolved for init. Load functionality may be unavailable.`
       );
     }
   } catch (lgUiError) {
     logger.error(
       `${stageName}: Error resolving or initializing LoadGameUI. Load functionality may be impaired.`,
-      lgUiError,
+      lgUiError
     );
   }
 
@@ -247,21 +247,21 @@ export async function initializeAuxiliaryServicesStage(
   try {
     logger.debug(`${stageName}: Resolving LlmSelectionModal...`);
     const llmSelectionModalInstance = container.resolve(
-      diTokens.LlmSelectionModal,
+      diTokens.LlmSelectionModal
     );
     if (llmSelectionModalInstance) {
       logger.debug(
-        `${stageName}: LlmSelectionModal resolved and initialized successfully.`,
+        `${stageName}: LlmSelectionModal resolved and initialized successfully.`
       );
     } else {
       logger.warn(
-        `${stageName}: LlmSelectionModal instance could not be resolved. 'Change LLM' functionality may be unavailable.`,
+        `${stageName}: LlmSelectionModal instance could not be resolved. 'Change LLM' functionality may be unavailable.`
       );
     }
   } catch (llmModalError) {
     logger.error(
       `${stageName}: Error resolving LlmSelectionModal. 'Change LLM' functionality may be impaired.`,
-      llmModalError,
+      llmModalError
     );
   }
 
@@ -269,21 +269,21 @@ export async function initializeAuxiliaryServicesStage(
   try {
     logger.debug(`${stageName}: Resolving CurrentTurnActorRenderer...`);
     const currentTurnActorRendererInstance = container.resolve(
-      diTokens.CurrentTurnActorRenderer,
+      diTokens.CurrentTurnActorRenderer
     );
     if (currentTurnActorRendererInstance) {
       logger.debug(
-        `${stageName}: CurrentTurnActorRenderer resolved and initialized successfully (via constructor).`,
+        `${stageName}: CurrentTurnActorRenderer resolved and initialized successfully (via constructor).`
       );
     } else {
       logger.warn(
-        `${stageName}: CurrentTurnActorRenderer instance could not be resolved. 'Current Turn' panel may not function.`,
+        `${stageName}: CurrentTurnActorRenderer instance could not be resolved. 'Current Turn' panel may not function.`
       );
     }
   } catch (ctarError) {
     logger.error(
       `${stageName}: Error resolving CurrentTurnActorRenderer. 'Current Turn' panel may be impaired.`,
-      ctarError,
+      ctarError
     );
   }
 
@@ -291,21 +291,21 @@ export async function initializeAuxiliaryServicesStage(
   try {
     logger.debug(`${stageName}: Resolving SpeechBubbleRenderer...`);
     const speechBubbleRendererInstance = container.resolve(
-      diTokens.SpeechBubbleRenderer,
+      diTokens.SpeechBubbleRenderer
     );
     if (speechBubbleRendererInstance) {
       logger.debug(
-        `${stageName}: SpeechBubbleRenderer resolved and initialized successfully (via constructor).`,
+        `${stageName}: SpeechBubbleRenderer resolved and initialized successfully (via constructor).`
       );
     } else {
       logger.warn(
-        `${stageName}: SpeechBubbleRenderer instance could not be resolved. Speech bubble display will not function.`,
+        `${stageName}: SpeechBubbleRenderer instance could not be resolved. Speech bubble display will not function.`
       );
     }
   } catch (sbrError) {
     logger.error(
       `${stageName}: Error resolving SpeechBubbleRenderer. Speech bubble display may be impaired.`,
-      sbrError,
+      sbrError
     );
   }
 
@@ -313,21 +313,21 @@ export async function initializeAuxiliaryServicesStage(
   try {
     logger.debug(`${stageName}: Resolving ProcessingIndicatorController...`);
     const processingIndicatorControllerInstance = container.resolve(
-      diTokens.ProcessingIndicatorController,
+      diTokens.ProcessingIndicatorController
     );
     if (processingIndicatorControllerInstance) {
       logger.debug(
-        `${stageName}: ProcessingIndicatorController resolved and initialized successfully (via constructor).`,
+        `${stageName}: ProcessingIndicatorController resolved and initialized successfully (via constructor).`
       );
     } else {
       logger.warn(
-        `${stageName}: ProcessingIndicatorController instance could not be resolved. Processing indicator will not function.`,
+        `${stageName}: ProcessingIndicatorController instance could not be resolved. Processing indicator will not function.`
       );
     }
   } catch (picError) {
     logger.error(
       `${stageName}: Error resolving ProcessingIndicatorController. Processing indicator may be impaired.`,
-      picError,
+      picError
     );
   }
 
@@ -346,14 +346,14 @@ export async function initializeAuxiliaryServicesStage(
 export async function setupMenuButtonListenersStage(
   gameEngine,
   logger,
-  documentRef,
+  documentRef
 ) {
   const stageName = 'Menu Button Listeners Setup';
   logger.debug(`Bootstrap Stage: Starting ${stageName}...`);
 
   try {
     const openSaveGameButton = documentRef.getElementById(
-      'open-save-game-button',
+      'open-save-game-button'
     );
     if (openSaveGameButton && gameEngine) {
       openSaveGameButton.addEventListener('click', () => {
@@ -361,21 +361,21 @@ export async function setupMenuButtonListenersStage(
         gameEngine.showSaveGameUI();
       });
       logger.debug(
-        `${stageName}: Save Game UI button listener attached to #open-save-game-button.`,
+        `${stageName}: Save Game UI button listener attached to #open-save-game-button.`
       );
     } else {
       if (!openSaveGameButton)
         logger.warn(
-          `${stageName}: Could not find #open-save-game-button. Save listener not attached.`,
+          `${stageName}: Could not find #open-save-game-button. Save listener not attached.`
         );
       if (!gameEngine)
         logger.warn(
-          `${stageName}: GameEngine not available for #open-save-game-button listener.`,
+          `${stageName}: GameEngine not available for #open-save-game-button listener.`
         );
     }
 
     const openLoadGameButton = documentRef.getElementById(
-      'open-load-game-button',
+      'open-load-game-button'
     );
     if (openLoadGameButton && gameEngine) {
       openLoadGameButton.addEventListener('click', () => {
@@ -383,27 +383,27 @@ export async function setupMenuButtonListenersStage(
         gameEngine.showLoadGameUI();
       });
       logger.debug(
-        `${stageName}: Load Game UI button listener attached to #open-load-game-button.`,
+        `${stageName}: Load Game UI button listener attached to #open-load-game-button.`
       );
     } else {
       if (!openLoadGameButton)
         logger.warn(
-          `${stageName}: Could not find #open-load-game-button. Load listener not attached.`,
+          `${stageName}: Could not find #open-load-game-button. Load listener not attached.`
         );
       if (!gameEngine)
         logger.warn(
-          `${stageName}: GameEngine not available for #open-load-game-button listener.`,
+          `${stageName}: GameEngine not available for #open-load-game-button listener.`
         );
     }
     logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
   } catch (error) {
     logger.error(
       `Bootstrap Stage: ${stageName} encountered an unexpected error during listener setup.`,
-      error,
+      error
     );
     const stageError = new Error(
       `Unexpected error during ${stageName}: ${error.message}`,
-      { cause: error },
+      { cause: error }
     );
     stageError.phase = stageName;
     throw stageError;
@@ -422,21 +422,21 @@ export async function setupMenuButtonListenersStage(
 export async function setupGlobalEventListenersStage(
   gameEngine,
   logger,
-  windowRef,
+  windowRef
 ) {
   const stageName = 'Global Event Listeners Setup';
   const eventName = 'beforeunload';
   logger.debug(
-    `Bootstrap Stage: Setting up global event listeners (${eventName})...`,
+    `Bootstrap Stage: Setting up global event listeners (${eventName})...`
   );
 
   try {
     if (!windowRef) {
       logger.error(
-        `${stageName}: windowRef is not available. Cannot attach '${eventName}' listener.`,
+        `${stageName}: windowRef is not available. Cannot attach '${eventName}' listener.`
       );
       throw new Error(
-        'windowRef was not provided to setupGlobalEventListenersStage.',
+        'windowRef was not provided to setupGlobalEventListenersStage.'
       );
     }
 
@@ -448,12 +448,12 @@ export async function setupGlobalEventListenersStage(
         gameEngine.getEngineStatus().isLoopRunning
       ) {
         logger.debug(
-          `${stageName}: '${eventName}' event triggered. Attempting to stop game engine.`,
+          `${stageName}: '${eventName}' event triggered. Attempting to stop game engine.`
         );
         gameEngine.stop().catch((stopError) => {
           logger.error(
             `${stageName}: Error during gameEngine.stop() in '${eventName}':`,
-            stopError,
+            stopError
           );
         });
       } else if (
@@ -463,27 +463,27 @@ export async function setupGlobalEventListenersStage(
         !gameEngine.getEngineStatus().isLoopRunning
       ) {
         logger.debug(
-          `${stageName}: '${eventName}' event triggered, but game engine loop is not running. No action taken to stop.`,
+          `${stageName}: '${eventName}' event triggered, but game engine loop is not running. No action taken to stop.`
         );
       } else if (!gameEngine) {
         logger.warn(
-          `${stageName}: '${eventName}' event triggered, but gameEngine instance is not available. Cannot attempt graceful shutdown.`,
+          `${stageName}: '${eventName}' event triggered, but gameEngine instance is not available. Cannot attempt graceful shutdown.`
         );
       }
     });
 
     logger.debug(
-      `${stageName}: '${eventName}' event listener attached successfully.`,
+      `${stageName}: '${eventName}' event listener attached successfully.`
     );
     logger.debug(`Bootstrap Stage: ${stageName} completed.`);
   } catch (error) {
     logger.error(
       `Bootstrap Stage: ${stageName} encountered an unexpected error during '${eventName}' listener setup.`,
-      error,
+      error
     );
     const stageError = new Error(
       `Unexpected error during ${stageName} for '${eventName}': ${error.message}`,
-      { cause: error },
+      { cause: error }
     );
     stageError.phase = stageName;
     throw stageError;
@@ -503,25 +503,25 @@ export async function setupGlobalEventListenersStage(
 export async function startGameStage(gameEngine, activeWorldName, logger) {
   const stageName = 'Start Game';
   logger.debug(
-    `Bootstrap Stage: ${stageName}: Starting new game with world: ${activeWorldName}...`,
+    `Bootstrap Stage: ${stageName}: Starting new game with world: ${activeWorldName}...`
   );
 
   if (!gameEngine) {
     logger.error(
-      `Bootstrap Stage: ${stageName} failed. GameEngine instance is not available.`,
+      `Bootstrap Stage: ${stageName} failed. GameEngine instance is not available.`
     );
     const criticalError = new Error(
-      'GameEngine not initialized before attempting to start game.',
+      'GameEngine not initialized before attempting to start game.'
     );
     criticalError.phase = stageName;
     throw criticalError;
   }
   if (typeof activeWorldName !== 'string' || activeWorldName.trim() === '') {
     logger.error(
-      `Bootstrap Stage: ${stageName} failed. activeWorldName is invalid or empty.`,
+      `Bootstrap Stage: ${stageName} failed. activeWorldName is invalid or empty.`
     );
     const criticalError = new Error(
-      'activeWorldName is invalid or empty, cannot start game.',
+      'activeWorldName is invalid or empty, cannot start game.'
     );
     criticalError.phase = stageName;
     throw criticalError;
@@ -530,16 +530,16 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
   try {
     await gameEngine.startNewGame(activeWorldName);
     logger.debug(
-      `Bootstrap Stage: ${stageName}: Game started successfully with world: ${activeWorldName}.`,
+      `Bootstrap Stage: ${stageName}: Game started successfully with world: ${activeWorldName}.`
     );
   } catch (startGameError) {
     logger.error(
       `Bootstrap Stage: ${stageName}: Error during gameEngine.startNewGame for world "${activeWorldName}".`,
-      startGameError,
+      startGameError
     );
     const stageError = new Error(
       `Failed to start new game with world "${activeWorldName}": ${startGameError.message}`,
-      { cause: startGameError },
+      { cause: startGameError }
     );
     stageError.phase = stageName;
     throw stageError;

@@ -80,8 +80,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     beforeEach(() => {
       consoleErrorSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {
-        });
+        .mockImplementation(() => {});
     });
     afterEach(() => {
       consoleErrorSpy.mockRestore();
@@ -93,7 +92,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
       const testDeps = { ...deps };
       delete testDeps.logger;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
-        'PlayerPromptService: Missing ILogger dependency.',
+        'PlayerPromptService: Missing ILogger dependency.'
       );
     });
     const methods = ['error', 'info', 'debug', 'warn'];
@@ -105,9 +104,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             new HumanPlayerPromptService({
               ...baseDependencies,
               logger: invalidLogger,
-            }),
+            })
         ).toThrow(
-          `PlayerPromptService: Invalid ILogger dependency. Missing method: ${method}().`,
+          `PlayerPromptService: Invalid ILogger dependency. Missing method: ${method}().`
         );
       });
     });
@@ -118,8 +117,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     beforeEach(() => {
       consoleErrorSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {
-        });
+        .mockImplementation(() => {});
     });
     afterEach(() => {
       consoleErrorSpy.mockRestore();
@@ -132,7 +130,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
       const testDeps = { ...deps };
       delete testDeps.actionDiscoverySystem;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
-        'PlayerPromptService: Missing IActionDiscoveryService dependency.',
+        'PlayerPromptService: Missing IActionDiscoveryService dependency.'
       );
     });
     it('should throw if actionDiscoverySystem lacks getValidActions method', () => {
@@ -145,9 +143,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
           new HumanPlayerPromptService({
             ...baseDependencies,
             actionDiscoverySystem: invalidSystem,
-          }),
+          })
       ).toThrow(
-        'PlayerPromptService: Invalid IActionDiscoveryService dependency. Missing method: getValidActions().',
+        'PlayerPromptService: Invalid IActionDiscoveryService dependency. Missing method: getValidActions().'
       );
     });
   });
@@ -157,8 +155,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     beforeEach(() => {
       consoleErrorSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {
-        });
+        .mockImplementation(() => {});
     });
     afterEach(() => {
       consoleErrorSpy.mockRestore();
@@ -170,7 +167,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
       const testDeps = { ...deps };
       delete testDeps.promptOutputPort;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
-        'PlayerPromptService: Missing IPromptOutputPort dependency.',
+        'PlayerPromptService: Missing IPromptOutputPort dependency.'
       );
     });
     it('should throw if promptOutputPort lacks prompt method', () => {
@@ -183,9 +180,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
           new HumanPlayerPromptService({
             ...baseDependencies,
             promptOutputPort: invalidPort,
-          }),
+          })
       ).toThrow(
-        'PlayerPromptService: Invalid IPromptOutputPort dependency. Missing method: prompt().',
+        'PlayerPromptService: Invalid IPromptOutputPort dependency. Missing method: prompt().'
       );
     });
   });
@@ -195,8 +192,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     beforeEach(() => {
       consoleErrorSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {
-        });
+        .mockImplementation(() => {});
     });
     afterEach(() => {
       consoleErrorSpy.mockRestore();
@@ -208,7 +204,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
       const testDeps = { ...deps };
       delete testDeps.worldContext;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
-        'PlayerPromptService: Missing IWorldContext dependency.',
+        'PlayerPromptService: Missing IWorldContext dependency.'
       );
     });
     it('should throw if worldContext lacks getLocationOfEntity method', () => {
@@ -221,9 +217,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
           new HumanPlayerPromptService({
             ...baseDependencies,
             worldContext: invalidContext,
-          }),
+          })
       ).toThrow(
-        'PlayerPromptService: Invalid IWorldContext dependency. Missing method: getLocationOfEntity().',
+        'PlayerPromptService: Invalid IWorldContext dependency. Missing method: getLocationOfEntity().'
       );
     });
   });
@@ -233,8 +229,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     beforeEach(() => {
       consoleErrorSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {
-        });
+        .mockImplementation(() => {});
     });
     afterEach(() => {
       consoleErrorSpy.mockRestore();
@@ -246,7 +241,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
       const testDeps = { ...deps };
       delete testDeps.entityManager;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
-        'PlayerPromptService: Missing IEntityManager dependency.',
+        'PlayerPromptService: Missing IEntityManager dependency.'
       );
     });
     it('should throw if entityManager lacks getEntityInstance method', () => {
@@ -259,9 +254,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
           new HumanPlayerPromptService({
             ...baseDependencies,
             entityManager: invalidManager,
-          }),
+          })
       ).toThrow(
-        'PlayerPromptService: Invalid IEntityManager dependency. Missing method: getEntityInstance().',
+        'PlayerPromptService: Invalid IEntityManager dependency. Missing method: getEntityInstance().'
       );
     });
   });
@@ -271,8 +266,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     beforeEach(() => {
       consoleErrorSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {
-        });
+        .mockImplementation(() => {});
     });
     afterEach(() => {
       consoleErrorSpy.mockRestore();
@@ -285,7 +279,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
       const testDeps = { ...deps };
       delete testDeps.gameDataRepository;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
-        'PlayerPromptService: Missing IGameDataRepository dependency.',
+        'PlayerPromptService: Missing IGameDataRepository dependency.'
       );
     });
     it('should throw if gameDataRepository lacks getActionDefinition method', () => {
@@ -298,9 +292,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
           new HumanPlayerPromptService({
             ...baseDependencies,
             gameDataRepository: invalidRepo,
-          }),
+          })
       ).toThrow(
-        'PlayerPromptService: Invalid IGameDataRepository dependency. Missing method: getActionDefinition().',
+        'PlayerPromptService: Invalid IGameDataRepository dependency. Missing method: getActionDefinition().'
       );
     });
   });
@@ -310,8 +304,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     beforeEach(() => {
       consoleErrorSpy = jest
         .spyOn(console, 'error')
-        .mockImplementation(() => {
-        });
+        .mockImplementation(() => {});
     });
     afterEach(() => {
       consoleErrorSpy.mockRestore();
@@ -324,7 +317,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
       const testDeps = { ...deps };
       delete testDeps.validatedEventDispatcher;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
-        'PlayerPromptService: Missing IValidatedEventDispatcher dependency.',
+        'PlayerPromptService: Missing IValidatedEventDispatcher dependency.'
       );
     });
     const dispatcherMethods = ['subscribe', 'unsubscribe'];
@@ -339,9 +332,9 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             new HumanPlayerPromptService({
               ...baseDependencies,
               validatedEventDispatcher: invalidDispatcher,
-            }),
+            })
         ).toThrow(
-          `PlayerPromptService: Invalid IValidatedEventDispatcher dependency. Missing method: ${method}().`,
+          `PlayerPromptService: Invalid IValidatedEventDispatcher dependency. Missing method: ${method}().`
         );
       });
     });
@@ -405,8 +398,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
   describe('Initial Validations and Setup', () => {
     let consoleErrorSpyForPrepare;
 
-    beforeEach(() => {
-    });
+    beforeEach(() => {});
 
     afterEach(() => {
       if (consoleErrorSpyForPrepare) consoleErrorSpyForPrepare.mockRestore();
@@ -415,8 +407,8 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
     it('should throw PromptError if actor is null', async () => {
       await expect(service.prompt(null)).rejects.toThrow(
         new PromptError(
-          'Invalid actor provided to PlayerPromptService.prompt: null',
-        ),
+          'Invalid actor provided to PlayerPromptService.prompt: null'
+        )
       );
     });
 
@@ -424,8 +416,8 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       const invalidActor = { name: 'No ID Actor' };
       await expect(service.prompt(invalidActor)).rejects.toThrow(
         new PromptError(
-          `Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(invalidActor)}`,
-        ),
+          `Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(invalidActor)}`
+        )
       );
     });
 
@@ -433,8 +425,8 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       const invalidActor = { id: '' };
       await expect(service.prompt(invalidActor)).rejects.toThrow(
         new PromptError(
-          `Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(invalidActor)}`,
-        ),
+          `Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(invalidActor)}`
+        )
       );
     });
 
@@ -461,14 +453,14 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
         ...defaultDiscoveredActions,
       ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
-        () => firstPromptUnsubscribeFn,
+        () => firstPromptUnsubscribeFn
       );
       const firstPromptPromise = service.prompt(firstActor);
       await tick();
 
       const secondActor = new Entity('player:other', 'player-template');
       mockWorldContext.getLocationOfEntity.mockResolvedValueOnce(
-        new Entity('location:other', 'loc-template'),
+        new Entity('location:other', 'loc-template')
       );
       mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         actionDefault,
@@ -486,7 +478,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
                 submittedByActorId: secondActor.id,
               },
             }),
-          0,
+          0
         );
         return secondPromptUnsubscribeFn;
       });
@@ -502,8 +494,8 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       // Corrected expectation for the log message
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Actively clearing prompt for actor ${firstActor.id}`,
-        ),
+          `Actively clearing prompt for actor ${firstActor.id}`
+        )
       );
 
       await expect(secondPromptPromise).resolves.toBeDefined();
@@ -517,7 +509,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
         ...defaultDiscoveredActions,
       ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
-        () => firstPromptUnsubscribeFn,
+        () => firstPromptUnsubscribeFn
       );
       const firstPromptPromise = service.prompt(actor);
       await tick();
@@ -537,7 +529,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
                 submittedByActorId: actor.id,
               },
             }),
-          0,
+          0
         );
         return secondPromptUnsubscribeFn;
       });
@@ -564,7 +556,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
         actionDefault,
       ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
-        () => unsubscribeFn,
+        () => unsubscribeFn
       );
 
       const promptPromise = service.prompt(actorToAbort, {
@@ -588,7 +580,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       // This expectation relies on the fact that localPromptContext.reject (called by abort)
       // will nullify this.#currentPromptContext if it matches, due to the Phase 3 integration.
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'PlayerPromptService: cancelCurrentPrompt called, but no active prompt to cancel.',
+        'PlayerPromptService: cancelCurrentPrompt called, but no active prompt to cancel.'
       );
 
       expect(unsubscribeFn).toHaveBeenCalledTimes(1);
@@ -605,14 +597,14 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
         ...defaultDiscoveredActions,
       ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
-        () => erroringUnsubscribeFn,
+        () => erroringUnsubscribeFn
       );
       const firstPromptWithBadUnsubscribe = service.prompt(actorToSupersede);
       await tick();
 
       const secondActor = new Entity('player:other2', 'player-template');
       mockWorldContext.getLocationOfEntity.mockResolvedValueOnce(
-        new Entity('location:other2', 'loc-template'),
+        new Entity('location:other2', 'loc-template')
       );
       mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         actionDefault,
@@ -630,7 +622,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
                 submittedByActorId: secondActor.id,
               },
             }),
-          0,
+          0
         );
         return secondPromptUnsubscribeFn;
       });
@@ -643,9 +635,9 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       // Corrected expectation for the error log message
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `PlayerPromptService._performPromptResourceCleanup: Error unsubscribing event listener for prompt (actor ${actorToSupersede.id}).`,
+          `PlayerPromptService._performPromptResourceCleanup: Error unsubscribing event listener for prompt (actor ${actorToSupersede.id}).`
         ),
-        expect.objectContaining({ message: 'Unsubscribe failed!' }),
+        expect.objectContaining({ message: 'Unsubscribe failed!' })
       );
 
       await expect(secondPromptPromise).resolves.toBeDefined();
@@ -689,20 +681,20 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       const specificPromptError = new PromptError(
         'Specific location PromptError',
         null,
-        'CUSTOM_LOCATION_ERROR',
+        'CUSTOM_LOCATION_ERROR'
       );
       mockWorldContext.getLocationOfEntity.mockRejectedValue(
-        specificPromptError,
+        specificPromptError
       );
       await expect(service.prompt(validActor)).rejects.toThrow(
-        specificPromptError,
+        specificPromptError
       );
     });
 
     it('should re-throw AbortError if getLocationOfEntity throws an AbortError', async () => {
       const abortError = new DOMException(
         'Location fetch aborted',
-        'AbortError',
+        'AbortError'
       );
       mockWorldContext.getLocationOfEntity.mockRejectedValue(abortError);
       await expect(service.prompt(validActor)).rejects.toThrow(abortError);
@@ -727,7 +719,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
         expect(e).toBeInstanceOf(DOMException);
         expect(e.name).toBe('AbortError');
         expect(e.message).toBe(
-          'Prompt aborted by signal during location fetch.',
+          'Prompt aborted by signal during location fetch.'
         );
       }
     });

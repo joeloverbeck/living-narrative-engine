@@ -30,8 +30,10 @@ describe('NotesPersistenceListener', () => {
     entityManager.getEntityInstance.mockReturnValue(actorEntity);
 
     listener.handleEvent({
-      actorId: 'a1',
-      extractedData: { notes: ['note'] },
+      payload: {
+        actorId: 'a1',
+        extractedData: { notes: ['note'] },
+      },
     });
 
     expect(entityManager.getEntityInstance).toHaveBeenCalledWith('a1');
@@ -46,21 +48,26 @@ describe('NotesPersistenceListener', () => {
     entityManager.getEntityInstance.mockReturnValue(null);
 
     listener.handleEvent({
-      actorId: 'a1',
-      extractedData: { notes: ['n'] },
+      payload: {
+        actorId: 'a1',
+        extractedData: { notes: ['n'] },
+      },
     });
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'NotesPersistenceListener: Could not find entity for actor ID a1.'
+      'NotesPersistenceListener: entity not found for actor a1'
     );
     expect(persistNotes).not.toHaveBeenCalled();
   });
 
   test('does nothing when notes array empty', () => {
     listener.handleEvent({
-      actorId: 'a1',
-      extractedData: { notes: [] },
+      payload: {
+        actorId: 'a1',
+        extractedData: { notes: [] },
+      },
     });
+
     expect(persistNotes).not.toHaveBeenCalled();
   });
 });

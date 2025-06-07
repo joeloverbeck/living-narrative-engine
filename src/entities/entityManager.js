@@ -595,7 +595,9 @@ class EntityManager extends IEntityManager {
     }
 
     /* ---------- final audit log ---------- */
-    this.#logger.debug(`Removed entity instance ${instanceId} from active map.`);
+    this.#logger.debug(
+      `Removed entity instance ${instanceId} from active map.`
+    );
 
     return true;
   }

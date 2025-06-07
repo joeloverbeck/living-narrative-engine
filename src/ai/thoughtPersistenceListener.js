@@ -3,14 +3,15 @@
 import { persistThoughts } from './thoughtPersistenceHook.js';
 
 /**
- * @class ThoughtPersistenceListener
- * @description Listens for AI decision events and persists any generated thoughts
- * to the actor's short-term memory component.
+ * Listens for 'core:ai_action_decided' and persists any thoughts in the
+ * actor’s short-term memory component.
  */
 export class ThoughtPersistenceListener {
   /**
-   * @param {{ logger: import('../interfaces/coreServices.js').ILogger,
-   *            entityManager: import('../interfaces/IEntityManager.js').IEntityManager }}
+   * @param {{
+   *   logger: import('../interfaces/coreServices.js').ILogger,
+   *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager
+   * }} deps
    */
   constructor({ logger, entityManager }) {
     this.logger = logger;
@@ -18,15 +19,23 @@ export class ThoughtPersistenceListener {
   }
 
   /**
-   * @param {{ actorId: string, extractedData: { thoughts?: string } }} payload
+   * @param {{ type: string, payload: { actorId: string, extractedData?: { thoughts?: string } } }} event
    */
-  handleEvent({ actorId, extractedData }) {
-    this.logger.info('Thoughts listener received: ' + extractedData);
+  handleEvent(event) {
+    if (!event || !event.payload) return;
+
+    const { actorId, extractedData } = event.payload;
+    this.logger.debug(
+      `ThoughtPersistenceListener → event received: ${JSON.stringify(event)}`
+    );
+
     if (!extractedData?.thoughts) return;
 
     const actorEntity = this.entityManager.getEntityInstance(actorId);
     if (actorEntity) {
-      this.logger.info('Will persist thoughts: ' + extractedData.thoughts);
+      this.logger.info(
+        `Persisting thoughts for ${actorId}: ${extractedData.thoughts}`
+      );
       persistThoughts(
         { thoughts: extractedData.thoughts },
         actorEntity,
@@ -34,7 +43,7 @@ export class ThoughtPersistenceListener {
       );
     } else {
       this.logger.warn(
-        `ThoughtPersistenceListener: Could not find entity for actor ID ${actorId}.`
+        `ThoughtPersistenceListener: entity not found for actor ${actorId}`
       );
     }
   }

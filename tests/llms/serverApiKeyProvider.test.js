@@ -73,7 +73,7 @@ describe('ServerApiKeyProvider', () => {
     test('should store injected dependencies', () => {
       expect(provider).toBeInstanceOf(ServerApiKeyProvider);
       expect(logger.debug).toHaveBeenCalledWith(
-        'ServerApiKeyProvider: Instance created and dependencies stored.',
+        'ServerApiKeyProvider: Instance created and dependencies stored.'
       );
     });
 
@@ -84,9 +84,9 @@ describe('ServerApiKeyProvider', () => {
             logger: null,
             fileSystemReader,
             environmentVariableReader,
-          }),
+          })
       ).toThrow(
-        'ServerApiKeyProvider: Constructor requires a valid logger instance.',
+        'ServerApiKeyProvider: Constructor requires a valid logger instance.'
       );
     });
 
@@ -99,7 +99,7 @@ describe('ServerApiKeyProvider', () => {
             logger,
             fileSystemReader: null,
             environmentVariableReader,
-          }),
+          })
       ).toThrow(expectedErrorMsg);
       expect(
         () =>
@@ -107,7 +107,7 @@ describe('ServerApiKeyProvider', () => {
             logger,
             fileSystemReader: {},
             environmentVariableReader,
-          }),
+          })
       ).toThrow(expectedErrorMsg);
     });
 
@@ -120,7 +120,7 @@ describe('ServerApiKeyProvider', () => {
             logger,
             fileSystemReader,
             environmentVariableReader: null,
-          }),
+          })
       ).toThrow(expectedErrorMsg);
       expect(
         () =>
@@ -128,7 +128,7 @@ describe('ServerApiKeyProvider', () => {
             logger,
             fileSystemReader,
             environmentVariableReader: {},
-          }),
+          })
       ).toThrow(expectedErrorMsg);
     });
   });
@@ -142,7 +142,7 @@ describe('ServerApiKeyProvider', () => {
     const createEnvContext = (
       isServer,
       projectRootPath = null,
-      executionEnvironment = 'unknown',
+      executionEnvironment = 'unknown'
     ) => {
       const mockEcLogger = mockLogger();
       const contextParams = { logger: mockEcLogger, executionEnvironment };
@@ -157,7 +157,7 @@ describe('ServerApiKeyProvider', () => {
       jest
         .spyOn(ec, 'getProjectRootPath')
         .mockReturnValue(
-          isServer ? projectRootPath || '/default/server/root' : null,
+          isServer ? projectRootPath || '/default/server/root' : null
         );
       jest
         .spyOn(ec, 'getExecutionEnvironment')
@@ -176,7 +176,7 @@ describe('ServerApiKeyProvider', () => {
       const key = await provider.getKey(llmConfig, environmentContext);
       expect(key).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
-        'ServerApiKeyProvider.getKey (test-llm): Attempted to use in a non-server environment. This provider is only for server-side execution. Environment: client',
+        'ServerApiKeyProvider.getKey (test-llm): Attempted to use in a non-server environment. This provider is only for server-side execution. Environment: client'
       );
       expect(environmentVariableReader.getEnv).not.toHaveBeenCalled();
       expect(fileSystemReader.readFile).not.toHaveBeenCalled();
@@ -186,7 +186,7 @@ describe('ServerApiKeyProvider', () => {
       const key = await provider.getKey(llmConfig, null);
       expect(key).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
-        'ServerApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
+        'ServerApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.'
       );
     });
 
@@ -197,7 +197,7 @@ describe('ServerApiKeyProvider', () => {
         const key = await provider.getKey(llmConfig, environmentContext);
         expect(key).toBe('env_key_123');
         expect(environmentVariableReader.getEnv).toHaveBeenCalledWith(
-          'MY_API_KEY',
+          'MY_API_KEY'
         );
         expect(fileSystemReader.readFile).not.toHaveBeenCalled();
       });
@@ -217,14 +217,14 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(environmentVariableReader.getEnv).toHaveBeenCalledWith(
-          'MISSING_KEY',
+          'MISSING_KEY'
         );
         expect(fileSystemReader.readFile).toHaveBeenCalledWith(
           '/project/root/api_key.txt',
-          'utf-8',
+          'utf-8'
         );
         expect(logger.warn).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): API key file \'/project/root/api_key.txt\' not found. Error: File not found',
+          "ServerApiKeyProvider.getKey (test-llm): API key file '/project/root/api_key.txt' not found. Error: File not found"
         );
       });
 
@@ -241,10 +241,10 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(environmentVariableReader.getEnv).toHaveBeenCalledWith(
-          'EMPTY_KEY',
+          'EMPTY_KEY'
         );
         expect(logger.warn).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): Environment variable \'EMPTY_KEY\' found but is empty or contains only whitespace.',
+          "ServerApiKeyProvider.getKey (test-llm): Environment variable 'EMPTY_KEY' found but is empty or contains only whitespace."
         );
         expect(fileSystemReader.readFile).toHaveBeenCalled();
       });
@@ -253,13 +253,13 @@ describe('ServerApiKeyProvider', () => {
         llmConfig.apiKeyEnvVar = 'ERROR_KEY_ENV';
         llmConfig.apiKeyFileName = 'api_key_file.txt';
         const envError = new Error(
-          'Hypothetical permission denied reading env',
+          'Hypothetical permission denied reading env'
         );
         environmentVariableReader.getEnv.mockImplementation(() => {
           throw envError; // Simulate a rare case where getEnv itself might throw
         });
         fileSystemReader.readFile.mockResolvedValueOnce(
-          '  file_key_after_env_error  ',
+          '  file_key_after_env_error  '
         );
         mockPathJoin.mockReturnValue('/project/root/api_key_file.txt');
 
@@ -267,12 +267,12 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBe('file_key_after_env_error');
         expect(logger.error).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): Error while reading environment variable \'ERROR_KEY_ENV\'. Error: Hypothetical permission denied reading env',
-          { error: envError },
+          "ServerApiKeyProvider.getKey (test-llm): Error while reading environment variable 'ERROR_KEY_ENV'. Error: Hypothetical permission denied reading env",
+          { error: envError }
         );
         expect(fileSystemReader.readFile).toHaveBeenCalledWith(
           '/project/root/api_key_file.txt',
-          'utf-8',
+          'utf-8'
         );
       });
 
@@ -285,7 +285,7 @@ describe('ServerApiKeyProvider', () => {
         expect(key).toBe('file_key_only');
         expect(environmentVariableReader.getEnv).not.toHaveBeenCalled();
         expect(logger.debug).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): No \'apiKeyEnvVar\' specified in llmConfig or it\'s empty. Skipping environment variable retrieval.',
+          "ServerApiKeyProvider.getKey (test-llm): No 'apiKeyEnvVar' specified in llmConfig or it's empty. Skipping environment variable retrieval."
         );
       });
     });
@@ -308,7 +308,7 @@ describe('ServerApiKeyProvider', () => {
         expect(key).toBe('file_key_456');
         expect(fileSystemReader.readFile).toHaveBeenCalledWith(
           '/project/root/keyfile.txt',
-          'utf-8',
+          'utf-8'
         );
       });
 
@@ -322,7 +322,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(logger.error).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): Cannot retrieve key from file \'keyfile.txt\' because projectRootPath is missing or invalid in EnvironmentContext.',
+          "ServerApiKeyProvider.getKey (test-llm): Cannot retrieve key from file 'keyfile.txt' because projectRootPath is missing or invalid in EnvironmentContext."
         );
         expect(fileSystemReader.readFile).not.toHaveBeenCalled();
       });
@@ -339,7 +339,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(logger.warn).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): API key file \'/project/root/nonexistent.txt\' not found. Error: ENOENT: File not found',
+          "ServerApiKeyProvider.getKey (test-llm): API key file '/project/root/nonexistent.txt' not found. Error: ENOENT: File not found"
         );
       });
 
@@ -355,7 +355,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(logger.warn).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): API key file \'/project/root/protected.txt\' not readable due to permissions. Error: EACCES: Permission denied',
+          "ServerApiKeyProvider.getKey (test-llm): API key file '/project/root/protected.txt' not readable due to permissions. Error: EACCES: Permission denied"
         );
       });
 
@@ -368,7 +368,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(logger.warn).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): API key file \'/project/root/empty.txt\' found but is empty or contains only whitespace.',
+          "ServerApiKeyProvider.getKey (test-llm): API key file '/project/root/empty.txt' found but is empty or contains only whitespace."
         );
       });
 
@@ -383,8 +383,8 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(logger.error).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): Unexpected error while reading API key file \'/project/root/error_file.txt\'. Error: Disk read error (unexpected)',
-          { errorCode: undefined, errorDetails: fileError }, // Check structure for unexpected error
+          "ServerApiKeyProvider.getKey (test-llm): Unexpected error while reading API key file '/project/root/error_file.txt'. Error: Disk read error (unexpected)",
+          { errorCode: undefined, errorDetails: fileError } // Check structure for unexpected error
         );
       });
 
@@ -396,10 +396,10 @@ describe('ServerApiKeyProvider', () => {
         expect(key).toBeNull();
         expect(fileSystemReader.readFile).not.toHaveBeenCalled();
         expect(logger.debug).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): No \'apiKeyFileName\' specified in llmConfig or it\'s empty. Skipping file retrieval.',
+          "ServerApiKeyProvider.getKey (test-llm): No 'apiKeyFileName' specified in llmConfig or it's empty. Skipping file retrieval."
         );
         expect(logger.warn).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): Neither \'apiKeyEnvVar\' nor \'apiKeyFileName\' were specified in the LLM configuration. Unable to retrieve API key.',
+          "ServerApiKeyProvider.getKey (test-llm): Neither 'apiKeyEnvVar' nor 'apiKeyFileName' were specified in the LLM configuration. Unable to retrieve API key."
         );
       });
     });
@@ -416,7 +416,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBe('env_is_primary');
         expect(environmentVariableReader.getEnv).toHaveBeenCalledWith(
-          'PRIMARY_KEY_ENV',
+          'PRIMARY_KEY_ENV'
         );
         expect(fileSystemReader.readFile).not.toHaveBeenCalled();
       });
@@ -439,7 +439,7 @@ describe('ServerApiKeyProvider', () => {
         environmentVariableReader.getEnv.mockReturnValue(undefined); // Env var fails (not found)
 
         const fileNotFoundError = new Error(
-          'ENOENT: File not found during double fail test',
+          'ENOENT: File not found during double fail test'
         );
         // @ts-ignore
         fileNotFoundError.code = 'ENOENT';
@@ -450,7 +450,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(logger.warn).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (test-llm): API key file \'/project/root/FILE_FAILS.txt\' not found. Error: ENOENT: File not found during double fail test',
+          "ServerApiKeyProvider.getKey (test-llm): API key file '/project/root/FILE_FAILS.txt' not found. Error: ENOENT: File not found during double fail test"
         );
       });
 
@@ -461,7 +461,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(logger.warn).toHaveBeenCalledWith(
-          'ServerApiKeyProvider.getKey (no-spec-llm): Neither \'apiKeyEnvVar\' nor \'apiKeyFileName\' were specified in the LLM configuration. Unable to retrieve API key.',
+          "ServerApiKeyProvider.getKey (no-spec-llm): Neither 'apiKeyEnvVar' nor 'apiKeyFileName' were specified in the LLM configuration. Unable to retrieve API key."
         );
       });
     });

@@ -390,7 +390,9 @@ class GameEngine {
     this.#isEngineInitialized = false;
     this.#activeWorld = null;
 
-    this.#logger.debug('GameEngine.stop: Engine fully stopped and state reset.');
+    this.#logger.debug(
+      'GameEngine.stop: Engine fully stopped and state reset.'
+    );
   }
 
   /**

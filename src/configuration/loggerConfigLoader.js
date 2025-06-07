@@ -118,13 +118,13 @@ export class LoggerConfigLoader {
         this.#defaultMaxRetries,
         this.#defaultBaseDelayMs,
         this.#defaultMaxDelayMs,
-        this.#logger,
+        this.#logger
       );
 
       if (typeof parsedResponse !== 'object' || parsedResponse === null) {
         logWarn(
           `[LoggerConfigLoader] Configuration file from ${path} is malformed (not an object). Content:`,
-          parsedResponse,
+          parsedResponse
         );
         return {
           error: true,
@@ -142,7 +142,7 @@ export class LoggerConfigLoader {
       if (parsedResponse.logLevel !== undefined) {
         if (typeof parsedResponse.logLevel !== 'string') {
           logWarn(
-            `[LoggerConfigLoader] 'logLevel' in ${path} must be a string. Found: ${typeof parsedResponse.logLevel}. Value: ${parsedResponse.logLevel}`,
+            `[LoggerConfigLoader] 'logLevel' in ${path} must be a string. Found: ${typeof parsedResponse.logLevel}. Value: ${parsedResponse.logLevel}`
           );
           return {
             error: true,
@@ -166,7 +166,7 @@ export class LoggerConfigLoader {
             name: error.name,
             stack: error.stack,
           }, // Include more error details
-        },
+        }
       );
 
       let stage = 'fetch_or_parse';
