@@ -17,6 +17,10 @@ const mockEntityManager = {
   addComponent: jest.fn(),
 };
 
+const mockDispatcher = {
+  dispatch: jest.fn().mockResolvedValue(true),
+};
+
 const mockLogger = {
   info: jest.fn(),
   warn: jest.fn(),
@@ -65,20 +69,52 @@ describe('AddComponentHandler', () => {
     handler = new AddComponentHandler({
       entityManager: mockEntityManager,
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
   });
 
   // --- Constructor validation ----------------------------------------------
   test('throws without valid dependencies', () => {
-    expect(() => new AddComponentHandler({ logger: mockLogger })).toThrow(
-      /EntityManager/
-    );
     expect(
-      () => new AddComponentHandler({ entityManager: {}, logger: mockLogger })
+      () =>
+        new AddComponentHandler({
+          logger: mockLogger,
+          safeEventDispatcher: mockDispatcher,
+        })
+    ).toThrow(/EntityManager/);
+    expect(
+      () =>
+        new AddComponentHandler({
+          entityManager: {},
+          logger: mockLogger,
+          safeEventDispatcher: mockDispatcher,
+        })
     ).toThrow(/addComponent method/);
     expect(
-      () => new AddComponentHandler({ entityManager: mockEntityManager })
+      () =>
+        new AddComponentHandler({
+          entityManager: mockEntityManager,
+          safeEventDispatcher: mockDispatcher,
+        })
     ).toThrow(/ILogger/);
+  });
+
+  test('throws if safeEventDispatcher is missing or invalid', () => {
+    expect(
+      () =>
+        new AddComponentHandler({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+        })
+    ).toThrow(/ISafeEventDispatcher/);
+    expect(
+      () =>
+        new AddComponentHandler({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+          safeEventDispatcher: {},
+        })
+    ).toThrow(/ISafeEventDispatcher/);
   });
 
   // --- Happy Path - Basic Add/Replace ------------------------------------
@@ -269,7 +305,7 @@ describe('AddComponentHandler', () => {
   // --- End of Updated Test ---
 
   // --- Error Handling during addComponent Call ---------------------------
-  test('logs error if EntityManager.addComponent throws', () => {
+  test('dispatches error event if EntityManager.addComponent throws', () => {
     const error = new Error('Entity manager failed!');
     mockEntityManager.addComponent.mockImplementation(() => {
       throw error;
@@ -281,14 +317,12 @@ describe('AddComponentHandler', () => {
       'c:t',
       {}
     );
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Failed to add component "c:t" to entity "actor-id-123". Error: Entity manager failed!'
-      ),
-      { error: error }
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining('Failed to add component'),
+      })
     );
-    expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
   // --- Context logger precedence -----------------------------------------

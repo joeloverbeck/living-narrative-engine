@@ -74,8 +74,7 @@ const mockvalidatedEventDispatcher = {
   dispatch: jest.fn().mockResolvedValue(true),
 };
 const mockSystemDataRegistry = { query: jest.fn(), registerSource: jest.fn() };
-// If ICommandOutcomeInterpreter gets resolved and ISafeEventDispatcher is needed:
-// const mockSafeEventDispatcher = { dispatch: jest.fn() };
+const mockSafeEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
 // --- Mock DI Container ---
 const createMockContainer = () => {
@@ -233,8 +232,14 @@ describe('registerInterpreters', () => {
       lifecycle: 'singleton',
     });
 
-    // If ICommandOutcomeInterpreter depends on ISafeEventDispatcher and is resolved in tests:
-    // mockContainer.register(tokens.ISafeEventDispatcher, mockSafeEventDispatcher, {lifecycle: 'singleton'});
+    // Register SafeEventDispatcher for handlers that require it
+    mockContainer.register(
+      tokens.ISafeEventDispatcher,
+      mockSafeEventDispatcher,
+      {
+        lifecycle: 'singleton',
+      }
+    );
 
     // Clear implementation mocks
     Object.values(mockLogger).forEach((fn) => fn.mockClear?.());
@@ -246,7 +251,7 @@ describe('registerInterpreters', () => {
       fn.mockClear?.()
     );
     Object.values(mockSystemDataRegistry).forEach((fn) => fn.mockClear?.());
-    // if (mockSafeEventDispatcher) Object.values(mockSafeEventDispatcher).forEach(fn => fn.mockClear?.());
+    Object.values(mockSafeEventDispatcher).forEach((fn) => fn.mockClear?.());
 
     // Clear constructor mocks defined via jest.mock() for USED handlers/interpreters
     OperationRegistry.mockClear?.();

@@ -197,10 +197,12 @@ describe('EventBusTurnEndAdapter', () => {
     const entityId = 'system_actor';
 
     await expect(adapter.turnEnded(entityId)).rejects.toThrow(dispatchError);
-    expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      `EventBusTurnEndAdapter: Error dispatching ${TURN_ENDED_ID} for ${entityId}. Error: ${dispatchError.message}`,
-      dispatchError
+    expect(mockVed.dispatch).toHaveBeenCalledTimes(2);
+    expect(mockVed.dispatch).toHaveBeenLastCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
+        message: expect.stringContaining('failed to dispatch'),
+      })
     );
   });
 });

@@ -101,6 +101,7 @@ export function registerInterpreters(container) {
       new AddComponentHandler({
         entityManager: c.resolve(tokens.IEntityManager), // Use IEntityManager
         logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
   logger.debug('Interpreter Registrations: Registered AddComponentHandler.');

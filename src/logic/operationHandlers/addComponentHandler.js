@@ -11,6 +11,8 @@
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 
 /**
  * Parameters accepted by {@link AddComponentHandler#execute}.
@@ -25,8 +27,9 @@
 //  Handler implementation
 // -----------------------------------------------------------------------------
 class AddComponentHandler {
-  /** @type {ILogger}        */ #logger;
+  /** @type {ILogger} */ #logger;
   /** @type {EntityManager} */ #entityManager;
+  /** @type {ISafeEventDispatcher} */ #dispatcher;
 
   /**
    * Creates an instance of AddComponentHandler.
@@ -34,9 +37,10 @@ class AddComponentHandler {
    * @param {object} dependencies - Dependencies object.
    * @param {EntityManager} dependencies.entityManager - The entity management service.
    * @param {ILogger} dependencies.logger - The logging service instance.
-   * @throws {Error} If entityManager or logger are missing or invalid.
+   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Dispatcher used to emit system error events.
+   * @throws {Error} If required dependencies are missing or invalid.
    */
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     // Validate logger FIRST (consistent with ModifyComponentHandler)
     if (
       !logger ||
@@ -51,6 +55,15 @@ class AddComponentHandler {
         'AddComponentHandler requires a valid EntityManager instance with an addComponent method.'
       );
     }
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error(
+        'AddComponentHandler requires a valid ISafeEventDispatcher instance.'
+      );
+    }
+    this.#dispatcher = safeEventDispatcher;
     this.#logger = logger;
     this.#entityManager = entityManager;
   }
@@ -141,12 +154,15 @@ class AddComponentHandler {
         `ADD_COMPONENT: Successfully added/replaced component "${trimmedComponentType}" on entity "${entityId}".`
       );
     } catch (e) {
-      // Catch potential errors from addComponent (e.g., entity not found by EntityManager, validation errors)
-      log.error(
-        `ADD_COMPONENT: Failed to add component "${trimmedComponentType}" to entity "${entityId}". Error: ${e.message}`,
-        { error: e }
-      );
-      // Optionally include stack trace in debug/verbose mode: e.stack
+      const msg = `ADD_COMPONENT: Failed to add component "${trimmedComponentType}" to entity "${entityId}". Error: ${e.message}`;
+      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: msg,
+        details: {
+          raw: e.message,
+          stack: e.stack,
+          timestamp: new Date().toISOString(),
+        },
+      });
     }
   }
 }
