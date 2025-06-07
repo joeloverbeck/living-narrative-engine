@@ -41,16 +41,14 @@
             }
           },
           {
-            "!": {
-              "in": [
-                {
-                  "var": "actor.id"
-                },
-                {
-                  "var": "target.components.core:following.leaderId"
-                }
-              ]
-            }
+            "!==": [
+              {
+                "var": "actor.id"
+              },
+              {
+                "var": "target.components.core:following.leaderId"
+              }
+            ]
           }
         ]
       },

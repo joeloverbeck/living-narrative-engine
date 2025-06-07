@@ -109,7 +109,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
           actor.id === ACTOR_INSTANCE_ID &&
           targetContext.type === 'none'
         );
-      },
+      }
     );
     mockFormatActionCommandFn.mockImplementation((actionDef, targetContext) => {
       if (actionDef.id === 'core:wait' && targetContext.type === 'none') {
@@ -149,7 +149,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   it('should return structured action info [{id, name, command, description}] when core:wait is available and valid', async () => {
     const validActions = await actionDiscoverySystem.getValidActions(
       mockActorEntity,
-      mockActionContext,
+      mockActionContext
     );
 
     expect(validActions).toEqual([
@@ -167,7 +167,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     expect(mockValidationService.isValid).toHaveBeenCalledWith(
       coreWaitActionDefinition,
       mockActorEntity,
-      ActionTargetContext.noTarget(),
+      ActionTargetContext.noTarget()
     );
     // --- END FIX ---
     expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(1);
@@ -175,23 +175,23 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       coreWaitActionDefinition,
       ActionTargetContext.noTarget(),
       mockEntityManager,
-      expect.any(Object),
+      expect.any(Object)
     );
     // Log messages should refer to the actor's INSTANCE_ID
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Starting action discovery for actor: ${ACTOR_INSTANCE_ID}`,
-      ),
+        `Starting action discovery for actor: ${ACTOR_INSTANCE_ID}`
+      )
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringMatching(
-        /Found valid action \(no target\/self\): 'Wait' \(ID: core:wait\)/,
-      ),
+        /Found valid action \(no target\/self\): 'Wait' \(ID: core:wait\)/
+      )
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 1 valid commands/actions.`,
-      ),
+        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 1 valid commands/actions.`
+      )
     );
   });
 
@@ -199,7 +199,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     mockValidationService.isValid.mockReturnValue(false); // Make validation fail
     const validActions = await actionDiscoverySystem.getValidActions(
       mockActorEntity,
-      mockActionContext,
+      mockActionContext
     );
 
     expect(validActions).toEqual([]);
@@ -207,14 +207,14 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     // --- FIX ---: The log message for a skipped action is now different as it fails during the domain-specific check.
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Action ${coreWaitActionDefinition.id} failed the final context-specific validation for 'none' domain.`,
-      ),
+        `Action ${coreWaitActionDefinition.id} failed the final context-specific validation for 'none' domain.`
+      )
     );
     // --- END FIX ---
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 valid commands/actions.`,
-      ),
+        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 valid commands/actions.`
+      )
     );
   });
 
@@ -222,7 +222,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     mockGameDataRepo.getAllActionDefinitions.mockReturnValue([]); // No actions available
     const validActions = await actionDiscoverySystem.getValidActions(
       mockActorEntity,
-      mockActionContext,
+      mockActionContext
     );
 
     expect(validActions).toEqual([]);
@@ -231,8 +231,8 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     // Log message refers to actor's INSTANCE_ID
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 valid commands/actions.`,
-      ),
+        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 valid commands/actions.`
+      )
     );
   });
 
@@ -258,7 +258,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
 
     const validActions = await actionDiscoverySystem.getValidActions(
       mockActorEntity,
-      mockActionContext,
+      mockActionContext
     );
 
     expect(validActions).toEqual([

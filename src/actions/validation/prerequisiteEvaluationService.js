@@ -126,18 +126,24 @@ export class PrerequisiteEvaluationService {
 
     // --- START: Refactor-AVS-3.3.2 ---
     // ─── 2 Build the Evaluation Context (NEW STEP) ───────────────────────
-    let evalCtx; // Task: Declare let evalCtx
+    let evalCtx;
     try {
-      // Task: Add Context Building Call (inside try) // AC2
       evalCtx = this.#actionValidationContextBuilder.buildContext(
         actionDefinition,
         actor,
         targetContext
       );
-      // Optional: Log successful context building
       this.#logger.debug(
         `PrereqEval[${actionId}]: Evaluation Context Built Successfully.`
-      ); // AC6
+      );
+
+      // =================================================================
+      // ===> ADD THIS LINE HERE <===
+      this.#logger.info(
+        `PrereqEval[${actionId}] Context:`,
+        JSON.stringify(evalCtx, null, 2)
+      );
+      // =================================================================
     } catch (buildError) {
       // Task: Wrap in try...catch, Handle errors in catch(err) // AC3
       // Task: Log error detailing failure (include required context) and return false // AC4

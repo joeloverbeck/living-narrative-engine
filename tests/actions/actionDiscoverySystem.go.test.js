@@ -107,8 +107,8 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   const adventurersGuildEntityDefinitionData = {
     id: GUILD_DEFINITION_ID,
     components: {
-      'core:name': { text: 'Adventurers\' Guild' },
-      'core:description': { text: 'The local adventurers\' guild.' },
+      'core:name': { text: "Adventurers' Guild" },
+      'core:description': { text: "The local adventurers' guild." },
       [EXITS_COMPONENT_ID]: [
         {
           direction: 'out to town',
@@ -151,19 +151,19 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     Object.entries(heroEntityDefinitionData.components || {}).forEach(
       ([typeId, data]) => {
         mockHeroEntity.addComponent(typeId, JSON.parse(JSON.stringify(data)));
-      },
+      }
     );
 
     mockAdventurersGuildLocation = new Entity(
       GUILD_INSTANCE_ID,
-      GUILD_DEFINITION_ID,
+      GUILD_DEFINITION_ID
     );
     Object.entries(
-      adventurersGuildEntityDefinitionData.components || {},
+      adventurersGuildEntityDefinitionData.components || {}
     ).forEach(([typeId, data]) => {
       mockAdventurersGuildLocation.addComponent(
         typeId,
-        JSON.parse(JSON.stringify(data)),
+        JSON.parse(JSON.stringify(data))
       );
     });
 
@@ -191,7 +191,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
         return targetEntity
           ? targetEntity.getComponentData(componentTypeId)
           : undefined;
-      },
+      }
     );
 
     mockEntityManager.hasComponent.mockImplementation(
@@ -204,7 +204,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
         return targetEntity
           ? targetEntity.hasComponent(componentTypeId)
           : false;
-      },
+      }
     );
 
     availableExits = [
@@ -230,13 +230,13 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
           ) {
             // Simulate prerequisite check (blocker is null)
             const relevantExit = availableExits.find(
-              (e) => e.direction === 'out to town',
+              (e) => e.direction === 'out to town'
             );
             return !!relevantExit && relevantExit.blocker === null;
           }
         }
         return false;
-      },
+      }
     );
 
     mockFormatActionCommandFn.mockImplementation((actionDef, targetContext) => {
@@ -277,7 +277,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   it('should discover "go out to town" action when player is in adventurers guild and exit is available', async () => {
     const validActions = await actionDiscoverySystem.getValidActions(
       mockHeroEntity,
-      mockActionContext,
+      mockActionContext
     );
 
     expect(validActions).toBeDefined();
@@ -302,18 +302,18 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(mockGetAvailableExits).toHaveBeenCalledWith(
       mockAdventurersGuildLocation,
       mockEntityManager,
-      mockLogger,
+      mockLogger
     );
 
     // ActionDiscoveryService logs INSTANCE IDs
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `Found ${availableExits.length} available exits for location: ${GUILD_INSTANCE_ID} via getAvailableExits.`,
+      `Found ${availableExits.length} available exits for location: ${GUILD_INSTANCE_ID} via getAvailableExits.`
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `    -> Processing available exit direction: out to town`,
+      `    -> Processing available exit direction: out to town`
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `    * Found valid action (direction: out to town): '${coreGoActionDefinition.name}' (ID: core:go)`,
+      `    * Found valid action (direction: out to town): '${coreGoActionDefinition.name}' (ID: core:go)`
     );
 
     expect(mockGameDataRepo.getAllActionDefinitions).toHaveBeenCalledTimes(1);
@@ -321,7 +321,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(mockValidationService.isValid).toHaveBeenCalledWith(
       coreWaitActionDefinition,
       mockHeroEntity,
-      ActionTargetContext.noTarget(),
+      ActionTargetContext.noTarget()
     );
     // --- FIX ---
     // This check is removed because the initial check no longer happens for 'direction' domain actions.
@@ -336,28 +336,28 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(mockValidationService.isValid).toHaveBeenCalledWith(
       coreGoActionDefinition,
       mockHeroEntity,
-      ActionTargetContext.forDirection('out to town'),
+      ActionTargetContext.forDirection('out to town')
     );
 
     expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
       coreWaitActionDefinition,
       ActionTargetContext.noTarget(),
       mockEntityManager,
-      expect.any(Object),
+      expect.any(Object)
     );
     expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
       coreGoActionDefinition,
       ActionTargetContext.forDirection('out to town'),
       mockEntityManager,
-      expect.any(Object),
+      expect.any(Object)
     );
 
     expect(mockGetEntityIdsForScopesFn).not.toHaveBeenCalled();
     // Log check uses actor's INSTANCE ID
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Finished action discovery for actor ${HERO_INSTANCE_ID}. Found 2 valid commands/actions.`,
-      ),
+        `Finished action discovery for actor ${HERO_INSTANCE_ID}. Found 2 valid commands/actions.`
+      )
     );
   });
 });

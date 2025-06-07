@@ -10,7 +10,6 @@
 /** @typedef {import('./prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 
 import { ActionTargetContext } from '../../models/actionTargetContext.js';
-// NOTE: PrerequisiteEvaluationService import is kept as it's still used.
 import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 // --- Refactor-AVS-3.4: Remove dependency ---
