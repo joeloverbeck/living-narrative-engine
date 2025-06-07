@@ -10,9 +10,6 @@ import { escapeHtml } from '../utils/textUtils.js';
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  * @typedef {import('../alerting/alertRouter.js').default} AlertRouter
  * @typedef {import('../alerting/alertMessageFormatter.js').default} AlertMessageFormatter
- * @typedef {import('../events/event.js').IEvent} IEvent
- * @typedef {import('../models/data/common.js').DisplayWarningPayload} DisplayWarningPayload
- * @typedef {import('../models/data/common.js').DisplayErrorPayload} DisplayErrorPayload
  */
 
 /**
@@ -21,6 +18,7 @@ import { escapeHtml } from '../utils/textUtils.js';
  * @description Renders warning and error alerts directly within the main chat/message panel.
  * It detects the presence of the chat panel and signals its readiness to the AlertRouter,
  * preventing alerts from being flushed to the console when a UI target is available.
+ * Implements text truncation with "Show more/less" toggles for long messages.
  */
 export class ChatAlertRenderer extends BoundDomRendererBase {
   /**
@@ -50,6 +48,30 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
    * @type {boolean}
    */
   #hasPanel = false;
+
+  /**
+   * A counter to generate unique IDs for ARIA attributes.
+   * @private
+   * @type {number}
+   */
+  #alertIdCounter = 0;
+
+  /**
+   * The character limit before a display message is truncated.
+   * @private
+   * @readonly
+   * @type {number}
+   */
+  static MESSAGE_TRUNCATION_LIMIT = 200;
+
+  /**
+   * The character limit before developer details are considered long.
+   * Per the ticket, this is a consideration, but details are always collapsible.
+   * @private
+   * @readonly
+   * @type {number}
+   */
+  static DETAILS_TRUNCATION_LIMIT = 100;
 
   /**
    * Creates an instance of ChatAlertRenderer.
@@ -105,8 +127,13 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       this.logger.debug(
         `${this._logPrefix} Chat panel found. Notifying AlertRouter that UI is ready.`
       );
-      // Crucially, signal that this UI component is ready to handle alerts.
       this.#alertRouter.notifyUIReady();
+      // Use event delegation for all toggle clicks within the panel
+      this._addDomListener(
+        this.elements.chatPanel,
+        'click',
+        this.#handleToggleClick.bind(this)
+      );
     } else {
       this.logger.warn(
         `${this._logPrefix} Chat panel ('#message-list') not found. This renderer will not display any alerts.`
@@ -141,14 +168,89 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   }
 
   /**
+   * Handles click events on the chat panel, delegating to toggle handlers
+   * if a toggle button was the event target.
+   * @private
+   * @param {MouseEvent} event The click event.
+   */
+  #handleToggleClick(event) {
+    const button = event.target.closest('.chat-alert-toggle');
+    if (!button) {
+      return;
+    }
+
+    const toggleType = button.dataset.toggleType;
+    if (toggleType === 'message') {
+      this.#toggleMessageText(button);
+    } else if (toggleType === 'details') {
+      this.#toggleDetailsVisibility(button);
+    }
+  }
+
+  /**
+   * Toggles the text content of a message paragraph between its truncated and full versions.
+   * @private
+   * @param {HTMLButtonElement} button The toggle button that was clicked.
+   */
+  #toggleMessageText(button) {
+    const messageElement = this.documentContext.query(
+      `#${button.getAttribute('aria-controls')}`
+    );
+    if (!messageElement) {
+      this.logger.warn(
+        `${this._logPrefix} Could not find message element for toggle button.`
+      );
+      return;
+    }
+
+    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+    if (isExpanded) {
+      // Collapse the text
+      messageElement.textContent = messageElement.dataset.truncatedText;
+      button.textContent = 'Show more';
+      button.setAttribute('aria-expanded', 'false');
+    } else {
+      // Expand the text
+      messageElement.textContent = messageElement.dataset.fullText;
+      button.textContent = 'Show less';
+      button.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  /**
+   * Toggles the visibility of the developer details section.
+   * @private
+   * @param {HTMLButtonElement} button The toggle button that was clicked.
+   */
+  #toggleDetailsVisibility(button) {
+    const detailsContent = this.documentContext.query(
+      `#${button.getAttribute('aria-controls')}`
+    );
+    if (!detailsContent) {
+      this.logger.warn(
+        `${this._logPrefix} Could not find details content for toggle button.`
+      );
+      return;
+    }
+
+    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+    detailsContent.hidden = isExpanded;
+    button.setAttribute('aria-expanded', !isExpanded);
+  }
+
+  /**
    * Creates and appends an alert bubble to the chat panel.
    * @private
    * @param {object} config
    * @param {'warning' | 'error'} config.type The type of alert.
-   * @param {string} config.displayMessage The main message for the user.
-   * @param {string | null} config.developerDetails The technical details for developers.
+   * @param {string} config.displayMessage The main, already-escaped message for the user.
+   * @param {string | null} config.developerDetails The already-escaped technical details for developers.
    */
   #createAndAppendBubble({ type, displayMessage, developerDetails }) {
+    this.#alertIdCounter++;
+    const messageId = `alert-msg-${this.#alertIdCounter}`;
+    const detailsId = `alert-details-${this.#alertIdCounter}`;
+
     const isError = type === 'error';
     const bubbleClass = isError ? 'chat-error-bubble' : 'chat-warning-bubble';
     const icon = isError ? '❌' : '⚠️';
@@ -177,31 +279,74 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     });
     if (titleElement) contentWrapper.appendChild(titleElement);
 
-    const messageElement = this.#domElementFactory.p(
-      'chat-alert-message',
-      displayMessage
-    );
-    if (messageElement) contentWrapper.appendChild(messageElement);
+    // --- Message Truncation Logic ---
+    const messageElement = this.#domElementFactory.p('chat-alert-message');
+    if (messageElement) {
+      messageElement.id = messageId;
+      let isTruncated = false;
+      if (displayMessage.length > ChatAlertRenderer.MESSAGE_TRUNCATION_LIMIT) {
+        isTruncated = true;
+        const truncated =
+          displayMessage.substring(
+            0,
+            ChatAlertRenderer.MESSAGE_TRUNCATION_LIMIT
+          ) + '…';
+        messageElement.textContent = truncated;
+        messageElement.dataset.fullText = displayMessage;
+        messageElement.dataset.truncatedText = truncated;
+      } else {
+        messageElement.textContent = displayMessage;
+      }
+      contentWrapper.appendChild(messageElement);
 
-    if (developerDetails) {
-      const detailsContainer = this.#domElementFactory.create('details', {
-        cls: 'chat-alert-details',
-      });
-      if (detailsContainer) {
-        const summary = this.#domElementFactory.create('summary', {
-          text: 'Details',
+      if (isTruncated) {
+        const toggleBtn = this.#domElementFactory.create('button', {
+          text: 'Show more',
+          cls: 'chat-alert-toggle',
+          attrs: {
+            'aria-expanded': 'false',
+            'aria-controls': messageId,
+            'data-toggle-type': 'message',
+          },
         });
-        const code = this.#domElementFactory.create('code', {
+        if (toggleBtn) contentWrapper.appendChild(toggleBtn);
+      }
+    }
+
+    // --- Developer Details Collapsible Section ---
+    if (developerDetails) {
+      const detailsContainer = this.#domElementFactory.div(
+        'chat-alert-details-container'
+      );
+      if (detailsContainer) {
+        const toggleBtn = this.#domElementFactory.create('button', {
+          text: 'Developer details',
+          cls: 'chat-alert-toggle',
+          attrs: {
+            'aria-expanded': 'false',
+            'aria-controls': detailsId,
+            'data-toggle-type': 'details',
+          },
+        });
+
+        const preElement = this.#domElementFactory.create('pre', {
+          cls: 'chat-alert-details', // Let CSS handle visibility via [hidden]
+          id: detailsId,
+        });
+        preElement.hidden = true; // Hidden by default
+
+        const codeElement = this.#domElementFactory.create('code', {
           text: developerDetails,
         });
-        if (summary) detailsContainer.appendChild(summary);
-        if (code) detailsContainer.appendChild(code);
+        if (codeElement) preElement.appendChild(codeElement);
+
+        if (toggleBtn) detailsContainer.appendChild(toggleBtn);
+        if (preElement) detailsContainer.appendChild(preElement);
         contentWrapper.appendChild(detailsContainer);
       }
     }
 
     bubbleElement.appendChild(contentWrapper);
-
     this.elements.chatPanel.appendChild(bubbleElement);
     this.#scrollToBottom();
   }
@@ -227,7 +372,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     this.#createAndAppendBubble({
       type: 'warning',
       displayMessage: escapeHtml(displayMessage),
-      developerDetails: escapeHtml(developerDetails),
+      developerDetails: developerDetails ? escapeHtml(developerDetails) : null,
     });
   }
 
@@ -252,7 +397,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     this.#createAndAppendBubble({
       type: 'error',
       displayMessage: escapeHtml(displayMessage),
-      developerDetails: escapeHtml(developerDetails),
+      developerDetails: developerDetails ? escapeHtml(developerDetails) : null,
     });
   }
 }
