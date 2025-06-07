@@ -157,7 +157,7 @@ export function registerAdapters(container) {
 
   // --- Register ConfigurableLLMAdapter lazily ---
   registrar.singletonFactory(tokens.LLMAdapter, (c) => {
-    logger.info(
+    logger.debug(
       'Adapter Registration: Starting LLM Adapter setup for CLIENT environment...'
     );
 

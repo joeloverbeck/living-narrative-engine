@@ -129,14 +129,14 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
       message.content.trim() !== ''
     ) {
       extractedJsonString = message.content.trim();
-      this.logger.info(
+      this.logger.debug(
         `${this.constructor.name} (${llmId}): Extracted JSON string from message.content.`,
         { llmId }
       );
     } else if (message.content && typeof message.content === 'object') {
       // If the API directly returns a JSON object in message.content for json_schema mode
       extractedJsonString = JSON.stringify(message.content);
-      this.logger.info(
+      this.logger.debug(
         `${this.constructor.name} (${llmId}): Extracted JSON object from message.content and stringified it.`,
         { llmId }
       );
@@ -159,7 +159,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
           }
         );
       } else {
-        this.logger.info(
+        this.logger.debug(
           `${this.constructor.name} (${llmId}): message.content is missing. Will check tool_calls fallback.`,
           { llmId }
         );
@@ -175,7 +175,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
       Array.isArray(message.tool_calls) &&
       message.tool_calls.length > 0
     ) {
-      this.logger.info(
+      this.logger.debug(
         `${this.constructor.name} (${llmId}): message.content not usable, attempting tool_calls fallback.`,
         { llmId }
       );
@@ -193,7 +193,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
         toolCall.function.arguments.trim() !== ''
       ) {
         extractedJsonString = toolCall.function.arguments.trim();
-        this.logger.info(
+        this.logger.debug(
           `${this.constructor.name} (${llmId}): Extracted JSON string from tool_calls fallback (function: ${toolCall.function.name}).`,
           {
             llmId,

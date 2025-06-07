@@ -155,7 +155,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       expect(fetchSpy).toHaveBeenCalledWith(MOCK_CONFIG_FILE_PATH);
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `LLMConfigService.#loadAndCacheConfigurationsFromSource: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}. 0 invalid configs skipped.`
         )
@@ -401,7 +401,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
       expect(
         llmConfigService.getLlmConfigsCacheForTest().has('invalid_cfg')
       ).toBe(false);
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `LLMConfigService.#loadAndCacheConfigurationsFromSource: Successfully loaded and cached 2 configurations from ${MOCK_CONFIG_FILE_PATH}. 1 invalid configs skipped.`
         )
@@ -459,12 +459,12 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
       });
 
       // Check initial log from constructor
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'LLMConfigService: Processing 1 initial configurations.'
         )
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'LLMConfigService: Successfully loaded 1 initial configurations into cache.'
         )
@@ -527,7 +527,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
       logger.info.mockClear();
 
       llmConfigService.resetCache();
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         'LLMConfigService: Cache cleared and loaded state reset. Configurations will be reloaded from source on next request if source is configured.'
       );
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
@@ -591,7 +591,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
       const newConfig = MOCK_CONFIG_2;
 
       llmConfigService.addOrUpdateConfigs([updatedMockConfig1, newConfig]);
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         'LLMConfigService.addOrUpdateConfigs: Processed 2 configs: 1 added, 1 updated, 0 skipped.'
       );
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(2);
@@ -626,7 +626,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
       logger.info.mockClear(); // Clear init logs
 
       llmConfigService.addOrUpdateConfigs([]);
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         'LLMConfigService.addOrUpdateConfigs: No new or valid configurations to add/update from the provided array (length 0).'
       );
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
@@ -643,7 +643,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         'LLMConfigService.addOrUpdateConfigs: Skipping invalid configuration object.',
         { configAttempted: invalidConfig }
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         'LLMConfigService.addOrUpdateConfigs: Processed 2 configs: 1 added, 0 updated, 1 skipped.'
       );
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(1);

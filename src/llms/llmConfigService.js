@@ -105,20 +105,20 @@ export class LLMConfigService {
     this.#logger = options.logger;
     this.#configSourceIdentifier = options.configSourceIdentifier;
 
-    this.#logger.info('LLMConfigService: Initializing...');
+    this.#logger.debug('LLMConfigService: Initializing...');
 
     if (options.initialConfigs) {
       if (
         Array.isArray(options.initialConfigs) &&
         options.initialConfigs.length > 0
       ) {
-        this.#logger.info(
+        this.#logger.debug(
           `LLMConfigService: Processing ${options.initialConfigs.length} initial configurations.`
         );
         this.addOrUpdateConfigs(options.initialConfigs, true); // Pass true to indicate these are initial
         if (this.#llmConfigsCache.size > 0) {
           this.#configsLoadedOrAttempted = true; // Mark as attempted if initial configs were successfully loaded
-          this.#logger.info(
+          this.#logger.debug(
             `LLMConfigService: Successfully loaded ${this.#llmConfigsCache.size} initial configurations into cache.`
           );
         } else {
@@ -130,7 +130,7 @@ export class LLMConfigService {
         Array.isArray(options.initialConfigs) &&
         options.initialConfigs.length === 0
       ) {
-        this.#logger.info(
+        this.#logger.debug(
           'LLMConfigService: Empty array provided for initialConfigs. No initial configurations loaded.'
         );
       } else if (!Array.isArray(options.initialConfigs)) {
@@ -141,16 +141,16 @@ export class LLMConfigService {
     }
 
     if (this.#configSourceIdentifier) {
-      this.#logger.info(
+      this.#logger.debug(
         `LLMConfigService: Configuration source identifier set to: ${this.#configSourceIdentifier}. Configurations will be loaded on demand.`
       );
     } else if (!this.#configsLoadedOrAttempted) {
       // Only log if no initial configs and no source ID
-      this.#logger.info(
+      this.#logger.debug(
         'LLMConfigService: No configuration source identifier provided and no initial configs loaded. Service will rely on programmatic additions.'
       );
     }
-    this.#logger.info('LLMConfigService: Initialization complete.');
+    this.#logger.debug('LLMConfigService: Initialization complete.');
   }
 
   /**
@@ -265,7 +265,7 @@ export class LLMConfigService {
     }
 
     if (addedCount > 0 || updatedCount > 0) {
-      this.#logger.info(
+      this.#logger.debug(
         `LLMConfigService.addOrUpdateConfigs: Processed ${configs.length} configs: ${addedCount} added, ${updatedCount} updated, ${skippedCount} skipped.`
       );
     } else if (skippedCount > 0) {
@@ -273,7 +273,7 @@ export class LLMConfigService {
         `LLMConfigService.addOrUpdateConfigs: Processed ${configs.length} configs: All were skipped due to validation errors.`
       );
     } else {
-      this.#logger.info(
+      this.#logger.debug(
         `LLMConfigService.addOrUpdateConfigs: No new or valid configurations to add/update from the provided array (length ${configs.length}).`
       );
     }
@@ -284,7 +284,7 @@ export class LLMConfigService {
       !this.#configsLoadedOrAttempted
     ) {
       if (this.#llmConfigsCache.size > 0) {
-        this.#logger.info(
+        this.#logger.debug(
           'LLMConfigService.addOrUpdateConfigs: Configurations added programmatically. Marking cache as "loaded/attempted" to potentially bypass source loading if not explicitly reset.'
         );
         this.#configsLoadedOrAttempted = true;
@@ -310,7 +310,7 @@ export class LLMConfigService {
       return;
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `LLMConfigService: Attempting to load configurations from source: ${this.#configSourceIdentifier}`
     );
     let rawData;
@@ -376,7 +376,7 @@ export class LLMConfigService {
       }
 
       if (loadedCount > 0) {
-        this.#logger.info(
+        this.#logger.debug(
           `LLMConfigService.#loadAndCacheConfigurationsFromSource: Successfully loaded and cached ${loadedCount} configurations from ${this.#configSourceIdentifier}. ${invalidCount} invalid configs skipped.`
         );
       } else {
@@ -502,7 +502,7 @@ export class LLMConfigService {
     // 1. Direct match by configId
     if (this.#llmConfigsCache.has(llmId)) {
       const config = this.#llmConfigsCache.get(llmId);
-      this.#logger.info(
+      this.#logger.debug(
         `LLMConfigService.getConfig: Found configuration by direct configId match for "${llmId}". ConfigId: "${config.configId}".`
       );
       return { ...config }; // Return a copy
@@ -554,14 +554,14 @@ export class LLMConfigService {
     }
 
     if (exactModelMatchConfig) {
-      this.#logger.info(
+      this.#logger.debug(
         `LLMConfigService.getConfig: Selected configuration by exact modelIdentifier match for "${llmId}". ConfigId: "${exactModelMatchConfig.configId}".`
       );
       return { ...exactModelMatchConfig }; // Return a copy
     }
 
     if (bestWildcardMatchConfig) {
-      this.#logger.info(
+      this.#logger.debug(
         `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmId}". Pattern: "${bestWildcardMatchConfig.modelIdentifier}", ConfigId: "${bestWildcardMatchConfig.configId}".`
       );
       return { ...bestWildcardMatchConfig }; // Return a copy
@@ -583,7 +583,7 @@ export class LLMConfigService {
   resetCache() {
     this.#llmConfigsCache.clear();
     this.#configsLoadedOrAttempted = false;
-    this.#logger.info(
+    this.#logger.debug(
       'LLMConfigService: Cache cleared and loaded state reset. Configurations will be reloaded from source on next request if source is configured.'
     );
   }

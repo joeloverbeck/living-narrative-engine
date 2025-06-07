@@ -211,7 +211,7 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
       }
 
       const extractedJsonString = toolCall.function.arguments.trim();
-      this.logger.info(
+      this.logger.debug(
         `${this.constructor.name} (${llmId}): Successfully extracted JSON string from tool_calls[0].function.arguments for tool '${expectedToolName}'.`,
         {
           llmId,

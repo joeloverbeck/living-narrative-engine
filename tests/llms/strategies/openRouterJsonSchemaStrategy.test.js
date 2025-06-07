@@ -355,19 +355,19 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         };
         const result = await strategy.execute(params);
         expect(result).toBe(expectedOutputJsonString);
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content is missing. Will check tool_calls fallback.`
           ),
           expect.objectContaining({ llmId: baseLlmConfig.configId })
         );
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content not usable, attempting tool_calls fallback.`
           ),
           expect.objectContaining({ llmId: baseLlmConfig.configId })
         );
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): Extracted JSON string from tool_calls fallback`
           ),

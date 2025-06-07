@@ -177,7 +177,7 @@ describe('PromptBuilder', () => {
       });
       // exactMatchConfig is chosen because LLMConfigService finds it first for this modelIdentifier.
       expect(result).toBe('Exact:data');
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLMConfigService.getConfig: Selected configuration by exact modelIdentifier match for "${llmIdToTest}". ConfigId: "${exactMatchConfig.configId}".`
       );
     });
@@ -188,7 +188,7 @@ describe('PromptBuilder', () => {
         testContent: 'data',
       });
       expect(result).toBe('PriorityByID:data');
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLMConfigService.getConfig: Found configuration by direct configId match for "${llmIdToTest}". ConfigId: "${configIdPriorityConfig.configId}".`
       );
     });
@@ -199,7 +199,7 @@ describe('PromptBuilder', () => {
         testContent: 'data',
       });
       expect(result).toBe('MediumWild:data');
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmIdToTest}". Pattern: "${mediumWildcardConfig.modelIdentifier}", ConfigId: "${mediumWildcardConfig.configId}".`
       );
     });
@@ -210,7 +210,7 @@ describe('PromptBuilder', () => {
         testContent: 'data',
       });
       expect(result).toBe('Exact:data');
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLMConfigService.getConfig: Selected configuration by exact modelIdentifier match for "${llmIdToTest}". ConfigId: "${exactMatchConfig.configId}".`
       );
     });
@@ -221,7 +221,7 @@ describe('PromptBuilder', () => {
         testContent: 'data',
       });
       expect(result).toBe('LongWild:data'); // "vendor/model-exact*" vs "vendor/model-*" vs "vendor/*"
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmIdToTest}". Pattern: "${longWildcardConfig.modelIdentifier}", ConfigId: "${longWildcardConfig.configId}".`
       );
     });
@@ -234,7 +234,7 @@ describe('PromptBuilder', () => {
         testContent: 'data',
       });
       expect(result).toBe('AnotherLongWild:data');
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmIdToTest}". Pattern: "${anotherLongWildcardConfig.modelIdentifier}", ConfigId: "${anotherLongWildcardConfig.configId}".`
       );
     });
@@ -260,7 +260,7 @@ describe('PromptBuilder', () => {
         testContent: 'data',
       });
       expect(result).toBe('ShortWild:data');
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmIdToTest}". Pattern: "${shortWildcardConfig.modelIdentifier}", ConfigId: "${shortWildcardConfig.configId}".`
       );
     });
