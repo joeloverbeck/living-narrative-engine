@@ -48,6 +48,7 @@ export class Throttler {
 
   /**
    * The duration in milliseconds to wait before sending a summary.
+   *
    * @private
    * @readonly
    * @type {number}
@@ -56,6 +57,7 @@ export class Throttler {
 
   /**
    * Creates an instance of Throttler.
+   *
    * @param {ISafeEventDispatcher} dispatcher - The event dispatcher for emitting summaries.
    * @param {AlertSeverity} severity - The type of alerts this instance handles ('warning' or 'error').
    * @throws {Error} If the dispatcher is invalid.
@@ -74,6 +76,7 @@ export class Throttler {
    * Determines if an event should be rendered immediately or suppressed.
    * If allowed, it initiates a 10-second tracking window for the event's key.
    * If suppressed, it increments a counter for that key.
+   *
    * @param {string} key - The unique key identifying the event.
    * @param {object} payload - The original event payload. Expected to have `message` and `details`.
    * @returns {boolean} `true` to allow the event, `false` to suppress it.
@@ -114,6 +117,7 @@ export class Throttler {
    * Checks if duplicates were suppressed for a given key and emits a summary message if so.
    * This method is called by the `setTimeout` scheduled in the `allow()` method.
    * After execution, it cleans up the state for the key.
+   *
    * @private
    * @param {string} key - The key of the event to summarize.
    */
