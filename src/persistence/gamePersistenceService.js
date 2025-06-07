@@ -91,7 +91,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @returns {SaveGameStructure} The captured game state object.
    */
   captureCurrentGameState(activeWorldName) {
-    this.#logger.info(
+    this.#logger.debug(
       'GamePersistenceService: Capturing current game state...'
     );
 
@@ -204,7 +204,7 @@ class GamePersistenceService extends IGamePersistenceService {
       },
     };
 
-    this.#logger.info(
+    this.#logger.debug(
       `GamePersistenceService: Game state capture complete. Game Title: ${currentWorldNameForMeta}, ${entitiesData.length} entities captured. Playtime: ${currentTotalPlaytime}s.`
     );
     return gameStateObject;
@@ -224,7 +224,7 @@ class GamePersistenceService extends IGamePersistenceService {
   }
 
   async saveGame(saveName, isEngineInitialized, activeWorldName) {
-    this.#logger.info(
+    this.#logger.debug(
       `GamePersistenceService: Manual save triggered with name: "${saveName}". Active world hint: "${activeWorldName || 'N/A'}".`
     );
 
@@ -253,7 +253,7 @@ class GamePersistenceService extends IGamePersistenceService {
         `GamePersistenceService.saveGame: Set saveName "${saveName}" in gameStateObject.metadata.`
       );
 
-      this.#logger.info(
+      this.#logger.debug(
         `GamePersistenceService.saveGame: Delegating to ISaveLoadService.saveManualGame for "${saveName}".`
       );
       const result = await this.#saveLoadService.saveManualGame(
@@ -262,7 +262,7 @@ class GamePersistenceService extends IGamePersistenceService {
       );
 
       if (result.success) {
-        this.#logger.info(
+        this.#logger.debug(
           `GamePersistenceService.saveGame: Manual save successful: ${result.message || `Save "${saveName}" completed.`}`
         );
       } else {
@@ -286,7 +286,7 @@ class GamePersistenceService extends IGamePersistenceService {
   }
 
   async restoreGameState(deserializedSaveData) {
-    this.#logger.info(
+    this.#logger.debug(
       'GamePersistenceService.restoreGameState: Starting game state restoration...'
     );
 
@@ -320,7 +320,7 @@ class GamePersistenceService extends IGamePersistenceService {
       };
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       'GamePersistenceService.restoreGameState: Restoring entities...'
     );
     const entitiesToRestore = deserializedSaveData.gameState.entities;
@@ -353,7 +353,7 @@ class GamePersistenceService extends IGamePersistenceService {
         }
       }
     }
-    this.#logger.info(
+    this.#logger.debug(
       'GamePersistenceService.restoreGameState: Entity restoration complete.'
     );
 
@@ -365,7 +365,7 @@ class GamePersistenceService extends IGamePersistenceService {
         this.#playtimeTracker.setAccumulatedPlaytime(
           deserializedSaveData.metadata.playtimeSeconds
         );
-        this.#logger.info(
+        this.#logger.debug(
           `GamePersistenceService.restoreGameState: Restored accumulated playtime: ${deserializedSaveData.metadata.playtimeSeconds}s.`
         );
       } catch (playtimeError) {
@@ -389,7 +389,7 @@ class GamePersistenceService extends IGamePersistenceService {
     // 2. The GameEngine already stops and restarts the TurnManager during load,
     //    effectively resetting its state.
     // 3. The TurnManager did not have a setCurrentTurn method, causing the warning.
-    this.#logger.info(
+    this.#logger.debug(
       'GamePersistenceService.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.'
     );
     // --- MODIFICATION END ---
@@ -397,14 +397,14 @@ class GamePersistenceService extends IGamePersistenceService {
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Placeholder for PlayerState/WorldState restoration.'
     );
-    this.#logger.info(
+    this.#logger.debug(
       'GamePersistenceService.restoreGameState: Game state restoration process complete.'
     );
     return { success: true };
   }
 
   async loadAndRestoreGame(saveIdentifier) {
-    this.#logger.info(
+    this.#logger.debug(
       `GamePersistenceService: Attempting to load and restore game from: ${saveIdentifier}.`
     );
     if (!this.#saveLoadService) {
@@ -443,7 +443,7 @@ class GamePersistenceService extends IGamePersistenceService {
       };
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `GamePersistenceService.loadAndRestoreGame: Raw game data loaded from ${saveIdentifier}. Restoring state.`
     );
     const gameDataToRestore = /** @type {SaveGameStructure} */ (
@@ -452,7 +452,7 @@ class GamePersistenceService extends IGamePersistenceService {
     const restoreResult = await this.restoreGameState(gameDataToRestore);
 
     if (restoreResult.success) {
-      this.#logger.info(
+      this.#logger.debug(
         `GamePersistenceService.loadAndRestoreGame: Game state restored successfully for ${saveIdentifier}.`
       );
       return { success: true, data: gameDataToRestore };

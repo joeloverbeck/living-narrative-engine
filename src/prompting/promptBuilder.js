@@ -205,7 +205,7 @@ export class PromptBuilder extends IPromptBuilder {
    * @returns {Promise<string>} A promise resolving to the assembled prompt string.
    */
   async build(llmId, promptData) {
-    this.#logger.info(`PromptBuilder.build called for llmId: ${llmId}`);
+    this.#logger.debug(`PromptBuilder.build called for llmId: ${llmId}`);
 
     if (!llmId || typeof llmId !== 'string') {
       this.#logger.error(

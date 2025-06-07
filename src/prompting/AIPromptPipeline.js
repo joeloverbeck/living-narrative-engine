@@ -108,7 +108,7 @@ export class AIPromptPipeline extends IAIPromptPipeline {
 
     if (!finalPromptString)
       throw new Error('PromptBuilder returned an empty or invalid prompt.');
-    this.#logger.info(
+    this.#logger.debug(
       `AIPromptPipeline: Generated final prompt string for actor ${actorId} using LLM config for '${currentLlmId}'.`
     );
     return finalPromptString;

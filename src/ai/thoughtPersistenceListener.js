@@ -33,7 +33,7 @@ export class ThoughtPersistenceListener {
 
     const actorEntity = this.entityManager.getEntityInstance(actorId);
     if (actorEntity) {
-      this.logger.info(
+      this.logger.debug(
         `Persisting thoughts for ${actorId}: ${extractedData.thoughts}`
       );
       persistThoughts(

@@ -37,7 +37,7 @@ export class NotesPersistenceListener {
 
     const actorEntity = this.entityManager.getEntityInstance(actorId);
     if (actorEntity) {
-      this.logger.info(
+      this.logger.debug(
         `Persisting notes for ${actorId}: ${JSON.stringify(
           extractedData.notes
         )}`
