@@ -219,7 +219,7 @@ describe('TurnIdleState', () => {
       await turnIdleState.exitState(mockHandler, null);
 
       expect(mockContext.getLogger).toHaveBeenCalled(); // Logger from context should be used
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnIdleState: Exiting. Actor: ${testActor.id}. Transitioning to None.`
       );
     });

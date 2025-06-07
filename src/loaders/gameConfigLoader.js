@@ -129,7 +129,7 @@ class GameConfigLoader {
       // 1. Locate Config Path
       configPath = this.#pathResolver.resolveGameConfigPath();
       const configFilename = this.#configuration.getGameConfigFilename(); // Get filename for logging
-      this.#logger.info(
+      this.#logger.debug(
         `GameConfigLoader: Attempting to load game config '${configFilename}' from ${configPath}...`
       );
 
@@ -209,7 +209,7 @@ class GameConfigLoader {
       }
 
       // 5. Validation Success - Check 'mods' array
-      this.#logger.info(
+      this.#logger.debug(
         `GameConfigLoader: Game config '${configFilename}' validation successful against schema '${schemaId}'.`
       );
 
@@ -241,13 +241,13 @@ class GameConfigLoader {
             (modId) => modId !== CORE_MOD_ID
           );
           parsedConfig.mods.unshift(CORE_MOD_ID);
-          this.#logger.info(
+          this.#logger.debug(
             `GameConfigLoader: CORE_MOD_ID mod found but was not first; moved to the beginning of the load order.`
           );
         } else {
           // If Core is missing entirely, prepend it
           parsedConfig.mods.unshift(CORE_MOD_ID);
-          this.#logger.info(
+          this.#logger.debug(
             `GameConfigLoader: Auto-injected CORE_MOD_ID mod at the beginning of the load order.`
           );
         }

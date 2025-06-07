@@ -45,7 +45,7 @@ export default class EndTurnSuccessStrategy extends ITurnDirectiveStrategy {
       return;
     }
 
-    logger.info(
+    logger.debug(
       `${className}: Executing END_TURN_SUCCESS for actor ${contextActor.id}.`
     );
     turnContext.endTurn(null); // End turn via ITurnContext, null for success
