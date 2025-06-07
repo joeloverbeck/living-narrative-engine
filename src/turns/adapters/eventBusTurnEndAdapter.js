@@ -2,7 +2,10 @@
 // --- FILE START ---
 
 import { ITurnEndPort } from '../ports/ITurnEndPort.js';
-import { TURN_ENDED_ID } from '../../constants/eventIds.js';
+import {
+  TURN_ENDED_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
+} from '../../constants/eventIds.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
@@ -59,7 +62,20 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
     if (!entityId || typeof entityId !== 'string') {
       const errMsg =
         'EventBusTurnEndAdapter: entityId must be a non-empty string';
-      this.#log.error(errMsg);
+      try {
+        await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+          message: errMsg,
+          details: {
+            raw: errMsg,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (dispatchErr) {
+        this.#log.error(
+          `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} about invalid entityId: ${dispatchErr.message}`,
+          dispatchErr
+        );
+      }
       throw new Error(errMsg);
     }
 
@@ -94,10 +110,21 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
         `EventBusTurnEndAdapter: Successfully dispatched ${TURN_ENDED_ID} for ${entityId} with success=${isTurnSuccessful}.`
       );
     } catch (err) {
-      this.#log.error(
-        `EventBusTurnEndAdapter: Error dispatching ${TURN_ENDED_ID} for ${entityId}. Error: ${err.message}`,
-        err
-      );
+      try {
+        await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+          message: `EventBusTurnEndAdapter failed to dispatch ${TURN_ENDED_ID} for ${entityId}.`,
+          details: {
+            raw: err.message,
+            stack: err.stack,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (dispatchErr) {
+        this.#log.error(
+          `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} after failing ${TURN_ENDED_ID} for ${entityId}: ${dispatchErr.message}`,
+          dispatchErr
+        );
+      }
       throw err; // Re-throw to allow caller to handle
     }
   }
