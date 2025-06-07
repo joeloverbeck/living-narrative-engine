@@ -12,19 +12,19 @@ import {
 /**
  * @class
  * @description
- *   The AlertRouter subscribes immediately to `core:system_warning_occurred`
- *   and SYSTEM_ERROR_OCCURRED_ID. If the UI is not yet ready (i.e. ChatAlertRenderer
- *   has not called `notifyUIReady()`), it queues incoming events and starts a 5-second
- *   timer. If, after 5 seconds, `notifyUIReady()` still hasn’t been called, it dumps all
- *   queued events to the console (`console.warn` for warnings, `console.error` for errors).
- *   Once `notifyUIReady()` is invoked, it cancels any pending timer, forwards all queued
- *   events as `"core:display_warning"` or `"core:display_error"`, clears the queue, and sets
- *   `uiReady = true`. After that, any new incoming events are forwarded immediately.
+ * The AlertRouter subscribes immediately to `core:system_warning_occurred`
+ * and SYSTEM_ERROR_OCCURRED_ID. If the UI is not yet ready (i.e. ChatAlertRenderer
+ * has not called `notifyUIReady()`), it queues incoming events and starts a 5-second
+ * timer. If, after 5 seconds, `notifyUIReady()` still hasn’t been called, it dumps all
+ * queued events to the console (`console.warn` for warnings, `console.error` for errors).
+ * Once `notifyUIReady()` is invoked, it cancels any pending timer, forwards all queued
+ * events as `"core:display_warning"` or `"core:display_error"`, clears the queue, and sets
+ * `uiReady = true`. After that, any new incoming events are forwarded immediately.
  *
- *   All internal operations are wrapped in `try/catch` to avoid crashes; exceptions
- *   are logged via `console.error(...)`.
+ * All internal operations are wrapped in `try/catch` to avoid crashes; exceptions
+ * are logged via `console.error(...)`.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher
- *   An instance of `SafeEventDispatcher` used to subscribe to core events and dispatch UI events.
+ * An instance of `SafeEventDispatcher` used to subscribe to core events and dispatch UI events.
  */
 export default class AlertRouter {
   /**
@@ -35,9 +35,8 @@ export default class AlertRouter {
    * The resolved safe event dispatcher instance.
    */
   constructor({ safeEventDispatcher }) {
-    // <-- CORRECTED LINE
     /** @private */
-    this.dispatcher = safeEventDispatcher; // <-- CORRECTED LINE
+    this.dispatcher = safeEventDispatcher;
     /** @private {Array<{ name: string, payload: any, timestamp: string }>} */
     this.queue = [];
     /** @private {boolean} */
@@ -46,15 +45,18 @@ export default class AlertRouter {
     this.flushTimer = null;
 
     try {
-      // Subscribe to both warning and error events right away
-      this.dispatcher.subscribe(
-        SYSTEM_WARNING_OCCURRED_ID,
-        this.handleEvent.bind(this)
+      // --- FIX START ---
+      // The original subscription was passing a method that expects two arguments (name, payload)
+      // to a system that likely calls listeners with only one (payload).
+      // The fix is to use an arrow function to correctly map the arguments.
+
+      this.dispatcher.subscribe(SYSTEM_WARNING_OCCURRED_ID, (payload) =>
+        this.handleEvent(SYSTEM_WARNING_OCCURRED_ID, payload)
       );
-      this.dispatcher.subscribe(
-        SYSTEM_ERROR_OCCURRED_ID,
-        this.handleEvent.bind(this)
+      this.dispatcher.subscribe(SYSTEM_ERROR_OCCURRED_ID, (payload) =>
+        this.handleEvent(SYSTEM_ERROR_OCCURRED_ID, payload)
       );
+      // --- FIX END ---
     } catch (err) {
       console.error('AlertRouter subscription error:', err);
     }
@@ -66,9 +68,9 @@ export default class AlertRouter {
    *
    * @private
    * @param {string} name
-   *   Either SYSTEM_WARNING_OCCURRED_ID or SYSTEM_ERROR_OCCURRED_ID.
+   * Either SYSTEM_WARNING_OCCURRED_ID or SYSTEM_ERROR_OCCURRED_ID.
    * @param {object} payload
-   *   Expected to contain a `message` property.
+   * Expected to contain a `message` property.
    */
   handleEvent(name, payload) {
     try {
@@ -159,7 +161,7 @@ export default class AlertRouter {
    *
    * @private
    * @param {string} name
-   *   Either SYSTEM_WARNING_OCCURRED_ID or SYSTEM_ERROR_OCCURRED_ID.
+   * Either SYSTEM_WARNING_OCCURRED_ID or SYSTEM_ERROR_OCCURRED_ID.
    * @param {object} payload
    */
   forwardToUI(name, payload) {

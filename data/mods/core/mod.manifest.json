@@ -30,7 +30,10 @@
     "characters": [],
     "items": [],
     "locations": [],
-    "actions": ["wait.action.json", "go.action.json"],
+    "actions": [
+      "wait.action.json",
+      "go.action.json"
+    ],
     "rules": [
       "turn_started.rule.json",
       "turn_ended.rule.json",
@@ -61,7 +64,8 @@
       "ui_stopped.event.json",
       "game_stopped.event.json",
       "ui_operation_in_progress.event.json",
-      "ui_display_error.event.json",
+      "display_error.event.json",
+      "display_warning.event.json",
       "game_loaded.event.json"
     ],
     "operations": []

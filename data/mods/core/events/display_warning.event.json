@@ -1,0 +1,55 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:display_warning",
+  "description": "Signals the UI to display a non-critical warning message to the user. This event is often used for recoverable issues or important notifications that do not halt application functionality.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "description": "The primary, user-friendly warning message to be displayed. If omitted, a message may be generated based on the 'details' object."
+      },
+      "details": {
+        "description": "Optional technical data associated with the warning. Used for generating messages, logging, and creating unique keys for alert throttling. It is typically an object but can be other types for flexibility.",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "statusCode": {
+                "type": "number",
+                "description": "An HTTP status code or other numeric error code."
+              },
+              "raw": {
+                "type": "string",
+                "description": "The raw error message or response body."
+              },
+              "url": {
+                "type": "string",
+                "description": "The URL of the resource that caused the warning."
+              },
+              "message": {
+                "type": "string",
+                "description": "A technical error message, distinct from the main user-facing message."
+              }
+            },
+            "additionalProperties": true
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "$comment": "The payload should be an object. Both 'message' and 'details' are optional. The UI will attempt to construct a meaningful warning from whatever is provided."
+  }
+}
