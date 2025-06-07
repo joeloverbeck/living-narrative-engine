@@ -90,6 +90,7 @@ describe('PrerequisiteEvaluationService', () => {
       jsonLogicEvaluationService: mockJsonLogicServiceInstance,
       actionValidationContextBuilder: mockBuilderInstance,
     });
+    mockLogger.debug.mockClear();
   });
 
   // --- Test Cases (Should remain the same as the previous correct version) ---

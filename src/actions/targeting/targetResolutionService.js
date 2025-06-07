@@ -128,7 +128,7 @@ class TargetResolutionService extends ITargetResolutionService {
     this.#gameDataRepository = gameDataRepository;
     this.#getEntityIdsForScopes = getEntityIdsForScopes;
 
-    this.#logger.info(
+    this.#logger.debug(
       'TargetResolutionService: Instance created and dependencies validated.'
     );
   }

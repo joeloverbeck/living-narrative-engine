@@ -70,8 +70,8 @@ describe('TargetResolutionService', () => {
       }).not.toThrow();
 
       expect(service).toBeInstanceOf(TargetResolutionService);
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'TargetResolutionService: Instance created and dependencies validated.'
       );
     });

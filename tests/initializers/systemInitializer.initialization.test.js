@@ -322,7 +322,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         testInitializationTag
       );
       expect(mockResolver.resolveByTag).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `SystemInitializer: Found 6 systems tagged with '${testInitializationTag}'.`
       );
 
@@ -380,7 +380,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       expect(mockResolver.resolveByTag).toHaveBeenCalledWith(
         testInitializationTag
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `SystemInitializer: Found 0 systems tagged with '${testInitializationTag}'.`
       );
 
@@ -403,7 +403,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         `SystemInitializer: resolveByTag for tag '${testInitializationTag}' did not return an array. Treating as empty.`
       );
       // Should then proceed as if it were empty
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `SystemInitializer: Found 0 systems tagged with '${testInitializationTag}'.`
       );
 
@@ -464,7 +464,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       expect(mockResolver.resolveByTag).toHaveBeenCalledWith(
         testInitializationTag
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `SystemInitializer: Found 3 systems tagged with '${testInitializationTag}'.`
       );
 

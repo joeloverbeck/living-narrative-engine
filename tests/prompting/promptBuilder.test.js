@@ -104,7 +104,7 @@ describe('PromptBuilder', () => {
   describe('Constructor', () => {
     test('initializes with default console logger when none provided', () => {
       const consoleSpy = jest
-        .spyOn(console, 'info')
+        .spyOn(console, 'debug')
         .mockImplementation(() => {});
       const pb = new PromptBuilder({
         llmConfigService: mockLlmConfigService,
@@ -130,7 +130,7 @@ describe('PromptBuilder', () => {
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.info).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
+      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
     });
 
     test('initializes correctly when LLMConfigService might have initialConfigs', () => {
@@ -144,7 +144,7 @@ describe('PromptBuilder', () => {
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.info).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
+      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
     });
 
     test('initializes correctly when LLMConfigService might have empty initialConfigs', () => {
@@ -158,7 +158,7 @@ describe('PromptBuilder', () => {
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.info).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
+      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
     });
 
     test('initializes correctly when LLMConfigService uses configSourceIdentifier', () => {
@@ -172,7 +172,7 @@ describe('PromptBuilder', () => {
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.info).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
+      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
     });
 
     test('initializes correctly regardless of LLMConfigService details', () => {
@@ -186,7 +186,7 @@ describe('PromptBuilder', () => {
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.info).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
+      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
     });
 
     test('throws when LLMConfigService not provided', () => {

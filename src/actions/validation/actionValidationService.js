@@ -117,7 +117,7 @@ export class ActionValidationService {
     // --- End Refactor-AVS-3.4 ---
 
     // Log message updated to reflect removed dependency implicitly
-    this.#logger.info(
+    this.#logger.debug(
       'ActionValidationService initialised (dependencies: EM, Logger, DCCC, PES).'
     );
   }

@@ -140,7 +140,7 @@ export class PromptBuilder extends IPromptBuilder {
       this.#goalsSectionAssembler = goalsSectionAssembler;
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers (standard, perception‐log, thoughts, notes, goals).'
     );
   }
@@ -294,7 +294,7 @@ export class PromptBuilder extends IPromptBuilder {
       finalPromptString += currentElementOutput;
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `PromptBuilder.build: Successfully assembled prompt for llmId: ${llmId} using config ${selectedConfig.configId}. Length: ${finalPromptString.length}`
     );
     return finalPromptString;
