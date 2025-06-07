@@ -650,7 +650,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
           selectedAction
         );
       }
-      this.#logger.info(
+      this.#logger.debug(
         `PlayerPromptService._handlePlayerTurnSubmittedEvent: Valid actionId '${submittedActionId}' (Name: '${selectedAction.name || 'N/A'}') for prompt (actor ${localPromptContext.actorId}). Resolving.`
       );
       resolve({ action: selectedAction, speech: speech || null });
@@ -763,7 +763,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
 
           // ── CHANGED LOGGING BEHAVIOUR ──────────────────────────────────────
           if (err instanceof DOMException && err.name === 'AbortError') {
-            this.#logger.info(
+            this.#logger.debug(
               `PlayerPromptService: Prompt for actor ${localPromptContext.actorId} aborted. ${err.message}`
             );
           } else {
@@ -797,7 +797,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
 
       if (cancellationSignal) {
         const handleAbort = () => {
-          this.#logger.info(
+          this.#logger.debug(
             `PlayerPromptService.prompt: Abort signal received for actor ${localPromptContext.actorId}. Rejecting prompt.`
           );
           localPromptContext.reject(

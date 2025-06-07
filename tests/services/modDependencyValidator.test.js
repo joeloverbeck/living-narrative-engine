@@ -100,7 +100,7 @@ describe('ModDependencyValidator', () => {
       ModDependencyValidator.validate(manifests, mockLogger)
     ).not.toThrow();
     expect(mockLogger.warn).not.toHaveBeenCalled();
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('passed')
     );
   });
@@ -161,7 +161,7 @@ describe('ModDependencyValidator', () => {
         "Mod 'ModA' optional dependency 'MissingB' is not loaded."
       )
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('passed')
     );
   });
@@ -184,7 +184,7 @@ describe('ModDependencyValidator', () => {
         "Mod 'ModA' requires dependency 'ModB' version '>=2.0.0', but found version '1.5.0'. (Optional dependency mismatch)"
       )
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('passed')
     );
   });
@@ -207,7 +207,7 @@ describe('ModDependencyValidator', () => {
         /Mod 'ModA' dependency 'ModB' has an invalid version format: 'totally-invalid'\. Cannot check optional version requirement\./
       )
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('passed')
     );
   });

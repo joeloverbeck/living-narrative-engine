@@ -117,7 +117,7 @@ export class AbstractTurnState extends ITurnState {
     }
 
     if (logger) {
-      logger.info(
+      logger.debug(
         `${this.getStateName()}: Entered. Actor: ${actorIdForLog}. Previous state: ${previousState?.getStateName() ?? 'None'}.`
       );
     } else {
@@ -158,7 +158,7 @@ export class AbstractTurnState extends ITurnState {
     }
 
     if (logger) {
-      logger.info(
+      logger.debug(
         `${this.getStateName()}: Exiting. Actor: ${actorIdForLog}. Transitioning to ${nextState?.getStateName() ?? 'None'}.`
       );
     } else {

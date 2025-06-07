@@ -283,7 +283,7 @@ describe('ProcessingCommandState', () => {
       await enterStatePromise;
 
       // Log from AbstractTurnState's enterState
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `ProcessingCommandState: Entered. Actor: ${actor.getId()}. Previous state: None.`
       );
       // Log from ProcessingCommandState's enterState (about actor and command)

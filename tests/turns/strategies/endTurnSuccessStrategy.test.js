@@ -84,7 +84,7 @@ describe('EndTurnSuccessStrategy', () => {
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `EndTurnSuccessStrategy: Executing END_TURN_SUCCESS for actor ${mockActor.id}.`
     );
     expect(mockTurnContext.endTurn).toHaveBeenCalledWith(null);

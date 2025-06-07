@@ -221,7 +221,7 @@ class WorldLoader {
       },
     ];
 
-    this.#logger.info(
+    this.#logger.debug(
       'WorldLoader: Instance created with ALL loaders, order‑resolver, and ValidatedEventDispatcher.'
     );
   }
@@ -237,7 +237,7 @@ class WorldLoader {
    * @throws {Error | ModDependencyError} Re-throws critical errors encountered during the loading sequence.
    */
   async loadWorld(worldName) {
-    this.#logger.info(
+    this.#logger.debug(
       `WorldLoader: Starting load sequence (World Hint: '${worldName}') ...`
     );
 
@@ -292,7 +292,7 @@ class WorldLoader {
 
       // --- Step 4: Load Game Configuration ---
       requestedModIds = await this.#gameConfigLoader.loadConfig();
-      this.#logger.info(
+      this.#logger.debug(
         `WorldLoader: Game config loaded. Requested mods: [${requestedModIds.join(', ')}]`
       );
 
@@ -305,7 +305,7 @@ class WorldLoader {
         this.#registry.store('mod_manifests', lcModId, manifestObj);
         manifestsForValidation.set(lcModId, manifestObj);
       }
-      this.#logger.info(
+      this.#logger.debug(
         `WorldLoader: Stored ${manifestsForValidation.size} mod manifests in the registry.`
       );
 

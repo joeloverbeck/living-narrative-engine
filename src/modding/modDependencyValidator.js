@@ -123,7 +123,7 @@ class ModDependencyValidator {
     }
 
     // If no fatals, validation passed successfully
-    logger.info(
+    logger.debug(
       'ModDependencyValidator: All dependency and conflict checks passed.'
     );
   }
