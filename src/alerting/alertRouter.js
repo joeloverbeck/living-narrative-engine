@@ -30,11 +30,14 @@ export default class AlertRouter {
   /**
    * Creates an AlertRouter and immediately subscribes to core warning/error events.
    *
-   * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher
+   * @param {object} dependencies - The dependency object.
+   * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dependencies.safeEventDispatcher
+   * The resolved safe event dispatcher instance.
    */
-  constructor(dispatcher) {
+  constructor({ safeEventDispatcher }) {
+    // <-- CORRECTED LINE
     /** @private */
-    this.dispatcher = dispatcher;
+    this.dispatcher = safeEventDispatcher; // <-- CORRECTED LINE
     /** @private {Array<{ name: string, payload: any, timestamp: string }>} */
     this.queue = [];
     /** @private {boolean} */

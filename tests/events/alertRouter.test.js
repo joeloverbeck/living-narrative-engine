@@ -29,7 +29,8 @@ describe('AlertRouter', () => {
       dispatch: jest.fn(),
     };
 
-    router = new AlertRouter(mockDispatcher);
+    // --- FIX: Instantiate AlertRouter with the correct dependency object structure ---
+    router = new AlertRouter({ safeEventDispatcher: mockDispatcher });
   });
 
   afterEach(() => {

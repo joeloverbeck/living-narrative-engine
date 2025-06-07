@@ -202,15 +202,15 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
     // Delegate subscription to the internal EventBus instance
     this.#eventBus.subscribe(eventName, listener);
 
-    // --- FIX START ---
-    // Return an unsubscribe function that delegates to the EventBus's unsubscribe
+    // --- FIX ---
+    // You MUST return a function that calls unsubscribe, fulfilling the interface contract.
     return () => {
       this.#logger.debug(
         `VED: Executing unsubscribe callback for "${eventName}". Delegating to EventBus.`
       );
       this.#eventBus.unsubscribe(eventName, listener);
     };
-    // --- FIX END ---
+    // --- END FIX ---
   }
 
   /**
