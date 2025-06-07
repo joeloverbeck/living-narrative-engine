@@ -139,8 +139,8 @@ export class Throttler {
 
       const eventName =
         this.#severity === 'warning'
-          ? 'ui:display_warning'
-          : 'ui:display_error';
+          ? 'core:display_warning'
+          : 'core:display_error';
 
       this.#dispatcher.dispatch(eventName, summaryPayload);
     }

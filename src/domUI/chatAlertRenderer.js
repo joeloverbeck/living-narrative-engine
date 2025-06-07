@@ -121,13 +121,13 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     // **FIX**: Use the safe dispatcher for subscriptions for consistency.
     this._addSubscription(
       this.#safeEventDispatcher.subscribe(
-        'ui:display_warning',
+        'core:display_warning',
         this.#handleWarning.bind(this)
       )
     );
     this._addSubscription(
       this.#safeEventDispatcher.subscribe(
-        'ui:display_error',
+        'core:display_error',
         this.#handleError.bind(this)
       )
     );
@@ -388,7 +388,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   }
 
   /**
-   * Handles the 'ui:display_warning' event.
+   * Handles the 'core:display_warning' event.
    *
    * @private
    * @param {IEvent<DisplayWarningPayload>} event The event object containing the warning details.
@@ -429,7 +429,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   }
 
   /**
-   * Handles the 'ui:display_error' event.
+   * Handles the 'core:display_error' event.
    *
    * @private
    * @param {IEvent<DisplayErrorPayload>} event The event object containing the error details.

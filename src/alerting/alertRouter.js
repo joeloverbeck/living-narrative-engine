@@ -18,7 +18,7 @@ import {
  *   timer. If, after 5 seconds, `notifyUIReady()` still hasn’t been called, it dumps all
  *   queued events to the console (`console.warn` for warnings, `console.error` for errors).
  *   Once `notifyUIReady()` is invoked, it cancels any pending timer, forwards all queued
- *   events as `"ui:display_warning"` or `"ui:display_error"`, clears the queue, and sets
+ *   events as `"core:display_warning"` or `"core:display_error"`, clears the queue, and sets
  *   `uiReady = true`. After that, any new incoming events are forwarded immediately.
  *
  *   All internal operations are wrapped in `try/catch` to avoid crashes; exceptions
@@ -134,7 +134,7 @@ export default class AlertRouter {
 
   /**
    * Cancels any pending flush timer, re-dispatches all queued events to the UI
-   * as "ui:display_warning" or "ui:display_error", then clears the queue and
+   * as "core:display_warning" or "core:display_error", then clears the queue and
    * marks the router as ready for immediate forwarding.
    */
   notifyUIReady() {
@@ -166,8 +166,8 @@ export default class AlertRouter {
     try {
       const uiEvent =
         name === SYSTEM_WARNING_OCCURRED_ID
-          ? 'ui:display_warning'
-          : 'ui:display_error';
+          ? 'core:display_warning'
+          : 'core:display_error';
       this.dispatcher.dispatch(uiEvent, payload);
     } catch (err) {
       console.error('AlertRouter dispatch error:', err);

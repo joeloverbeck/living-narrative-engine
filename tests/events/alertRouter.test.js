@@ -81,10 +81,10 @@ describe('AlertRouter', () => {
     // Immediately call notifyUIReady() (within 5s)
     router.notifyUIReady();
 
-    // Should dispatch "ui:display_error" exactly once
+    // Should dispatch "core:display_error" exactly once
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      'ui:display_error',
+      'core:display_error',
       payload
     );
 
@@ -114,7 +114,7 @@ describe('AlertRouter', () => {
     // Since uiReady === true, it should forward immediately:
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      'ui:display_warning',
+      'core:display_warning',
       payload
     );
 

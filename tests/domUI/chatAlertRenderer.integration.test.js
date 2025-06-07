@@ -112,9 +112,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       };
 
       // --- Act: Dispatch three identical events in quick succession ---
-      fireEvent('ui:display_warning', warningPayload);
-      fireEvent('ui:display_warning', warningPayload);
-      fireEvent('ui:display_warning', warningPayload);
+      fireEvent('core:display_warning', warningPayload);
+      fireEvent('core:display_warning', warningPayload);
+      fireEvent('core:display_warning', warningPayload);
 
       // --- Assert: Immediate State (Test Case 1: Identical Warnings Suppression) ---
       expect(chatPanel.children.length).toBe(1);
@@ -141,7 +141,7 @@ describe('ChatAlertRenderer Throttling Integration', () => {
         details: warningPayload.details, // Details are carried over.
       };
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'ui:display_warning',
+        'core:display_warning',
         expectedSummaryPayload
       );
 
@@ -162,8 +162,8 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       };
 
       // --- Act ---
-      fireEvent('ui:display_warning', payload);
-      fireEvent('ui:display_error', payload);
+      fireEvent('core:display_warning', payload);
+      fireEvent('core:display_error', payload);
 
       // --- Assert ---
       // Both should be rendered immediately as they use separate throttler instances.
@@ -198,7 +198,7 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       };
 
       // --- Act: Dispatch a single, final error event ---
-      fireEvent('ui:display_error', finalErrorPayload);
+      fireEvent('core:display_error', finalErrorPayload);
 
       // --- Assert: Immediate State ---
       // One error bubble should appear.

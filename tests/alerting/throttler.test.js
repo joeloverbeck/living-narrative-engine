@@ -87,11 +87,14 @@ describe('Throttler', () => {
 
     // Assert
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('ui:display_warning', {
-      message:
-        "Warning: 'Test message' occurred 2 more times in the last 10 seconds.",
-      details: payload.details,
-    });
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:display_warning',
+      {
+        message:
+          "Warning: 'Test message' occurred 2 more times in the last 10 seconds.",
+        details: payload.details,
+      }
+    );
   });
 
   /**
@@ -113,7 +116,7 @@ describe('Throttler', () => {
 
     // Assert
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('ui:display_error', {
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:display_error', {
       message:
         "Error: 'Critical failure' occurred 1 more times in the last 10 seconds.",
       details: errorPayload.details,
@@ -180,11 +183,14 @@ describe('Throttler', () => {
 
     // Assert: Only one summary dispatch should occur (for key1)
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('ui:display_warning', {
-      message:
-        "Warning: 'Message One' occurred 1 more times in the last 10 seconds.",
-      details: undefined,
-    });
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:display_warning',
+      {
+        message:
+          "Warning: 'Message One' occurred 1 more times in the last 10 seconds.",
+        details: undefined,
+      }
+    );
   });
 
   it('should throw an error if an invalid dispatcher is provided', () => {

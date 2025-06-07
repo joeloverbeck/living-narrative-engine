@@ -209,11 +209,11 @@ describe('ChatAlertRenderer', () => {
   describe('Initialization', () => {
     it('should subscribe to warning and error events', () => {
       expect(mocks.safeEventDispatcher.subscribe).toHaveBeenCalledWith(
-        'ui:display_warning',
+        'core:display_warning',
         expect.any(Function)
       );
       expect(mocks.safeEventDispatcher.subscribe).toHaveBeenCalledWith(
-        'ui:display_error',
+        'core:display_error',
         expect.any(Function)
       );
     });
@@ -234,7 +234,7 @@ describe('ChatAlertRenderer', () => {
   describe('Throttling Logic', () => {
     it('should NOT render a warning bubble if warning throttler returns false', () => {
       mockWarningAllow.mockReturnValue(false);
-      mocks.safeEventDispatcher.trigger('ui:display_warning', {
+      mocks.safeEventDispatcher.trigger('core:display_warning', {
         details: {},
       });
       expect(mockWarningAllow).toHaveBeenCalled();
@@ -244,7 +244,7 @@ describe('ChatAlertRenderer', () => {
 
     it('should NOT render an error bubble if error throttler returns false', () => {
       mockErrorAllow.mockReturnValue(false);
-      mocks.safeEventDispatcher.trigger('ui:display_error', {
+      mocks.safeEventDispatcher.trigger('core:display_error', {
         details: {},
       });
       expect(mockErrorAllow).toHaveBeenCalled();
@@ -256,7 +256,7 @@ describe('ChatAlertRenderer', () => {
   describe('DOM & Logic Tests', () => {
     it('should render a warning bubble when panel is present and throttler allows', () => {
       const message = 'This is a test warning.';
-      mocks.safeEventDispatcher.trigger('ui:display_warning', {
+      mocks.safeEventDispatcher.trigger('core:display_warning', {
         message,
         details: {},
       });
@@ -272,7 +272,7 @@ describe('ChatAlertRenderer', () => {
       mockWarningAllow.mockReturnValue(true);
 
       const message = 'Console warning.';
-      localMocks.safeEventDispatcher.trigger('ui:display_warning', {
+      localMocks.safeEventDispatcher.trigger('core:display_warning', {
         message,
         details: {},
       });
@@ -285,7 +285,7 @@ describe('ChatAlertRenderer', () => {
   describe('Truncation and developer details', () => {
     it('truncates long messages and toggles on click', () => {
       const longMsg = 'x'.repeat(250);
-      mocks.safeEventDispatcher.trigger('ui:display_warning', {
+      mocks.safeEventDispatcher.trigger('core:display_warning', {
         message: longMsg,
         details: {},
       });
@@ -311,7 +311,7 @@ describe('ChatAlertRenderer', () => {
           raw: '503 Service Unavailable',
         },
       };
-      mocks.safeEventDispatcher.trigger('ui:display_error', payload);
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
 
       const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
       const msgEl = bubble.querySelector('.chat-alert-message');
@@ -333,7 +333,7 @@ describe('ChatAlertRenderer', () => {
           raw: '<img src=x onerror=alert(1)>',
         },
       };
-      mocks.safeEventDispatcher.trigger('ui:display_error', payload);
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
 
       const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
       const code = bubble.querySelector('code');
