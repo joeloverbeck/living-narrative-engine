@@ -156,7 +156,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       logger.info(
         `LLMResponseProcessor: Successfully validated and transformed LLM output for actor ${actorId}. Action: ${finalAction.actionDefinitionId}`
       );
-      logger.debug(
+      logger.info(
         `LLMResponseProcessor: Transformed ProcessedTurnAction details for ${actorId}:`,
         { actorId, action: finalAction, extractedData: { thoughts, notes } }
       );
