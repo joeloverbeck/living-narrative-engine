@@ -209,6 +209,7 @@ describe('TurnManager - Round Lifecycle and Turn Advancement', () => {
         'System Error: No active actors found to start a round. Stopping game.',
       details: {
         raw: 'Cannot start a new round: No active entities with an Actor component found.',
+        stack: expect.any(String),
         timestamp: expect.any(String),
       },
     });

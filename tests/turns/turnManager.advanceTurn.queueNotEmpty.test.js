@@ -233,7 +233,11 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
       {
         message:
           'Internal Error: Turn order inconsistency detected. Stopping game.',
-        details: { raw: expectedErrorMsg, timestamp: expect.any(String) },
+        details: {
+          raw: expectedErrorMsg,
+          stack: expect.any(String),
+          timestamp: expect.any(String),
+        },
       }
     );
 

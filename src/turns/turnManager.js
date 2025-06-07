@@ -674,7 +674,9 @@ class TurnManager extends ITurnManager {
         ? detailsOrError.message
         : String(detailsOrError);
     const stackString =
-      detailsOrError instanceof Error ? detailsOrError.stack : undefined;
+      detailsOrError instanceof Error
+        ? detailsOrError.stack
+        : new Error().stack;
     try {
       await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: message,
