@@ -108,7 +108,7 @@ class ModManifestLoader {
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
 
-    this.#logger.info(
+    this.#logger.debug(
       'ModManifestLoader: Instance created and dependencies validated.'
     );
   }

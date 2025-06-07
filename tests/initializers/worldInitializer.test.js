@@ -118,7 +118,7 @@ describe('WorldInitializer', () => {
 
   describe('constructor', () => {
     it('should instantiate successfully with all valid dependencies', () => {
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'WorldInitializer: Instance created (with ReferenceResolver).'
       );
     });

@@ -92,7 +92,7 @@ export function configureContainer(container, uiElements) {
           `[ContainerConfig] Failed to load logger configuration from '${loggerConfigResult.path || 'default path'}'. Error: ${loggerConfigResult.message}. Stage: ${loggerConfigResult.stage || 'N/A'}. Retaining current log level.`
         );
       } else {
-        logger.info(
+        logger.debug(
           '[ContainerConfig] Logger configuration file loaded but no specific logLevel found or file was empty. Retaining current log level.'
         );
       }
@@ -145,7 +145,7 @@ export function configureContainer(container, uiElements) {
       container.resolve(tokens.IGameDataRepository)
     );
     systemDataRegistry.registerSource('GameDataRepository', gameDataRepo);
-    logger.info(
+    logger.debug(
       `[ContainerConfig] Data source 'GameDataRepository' registered in SystemDataRegistry.`
     );
 
@@ -157,7 +157,7 @@ export function configureContainer(container, uiElements) {
       `[ContainerConfig] Registering data source '${worldContextKey}' in SystemDataRegistry...`
     );
     systemDataRegistry.registerSource(worldContextKey, worldContextInstance);
-    logger.info(
+    logger.debug(
       `[ContainerConfig] Data source '${worldContextKey}' successfully registered in SystemDataRegistry.`
     );
 
@@ -173,7 +173,7 @@ export function configureContainer(container, uiElements) {
       perceptionUpdateServiceKey,
       perceptionUpdateServiceInstance
     );
-    logger.info(
+    logger.debug(
       `[ContainerConfig] Data source '${perceptionUpdateServiceKey}' successfully registered in SystemDataRegistry.`
     );
   } catch (error) {
@@ -190,7 +190,7 @@ export function configureContainer(container, uiElements) {
     });
   }
 
-  logger.info(
+  logger.debug(
     '[ContainerConfig] Configuration and registry population complete.'
   );
 }

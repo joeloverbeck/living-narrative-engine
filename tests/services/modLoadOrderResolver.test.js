@@ -252,7 +252,7 @@ describe('resolveOrder – adjustment-log (Ticket T-4)', () => {
 
     resolveOrder(requested, manifests, mockLogger);
 
-    const logged = mockLogger.info.mock.calls.some(([msg]) =>
+    const logged = mockLogger.debug.mock.calls.some(([msg]) =>
       msg.includes('Mod load order adjusted to satisfy dependencies.')
     );
     expect(logged).toBe(true);
@@ -267,7 +267,7 @@ describe('resolveOrder – adjustment-log (Ticket T-4)', () => {
 
     resolveOrder(requested, manifests, mockLogger);
 
-    const logged = mockLogger.info.mock.calls.some(([msg]) =>
+    const logged = mockLogger.debug.mock.calls.some(([msg]) =>
       msg.includes('Mod load order adjusted to satisfy dependencies.')
     );
     expect(logged).toBe(false);

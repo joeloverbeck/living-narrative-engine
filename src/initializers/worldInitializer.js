@@ -94,7 +94,7 @@ class WorldInitializer {
     this.#spatialIndexManager = spatialIndexManager;
     this.#referenceResolver = referenceResolver;
 
-    this.#logger.info(
+    this.#logger.debug(
       'WorldInitializer: Instance created (with ReferenceResolver).'
     );
   }
