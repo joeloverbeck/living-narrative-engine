@@ -95,7 +95,7 @@ describe('InitializationService', () => {
             return mockDomUiFacade;
           case tokens.ILogger:
             return mockLogger;
-          case tokens.ILLMAdapter:
+          case tokens.LLMAdapter:
             return mockLlmAdapter;
           case tokens.ISchemaValidator:
             return mockSchemaValidator;
@@ -186,7 +186,7 @@ describe('InitializationService', () => {
 
       expect(serviceResolveOrder).toEqual([
         tokens.WorldLoader,
-        tokens.ILLMAdapter,
+        tokens.LLMAdapter,
         tokens.ISchemaValidator, // Resolved by LlmConfigLoader via container
         tokens.IConfiguration, // Resolved by LlmConfigLoader via container
         tokens.SystemInitializer,
@@ -343,7 +343,7 @@ describe('InitializationService', () => {
         mockContainer.resolve = jest.fn((token) => {
           if (token === tokens.ILogger) return mockLogger;
           if (token === tokens.WorldLoader) return mockWorldLoader;
-          if (token === tokens.ILLMAdapter) return mockLlmAdapter;
+          if (token === tokens.LLMAdapter) return mockLlmAdapter;
           if (token === tokens.ISchemaValidator) return mockSchemaValidator;
           if (token === tokens.IConfiguration) return mockConfiguration;
           if (token === tokens.SystemInitializer) throw error;
@@ -376,7 +376,7 @@ describe('InitializationService', () => {
         mockContainer.resolve = jest.fn((token) => {
           if (token === tokens.ILogger) return mockLogger;
           if (token === tokens.WorldLoader) return mockWorldLoader;
-          if (token === tokens.ILLMAdapter) return mockLlmAdapter;
+          if (token === tokens.LLMAdapter) return mockLlmAdapter;
           if (token === tokens.ISchemaValidator) return mockSchemaValidator;
           if (token === tokens.IConfiguration) return mockConfiguration;
           if (token === tokens.SystemInitializer) return mockSystemInitializer;
@@ -430,7 +430,7 @@ describe('InitializationService', () => {
         mockContainer.resolve = jest.fn((token) => {
           if (token === tokens.ILogger) return mockLogger;
           if (token === tokens.WorldLoader) return mockWorldLoader;
-          if (token === tokens.ILLMAdapter) return mockLlmAdapter;
+          if (token === tokens.LLMAdapter) return mockLlmAdapter;
           if (token === tokens.ISchemaValidator) return mockSchemaValidator;
           if (token === tokens.IConfiguration) return mockConfiguration;
           if (token === tokens.SystemInitializer) return mockSystemInitializer;

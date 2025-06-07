@@ -13,7 +13,7 @@ import {
  * @class
  * @description
  *   The AlertRouter subscribes immediately to `core:system_warning_occurred`
- *   and `core:system_error_occurred`. If the UI is not yet ready (i.e. ChatAlertRenderer
+ *   and SYSTEM_ERROR_OCCURRED_ID. If the UI is not yet ready (i.e. ChatAlertRenderer
  *   has not called `notifyUIReady()`), it queues incoming events and starts a 5-second
  *   timer. If, after 5 seconds, `notifyUIReady()` still hasn’t been called, it dumps all
  *   queued events to the console (`console.warn` for warnings, `console.error` for errors).
@@ -66,7 +66,7 @@ export default class AlertRouter {
    *
    * @private
    * @param {string} name
-   *   Either 'core:system_warning_occurred' or 'core:system_error_occurred'.
+   *   Either SYSTEM_WARNING_OCCURRED_ID or SYSTEM_ERROR_OCCURRED_ID.
    * @param {object} payload
    *   Expected to contain a `message` property.
    */

@@ -7,7 +7,7 @@
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
- * @typedef {import('../interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter
+ * @typedef {import('../interfaces/ILLMAdapter.js').LLMAdapter} LLMAdapter
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
@@ -42,8 +42,8 @@ export class AITurnHandler extends BaseTurnHandler {
   #turnEndPort;
   /** @type {object} */
   #gameWorldAccess;
-  /** @type {ILLMAdapter} */
-  #illmAdapter;
+  /** @type {LLMAdapter} */ // FIXED: Corrected type
+  #llmAdapter;
   /** @type {ICommandProcessor} */
   #commandProcessor;
   /** @type {ICommandOutcomeInterpreter} */
@@ -70,7 +70,7 @@ export class AITurnHandler extends BaseTurnHandler {
   #promptContentProvider;
   /** @type {ILLMResponseProcessor} */
   #llmResponseProcessor;
-  /** @type {IAIPromptPipeline_Interface} */ // ADDED: Private field for the pipeline
+  /** @type {IAIPromptPipeline_Interface} */
   #aiPromptPipeline;
 
   #aiIsAwaitingExternalEvent = false;
@@ -84,7 +84,7 @@ export class AITurnHandler extends BaseTurnHandler {
    * @param {ITurnStateFactory} dependencies.turnStateFactory - Factory for creating turn states.
    * @param {ITurnEndPort} dependencies.turnEndPort
    * @param {object} dependencies.gameWorldAccess
-   * @param {ILLMAdapter} dependencies.illmAdapter
+   * @param {LLMAdapter} dependencies.llmAdapter
    * @param {ICommandProcessor} dependencies.commandProcessor
    * @param {ICommandOutcomeInterpreter} dependencies.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
@@ -101,32 +101,32 @@ export class AITurnHandler extends BaseTurnHandler {
    * @param {IAIPromptPipeline_Interface} dependencies.aiPromptPipeline
    */
   constructor({
-                logger,
-                turnStateFactory,
-                turnEndPort,
-                gameWorldAccess,
-                illmAdapter,
-                commandProcessor,
-                commandOutcomeInterpreter,
-                safeEventDispatcher,
-                subscriptionManager,
-                entityManager,
-                actionDiscoverySystem,
-                promptBuilder,
-                aiFallbackActionFactory,
-                aiPlayerStrategyFactory,
-                turnContextFactory,
-                gameStateProvider,
-                promptContentProvider,
-                llmResponseProcessor,
-                aiPromptPipeline, // ADDED: Dependency to constructor
-              }) {
+    logger,
+    turnStateFactory,
+    turnEndPort,
+    gameWorldAccess,
+    llmAdapter, // FIXED: Corrected parameter name
+    commandProcessor,
+    commandOutcomeInterpreter,
+    safeEventDispatcher,
+    subscriptionManager,
+    entityManager,
+    actionDiscoverySystem,
+    promptBuilder,
+    aiFallbackActionFactory,
+    aiPlayerStrategyFactory,
+    turnContextFactory,
+    gameStateProvider,
+    promptContentProvider,
+    llmResponseProcessor,
+    aiPromptPipeline,
+  }) {
     super({ logger, turnStateFactory });
 
     if (!turnEndPort) throw new Error('AITurnHandler: Invalid ITurnEndPort');
     if (!gameWorldAccess)
       throw new Error('AITurnHandler: Missing gameWorldAccess');
-    if (!illmAdapter) throw new Error('AITurnHandler: Invalid ILLMAdapter');
+    if (!llmAdapter) throw new Error('AITurnHandler: Invalid LLMAdapter'); // FIXED: Corrected check
     if (!commandProcessor)
       throw new Error('AITurnHandler: Invalid ICommandProcessor');
     if (!commandOutcomeInterpreter)
@@ -154,12 +154,11 @@ export class AITurnHandler extends BaseTurnHandler {
     if (!llmResponseProcessor)
       throw new Error('AITurnHandler: Invalid ILLMResponseProcessor');
     if (!aiPromptPipeline)
-      // ADDED: Validation for the new dependency
       throw new Error('AITurnHandler: Invalid IAIPromptPipeline');
 
     this.#turnEndPort = turnEndPort;
     this.#gameWorldAccess = gameWorldAccess;
-    this.#illmAdapter = illmAdapter;
+    this.#llmAdapter = llmAdapter; // FIXED: Corrected assignment
     this.#commandProcessor = commandProcessor;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
@@ -173,7 +172,7 @@ export class AITurnHandler extends BaseTurnHandler {
     this.#gameStateProvider = gameStateProvider;
     this.#promptContentProvider = promptContentProvider;
     this.#llmResponseProcessor = llmResponseProcessor;
-    this.#aiPromptPipeline = aiPromptPipeline; // ADDED: Store dependency in private field
+    this.#aiPromptPipeline = aiPromptPipeline;
 
     this.#aiIsAwaitingExternalEvent = false;
     this.#aiAwaitingExternalEventForActorId = null;
@@ -181,7 +180,7 @@ export class AITurnHandler extends BaseTurnHandler {
     const initialState = this._turnStateFactory.createInitialState(this);
     this._setInitialState(initialState);
     this._logger.debug(
-      `${this.constructor.name} initialized successfully with injected dependencies.`,
+      `${this.constructor.name} initialized successfully with injected dependencies.`
     );
   }
 
@@ -198,7 +197,7 @@ export class AITurnHandler extends BaseTurnHandler {
       this.#aiAwaitingExternalEventForActorId !== currentActorInContext?.id
     ) {
       this._logger.warn(
-        `${this.constructor.name}._getAIIsAwaitingExternalEventFlag: Flag true for ${this.#aiAwaitingExternalEventForActorId}, context actor ${currentActorInContext?.id}.`,
+        `${this.constructor.name}._getAIIsAwaitingExternalEventFlag: Flag true for ${this.#aiAwaitingExternalEventForActorId}, context actor ${currentActorInContext?.id}.`
       );
     }
     return false;
@@ -208,7 +207,7 @@ export class AITurnHandler extends BaseTurnHandler {
     const currentActorInContext = this.getTurnContext()?.getActor();
     if (actorId !== currentActorInContext?.id) {
       this._logger.error(
-        `${this.constructor.name}._setAIIsAwaitingExternalEventFlag: Actor mismatch. Attempt for ${actorId}, context ${currentActorInContext?.id}.`,
+        `${this.constructor.name}._setAIIsAwaitingExternalEventFlag: Actor mismatch. Attempt for ${actorId}, context ${currentActorInContext?.id}.`
       );
       return;
     }
@@ -217,29 +216,27 @@ export class AITurnHandler extends BaseTurnHandler {
       ? actorId
       : null;
     this._logger.debug(
-      `${this.constructor.name}._setAIIsAwaitingExternalEventFlag: AI waiting flag for actor ${actorId} set to ${this.#aiIsAwaitingExternalEvent}.`,
+      `${this.constructor.name}._setAIIsAwaitingExternalEventFlag: AI waiting flag for actor ${actorId} set to ${this.#aiIsAwaitingExternalEvent}.`
     );
   }
 
   async startTurn(actor) {
     this._logger.debug(
-      `${this.constructor.name}.startTurn called for AI actor ${actor?.id}.`,
+      `${this.constructor.name}.startTurn called for AI actor ${actor?.id}.`
     );
     super._assertHandlerActive();
 
     if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
       this._logger.error(
-        `${this.constructor.name}.startTurn: actor is required and must have a valid id.`,
+        `${this.constructor.name}.startTurn: actor is required and must have a valid id.`
       );
       throw new Error(`${this.constructor.name}.startTurn: actor is required.`);
     }
     this._setCurrentActorInternal(actor);
 
-    // MODIFIED: This block now passes the correct dependencies to the strategy.
-    // The strategy needs the pipeline itself, not its individual components.
     const aiStrategy = this.#aiPlayerStrategyFactory.create({
-      llmAdapter: this.#illmAdapter,
-      aiPromptPipeline: this.#aiPromptPipeline, // Pass the stored pipeline
+      llmAdapter: this.#llmAdapter, // FIXED: Now consistent
+      aiPromptPipeline: this.#aiPromptPipeline,
       llmResponseProcessor: this.#llmResponseProcessor,
       aiFallbackActionFactory: this.#aiFallbackActionFactory,
       logger: this._logger,
@@ -273,28 +270,28 @@ export class AITurnHandler extends BaseTurnHandler {
 
     if (!this._currentState) {
       this._logger.error(
-        `${this.constructor.name}.startTurn: _currentState is null for actor ${actor.id}. This should have been set by turnStateFactory.`,
+        `${this.constructor.name}.startTurn: _currentState is null for actor ${actor.id}. This should have been set by turnStateFactory.`
       );
       const fallbackInitialState =
         this._turnStateFactory.createInitialState(this);
       if (fallbackInitialState) {
         this._logger.warn(
-          `${this.constructor.name}.startTurn: Attempting to set initial state again.`,
+          `${this.constructor.name}.startTurn: Attempting to set initial state again.`
         );
         this._setInitialState(fallbackInitialState);
         if (!this._currentState)
           throw new Error(
-            'AITurnHandler: _currentState is null, and recovery failed.',
+            'AITurnHandler: _currentState is null, and recovery failed.'
           );
       } else {
         throw new Error(
-          'AITurnHandler: _currentState is null, and turnStateFactory failed to provide a state.',
+          'AITurnHandler: _currentState is null, and turnStateFactory failed to provide a state.'
         );
       }
     }
     await this._currentState.startTurn(this, actor);
     this._logger.info(
-      `${this.constructor.name}.startTurn: Turn for AI actor ${actor.id} delegated.`,
+      `${this.constructor.name}.startTurn: Turn for AI actor ${actor.id} delegated.`
     );
   }
 
@@ -303,7 +300,7 @@ export class AITurnHandler extends BaseTurnHandler {
     this.#aiIsAwaitingExternalEvent = false;
     this.#aiAwaitingExternalEventForActorId = null;
     this._logger.debug(
-      `${this.constructor.name}: AI 'isAwaitingExternalEvent' flags reset. Context: '${logContext}'.`,
+      `${this.constructor.name}: AI 'isAwaitingExternalEvent' flags reset. Context: '${logContext}'.`
     );
   }
 
@@ -311,15 +308,15 @@ export class AITurnHandler extends BaseTurnHandler {
     if (this._isDestroyed) return;
     this._logger.info(`${this.constructor.name}.destroy() invoked.`);
     if (
-      this.#illmAdapter &&
-      typeof this.#illmAdapter.cancelOngoingOperations === 'function'
+      this.#llmAdapter && // FIXED: Corrected property name
+      typeof this.#llmAdapter.cancelOngoingOperations === 'function' // FIXED: Corrected property name
     ) {
       try {
-        await Promise.resolve(this.#illmAdapter.cancelOngoingOperations());
+        await Promise.resolve(this.#llmAdapter.cancelOngoingOperations()); // FIXED: Corrected property name
       } catch (e) {
         this._logger.warn(
-          `${this.constructor.name}: Error cancelling ILLMAdapter ops: ${e.message}`,
-          e,
+          `${this.constructor.name}: Error cancelling LLMAdapter ops: ${e.message}`,
+          e
         );
       }
     }
@@ -331,4 +328,3 @@ export class AITurnHandler extends BaseTurnHandler {
 }
 
 export default AITurnHandler;
-// --- FILE END ---

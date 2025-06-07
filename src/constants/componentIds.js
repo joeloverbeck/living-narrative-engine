@@ -1,5 +1,5 @@
 // ------------------------------
-// src/types/componentIds.js
+// src/constants/componentIds.js
 // ------------------------------
 
 export const NAME_COMPONENT_ID = 'core:name';

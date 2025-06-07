@@ -602,7 +602,6 @@ class CommandProcessor {
     internalDetails,
     originalError = null
   ) {
-    // Payload for core:system_error_occurred does NOT include eventName within it.
     const payload = {
       message: userMessage,
       details: {

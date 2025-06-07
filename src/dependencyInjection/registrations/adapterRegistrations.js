@@ -156,7 +156,7 @@ export function registerAdapters(container) {
   );
 
   // --- Register ConfigurableLLMAdapter lazily ---
-  registrar.singletonFactory(tokens.ILLMAdapter, (c) => {
+  registrar.singletonFactory(tokens.LLMAdapter, (c) => {
     logger.info(
       'Adapter Registration: Starting LLM Adapter setup for CLIENT environment...'
     );
@@ -212,13 +212,13 @@ export function registerAdapters(container) {
     });
 
     logger.info(
-      `Adapter Registration: ConfigurableLLMAdapter instance (token: ${tokens.ILLMAdapter}) created. It must be initialized explicitly later in the application's bootstrap sequence, after all schemas have been loaded.`
+      `Adapter Registration: ConfigurableLLMAdapter instance (token: ${tokens.LLMAdapter}) created. It must be initialized explicitly later in the application's bootstrap sequence, after all schemas have been loaded.`
     );
 
     return adapterInstance;
   });
   logger.info(
-    `Adapter Registration: Registered ConfigurableLLMAdapter factory as ${tokens.ILLMAdapter}. Deferred (explicit) initialization is required.`
+    `Adapter Registration: Registered ConfigurableLLMAdapter factory as ${tokens.LLMAdapter}. Deferred (explicit) initialization is required.`
   );
 
   logger.info('Adapter Registrations: All registrations complete.');

@@ -682,7 +682,7 @@ export function registerDomainServices(container) {
 
   r.singletonFactory(tokens.IAIPromptPipeline, (c) => {
     return new AIPromptPipeline({
-      llmAdapter: c.resolve(tokens.ILLMAdapter),
+      llmAdapter: c.resolve(tokens.LLMAdapter),
       gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
       promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
       promptBuilder: c.resolve(tokens.IPromptBuilder),

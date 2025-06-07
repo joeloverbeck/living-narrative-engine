@@ -219,7 +219,7 @@ export function registerUI(
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-        llmAdapter: c.resolve(tokens.ILLMAdapter),
+        llmAdapter: c.resolve(tokens.LLMAdapter),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       })
   );

@@ -347,7 +347,7 @@ describe('UiMessageRenderer', () => {
       );
     });
 
-    it('should handle invalid system_error_occurred payload', () => {
+    it('should handle invalid SYSTEM_ERROR_OCCURRED_ID payload', () => {
       const renderer = createRenderer();
       mockLogger.error.mockClear(); // Clear constructor/setup logs
       mockLogger.debug.mockClear();

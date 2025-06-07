@@ -41,10 +41,10 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       id: 'ai-actor-123',
       /** @param {string} componentId */
       hasComponent: (componentId) => {
-        return (
-          componentId === ACTOR_COMPONENT_ID &&
-          componentId !== PLAYER_COMPONENT_ID
-        );
+        // Corrected logic: An AI actor should have ACTOR_COMPONENT_ID but not PLAYER_COMPONENT_ID.
+        if (componentId === PLAYER_COMPONENT_ID) return false;
+        if (componentId === ACTOR_COMPONENT_ID) return true;
+        return false;
       },
     };
 
@@ -54,8 +54,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     const resolver = container.resolve(tokens.TurnHandlerResolver);
     expect(resolver).toBeInstanceOf(TurnHandlerResolver);
 
-    // 3. Attempt to create the AI handler. The key assertion is that this does NOT throw.
-    // The original bug would cause a "Invalid IAIFallbackActionFactory" error here.
+    // 3. Attempt to create the AI handler.
     let handler;
     await expect(async () => {
       handler = await resolver.resolveHandler(
@@ -73,8 +72,8 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
 
   it('should throw an error if AITurnHandler constructor dependencies are manually misconfigured', () => {
     // --- Arrange ---
-    // This is a sanity check to prove our test works. We'll register a broken
-    // factory for AITurnHandler that omits the dependency.
+    // This is a sanity check. We'll register a broken factory for AITurnHandler
+    // that intentionally omits a required dependency.
 
     const brokenContainer = new AppContainer();
     configureContainer(brokenContainer, {
@@ -93,7 +92,8 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           turnStateFactory: c.resolve(tokens.ITurnStateFactory),
           gameWorldAccess: c.resolve(tokens.IWorldContext),
           turnEndPort: c.resolve(tokens.ITurnEndPort),
-          illmAdapter: c.resolve(tokens.ILLMAdapter),
+          // FIXED: Use the correct property name 'llmAdapter' and token 'LLMAdapter'
+          llmAdapter: c.resolve(tokens.LLMAdapter),
           commandProcessor: c.resolve(tokens.ICommandProcessor),
           commandOutcomeInterpreter: c.resolve(
             tokens.ICommandOutcomeInterpreter
@@ -103,18 +103,19 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           entityManager: c.resolve(tokens.IEntityManager),
           actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
           promptBuilder: c.resolve(tokens.IPromptBuilder),
-          // --- INTENTIONALLY MISSING ---
+          // --- INTENTIONALLY MISSING to trigger the expected error ---
           // aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
-          // --- INTENTIONALLY MISSING ---
+          // -----------------------------------------------------------
           aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
           turnContextFactory: c.resolve(tokens.ITurnContextFactory),
           gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
           promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
           llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+          aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline), // This was missing
         });
       },
       { lifecycle: 'transient' }
-    ); // Use transient to ensure our factory is called
+    );
 
     // --- Act & Assert ---
     // We expect the resolution of this misconfigured handler to fail with the exact error message.

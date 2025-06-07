@@ -345,7 +345,7 @@ describe('Adapter Registrations - registerAdapters', () => {
   // VVVVVV THIS IS THE CORRECTED TEST VVVVVV
   it('should pass the resolved logger to ConfigurableLLMAdapter and its direct dependencies during its registration', () => {
     registerAdapters(mockContainer);
-    const llmAdapterInstance = mockContainer.resolve(tokens.ILLMAdapter); // This invokes the factory for ILLMAdapter
+    const llmAdapterInstance = mockContainer.resolve(tokens.LLMAdapter); // This invokes the factory for ILLMAdapter
 
     // Assertions for dependencies of components created directly within registerAdapters
 

@@ -102,7 +102,7 @@ beforeEach(() => {
   mockLlmAdapterInstance.isInitialized.mockReturnValue(false);
   mockLlmAdapterInstance.isOperational.mockReturnValue(false);
 
-  container.register(tokens.ILLMAdapter, mockLlmAdapterInstance);
+  container.register(tokens.LLMAdapter, mockLlmAdapterInstance);
   container.register(tokens.ISchemaValidator, mockSchemaValidatorInstance);
   container.register(tokens.IConfiguration, mockConfigurationInstance);
   container.register(tokens.ISafeEventDispatcher, {

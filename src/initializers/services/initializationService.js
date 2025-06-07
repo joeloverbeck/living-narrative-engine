@@ -127,7 +127,7 @@ class InitializationService extends IInitializationService {
       try {
         const llmAdapter =
           /** @type {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} */
-          (this.#container.resolve(tokens.ILLMAdapter));
+          (this.#container.resolve(tokens.LLMAdapter));
 
         if (!llmAdapter) {
           this.#logger.error(
