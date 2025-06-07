@@ -266,7 +266,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
       }
     }
 
-    this.logger.info(`${this._logPrefix} Modal shown.`);
+    this.logger.debug(`${this._logPrefix} Modal shown.`);
   }
 
   /**
@@ -332,7 +332,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
       }
     }, this._hideAnimationDuration);
 
-    this.logger.info(`${this._logPrefix} Modal hidden.`);
+    this.logger.debug(`${this._logPrefix} Modal hidden.`);
   }
 
   /**
@@ -538,6 +538,6 @@ export class BaseModalRenderer extends BoundDomRendererBase {
     super.destroy(); // Handles VED subscriptions and DOM listeners removal
 
     this._previouslyFocusedElement = null; // Clear reference
-    this.logger.info(`${this._logPrefix} Destroyed.`);
+    this.logger.debug(`${this._logPrefix} Destroyed.`);
   }
 }

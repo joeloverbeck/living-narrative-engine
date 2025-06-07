@@ -95,7 +95,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
         `${this._logPrefix} Speech input element for player indicator cached.`
       );
     } else {
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Speech input element (selector: '${speechInputSelector}') not found. Player input indicator will not be active via direct input listening.`
       );
     }
@@ -104,7 +104,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
       this.#hideIndicator('initialization'); // Ensure it's hidden initially
     }
     this.#subscribeToEvents();
-    this.logger.info(`${this._logPrefix} Initialized.`);
+    this.logger.debug(`${this._logPrefix} Initialized.`);
   }
 
   /**
@@ -299,7 +299,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
     this.#speechInputElement = null; // Clear reference
     this.#domElementFactory = null; // Clear reference
 
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} ProcessingIndicatorController disposed.`
     );
   }

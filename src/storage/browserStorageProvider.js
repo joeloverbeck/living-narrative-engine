@@ -43,7 +43,7 @@ export class BrowserStorageProvider extends IStorageProvider {
       ) {
         return this.#rootHandle;
       }
-      this.#logger.info(
+      this.#logger.debug(
         'Permission to root directory no longer granted. Requesting again...'
       );
       if (
@@ -62,7 +62,7 @@ export class BrowserStorageProvider extends IStorageProvider {
 
     if (promptIfMissing) {
       try {
-        this.#logger.info(
+        this.#logger.debug(
           'Prompting user for root directory access (readwrite)...'
         );
         const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
@@ -192,7 +192,7 @@ export class BrowserStorageProvider extends IStorageProvider {
   async writeFileAtomically(filePath, data) {
     // --- MODIFICATION START: Normalize filePath before using it to construct tempFilePath ---
     const normalizedFilePath = filePath.replace(/^\/+|\/+$/g, '');
-    this.#logger.info(
+    this.#logger.debug(
       `BrowserStorageProvider: Beginning atomic write for ${normalizedFilePath}.`
     );
     const tempFilePath = `${normalizedFilePath}.tmp`;
@@ -210,7 +210,7 @@ export class BrowserStorageProvider extends IStorageProvider {
       });
       await tempWritable.write(data);
       await tempWritable.close();
-      this.#logger.info(
+      this.#logger.debug(
         `BrowserStorageProvider: Successfully wrote ${data.byteLength} bytes to temporary file ${tempFilePath}.`
       );
     } catch (error) {
@@ -249,7 +249,7 @@ export class BrowserStorageProvider extends IStorageProvider {
       });
       await finalWritable.write(data);
       await finalWritable.close();
-      this.#logger.info(
+      this.#logger.debug(
         `BrowserStorageProvider: Successfully replaced/wrote final file ${normalizedFilePath}.`
       );
     } catch (error) {
@@ -268,7 +268,7 @@ export class BrowserStorageProvider extends IStorageProvider {
     );
     try {
       await this.deleteFile(tempFilePath);
-      this.#logger.info(
+      this.#logger.debug(
         `BrowserStorageProvider: Successfully cleaned up temporary file ${tempFilePath}.`
       );
     } catch (cleanupError) {
@@ -278,7 +278,7 @@ export class BrowserStorageProvider extends IStorageProvider {
       );
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `BrowserStorageProvider: Atomic write to ${normalizedFilePath} completed successfully.`
     );
     return { success: true };
@@ -304,7 +304,7 @@ export class BrowserStorageProvider extends IStorageProvider {
           matchingFiles.push(entry.name);
         }
       }
-      this.#logger.info(
+      this.#logger.debug(
         `BrowserStorageProvider: Found ${matchingFiles.length} files in "${directoryPath}" matching "${pattern}".`
       );
       return matchingFiles;

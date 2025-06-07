@@ -194,7 +194,7 @@ class RuleLoader extends BaseManifestItemLoader {
     this._logger.warn(
       `RuleLoader: loadAllRules is potentially deprecated. Aggregation should use results from loadItemsForMod.`
     );
-    this._logger.info(
+    this._logger.debug(
       `RuleLoader: Starting rule loading for ${modsToLoad.length} mods.`
     );
     let totalRulesLoaded = 0;
@@ -220,7 +220,7 @@ class RuleLoader extends BaseManifestItemLoader {
       }
     }
 
-    this._logger.info(
+    this._logger.debug(
       `RuleLoader: Finished loading rules for all mods. Total rules count: ${totalRulesLoaded}.`
     );
     return totalRulesLoaded; // Return only the count as per original method signature

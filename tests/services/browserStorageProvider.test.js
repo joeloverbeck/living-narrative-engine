@@ -166,16 +166,16 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
     );
     expect(mockFileSystemState[tempFilePath]).toBeUndefined();
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `BrowserStorageProvider: Successfully wrote ${data.byteLength} bytes to temporary file ${tempFilePath}.`
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `BrowserStorageProvider: Successfully replaced/wrote final file ${filePath}.`
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `BrowserStorageProvider: Successfully cleaned up temporary file ${tempFilePath}.`
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `BrowserStorageProvider: Atomic write to ${filePath} completed successfully.`
     );
   });
@@ -268,7 +268,7 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
     expect(savesDirHandleMock.removeEntry).toHaveBeenCalledWith(tempFileName);
     expect(mockFileSystemState[tempFilePath]).toBeUndefined();
 
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `BrowserStorageProvider: Atomic write to ${filePath} completed successfully.`
     );
   });
@@ -533,7 +533,7 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
     expect(mockFileSystemState[normalizedPath]).toEqual(data);
     expect(slashedDirHandleMock.removeEntry).toHaveBeenCalledWith(tempFileName);
     expect(mockFileSystemState[tempNormalizedPath]).toBeUndefined();
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `BrowserStorageProvider: Atomic write to ${normalizedPath} completed successfully.`
     );
   });

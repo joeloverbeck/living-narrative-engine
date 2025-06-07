@@ -24,11 +24,11 @@ afterEach(() => {
 });
 
 describe('PlaytimeTracker', () => {
-  test('startSession sets start time and logs info', () => {
+  test('startSession sets start time and logs debug', () => {
     const tracker = new PlaytimeTracker({ logger: mockLogger });
     tracker.startSession();
     expect(tracker._getSessionStartTime()).toBe(currentTime);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `PlaytimeTracker: Session started at ${currentTime}`
     );
   });
@@ -53,10 +53,10 @@ describe('PlaytimeTracker', () => {
     expect(tracker._getSessionStartTime()).toBe(0);
   });
 
-  test('endSessionAndAccumulate with no session logs info', () => {
+  test('endSessionAndAccumulate with no session logs debug', () => {
     const tracker = new PlaytimeTracker({ logger: mockLogger });
     tracker.endSessionAndAccumulate();
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       'PlaytimeTracker: endSessionAndAccumulate called but no active session was found.'
     );
   });
