@@ -5,7 +5,6 @@ import {
   expect,
   jest,
   beforeEach,
-  afterEach,
 } from '@jest/globals';
 import { ChatAlertRenderer } from '../../src/domUI/index.js';
 import { Throttler } from '../../src/alerting/throttler.js';
@@ -182,15 +181,7 @@ const createMockDomElementFactory = () => {
 
 const createMockAlertRouter = () => ({ notifyUIReady: jest.fn() });
 
-const createMockAlertMessageFormatter = () => ({
-  format: jest.fn().mockReturnValue({
-    displayMessage: 'Default Mock Message',
-    developerDetails: null,
-  }),
-});
-
 describe('ChatAlertRenderer', () => {
-  let renderer;
   let mocks;
 
   const setup = (panelExists = true) => {
@@ -205,7 +196,6 @@ describe('ChatAlertRenderer', () => {
       safeEventDispatcher: createMockSafeEventDispatcher(),
       domElementFactory: createMockDomElementFactory(),
       alertRouter: createMockAlertRouter(),
-      alertMessageFormatter: createMockAlertMessageFormatter(),
     };
     localMocks.mockChatPanel = localMocks.documentContext._mockChatPanel;
 
@@ -217,7 +207,6 @@ describe('ChatAlertRenderer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     const setupResult = setup();
-    renderer = setupResult.renderer;
     mocks = setupResult.mocks;
     mockWarningAllow.mockReturnValue(true);
     mockErrorAllow.mockReturnValue(true);
@@ -273,12 +262,9 @@ describe('ChatAlertRenderer', () => {
   describe('DOM & Logic Tests', () => {
     it('should render a warning bubble when panel is present and throttler allows', () => {
       const message = 'This is a test warning.';
-      mocks.alertMessageFormatter.format.mockReturnValue({
-        displayMessage: message,
-        developerDetails: null,
-      });
       mocks.safeEventDispatcher.trigger('ui:display_warning', {
-        details: { message },
+        message,
+        details: {},
       });
 
       expect(mocks.mockChatPanel.appendChild).toHaveBeenCalledTimes(1);
@@ -291,11 +277,8 @@ describe('ChatAlertRenderer', () => {
       mockWarningAllow.mockReturnValue(true);
 
       const message = 'Console warning.';
-      localMocks.alertMessageFormatter.format.mockReturnValue({
-        displayMessage: message,
-        developerDetails: null,
-      });
       localMocks.safeEventDispatcher.trigger('ui:display_warning', {
+        message,
         details: {},
       });
 

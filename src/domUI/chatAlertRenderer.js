@@ -11,12 +11,11 @@ import { generateKey } from '../alerting/throttleUtils.js';
  * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  * @typedef {import('../alerting/alertRouter.js').default} AlertRouter
- * @typedef {import('../alerting/alertMessageFormatter.js').default} AlertMessageFormatter
  */
 
 /**
  * @class ChatAlertRenderer
- * @extends {BoundDomRendererBase}
+ * @augments {BoundDomRendererBase}
  * @description Renders warning and error alerts directly within the main chat/message panel.
  * It detects the presence of the chat panel and signals its readiness to the AlertRouter,
  * preventing alerts from being flushed to the console when a UI target is available.
@@ -26,8 +25,6 @@ import { generateKey } from '../alerting/throttleUtils.js';
 export class ChatAlertRenderer extends BoundDomRendererBase {
   /** @private @type {AlertRouter} */
   #alertRouter;
-  /** @private @type {AlertMessageFormatter} */
-  #alertMessageFormatter;
   /** @private @type {DomElementFactory} */
   #domElementFactory;
   /** @private @type {ISafeEventDispatcher} */
@@ -48,13 +45,13 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Creates an instance of ChatAlertRenderer.
+   *
    * @param {object} dependencies The dependencies for the renderer.
    * @param {ILogger} dependencies.logger The logger instance.
    * @param {IDocumentContext} dependencies.documentContext The document context abstraction.
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher The safe event dispatcher.
    * @param {DomElementFactory} dependencies.domElementFactory The factory for creating DOM elements.
    * @param {AlertRouter} dependencies.alertRouter The router that directs alerts.
-   * @param {AlertMessageFormatter} dependencies.alertMessageFormatter The formatter for creating alert messages.
    * @throws {Error} If any of the required dependencies are missing.
    */
   constructor({
@@ -63,7 +60,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     safeEventDispatcher,
     domElementFactory,
     alertRouter,
-    alertMessageFormatter,
   }) {
     // **FIX**: Pass the safe dispatcher to the parent under the key it expects.
     super({
@@ -84,11 +80,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     if (!alertRouter) {
       throw new Error(`${this._logPrefix} AlertRouter dependency is required.`);
     }
-    if (!alertMessageFormatter) {
-      throw new Error(
-        `${this._logPrefix} AlertMessageFormatter dependency is required.`
-      );
-    }
     if (!domElementFactory) {
       throw new Error(
         `${this._logPrefix} DomElementFactory dependency is required.`
@@ -97,7 +88,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#alertRouter = alertRouter;
-    this.#alertMessageFormatter = alertMessageFormatter;
     this.#domElementFactory = domElementFactory;
 
     // --- Throttler Instantiation ---
@@ -148,6 +138,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   // ... rest of the class methods (createAndAppendBubble, handleWarning, etc.) are unchanged ...
   /**
    * Scrolls the chat panel to the bottom to ensure the latest message is visible.
+   *
    * @private
    */
   #scrollToBottom() {
@@ -159,6 +150,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   /**
    * Handles click events on the chat panel, delegating to toggle handlers
    * if a toggle button was the event target.
+   *
    * @private
    * @param {MouseEvent} event The click event.
    */
@@ -178,6 +170,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Toggles the text content of a message paragraph between its truncated and full versions.
+   *
    * @private
    * @param {HTMLButtonElement} button The toggle button that was clicked.
    */
@@ -208,6 +201,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Toggles the visibility of the developer details section.
+   *
    * @private
    * @param {HTMLButtonElement} button The toggle button that was clicked.
    */
@@ -229,6 +223,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Creates and appends an alert bubble to the chat panel.
+   *
    * @private
    * @param {object} config
    * @param {'warning' | 'error'} config.type The type of alert.
@@ -341,18 +336,66 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   }
 
   /**
+   * Creates a user-friendly message from raw details when none is provided.
+   *
+   * @private
+   * @param {any} details The raw details object from the event payload.
+   * @returns {string} A user-facing message.
+   */
+  #getUserFriendlyMessage(details) {
+    if (!details || typeof details !== 'object') {
+      return 'An unknown warning/error occurred.';
+    }
+
+    switch (details.statusCode) {
+      case 401:
+      case 403:
+        return 'Authentication failed. Please check your credentials or permissions.';
+      case 404:
+        return 'The requested resource could not be found.';
+      case 500:
+        return 'An unexpected server error occurred. Please try again later.';
+      case 503:
+        return 'Service temporarily unavailable. Please retry in a moment.';
+      default:
+        return details.message || 'An unexpected error occurred.';
+    }
+  }
+
+  /**
+   * Extracts a developer-focused details string from a raw details object.
+   *
+   * @private
+   * @param {any} details The raw details object from the event payload.
+   * @returns {string | null} A details string or null if not applicable.
+   */
+  #extractDeveloperDetails(details) {
+    if (!details || typeof details !== 'object') {
+      return details === null ? 'null' : `Malformed details: ${typeof details}`;
+    }
+
+    if (typeof details.statusCode === 'number') {
+      const parts = [details.statusCode];
+      if (details.raw) parts.push(details.raw);
+      if (details.url) parts.push(`at ${details.url}`);
+      return parts.join(' ');
+    }
+
+    return null;
+  }
+
+  /**
    * Handles the 'ui:display_warning' event.
+   *
    * @private
    * @param {IEvent<DisplayWarningPayload>} event The event object containing the warning details.
    */
   #handleWarning(event) {
     const { message, details } = event.payload;
 
-    // Format the message from details, which gives a canonical display message.
-    const formatResult = this.#alertMessageFormatter.format(details);
-    // A summary event from the throttler will have a `message` property. Prioritize it.
-    const displayMessage = message || formatResult.displayMessage;
-    const developerDetails = formatResult.developerDetails;
+    const canonicalMessage = message || this.#getUserFriendlyMessage(details);
+    const displayMessage = canonicalMessage;
+    const developerDetails = this.#extractDeveloperDetails(details);
 
     if (!this.#hasPanel) {
       const consoleMessage = `[UI WARNING] ${displayMessage}${
@@ -366,8 +409,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     const escapedMessage = escapeHtml(displayMessage);
     const key = generateKey(escapedMessage, details);
     const shouldRender = this.#warningThrottler.allow(key, {
-      // For the summary, use the canonical message from the formatter, not the summary's own text.
-      message: formatResult.displayMessage,
+      message: canonicalMessage,
       details: details,
     });
 
@@ -385,15 +427,16 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Handles the 'ui:display_error' event.
+   *
    * @private
    * @param {IEvent<DisplayErrorPayload>} event The event object containing the error details.
    */
   #handleError(event) {
     const { message, details } = event.payload;
 
-    const formatResult = this.#alertMessageFormatter.format(details);
-    const displayMessage = message || formatResult.displayMessage;
-    const developerDetails = formatResult.developerDetails;
+    const canonicalMessage = message || this.#getUserFriendlyMessage(details);
+    const displayMessage = canonicalMessage;
+    const developerDetails = this.#extractDeveloperDetails(details);
 
     if (!this.#hasPanel) {
       const consoleMessage = `[UI ERROR] ${displayMessage}${
@@ -407,7 +450,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     const escapedMessage = escapeHtml(displayMessage);
     const key = generateKey(escapedMessage, details);
     const shouldRender = this.#errorThrottler.allow(key, {
-      message: formatResult.displayMessage,
+      message: canonicalMessage,
       details: details,
     });
 

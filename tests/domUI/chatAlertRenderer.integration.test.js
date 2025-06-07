@@ -30,12 +30,7 @@ const mockAlertRouter = {
   notifyUIReady: jest.fn(),
 };
 
-const mockAlertMessageFormatter = {
-  format: jest.fn(),
-};
-
 describe('ChatAlertRenderer Throttling Integration', () => {
-  let renderer;
   let chatPanel;
   let mockSafeEventDispatcher;
   let testDocumentContext;
@@ -66,12 +61,6 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       unsubscribe: jest.fn(),
     };
 
-    // Set a default behavior for the formatter mock
-    mockAlertMessageFormatter.format.mockImplementation((details) => ({
-      displayMessage: `Formatted message for ${details?.url || 'unknown'}`,
-      developerDetails: `Details: ${JSON.stringify(details)}`,
-    }));
-
     // Wrap JSDOM's document in the expected context object interface
     testDocumentContext = {
       query: (selector) => document.querySelector(selector),
@@ -79,13 +68,12 @@ describe('ChatAlertRenderer Throttling Integration', () => {
     };
 
     // Instantiate the renderer with all its mocked dependencies
-    renderer = new ChatAlertRenderer({
+    new ChatAlertRenderer({
       logger: mockLogger,
       documentContext: testDocumentContext,
       safeEventDispatcher: mockSafeEventDispatcher,
       domElementFactory: new DomElementFactory(testDocumentContext),
       alertRouter: mockAlertRouter,
-      alertMessageFormatter: mockAlertMessageFormatter,
     });
   });
 
@@ -97,6 +85,7 @@ describe('ChatAlertRenderer Throttling Integration', () => {
 
   /**
    * Helper to simulate an external event dispatch, triggering the renderer's subscribed handler.
+   *
    * @param {string} eventName The name of the event to fire.
    * @param {object} payload The event payload.
    */
@@ -118,14 +107,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
     it('should suppress identical warnings and render a summary bubble after 10s', () => {
       // --- Arrange ---
       const warningPayload = {
+        message: 'Connection timed out.',
         details: { statusCode: 408, url: '/api/data' },
       };
-
-      // The throttler's key and summary message depend on the formatter's output.
-      mockAlertMessageFormatter.format.mockReturnValue({
-        displayMessage: 'Connection timed out.',
-        developerDetails: 'Status: 408, URL: /api/data',
-      });
 
       // --- Act: Dispatch three identical events in quick succession ---
       fireEvent('ui:display_warning', warningPayload);
@@ -173,12 +157,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
     it('should render two separate bubbles for a warning and an error with the same content', () => {
       // --- Arrange ---
       const payload = {
+        message: 'Same message content.',
         details: { statusCode: 500, url: '/api/critical' },
       };
-      mockAlertMessageFormatter.format.mockReturnValue({
-        displayMessage: 'Same message content.',
-        developerDetails: 'Status: 500',
-      });
 
       // --- Act ---
       fireEvent('ui:display_warning', payload);
@@ -213,12 +194,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
     it('should render a single error bubble and NOT a summary for a one-off event', () => {
       // --- Arrange ---
       const finalErrorPayload = {
+        message: 'Final attempt failed after 3 retries.',
         details: { statusCode: 504, url: '/api/flaky-service' },
       };
-      mockAlertMessageFormatter.format.mockReturnValue({
-        displayMessage: 'Final attempt failed after 3 retries.',
-        developerDetails: 'Status: 504',
-      });
 
       // --- Act: Dispatch a single, final error event ---
       fireEvent('ui:display_error', finalErrorPayload);

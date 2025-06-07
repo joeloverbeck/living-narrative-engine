@@ -16,7 +16,6 @@
  * @example
  * generateKey('User not found', { statusCode: 404, url: '/api/users/123' });
  * // returns 'User not found::404::/api/users/123'
- *
  * @example
  * generateKey('An unknown error occurred', null);
  * // returns 'An unknown error occurred::::'
