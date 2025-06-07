@@ -1,13 +1,8 @@
-// src/domUI/uiMessageRenderer.js
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 // DomElementFactory is not explicitly imported if only used via this.#domElementFactory,
 // but good practice to keep it if it was there or if type hints are desired.
 // import DomElementFactory from './domElementFactory.js';
-import {
-  ACTION_FAILED_ID,
-  DISPLAY_MESSAGE_ID,
-  SYSTEM_ERROR_OCCURRED_ID,
-} from '../constants/eventIds.js';
+import { ACTION_FAILED_ID, DISPLAY_MESSAGE_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
@@ -143,12 +138,6 @@ export class UiMessageRenderer extends BoundDomRendererBase {
     );
     this._addSubscription(
       this.validatedEventDispatcher.subscribe(
-        SYSTEM_ERROR_OCCURRED_ID,
-        this.#onShowFatal.bind(this)
-      )
-    );
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
         ACTION_FAILED_ID, // Assuming this is the correct event for echoing failed actions.
         this.#onCommandEcho.bind(this)
       )
@@ -247,7 +236,10 @@ export class UiMessageRenderer extends BoundDomRendererBase {
     this.elements.messageList.appendChild(li);
     this.#scrollToBottom();
     this.logger.debug(
-      `${this._logPrefix} Rendered message: ${type} - ${String(text).substring(0, 50)}`
+      `${this._logPrefix} Rendered message: ${type} - ${String(text).substring(
+        0,
+        50
+      )}`
     );
   }
 
@@ -276,27 +268,6 @@ export class UiMessageRenderer extends BoundDomRendererBase {
         eventObject
       );
     }
-  }
-
-  /**
-   * Handles the SYSTEM_ERROR_OCCURRED_ID event.
-   *
-   * @param {IEvent<any>} eventObject The full event object.
-   */
-  #onShowFatal(eventObject) {
-    const payload = eventObject?.payload;
-    if (!payload || typeof payload.message !== 'string') {
-      this.logger.error(
-        `${this._logPrefix} Received invalid ${SYSTEM_ERROR_OCCURRED_ID} payload.`,
-        eventObject
-      );
-      this.render('An unspecified fatal system error occurred.', 'fatal');
-      return;
-    }
-    let msg = payload.message;
-    if (payload.details?.raw) msg += `\nDetails: ${payload.details.raw}`;
-    this.logger.error(`${this._logPrefix} Fatal error displayed: ${msg}`); // Log before render as render also logs
-    this.render(msg, 'fatal');
   }
 
   /**

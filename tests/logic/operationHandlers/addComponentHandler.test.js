@@ -4,7 +4,8 @@
  * @jest-environment node
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js'; // Adjust path if needed
+import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js'; // Adjust path if needed
 
 // --- Type-hints (for editors only) ------------------------------------------
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -318,7 +319,7 @@ describe('AddComponentHandler', () => {
       {}
     );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      'core:system_error_occurred',
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Failed to add component'),
       })

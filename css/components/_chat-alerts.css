@@ -23,39 +23,39 @@
  */
 :root {
   /*
-     * --error-color: The text and border color for error bubbles.
-     * Override to change the primary color of error alerts.
-     */
+       * --error-color: The text and border color for error bubbles.
+       * Override to change the primary color of error alerts.
+       */
   --error-color: #b00020;
 
   /*
-     * --error-background: The background color for error bubbles.
-     * Override to change the fill color of error alerts.
-     */
+       * --error-background: The background color for error bubbles.
+       * Override to change the fill color of error alerts.
+       */
   --error-background: #ffcdd2;
 
   /*
-     * --warning-color: The text and border color for warning bubbles.
-     * Override to change the primary color of warning alerts.
-     */
+       * --warning-color: The text and border color for warning bubbles.
+       * Override to change the primary color of warning alerts.
+       */
   --warning-color: #e65100;
 
   /*
-     * --warning-background: The background color for warning bubbles.
-     * Override to change the fill color of warning alerts.
-     */
+       * --warning-background: The background color for warning bubbles.
+       * Override to change the fill color of warning alerts.
+       */
   --warning-background: #fff8e1;
 
   /*
-     * --alert-padding: The inner padding for both error and warning bubbles.
-     * Override to adjust the spacing inside alerts.
-     */
+       * --alert-padding: The inner padding for both error and warning bubbles.
+       * Override to adjust the spacing inside alerts.
+       */
   --alert-padding: 8px;
 
   /*
-     * --alert-border-radius: The corner roundness for both error and warning bubbles.
-     * Override to make alerts more or less rounded.
-     */
+       * --alert-border-radius: The corner roundness for both error and warning bubbles.
+       * Override to make alerts more or less rounded.
+       */
   --alert-border-radius: 12px;
 }
 
@@ -80,28 +80,30 @@
  * They rely exclusively on the CSS variables defined above for theming.
  */
 
-.chat-errorBubble {
-  background-color: var(--error-background);
-  color: var(--error-color);
-  border: 1px solid var(--error-color);
+.chat-errorBubble,
+.chat-warningBubble {
   border-radius: var(--alert-border-radius);
   padding: var(--alert-padding);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.3s ease-out;
-  max-width: 300px;
-  word-break: break-all;
+  /* MODIFIED: Make bubbles wider, centered, and properly spaced. */
+  max-width: 90%;
+  margin: var(--spacing-md) auto;
+  overflow-wrap: break-word;
+  /* FIX: Prevents margin collapse and clips any potential overflow, fixing the border issue. */
+  overflow: hidden;
+}
+
+.chat-errorBubble {
+  background-color: var(--error-background);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
 }
 
 .chat-warningBubble {
   background-color: var(--warning-background);
   color: var(--warning-color);
   border: 1px solid var(--warning-color);
-  border-radius: var(--alert-border-radius);
-  padding: var(--alert-padding);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 0.3s ease-out;
-  max-width: 300px;
-  word-break: break-all;
 }
 
 /*

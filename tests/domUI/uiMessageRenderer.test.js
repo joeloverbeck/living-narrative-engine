@@ -1,4 +1,5 @@
 // tests/domUI/uiMessageRenderer.test.js
+
 import {
   afterEach,
   beforeEach,
@@ -16,7 +17,6 @@ import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.
 import {
   ACTION_FAILED_ID,
   DISPLAY_MESSAGE_ID,
-  SYSTEM_ERROR_OCCURRED_ID,
 } from '../../src/constants/eventIds.js';
 
 jest.mock('../../src/logging/consoleLogger.js');
@@ -130,57 +130,6 @@ describe('UiMessageRenderer', () => {
       );
     });
 
-    it('should render fatal error message', () => {
-      const renderer = createRenderer();
-      const text = 'Fatal error test';
-      // Invoke the handler via the VED mock
-      const fatalHandler = mockVed.subscribe.mock.calls.find(
-        (call) => call[0] === SYSTEM_ERROR_OCCURRED_ID
-      )[1];
-      fatalHandler({
-        type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: { message: text },
-      });
-      const messageElement = renderer.elements.messageList.querySelector('li');
-      expect(messageElement).not.toBeNull();
-      expect(messageElement.textContent).toBe(text);
-      expect(messageElement.classList.contains('message-fatal')).toBe(true);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`Fatal error displayed: ${text}`)
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Rendered message: fatal - ${text.substring(0, 50)}`
-        )
-      );
-    });
-
-    it('should render fatal error message with Error details', () => {
-      const renderer = createRenderer();
-      const baseText = 'Fatal error occurred.';
-      const errorDetails = 'Detailed reason.';
-      const fullText = `${baseText}\nDetails: ${errorDetails}`;
-      const fatalHandler = mockVed.subscribe.mock.calls.find(
-        (call) => call[0] === SYSTEM_ERROR_OCCURRED_ID
-      )[1];
-      fatalHandler({
-        type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: { message: baseText, details: { raw: errorDetails } },
-      });
-      const messageElement = renderer.elements.messageList.querySelector('li');
-      expect(messageElement).not.toBeNull();
-      expect(messageElement.textContent).toBe(fullText);
-      expect(messageElement.classList.contains('message-fatal')).toBe(true);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`Fatal error displayed: ${fullText}`)
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Rendered message: fatal - ${fullText.substring(0, 50)}`
-        )
-      );
-    });
-
     it('should render command echo message', () => {
       const renderer = createRenderer();
       const command = 'look around';
@@ -241,13 +190,9 @@ describe('UiMessageRenderer', () => {
   describe('Event Handling (VED Subscriptions)', () => {
     it('should subscribe to events on construction', () => {
       createRenderer();
-      expect(mockVed.subscribe).toHaveBeenCalledTimes(3);
+      expect(mockVed.subscribe).toHaveBeenCalledTimes(2);
       expect(mockVed.subscribe).toHaveBeenCalledWith(
         DISPLAY_MESSAGE_ID,
-        expect.any(Function)
-      );
-      expect(mockVed.subscribe).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Function)
       );
       expect(mockVed.subscribe).toHaveBeenCalledWith(
@@ -277,27 +222,6 @@ describe('UiMessageRenderer', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Rendered message: info - ${payload.message.substring(0, 50)}`
-        )
-      );
-    });
-
-    it('should handle SYSTEM_ERROR_OCCURRED event', () => {
-      const renderer = createRenderer();
-      const payload = { message: 'VED Fatal Error' };
-      const fatalHandler = mockVed.subscribe.mock.calls.find(
-        (call) => call[0] === SYSTEM_ERROR_OCCURRED_ID
-      )[1];
-      fatalHandler({ type: SYSTEM_ERROR_OCCURRED_ID, payload: payload });
-      const messageElement = renderer.elements.messageList.querySelector('li');
-      expect(messageElement).not.toBeNull();
-      expect(messageElement.textContent).toBe(payload.message);
-      expect(messageElement.classList.contains('message-fatal')).toBe(true);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`Fatal error displayed: ${payload.message}`)
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Rendered message: fatal - ${payload.message.substring(0, 50)}`
         )
       );
     });
@@ -347,45 +271,6 @@ describe('UiMessageRenderer', () => {
       );
     });
 
-    it('should handle invalid SYSTEM_ERROR_OCCURRED_ID payload', () => {
-      const renderer = createRenderer();
-      mockLogger.error.mockClear(); // Clear constructor/setup logs
-      mockLogger.debug.mockClear();
-
-      const fatalHandler = mockVed.subscribe.mock.calls.find(
-        (call) => call[0] === SYSTEM_ERROR_OCCURRED_ID
-      )[1];
-      fatalHandler(null);
-      fatalHandler({});
-      fatalHandler({
-        type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: { message: 123 },
-      });
-
-      const messageElements =
-        renderer.elements.messageList.querySelectorAll('li.message-fatal');
-      expect(messageElements.length).toBe(3);
-      messageElements.forEach((messageElement) => {
-        expect(messageElement.textContent).toBe(
-          'An unspecified fatal system error occurred.'
-        );
-      });
-      expect(mockLogger.error).toHaveBeenCalledTimes(3); // 3 from handler + potentially others if not cleared
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Received invalid ' + SYSTEM_ERROR_OCCURRED_ID + ' payload.'
-        ),
-        expect.anything()
-      );
-      // Each render call logs a debug message
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Rendered message: fatal - An unspecified fatal system error occurred.'
-        )
-      );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(3);
-    });
-
     it('should unsubscribe from events on dispose', () => {
       const mockSubscription = { unsubscribe: jest.fn() };
       mockVed.subscribe.mockReset(); // Reset before createRenderer
@@ -396,7 +281,7 @@ describe('UiMessageRenderer', () => {
 
       renderer.dispose();
 
-      expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(3);
+      expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(2);
       // Check for the specific log from RendererBase.dispose()
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -405,7 +290,7 @@ describe('UiMessageRenderer', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          '[UiMessageRenderer] Unsubscribing 3 VED event subscriptions.'
+          '[UiMessageRenderer] Unsubscribing 2 VED event subscriptions.'
         )
       );
     });
@@ -547,7 +432,7 @@ describe('UiMessageRenderer', () => {
       renderer.dispose();
       renderer.dispose(); // Call dispose again
 
-      expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(3);
+      expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(2);
       // Check specific dispose logs from RendererBase and UiMessageRenderer
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -562,7 +447,7 @@ describe('UiMessageRenderer', () => {
       // The "Disposing subscriptions" comes from the old code, new code is more granular.
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          '[UiMessageRenderer] Unsubscribing 3 VED event subscriptions.'
+          '[UiMessageRenderer] Unsubscribing 2 VED event subscriptions.'
         )
       );
     });

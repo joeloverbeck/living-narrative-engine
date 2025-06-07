@@ -8,34 +8,10 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import {
   createToggleElement,
-  escapeHtml,
   truncateText,
 } from '../../src/utils/rendererUtils.js';
 
 describe('RendererUtils', () => {
-  describe('escapeHtml', () => {
-    it('should correctly escape all special HTML characters', () => {
-      const input = `<script>"'&</script>`;
-      const expected = `&lt;script&gt;&quot;&#39;&amp;&lt;/script&gt;`;
-      expect(escapeHtml(input)).toBe(expected);
-    });
-
-    it('should return an empty string for non-string inputs', () => {
-      expect(escapeHtml(null)).toBe('');
-      expect(escapeHtml(undefined)).toBe('');
-      expect(escapeHtml(123)).toBe('');
-      expect(escapeHtml({})).toBe('');
-    });
-
-    it('should pass the XSS script specified in the acceptance criteria', () => {
-      const input = "<script>alert('X')</script>";
-      // FIX: The expectation is updated to reflect the correct and safer behavior
-      // of escaping single quotes.
-      const expected = '&lt;script&gt;alert(&#39;X&#39;)&lt;/script&gt;';
-      expect(escapeHtml(input)).toBe(expected);
-    });
-  });
-
   describe('truncateText', () => {
     it('should not truncate text shorter than or equal to maxLength', () => {
       const text = 'Hello world';

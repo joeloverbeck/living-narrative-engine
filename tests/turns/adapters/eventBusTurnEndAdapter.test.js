@@ -3,7 +3,10 @@
 
 import EventBusTurnEndAdapter from '../../../src/turns/adapters/eventBusTurnEndAdapter.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  TURN_ENDED_ID,
+} from '../../../src/constants/eventIds.js';
 
 // --- Mocks ---
 const mockSafeDispatcher = {
@@ -199,7 +202,7 @@ describe('EventBusTurnEndAdapter', () => {
     await expect(adapter.turnEnded(entityId)).rejects.toThrow(dispatchError);
     expect(mockVed.dispatch).toHaveBeenCalledTimes(2);
     expect(mockVed.dispatch).toHaveBeenLastCalledWith(
-      'core:system_error_occurred',
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('failed to dispatch'),
       })

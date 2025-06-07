@@ -1,7 +1,9 @@
-// src/domUI/chatAlertRenderer.js
+/**
+ * @file This module is in charge of displaying warning and error messages in the chat panel.
+ * @see src/domUI/chatAlertRenderer.js
+ */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
-import { escapeHtml } from '../utils/rendererUtils.js';
 import { Throttler } from '../alerting/throttler.js';
 import { generateKey } from '../alerting/throttleUtils.js';
 
@@ -227,8 +229,8 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
    * @private
    * @param {object} config
    * @param {'warning' | 'error'} config.type The type of alert.
-   * @param {string} config.displayMessage The main, already-escaped message for the user.
-   * @param {string | null} config.developerDetails The already-escaped technical details for developers.
+   * @param {string} config.displayMessage The main, unescaped message for the user.
+   * @param {string | null} config.developerDetails The unescaped technical details for developers.
    */
   #createAndAppendBubble({ type, displayMessage, developerDetails }) {
     this.#alertIdCounter++;
@@ -302,9 +304,8 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
     // --- Developer Details Collapsible Section ---
     if (developerDetails) {
-      const detailsContainer = this.#domElementFactory.div(
-        'chat-alert-details-container'
-      );
+      const detailsContainer =
+        this.#domElementFactory.div('chat-alert-details');
       if (detailsContainer) {
         const toggleBtn = this.#domElementFactory.create('button', {
           text: 'Developer details',
@@ -317,7 +318,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
         });
 
         const preElement = this.#domElementFactory.create('pre', {
-          cls: 'chat-alert-details', // Let CSS handle visibility via [hidden]
+          cls: 'chat-alert-details-content', // Let CSS handle visibility via [hidden]
           id: detailsId,
         });
         preElement.hidden = true; // Hidden by default
@@ -367,23 +368,49 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Extracts a developer-focused details string from a raw details object.
+   * Handles custom error formats, standard Error objects, and other data types.
    *
    * @private
    * @param {any} details The raw details object from the event payload.
    * @returns {string | null} A details string or null if not applicable.
    */
   #extractDeveloperDetails(details) {
-    if (!details || typeof details !== 'object') {
-      return details === null ? 'null' : `Malformed details: ${typeof details}`;
+    if (!details) return null;
+
+    // Case 1: Standard JavaScript Error object with a stack trace
+    if (details instanceof Error && typeof details.stack === 'string') {
+      return details.stack;
     }
 
-    if (typeof details.statusCode === 'number') {
-      const parts = [details.statusCode];
-      if (details.raw) parts.push(details.raw);
-      if (details.url) parts.push(`at ${details.url}`);
-      return parts.join(' ');
+    // Case 2: Custom error object with statusCode
+    if (typeof details === 'object' && typeof details.statusCode === 'number') {
+      const parts = [];
+      if (details.statusCode) parts.push(`Status Code: ${details.statusCode}`);
+      if (details.url) parts.push(`URL: ${details.url}`);
+      if (details.raw) parts.push(`Details: ${details.raw}`);
+      // If there's a stack trace on the custom object, include it.
+      if (details.stack) {
+        parts.push(`\nStack Trace:\n${details.stack}`);
+      }
+      return parts.join('\n');
     }
 
+    // Case 3: A simple string or number was passed
+    if (typeof details === 'string' || typeof details === 'number') {
+      return String(details);
+    }
+
+    // Case 4: A generic object, try to serialize it
+    if (typeof details === 'object' && Object.keys(details).length > 0) {
+      try {
+        // Attempt to pretty-print the object.
+        return JSON.stringify(details, null, 2);
+      } catch (e) {
+        return 'Could not serialize details object.';
+      }
+    }
+
+    // Fallback if no details can be extracted
     return null;
   }
 
@@ -397,11 +424,10 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     const { message, details } = event.payload;
 
     const canonicalMessage = message || this.#getUserFriendlyMessage(details);
-    const displayMessage = canonicalMessage;
     const developerDetails = this.#extractDeveloperDetails(details);
 
     if (!this.#hasPanel) {
-      const consoleMessage = `[UI WARNING] ${displayMessage}${
+      const consoleMessage = `[UI WARNING] ${canonicalMessage}${
         developerDetails ? ` | Details: ${developerDetails}` : ''
       }`;
       this.logger.warn(consoleMessage);
@@ -409,8 +435,10 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
 
     // --- Throttling Logic ---
-    const escapedMessage = escapeHtml(displayMessage);
-    const key = generateKey(escapedMessage, details);
+    // FIX: The key should be generated from the raw, canonical message.
+    // The content is rendered using `.textContent`, so it should not be
+    // HTML-escaped beforehand.
+    const key = generateKey(canonicalMessage, details);
     const shouldRender = this.#warningThrottler.allow(key, {
       message: canonicalMessage,
       details: details,
@@ -421,10 +449,13 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
     // --- End Throttling Logic ---
 
+    // FIX: Pass the raw, unescaped messages to the bubble creator.
+    // The `.textContent` property used internally will handle displaying
+    // special characters correctly without interpreting them as HTML.
     this.#createAndAppendBubble({
       type: 'warning',
-      displayMessage: escapedMessage,
-      developerDetails: developerDetails ? escapeHtml(developerDetails) : null,
+      displayMessage: canonicalMessage,
+      developerDetails: developerDetails,
     });
   }
 
@@ -438,11 +469,10 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     const { message, details } = event.payload;
 
     const canonicalMessage = message || this.#getUserFriendlyMessage(details);
-    const displayMessage = canonicalMessage;
     const developerDetails = this.#extractDeveloperDetails(details);
 
     if (!this.#hasPanel) {
-      const consoleMessage = `[UI ERROR] ${displayMessage}${
+      const consoleMessage = `[UI ERROR] ${canonicalMessage}${
         developerDetails ? ` | Details: ${developerDetails}` : ''
       }`;
       this.logger.error(consoleMessage);
@@ -450,8 +480,10 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
 
     // --- Throttling Logic ---
-    const escapedMessage = escapeHtml(displayMessage);
-    const key = generateKey(escapedMessage, details);
+    // FIX: The key should be generated from the raw, canonical message.
+    // The content is rendered using `.textContent`, so it should not be
+    // HTML-escaped beforehand.
+    const key = generateKey(canonicalMessage, details);
     const shouldRender = this.#errorThrottler.allow(key, {
       message: canonicalMessage,
       details: details,
@@ -462,10 +494,13 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
     // --- End Throttling Logic ---
 
+    // FIX: Pass the raw, unescaped messages to the bubble creator.
+    // The `.textContent` property used internally will handle displaying
+    // special characters correctly without interpreting them as HTML.
     this.#createAndAppendBubble({
       type: 'error',
-      displayMessage: escapedMessage,
-      developerDetails: developerDetails ? escapeHtml(developerDetails) : null,
+      displayMessage: canonicalMessage,
+      developerDetails: developerDetails,
     });
   }
 }

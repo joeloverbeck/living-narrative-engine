@@ -14,7 +14,7 @@ import {
  */
 
 /* ---------------------------------------------------------------- *
- *             Constants & helper utilities (unchanged)             *
+ * Constants & helper utilities (unchanged)             *
  * ---------------------------------------------------------------- */
 const DEFAULT_MAX_RETRIES = 3;
 const DEFAULT_BASE_DELAY_MS = 500;
@@ -23,7 +23,7 @@ const DEFAULT_MAX_DELAY_MS = 10_000;
 const RETRYABLE_STATUS_CODES = [408, 429, 500, 502, 503, 504];
 
 /* ---------------------------------------------------------------- *
- *                     Custom HttpClientError                       *
+ * Custom HttpClientError                       *
  * ---------------------------------------------------------------- */
 export class HttpClientError extends Error {
   url;
@@ -49,7 +49,7 @@ export class HttpClientError extends Error {
 }
 
 /* ---------------------------------------------------------------- *
- *                         RetryHttpClient                          *
+ * RetryHttpClient                          *
  * ---------------------------------------------------------------- */
 export class RetryHttpClient extends IHttpClient {
   /** @type {ILogger}              */ #logger;
@@ -181,7 +181,7 @@ export class RetryHttpClient extends IHttpClient {
   }
 
   /* ---------------------------------------------------------------- *
-   *                              request                             *
+   * request                             *
    * ---------------------------------------------------------------- */
   /**
    * @override
@@ -202,7 +202,9 @@ export class RetryHttpClient extends IHttpClient {
       attempt += 1;
       try {
         this.#logger.debug(
-          `RetryHttpClient.request: Attempt ${attempt}/${this.#defaultMaxRetries + 1} → ${url}`
+          `RetryHttpClient.request: Attempt ${attempt}/${
+            this.#defaultMaxRetries + 1
+          } → ${url}`
         );
         const response = await fetch(url, options);
 
@@ -229,7 +231,9 @@ export class RetryHttpClient extends IHttpClient {
         ) {
           const delay = this.#calculateDelay(attempt);
           this.#emitWarning(
-            `Retryable HTTP error ${status} on ${url} (attempt ${attempt}/${this.#defaultMaxRetries + 1})`,
+            `Retryable HTTP error ${status} on ${url} (attempt ${attempt}/${
+              this.#defaultMaxRetries + 1
+            })`,
             {
               statusCode: status,
               url,
@@ -269,7 +273,9 @@ export class RetryHttpClient extends IHttpClient {
         if (attempt <= this.#defaultMaxRetries) {
           const delay = this.#calculateDelay(attempt);
           this.#emitWarning(
-            `Network error contacting ${url} (attempt ${attempt}/${this.#defaultMaxRetries + 1})`,
+            `Network error contacting ${url} (attempt ${attempt}/${
+              this.#defaultMaxRetries + 1
+            })`,
             { statusCode: undefined, url, raw: err.message }
           );
           await new Promise((res) => setTimeout(res, delay));

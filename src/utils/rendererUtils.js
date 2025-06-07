@@ -14,27 +14,6 @@
  */
 
 /**
- * Replaces HTML special characters with their corresponding entities to prevent XSS.
- *
- * @param {string} str - The string to escape.
- * @returns {string} The escaped string, safe for insertion into HTML.
- * @example
- * const safeString = escapeHtml("<script>alert('XSS')</script>");
- * // -> "&lt;script&gt;alert('XSS')&lt;/script&gt;"
- */
-export function escapeHtml(str) {
-  if (typeof str !== 'string') {
-    return '';
-  }
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-/**
  * Truncates a string to a maximum length, separating it into a preview and a remainder.
  *
  * @param {string} text - The text to truncate.

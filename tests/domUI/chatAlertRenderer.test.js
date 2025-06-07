@@ -1,4 +1,3 @@
-// tests/domUI/chatAlertRenderer.test.js
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { ChatAlertRenderer } from '../../src/domUI/index.js';
 import { Throttler } from '../../src/alerting/throttler.js';
@@ -320,7 +319,13 @@ describe('ChatAlertRenderer', () => {
       );
       const pre = bubble.querySelector('pre');
       const code = pre.querySelector('code');
-      expect(code.textContent).toBe('503 503 Service Unavailable at /api/x');
+      // **FIXED**: Assert against the new, multi-line developer details format.
+      const expectedDetails = [
+        'Status Code: 503',
+        'URL: /api/x',
+        'Details: 503 Service Unavailable',
+      ].join('\n');
+      expect(code.textContent).toBe(expectedDetails);
       expect(pre.hidden).toBe(true);
     });
 
@@ -337,9 +342,15 @@ describe('ChatAlertRenderer', () => {
 
       const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
       const code = bubble.querySelector('code');
-      expect(code.textContent).toBe(
-        '500 &lt;img src=x onerror=alert(1)&gt; at /bad'
-      );
+      // **FIXED**: Assert against the new, multi-line format. The use of
+      // `.textContent` in the implementation correctly prevents HTML parsing,
+      // so the raw string is expected.
+      const expectedDetails = [
+        'Status Code: 500',
+        'URL: /bad',
+        'Details: <img src=x onerror=alert(1)>',
+      ].join('\n');
+      expect(code.textContent).toBe(expectedDetails);
     });
   });
 });

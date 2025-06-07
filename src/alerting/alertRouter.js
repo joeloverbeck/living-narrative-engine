@@ -46,16 +46,22 @@ export default class AlertRouter {
 
     try {
       // --- FIX START ---
-      // The original subscription was passing a method that expects two arguments (name, payload)
-      // to a system that likely calls listeners with only one (payload).
-      // The fix is to use an arrow function to correctly map the arguments.
+      // The issue is that the event dispatcher passes a full event object
+      // (e.g., { name, payload }) to the subscriber. The original code
+      // incorrectly treated this entire object as the payload.
+      //
+      // The fix is to subscribe with a handler that correctly unnests
+      // the `payload` property from the received event object before passing
+      // it to `handleEvent`.
 
-      this.dispatcher.subscribe(SYSTEM_WARNING_OCCURRED_ID, (payload) =>
-        this.handleEvent(SYSTEM_WARNING_OCCURRED_ID, payload)
-      );
-      this.dispatcher.subscribe(SYSTEM_ERROR_OCCURRED_ID, (payload) =>
-        this.handleEvent(SYSTEM_ERROR_OCCURRED_ID, payload)
-      );
+      this.dispatcher.subscribe(SYSTEM_WARNING_OCCURRED_ID, (eventObject) => {
+        // Pass the actual application payload (eventObject.payload) to the handler
+        this.handleEvent(SYSTEM_WARNING_OCCURRED_ID, eventObject.payload);
+      });
+      this.dispatcher.subscribe(SYSTEM_ERROR_OCCURRED_ID, (eventObject) => {
+        // Pass the actual application payload (eventObject.payload) to the handler
+        this.handleEvent(SYSTEM_ERROR_OCCURRED_ID, eventObject.payload);
+      });
       // --- FIX END ---
     } catch (err) {
       console.error('AlertRouter subscription error:', err);
