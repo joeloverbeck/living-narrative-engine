@@ -253,6 +253,8 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     if (iconElement) {
       iconElement.setAttribute('aria-hidden', 'true');
       bubbleElement.appendChild(iconElement);
+      const srText = this.#domElementFactory.span('visually-hidden', title);
+      if (srText) bubbleElement.appendChild(srText);
     }
 
     const contentWrapper = this.#domElementFactory.div('chat-alert-content');
