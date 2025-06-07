@@ -611,6 +611,8 @@ class CommandProcessor {
     };
     if (originalError?.stack) {
       payload.details.stack = originalError.stack;
+    } else {
+      payload.details.stack = new Error().stack;
     }
 
     if (originalError) {

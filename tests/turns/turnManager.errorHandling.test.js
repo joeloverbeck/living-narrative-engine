@@ -269,6 +269,7 @@ describe('TurnManager - Error Handling', () => {
           'Internal Error: Turn order inconsistency detected. Stopping game.',
         details: {
           raw: 'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.',
+          stack: expect.any(String),
           timestamp: expect.any(String),
         },
       })

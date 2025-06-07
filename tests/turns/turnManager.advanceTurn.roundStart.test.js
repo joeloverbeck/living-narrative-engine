@@ -180,7 +180,11 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
       {
         message:
           'System Error: No active actors found to start a round. Stopping game.',
-        details: { raw: expectedErrorMsg, timestamp: expect.any(String) },
+        details: {
+          raw: expectedErrorMsg,
+          stack: expect.any(String),
+          timestamp: expect.any(String),
+        },
       }
     );
 
@@ -227,7 +231,11 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
       {
         message:
           'System Error: No active actors found to start a round. Stopping game.',
-        details: { raw: expectedErrorMsg, timestamp: expect.any(String) },
+        details: {
+          raw: expectedErrorMsg,
+          stack: expect.any(String),
+          timestamp: expect.any(String),
+        },
       }
     );
 
