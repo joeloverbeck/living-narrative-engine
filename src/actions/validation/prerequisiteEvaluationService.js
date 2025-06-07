@@ -139,7 +139,7 @@ export class PrerequisiteEvaluationService {
 
       // =================================================================
       // ===> ADD THIS LINE HERE <===
-      this.#logger.info(
+      this.#logger.debug(
         `PrereqEval[${actionId}] Context:`,
         JSON.stringify(evalCtx, null, 2)
       );
