@@ -26,7 +26,11 @@ const logger = new ConsoleLogger(LogLevel.INFO);
 const config = new StaticConfiguration();
 const resolver = new DefaultPathResolver(config);
 const fetcher = new NodeDataFetcher();
-const validator = new AjvSchemaValidator(logger);
+const stubDispatcher = { dispatch: async () => true };
+const validator = new AjvSchemaValidator({
+  logger,
+  dispatcher: stubDispatcher,
+});
 const registry = new InMemoryDataRegistry();
 const schemaLoader = new SchemaLoader(
   config,

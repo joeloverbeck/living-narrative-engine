@@ -302,7 +302,10 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
 
     /* -------------------- Core plumbing ---------------------------------- */
     logger = createMockLogger();
-    validator = new AjvSchemaValidator(logger); // Use REAL validator
+    validator = new AjvSchemaValidator({
+      logger,
+      dispatcher: { dispatch: jest.fn() },
+    }); // Use REAL validator
 
     schemaLoader = {
       loadAndCompileAllSchemas: jest.fn().mockImplementation(async () => {

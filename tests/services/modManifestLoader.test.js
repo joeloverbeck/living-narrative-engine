@@ -161,7 +161,10 @@ describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
     // *** FIX START: Create logger first, then pass it to validator ***
     const mockLogger = createMockLogger(); // Create the logger instance
     // real validator and schema registration, now with logger dependency
-    const schemaValidator = new AjvSchemaValidator(mockLogger); // Pass the logger
+    const schemaValidator = new AjvSchemaValidator({
+      logger: mockLogger,
+      dispatcher: { dispatch: jest.fn() },
+    });
     await schemaValidator.addSchema(manifestSchema, MOD_SCHEMA_ID);
 
     deps = {

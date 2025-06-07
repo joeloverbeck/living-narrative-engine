@@ -116,7 +116,10 @@ describe('End-to-End Notes Persistence Flow', () => {
       notesSectionAssembler: new NotesSectionAssembler({ logger }),
     });
 
-    schemaValidator = new AjvSchemaValidator(logger);
+    schemaValidator = new AjvSchemaValidator({
+      logger,
+      dispatcher: { dispatch: jest.fn() },
+    });
     processor = new LLMResponseProcessor({ schemaValidator });
   });
 

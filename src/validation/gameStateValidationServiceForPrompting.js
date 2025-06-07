@@ -7,6 +7,7 @@
 
 import { ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING } from '../constants/textDefaults.js';
 import { IGameStateValidationServiceForPrompting } from '../interfaces/IGameStateValidationServiceForPrompting.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * @class GameStateValidationServiceForPrompting
@@ -16,12 +17,24 @@ import { IGameStateValidationServiceForPrompting } from '../interfaces/IGameStat
 export class GameStateValidationServiceForPrompting extends IGameStateValidationServiceForPrompting {
   /** @type {ILogger} */
   #logger;
+  /** @type {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #dispatcher;
+
+  /**
+   * Dispatches SYSTEM_ERROR_OCCURRED_ID with context.
+   *
+   * @param {string} message
+   */
+  #emitError(message) {
+    const details = { timestamp: new Date().toISOString() };
+    this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, { message, details });
+  }
 
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger
    */
-  constructor({ logger }) {
+  constructor({ logger, dispatcher }) {
     super();
 
     if (!logger) {
@@ -29,7 +42,13 @@ export class GameStateValidationServiceForPrompting extends IGameStateValidation
         'GameStateValidationServiceForPrompting: Logger dependency is required.'
       );
     }
+    if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
+      throw new Error(
+        'GameStateValidationServiceForPrompting: SafeEventDispatcher is required.'
+      );
+    }
     this.#logger = logger;
+    this.#dispatcher = dispatcher;
     this.#logger.debug('GameStateValidationServiceForPrompting initialized.');
   }
 
@@ -43,7 +62,7 @@ export class GameStateValidationServiceForPrompting extends IGameStateValidation
    */
   validate(gameStateDto) {
     if (!gameStateDto) {
-      this.#logger.error(
+      this.#emitError(
         'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.'
       );
       return {

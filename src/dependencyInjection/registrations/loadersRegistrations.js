@@ -81,13 +81,11 @@ export function registerLoaders(container) {
 
   // AjvSchemaValidator depends on ILogger
   // Corrected registration: Pass the resolved logger
-  registrar.singletonFactory(
-    tokens.ISchemaValidator,
-    (c) =>
-      new AjvSchemaValidator(
-        c.resolve(tokens.ILogger) // <-- Resolve and pass ILogger here
-      )
-  );
+  registrar.singletonFactory(tokens.ISchemaValidator, (c) => {
+    const logger = c.resolve(tokens.ILogger);
+    const dispatcher = c.resolve(tokens.ISafeEventDispatcher);
+    return new AjvSchemaValidator({ logger, dispatcher });
+  });
   logger.debug(`Loaders Registration: Registered ${tokens.ISchemaValidator}.`);
 
   registrar.singletonFactory(

@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { GameStateValidationServiceForPrompting } from '../../src/validation/gameStateValidationServiceForPrompting.js';
 import { ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING } from '../../src/constants/textDefaults.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // Mock ILogger dependency
 const mockLogger = {
@@ -32,11 +33,14 @@ const createMockGameStateDto = ({
 
 describe('GameStateValidationServiceForPrompting', () => {
   let service;
+  let stubDispatcher;
 
   beforeEach(() => {
     jest.clearAllMocks(); // Clear mocks before each test
+    stubDispatcher = { dispatch: jest.fn() };
     service = new GameStateValidationServiceForPrompting({
       logger: mockLogger,
+      dispatcher: stubDispatcher,
     });
   });
 
@@ -68,8 +72,12 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(result.errorContent).toBe(
         ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.'
+      expect(stubDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message:
+            'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
+        })
       );
     });
 
@@ -79,8 +87,12 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(result.errorContent).toBe(
         ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.'
+      expect(stubDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message:
+            'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
+        })
       );
     });
 
@@ -96,7 +108,7 @@ describe('GameStateValidationServiceForPrompting', () => {
         "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorState'. This might affect prompt data completeness indirectly."
       );
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Ensure only this warning
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(stubDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should return valid and warn if actorPromptData is missing', () => {
@@ -111,7 +123,7 @@ describe('GameStateValidationServiceForPrompting', () => {
         "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks."
       );
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Ensure only this warning
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(stubDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should return valid and warn if both actorState and actorPromptData are missing', () => {
@@ -129,7 +141,7 @@ describe('GameStateValidationServiceForPrompting', () => {
         "GameStateValidationServiceForPrompting.validate: AIGameStateDTO is missing 'actorPromptData'. Character info will be limited or use fallbacks."
       );
       expect(mockLogger.warn).toHaveBeenCalledTimes(2); // Expect two separate warnings
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(stubDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should return valid if gameStateDto is valid and complete (has actorState and actorPromptData)', () => {
@@ -141,7 +153,7 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(result.isValid).toBe(true);
       expect(result.errorContent).toBeNull();
       expect(mockLogger.warn).not.toHaveBeenCalled();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(stubDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 });

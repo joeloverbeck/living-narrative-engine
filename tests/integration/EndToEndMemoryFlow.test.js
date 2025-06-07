@@ -129,7 +129,10 @@ describe('End-to-End Short-Term Memory Flow', () => {
       notesSectionAssembler: new NotesSectionAssembler({ logger }),
     });
 
-    schemaValidator = new AjvSchemaValidator(logger);
+    schemaValidator = new AjvSchemaValidator({
+      logger,
+      dispatcher: { dispatch: jest.fn() },
+    });
 
     responseProcessor = new LLMResponseProcessor({
       schemaValidator,

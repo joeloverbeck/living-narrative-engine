@@ -88,7 +88,10 @@ beforeAll(async () => {
   eventBus = new EventBus();
 
   /* Ajv validator and schema preload */
-  const schemaValidator = new AjvSchemaValidator(logger);
+  const schemaValidator = new AjvSchemaValidator({
+    logger,
+    dispatcher: { dispatch: jest.fn() },
+  });
   await schemaValidator.addSchema(
     warningEventDef.payloadSchema,
     SYSTEM_WARNING_OCCURRED_ID + '#payload'

@@ -398,7 +398,10 @@ describe('AjvSchemaValidator', () => {
       debug: jest.fn(),
     };
     // Pass the mock logger to the constructor
-    validator = new AjvSchemaValidator(mockLogger); // <-- Pass mockLogger
+    validator = new AjvSchemaValidator({
+      logger: mockLogger,
+      dispatcher: { dispatch: jest.fn() },
+    });
   });
 
   // --- Task 2: Test constructor ---
@@ -408,20 +411,31 @@ describe('AjvSchemaValidator', () => {
       // so we just need to ensure it didn't throw implicitly.
       // If beforeEach failed, the test wouldn't run.
       // We can add an explicit check for robustness.
-      expect(() => new AjvSchemaValidator(mockLogger)).not.toThrow();
+      expect(
+        () =>
+          new AjvSchemaValidator({
+            logger: mockLogger,
+            dispatcher: { dispatch: jest.fn() },
+          })
+      ).not.toThrow();
     });
 
     it('should throw an error if an invalid logger is provided', () => {
       // Test missing methods
-      expect(() => new AjvSchemaValidator({})).toThrow(
-        /Missing or invalid 'logger' dependency/
-      );
+      expect(
+        () =>
+          new AjvSchemaValidator({
+            logger: {},
+            dispatcher: { dispatch: jest.fn() },
+          })
+      ).toThrow(/Missing or invalid 'logger' dependency/);
       expect(
         () =>
           new AjvSchemaValidator({
             info: jest.fn(),
             warn: jest.fn(),
             error: jest.fn(),
+            dispatcher: { dispatch: jest.fn() },
           })
       ).toThrow(/Missing or invalid 'logger' dependency/); // Missing debug
       // Test null/undefined

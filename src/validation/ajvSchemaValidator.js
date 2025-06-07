@@ -5,6 +5,7 @@
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 // ── IMPORT v3 TURN‐ACTION SCHEMA ─────────────────────────────────────────────
 import {
@@ -26,11 +27,29 @@ import {
 class AjvSchemaValidator {
   #ajv = null;
   #logger = null;
+  #dispatcher = null;
 
   /**
-   * @param {import('../interfaces/coreServices.js').ILogger} logger
+   * Dispatches a SYSTEM_ERROR_OCCURRED_ID event with context details.
+   *
+   * @param {string} message
+   * @param {Error} [err]
    */
-  constructor(logger) {
+  #emitError(message, err) {
+    const details = {
+      timestamp: new Date().toISOString(),
+      raw: err ? err.message : undefined,
+      stack: err ? err.stack : undefined,
+    };
+    this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, { message, details });
+  }
+
+  /**
+   * @param {object} dependencies
+   * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger
+   * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dependencies.dispatcher
+   */
+  constructor({ logger, dispatcher }) {
     if (
       !logger ||
       typeof logger.info !== 'function' ||
@@ -42,7 +61,13 @@ class AjvSchemaValidator {
         "AjvSchemaValidator: Missing or invalid 'logger' dependency (ILogger). Requires info, warn, error, debug."
       );
     }
+    if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
+      throw new Error(
+        'AjvSchemaValidator: Missing or invalid SafeEventDispatcher with .dispatch(...)'
+      );
+    }
     this.#logger = logger;
+    this.#dispatcher = dispatcher;
 
     try {
       this.#ajv = new Ajv({ allErrors: true, strictTypes: false });
@@ -67,18 +92,15 @@ class AjvSchemaValidator {
           );
         }
       } catch (preloadError) {
-        this.#logger.error(
+        this.#emitError(
           `AjvSchemaValidator: Failed to preload schema '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}'. Error: ${preloadError.message}`,
-          {
-            schemaId: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
-            error: preloadError,
-          }
+          preloadError
         );
       }
       // ───────────────────────────────────────────────────────────────────────────
     } catch (error) {
-      this.#logger.error(
-        'AjvSchemaValidator: CRITICAL - Failed to instantiate Ajv or add formats:',
+      this.#emitError(
+        `AjvSchemaValidator: CRITICAL - Failed to instantiate Ajv or add formats: ${error.message}`,
         error
       );
       throw new Error('AjvSchemaValidator: Failed to initialize Ajv.');
@@ -94,7 +116,7 @@ class AjvSchemaValidator {
    */
   async addSchema(schemaData, schemaId) {
     if (!this.#ajv) {
-      this.#logger.error(
+      this.#emitError(
         'AjvSchemaValidator.addSchema: Ajv instance not available.'
       );
       return Promise.reject(
@@ -107,13 +129,13 @@ class AjvSchemaValidator {
       Object.keys(schemaData).length === 0
     ) {
       const errMsg = `Invalid or empty schemaData provided for ID '${schemaId}'.`;
-      this.#logger.error(`AjvSchemaValidator.addSchema: ${errMsg}`);
+      this.#emitError(`AjvSchemaValidator.addSchema: ${errMsg}`);
       return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
     }
     if (!schemaId || typeof schemaId !== 'string' || schemaId.trim() === '') {
       const errMsg =
         'Invalid or empty schemaId provided. Expected a non-empty string.';
-      this.#logger.error(`AjvSchemaValidator.addSchema: ${errMsg}`);
+      this.#emitError(`AjvSchemaValidator.addSchema: ${errMsg}`);
       return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
     }
 
@@ -122,7 +144,7 @@ class AjvSchemaValidator {
     try {
       if (this.#ajv.getSchema(keyToRegister)) {
         const errorMsg = `AjvSchemaValidator: Schema with ID '${keyToRegister}' already exists. Ajv does not overwrite. Use removeSchema first if replacement is intended.`;
-        this.#logger.error(errorMsg);
+        this.#emitError(errorMsg);
         throw new Error(errorMsg);
       }
 
@@ -132,17 +154,14 @@ class AjvSchemaValidator {
       );
       return Promise.resolve();
     } catch (error) {
-      this.#logger.error(
+      this.#emitError(
         `AjvSchemaValidator: Error adding schema with ID '${keyToRegister}': ${error.message}`,
-        {
-          schemaId: keyToRegister,
-          error: error,
-        }
+        error
       );
       if (error.errors) {
-        this.#logger.error(
-          'Ajv Validation Errors (during addSchema):',
-          JSON.stringify(error.errors, null, 2)
+        this.#emitError(
+          'Ajv Validation Errors (during addSchema): ' +
+            JSON.stringify(error.errors, null, 2)
         );
       }
       const rejectionError =
@@ -163,7 +182,7 @@ class AjvSchemaValidator {
    */
   removeSchema(schemaId) {
     if (!this.#ajv) {
-      this.#logger.error(
+      this.#emitError(
         'AjvSchemaValidator.removeSchema: Ajv instance not available. Cannot remove schema.'
       );
       throw new Error('AjvSchemaValidator: Ajv instance not available.');
@@ -194,18 +213,15 @@ class AjvSchemaValidator {
         );
         return true;
       } else {
-        this.#logger.error(
+        this.#emitError(
           `AjvSchemaValidator: Called removeSchema for '${idToUse}', but it still appears present.`
         );
         return false;
       }
     } catch (error) {
-      this.#logger.error(
+      this.#emitError(
         `AjvSchemaValidator: Error removing schema '${idToUse}': ${error.message}`,
-        {
-          schemaId: idToUse,
-          error: error,
-        }
+        error
       );
       return false;
     }
@@ -258,12 +274,9 @@ class AjvSchemaValidator {
           errors: isValid ? null : validationErrors || [],
         };
       } catch (validationError) {
-        this.#logger.error(
+        this.#emitError(
           `AjvSchemaValidator: Runtime error during validation with schema '${schemaId}': ${validationError.message}`,
-          {
-            schemaId: schemaId,
-            error: validationError,
-          }
+          validationError
         );
         return {
           isValid: false,
