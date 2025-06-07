@@ -71,7 +71,7 @@ describe('persistNotes', () => {
     persistNotes(action, actor, logger);
 
     // --- FIX: Updated the assertion to match the new, specific log message ---
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Added note: "A valid note" at')
     );
   });

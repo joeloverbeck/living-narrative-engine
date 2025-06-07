@@ -132,7 +132,7 @@ export function configureContainer(container, uiElements) {
   registerOrchestration(container);
   // --- *** END CORRECTION *** ---
 
-  logger.info('[ContainerConfig] All core bundles registered.');
+  logger.debug('[ContainerConfig] All core bundles registered.');
 
   // --- Populate Registries (Post-Registration Steps) ---
   try {

@@ -153,7 +153,7 @@ class AppConfigService {
       this._proxyProjectRootPathForApiKeyFiles,
       'API key file retrieval relative to a project root will not be available unless this is set'
     );
-    this._logger.info('AppConfigService: Configuration loading complete.');
+    this._logger.debug('AppConfigService: Configuration loading complete.');
   }
 
   /**

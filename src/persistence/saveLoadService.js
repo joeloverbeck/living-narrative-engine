@@ -47,7 +47,7 @@ class SaveLoadService extends ISaveLoadService {
       );
     this.#logger = logger;
     this.#storageProvider = storageProvider;
-    this.#logger.info('SaveLoadService initialized.');
+    this.#logger.debug('SaveLoadService initialized.');
   }
 
   /**
@@ -144,19 +144,19 @@ class SaveLoadService extends ISaveLoadService {
     const gameStateMessagePack = encode(finalSaveObject.gameState);
     finalSaveObject.integrityChecks.gameStateChecksum =
       await this.#generateChecksum(gameStateMessagePack); //
-    this.#logger.info(
+    this.#logger.debug(
       `Calculated gameStateChecksum: ${finalSaveObject.integrityChecks.gameStateChecksum}`
     );
 
     this.#logger.debug('Serializing full game state object to MessagePack...');
     const messagePackData = encode(finalSaveObject); //
-    this.#logger.info(
+    this.#logger.debug(
       `MessagePack Raw Size: ${messagePackData.byteLength} bytes`
     );
 
     this.#logger.debug('Compressing MessagePack data with Gzip...');
     const compressedData = pako.gzip(messagePackData); //
-    this.#logger.info(`Gzipped Size: ${compressedData.byteLength} bytes`);
+    this.#logger.debug(`Gzipped Size: ${compressedData.byteLength} bytes`);
 
     return { compressedData, finalSaveObject };
   }
@@ -247,7 +247,7 @@ class SaveLoadService extends ISaveLoadService {
    * @returns {Promise<Array<SaveFileMetadata>>}
    */
   async listManualSaveSlots() {
-    this.#logger.info(
+    this.#logger.debug(
       `Listing manual save slots from ${FULL_MANUAL_SAVE_DIRECTORY_PATH}...`
     );
     const collectedMetadata = [];
@@ -264,7 +264,7 @@ class SaveLoadService extends ISaveLoadService {
         FULL_MANUAL_SAVE_DIRECTORY_PATH,
         MANUAL_SAVE_PATTERN.source
       );
-      this.#logger.info(
+      this.#logger.debug(
         `Found ${files.length} potential manual save files in ${FULL_MANUAL_SAVE_DIRECTORY_PATH}.`
       );
     } catch (listError) {
@@ -274,7 +274,7 @@ class SaveLoadService extends ISaveLoadService {
         listError.message.toLowerCase().includes('not found')
       ) {
         // Example check
-        this.#logger.info(
+        this.#logger.debug(
           `${FULL_MANUAL_SAVE_DIRECTORY_PATH} not found. Assuming no manual saves yet.`
         );
         return []; // No directory means no saves
@@ -366,12 +366,12 @@ class SaveLoadService extends ISaveLoadService {
         timestamp: timestamp,
         playtimeSeconds: playtimeSeconds,
       });
-      this.#logger.info(
+      this.#logger.debug(
         `Successfully parsed metadata for ${filePath}: Name="${saveName}", Timestamp="${timestamp}"`
       );
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `Finished listing manual save slots. Returning ${collectedMetadata.length} items.`
     );
     return collectedMetadata;
@@ -469,9 +469,9 @@ class SaveLoadService extends ISaveLoadService {
       this.#logger.error(devMsg + ` User message: "${userMsg}"`);
       return { success: false, error: userMsg, data: null };
     }
-    this.#logger.info(`Checksum VERIFIED for ${saveIdentifier}.`);
+    this.#logger.debug(`Checksum VERIFIED for ${saveIdentifier}.`);
 
-    this.#logger.info(
+    this.#logger.debug(
       `Game data loaded and validated successfully from: "${saveIdentifier}"`
     );
     return { success: true, data: loadedObject, error: null };
@@ -481,7 +481,7 @@ class SaveLoadService extends ISaveLoadService {
    * @inheritdoc
    */
   async saveManualGame(saveName, gameStateObject) {
-    this.#logger.info(`Attempting to save manual game: "${saveName}"`);
+    this.#logger.debug(`Attempting to save manual game: "${saveName}"`);
 
     if (!saveName || typeof saveName !== 'string' || saveName.trim() === '') {
       const userMsg = 'Invalid save name provided. Please enter a valid name.';
@@ -505,7 +505,7 @@ class SaveLoadService extends ISaveLoadService {
           await this.#storageProvider.ensureDirectoryExists(
             FULL_MANUAL_SAVE_DIRECTORY_PATH
           );
-          this.#logger.info(
+          this.#logger.debug(
             `Ensured directory exists: ${FULL_MANUAL_SAVE_DIRECTORY_PATH}`
           );
         } catch (dirError) {
@@ -537,7 +537,7 @@ class SaveLoadService extends ISaveLoadService {
       );
 
       if (writeResult.success) {
-        this.#logger.info(
+        this.#logger.debug(
           `Manual game "${saveName}" saved successfully to ${filePath}.`
         );
         return {
@@ -575,7 +575,7 @@ class SaveLoadService extends ISaveLoadService {
    * @param {string} saveIdentifier - The full path to the save file to delete (e.g., "saves/manual_saves/my_save.sav").
    */
   async deleteManualSave(saveIdentifier) {
-    this.#logger.info(`Attempting to delete manual save: "${saveIdentifier}"`);
+    this.#logger.debug(`Attempting to delete manual save: "${saveIdentifier}"`);
     if (
       !saveIdentifier ||
       typeof saveIdentifier !== 'string' ||
@@ -601,7 +601,7 @@ class SaveLoadService extends ISaveLoadService {
 
       const deleteResult = await this.#storageProvider.deleteFile(filePath);
       if (deleteResult.success) {
-        this.#logger.info(`Manual save "${filePath}" deleted successfully.`);
+        this.#logger.debug(`Manual save "${filePath}" deleted successfully.`);
       } else {
         this.#logger.error(
           `Failed to delete manual save "${filePath}": ${deleteResult.error}`

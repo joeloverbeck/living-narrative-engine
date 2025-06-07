@@ -247,7 +247,7 @@ class ShutdownService {
       }
 
       // --- Final Success ---
-      this.#logger.info('ShutdownService: Shutdown sequence finished.');
+      this.#logger.debug('ShutdownService: Shutdown sequence finished.');
       const completedPayload = {};
       try {
         await this.#validatedEventDispatcher.dispatch(

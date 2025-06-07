@@ -83,7 +83,7 @@ describe('PerceptionUpdateService', () => {
         entityManager: mockEntityManager,
       });
       expect(service).toBeInstanceOf(PerceptionUpdateService);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PerceptionUpdateService: Instance created.'
       );
     });

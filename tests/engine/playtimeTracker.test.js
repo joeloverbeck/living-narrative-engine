@@ -82,7 +82,7 @@ describe('PlaytimeTracker', () => {
     tracker.reset();
     expect(tracker._getAccumulatedPlaytimeSeconds()).toBe(0);
     expect(tracker._getSessionStartTime()).toBe(0);
-    expect(mockLogger.info).toHaveBeenLastCalledWith(
+    expect(mockLogger.debug).toHaveBeenLastCalledWith(
       'PlaytimeTracker: Playtime reset.'
     );
   });

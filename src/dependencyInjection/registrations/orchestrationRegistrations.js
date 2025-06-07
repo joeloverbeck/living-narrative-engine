@@ -98,5 +98,5 @@ export function registerOrchestration(container) {
     `Orchestration Registration: Registered ${tokens.ShutdownService} (Singleton).`
   );
 
-  logger.info('Orchestration Registration: Complete.');
+  logger.debug('Orchestration Registration: Complete.');
 }

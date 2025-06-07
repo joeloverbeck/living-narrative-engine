@@ -68,7 +68,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
       this.#logger = logger;
     }
 
-    this.#logger.info('PlaytimeTracker: Instance created.');
+    this.#logger.debug('PlaytimeTracker: Instance created.');
   }
 
   /**
@@ -168,7 +168,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   reset() {
     this.#accumulatedPlaytimeSeconds = 0;
     this.#sessionStartTime = 0;
-    this.#logger.info('PlaytimeTracker: Playtime reset.');
+    this.#logger.debug('PlaytimeTracker: Playtime reset.');
   }
 
   /**
