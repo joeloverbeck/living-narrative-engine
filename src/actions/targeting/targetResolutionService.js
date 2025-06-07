@@ -8,6 +8,7 @@ import {
 } from '../../constants/componentIds.js';
 import { matchNames } from '../../utils/nameMatcher.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
+import { prepareNameMatchCandidates } from '../../utils/targetingUtils.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 import { getAvailableExits } from '../../utils/locationUtils.js';
 import {
@@ -133,75 +134,6 @@ class TargetResolutionService extends ITargetResolutionService {
   }
 
   // Error message utilities removed in favor of shared helpers in messages.js
-
-  /**
-   * @private
-   * @description Gathers and prepares a list of name match candidates from a given source of entity IDs.
-   * It fetches entity instances, retrieves their names, and filters them.
-   * @param {function(): string[] | Set<string>} getEntityIdsFn - A function that returns entity IDs from the specific domain source.
-   * @param {string} domainContextForLogging - E.g., "inventory", "equipment", "environment" (for log messages).
-   * @param {string} [actorEntityIdToExclude] - Optional ID of an entity to exclude from candidates (e.g., the actor in environment).
-   * @returns {Promise<NameMatchCandidate[]>} An array of valid name match candidates.
-   */
-  async #_gatherNameMatchCandidates(
-    getEntityIdsFn,
-    domainContextForLogging,
-    actorEntityIdToExclude = null
-  ) {
-    this.#logger.debug(
-      `TargetResolutionService.#_gatherNameMatchCandidates called for domain: ${domainContextForLogging}`
-    );
-    const entityIds = getEntityIdsFn();
-
-    if (!entityIds || entityIds.size === 0) {
-      this.#logger.debug(
-        `TargetResolutionService.#_gatherNameMatchCandidates: No entity IDs provided by source for ${domainContextForLogging}.`
-      );
-      return [];
-    }
-
-    const candidates = [];
-    for (const itemId of entityIds) {
-      if (actorEntityIdToExclude && itemId === actorEntityIdToExclude) {
-        this.#logger.debug(
-          `TargetResolutionService.#_gatherNameMatchCandidates: Excluding entity ID '${itemId}' (actor) from domain '${domainContextForLogging}'.`
-        );
-        continue;
-      }
-
-      if (typeof itemId !== 'string' || !itemId) {
-        this.#logger.warn(
-          `TargetResolutionService.#_gatherNameMatchCandidates: Invalid (non-string or empty) entity ID encountered in ${domainContextForLogging}: ${JSON.stringify(itemId)}. Skipping.`
-        );
-        continue;
-      }
-
-      const itemEntity = this.#entityManager.getEntityInstance(itemId);
-
-      if (itemEntity) {
-        const name = getEntityDisplayName(
-          itemEntity,
-          itemEntity.id,
-          this.#logger
-        );
-        if (name && typeof name === 'string' && name.trim() !== '') {
-          candidates.push({ id: itemEntity.id, name: name });
-        } else {
-          this.#logger.warn(
-            `TargetResolutionService.#_gatherNameMatchCandidates: Entity '${itemId}' in ${domainContextForLogging} returned no valid name from getEntityDisplayName. Skipping. Name resolved to: ${name}`
-          );
-        }
-      } else {
-        this.#logger.warn(
-          `TargetResolutionService.#_gatherNameMatchCandidates: Entity '${itemId}' from ${domainContextForLogging} not found via entityManager. Skipping.`
-        );
-      }
-    }
-    this.#logger.debug(
-      `TargetResolutionService.#_gatherNameMatchCandidates: Produced ${candidates.length} candidates for domain: ${domainContextForLogging}.`
-    );
-    return candidates;
-  }
 
   /**
    * @private
@@ -479,10 +411,15 @@ class TargetResolutionService extends ITargetResolutionService {
     }
 
     const getEntityIdsFn = () => idsSet;
-    const candidates = await this.#_gatherNameMatchCandidates(
+    const candidates = await prepareNameMatchCandidates(
       getEntityIdsFn,
-      loggingContext,
-      excludeActor ? actorEntity.id : undefined
+      this.#entityManager,
+      getEntityDisplayName,
+      this.#logger,
+      {
+        entityIdToExclude: excludeActor ? actorEntity.id : undefined,
+        domainContextForLogging: loggingContext,
+      }
     );
 
     if (candidates.length === 0 && typeof candidateEmptyCheck === 'function') {

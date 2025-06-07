@@ -284,7 +284,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
 
       // Expected Outcome
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "TargetResolutionService.#_gatherNameMatchCandidates: Entity 'nonExistentItem' from inventory not found via entityManager. Skipping."
+        "prepareNameMatchCandidates: Entity 'nonExistentItem' from inventory not found via entityManager. Skipping."
       );
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
