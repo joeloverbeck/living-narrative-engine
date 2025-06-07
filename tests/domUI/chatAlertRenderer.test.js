@@ -282,4 +282,64 @@ describe('ChatAlertRenderer', () => {
       );
     });
   });
+  describe('Truncation and developer details', () => {
+    it('truncates long messages and toggles on click', () => {
+      const longMsg = 'x'.repeat(250);
+      mocks.safeEventDispatcher.trigger('ui:display_warning', {
+        message: longMsg,
+        details: {},
+      });
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const msgEl = bubble.querySelector('.chat-alert-message');
+      const toggleBtn = bubble.querySelector('.chat-alert-toggle');
+      toggleBtn.dataset.toggleType = 'message';
+
+      expect(msgEl.textContent.length).toBe(201);
+      expect(toggleBtn.textContent).toBe('Show more');
+
+      mocks.mockChatPanel._eventListeners.click({ target: toggleBtn });
+      expect(msgEl.textContent).toBe(longMsg);
+      expect(toggleBtn.textContent).toBe('Show less');
+    });
+
+    it('renders mapped message and escaped developer details for status code 503', () => {
+      const payload = {
+        details: {
+          statusCode: 503,
+          url: '/api/x',
+          raw: '503 Service Unavailable',
+        },
+      };
+      mocks.safeEventDispatcher.trigger('ui:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const msgEl = bubble.querySelector('.chat-alert-message');
+      expect(msgEl.textContent).toBe(
+        'Service temporarily unavailable. Please retry in a moment.'
+      );
+      const pre = bubble.querySelector('pre');
+      const code = pre.querySelector('code');
+      expect(code.textContent).toBe('503 503 Service Unavailable at /api/x');
+      expect(pre.hidden).toBe(true);
+    });
+
+    it('escapes malicious details content', () => {
+      const payload = {
+        message: 'Oops',
+        details: {
+          statusCode: 500,
+          url: '/bad',
+          raw: '<img src=x onerror=alert(1)>',
+        },
+      };
+      mocks.safeEventDispatcher.trigger('ui:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const code = bubble.querySelector('code');
+      expect(code.textContent).toBe(
+        '500 &lt;img src=x onerror=alert(1)&gt; at /bad'
+      );
+    });
+  });
 });
