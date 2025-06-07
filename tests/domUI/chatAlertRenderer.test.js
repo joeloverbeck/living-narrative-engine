@@ -1,11 +1,5 @@
 // tests/domUI/chatAlertRenderer.test.js
-import {
-  describe,
-  it,
-  expect,
-  jest,
-  beforeEach,
-} from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { ChatAlertRenderer } from '../../src/domUI/index.js';
 import { Throttler } from '../../src/alerting/throttler.js';
 

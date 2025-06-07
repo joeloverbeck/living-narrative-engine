@@ -22,41 +22,41 @@
  * }
  */
 :root {
-    /*
+  /*
      * --error-color: The text and border color for error bubbles.
      * Override to change the primary color of error alerts.
      */
-    --error-color: #b00020;
+  --error-color: #b00020;
 
-    /*
+  /*
      * --error-background: The background color for error bubbles.
      * Override to change the fill color of error alerts.
      */
-    --error-background: #ffcdd2;
+  --error-background: #ffcdd2;
 
-    /*
+  /*
      * --warning-color: The text and border color for warning bubbles.
      * Override to change the primary color of warning alerts.
      */
-    --warning-color: #ffa000;
+  --warning-color: #ffa000;
 
-    /*
+  /*
      * --warning-background: The background color for warning bubbles.
      * Override to change the fill color of warning alerts.
      */
-    --warning-background: #fff8e1;
+  --warning-background: #fff8e1;
 
-    /*
+  /*
      * --alert-padding: The inner padding for both error and warning bubbles.
      * Override to adjust the spacing inside alerts.
      */
-    --alert-padding: 8px;
+  --alert-padding: 8px;
 
-    /*
+  /*
      * --alert-border-radius: The corner roundness for both error and warning bubbles.
      * Override to make alerts more or less rounded.
      */
-    --alert-border-radius: 12px;
+  --alert-border-radius: 12px;
 }
 
 /**
@@ -66,10 +66,10 @@
  * these variables will take precedence over the :root defaults.
  */
 [data-theme='dark'] {
-    --error-color: #ff8a80;
-    --error-background: #4d0000;
-    --warning-color: #ffd740;
-    --warning-background: #4d4000;
+  --error-color: #ff8a80;
+  --error-background: #4d0000;
+  --warning-color: #ffd740;
+  --warning-background: #4d4000;
 }
 
 /*
@@ -81,27 +81,27 @@
  */
 
 .chat-errorBubble {
-    background-color: var(--error-background);
-    color: var(--error-color);
-    border: 1px solid var(--error-color);
-    border-radius: var(--alert-border-radius);
-    padding: var(--alert-padding);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 0.3s ease-out;
-    max-width: 300px;
-    word-break: break-all;
+  background-color: var(--error-background);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+  border-radius: var(--alert-border-radius);
+  padding: var(--alert-padding);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-out;
+  max-width: 300px;
+  word-break: break-all;
 }
 
 .chat-warningBubble {
-    background-color: var(--warning-background);
-    color: var(--warning-color);
-    border: 1px solid var(--warning-color);
-    border-radius: var(--alert-border-radius);
-    padding: var(--alert-padding);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 0.3s ease-out;
-    max-width: 300px;
-    word-break: break-all;
+  background-color: var(--warning-background);
+  color: var(--warning-color);
+  border: 1px solid var(--warning-color);
+  border-radius: var(--alert-border-radius);
+  padding: var(--alert-padding);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-out;
+  max-width: 300px;
+  word-break: break-all;
 }
 
 /*
@@ -111,12 +111,12 @@
  */
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
