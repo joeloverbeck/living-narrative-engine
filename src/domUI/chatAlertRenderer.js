@@ -4,7 +4,6 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { escapeHtml } from '../utils/rendererUtils.js';
 import { Throttler } from '../alerting/throttler.js';
 import { generateKey } from '../alerting/throttleUtils.js';
-import { getUserFriendlyMessage } from '../alerting/statusCodeMapper.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -12,12 +11,11 @@ import { getUserFriendlyMessage } from '../alerting/statusCodeMapper.js';
  * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  * @typedef {import('../alerting/alertRouter.js').default} AlertRouter
- * @typedef {import('../alerting/alertMessageFormatter.js').default} AlertMessageFormatter
  */
 
 /**
  * @class ChatAlertRenderer
- * @extends {BoundDomRendererBase}
+ * @augments {BoundDomRendererBase}
  * @description Renders warning and error alerts directly within the main chat/message panel.
  * It detects the presence of the chat panel and signals its readiness to the AlertRouter,
  * preventing alerts from being flushed to the console when a UI target is available.
@@ -27,8 +25,6 @@ import { getUserFriendlyMessage } from '../alerting/statusCodeMapper.js';
 export class ChatAlertRenderer extends BoundDomRendererBase {
   /** @private @type {AlertRouter} */
   #alertRouter;
-  /** @private @type {AlertMessageFormatter} */
-  #alertMessageFormatter;
   /** @private @type {DomElementFactory} */
   #domElementFactory;
   /** @private @type {ISafeEventDispatcher} */
@@ -49,13 +45,13 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Creates an instance of ChatAlertRenderer.
+   *
    * @param {object} dependencies The dependencies for the renderer.
    * @param {ILogger} dependencies.logger The logger instance.
    * @param {IDocumentContext} dependencies.documentContext The document context abstraction.
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher The safe event dispatcher.
    * @param {DomElementFactory} dependencies.domElementFactory The factory for creating DOM elements.
    * @param {AlertRouter} dependencies.alertRouter The router that directs alerts.
-   * @param {AlertMessageFormatter} dependencies.alertMessageFormatter The formatter for creating alert messages.
    * @throws {Error} If any of the required dependencies are missing.
    */
   constructor({
@@ -64,8 +60,8 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     safeEventDispatcher,
     domElementFactory,
     alertRouter,
-    alertMessageFormatter,
   }) {
+    // **FIX**: Pass the safe dispatcher to the parent under the key it expects.
     super({
       logger,
       documentContext,
@@ -75,6 +71,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       },
     });
 
+    // --- Dependency Validation ---
     if (!safeEventDispatcher) {
       throw new Error(
         `${this._logPrefix} ISafeEventDispatcher dependency is required.`
@@ -82,11 +79,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
     if (!alertRouter) {
       throw new Error(`${this._logPrefix} AlertRouter dependency is required.`);
-    }
-    if (!alertMessageFormatter) {
-      throw new Error(
-        `${this._logPrefix} AlertMessageFormatter dependency is required.`
-      );
     }
     if (!domElementFactory) {
       throw new Error(
@@ -96,15 +88,17 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#alertRouter = alertRouter;
-    this.#alertMessageFormatter = alertMessageFormatter;
     this.#domElementFactory = domElementFactory;
 
+    // --- Throttler Instantiation ---
+    // **FIX**: Use the explicitly requested safe dispatcher.
     this.#warningThrottler = new Throttler(
       this.#safeEventDispatcher,
       'warning'
     );
     this.#errorThrottler = new Throttler(this.#safeEventDispatcher, 'error');
 
+    // --- DOM Detection and Readiness Notification ---
     this.#hasPanel = !!this.elements.chatPanel;
 
     if (this.#hasPanel) {
@@ -123,6 +117,8 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       );
     }
 
+    // --- Event Subscriptions ---
+    // **FIX**: Use the safe dispatcher for subscriptions for consistency.
     this._addSubscription(
       this.#safeEventDispatcher.subscribe(
         'ui:display_warning',
@@ -139,8 +135,10 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     this.logger.debug(`${this._logPrefix} Initialized.`);
   }
 
+  // ... rest of the class methods (createAndAppendBubble, handleWarning, etc.) are unchanged ...
   /**
    * Scrolls the chat panel to the bottom to ensure the latest message is visible.
+   *
    * @private
    */
   #scrollToBottom() {
@@ -152,6 +150,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   /**
    * Handles click events on the chat panel, delegating to toggle handlers
    * if a toggle button was the event target.
+   *
    * @private
    * @param {MouseEvent} event The click event.
    */
@@ -171,6 +170,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Toggles the text content of a message paragraph between its truncated and full versions.
+   *
    * @private
    * @param {HTMLButtonElement} button The toggle button that was clicked.
    */
@@ -201,6 +201,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Toggles the visibility of the developer details section.
+   *
    * @private
    * @param {HTMLButtonElement} button The toggle button that was clicked.
    */
@@ -222,6 +223,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Creates and appends an alert bubble to the chat panel.
+   *
    * @private
    * @param {object} config
    * @param {'warning' | 'error'} config.type The type of alert.
@@ -261,6 +263,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     });
     if (titleElement) contentWrapper.appendChild(titleElement);
 
+    // --- Message Truncation Logic ---
     const messageElement = this.#domElementFactory.p('chat-alert-message');
     if (messageElement) {
       messageElement.id = messageId;
@@ -294,6 +297,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       }
     }
 
+    // --- Developer Details Collapsible Section ---
     if (developerDetails) {
       const detailsContainer = this.#domElementFactory.div(
         'chat-alert-details-container'
@@ -310,10 +314,10 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
         });
 
         const preElement = this.#domElementFactory.create('pre', {
-          cls: 'chat-alert-details',
+          cls: 'chat-alert-details', // Let CSS handle visibility via [hidden]
           id: detailsId,
         });
-        preElement.hidden = true;
+        preElement.hidden = true; // Hidden by default
 
         const codeElement = this.#domElementFactory.create('code', {
           text: developerDetails,
@@ -332,24 +336,66 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   }
 
   /**
+   * Creates a user-friendly message from raw details when none is provided.
+   *
+   * @private
+   * @param {any} details The raw details object from the event payload.
+   * @returns {string} A user-facing message.
+   */
+  #getUserFriendlyMessage(details) {
+    if (!details || typeof details !== 'object') {
+      return 'An unknown warning/error occurred.';
+    }
+
+    switch (details.statusCode) {
+      case 401:
+      case 403:
+        return 'Authentication failed. Please check your credentials or permissions.';
+      case 404:
+        return 'The requested resource could not be found.';
+      case 500:
+        return 'An unexpected server error occurred. Please try again later.';
+      case 503:
+        return 'Service temporarily unavailable. Please retry in a moment.';
+      default:
+        return details.message || 'An unexpected error occurred.';
+    }
+  }
+
+  /**
+   * Extracts a developer-focused details string from a raw details object.
+   *
+   * @private
+   * @param {any} details The raw details object from the event payload.
+   * @returns {string | null} A details string or null if not applicable.
+   */
+  #extractDeveloperDetails(details) {
+    if (!details || typeof details !== 'object') {
+      return details === null ? 'null' : `Malformed details: ${typeof details}`;
+    }
+
+    if (typeof details.statusCode === 'number') {
+      const parts = [details.statusCode];
+      if (details.raw) parts.push(details.raw);
+      if (details.url) parts.push(`at ${details.url}`);
+      return parts.join(' ');
+    }
+
+    return null;
+  }
+
+  /**
    * Handles the 'ui:display_warning' event.
+   *
    * @private
    * @param {IEvent<DisplayWarningPayload>} event The event object containing the warning details.
    */
   #handleWarning(event) {
-    const { message: eventMessage, details } = event.payload;
+    const { message, details } = event.payload;
 
-    const { displayMessage: generatedMessage, devDetails: developerDetails } =
-      getUserFriendlyMessage(details, eventMessage);
-
-    // Heuristic: A summary message from the throttler has a recognizable pattern.
-    // This is the only reliable way to distinguish it from a regular event that happens
-    // to also have a message and a status code.
-    const isSummary =
-      eventMessage && eventMessage.includes(' more times in the last ');
-
-    // If it's a summary, the event's message wins. Otherwise, the status code mapped message wins.
-    const displayMessage = isSummary ? eventMessage : generatedMessage;
+    const canonicalMessage = message || this.#getUserFriendlyMessage(details);
+    const displayMessage = canonicalMessage;
+    const developerDetails = this.#extractDeveloperDetails(details);
 
     if (!this.#hasPanel) {
       const consoleMessage = `[UI WARNING] ${displayMessage}${
@@ -359,19 +405,18 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       return;
     }
 
+    // --- Throttling Logic ---
     const escapedMessage = escapeHtml(displayMessage);
     const key = generateKey(escapedMessage, details);
-
     const shouldRender = this.#warningThrottler.allow(key, {
-      // For creating future summaries, the throttler needs the CANONICAL message,
-      // not the summary text. So we pass the `generatedMessage`.
-      message: generatedMessage,
+      message: canonicalMessage,
       details: details,
     });
 
     if (!shouldRender) {
       return; // Suppress the alert
     }
+    // --- End Throttling Logic ---
 
     this.#createAndAppendBubble({
       type: 'warning',
@@ -382,21 +427,16 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
   /**
    * Handles the 'ui:display_error' event.
+   *
    * @private
    * @param {IEvent<DisplayErrorPayload>} event The event object containing the error details.
    */
   #handleError(event) {
-    const { message: eventMessage, details } = event.payload;
+    const { message, details } = event.payload;
 
-    const { displayMessage: generatedMessage, devDetails: developerDetails } =
-      getUserFriendlyMessage(details, eventMessage);
-
-    // Heuristic to detect summary messages.
-    const isSummary =
-      eventMessage && eventMessage.includes(' more times in the last ');
-
-    // If it's a summary, the event's message wins. Otherwise, the status code mapped message wins.
-    const displayMessage = isSummary ? eventMessage : generatedMessage;
+    const canonicalMessage = message || this.#getUserFriendlyMessage(details);
+    const displayMessage = canonicalMessage;
+    const developerDetails = this.#extractDeveloperDetails(details);
 
     if (!this.#hasPanel) {
       const consoleMessage = `[UI ERROR] ${displayMessage}${
@@ -406,18 +446,18 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       return;
     }
 
+    // --- Throttling Logic ---
     const escapedMessage = escapeHtml(displayMessage);
     const key = generateKey(escapedMessage, details);
-
     const shouldRender = this.#errorThrottler.allow(key, {
-      // For creating future summaries, the throttler needs the CANONICAL message.
-      message: generatedMessage,
+      message: canonicalMessage,
       details: details,
     });
 
     if (!shouldRender) {
       return; // Suppress the alert
     }
+    // --- End Throttling Logic ---
 
     this.#createAndAppendBubble({
       type: 'error',
