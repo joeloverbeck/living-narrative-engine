@@ -227,7 +227,11 @@ describe('TurnManager - Error Handling', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: 'System Error during turn advancement. Stopping game.',
-        details: resolveError.message,
+        details: {
+          raw: resolveError.message,
+          timestamp: expect.any(String),
+          stack: expect.any(String),
+        },
       })
     );
     // stop() calls clearCurrentRound
@@ -263,8 +267,10 @@ describe('TurnManager - Error Handling', () => {
       expect.objectContaining({
         message:
           'Internal Error: Turn order inconsistency detected. Stopping game.',
-        details:
-          'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.',
+        details: {
+          raw: 'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.',
+          timestamp: expect.any(String),
+        },
       })
     );
     // stop() calls clearCurrentRound

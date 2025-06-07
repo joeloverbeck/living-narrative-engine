@@ -510,12 +510,11 @@ export class ProcessingCommandState extends AbstractTurnState {
         // dispatch should not throw
         await systemErrorDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `System error in ${this.getStateName()} for actor ${currentActorIdForLog}: ${error.message}`,
-          type: 'error',
-          details: `OriginalError: ${error.name} - ${error.message}${
-            error.stack ? `\nStack: ${error.stack}` : ''
-          }`,
-          actorId: currentActorIdForLog,
-          turnState: this.getStateName(),
+          details: {
+            raw: `OriginalError: ${error.name} - ${error.message}`,
+            stack: error.stack,
+            timestamp: new Date().toISOString(),
+          },
         });
       } catch (dispatchError) {
         // Should not be reached

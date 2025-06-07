@@ -165,7 +165,7 @@ describe('UiMessageRenderer', () => {
       )[1];
       fatalHandler({
         type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: { message: baseText, error: new Error(errorDetails) },
+        payload: { message: baseText, details: { raw: errorDetails } },
       });
       const messageElement = renderer.elements.messageList.querySelector('li');
       expect(messageElement).not.toBeNull();

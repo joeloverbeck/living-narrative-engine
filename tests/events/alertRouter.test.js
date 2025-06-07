@@ -3,6 +3,7 @@
  */
 
 import AlertRouter from '../../src/alerting/alertRouter.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 import {
   afterEach,
   beforeEach,
@@ -72,8 +73,8 @@ describe('AlertRouter', () => {
 
     const payload = { message: 'Test error message' };
     // Simulate an error event
-    mockDispatcher.listeners['core:system_error_occurred'](
-      'core:system_error_occurred',
+    mockDispatcher.listeners[SYSTEM_ERROR_OCCURRED_ID](
+      SYSTEM_ERROR_OCCURRED_ID,
       payload
     );
 

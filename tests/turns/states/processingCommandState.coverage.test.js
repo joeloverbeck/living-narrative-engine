@@ -137,7 +137,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('No actor present'),
-        actorId: expect.any(String),
+        details: expect.any(Object),
       })
     );
 
@@ -183,7 +183,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Error retrieving ITurnAction'),
-        actorId: actor.id,
+        details: expect.any(Object),
       })
     );
     // And endTurn called
@@ -219,7 +219,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('No ITurnAction available'),
-        actorId: actor.id,
+        details: expect.any(Object),
       })
     );
     // endTurn should be invoked
@@ -258,7 +258,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
         message: expect.stringContaining(
           'invalid: missing or empty actionDefinitionId'
         ),
-        actorId: actor.id,
+        details: expect.any(Object),
       })
     );
     expect(spyEndTurn).toHaveBeenCalledWith(expect.any(Error));
@@ -359,7 +359,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
         message: expect.stringContaining(
           'Failed to retrieve ICommandProcessor'
         ),
-        actorId: actor.id,
+        details: expect.any(Object),
       })
     );
   });
@@ -394,7 +394,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
         message: expect.stringContaining(
           'Failed to retrieve ICommandProcessor'
         ),
-        actorId: actor.id,
+        details: expect.any(Object),
       })
     );
   });

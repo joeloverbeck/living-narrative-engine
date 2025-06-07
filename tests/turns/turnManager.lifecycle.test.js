@@ -181,9 +181,13 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          details: expect.stringContaining(
-            'Subscription function did not return an unsubscribe callback'
-          ),
+          details: {
+            raw: expect.stringContaining(
+              'Subscription function did not return an unsubscribe callback'
+            ),
+            timestamp: expect.any(String),
+            stack: expect.any(String),
+          },
         })
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
@@ -205,7 +209,13 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
       );
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({ details: subscribeError.message })
+        expect.objectContaining({
+          details: {
+            raw: subscribeError.message,
+            timestamp: expect.any(String),
+            stack: expect.any(String),
+          },
+        })
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
       stopSpy.mockRestore();

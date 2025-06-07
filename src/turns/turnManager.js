@@ -678,9 +678,11 @@ class TurnManager extends ITurnManager {
     try {
       await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: message,
-        type: 'error',
-        details: detailString,
-        stack: stackString, // Optionally include stack
+        details: {
+          raw: detailString,
+          stack: stackString,
+          timestamp: new Date().toISOString(),
+        },
       });
     } catch (dispatchError) {
       this.#logger.error(

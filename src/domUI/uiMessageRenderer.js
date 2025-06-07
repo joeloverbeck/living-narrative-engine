@@ -294,7 +294,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
       return;
     }
     let msg = payload.message;
-    if (payload.error?.message) msg += `\nDetails: ${payload.error.message}`;
+    if (payload.details?.raw) msg += `\nDetails: ${payload.details.raw}`;
     this.logger.error(`${this._logPrefix} Fatal error displayed: ${msg}`); // Log before render as render also logs
     this.render(msg, 'fatal');
   }
