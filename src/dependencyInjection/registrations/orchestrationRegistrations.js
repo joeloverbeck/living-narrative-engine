@@ -55,7 +55,7 @@ export function registerOrchestration(container) {
       validatedEventDispatcher: initDispatcher,
     });
   });
-  logger.info(
+  logger.debug(
     `Orchestration Registration: Registered ${tokens.IInitializationService} (Singleton).`
   );
 
@@ -94,7 +94,7 @@ export function registerOrchestration(container) {
       gameLoop: shutdownGameLoop, // GameLoop is resolved here
     });
   });
-  logger.info(
+  logger.debug(
     `Orchestration Registration: Registered ${tokens.ShutdownService} (Singleton).`
   );
 

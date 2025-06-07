@@ -128,7 +128,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       throw new ConfigurationError(errorMsg, { llmId });
     }
 
-    this.logger.info(
+    this.logger.debug(
       `${this.constructor.name}.execute called for LLM ID: ${llmId}.`
     );
 
@@ -213,7 +213,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         targetHeaders: llmConfig.providerSpecificHeaders || {},
       };
       // MODIFICATION END
-      this.logger.info(
+      this.logger.debug(
         `${this.constructor.name} (${llmId}): Client-side execution. Using proxy URL: ${targetUrl}. Payload prepared according to proxy API contract.`,
         { llmId }
       );
@@ -241,7 +241,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         `${this.constructor.name} (${llmId}): Making API call to '${targetUrl}'. Payload length: ${JSON.stringify(finalPayload)?.length}`,
         { llmId }
       );
-      this.logger.info(
+      this.logger.debug(
         `${this.constructor.name} (${llmId}): Final prompt to be sent to '${targetUrl}':`,
         { llmId, payload: JSON.stringify(finalPayload, null, 2) }
       );
@@ -272,7 +272,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         typeof extractedJsonString === 'string' &&
         extractedJsonString.trim() !== ''
       ) {
-        this.logger.info(
+        this.logger.debug(
           `${this.constructor.name} (${llmId}): Successfully extracted JSON string. Length: ${extractedJsonString.length}.`,
           { llmId }
         );

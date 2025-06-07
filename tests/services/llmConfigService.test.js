@@ -90,7 +90,7 @@ describe('LLMConfigService', () => {
         configSourceIdentifier: sourceId,
       });
       expect(service).toBeInstanceOf(LLMConfigService);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Configuration source identifier set to: ${sourceId}`
         )
@@ -109,7 +109,7 @@ describe('LLMConfigService', () => {
         service.getLlmConfigsCacheForTest().get(sampleConfig1.configId)
       ).toEqual(sampleConfig1);
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'Successfully loaded 1 initial configurations into cache.'
         )
@@ -124,7 +124,7 @@ describe('LLMConfigService', () => {
       });
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false); // No valid configs loaded, so flag remains false until source load or programmatic add
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'LLMConfigService: Empty array provided for initialConfigs. No initial configurations loaded.'
       );
     });
@@ -166,7 +166,7 @@ describe('LLMConfigService', () => {
         logger: mockLogger,
         configurationProvider: mockConfigurationProvider,
       });
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'No configuration source identifier provided and no initial configs loaded.'
         )
@@ -276,7 +276,7 @@ describe('LLMConfigService', () => {
       expect(
         service.getLlmConfigsCacheForTest().get(sampleConfig2.configId)
       ).toEqual(sampleConfig2);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'Processed 2 configs: 2 added, 0 updated, 0 skipped.'
         )
@@ -294,7 +294,7 @@ describe('LLMConfigService', () => {
       expect(
         service.getLlmConfigsCacheForTest().get(sampleConfig1.configId)
       ).toEqual(updatedConfig1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'Processed 1 configs: 0 added, 1 updated, 0 skipped.'
         )
@@ -329,7 +329,7 @@ describe('LLMConfigService', () => {
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
       service.addOrUpdateConfigs([{ ...sampleConfig1 }]);
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(true);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'Configurations added programmatically. Marking cache as "loaded/attempted"'
         )
@@ -364,7 +364,7 @@ describe('LLMConfigService', () => {
       expect(
         service.getLlmConfigsCacheForTest().get(sampleConfig1.configId)
       ).toEqual(sampleConfig1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Successfully loaded and cached 2 configurations from ${sourceId}`
         )
@@ -574,7 +574,7 @@ describe('LLMConfigService', () => {
       });
       const config = await service.getConfig(sampleConfig1.configId);
       expect(config).toEqual(sampleConfig1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Found configuration by direct configId match for "${sampleConfig1.configId}"`
         )
@@ -604,7 +604,7 @@ describe('LLMConfigService', () => {
       });
       const config = await service.getConfig(sampleConfig1.modelIdentifier);
       expect(config).toEqual(sampleConfig1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Selected configuration by exact modelIdentifier match for "${sampleConfig1.modelIdentifier}"`
         )
@@ -627,7 +627,7 @@ describe('LLMConfigService', () => {
       const targetModelId1 = 'provider/model-x-v3';
       let config = await service.getConfig(targetModelId1);
       expect(config.configId).toBe(sampleLongerWildcardConfig.configId);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Selected configuration by wildcard modelIdentifier match for "${targetModelId1}". Pattern: "${sampleLongerWildcardConfig.modelIdentifier}"`
         )
@@ -637,7 +637,7 @@ describe('LLMConfigService', () => {
       const targetModelId2 = 'provider/another-model';
       config = await service.getConfig(targetModelId2);
       expect(config.configId).toBe(sampleWildcardConfig.configId);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Selected configuration by wildcard modelIdentifier match for "${targetModelId2}". Pattern: "${sampleWildcardConfig.modelIdentifier}"`
         )
@@ -662,7 +662,7 @@ describe('LLMConfigService', () => {
 
       const config = await service.getConfig('provider/model-a-v1'); // This is a configId
       expect(config.configId).toBe(conflictingConfig.configId); // Should find by configId first
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Found configuration by direct configId match for "provider/model-a-v1"`
         )
@@ -684,7 +684,7 @@ describe('LLMConfigService', () => {
 
       const config = await service.getConfig('provider/model-x');
       expect(config.configId).toBe(exactMatchConfig.configId);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Selected configuration by exact modelIdentifier match for "provider/model-x"`
         )
@@ -723,7 +723,7 @@ describe('LLMConfigService', () => {
 
       expect(service.getLlmConfigsCacheForTest().size).toBe(0);
       expect(service.getConfigsLoadedOrAttemptedFlagForTest()).toBe(false);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'LLMConfigService: Cache cleared and loaded state reset. Configurations will be reloaded from source on next request if source is configured.'
       );
     });
