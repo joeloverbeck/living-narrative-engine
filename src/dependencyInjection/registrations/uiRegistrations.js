@@ -10,6 +10,8 @@
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler (Updated Dependency)
+import AlertRouter from '../../alerting/alertRouter.js';
+import { AlertMessageFormatter } from '../../alerting/alertMessageFormatter.js';
 
 // --- NEW DOM UI Component Imports ---
 import {
@@ -26,6 +28,7 @@ import {
   DocumentContext,
   CurrentTurnActorRenderer,
   ProcessingIndicatorController,
+  ChatAlertRenderer,
 } from '../../domUI/index.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
@@ -42,6 +45,7 @@ import { EngineUIManager } from '../../domUI'; // Corrected import path if Engin
 /** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
+/** @typedef {import('../../interfaces/IAlertMessageFormatter.js').IAlertMessageFormatter} IAlertMessageFormatter */
 
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
@@ -75,7 +79,7 @@ export function registerUI(
   registrar.instance(tokens.titleElement, titleElement);
   logger.debug('UI Registrations: Registered titleElement instance.');
 
-  // --- 1. Register Core UI Utilities ---
+  // --- 1. Register Core UI Utilities & Alerting Services ---
   registrar.singletonFactory(
     tokens.IDocumentContext,
     (c) => new DocumentContext(c.resolve(tokens.WindowDocument))
@@ -87,6 +91,16 @@ export function registerUI(
     (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext))
   );
   logger.debug(`UI Registrations: Registered ${tokens.DomElementFactory}.`);
+
+  registrar.single(tokens.AlertRouter, AlertRouter, [
+    tokens.ISafeEventDispatcher,
+  ]);
+  logger.debug(`UI Registrations: Registered ${tokens.AlertRouter}.`);
+
+  registrar.single(tokens.IAlertMessageFormatter, AlertMessageFormatter);
+  logger.debug(
+    `UI Registrations: Registered ${tokens.IAlertMessageFormatter}.`
+  );
 
   // --- 2. Register Individual Renderers / Controllers / Services ---
 
@@ -247,6 +261,20 @@ export function registerUI(
     `UI Registrations: Registered ${tokens.ProcessingIndicatorController}.`
   );
 
+  registrar.singletonFactory(
+    tokens.ChatAlertRenderer,
+    (c) =>
+      new ChatAlertRenderer({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+        alertRouter: c.resolve(tokens.AlertRouter),
+        alertMessageFormatter: c.resolve(tokens.IAlertMessageFormatter),
+      })
+  );
+  logger.debug(`UI Registrations: Registered ${tokens.ChatAlertRenderer}.`);
+
   // --- 3. Register Facade ---
   // CORRECTED: Pass an array of dependency tokens. The DI container's resolve logic
   // (especially the mock one in the test) will map these to an object for the constructor.
@@ -290,6 +318,12 @@ export function registerUI(
   );
   logger.debug(
     `UI Registrations: Registered ${tokens.IInputHandler} (legacy) with VED.`
+  );
+
+  // --- 6. Eagerly instantiate ChatAlertRenderer to ensure it subscribes to events on startup ---
+  container.resolve(tokens.ChatAlertRenderer);
+  logger.info(
+    `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`
   );
 
   logger.info('UI Registrations: Complete.');

@@ -46,6 +46,7 @@
  * @property {DiToken} DomRenderer - Token for the legacy DOM rendering class (deprecated).
  * @property {DiToken} CurrentTurnActorRenderer - Token for the component displaying the current turn actor's portrait and name.
  * @property {DiToken} ProcessingIndicatorController - Token for the component managing the processing/thinking indicator.
+ * @property {DiToken} ChatAlertRenderer - Token for the component that renders warnings and errors in the chat panel.
  *
  * --- Loaders ---
  * @property {DiToken} SchemaLoader - Token for the schema loading service.
@@ -82,6 +83,7 @@
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
  * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
  * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data.
+ * @property {DiToken} AlertRouter - Token for the service that routes alerts to the UI or console.
  *
  * --- Core Service Interfaces ---
  * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
@@ -106,6 +108,7 @@
  * @property {DiToken} IStorageProvider - Token for the storage provider interface.
  * @property {DiToken} IInitializationService - Token for the game initialization service interface.
  * @property {DiToken} ILLMAdapter - Token for the LLM adapter service interface.
+ * @property {DiToken} IAlertMessageFormatter - Token for the service that formats alert/error messages.
  *
  * --- Initialization & Orchestration ---
  * @property {DiToken} WorldInitializer - Token for initializing the game world.
@@ -175,6 +178,7 @@ export const tokens = Object.freeze({
   EngineUIManager: 'EngineUIManager',
   CurrentTurnActorRenderer: 'CurrentTurnActorRenderer',
   ProcessingIndicatorController: 'ProcessingIndicatorController',
+  ChatAlertRenderer: 'ChatAlertRenderer',
 
   // Loaders
   SchemaLoader: 'SchemaLoader',
@@ -209,6 +213,7 @@ export const tokens = Object.freeze({
   PlaytimeTracker: 'PlaytimeTracker',
   GamePersistenceService: 'GamePersistenceService',
   EntityDisplayDataProvider: 'EntityDisplayDataProvider',
+  AlertRouter: 'AlertRouter',
 
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',
@@ -232,6 +237,7 @@ export const tokens = Object.freeze({
   IStorageProvider: 'IStorageProvider',
   IInitializationService: 'IInitializationService',
   ILLMAdapter: 'ILLMAdapter',
+  IAlertMessageFormatter: 'IAlertMessageFormatter',
 
   // Initialization & Orchestration
   WorldInitializer: 'WorldInitializer',
