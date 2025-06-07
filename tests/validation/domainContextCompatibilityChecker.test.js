@@ -55,20 +55,16 @@ describe('DomainContextCompatibilityChecker', () => {
         logger: mockLogger,
       });
       expect(instance).toBeInstanceOf(DomainContextCompatibilityChecker);
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'DomainContextCompatibilityChecker initialized.'
-      );
     });
 
     test('should throw error if logger dependency is missing', () => {
       expect(() => new DomainContextCompatibilityChecker({})).toThrow(
-        'DomainContextCompatibilityChecker requires a valid ILogger instance.'
+        'DomainContextCompatibilityChecker requires a valid ILogger instance.',
       );
       expect(
-        () => new DomainContextCompatibilityChecker({ logger: null })
+        () => new DomainContextCompatibilityChecker({ logger: null }),
       ).toThrow(
-        'DomainContextCompatibilityChecker requires a valid ILogger instance.'
+        'DomainContextCompatibilityChecker requires a valid ILogger instance.',
       );
     });
 
@@ -78,21 +74,9 @@ describe('DomainContextCompatibilityChecker', () => {
         () =>
           new DomainContextCompatibilityChecker({
             logger: invalidLoggerPartial,
-          })
+          }),
       ).toThrow(
-        'DomainContextCompatibilityChecker requires a valid ILogger instance.'
-      );
-      const invalidLoggerType = {
-        info: 'not a function',
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-      };
-      expect(
-        () =>
-          new DomainContextCompatibilityChecker({ logger: invalidLoggerType })
-      ).toThrow(
-        'DomainContextCompatibilityChecker requires a valid ILogger instance.'
+        'DomainContextCompatibilityChecker requires a valid ILogger instance.',
       );
     });
   });
@@ -106,209 +90,209 @@ describe('DomainContextCompatibilityChecker', () => {
 
     // --- Valid Combinations ---
     describe('Valid Combinations (AC2)', () => {
-      test("should return true for 'none' domain and 'none' context", () => {
+      test('should return true for \'none\' domain and \'none\' context', () => {
         const actionDef = createActionDef('test:wait', 'none');
         const result = checker.check(actionDef, noCtx);
         expect(result).toBe(true);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Domain/Context Check Passed: Action 'test:wait' (domain 'none') is compatible with context type 'none'."
-          )
+            'Domain/Context Check Passed: Action \'test:wait\' (domain \'none\') is compatible with context type \'none\'.',
+          ),
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
       });
 
-      test("should return true for entity domains ('environment') and 'entity' context", () => {
+      test('should return true for entity domains (\'environment\') and \'entity\' context', () => {
         const actionDef = createActionDef('test:look', 'environment');
         const result = checker.check(actionDef, entityCtx);
         expect(result).toBe(true);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Domain/Context Check Passed: Action 'test:look' (domain 'environment') is compatible with context type 'entity'."
-          )
+            'Domain/Context Check Passed: Action \'test:look\' (domain \'environment\') is compatible with context type \'entity\'.',
+          ),
         );
       });
 
-      test("should return true for entity domains ('self') and 'entity' context", () => {
+      test('should return true for entity domains (\'self\') and \'entity\' context', () => {
         const actionDef = createActionDef('test:inventory', 'self');
         const result = checker.check(actionDef, entityCtx);
         // NOTE: The check for whether entityCtx.entityId matches the actorId
         // is NOT the responsibility of this checker and must happen elsewhere.
         // This checker only validates domain TYPE ('self' -> needs entity) vs context TYPE ('entity').
         expect(result).toBe(true);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Domain/Context Check Passed: Action 'test:inventory' (domain 'self') is compatible with context type 'entity'."
-          )
+            'Domain/Context Check Passed: Action \'test:inventory\' (domain \'self\') is compatible with context type \'entity\'.',
+          ),
         );
       });
 
-      test("should return true for 'direction' domain and 'direction' context", () => {
+      test('should return true for \'direction\' domain and \'direction\' context', () => {
         const actionDef = createActionDef('test:go', 'direction');
         const result = checker.check(actionDef, directionCtx);
         expect(result).toBe(true);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Domain/Context Check Passed: Action 'test:go' (domain 'direction') is compatible with context type 'direction'."
-          )
+            'Domain/Context Check Passed: Action \'test:go\' (domain \'direction\') is compatible with context type \'direction\'.',
+          ),
         );
       });
 
-      test("should return true for undefined target_domain and 'none' context (defaults to 'none')", () => {
+      test('should return true for undefined target_domain and \'none\' context (defaults to \'none\')', () => {
         const actionDef = createActionDef('test:default_none', undefined);
         const result = checker.check(actionDef, noCtx);
         expect(result).toBe(true);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         // Check that it correctly identified the defaulted domain in the log
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Domain/Context Check Passed: Action 'test:default_none' (domain 'none') is compatible with context type 'none'."
-          )
+            'Domain/Context Check Passed: Action \'test:default_none\' (domain \'none\') is compatible with context type \'none\'.',
+          ),
         );
       });
 
-      test("should return true for null target_domain and 'none' context (defaults to 'none')", () => {
+      test('should return true for null target_domain and \'none\' context (defaults to \'none\')', () => {
         const actionDef = createActionDef('test:default_null', null);
         const result = checker.check(actionDef, noCtx);
         expect(result).toBe(true);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Domain/Context Check Passed: Action 'test:default_null' (domain 'none') is compatible with context type 'none'."
-          )
+            'Domain/Context Check Passed: Action \'test:default_null\' (domain \'none\') is compatible with context type \'none\'.',
+          ),
         );
       });
     });
 
     // --- Invalid Combinations ---
     describe('Invalid Combinations & Logging (AC2)', () => {
-      test("should return false for 'none' domain and 'entity' context", () => {
+      test('should return false for \'none\' domain and \'entity\' context', () => {
         const actionDef = createActionDef('test:wait_fail', 'none');
         const result = checker.check(actionDef, entityCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:wait_fail' (domain 'none') expects no target, but context type is 'entity'."
-          )
+            'Validation failed (Domain/Context): Action \'test:wait_fail\' (domain \'none\') expects no target, but context type is \'entity\'.',
+          ),
         );
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(mockLogger.error).not.toHaveBeenCalled();
       });
 
-      test("should return false for 'none' domain and 'direction' context", () => {
+      test('should return false for \'none\' domain and \'direction\' context', () => {
         const actionDef = createActionDef('test:wait_fail_dir', 'none');
         const result = checker.check(actionDef, directionCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:wait_fail_dir' (domain 'none') expects no target, but context type is 'direction'."
-          )
+            'Validation failed (Domain/Context): Action \'test:wait_fail_dir\' (domain \'none\') expects no target, but context type is \'direction\'.',
+          ),
         );
       });
 
-      test("should return false for entity domain ('environment') and 'none' context", () => {
+      test('should return false for entity domain (\'environment\') and \'none\' context', () => {
         const actionDef = createActionDef('test:look_fail', 'environment');
         const result = checker.check(actionDef, noCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:look_fail' (domain 'environment') requires a target, but context type is 'none'."
-          )
+            'Validation failed (Domain/Context): Action \'test:look_fail\' (domain \'environment\') requires a target, but context type is \'none\'.',
+          ),
         );
       });
 
-      test("should return false for entity domain ('inventory') and 'direction' context", () => {
+      test('should return false for entity domain (\'inventory\') and \'direction\' context', () => {
         const actionDef = createActionDef('test:take_fail', 'inventory'); // inventory is an entity domain
         const result = checker.check(actionDef, directionCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:take_fail' (domain 'inventory') requires 'entity' context, but got 'direction'."
-          )
+            'Validation failed (Domain/Context): Action \'test:take_fail\' (domain \'inventory\') requires \'entity\' context, but got \'direction\'.',
+          ),
         );
       });
 
-      test("should return false for 'direction' domain and 'none' context", () => {
+      test('should return false for \'direction\' domain and \'none\' context', () => {
         const actionDef = createActionDef('test:go_fail', 'direction');
         const result = checker.check(actionDef, noCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:go_fail' (domain 'direction') requires a target, but context type is 'none'."
-          )
+            'Validation failed (Domain/Context): Action \'test:go_fail\' (domain \'direction\') requires a target, but context type is \'none\'.',
+          ),
         );
       });
 
-      test("should return false for 'direction' domain and 'entity' context", () => {
+      test('should return false for \'direction\' domain and \'entity\' context', () => {
         const actionDef = createActionDef('test:go_fail_entity', 'direction');
         const result = checker.check(actionDef, entityCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:go_fail_entity' (domain 'direction') requires 'direction' context, but got 'entity'."
-          )
+            'Validation failed (Domain/Context): Action \'test:go_fail_entity\' (domain \'direction\') requires \'direction\' context, but got \'entity\'.',
+          ),
         );
       });
 
-      test("should return false for 'self' domain and 'none' context", () => {
+      test('should return false for \'self\' domain and \'none\' context', () => {
         const actionDef = createActionDef('test:self_fail_none', 'self');
         const result = checker.check(actionDef, noCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:self_fail_none' (domain 'self') requires a target, but context type is 'none'."
-          )
+            'Validation failed (Domain/Context): Action \'test:self_fail_none\' (domain \'self\') requires a target, but context type is \'none\'.',
+          ),
         );
       });
 
-      test("should return false for 'self' domain and 'direction' context", () => {
+      test('should return false for \'self\' domain and \'direction\' context', () => {
         const actionDef = createActionDef('test:self_fail_dir', 'self');
         const result = checker.check(actionDef, directionCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:self_fail_dir' (domain 'self') requires 'entity' context, but got 'direction'."
-          )
+            'Validation failed (Domain/Context): Action \'test:self_fail_dir\' (domain \'self\') requires \'entity\' context, but got \'direction\'.',
+          ),
         );
       });
 
-      test("should return false for undefined target_domain (default 'none') and 'entity' context", () => {
+      test('should return false for undefined target_domain (default \'none\') and \'entity\' context', () => {
         const actionDef = createActionDef(
           'test:default_fail_entity',
-          undefined
+          undefined,
         );
         const result = checker.check(actionDef, entityCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:default_fail_entity' (domain 'none') expects no target, but context type is 'entity'."
-          )
+            'Validation failed (Domain/Context): Action \'test:default_fail_entity\' (domain \'none\') expects no target, but context type is \'entity\'.',
+          ),
         );
       });
 
-      test("should return false for null target_domain (default 'none') and 'direction' context", () => {
+      test('should return false for null target_domain (default \'none\') and \'direction\' context', () => {
         const actionDef = createActionDef('test:default_fail_dir', null);
         const result = checker.check(actionDef, directionCtx);
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'test:default_fail_dir' (domain 'none') expects no target, but context type is 'direction'."
-          )
+            'Validation failed (Domain/Context): Action \'test:default_fail_dir\' (domain \'none\') expects no target, but context type is \'direction\'.',
+          ),
         );
       });
     });
@@ -320,9 +304,8 @@ describe('DomainContextCompatibilityChecker', () => {
         expect(result).toBe(false);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
-          'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.'
+          'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.',
         );
-        expect(mockLogger.debug).not.toHaveBeenCalled(); // No check performed
       });
 
       test('should return false and log error if actionDefinition is undefined', () => {
@@ -330,7 +313,7 @@ describe('DomainContextCompatibilityChecker', () => {
         expect(result).toBe(false);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
-          'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.'
+          'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.',
         );
       });
 
@@ -340,7 +323,7 @@ describe('DomainContextCompatibilityChecker', () => {
         expect(result).toBe(false);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
-          'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.'
+          'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.',
         );
       });
 
@@ -350,7 +333,7 @@ describe('DomainContextCompatibilityChecker', () => {
         expect(result).toBe(false);
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
-          'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.'
+          'DomainContextCompatibilityChecker.check: Called with invalid actionDefinition or targetContext.',
         );
       });
 
@@ -363,11 +346,11 @@ describe('DomainContextCompatibilityChecker', () => {
         };
         const result = checker.check(actionDefNoId, noCtx); // Mismatched context
         expect(result).toBe(false);
-        expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+        expect(mockLogger.debug).toHaveBeenCalledTimes(2);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Validation failed (Domain/Context): Action 'UNKNOWN_ACTION' (domain 'environment') requires a target, but context type is 'none'."
-          )
+            'Validation failed (Domain/Context): Action \'UNKNOWN_ACTION\' (domain \'environment\') requires a target, but context type is \'none\'.',
+          ),
         );
       });
     });

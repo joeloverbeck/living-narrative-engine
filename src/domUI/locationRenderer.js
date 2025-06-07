@@ -537,7 +537,7 @@ export class LocationRenderer extends BoundDomRendererBase {
       '(None else here)'
     );
 
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} Location "${locationDto.name}" display updated.`
     );
   }

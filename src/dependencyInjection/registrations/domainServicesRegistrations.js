@@ -709,7 +709,7 @@ export function registerDomainServices(container) {
     `Domain Services Registration: Registered ${String(tokens.ITurnContextFactory)}.`
   );
 
-  log.info('Domain-services Registration: complete.');
+  log.debug('Domain-services Registration: complete.');
 }
 
 // --- FILE END ---

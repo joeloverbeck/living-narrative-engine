@@ -597,10 +597,6 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       expect(handler._isDestroyed).toBe(true);
       expect(stateDestroySpy).toHaveBeenCalledTimes(1);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `AwaitingPlayerInputState: Handler (actor ${dummyActor.id}) is already being destroyed. Skipping turnContext.endTurn().`
-      );
-
       expect(resetSpy).toHaveBeenCalledWith(
         expect.stringContaining(`destroy-MinimalTestHandler`)
       );

@@ -63,7 +63,6 @@ class ShutdownService {
     }
     if (
       !logger ||
-      typeof logger.info !== 'function' ||
       typeof logger.error !== 'function' ||
       typeof logger.debug !== 'function' ||
       typeof logger.warn !== 'function'
@@ -169,14 +168,6 @@ class ShutdownService {
         );
         // Optionally dispatch a specific failure event for TurnManager stop
       }
-      // REMOVED: GameLoop stopping logic
-      // if (this.#gameLoop.isRunning) {
-      //     this.#logger.info('ShutdownService: Stopping GameLoop...');
-      //     this.#gameLoop.stop();
-      //     this.#logger.info('ShutdownService: GameLoop stop() method called.');
-      // } else {
-      //     this.#logger.info('ShutdownService: GameLoop instance found but already stopped or not running.');
-      // }
 
       // 2. Shutdown Tagged Systems
       this.#logger.info(

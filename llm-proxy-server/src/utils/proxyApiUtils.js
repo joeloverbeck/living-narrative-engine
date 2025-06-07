@@ -186,7 +186,7 @@ export async function Workspace_retry(
       }
     }
   }
-  currentLogger.info(
+  currentLogger.debug(
     `Workspace_retry: Initiating request sequence for ${url} with maxRetries=${maxRetries}, baseDelayMs=${baseDelayMs}, maxDelayMs=${maxDelayMs}.`
   );
   return attemptFetchRecursive(1);

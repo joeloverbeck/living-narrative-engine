@@ -132,15 +132,6 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
         entityManager.removeEntityInstance(INSTANCE_ID_1);
         expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
       });
-
-      it('should log an info message about removal', () => {
-        entityManager.removeEntityInstance(INSTANCE_ID_1);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Removed entity instance ${INSTANCE_ID_1} from active map.`
-          )
-        );
-      });
     });
 
     describe('when removing an entity with position', () => {
@@ -177,11 +168,6 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
             `Removed entity ${INSTANCE_ID_2_POS} from spatial index (location instanceId: ${TEST_LOCATION_ID}).`
-          )
-        );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Removed entity instance ${INSTANCE_ID_2_POS} from active map.`
           )
         );
       });
@@ -294,13 +280,6 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
     it('should call ISpatialIndexManager.clearIndex', () => {
       entityManager.clearAll();
       expect(mockSpatialIndex.clearIndex).toHaveBeenCalledTimes(1);
-    });
-
-    it('should log an info message about clearing', () => {
-      entityManager.clearAll();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EntityManager: Cleared all active entities, definition map, and delegated spatial index clearing.'
-      );
     });
   });
 });

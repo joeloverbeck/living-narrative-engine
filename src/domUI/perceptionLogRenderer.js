@@ -177,7 +177,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       }
 
       if (!actorEntity.hasComponent(PERCEPTION_LOG_COMPONENT_ID)) {
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} Actor '${this.#currentActorId}' does not have a '${PERCEPTION_LOG_COMPONENT_ID}' component.`
         );
         return [];
@@ -192,7 +192,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
         !Array.isArray(perceptionData.logEntries) ||
         perceptionData.logEntries.length === 0
       ) {
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} Actor '${this.#currentActorId}' has '${PERCEPTION_LOG_COMPONENT_ID}' component, but 'logEntries' are empty or malformed.`
         );
         return [];
@@ -340,7 +340,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       this.#currentActorId = null;
     } else {
       this.#currentActorId = event.payload.entityId;
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Current actor ID set to: ${this.#currentActorId}`
       );
     }

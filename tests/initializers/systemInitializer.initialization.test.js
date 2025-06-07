@@ -317,14 +317,6 @@ describe('SystemInitializer (Tag-Based)', () => {
 
       await systemInitializer.initializeAll();
 
-      // Check overall start/complete logs and events
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `SystemInitializer: Starting initialization for systems tagged with '${testInitializationTag}'...`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Initialization loop for tagged systems completed.'
-      );
-
       // Check resolver call
       expect(mockResolver.resolveByTag).toHaveBeenCalledWith(
         testInitializationTag
@@ -337,12 +329,6 @@ describe('SystemInitializer (Tag-Based)', () => {
       // Check individual system initializations and logs/events
       // Good1
       expect(mockSystemGood1.initialize).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Initializing system: SystemGood1...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: System SystemGood1 initialized successfully.'
-      );
 
       // NoInit
       expect(mockSystemNoInit.someOtherMethod).not.toHaveBeenCalled(); // Ensure its other methods aren't called
@@ -352,9 +338,6 @@ describe('SystemInitializer (Tag-Based)', () => {
 
       // FailInit
       expect(mockSystemFailInit.initialize).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Initializing system: SystemFailInit...'
-      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Error initializing system 'SystemFailInit'. Continuing. Error: ${initError.message}`
@@ -373,12 +356,6 @@ describe('SystemInitializer (Tag-Based)', () => {
 
       // Good2
       expect(mockSystemGood2.initialize).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Initializing system: SystemGood2...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: System SystemGood2 initialized successfully.'
-      );
 
       // BadInitType
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -406,12 +383,6 @@ describe('SystemInitializer (Tag-Based)', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         `SystemInitializer: Found 0 systems tagged with '${testInitializationTag}'.`
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Proceeding to initialize 0 resolved systems sequentially...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Initialization loop for tagged systems completed.'
-      );
 
       // No systems to initialize
       expect(mockSystemGood1.initialize).not.toHaveBeenCalled();
@@ -434,12 +405,6 @@ describe('SystemInitializer (Tag-Based)', () => {
       // Should then proceed as if it were empty
       expect(mockLogger.info).toHaveBeenCalledWith(
         `SystemInitializer: Found 0 systems tagged with '${testInitializationTag}'.`
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Proceeding to initialize 0 resolved systems sequentially...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Initialization loop for tagged systems completed.'
       );
 
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -531,9 +496,6 @@ describe('SystemInitializer (Tag-Based)', () => {
       // Should only have the one error from mockSystemFailInit
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).not.toHaveBeenCalled(); // No other warnings expected here
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'SystemInitializer: Initialization loop for tagged systems completed.'
-      );
     });
   });
 });

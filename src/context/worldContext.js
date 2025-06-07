@@ -65,7 +65,7 @@ class WorldContext extends IWorldContext {
     }
     this.#entityManager = entityManager;
     this.#logger = logger;
-    this.#logger.info(
+    this.#logger.debug(
       'WorldContext: Initialized (Stateless, backed by EntityManager).'
     );
   }

@@ -110,10 +110,6 @@ export class LoggerConfigLoader {
         ? this.#logger.warn(msg, ...args)
         : console.warn(msg, ...args);
 
-    logInfo(
-      `[LoggerConfigLoader] Attempting to load logger configuration from: ${path}`
-    );
-
     let parsedResponse;
     try {
       parsedResponse = await Workspace_retry(
@@ -122,17 +118,13 @@ export class LoggerConfigLoader {
         this.#defaultMaxRetries,
         this.#defaultBaseDelayMs,
         this.#defaultMaxDelayMs,
-        this.#logger
-      );
-
-      logInfo(
-        `[LoggerConfigLoader] Successfully fetched and parsed logger configuration from ${path}.`
+        this.#logger,
       );
 
       if (typeof parsedResponse !== 'object' || parsedResponse === null) {
         logWarn(
           `[LoggerConfigLoader] Configuration file from ${path} is malformed (not an object). Content:`,
-          parsedResponse
+          parsedResponse,
         );
         return {
           error: true,
@@ -143,9 +135,6 @@ export class LoggerConfigLoader {
       }
 
       if (Object.keys(parsedResponse).length === 0) {
-        logInfo(
-          `[LoggerConfigLoader] Logger configuration file at ${path} is empty or contains an empty JSON object. No log level specified.`
-        );
         // Return empty object, indicates no specific dependencyInjection found but file was parsable
         return {};
       }
@@ -153,7 +142,7 @@ export class LoggerConfigLoader {
       if (parsedResponse.logLevel !== undefined) {
         if (typeof parsedResponse.logLevel !== 'string') {
           logWarn(
-            `[LoggerConfigLoader] 'logLevel' in ${path} must be a string. Found: ${typeof parsedResponse.logLevel}. Value: ${parsedResponse.logLevel}`
+            `[LoggerConfigLoader] 'logLevel' in ${path} must be a string. Found: ${typeof parsedResponse.logLevel}. Value: ${parsedResponse.logLevel}`,
           );
           return {
             error: true,
@@ -163,11 +152,6 @@ export class LoggerConfigLoader {
           };
         }
         // Case-insensitivity for logLevel value will be handled by ConsoleLogger's setLogLevel
-      } else {
-        logInfo(
-          `[LoggerConfigLoader] 'logLevel' property not found in ${path}. No log level specified.`
-        );
-        // This is not an error, just means no specific level set in the file.
       }
 
       return /** @type {LoggerConfigurationFile} */ (parsedResponse);
@@ -182,7 +166,7 @@ export class LoggerConfigLoader {
             name: error.name,
             stack: error.stack,
           }, // Include more error details
-        }
+        },
       );
 
       let stage = 'fetch_or_parse';

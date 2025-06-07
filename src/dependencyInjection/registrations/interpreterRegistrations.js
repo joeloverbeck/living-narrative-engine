@@ -49,7 +49,7 @@ export function registerInterpreters(container) {
   const registrar = new Registrar(container);
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
-  logger.info('Interpreter Registrations: Starting...');
+  logger.debug('Interpreter Registrations: Starting...');
 
   // --- Register CommandOutcomeInterpreter against ICommandOutcomeInterpreter token ---
   registrar.singletonFactory(
@@ -208,7 +208,7 @@ export function registerInterpreters(container) {
     );
     return registry;
   });
-  logger.info(
+  logger.debug(
     'Interpreter Registrations: Registered OperationRegistry factory.'
   );
 
@@ -221,7 +221,7 @@ export function registerInterpreters(container) {
         operationRegistry: c.resolve(tokens.OperationRegistry),
       })
   );
-  logger.info('Interpreter Registrations: Registered OperationInterpreter.');
+  logger.debug('Interpreter Registrations: Registered OperationInterpreter.');
 
   registrar
     .tagged([...INITIALIZABLE, ...SHUTDOWNABLE])
@@ -241,9 +241,9 @@ export function registerInterpreters(container) {
         operationInterpreter: c.resolve(tokens.OperationInterpreter),
       });
     });
-  logger.info(
+  logger.debug(
     `Interpreter Registrations: Registered SystemLogicInterpreter factory tagged with ${[...INITIALIZABLE, ...SHUTDOWNABLE].join(', ')}.`
   );
 
-  logger.info('Interpreter Registrations: Complete.');
+  logger.debug('Interpreter Registrations: Complete.');
 }

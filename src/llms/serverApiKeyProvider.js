@@ -98,7 +98,7 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
         if (keyFromEnv !== undefined) {
           if (keyFromEnv.trim() !== '') {
             retrievedApiKey = keyFromEnv.trim();
-            this.#logger.info(
+            this.#logger.debug(
               `ServerApiKeyProvider.getKey (${llmId}): Successfully retrieved API key from environment variable '${envVarName}'.`
             );
           } else {
@@ -107,7 +107,7 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
             );
           }
         } else {
-          this.#logger.info(
+          this.#logger.debug(
             `ServerApiKeyProvider.getKey (${llmId}): Environment variable '${envVarName}' not found or not set.`
           );
         }
@@ -160,7 +160,7 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
           );
           if (keyFromFile.trim() !== '') {
             retrievedApiKey = keyFromFile.trim();
-            this.#logger.info(
+            this.#logger.debug(
               `ServerApiKeyProvider.getKey (${llmId}): Successfully retrieved API key from file '${fullPath}'.`
             );
           } else {
@@ -213,7 +213,7 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
       );
     } else {
       // This means at least one method was specified, but all attempted methods failed to yield a key.
-      this.#logger.info(
+      this.#logger.debug(
         `ServerApiKeyProvider.getKey (${llmId}): API key not found through any configured method (environment variable or file).`
       );
     }

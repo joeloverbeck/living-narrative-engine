@@ -98,9 +98,6 @@ class InputHandler extends IInputHandler {
       'textUI:enable_input',
       /** @param {SystemEventPayloads['textUI:enable_input']} _event - Ignored event payload */
       (_event) => {
-        console.log(
-          "InputHandler: Received 'textUI:enable_input' event. Enabling input."
-        );
         this.enable();
       }
     );
@@ -110,9 +107,6 @@ class InputHandler extends IInputHandler {
       'textUI:disable_input',
       /** @param {SystemEventPayloads['textUI:disable_input']} _event - Ignored event payload */
       (_event) => {
-        console.log(
-          "InputHandler: Received 'textUI:disable_input' event. Disabling input."
-        );
         this.disable();
       }
     );
@@ -180,7 +174,6 @@ class InputHandler extends IInputHandler {
   enable() {
     if (this.#isEnabled) return; // Avoid redundant operations
     this.#isEnabled = true;
-    console.log('InputHandler: Enabling input processing.');
     this.#inputElement.focus();
     // Note: Visual state (disabled attribute, placeholder) should be handled
     // by the InputStateController listening for the same 'textUI:enable_input' event.
@@ -193,7 +186,6 @@ class InputHandler extends IInputHandler {
   disable() {
     if (!this.#isEnabled) return; // Avoid redundant operations
     this.#isEnabled = false;
-    console.log('InputHandler: Disabling input processing.');
     // Note: Visual state (disabled attribute, placeholder) should be handled
     // by the InputStateController listening for the same 'textUI:disable_input' event.
   }

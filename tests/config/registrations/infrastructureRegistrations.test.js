@@ -182,7 +182,7 @@ describe('registerInfrastructure', () => {
 
   test('should log completion message', () => {
     registerInfrastructure(container);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       'Infrastructure Registration: complete.'
     );
   });

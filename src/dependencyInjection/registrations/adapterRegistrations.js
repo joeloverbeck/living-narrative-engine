@@ -49,7 +49,7 @@ export function registerAdapters(container) {
   const registrar = new Registrar(container);
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
-  logger.info('Adapter Registrations: Starting...');
+  logger.debug('Adapter Registrations: Starting...');
 
   // --- Register EventBusCommandInputGateway ---
   registrar
@@ -211,15 +211,15 @@ export function registerAdapters(container) {
       // initialLlmId: null // Or get from config if needed
     });
 
-    logger.info(
+    logger.debug(
       `Adapter Registration: ConfigurableLLMAdapter instance (token: ${tokens.LLMAdapter}) created. It must be initialized explicitly later in the application's bootstrap sequence, after all schemas have been loaded.`
     );
 
     return adapterInstance;
   });
-  logger.info(
+  logger.debug(
     `Adapter Registration: Registered ConfigurableLLMAdapter factory as ${tokens.LLMAdapter}. Deferred (explicit) initialization is required.`
   );
 
-  logger.info('Adapter Registrations: All registrations complete.');
+  logger.debug('Adapter Registrations: All registrations complete.');
 }

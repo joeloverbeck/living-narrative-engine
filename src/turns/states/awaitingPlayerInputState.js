@@ -296,7 +296,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
           `${this.name}: Handler destroyed. Actor ID from context: N/A_in_context. No specific turn to end via context if actor is missing.`
         );
       } else if (handler._isDestroying || handler._isDestroyed) {
-        logger.info(
+        logger.debug(
           `${this.name}: Handler (actor ${actorInCtx.id}) is already being destroyed. Skipping turnContext.endTurn().`
         );
       } else {

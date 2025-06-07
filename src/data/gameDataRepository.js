@@ -70,7 +70,7 @@ export class GameDataRepository extends IGameDataRepository {
     this.#registry = registry;
     this.#logger = logger;
 
-    this.#logger.info(
+    this.#logger.debug(
       'GameDataRepository initialised (delegates to registry).'
     );
   }

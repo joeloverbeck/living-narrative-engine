@@ -58,7 +58,7 @@ class AjvSchemaValidator {
             LLM_TURN_ACTION_RESPONSE_SCHEMA,
             LLM_TURN_ACTION_RESPONSE_SCHEMA_ID
           );
-          this.#logger.info(
+          this.#logger.debug(
             `AjvSchemaValidator: Successfully preloaded schema '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}'.`
           );
         } else {

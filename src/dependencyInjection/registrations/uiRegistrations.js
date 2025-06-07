@@ -60,12 +60,12 @@ import { EngineUIManager } from '../../domUI'; // Corrected import path if Engin
  */
 export function registerUI(
   container,
-  { outputDiv, inputElement, titleElement, document: doc }
+  { outputDiv, inputElement, titleElement, document: doc },
 ) {
   const registrar = new Registrar(container);
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
-  logger.info('UI Registrations: Starting (Refactored DOM UI)...');
+  logger.debug('UI Registrations: Starting (Refactored DOM UI)...');
 
   // --- 0. Register External Dependencies (DOM elements / document passed from bootstrap) ---
   registrar.instance(tokens.WindowDocument, doc);
@@ -80,13 +80,13 @@ export function registerUI(
   // --- 1. Register Core UI Utilities & Alerting Services ---
   registrar.singletonFactory(
     tokens.IDocumentContext,
-    (c) => new DocumentContext(c.resolve(tokens.WindowDocument))
+    (c) => new DocumentContext(c.resolve(tokens.WindowDocument)),
   );
   logger.debug(`UI Registrations: Registered ${tokens.IDocumentContext}.`);
 
   registrar.singletonFactory(
     tokens.DomElementFactory,
-    (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext))
+    (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext)),
   );
   logger.debug(`UI Registrations: Registered ${tokens.DomElementFactory}.`);
 
@@ -123,7 +123,7 @@ export function registerUI(
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         titleElement: c.resolve(tokens.titleElement),
-      })
+      }),
   );
   logger.debug(`UI Registrations: Registered ${tokens.TitleRenderer}.`);
 
@@ -135,7 +135,7 @@ export function registerUI(
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         inputElement: c.resolve(tokens.inputElement),
-      })
+      }),
   );
   logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
 
@@ -145,7 +145,7 @@ export function registerUI(
     const locationContainer = docContext.query('#location-info-container');
     if (!locationContainer) {
       resolvedLogger.warn(
-        `UI Registrations: Could not find '#location-info-container' element for LocationRenderer. Location details may not render.`
+        `UI Registrations: Could not find '#location-info-container' element for LocationRenderer. Location details may not render.`,
       );
     }
     return new LocationRenderer({
@@ -160,7 +160,7 @@ export function registerUI(
     });
   });
   logger.debug(
-    `UI Registrations: Registered ${tokens.LocationRenderer} with IEntityManager, IDataRegistry, and EntityDisplayDataProvider.`
+    `UI Registrations: Registered ${tokens.LocationRenderer} with IEntityManager, IDataRegistry, and EntityDisplayDataProvider.`,
   );
 
   registrar.singletonFactory(tokens.ActionButtonsRenderer, (c) => {
@@ -195,7 +195,7 @@ export function registerUI(
         domElementFactory: c.resolve(tokens.DomElementFactory),
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      })
+      }),
   );
   logger.debug(`UI Registrations: Registered ${tokens.SaveGameUI}.`);
 
@@ -208,7 +208,7 @@ export function registerUI(
         domElementFactory: c.resolve(tokens.DomElementFactory),
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      })
+      }),
   );
   logger.debug(`UI Registrations: Registered ${tokens.LoadGameUI}.`);
 
@@ -221,7 +221,7 @@ export function registerUI(
         domElementFactory: c.resolve(tokens.DomElementFactory),
         llmAdapter: c.resolve(tokens.LLMAdapter),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      })
+      }),
   );
   logger.debug(`UI Registrations: Registered ${tokens.LlmSelectionModal}.`);
 
@@ -234,10 +234,10 @@ export function registerUI(
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         entityManager: c.resolve(tokens.IEntityManager),
         entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
-      })
+      }),
   );
   logger.debug(
-    `UI Registrations: Registered ${tokens.CurrentTurnActorRenderer}.`
+    `UI Registrations: Registered ${tokens.CurrentTurnActorRenderer}.`,
   );
 
   registrar.singletonFactory(
@@ -248,10 +248,10 @@ export function registerUI(
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
-      })
+      }),
   );
   logger.debug(
-    `UI Registrations: Registered ${tokens.ProcessingIndicatorController}.`
+    `UI Registrations: Registered ${tokens.ProcessingIndicatorController}.`,
   );
 
   registrar.singletonFactory(
@@ -264,7 +264,7 @@ export function registerUI(
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
         alertRouter: c.resolve(tokens.AlertRouter),
-      })
+      }),
   );
   logger.debug(`UI Registrations: Registered ${tokens.ChatAlertRenderer}.`);
 
@@ -281,8 +281,8 @@ export function registerUI(
     tokens.LoadGameUI,
     tokens.LlmSelectionModal,
   ]);
-  logger.info(
-    `UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`
+  logger.debug(
+    `UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`,
   );
 
   // --- 4. Register Engine UI Manager ---
@@ -293,9 +293,9 @@ export function registerUI(
         eventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domUiFacade: c.resolve(tokens.DomUiFacade),
         logger: c.resolve(tokens.ILogger),
-      })
+      }),
   );
-  logger.info(`UI Registrations: Registered ${tokens.EngineUIManager}.`);
+  logger.debug(`UI Registrations: Registered ${tokens.EngineUIManager}.`);
 
   // --- 5. Legacy Input Handler (Dependency Updated) ---
   registrar.singletonFactory(
@@ -304,20 +304,20 @@ export function registerUI(
       new InputHandler(
         c.resolve(tokens.inputElement),
         undefined, // textParser (presumably TextParserService)
-        c.resolve(tokens.IValidatedEventDispatcher)
-      )
+        c.resolve(tokens.IValidatedEventDispatcher),
+      ),
   );
   logger.debug(
-    `UI Registrations: Registered ${tokens.IInputHandler} (legacy) with VED.`
+    `UI Registrations: Registered ${tokens.IInputHandler} (legacy) with VED.`,
   );
 
   // --- 6. Eagerly instantiate ChatAlertRenderer to ensure it subscribes to events on startup ---
   container.resolve(tokens.ChatAlertRenderer);
-  logger.info(
-    `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`
+  logger.debug(
+    `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`,
   );
 
-  logger.info('UI Registrations: Complete.');
+  logger.debug('UI Registrations: Complete.');
 }
 
 // --- FILE END ---

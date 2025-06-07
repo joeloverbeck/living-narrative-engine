@@ -81,9 +81,6 @@ export class UIBootstrapper {
       throw new Error(errorMsg);
     }
 
-    console.log(
-      '[UIBootstrapper] All essential UI elements found successfully.'
-    );
     return /** @type {EssentialUIElements} */ (foundElements);
   }
 }

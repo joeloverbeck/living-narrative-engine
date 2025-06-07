@@ -50,7 +50,7 @@ export function registerInitializers(container) {
   );
   // --- End Registration ---
 
-  log.info('Initializer Registration: complete.');
+  log.debug('Initializer Registration: complete.');
 }
 
 // --- FILE END ---

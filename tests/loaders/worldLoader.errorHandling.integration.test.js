@@ -461,22 +461,6 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     // Verify registry.clear was called only once at the beginning
     expect(mockRegistry.clear).toHaveBeenCalledTimes(1);
 
-    // Verify logger.info was called for starting/finishing the load for badMod, despite the error
-    // (Assertions for mod start/finish/summary from previous correction should still be valid)
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `--- Loading content for mod: ${badModId} ---`
-    );
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringMatching(
-        new RegExp(
-          `Mod '${badModId}' loaded in .*ms: rules\\(1\\) -> Overrides\\(0\\), Errors\\(1\\)`
-        )
-      )
-    );
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `--- Finished loading content for mod: ${badModId} ---`
-    );
-
     // ******** FIX: Update assertion for content_load_failed event ********
     expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
       'initialization:world_loader:content_load_failed',

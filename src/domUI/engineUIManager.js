@@ -372,7 +372,7 @@ export class EngineUIManager {
     }
 
     this.#domUiFacade.messages.render(payload.message, payload.type);
-    this.#logger.info(
+    this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_MESSAGE_DISPLAY_REQUESTED}. Displayed ${payload.type} message: "${payload.message.substring(0, 50)}..."`
     );
   }
@@ -394,7 +394,7 @@ export class EngineUIManager {
       typeof this.#domUiFacade.saveGame.show === 'function'
     ) {
       this.#domUiFacade.saveGame.show();
-      this.#logger.info(
+      this.#logger.debug(
         `EngineUIManager: Handled ${REQUEST_SHOW_SAVE_GAME_UI}. Save Game UI requested to show.`
       );
     } else {
@@ -421,7 +421,7 @@ export class EngineUIManager {
       typeof this.#domUiFacade.loadGame.show === 'function'
     ) {
       this.#domUiFacade.loadGame.show();
-      this.#logger.info(
+      this.#logger.debug(
         `EngineUIManager: Handled ${REQUEST_SHOW_LOAD_GAME_UI}. Load Game UI requested to show.`
       );
     } else {
@@ -446,7 +446,7 @@ export class EngineUIManager {
     const message =
       'Cannot save at this moment (e.g. game not fully initialized or in a critical state).';
     this.#domUiFacade.messages.render(message, 'info');
-    this.#logger.info(
+    this.#logger.debug(
       `EngineUIManager: Handled ${CANNOT_SAVE_GAME_INFO}. Displayed info message: "${message}"`
     );
   }
@@ -459,7 +459,7 @@ export class EngineUIManager {
    * @returns {void}
    */
   dispose() {
-    this.#logger.info(
+    this.#logger.debug(
       'EngineUIManager: Disposing. (No explicit unsubscriptions needed with current ISafeEventDispatcher behavior).'
     );
     // If ISafeEventDispatcher required manual unsubscription, it would happen here:

@@ -127,7 +127,7 @@ class GameEngine {
       await this.stop(); // stop() handles setting #isEngineInitialized to false and #activeWorld to null
     }
     this.#activeWorld = worldName; // Set active world here as per ticket's Key Considerations
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine: Preparing new game session for world "${worldName}"...`
     );
   }
@@ -148,7 +148,7 @@ class GameEngine {
    * @memberof GameEngine
    */
   async _executeInitializationSequence(worldName) {
-    this.#logger.info(
+    this.#logger.debug(
       'GameEngine._executeInitializationSequence: Dispatching UI event for initialization start.'
     );
     await this.#safeEventDispatcher.dispatch(
@@ -157,21 +157,21 @@ class GameEngine {
       { allowSchemaNotFound: true }
     );
 
-    this.#logger.info(
+    this.#logger.debug(
       'GameEngine._executeInitializationSequence: Resolving InitializationService...'
     );
     const initializationService = /** @type {IInitializationService} */ (
       this.#container.resolve(tokens.IInitializationService)
     );
 
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine._executeInitializationSequence: Invoking IInitializationService.runInitializationSequence for world "${worldName}"...`
     );
     const initResult = /** @type {InitializationResult} */ (
       await initializationService.runInitializationSequence(worldName)
     );
 
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine._executeInitializationSequence: Initialization sequence completed for "${worldName}". Success: ${initResult.success}`
     );
     return initResult;
@@ -201,7 +201,7 @@ class GameEngine {
    * 10. Logs that the new game has started and is ready, including the active world name.
    */
   async _finalizeNewGameSuccess(worldName) {
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine._finalizeNewGameSuccess: Initialization successful for world "${worldName}". Finalizing new game setup.`
     );
 
@@ -221,7 +221,7 @@ class GameEngine {
       worldName,
     });
 
-    this.#logger.info(
+    this.#logger.debug(
       'GameEngine._finalizeNewGameSuccess: Dispatching UI event for game ready.'
     );
     await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
@@ -229,7 +229,7 @@ class GameEngine {
       message: 'Enter command...',
     });
 
-    this.#logger.info(
+    this.#logger.debug(
       'GameEngine._finalizeNewGameSuccess: Starting TurnManager...'
     );
     if (this.#turnManager) {
@@ -246,7 +246,7 @@ class GameEngine {
       );
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine._finalizeNewGameSuccess: New game started and ready (World: ${this.#activeWorld}).`
     );
   }
@@ -268,7 +268,7 @@ class GameEngine {
       `GameEngine._handleNewGameFailure: Handling new game failure for world "${worldName}". Error: ${error.message}`,
       error
     );
-    this.#logger.info(
+    this.#logger.debug(
       'GameEngine._handleNewGameFailure: Dispatching UI event for operation failed.'
     );
 
@@ -298,7 +298,7 @@ class GameEngine {
    * @memberof GameEngine
    */
   async startNewGame(worldName) {
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine: startNewGame called for world "${worldName}".`
     );
     let specificInitializationError = null; // Used to track if the error came from initResult.success = false
@@ -352,18 +352,18 @@ class GameEngine {
    */
   async stop() {
     if (!this.#isEngineInitialized && !this.#isGameLoopRunning) {
-      this.#logger.info(
+      this.#logger.debug(
         'GameEngine.stop: Engine not running or already stopped. No action taken.'
       );
       return;
     }
 
-    this.#logger.info('GameEngine.stop: Stopping game engine session...');
+    this.#logger.debug('GameEngine.stop: Stopping game engine session...');
     this.#isGameLoopRunning = false;
 
     if (this.#playtimeTracker) {
       this.#playtimeTracker.endSessionAndAccumulate();
-      this.#logger.info('GameEngine.stop: Playtime session ended.');
+      this.#logger.debug('GameEngine.stop: Playtime session ended.');
     } else {
       this.#logger.warn(
         'GameEngine.stop: PlaytimeTracker service not available, cannot end session.'
@@ -373,11 +373,11 @@ class GameEngine {
     await this.#safeEventDispatcher.dispatch(ENGINE_STOPPED_UI, {
       inputDisabledMessage: 'Game stopped. Engine is inactive.',
     });
-    this.#logger.info('GameEngine.stop: ENGINE_STOPPED_UI event dispatched.');
+    this.#logger.debug('GameEngine.stop: ENGINE_STOPPED_UI event dispatched.');
 
     if (this.#turnManager) {
       await this.#turnManager.stop();
-      this.#logger.info('GameEngine.stop: TurnManager stopped.');
+      this.#logger.debug('GameEngine.stop: TurnManager stopped.');
     } else {
       this.#logger.warn(
         'GameEngine.stop: TurnManager service not available, cannot stop.'
@@ -385,12 +385,12 @@ class GameEngine {
     }
 
     await this.#safeEventDispatcher.dispatch(GAME_STOPPED_ID, {});
-    this.#logger.info('GameEngine.stop: GAME_STOPPED_ID event dispatched.');
+    this.#logger.debug('GameEngine.stop: GAME_STOPPED_ID event dispatched.');
 
     this.#isEngineInitialized = false;
     this.#activeWorld = null;
 
-    this.#logger.info('GameEngine.stop: Engine fully stopped and state reset.');
+    this.#logger.debug('GameEngine.stop: Engine fully stopped and state reset.');
   }
 
   /**
@@ -404,7 +404,7 @@ class GameEngine {
    * @memberof GameEngine
    */
   async triggerManualSave(saveName) {
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine.triggerManualSave: Manual save process initiated with name: "${saveName}"`
     );
 
@@ -439,7 +439,7 @@ class GameEngine {
     let saveResult;
 
     try {
-      this.#logger.info(
+      this.#logger.debug(
         `GameEngine.triggerManualSave: Dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save: "${saveName}".`
       );
       await this.#safeEventDispatcher.dispatch(
@@ -459,7 +459,7 @@ class GameEngine {
 
       if (saveResult.success) {
         const successMsg = `Game "${saveName}" saved successfully.`;
-        this.#logger.info(
+        this.#logger.debug(
           `GameEngine.triggerManualSave: Save successful. Name: "${saveName}", Path: ${saveResult.filePath || 'N/A'}`
         );
 
@@ -468,7 +468,7 @@ class GameEngine {
           path: saveResult.filePath,
           type: 'manual',
         });
-        this.#logger.info(
+        this.#logger.debug(
           `GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`
         );
 
@@ -494,7 +494,7 @@ class GameEngine {
             type: 'error',
           }
         );
-        this.#logger.info(
+        this.#logger.debug(
           `GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (error) for "${saveName}".`
         );
       }
@@ -518,11 +518,11 @@ class GameEngine {
           type: 'error',
         }
       );
-      this.#logger.info(
+      this.#logger.debug(
         `GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (critical error) for "${saveName}".`
       );
     } finally {
-      this.#logger.info(
+      this.#logger.debug(
         `GameEngine.triggerManualSave: Dispatching ENGINE_READY_UI after save attempt for "${saveName}".`
       );
       await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
@@ -546,7 +546,7 @@ class GameEngine {
    * @memberof GameEngine
    */
   async _prepareForLoadGameSession(saveIdentifier) {
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine._prepareForLoadGameSession: Preparing to load game from identifier: ${saveIdentifier}`
     );
 
@@ -555,7 +555,7 @@ class GameEngine {
     }
     await this._resetCoreGameState();
 
-    this.#logger.info(
+    this.#logger.debug(
       'GameEngine._prepareForLoadGameSession: Dispatching UI event for load operation in progress.'
     );
     const shortSaveName = saveIdentifier.split(/[/\\]/).pop() || saveIdentifier;
@@ -576,12 +576,12 @@ class GameEngine {
    * @memberof GameEngine
    */
   async _executeLoadAndRestore(saveIdentifier) {
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine._executeLoadAndRestore: Calling IGamePersistenceService.loadAndRestoreGame for "${saveIdentifier}"...`
     );
     const restoreOutcome =
       await this.#gamePersistenceService.loadAndRestoreGame(saveIdentifier);
-    this.#logger.info(
+    this.#logger.debug(
       `GameEngine._executeLoadAndRestore: Load and restore call completed for "${saveIdentifier}". Success: ${restoreOutcome.success}`
     );
     return restoreOutcome;

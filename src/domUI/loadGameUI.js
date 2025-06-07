@@ -133,7 +133,7 @@ class LoadGameUI extends BaseModalRenderer {
       return;
     }
     this._initEventListeners();
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} Initialized and event listeners attached via _addDomListener.`
     );
   }
@@ -588,7 +588,7 @@ class LoadGameUI extends BaseModalRenderer {
     }
 
     const slotToLoad = this.selectedSlotData;
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} User initiated load for: ${slotToLoad.identifier} ("${slotToLoad.saveName}")`
     );
     this._setOperationInProgress(true);
@@ -604,7 +604,7 @@ class LoadGameUI extends BaseModalRenderer {
           `Game "${slotToLoad.saveName}" loaded successfully. Resuming...`,
           'success'
         );
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} Game loaded successfully from ${slotToLoad.identifier}`
         );
         setTimeout(() => this.hide(), 1500);
@@ -656,13 +656,13 @@ class LoadGameUI extends BaseModalRenderer {
     const confirmMsg = `Are you sure you want to delete the save "${slotToDelete.saveName}"? This action cannot be undone.`;
 
     if (!window.confirm(confirmMsg)) {
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Delete operation cancelled by user for: ${slotToDelete.identifier}`
       );
       return;
     }
 
-    this.logger.info(
+    this.logger.debug(
       `${this._logPrefix} User initiated delete for: ${slotToDelete.identifier} ("${slotToDelete.saveName}")`
     );
     this._setOperationInProgress(true);
@@ -680,7 +680,7 @@ class LoadGameUI extends BaseModalRenderer {
           `Save "${slotToDelete.saveName}" deleted successfully.`,
           'success'
         );
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} Save deleted successfully: ${slotToDelete.identifier}`
         );
         this.selectedSlotData = null;

@@ -271,12 +271,6 @@ describe('GameEngine', () => {
         ENGINE_STOPPED_UI,
         { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'GameEngine.stop: Stopping game engine session...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'GameEngine.stop: Engine fully stopped and state reset.'
-      );
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_READY_UI,
         {
@@ -359,18 +353,6 @@ describe('GameEngine', () => {
 
       await gameEngine.stop();
 
-      const logCalls = mockLogger.info.mock.calls;
-      expect(logCalls).toEqual(
-        expect.arrayContaining([
-          ['GameEngine.stop: Stopping game engine session...'],
-          ['GameEngine.stop: Playtime session ended.'],
-          ['GameEngine.stop: ENGINE_STOPPED_UI event dispatched.'],
-          ['GameEngine.stop: TurnManager stopped.'],
-          ['GameEngine.stop: GAME_STOPPED_ID event dispatched.'],
-          ['GameEngine.stop: Engine fully stopped and state reset.'],
-        ])
-      );
-
       expect(mockPlaytimeTracker.endSessionAndAccumulate).toHaveBeenCalledTimes(
         1
       );
@@ -406,9 +388,6 @@ describe('GameEngine', () => {
 
       await gameEngine.stop();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'GameEngine.stop: Engine not running or already stopped. No action taken.'
-      );
       expect(
         mockPlaytimeTracker.endSessionAndAccumulate
       ).not.toHaveBeenCalled();
@@ -454,12 +433,6 @@ describe('GameEngine', () => {
       // The actual mockPlaytimeTracker object's methods won't be called as this.#playtimeTracker is null.
 
       expect(mockTurnManager.stop).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'GameEngine.stop: Stopping game engine session...'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'GameEngine.stop: Engine fully stopped and state reset.'
-      );
 
       mockContainer.resolve = originalResolve; // Restore
     });

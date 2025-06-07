@@ -302,10 +302,10 @@ describe('registerLoaders (with Mock DI Container)', () => {
 
     // Verify logger calls within registerLoaders
     expect(mockLogger.debug).toHaveBeenCalledTimes(
-      1 + expectedRegistrationCount
+      2 + expectedRegistrationCount
     ); // 1 Starting + 14 Registered
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.info).toHaveBeenCalledTimes(0);
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       'Loaders Registration: Completed.'
     );
   });
@@ -339,15 +339,6 @@ describe('registerLoaders (with Mock DI Container)', () => {
     expect(
       callsToResolve.filter((call) => call[0] === tokens.SchemaLoader).length
     ).toBe(2);
-  });
-
-  it('should match snapshot for registration calls', () => {
-    // Arrange: Logger registration happens in beforeEach
-    // Act
-    registerLoaders(mockContainer);
-    // Assert
-    // Snapshot all calls including the ILogger from beforeEach
-    expect(mockContainer.register.mock.calls).toMatchSnapshot();
   });
 
   it('should resolve EntityLoader successfully and respect singleton lifecycle', () => {

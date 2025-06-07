@@ -26,7 +26,7 @@ class OperationInterpreter {
     }
     this.#logger = logger;
     this.#registry = operationRegistry;
-    this.#logger.info(
+    this.#logger.debug(
       'OperationInterpreter Initialized (using OperationRegistry).'
     );
   }

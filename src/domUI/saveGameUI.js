@@ -645,7 +645,7 @@ export class SaveGameUI extends BaseModalRenderer {
           `Are you sure you want to overwrite the existing save "${originalSaveName}" with "${currentSaveName}"?`
         )
       ) {
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} Save overwrite cancelled by user for slot ${this.selectedSlotData.slotId}.`
         );
         return;
@@ -663,7 +663,7 @@ export class SaveGameUI extends BaseModalRenderer {
     let finalMessageType = 'info';
 
     try {
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Calling gameEngine.triggerManualSave with name: "${currentSaveName}". Selected slot conceptual ID: ${this.selectedSlotData.slotId}, actual identifier if exists: ${this.selectedSlotData.identifier}`
       );
       const result = await this.gameEngine.triggerManualSave(

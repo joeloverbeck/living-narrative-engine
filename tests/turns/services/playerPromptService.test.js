@@ -73,10 +73,6 @@ describe('PlayerPromptService Constructor', () => {
     mockLogger.info.mockClear();
     const localService = new HumanPlayerPromptService(validDependencies);
     expect(localService).toBeInstanceOf(HumanPlayerPromptService);
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'PlayerPromptService initialized successfully.'
-    );
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
   });
 
   describe('ValidatedEventDispatcher Dependency Validation', () => {

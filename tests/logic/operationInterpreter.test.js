@@ -175,9 +175,6 @@ describe('OperationInterpreter', () => {
           operationRegistry: mockRegistry,
         })
     ).not.toThrow();
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'OperationInterpreter Initialized (using OperationRegistry).'
-    );
   });
 
   // --- execute() Tests ---

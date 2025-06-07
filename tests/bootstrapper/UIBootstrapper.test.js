@@ -54,9 +54,6 @@ describe('UIBootstrapper.gatherEssentialElements', () => {
     expect(result.inputElement).toBe(document.querySelector('#speech-input'));
     expect(result.titleElement).toBe(document.querySelector('h1'));
     expect(result.document).toBe(document);
-    expect(logSpy).toHaveBeenCalledWith(
-      '[UIBootstrapper] All essential UI elements found successfully.'
-    );
   });
 
   it('throws with details when elements are missing', () => {

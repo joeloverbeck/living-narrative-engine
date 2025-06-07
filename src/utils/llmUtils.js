@@ -184,7 +184,7 @@ export async function parseAndRepairJson(jsonString, logger) {
       // Attempt to parse the repaired string
       const repairedObject = JSON.parse(repairedString); // [cite: 1, 1000]
       if (logger) {
-        logger.info(
+        logger.debug(
           'parseAndRepairJson: Successfully parsed JSON after repair.',
           {
             // [cite: 1, 1000]

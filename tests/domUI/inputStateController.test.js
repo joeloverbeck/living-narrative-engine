@@ -546,12 +546,6 @@ describe('InputStateController', () => {
 
       expect(inputElement.disabled).toBe(false);
       expect(inputElement.placeholder).toBe('Enter speech (optional)...'); // Updated default
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Received 'textUI:enable_input' without valid 'placeholder' string in payload, using default placeholder: \"Enter speech (optional)...\""
-        ), // Updated warning message
-        { receivedEvent: event }
-      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Input enabled.')
       );
@@ -560,7 +554,7 @@ describe('InputStateController', () => {
           'Input placeholder set to: "Enter speech (optional)..."'
         )
       ); // Updated debug message
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(3);
     });
 
     // Ticket 3.1: Test updated for new default placeholder
@@ -579,12 +573,6 @@ describe('InputStateController', () => {
 
       expect(inputElement.disabled).toBe(false);
       expect(inputElement.placeholder).toBe('Enter speech (optional)...'); // Updated default
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Received 'textUI:enable_input' without valid 'placeholder' string in payload, using default placeholder: \"Enter speech (optional)...\""
-        ), // Updated warning message
-        { receivedEvent: event }
-      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Input enabled.')
       );
@@ -593,7 +581,7 @@ describe('InputStateController', () => {
           'Input placeholder set to: "Enter speech (optional)..."'
         )
       ); // Updated debug message
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(3);
     });
 
     it('should not log state changes if event handler does not change state', () => {

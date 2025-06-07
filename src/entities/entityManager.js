@@ -595,7 +595,7 @@ class EntityManager extends IEntityManager {
     }
 
     /* ---------- final audit log ---------- */
-    this.#logger.info(`Removed entity instance ${instanceId} from active map.`);
+    this.#logger.debug(`Removed entity instance ${instanceId} from active map.`);
 
     return true;
   }
@@ -607,7 +607,7 @@ class EntityManager extends IEntityManager {
     this.activeEntities.clear();
     this.#definitionToPrimaryInstanceMap.clear();
     this.#spatialIndexManager.clearIndex();
-    this.#logger.info(
+    this.#logger.debug(
       'EntityManager: Cleared all active entities, definition map, and delegated spatial index clearing.'
     );
   }

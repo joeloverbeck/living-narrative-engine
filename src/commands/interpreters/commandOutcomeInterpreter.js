@@ -162,7 +162,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       // For successful command processing (core:attempt_action dispatched),
       // always wait for rules to dispatch core:turn_ended.
       directive = TurnDirective.WAIT_FOR_EVENT;
-      this.#logger.info(
+      this.#logger.debug(
         `Actor ${actorId}: CommandProcessor success for action '${processedActionId}'. Directive: ${directive}.`
       );
     } else {
@@ -191,7 +191,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
         );
         directive = TurnDirective.END_TURN_FAILURE;
       }
-      this.#logger.info(
+      this.#logger.debug(
         `Actor ${actorId}: CommandProcessor failure for action '${processedActionId}'. Directive: ${directive}.`
       );
     }

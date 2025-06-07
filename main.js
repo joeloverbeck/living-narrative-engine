@@ -18,9 +18,6 @@ import {
 
 // --- Bootstrap the Application ---
 (async () => {
-  // Initial log, logger not available yet.
-  console.log('main.js: Bootstrapping application...');
-
   /** @type {import('./src/bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
   let uiElements;
   /** @type {import('./src/dependencyInjection/appContainer.js').default | undefined} */
@@ -35,19 +32,14 @@ import {
   try {
     // STAGE 1: Ensure Critical DOM Elements
     currentPhaseForError = 'UI Element Validation';
-    console.log(`main.js: Executing ${currentPhaseForError} stage...`);
     uiElements = await ensureCriticalDOMElementsStage(document);
-    console.log(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 2: Setup DI Container
     currentPhaseForError = 'DI Container Setup';
-    console.log(`main.js: Executing ${currentPhaseForError} stage...`);
     container = await setupDIContainerStage(uiElements, configureContainer);
-    console.log(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 3: Resolve Core Services (Logger)
     currentPhaseForError = 'Core Services Resolution';
-    console.log(`main.js: Executing ${currentPhaseForError} stage...`);
     const coreServices = await resolveCoreServicesStage(container, tokens);
     logger = coreServices.logger; // Assign the resolved logger
     logger.debug(

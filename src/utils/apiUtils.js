@@ -127,7 +127,7 @@ export async function Workspace_retry(
         `Workspace_retry: Attempt ${currentAttempt}/${maxRetries} for ${url} - Request successful (status ${response.status}). Parsing JSON response.`
       );
       const responseData = await response.json();
-      log.info(
+      log.debug(
         `Workspace_retry: Successfully fetched and parsed JSON from ${url} after ${currentAttempt} attempt(s).`
       );
       return responseData;
@@ -180,7 +180,7 @@ export async function Workspace_retry(
     }
   }
 
-  log.info(
+  log.debug(
     `Workspace_retry: Initiating request sequence for ${url} with maxRetries=${maxRetries}, baseDelayMs=${baseDelayMs}, maxDelayMs=${maxDelayMs}.`
   );
   return attemptFetchRecursive(1);

@@ -108,7 +108,7 @@ export function configureContainer(container, uiElements) {
     }
   })();
 
-  logger.info(
+  logger.debug(
     '[ContainerConfig] Starting synchronous bundle registration while logger dependencyInjection continues loading in background (if not already done).'
   );
 

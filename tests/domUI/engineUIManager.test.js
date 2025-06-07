@@ -387,9 +387,6 @@ describe('EngineUIManager', () => {
             message,
             type
           );
-          expect(mockLogger.info).toHaveBeenCalledWith(
-            `EngineUIManager: Handled ${ENGINE_MESSAGE_DISPLAY_REQUESTED}. Displayed ${type} message: "${message.substring(0, 50)}..."`
-          );
         });
       });
 
@@ -439,9 +436,6 @@ describe('EngineUIManager', () => {
       it('should call domUiFacade.saveGame.show() if available', () => {
         handler()(mockEvent);
         expect(mockDomUiFacade.saveGame.show).toHaveBeenCalledTimes(1);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: Handled ${REQUEST_SHOW_SAVE_GAME_UI}. Save Game UI requested to show.`
-        );
       });
 
       it('should log warning if domUiFacade.saveGame is undefined', () => {
@@ -469,9 +463,6 @@ describe('EngineUIManager', () => {
       it('should call domUiFacade.loadGame.show() if available', () => {
         handler()(mockEvent);
         expect(mockDomUiFacade.loadGame.show).toHaveBeenCalledTimes(1);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: Handled ${REQUEST_SHOW_LOAD_GAME_UI}. Load Game UI requested to show.`
-        );
       });
 
       it('should log warning if domUiFacade.loadGame is undefined', () => {
@@ -503,26 +494,7 @@ describe('EngineUIManager', () => {
           expectedMessage,
           'info'
         );
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: Handled ${CANNOT_SAVE_GAME_INFO}. Displayed info message: "${expectedMessage}"`
-        );
       });
     });
-  });
-
-  describe('dispose()', () => {
-    it('should log a message about disposal', () => {
-      const manager = new EngineUIManager({
-        eventDispatcher: mockEventDispatcher,
-        domUiFacade: mockDomUiFacade,
-        logger: mockLogger,
-      });
-      manager.dispose();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EngineUIManager: Disposing. (No explicit unsubscriptions needed with current ISafeEventDispatcher behavior).'
-      );
-    });
-
-    // If unsubscription logic were added to dispose, tests for that would go here.
   });
 });

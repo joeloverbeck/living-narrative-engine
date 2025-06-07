@@ -203,7 +203,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
     this.logger.debug(`${this._logPrefix} Cleared list container.`);
 
     if (!itemsData || !Array.isArray(itemsData) || itemsData.length === 0) {
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} List data is empty or not an array. Displaying empty message.`
       );
       const emptyMessage = this._getEmptyListMessage();
@@ -268,7 +268,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
           // Optionally render an error placeholder for this specific item
         }
       });
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Rendered ${renderedCount} out of ${itemsData.length} items into the list.`
       );
     }

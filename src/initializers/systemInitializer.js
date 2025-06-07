@@ -128,13 +128,13 @@ class SystemInitializer {
     const systemName = system?.constructor?.name ?? 'UnnamedSystem';
 
     if (system && typeof system.initialize === 'function') {
-      this.#logger.info(
+      this.#logger.debug(
         `SystemInitializer: Initializing system: ${systemName}...`
       );
       try {
         /** @type {{ initialize: () => Promise<void> | void }} */
         await system.initialize();
-        this.#logger.info(
+        this.#logger.debug(
           `SystemInitializer: System ${systemName} initialized successfully.`
         );
       } catch (initError) {
@@ -188,12 +188,12 @@ class SystemInitializer {
    * @throws {Error} If resolving the systems critically fails.
    */
   async initializeAll() {
-    this.#logger.info(
+    this.#logger.debug(
       `SystemInitializer: Starting initialization for systems tagged with '${this.#initializationTag}'...`
     );
 
     const systemsToInitialize = await this._resolveSystems();
-    this.#logger.info(
+    this.#logger.debug(
       `SystemInitializer: Proceeding to initialize ${systemsToInitialize.length} resolved systems sequentially...`
     );
 
@@ -201,7 +201,7 @@ class SystemInitializer {
       await this.#_initializeSingleSystem(system); // Handles individual errors and events
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       'SystemInitializer: Initialization loop for tagged systems completed.'
     );
   }

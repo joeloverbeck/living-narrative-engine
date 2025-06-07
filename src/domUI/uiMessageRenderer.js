@@ -78,7 +78,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
       this.elements.outputDivElement &&
       this.#domElementFactory
     ) {
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} #message-list element not found by selector. Attempting to create it inside #outputDivElement.`
       );
       const createdMessageList = this.#domElementFactory.create('ul', {
@@ -89,7 +89,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
       if (createdMessageList) {
         this.elements.outputDivElement.appendChild(createdMessageList);
         this.elements.messageList = createdMessageList; // Assign to this.elements
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} #message-list created dynamically inside #outputDivElement and assigned to this.elements.messageList.`
         );
       } else {
@@ -290,7 +290,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
       payload.command.trim()
     ) {
       // Fallback for events that might use 'command' instead of 'originalInput'
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Echoing 'command' field from event as 'originalInput' was missing or empty.`
       );
       this.render(`> ${payload.command}`, 'echo');

@@ -110,9 +110,6 @@ describe('WorldContext (Stateless)', () => {
       expect(
         () => new WorldContext(mockEntityManager, mockLogger)
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('WorldContext: Initialized')
-      );
     });
   });
 

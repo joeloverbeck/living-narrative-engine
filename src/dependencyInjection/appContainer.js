@@ -57,20 +57,6 @@ class AppContainer {
     const effectiveOptions = { ...defaultOptions, ...options }; // Merge provided options over defaults
 
     const lifecycle = effectiveOptions.lifecycle;
-    const tagsInfo =
-      Array.isArray(effectiveOptions.tags) && effectiveOptions.tags.length > 0
-        ? ` Tags: [${effectiveOptions.tags.join(', ')}]`
-        : '';
-    // Only log deps info if the key actually exists in the effective options
-    const depsInfo =
-      Object.prototype.hasOwnProperty.call(effectiveOptions, 'dependencies') &&
-      Array.isArray(effectiveOptions.dependencies) &&
-      effectiveOptions.dependencies.length > 0
-        ? ` Deps: [${effectiveOptions.dependencies.join(', ')}]`
-        : '';
-    console.log(
-      `AppContainer: Registering "${registrationKey}" (Lifecycle: ${lifecycle})${depsInfo}${tagsInfo}`
-    );
 
     this.#registrations.set(registrationKey, {
       registration: factoryOrValueOrClass,

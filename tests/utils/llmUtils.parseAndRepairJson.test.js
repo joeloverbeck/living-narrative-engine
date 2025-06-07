@@ -135,10 +135,6 @@ describe('parseAndRepairJson', () => {
         expect.stringContaining('Initial JSON.parse failed'),
         expect.any(Object)
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Successfully parsed JSON after repair'),
-        expect.any(Object)
-      );
     });
 
     test('should repair and parse JSON with missing quotes on keys', async () => {
@@ -154,7 +150,6 @@ describe('parseAndRepairJson', () => {
       expect(result).toEqual(expectedObject);
       expect(mockRepairJson).toHaveBeenCalledWith(cleanedRepairableString);
       expect(mockLogger.warn).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalled();
     });
 
     test('should repair and parse JSON with single quotes', async () => {
@@ -169,7 +164,6 @@ describe('parseAndRepairJson', () => {
       expect(result).toEqual(expectedObject);
       expect(mockRepairJson).toHaveBeenCalledWith(cleanedRepairableString);
       expect(mockLogger.warn).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalled();
     });
   });
 
@@ -262,11 +256,6 @@ describe('parseAndRepairJson', () => {
       const repairableJson = '{"baz": "qux",}';
       mockRepairJson.mockReturnValue('{"baz": "qux"}');
       await parseAndRepairJson(repairableJson, mockLogger);
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Successfully parsed JSON after repair'),
-        expect.anything()
-      );
     });
 
     test('should call logger.error when repair attempt fails to produce valid JSON', async () => {

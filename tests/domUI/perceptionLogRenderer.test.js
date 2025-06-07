@@ -212,9 +212,6 @@ describe('PerceptionLogRenderer', () => {
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
       expect(renderer._getListItemsData()).toEqual([]);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Actor '${actorId}' does not have a '${PERCEPTION_LOG_COMPONENT_ID}' component.`
-      );
     });
 
     it('should return [] and log if logEntries are empty or malformed', () => {
@@ -228,9 +225,6 @@ describe('PerceptionLogRenderer', () => {
 
       mockActor.getComponentData.mockReturnValueOnce({ logEntries: [] });
       expect(renderer._getListItemsData()).toEqual([]);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining("logEntries' are empty or malformed")
-      );
     });
 
     it('should return logEntries if valid', () => {

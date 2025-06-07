@@ -27,7 +27,7 @@ export function registerOrchestration(container) {
   const registrar = new Registrar(container);
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger); // Assumes ILogger is already registered
-  logger.info('Orchestration Registration: Starting...');
+  logger.debug('Orchestration Registration: Starting...');
 
   // --- Initialization Service ---
   // Singleton lifecycle is appropriate as it manages a global process.

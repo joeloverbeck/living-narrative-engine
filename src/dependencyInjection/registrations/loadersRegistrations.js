@@ -229,5 +229,5 @@ export function registerLoaders(container) {
   logger.debug(`Loaders Registration: Registered ${tokens.EntityLoader}.`);
   // === END LOADER-004-F ===
 
-  logger.info('Loaders Registration: Completed.');
+  logger.debug('Loaders Registration: Completed.');
 }

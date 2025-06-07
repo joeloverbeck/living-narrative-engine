@@ -299,11 +299,6 @@ describe('BaseListDisplayComponent', () => {
         expect(listContainerElement.children.length).toBe(sampleData.length);
         expect(listContainerElement.children[0]).toBe(mockItemElements[0]);
         expect(listContainerElement.children[1]).toBe(mockItemElements[1]);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Rendered ${sampleData.length} out of ${sampleData.length} items`
-          )
-        );
         expect(instance._onListRendered).toHaveBeenCalledWith(
           sampleData,
           listContainerElement
@@ -321,11 +316,6 @@ describe('BaseListDisplayComponent', () => {
 
         expect(listContainerElement.children.length).toBe(1);
         expect(listContainerElement.children[0]).toBe(mockItemElement);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Rendered 1 out of ${sampleData.length} items`
-          )
-        );
       });
 
       it('should log warning if _renderListItem returns non-HTMLElement and non-null', async () => {

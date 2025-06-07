@@ -19,6 +19,7 @@ import InputSetupService from '../../setup/inputSetupService.js';
 /** @typedef {import('../../../interfaces/coreServices.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../../interfaces/coreServices.js').ITurnManager} ITurnManager */
+
 /** @typedef {import('../../turns/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */
 
 /**
@@ -32,7 +33,7 @@ export function registerRuntime(container) {
   const r = new Registrar(container);
   /** @type {ILogger} */
   const log = container.resolve(tokens.ILogger); // Use explicit type
-  log.info('Runtime Registration: Starting...'); // <<< Moved log up
+  log.debug('Runtime Registration: Starting...'); // <<< Moved log up
 
   // ====================================================================
   // REMOVED: Register GameLoop as Singleton

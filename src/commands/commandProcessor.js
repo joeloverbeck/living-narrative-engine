@@ -147,7 +147,7 @@ class CommandProcessor {
     this.#entityManager = entityManager;
     this.#gameDataRepository = gameDataRepository;
 
-    this.#logger.info(
+    this.#logger.debug(
       'CommandProcessor: Instance created and dependencies validated.'
     );
   }
@@ -414,7 +414,7 @@ class CommandProcessor {
       originalInput: originalCommandString,
     };
 
-    this.#logger.info(
+    this.#logger.debug(
       `CommandProcessor.#_dispatchActionAttempt: Dispatching core:attempt_action for "${originalCommandString}".`
     );
     this.#logger.debug(
@@ -429,7 +429,7 @@ class CommandProcessor {
     );
 
     if (dispatchSuccess) {
-      this.#logger.info(
+      this.#logger.debug(
         `CommandProcessor.#_dispatchActionAttempt: Dispatched core:attempt_action successfully for "${originalCommandString}" by ${actorId}.`
       );
       return { success: true, errorResult: null };
@@ -463,7 +463,7 @@ class CommandProcessor {
     const trimmedCommand = /** @type {string} */ (validation.trimmedCommand);
     const validActor = /** @type {Entity} */ (actor);
 
-    this.#logger.info(
+    this.#logger.debug(
       `CommandProcessor: Processing command "${trimmedCommand}" for actor ${actorId}`
     );
 
@@ -516,7 +516,7 @@ class CommandProcessor {
       );
 
       if (dispatchOutcome.success) {
-        this.#logger.info(
+        this.#logger.debug(
           `CommandProcessor: Successfully processed and dispatched action for "${trimmedCommand}" by ${actorId}.`
         );
         return {

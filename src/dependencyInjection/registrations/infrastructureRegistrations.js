@@ -200,7 +200,7 @@ export function registerInfrastructure(container) {
   );
   // --- END ADDED REGISTRATION ---
 
-  log.info('Infrastructure Registration: complete.');
+  log.debug('Infrastructure Registration: complete.');
 }
 
 // --- FILE END ---

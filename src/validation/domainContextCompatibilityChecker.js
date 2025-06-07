@@ -44,8 +44,7 @@ export class DomainContextCompatibilityChecker {
       !logger ||
       typeof logger.debug !== 'function' ||
       typeof logger.error !== 'function' ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.info !== 'function'
+      typeof logger.warn !== 'function'
     ) {
       // Throw error if logger is missing or doesn't conform to the expected ILogger interface
       throw new Error(
@@ -53,7 +52,7 @@ export class DomainContextCompatibilityChecker {
       );
     }
     this.#logger = logger;
-    this.#logger.info('DomainContextCompatibilityChecker initialized.');
+    this.#logger.debug('DomainContextCompatibilityChecker initialized.');
   }
 
   /**

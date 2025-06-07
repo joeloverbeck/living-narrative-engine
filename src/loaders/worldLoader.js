@@ -341,12 +341,12 @@ class WorldLoader {
       this.#registry.store('meta', 'final_mod_order', this.#finalOrder);
 
       // --- Step 6: Sequential Per-Mod Content Loading ---
-      this.#logger.info(
+      this.#logger.debug(
         `WorldLoader: Beginning content loading based on final order...`
       );
 
       for (const modId of this.#finalOrder) {
-        this.#logger.info(`--- Loading content for mod: ${modId} ---`);
+        this.#logger.debug(`--- Loading content for mod: ${modId} ---`);
 
         let manifest = null;
         /** @type {ModResultsSummary} */
@@ -543,14 +543,14 @@ class WorldLoader {
         this.#logger.info(summaryMessage);
         // --- End Per-Mod Summary Logging ---
 
-        this.#logger.info(`--- Finished loading content for mod: ${modId} ---`);
+        this.#logger.debug(`--- Finished loading content for mod: ${modId} ---`);
       } // End outer loop (finalOrder)
-      this.#logger.info(
+      this.#logger.debug(
         `WorldLoader: Completed content loading loop for all mods in final order.`
       );
 
       // --- Step 7: Post-Load Processing (Placeholder) ---
-      this.#logger.info(
+      this.#logger.debug(
         'WorldLoader: Post-load processing step (if any) reached.'
       );
 

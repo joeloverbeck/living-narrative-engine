@@ -76,7 +76,7 @@ describe('proxyApiUtils', () => {
         fallbackMock.isFallback = true;
         fallbackMock.fallbackMessagePrefix = fallbackMessagePrefix;
         return fallbackMock;
-      }
+      },
     );
 
     global.fetch = jest.fn();
@@ -86,10 +86,14 @@ describe('proxyApiUtils', () => {
     mathRandomSpy = jest.spyOn(Math, 'random');
 
     consoleSpies = {
-      debug: jest.spyOn(console, 'debug').mockImplementation(() => {}),
-      info: jest.spyOn(console, 'info').mockImplementation(() => {}),
-      warn: jest.spyOn(console, 'warn').mockImplementation(() => {}),
-      error: jest.spyOn(console, 'error').mockImplementation(() => {}),
+      debug: jest.spyOn(console, 'debug').mockImplementation(() => {
+      }),
+      info: jest.spyOn(console, 'info').mockImplementation(() => {
+      }),
+      warn: jest.spyOn(console, 'warn').mockImplementation(() => {
+      }),
+      error: jest.spyOn(console, 'error').mockImplementation(() => {
+      }),
     };
   });
 
@@ -157,12 +161,12 @@ describe('proxyApiUtils', () => {
       if (isJsonBody) {
         response.json.mockResolvedValue(body);
         response.text.mockResolvedValueOnce(
-          typeof body === 'string' ? body : JSON.stringify(body)
+          typeof body === 'string' ? body : JSON.stringify(body),
         );
       } else {
         response.text.mockResolvedValue(body);
         response.json.mockRejectedValueOnce(
-          new Error('Response is not valid JSON')
+          new Error('Response is not valid JSON'),
         );
       }
       return response;
@@ -170,7 +174,7 @@ describe('proxyApiUtils', () => {
 
     test('should return parsed JSON on successful fetch (first attempt)', async () => {
       fetch.mockResolvedValueOnce(
-        mockFetchResponse(200, mockSuccessResponseData)
+        mockFetchResponse(200, mockSuccessResponseData),
       );
 
       const result = await Workspace_retry(
@@ -179,7 +183,7 @@ describe('proxyApiUtils', () => {
         mockMaxRetries,
         mockBaseDelayMs,
         mockMaxDelayMs,
-        mockLogger
+        mockLogger,
       );
 
       expect(result).toEqual(mockSuccessResponseData);
@@ -187,19 +191,19 @@ describe('proxyApiUtils', () => {
       expect(fetch).toHaveBeenCalledWith(mockUrl, mockDefaultOptions);
       expect(ensureValidLogger).toHaveBeenCalledWith(
         mockLogger,
-        'Workspace_retry'
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=${mockMaxRetries}, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
+        'Workspace_retry',
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Attempt 1/${mockMaxRetries} - Fetching ${mockDefaultOptions.method} ${mockUrl}`
+        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=${mockMaxRetries}, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Workspace_retry: Attempt 1/${mockMaxRetries} for ${mockUrl} - Request successful (status 200). Parsing JSON response.`
+        `Attempt 1/${mockMaxRetries} - Fetching ${mockDefaultOptions.method} ${mockUrl}`,
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Workspace_retry: Attempt 1/${mockMaxRetries} for ${mockUrl} - Request successful (status 200). Parsing JSON response.`,
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 1 attempt(s).`
+        `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 1 attempt(s).`,
       );
       expect(setTimeout).not.toHaveBeenCalled();
     });
@@ -208,10 +212,10 @@ describe('proxyApiUtils', () => {
       test(`should retry on retryable HTTP status ${status} and succeed on second attempt`, async () => {
         fetch
           .mockResolvedValueOnce(
-            mockFetchResponse(status, mockErrorJsonResponseData, true, false)
+            mockFetchResponse(status, mockErrorJsonResponseData, true, false),
           )
           .mockResolvedValueOnce(
-            mockFetchResponse(200, mockSuccessResponseData)
+            mockFetchResponse(200, mockSuccessResponseData),
           );
 
         mathRandomSpy.mockReturnValue(0.5); // No jitter for predictable delay
@@ -222,7 +226,7 @@ describe('proxyApiUtils', () => {
           mockMaxRetries,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
+          mockLogger,
         );
 
         await jest.runOnlyPendingTimersAsync();
@@ -234,20 +238,20 @@ describe('proxyApiUtils', () => {
         const expectedDelay = _calculateRetryDelay_forTest(
           1,
           mockBaseDelayMs,
-          mockMaxDelayMs
+          mockMaxDelayMs,
         );
         expect(setTimeout).toHaveBeenCalledTimes(1);
         expect(setTimeout).toHaveBeenCalledWith(
           expect.any(Function),
-          expectedDelay
+          expectedDelay,
         );
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Attempt 1/${mockMaxRetries} for ${mockUrl} failed with status ${status}. Retrying in ${expectedDelay}ms... Error body preview: ${JSON.stringify(mockErrorJsonResponseData).substring(0, 100)}`
-          )
+            `Attempt 1/${mockMaxRetries} for ${mockUrl} failed with status ${status}. Retrying in ${expectedDelay}ms... Error body preview: ${JSON.stringify(mockErrorJsonResponseData).substring(0, 100)}`,
+          ),
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
-          `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 2 attempt(s).`
+          `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 2 attempt(s).`,
         );
       });
     });
@@ -259,8 +263,8 @@ describe('proxyApiUtils', () => {
           nonRetryableStatus,
           mockErrorJsonResponseData,
           true,
-          false
-        )
+          false,
+        ),
       );
 
       await expect(
@@ -270,16 +274,16 @@ describe('proxyApiUtils', () => {
           mockMaxRetries,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
-        )
+          mockLogger,
+        ),
       ).rejects.toThrow(
-        `API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)}`
+        `API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)}`,
       );
 
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(setTimeout).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Workspace_retry: API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)} (Attempt 1/${mockMaxRetries}, Non-retryable or max retries reached)`
+        `Workspace_retry: API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)} (Attempt 1/${mockMaxRetries}, Non-retryable or max retries reached)`,
       );
     });
 
@@ -299,7 +303,7 @@ describe('proxyApiUtils', () => {
         fetch
           .mockRejectedValueOnce(networkError)
           .mockResolvedValueOnce(
-            mockFetchResponse(200, mockSuccessResponseData)
+            mockFetchResponse(200, mockSuccessResponseData),
           );
         mathRandomSpy.mockReturnValue(0.5);
 
@@ -309,7 +313,7 @@ describe('proxyApiUtils', () => {
           mockMaxRetries,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
+          mockLogger,
         );
         await jest.runOnlyPendingTimersAsync();
         const result = await promise;
@@ -319,18 +323,18 @@ describe('proxyApiUtils', () => {
         const expectedDelay = _calculateRetryDelay_forTest(
           1,
           mockBaseDelayMs,
-          mockMaxDelayMs
+          mockMaxDelayMs,
         );
         expect(setTimeout).toHaveBeenCalledTimes(1);
         expect(setTimeout).toHaveBeenCalledWith(
           expect.any(Function),
-          expectedDelay
+          expectedDelay,
         );
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          `Workspace_retry: Attempt 1/${mockMaxRetries} for ${mockUrl} failed with network error: ${networkError.message}. Retrying in ${expectedDelay}ms...`
+          `Workspace_retry: Attempt 1/${mockMaxRetries} for ${mockUrl} failed with network error: ${networkError.message}. Retrying in ${expectedDelay}ms...`,
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
-          `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 2 attempt(s).`
+          `Workspace_retry: Successfully fetched and parsed JSON from ${mockUrl} after 2 attempt(s).`,
         );
       });
     });
@@ -346,10 +350,10 @@ describe('proxyApiUtils', () => {
           mockMaxRetries,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
-        )
+          mockLogger,
+        ),
       ).rejects.toThrow(
-        `Workspace_retry: Failed for ${mockUrl} after 1 attempt(s). Unexpected error: ${unexpectedError.message}`
+        `Workspace_retry: Failed for ${mockUrl} after 1 attempt(s). Unexpected error: ${unexpectedError.message}`,
       );
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(setTimeout).not.toHaveBeenCalled();
@@ -358,13 +362,13 @@ describe('proxyApiUtils', () => {
         expect.objectContaining({
           originalErrorName: unexpectedError.name,
           originalErrorMessage: unexpectedError.message,
-        })
+        }),
       );
     });
 
     test('should correctly parse JSON error response body on failure', async () => {
       fetch.mockResolvedValueOnce(
-        mockFetchResponse(500, mockErrorJsonResponseData, true, false)
+        mockFetchResponse(500, mockErrorJsonResponseData, true, false),
       );
       mathRandomSpy.mockReturnValue(0.5);
 
@@ -375,15 +379,15 @@ describe('proxyApiUtils', () => {
           1,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
-        )
+          mockLogger,
+        ),
       ).rejects.toThrow(
-        `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${JSON.stringify(mockErrorJsonResponseData)}`
+        `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${JSON.stringify(mockErrorJsonResponseData)}`,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Attempt 1 for ${mockUrl} - Error response body (JSON): ${JSON.stringify(mockErrorJsonResponseData).substring(0, 500)}`
-        )
+          `Attempt 1 for ${mockUrl} - Error response body (JSON): ${JSON.stringify(mockErrorJsonResponseData).substring(0, 500)}`,
+        ),
       );
     });
 
@@ -395,7 +399,7 @@ describe('proxyApiUtils', () => {
         json: jest
           .fn()
           .mockRejectedValueOnce(
-            new Error('Invalid JSON syntax for error response')
+            new Error('Invalid JSON syntax for error response'),
           ),
         text: jest.fn().mockResolvedValueOnce(mockErrorTextResponseData),
       };
@@ -409,17 +413,17 @@ describe('proxyApiUtils', () => {
           1,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
-        )
+          mockLogger,
+        ),
       ).rejects.toThrow(
-        `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${mockErrorTextResponseData}`
+        `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${mockErrorTextResponseData}`,
       );
       expect(response.json).toHaveBeenCalledTimes(1);
       expect(response.text).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Attempt 1 for ${mockUrl} - Error response body (Text): ${mockErrorTextResponseData.substring(0, 500)}`
-        )
+          `Attempt 1 for ${mockUrl} - Error response body (Text): ${mockErrorTextResponseData.substring(0, 500)}`,
+        ),
       );
     });
 
@@ -443,13 +447,13 @@ describe('proxyApiUtils', () => {
           1,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
-        )
+          mockLogger,
+        ),
       ).rejects.toThrow(
-        `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${expectedFallbackBodyText}`
+        `API request to ${mockUrl} failed after 1 attempt(s) with status 500: ${expectedFallbackBodyText}`,
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `Attempt 1 for ${mockUrl} - Failed to read error response body as JSON or text. Error: ${textParseError.message}`
+        `Attempt 1 for ${mockUrl} - Failed to read error response body as JSON or text. Error: ${textParseError.message}`,
       );
     });
 
@@ -458,7 +462,7 @@ describe('proxyApiUtils', () => {
       ensureValidLogger.mockImplementationOnce(() => fallbackLoggerInstance);
 
       fetch.mockResolvedValueOnce(
-        mockFetchResponse(200, mockSuccessResponseData)
+        mockFetchResponse(200, mockSuccessResponseData),
       );
       await Workspace_retry(
         mockUrl,
@@ -466,15 +470,15 @@ describe('proxyApiUtils', () => {
         1,
         mockBaseDelayMs,
         mockMaxDelayMs,
-        null
+        null,
       );
 
       expect(ensureValidLogger).toHaveBeenCalledWith(null, 'Workspace_retry');
-      expect(fallbackLoggerInstance.info).toHaveBeenCalledWith(
-        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
+      expect(fallbackLoggerInstance.debug).toHaveBeenCalledWith(
+        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`,
       );
       expect(fallbackLoggerInstance.debug).toHaveBeenCalledWith(
-        `Attempt 1/1 - Fetching GET ${mockUrl}`
+        `Attempt 1/1 - Fetching GET ${mockUrl}`,
       );
     });
 
@@ -484,7 +488,7 @@ describe('proxyApiUtils', () => {
       ensureValidLogger.mockImplementationOnce(() => fallbackLoggerInstance);
 
       fetch.mockResolvedValueOnce(
-        mockFetchResponse(200, mockSuccessResponseData)
+        mockFetchResponse(200, mockSuccessResponseData),
       );
       await Workspace_retry(
         mockUrl,
@@ -492,28 +496,28 @@ describe('proxyApiUtils', () => {
         1,
         mockBaseDelayMs,
         mockMaxDelayMs,
-        invalidLogger
+        invalidLogger,
       );
 
       expect(ensureValidLogger).toHaveBeenCalledWith(
         invalidLogger,
-        'Workspace_retry'
+        'Workspace_retry',
       );
-      expect(fallbackLoggerInstance.info).toHaveBeenCalledWith(
-        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`
+      expect(fallbackLoggerInstance.debug).toHaveBeenCalledWith(
+        `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`,
       );
     });
 
     test('should use actual fallback (console) logger when ensureValidLogger is set to use actual implementation', async () => {
       const actualEnsureValidLogger = jest.requireActual(
-        '../../src/utils/loggerUtils.js'
+        '../../src/utils/loggerUtils.js',
       ).ensureValidLogger;
       ensureValidLogger.mockImplementationOnce((logger, prefix) =>
-        actualEnsureValidLogger(logger, prefix)
+        actualEnsureValidLogger(logger, prefix),
       );
 
       fetch.mockResolvedValueOnce(
-        mockFetchResponse(200, mockSuccessResponseData)
+        mockFetchResponse(200, mockSuccessResponseData),
       );
       await Workspace_retry(
         mockUrl,
@@ -521,29 +525,29 @@ describe('proxyApiUtils', () => {
         1,
         mockBaseDelayMs,
         mockMaxDelayMs,
-        null
+        null,
       );
 
       const expectedInitialLogMessage = `Workspace_retry: Initiating request sequence for ${mockUrl} with maxRetries=1, baseDelayMs=${mockBaseDelayMs}, maxDelayMs=${mockMaxDelayMs}.`;
-      expect(consoleSpies.info).toHaveBeenCalledWith(
+      expect(consoleSpies.debug).toHaveBeenCalledWith(
         'Workspace_retry: ',
-        expectedInitialLogMessage
+        expectedInitialLogMessage,
       );
 
       const expectedAttemptLogMessage = `Attempt 1/1 - Fetching GET ${mockUrl}`;
       expect(consoleSpies.debug).toHaveBeenCalledWith(
         'Workspace_retry: ',
-        expectedAttemptLogMessage
+        expectedAttemptLogMessage,
       );
 
       jest.clearAllMocks();
       ensureValidLogger.mockImplementationOnce((logger, prefix) =>
-        actualEnsureValidLogger(logger, prefix)
+        actualEnsureValidLogger(logger, prefix),
       );
 
       const invalidLogger = { custom: 'field' };
       fetch.mockResolvedValueOnce(
-        mockFetchResponse(200, mockSuccessResponseData)
+        mockFetchResponse(200, mockSuccessResponseData),
       );
       await Workspace_retry(
         mockUrl,
@@ -551,11 +555,11 @@ describe('proxyApiUtils', () => {
         1,
         mockBaseDelayMs,
         mockMaxDelayMs,
-        invalidLogger
+        invalidLogger,
       );
       expect(consoleSpies.warn).toHaveBeenCalledWith(
         'Workspace_retry: ',
-        'An invalid logger instance was provided. Falling back to console logging with prefix "Workspace_retry".'
+        'An invalid logger instance was provided. Falling back to console logging with prefix "Workspace_retry".',
       );
     });
 
@@ -566,7 +570,7 @@ describe('proxyApiUtils', () => {
         body: JSON.stringify({ key: 'value' }),
       };
       fetch.mockResolvedValueOnce(
-        mockFetchResponse(200, mockSuccessResponseData)
+        mockFetchResponse(200, mockSuccessResponseData),
       );
       await Workspace_retry(
         mockUrl,
@@ -574,19 +578,19 @@ describe('proxyApiUtils', () => {
         1,
         mockBaseDelayMs,
         mockMaxDelayMs,
-        mockLogger
+        mockLogger,
       );
 
       expect(fetch).toHaveBeenCalledWith(mockUrl, postOptions);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Attempt 1/1 - Fetching POST ${mockUrl}`
+        `Attempt 1/1 - Fetching POST ${mockUrl}`,
       );
     });
 
     test('should default to GET method for logging if options.method is undefined', async () => {
       const optionsWithoutMethod = { headers: { 'X-Test': 'header' } };
       fetch.mockResolvedValueOnce(
-        mockFetchResponse(200, mockSuccessResponseData)
+        mockFetchResponse(200, mockSuccessResponseData),
       );
       await Workspace_retry(
         mockUrl,
@@ -594,12 +598,12 @@ describe('proxyApiUtils', () => {
         1,
         mockBaseDelayMs,
         mockMaxDelayMs,
-        mockLogger
+        mockLogger,
       );
 
       expect(fetch).toHaveBeenCalledWith(mockUrl, optionsWithoutMethod);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Attempt 1/1 - Fetching GET ${mockUrl}`
+        `Attempt 1/1 - Fetching GET ${mockUrl}`,
       );
     });
 
@@ -610,8 +614,8 @@ describe('proxyApiUtils', () => {
           nonRetryableStatus,
           mockErrorJsonResponseData,
           true,
-          false
-        )
+          false,
+        ),
       );
 
       await expect(
@@ -621,15 +625,15 @@ describe('proxyApiUtils', () => {
           0,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
-        )
+          mockLogger,
+        ),
       ).rejects.toThrow(
-        `API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)}`
+        `API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)}`,
       );
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(setTimeout).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Workspace_retry: API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)} (Attempt 1/0, Non-retryable or max retries reached)`
+        `Workspace_retry: API request to ${mockUrl} failed after 1 attempt(s) with status ${nonRetryableStatus}: ${JSON.stringify(mockErrorJsonResponseData)} (Attempt 1/0, Non-retryable or max retries reached)`,
       );
     });
 
@@ -644,10 +648,10 @@ describe('proxyApiUtils', () => {
           0,
           mockBaseDelayMs,
           mockMaxDelayMs,
-          mockLogger
-        )
+          mockLogger,
+        ),
       ).rejects.toThrow(
-        `Workspace_retry: Failed for ${mockUrl} after 1 attempt(s) due to persistent network error: ${networkError.message}`
+        `Workspace_retry: Failed for ${mockUrl} after 1 attempt(s) due to persistent network error: ${networkError.message}`,
       );
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(setTimeout).not.toHaveBeenCalled();
@@ -656,7 +660,7 @@ describe('proxyApiUtils', () => {
         {
           originalErrorName: networkError.name,
           originalErrorMessage: networkError.message,
-        }
+        },
       );
     });
   });

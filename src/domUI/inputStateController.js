@@ -164,7 +164,7 @@ export class InputStateController extends RendererBase {
       placeholder === defaultPlaceholder &&
       (!payload || typeof payload.placeholder !== 'string')
     ) {
-      this.logger.info(
+      this.logger.debug(
         `${this._logPrefix} Received '${eventType}' without valid 'placeholder' string in payload, using default placeholder: "${defaultPlaceholder}"`,
         { receivedEvent: event }
       );
