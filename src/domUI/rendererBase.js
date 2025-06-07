@@ -86,7 +86,7 @@ export class RendererBase {
     }
     if (
       !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatchValidated !== 'function' ||
+      typeof validatedEventDispatcher.dispatch !== 'function' ||
       typeof validatedEventDispatcher.subscribe !== 'function'
     ) {
       throw new Error(

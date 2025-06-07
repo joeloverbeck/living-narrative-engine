@@ -160,7 +160,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
     mockGameConfigLoader = { loadConfig: jest.fn() };
     mockModManifestLoader = { loadRequestedManifests: jest.fn() };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     // Mock individual content loaders to return minimal success results

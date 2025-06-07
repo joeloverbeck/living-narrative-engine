@@ -146,7 +146,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
     mockGameConfigLoader = { loadConfig: jest.fn() };
     mockModManifestLoader = { loadRequestedManifests: jest.fn() };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     // Mock individual content loaders

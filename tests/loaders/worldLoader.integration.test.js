@@ -151,7 +151,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     mockEntityLoader = { loadItemsForMod: jest.fn() };
 
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     // --- 2. Define Mock Data ---
@@ -501,23 +501,17 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(mockRegistry.clear).toHaveBeenCalledTimes(clearCalls); // Still 1
 
     // Ensure failure events were not called
-    expect(
-      mockValidatedEventDispatcher.dispatchValidated
-    ).not.toHaveBeenCalledWith(
+    expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
       'initialization:world_loader:failed',
       expect.anything(),
       expect.anything()
     );
-    expect(
-      mockValidatedEventDispatcher.dispatchValidated
-    ).not.toHaveBeenCalledWith(
+    expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
       'initialization:world_loader:mod_load_failed',
       expect.anything(),
       expect.anything()
     );
-    expect(
-      mockValidatedEventDispatcher.dispatchValidated
-    ).not.toHaveBeenCalledWith(
+    expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
       'initialization:world_loader:content_load_failed',
       expect.anything(),
       expect.anything()

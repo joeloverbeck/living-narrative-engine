@@ -119,7 +119,7 @@ class CommandProcessor {
       this.#_validateDependency(
         validatedEventDispatcher,
         'validatedEventDispatcher',
-        ['dispatchValidated']
+        ['dispatch']
       ); // Used by ActionContext shim
       this.#_validateDependency(safeEventDispatcher, 'safeEventDispatcher', [
         'dispatch',
@@ -331,10 +331,7 @@ class CommandProcessor {
             // The VED expects eventName as first param, payload as second.
             // If the shim's payload contains eventName, it might conflict if VED also expects it separately.
             // Assuming payload here is the actual data for textUI:display_message.
-            return this.#validatedEventDispatcher.dispatchValidated(
-              eventName,
-              payload
-            );
+            return this.#validatedEventDispatcher.dispatch(eventName, payload);
           } else {
             this.#logger.warn(
               `CommandProcessor (Shim): Unsupported event '${eventName}'. Ignoring.`

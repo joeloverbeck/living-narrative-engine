@@ -217,7 +217,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
 
     // --- Added mock for ValidatedEventDispatcher ---
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined), // Mock the method used by WorldLoader
+      dispatch: jest.fn().mockResolvedValue(undefined), // Mock the method used by WorldLoader
     };
 
     // --- 2. Define Mock Data ---

@@ -16,7 +16,7 @@ const mockLogger = {
 
 const mockEventDispatcher = {
   dispatch: jest.fn(),
-  dispatchValidated: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
 };
@@ -404,7 +404,7 @@ describe('InitializationService', () => {
     it('should dispatch failed event on any critical error', async () => {
       mockSystemInitializer.initializeAll.mockRejectedValueOnce(testError);
       await initializationService.runInitializationSequence(testWorldName);
-      expect(mockEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         'initialization:initialization_service:failed',
         expect.objectContaining({
           worldName: testWorldName,
@@ -418,7 +418,7 @@ describe('InitializationService', () => {
     it('should dispatch UI error events on critical error', async () => {
       mockWorldLoader.loadWorld.mockRejectedValueOnce(testError);
       await initializationService.runInitializationSequence(testWorldName);
-      expect(mockEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         'ui:show_fatal_error',
         expect.objectContaining({
           title: 'Fatal Initialization Error',
@@ -426,7 +426,7 @@ describe('InitializationService', () => {
           details: testError.stack,
         })
       );
-      expect(mockEventDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         'textUI:disable_input',
         expect.objectContaining({
           message: expect.stringContaining('Fatal error during initialization'),
@@ -442,7 +442,7 @@ describe('InitializationService', () => {
     it('should log error if dispatching UI error events fails after critical error', async () => {
       const dispatchError = new Error('Dispatch Failed');
       mockWorldLoader.loadWorld.mockRejectedValueOnce(testError);
-      mockEventDispatcher.dispatchValidated
+      mockEventDispatcher.dispatch
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(dispatchError);
 

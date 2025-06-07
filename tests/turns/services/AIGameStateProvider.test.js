@@ -94,9 +94,9 @@ const mockEntityManager = () => ({
 });
 
 /**
- * @returns {jest.Mocked<import('../../../src/turns/interfaces/IActionDiscoverySystem.js').IActionDiscoverySystem>}
+ * @returns {jest.Mocked<import('../../../src/turns/interfaces/IActionDiscoveryService.js').IActionDiscoveryService>}
  */
-const mockActionDiscoverySystem = () => ({
+const mockActionDiscoveryService = () => ({
   getValidActions: jest.fn(),
 });
 
@@ -106,18 +106,18 @@ const mockActionDiscoverySystem = () => ({
 const mockTurnContext = () => {
   const loggerInstance = mockLogger();
   const entityManagerInstance = mockEntityManager();
-  const actionDiscoverySystemInst = mockActionDiscoverySystem();
+  const actionDiscoverySystemInst = mockActionDiscoveryService();
 
   return {
     getLogger: jest.fn(() => loggerInstance),
     getActor: jest.fn(),
     getEntityManager: jest.fn(() => entityManagerInstance),
-    getActionDiscoverySystem: jest.fn(() => actionDiscoverySystemInst),
+    getActionDiscoveryService: jest.fn(() => actionDiscoverySystemInst),
     game: {},
     // Expose for convenience in tests
     mockLoggerInstance: loggerInstance,
     mockEntityManagerInstance: entityManagerInstance,
-    mockActionDiscoverySystemInstance: actionDiscoverySystemInst,
+    mockActionDiscoveryServiceInstance: actionDiscoverySystemInst,
   };
 };
 
@@ -148,7 +148,7 @@ describe('AIGameStateProvider', () => {
     turnContext = mockTurnContext();
     logger = turnContext.mockLoggerInstance;
     entityManager = turnContext.mockEntityManagerInstance;
-    actionDiscoverySystem = turnContext.mockActionDiscoverySystemInstance;
+    actionDiscoverySystem = turnContext.mockActionDiscoveryServiceInstance;
 
     mockActor = new MockEntity('actor1');
     mockActor.setComponentData(POSITION_COMPONENT_ID, { locationId: 'loc1' });
@@ -691,8 +691,8 @@ describe('AIGameStateProvider', () => {
         entityManager.getEntitiesInLocation.mockResolvedValue(new Set()); // Default to no other entities in location
       });
 
-      test('should return empty actions if ActionDiscoverySystem (ADS) is not available on turnContext', async () => {
-        turnContext.getActionDiscoverySystem.mockReturnValue(null);
+      test('should return empty actions if ActionDiscoveryService (ADS) is not available on turnContext', async () => {
+        turnContext.getActionDiscoveryService.mockReturnValue(null);
         const gameState = await provider.buildGameState(
           mockActor,
           turnContext,

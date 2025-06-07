@@ -24,7 +24,7 @@ const mockLogger = {
 
 // Mock minimal IValidatedEventDispatcher
 const mockValidatedEventDispatcher = {
-  dispatchValidated: jest.fn().mockResolvedValue(undefined), // Mock the async method
+  dispatch: jest.fn().mockResolvedValue(undefined), // Mock the async method
 };
 
 // --- Test Suite ---
@@ -110,6 +110,6 @@ describe('InitializationService Integration with AppContainer', () => {
     // To test them, you would typically call a method on `resolvedService`
     // (e.g., `runInitializationSequence`) that *uses* those dependencies,
     // and then assert that the corresponding mock methods were called
-    // (e.g., `mockValidatedEventDispatcher.dispatchValidated`).
+    // (e.g., `mockValidatedEventDispatcher.dispatch`).
   });
 });

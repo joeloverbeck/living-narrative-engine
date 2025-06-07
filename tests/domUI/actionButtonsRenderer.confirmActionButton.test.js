@@ -184,7 +184,7 @@ describe('ActionButtonsRenderer', () => {
 
     // Mock implementations for factory and VED
     mockVed.subscribe.mockReturnValue({ unsubscribe: jest.fn() });
-    mockVed.dispatchValidated.mockResolvedValue(true); // Default to success
+    mockVed.dispatch.mockResolvedValue(true); // Default to success
     mockDomElementFactoryInstance.button.mockImplementation((text, cls) => {
       const classesArray = Array.isArray(cls)
         ? cls
@@ -351,7 +351,7 @@ describe('ActionButtonsRenderer', () => {
       ['info', 'error', 'debug', 'warn'].forEach((level) =>
         mockLogger[level].mockClear()
       );
-      mockVed.dispatchValidated.mockClear();
+      mockVed.dispatch.mockClear();
       if (actionButtonInstance && actionButtonInstance.classList) {
         actionButtonInstance.classList.add.mockClear();
         actionButtonInstance.classList.remove.mockClear();
@@ -368,7 +368,7 @@ describe('ActionButtonsRenderer', () => {
       ['info', 'error', 'debug', 'warn'].forEach((level) =>
         mockLogger[level].mockClear()
       );
-      mockVed.dispatchValidated.mockClear();
+      mockVed.dispatch.mockClear();
       if (actionButtonInstance && actionButtonInstance.classList) {
         actionButtonInstance.classList.add.mockClear();
         actionButtonInstance.classList.remove.mockClear();
@@ -377,19 +377,16 @@ describe('ActionButtonsRenderer', () => {
 
     it('should dispatch event with actionId and speech, clear speech, deselect, and disable send button on successful dispatch', async () => {
       commandInputElement.value = 'Player says this';
-      mockVed.dispatchValidated.mockResolvedValue(true);
+      mockVed.dispatch.mockResolvedValue(true);
 
       await globalMockSendButton.click();
 
-      expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
-      expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
-        PLAYER_TURN_SUBMITTED_ID,
-        {
-          submittedByActorId: MOCK_ACTOR_ID,
-          actionId: actionToSubmit.id,
-          speech: 'Player says this',
-        }
-      );
+      expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
+        submittedByActorId: MOCK_ACTOR_ID,
+        actionId: actionToSubmit.id,
+        speech: 'Player says this',
+      });
 
       // SUT log: `${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched for action '${actionId}' by actor '${this.#currentActorId}'.`
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -417,16 +414,13 @@ describe('ActionButtonsRenderer', () => {
 
     it('should dispatch event with speech: null if speech input is empty', async () => {
       commandInputElement.value = '';
-      mockVed.dispatchValidated.mockResolvedValue(true);
+      mockVed.dispatch.mockResolvedValue(true);
       await globalMockSendButton.click();
-      expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
-        PLAYER_TURN_SUBMITTED_ID,
-        {
-          submittedByActorId: MOCK_ACTOR_ID,
-          actionId: actionToSubmit.id,
-          speech: null,
-        }
-      );
+      expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
+        submittedByActorId: MOCK_ACTOR_ID,
+        actionId: actionToSubmit.id,
+        speech: null,
+      });
       expect(commandInputElement.value).toBe('');
     });
 
@@ -482,18 +476,15 @@ describe('ActionButtonsRenderer', () => {
 
       mockLogger.warn.mockClear();
       mockLogger.debug.mockClear(); // Clear debug as well
-      mockVed.dispatchValidated.mockClear().mockResolvedValue(true);
+      mockVed.dispatch.mockClear().mockResolvedValue(true);
 
       await testSpecificSendButton.click();
 
-      expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
-        PLAYER_TURN_SUBMITTED_ID,
-        {
-          submittedByActorId: MOCK_ACTOR_ID,
-          actionId: actionToSubmit.id,
-          speech: null,
-        }
-      );
+      expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
+        submittedByActorId: MOCK_ACTOR_ID,
+        actionId: actionToSubmit.id,
+        speech: null,
+      });
 
       // SUT logs a debug message when speech input is not found:
       // this.logger.debug(`${this._logPrefix} No speech input element available.`);
@@ -510,9 +501,9 @@ describe('ActionButtonsRenderer', () => {
       currentDocument.body.removeChild(testSpecificSendButton);
     });
 
-    it('should log error and not change UI state if dispatchValidated returns false', async () => {
+    it('should log error and not change UI state if dispatch returns false', async () => {
       commandInputElement.value = 'Test speech';
-      mockVed.dispatchValidated.mockResolvedValue(false);
+      mockVed.dispatch.mockResolvedValue(false);
 
       if (
         actionButtonInstance &&
@@ -528,7 +519,7 @@ describe('ActionButtonsRenderer', () => {
 
       await globalMockSendButton.click();
 
-      expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
+      expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
 
       // SUT log: `${this._logPrefix} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action '${actionId}'.`
       const expectedErrorPayload = {
@@ -555,10 +546,10 @@ describe('ActionButtonsRenderer', () => {
       }
     });
 
-    it('should log error and not change UI state if dispatchValidated throws an error', async () => {
+    it('should log error and not change UI state if dispatch throws an error', async () => {
       commandInputElement.value = 'Test speech again';
       const dispatchError = new Error('Network Error');
-      mockVed.dispatchValidated.mockRejectedValue(dispatchError);
+      mockVed.dispatch.mockRejectedValue(dispatchError);
 
       if (
         actionButtonInstance &&
@@ -574,8 +565,8 @@ describe('ActionButtonsRenderer', () => {
 
       await globalMockSendButton.click();
 
-      expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
-      // SUT log: `${this._logPrefix} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_ID}'.`
+      expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
+      // SUT log: `${this._logPrefix} Exception during dispatch for '${PLAYER_TURN_SUBMITTED_ID}'.`
       const expectedErrorContext = {
         error: dispatchError,
         payload: {
@@ -585,7 +576,7 @@ describe('ActionButtonsRenderer', () => {
         },
       };
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_ID}'.`,
+        `${CLASS_PREFIX} Exception during dispatch for '${PLAYER_TURN_SUBMITTED_ID}'.`,
         expectedErrorContext
       );
       expect(commandInputElement.value).toBe('Test speech again');
@@ -607,7 +598,7 @@ describe('ActionButtonsRenderer', () => {
 
       await globalMockSendButton.click();
 
-      expect(mockVed.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockVed.dispatch).not.toHaveBeenCalled();
       // SUT log: `${this._logPrefix} 'Confirm Action' clicked, but no action is selected.`
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} 'Confirm Action' clicked, but no action is selected.`
@@ -627,7 +618,7 @@ describe('ActionButtonsRenderer', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} #handleSendAction called, but sendButtonElement is null.`
       );
-      expect(mockVed.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockVed.dispatch).not.toHaveBeenCalled();
     });
   });
 });

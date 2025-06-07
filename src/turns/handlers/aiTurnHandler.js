@@ -14,7 +14,7 @@
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
- * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem
+ * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  * @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder
  */
 
@@ -53,7 +53,7 @@ export class AITurnHandler extends BaseTurnHandler {
   #subscriptionManager;
   /** @type {IEntityManager} */
   #entityManager;
-  /** @type {IActionDiscoverySystem} */
+  /** @type {IActionDiscoveryService} */
   #actionDiscoverySystem;
 
   /** @type {IPromptBuilder} */
@@ -88,7 +88,7 @@ export class AITurnHandler extends BaseTurnHandler {
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
    * @param {SubscriptionLifecycleManager} dependencies.subscriptionManager
    * @param {IEntityManager} dependencies.entityManager
-   * @param {IActionDiscoverySystem} dependencies.actionDiscoverySystem
+   * @param {IActionDiscoveryService} dependencies.actionDiscoverySystem
    * @param {IPromptBuilder} dependencies.promptBuilder
    * @param {IAIPlayerStrategyFactory} dependencies.aiPlayerStrategyFactory
    * @param {ITurnContextFactory} dependencies.turnContextFactory
@@ -134,7 +134,7 @@ export class AITurnHandler extends BaseTurnHandler {
     if (!entityManager)
       throw new Error('AITurnHandler: Invalid IEntityManager');
     if (!actionDiscoverySystem)
-      throw new Error('AITurnHandler: Invalid IActionDiscoverySystem');
+      throw new Error('AITurnHandler: Invalid IActionDiscoveryService');
     if (!promptBuilder)
       throw new Error('AITurnHandler: Invalid IPromptBuilder');
     if (!aiFallbackActionFactory)

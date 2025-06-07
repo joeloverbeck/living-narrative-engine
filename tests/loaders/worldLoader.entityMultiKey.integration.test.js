@@ -192,7 +192,7 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
     mockGameConfigLoader = { loadConfig: jest.fn() };
     mockModManifestLoader = { loadRequestedManifests: jest.fn() };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     // Mock irrelevant content loaders to return minimal success

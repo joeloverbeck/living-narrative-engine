@@ -28,10 +28,9 @@ class DispatchEventHandler {
    * @throws {Error} If dependencies are invalid.
    */
   constructor({ dispatcher, logger }) {
+    // FIX: Simplified the validation since both methods are now named 'dispatch'
     const dispatcherValid =
-      dispatcher &&
-      (typeof dispatcher.dispatchValidated === 'function' ||
-        typeof dispatcher.dispatch === 'function');
+      dispatcher && typeof dispatcher.dispatch === 'function';
     if (!dispatcherValid) {
       throw new Error(
         'DispatchEventHandler requires a valid ValidatedEventDispatcher (preferred) or EventBus instance.'
@@ -93,17 +92,29 @@ class DispatchEventHandler {
       { payload }
     );
     try {
-      if (typeof this.#dispatcher.dispatchValidated === 'function') {
-        this.#dispatcher
-          .dispatchValidated(eventType, payload)
+      // FIX: Differentiate dispatchers. EventBus has `listenerCount`, VED does not.
+      if (typeof this.#dispatcher.listenerCount === 'function') {
+        // EventBus path
+        Promise.resolve(this.#dispatcher.dispatch(eventType, payload))
           .then(() => {
-            logger.debug(
-              `DispatchEventHandler: Event "${eventType}" dispatched (Validated).`
-            );
+            // Check listener count if the method exists (best effort)
+            const listenerCount = this.#dispatcher.listenerCount(eventType);
+            if (listenerCount === 0) {
+              logger.warn(
+                `DispatchEventHandler: No listeners for event "${eventType}".`
+              );
+            } else {
+              // Log success, handle NaN case for unknown count
+              logger.debug(
+                `DispatchEventHandler: Dispatched "${eventType}" to ${
+                  Number.isNaN(listenerCount) ? 'unknown' : listenerCount
+                } listener(s) via EventBus.`
+              );
+            }
           })
           .catch((err) => {
             logger.error(
-              `DispatchEventHandler: Error during async processing of event "${eventType}" via ValidatedEventDispatcher.`,
+              `DispatchEventHandler: Error during dispatch of event "${eventType}" via EventBus.`,
               {
                 error: err,
                 eventType,
@@ -112,28 +123,17 @@ class DispatchEventHandler {
             );
           });
       } else if (typeof this.#dispatcher.dispatch === 'function') {
-        // Fallback to EventBus interface
-        Promise.resolve(this.#dispatcher.dispatch(eventType, payload))
+        // ValidatedEventDispatcher path
+        this.#dispatcher
+          .dispatch(eventType, payload)
           .then(() => {
-            // Check listener count if the method exists (best effort)
-            const listenerCount =
-              typeof this.#dispatcher.listenerCount === 'function'
-                ? this.#dispatcher.listenerCount(eventType)
-                : NaN;
-            if (listenerCount === 0) {
-              logger.warn(
-                `DispatchEventHandler: No listeners for event "${eventType}".`
-              );
-            } else {
-              // Log success, handle NaN case for unknown count
-              logger.debug(
-                `DispatchEventHandler: Dispatched "${eventType}" to ${Number.isNaN(listenerCount) ? 'unknown' : listenerCount} listener(s) via EventBus.`
-              );
-            }
+            logger.debug(
+              `DispatchEventHandler: Event "${eventType}" dispatched (Validated).`
+            );
           })
           .catch((err) => {
             logger.error(
-              `DispatchEventHandler: Error during dispatch of event "${eventType}" via EventBus.`,
+              `DispatchEventHandler: Error during async processing of event "${eventType}" via ValidatedEventDispatcher.`,
               {
                 error: err,
                 eventType,

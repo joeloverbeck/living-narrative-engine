@@ -23,7 +23,7 @@ const mockLogger = {
 
 const mockDispatcher = {
   dispatch: jest.fn(),
-  dispatchValidated: jest.fn().mockResolvedValue(true),
+  dispatch: jest.fn().mockResolvedValue(true),
   subscribe: jest.fn(),
 };
 
@@ -70,7 +70,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     mockTurnOrderService.clearCurrentRound
       .mockReset()
       .mockResolvedValue(undefined);
-    mockDispatcher.dispatchValidated.mockReset().mockResolvedValue(true);
+    mockDispatcher.dispatch.mockReset().mockResolvedValue(true);
     mockDispatcher.subscribe
       .mockReset()
       .mockReturnValue(turnEndedUnsubscribeMock);
@@ -137,7 +137,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     );
     expect(mockTurnOrderService.isEmpty).not.toHaveBeenCalled();
     expect(stopSpy).not.toHaveBeenCalled();
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled();
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     expect(mockDispatcher.subscribe).not.toHaveBeenCalled(); // subscribe happens in start()
     expect(turnEndedUnsubscribeMock).not.toHaveBeenCalled();
   });
@@ -174,8 +174,8 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg); // Error logged
 
     // Check dispatch and stop from the advanceTurn call
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       {
         message:
@@ -222,8 +222,8 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
 
     // Check dispatch and stop from the advanceTurn call
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       {
         message:
@@ -319,13 +319,10 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
       `>>> Starting turn initiation for Entity: ${actor1.id} (ai) <<<`
     ); // Assuming actor1 is AI
     // It dispatches turn started...
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:turn_started',
-      {
-        entityId: actor1.id,
-        entityType: 'ai',
-      }
-    ); // Assuming AI
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
+      entityId: actor1.id,
+      entityType: 'ai',
+    }); // Assuming AI
     // It resolves the handler...
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1);
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(actor1);
@@ -342,12 +339,12 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     // Ensure stop was NOT called and no system errors dispatched
     expect(stopSpy).not.toHaveBeenCalled();
     // Dispatch validated *was* called for core:turn_started, so check count or filter
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       'core:turn_started',
       expect.anything()
     );
     // Ensure no system error dispatches
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalledWith(
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.anything()
     );

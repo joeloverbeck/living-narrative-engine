@@ -161,7 +161,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     mockRuleLoader = { loadItemsForMod: jest.fn() };
     mockEntityLoader = { loadItemsForMod: jest.fn() };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     // --- 2. Define Base Mock Data ---

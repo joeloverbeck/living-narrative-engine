@@ -26,7 +26,7 @@ const mockLogger = {
 
 const mockDispatcher = {
   dispatch: jest.fn(),
-  dispatchValidated: jest.fn().mockResolvedValue(true),
+  dispatch: jest.fn().mockResolvedValue(true),
   subscribe: jest.fn(), // <<< ADDED
 };
 
@@ -82,7 +82,7 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     mockTurnOrderService.isEmpty.mockReset().mockResolvedValue(false); // Default: Queue NOT empty
     mockTurnOrderService.getNextEntity.mockReset().mockResolvedValue(null); // Default reset
     mockTurnOrderService.clearCurrentRound.mockReset().mockResolvedValue();
-    mockDispatcher.dispatchValidated.mockReset().mockResolvedValue(true);
+    mockDispatcher.dispatch.mockReset().mockResolvedValue(true);
     mockDispatcher.subscribe
       .mockReset()
       .mockReturnValue(turnEndedUnsubscribeMock);
@@ -128,7 +128,7 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     // Clear mocks called during start() phase
     mockLogger.info.mockClear(); // Clear "Turn Manager started." log
     mockLogger.debug.mockClear(); // Clear suppressed advanceTurn log
-    mockDispatcher.dispatchValidated.mockClear();
+    mockDispatcher.dispatch.mockClear();
     mockDispatcher.subscribe.mockClear(); // Clear the subscribe call from start()
     mockTurnOrderService.isEmpty.mockClear(); // Clear mocks before actual test calls
     mockTurnOrderService.getNextEntity.mockClear();
@@ -183,13 +183,10 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     );
 
     // Check core:turn_started dispatch
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:turn_started',
-      {
-        entityId: nextActor.id,
-        entityType: entityType,
-      }
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
+      entityId: nextActor.id,
+      entityType: entityType,
+    });
 
     // Verify resolver call
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1);
@@ -230,8 +227,8 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
 
     // Check dispatch event and payload
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       {
         message:
@@ -276,7 +273,7 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
       ),
       thrownError // Check that the original error object was logged
     );
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: 'System Error during turn advancement. Stopping game.',
@@ -317,13 +314,10 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     expect(mockLogger.info).toHaveBeenCalledWith(
       `>>> Starting turn initiation for Entity: ${nonActorEntity.id} (${entityType}) <<<`
     );
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:turn_started',
-      {
-        entityId: nonActorEntity.id,
-        entityType: entityType,
-      }
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
+      entityId: nonActorEntity.id,
+      entityType: entityType,
+    });
 
     // Verify it proceeds to resolve handler
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1);

@@ -130,7 +130,7 @@ beforeEach(() => {
       }
       return mockUnsubscribeFn;
     }),
-    dispatchValidated: jest.fn().mockResolvedValue(true),
+    dispatch: jest.fn().mockResolvedValue(true),
     listenerCount: jest.fn(),
     unsubscribe: jest.fn(),
   };

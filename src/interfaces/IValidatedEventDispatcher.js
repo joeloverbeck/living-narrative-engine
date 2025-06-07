@@ -15,7 +15,7 @@ export class IValidatedEventDispatcher {
    * Implementations should ideally validate the payload against a schema associated
    * with the eventName before dispatching via the underlying EventBus.
    *
-   * @function dispatchValidated
+   * @function dispatch
    * @param {string} eventName - The unique identifier of the event to dispatch (e.g., 'entity:moved').
    * @param {object} payload - The data associated with the event.
    * @param {object} [options] - Optional settings for validation/dispatch behavior (e.g., skipping validation if schema not found).
@@ -23,9 +23,9 @@ export class IValidatedEventDispatcher {
    * (passed validation or validation was skipped), `false` otherwise (validation failed, dispatch error).
    * @throws {Error} Implementations might throw errors for critical failures during the dispatch process.
    */
-  async dispatchValidated(eventName, payload, options) {
+  async dispatch(eventName, payload, options) {
     throw new Error(
-      'IValidatedEventDispatcher.dispatchValidated method not implemented.'
+      'IValidatedEventDispatcher.dispatch method not implemented.'
     );
   }
 

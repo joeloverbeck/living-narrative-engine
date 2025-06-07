@@ -50,7 +50,7 @@ const createMockDocumentContext = () => ({
 
 const createMockValidatedEventDispatcher = () => ({
   subscribe: jest.fn(() => ({ unsubscribe: jest.fn() })),
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
 });
 
 describe('BoundDomRendererBase', () => {

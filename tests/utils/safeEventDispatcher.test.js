@@ -16,7 +16,7 @@ const mockLogger = {
 
 // Mock IValidatedEventDispatcher
 const mockVed = {
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
 };
@@ -52,7 +52,7 @@ describe('SafeEventDispatcher', () => {
 
   it('should throw an error if validatedEventDispatcher dependency is missing or invalid', () => {
     const expectedErrorMessage =
-      'SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatchValidated, subscribe, and unsubscribe methods).';
+      'SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatch, subscribe, and unsubscribe methods).';
     expect(
       () =>
         new SafeEventDispatcher({
@@ -89,8 +89,8 @@ describe('SafeEventDispatcher', () => {
   const testPayload = { data: 'value' };
   const expectedDefaultOptions = {}; // The default options object passed when none are provided to dispatch
 
-  it('AC1: should return true and not log error when VED.dispatchValidated resolves true', async () => {
-    mockVed.dispatchValidated.mockResolvedValue(true);
+  it('AC1: should return true and not log error when VED.dispatch resolves true', async () => {
+    mockVed.dispatch.mockResolvedValue(true);
     const dispatcher = new SafeEventDispatcher({
       validatedEventDispatcher: mockVed,
       logger: mockLogger,
@@ -100,8 +100,8 @@ describe('SafeEventDispatcher', () => {
     const result = await dispatcher.dispatch(testEventName, testPayload);
 
     expect(result).toBe(true);
-    // Expect VED.dispatchValidated to be called with three arguments (eventName, payload, defaultOptions)
-    expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
+    // Expect VED.dispatch to be called with three arguments (eventName, payload, defaultOptions)
+    expect(mockVed.dispatch).toHaveBeenCalledWith(
       testEventName,
       testPayload,
       expectedDefaultOptions
@@ -112,8 +112,8 @@ describe('SafeEventDispatcher', () => {
     );
   });
 
-  it('AC2: should return false and log error when VED.dispatchValidated resolves false', async () => {
-    mockVed.dispatchValidated.mockResolvedValue(false);
+  it('AC2: should return false and log error when VED.dispatch resolves false', async () => {
+    mockVed.dispatch.mockResolvedValue(false);
     const dispatcher = new SafeEventDispatcher({
       validatedEventDispatcher: mockVed,
       logger: mockLogger,
@@ -123,8 +123,8 @@ describe('SafeEventDispatcher', () => {
     const result = await dispatcher.dispatch(testEventName, testPayload);
 
     expect(result).toBe(false);
-    // Expect VED.dispatchValidated to be called with three arguments
-    expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
+    // Expect VED.dispatch to be called with three arguments
+    expect(mockVed.dispatch).toHaveBeenCalledWith(
       testEventName,
       testPayload,
       expectedDefaultOptions
@@ -137,9 +137,9 @@ describe('SafeEventDispatcher', () => {
     );
   });
 
-  it('AC3: should return false and log error when VED.dispatchValidated throws an exception', async () => {
+  it('AC3: should return false and log error when VED.dispatch throws an exception', async () => {
     const testError = new Error('VED dispatch failed!');
-    mockVed.dispatchValidated.mockRejectedValue(testError);
+    mockVed.dispatch.mockRejectedValue(testError);
     const dispatcher = new SafeEventDispatcher({
       validatedEventDispatcher: mockVed,
       logger: mockLogger,
@@ -149,8 +149,8 @@ describe('SafeEventDispatcher', () => {
     const result = await dispatcher.dispatch(testEventName, testPayload);
 
     expect(result).toBe(false);
-    // Expect VED.dispatchValidated to be called with three arguments
-    expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
+    // Expect VED.dispatch to be called with three arguments
+    expect(mockVed.dispatch).toHaveBeenCalledWith(
       testEventName,
       testPayload,
       expectedDefaultOptions

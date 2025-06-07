@@ -68,7 +68,7 @@ import GoalsSectionAssembler from '../../prompting/assembling/goalsSectionAssemb
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../actions/targeting/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
-/** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem */
+/** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../entities/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
 /** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
@@ -334,8 +334,8 @@ export function registerDomainServices(container) {
     );
     const playerPromptDeps = {
       logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-      actionDiscoverySystem: /** @type {IActionDiscoverySystem} */ (
-        c.resolve(tokens.IActionDiscoverySystem)
+      actionDiscoverySystem: /** @type {IActionDiscoveryService} */ (
+        c.resolve(tokens.IActionDiscoveryService)
       ),
       promptOutputPort: /** @type {IPromptOutputPort} */ (
         c.resolve(tokens.IPromptOutputPort)

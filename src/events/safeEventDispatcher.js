@@ -59,12 +59,12 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
 
     if (
       !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatchValidated !== 'function' ||
+      typeof validatedEventDispatcher.dispatch !== 'function' ||
       typeof validatedEventDispatcher.subscribe !== 'function' ||
       typeof validatedEventDispatcher.unsubscribe !== 'function'
     ) {
       const errMsg =
-        'SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatchValidated, subscribe, and unsubscribe methods).';
+        'SafeEventDispatcher Constructor: Invalid or missing validatedEventDispatcher dependency (requires dispatch, subscribe, and unsubscribe methods).';
       this.#logger.error(errMsg);
       throw new Error(errMsg);
     }
@@ -89,8 +89,8 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
   async dispatch(eventName, payload, options = {}) {
     // Added options parameter
     try {
-      // Pass the options object to dispatchValidated
-      const dispatchResult = await this.#ved.dispatchValidated(
+      // Pass the options object to dispatch
+      const dispatchResult = await this.#ved.dispatch(
         eventName,
         payload,
         options
@@ -103,7 +103,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
         return true;
       } else {
         // The VED itself will log reasons for returning false (e.g., validation failure)
-        // This log is specifically for if VED.dispatchValidated returns false without throwing
+        // This log is specifically for if VED.dispatch returns false without throwing
         this.#logger.warn(
           `SafeEventDispatcher: Underlying VED failed to dispatch event '${eventName}' (returned false). See VED logs for details. Payload: ${JSON.stringify(payload)}`
         );

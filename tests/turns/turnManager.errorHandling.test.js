@@ -79,7 +79,7 @@ const mockValidatedEventDispatcher = () => {
   mockUnsubscribeFunctionGlobal = jest.fn();
   const dispatcher = {
     _subscriptions: {},
-    dispatchValidated: jest.fn(async (eventName, payload) => true),
+    dispatch: jest.fn(async (eventName, payload) => true),
     subscribe: jest.fn((eventName, callback) => {
       dispatcher._subscriptions[eventName] =
         dispatcher._subscriptions[eventName] || [];
@@ -223,7 +223,7 @@ describe('TurnManager - Error Handling', () => {
       `CRITICAL Error during turn advancement logic (before handler initiation): ${resolveError.message}`,
       resolveError // Check that the error object itself is logged
     );
-    expect(dispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: 'System Error during turn advancement. Stopping game.',
@@ -258,7 +258,7 @@ describe('TurnManager - Error Handling', () => {
     expect(logger.error).toHaveBeenCalledWith(
       'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.'
     );
-    expect(dispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message:

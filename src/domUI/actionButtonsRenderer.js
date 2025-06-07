@@ -477,11 +477,10 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     };
 
     try {
-      const dispatchResult =
-        await this.validatedEventDispatcher.dispatchValidated(
-          PLAYER_TURN_SUBMITTED_ID,
-          eventPayload
-        );
+      const dispatchResult = await this.validatedEventDispatcher.dispatch(
+        PLAYER_TURN_SUBMITTED_ID,
+        eventPayload
+      );
 
       if (dispatchResult) {
         this.logger.debug(
@@ -511,7 +510,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
       }
     } catch (error) {
       this.logger.error(
-        `${this._logPrefix} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_ID}'.`,
+        `${this._logPrefix} Exception during dispatch for '${PLAYER_TURN_SUBMITTED_ID}'.`,
         { error, payload: eventPayload }
       );
     }

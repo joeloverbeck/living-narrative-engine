@@ -64,9 +64,10 @@ class InitializationService extends IInitializationService {
     }
     this.#logger = logger;
 
+    // FIX: Check for the correct 'dispatch' method name
     if (
       !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatchValidated !== 'function'
+      typeof validatedEventDispatcher.dispatch !== 'function'
     ) {
       const errorMsg =
         "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.";
@@ -282,7 +283,7 @@ class InitializationService extends IInitializationService {
         stack: error instanceof Error ? error.stack : undefined,
       };
       this.#validatedEventDispatcher
-        .dispatchValidated(
+        .dispatch(
           'initialization:initialization_service:failed',
           failedPayload,
           { allowSchemaNotFound: true }
@@ -301,21 +302,14 @@ class InitializationService extends IInitializationService {
         );
 
       try {
-        await this.#validatedEventDispatcher.dispatchValidated(
-          'ui:show_fatal_error',
-          {
-            title: 'Fatal Initialization Error',
-            message: `Initialization failed for world '${worldName}'. Reason: ${errorMessage}`,
-            details:
-              error instanceof Error ? error.stack : 'No stack available.',
-          }
-        );
-        await this.#validatedEventDispatcher.dispatchValidated(
-          'textUI:disable_input',
-          {
-            message: 'Fatal error during initialization. Cannot continue.',
-          }
-        );
+        await this.#validatedEventDispatcher.dispatch('ui:show_fatal_error', {
+          title: 'Fatal Initialization Error',
+          message: `Initialization failed for world '${worldName}'. Reason: ${errorMessage}`,
+          details: error instanceof Error ? error.stack : 'No stack available.',
+        });
+        await this.#validatedEventDispatcher.dispatch('textUI:disable_input', {
+          message: 'Fatal error during initialization. Cannot continue.',
+        });
         this.#logger.info(
           'InitializationService: Dispatched ui:show_fatal_error and textUI:disable_input events.'
         );

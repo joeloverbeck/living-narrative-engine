@@ -36,7 +36,7 @@ const mockValidatedEventDispatcher = {
     unsubscribeSpies.push(mockUnsubscribe);
     return mockSubscription;
   }),
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
 };
 
 // --- Helper to create mock elements ---

@@ -126,8 +126,8 @@ describe('ValidatedEventDispatcher', () => {
     });
   });
 
-  // --- dispatchValidated Tests ---
-  describe('dispatchValidated', () => {
+  // --- dispatch Tests ---
+  describe('dispatch', () => {
     const eventName = 'test:event';
     const payload = { data: 'some_payload' };
     const schemaId = `${eventName}#payload`;
@@ -157,7 +157,7 @@ describe('ValidatedEventDispatcher', () => {
       mockEventBus.dispatch.mockResolvedValue(undefined); // Simulate successful dispatch
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(true);
@@ -204,7 +204,7 @@ describe('ValidatedEventDispatcher', () => {
       });
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(false);
@@ -245,7 +245,7 @@ describe('ValidatedEventDispatcher', () => {
       }); // No error details
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(false);
@@ -274,7 +274,7 @@ describe('ValidatedEventDispatcher', () => {
       mockEventBus.dispatch.mockResolvedValue(undefined);
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(true);
@@ -309,7 +309,7 @@ describe('ValidatedEventDispatcher', () => {
       mockEventBus.dispatch.mockResolvedValue(undefined);
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(true);
@@ -343,7 +343,7 @@ describe('ValidatedEventDispatcher', () => {
       mockEventBus.dispatch.mockResolvedValue(undefined);
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(true);
@@ -381,7 +381,7 @@ describe('ValidatedEventDispatcher', () => {
       }); // Throw error
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(false);
@@ -414,7 +414,7 @@ describe('ValidatedEventDispatcher', () => {
       }); // Throw error
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(false);
@@ -471,7 +471,7 @@ describe('ValidatedEventDispatcher', () => {
       });
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(false); // <<<< CHECK SUT CODE IF THIS FAILS (receives true)
@@ -512,7 +512,7 @@ describe('ValidatedEventDispatcher', () => {
       mockEventBus.dispatch.mockRejectedValue(dispatchError); // Simulate dispatch failure
 
       // Act
-      const result = await dispatcher.dispatchValidated(eventName, payload);
+      const result = await dispatcher.dispatch(eventName, payload);
 
       // Assert
       expect(result).toBe(false);

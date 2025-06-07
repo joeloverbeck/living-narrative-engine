@@ -208,7 +208,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     mockGameConfigLoader = { loadConfig: jest.fn() };
     mockModManifestLoader = { loadRequestedManifests: jest.fn() };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
     // Mock individual content loaders (only EntityLoader is relevant here)
@@ -510,9 +510,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     );
 
     // 7. Verify Event Dispatcher calls
-    expect(
-      mockValidatedEventDispatcher.dispatchValidated
-    ).not.toHaveBeenCalledWith(
+    expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
       expect.stringContaining('failed'),
       expect.anything(),
       expect.anything()

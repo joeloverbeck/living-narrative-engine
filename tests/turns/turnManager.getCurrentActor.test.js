@@ -48,7 +48,7 @@ const mockLogger = {
 
 // Mock dispatcher with subscribe
 const mockDispatcher = {
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
   subscribe: jest.fn(), // Needs to be present
 };
 
@@ -104,7 +104,7 @@ describe('TurnManager', () => {
     mockTurnOrderService.getNextEntity.mockResolvedValue(null);
     mockTurnOrderService.startNewRound.mockResolvedValue();
     mockTurnOrderService.clearCurrentRound.mockResolvedValue();
-    mockDispatcher.dispatchValidated.mockReset().mockResolvedValue(true); // Reset and default success
+    mockDispatcher.dispatch.mockReset().mockResolvedValue(true); // Reset and default success
     mockDispatcher.subscribe
       .mockReset()
       .mockReturnValue(turnEndedUnsubscribeMock); // Mock subscribe return
@@ -219,7 +219,7 @@ describe('TurnManager', () => {
         `>>> Starting turn initiation for Entity: ${mockActor.id} (${entityType}) <<<`
       );
       // Check core:turn_started event was dispatched
-      expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:turn_started',
         {
           entityId: mockActor.id,
@@ -260,7 +260,7 @@ describe('TurnManager', () => {
       expect(turnManager.getCurrentActor()).toBe(mockActor);
       expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1); // Called once during start
       expect(mockAiHandler.startTurn).toHaveBeenCalledTimes(1); // Called once during start
-      expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         'core:turn_started',
         {
           entityId: mockActor.id,
@@ -272,7 +272,7 @@ describe('TurnManager', () => {
       // --- Clear mocks BEFORE calling stop() to isolate stop()'s effects ---
       mockTurnHandlerResolver.resolveHandler.mockClear();
       mockAiHandler.startTurn.mockClear();
-      mockDispatcher.dispatchValidated.mockClear();
+      mockDispatcher.dispatch.mockClear();
       mockDispatcher.subscribe.mockClear(); // Clear subscribe calls if needed, though stop doesn't call it
       mockLogger.info.mockClear();
       mockLogger.debug.mockClear();
@@ -296,7 +296,7 @@ describe('TurnManager', () => {
       // --- Verify stop() DID NOT trigger NEW turn advancement actions ---
       expect(mockTurnHandlerResolver.resolveHandler).not.toHaveBeenCalled(); // Should NOT be called *again* by stop
       expect(mockAiHandler.startTurn).not.toHaveBeenCalled(); // Should NOT be called *again* by stop
-      expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled(); // stop() doesn't dispatch events currently
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled(); // stop() doesn't dispatch events currently
     });
   });
   // --- End Tests for getCurrentActor() ---

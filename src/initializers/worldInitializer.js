@@ -109,11 +109,9 @@ class WorldInitializer {
    */
   async #_dispatchWorldInitEvent(eventName, payload, identifierForLog) {
     try {
-      await this.#validatedEventDispatcher.dispatchValidated(
-        eventName,
-        payload,
-        { allowSchemaNotFound: true }
-      );
+      await this.#validatedEventDispatcher.dispatch(eventName, payload, {
+        allowSchemaNotFound: true,
+      });
       this.#logger.debug(
         `WorldInitializer (EventDispatch): Successfully dispatched '${eventName}' for ${identifierForLog}.`
       );

@@ -37,7 +37,7 @@ describe('InitializationService', () => {
       debug: jest.fn(),
     };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined), // Default success
+      dispatch: jest.fn().mockResolvedValue(undefined), // Default success
     };
     mockWorldLoader = {
       loadWorld: jest.fn().mockResolvedValue(undefined),
@@ -232,8 +232,9 @@ describe('InitializationService', () => {
       );
     });
 
-    it('should throw an error if validatedEventDispatcher is invalid (missing dispatchValidated)', () => {
-      const invalidDispatcher = { dispatch: jest.fn() };
+    it('should throw an error if validatedEventDispatcher is invalid (missing dispatch)', () => {
+      // FIX: Use an empty object for clarity. This mock is invalid because it lacks '.dispatch()'.
+      const invalidDispatcher = {};
       expect(
         () =>
           new InitializationService({

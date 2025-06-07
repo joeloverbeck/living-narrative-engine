@@ -63,7 +63,7 @@ describe('SystemInitializer (Tag-Based)', () => {
 
     // Mock ValidatedEventDispatcher
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined), // Mock the required method
+      dispatch: jest.fn().mockResolvedValue(undefined), // Mock the required method
       // Add other methods if needed
     };
 
@@ -119,7 +119,7 @@ describe('SystemInitializer (Tag-Based)', () => {
     const expectedLoggerErrorMsg =
       'SystemInitializer requires an ILogger instance.';
     const expectedDispatcherErrorMsg =
-      'SystemInitializer requires a valid ValidatedEventDispatcher.'; // Used for missing dispatcher OR missing dispatchValidated
+      'SystemInitializer requires a valid ValidatedEventDispatcher.'; // Used for missing dispatcher OR missing dispatch
     const expectedTagErrorMsg =
       'SystemInitializer requires a non-empty string initializationTag.';
 
@@ -190,9 +190,9 @@ describe('SystemInitializer (Tag-Based)', () => {
       expect(mockLogger.error).not.toHaveBeenCalled(); // Constructor throws before logging
     });
 
-    it('should throw an error if ValidatedEventDispatcher does not support dispatchValidated', () => {
+    it('should throw an error if ValidatedEventDispatcher does not support dispatch', () => {
       // Added test
-      const invalidDispatcher = { someOtherMethod: jest.fn() }; // Missing dispatchValidated
+      const invalidDispatcher = { someOtherMethod: jest.fn() }; // Missing dispatch
       // Call constructor with object structure
       const action = () =>
         new SystemInitializer({
@@ -361,9 +361,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         ),
         initError
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
           systemName: 'SystemFailInit',
@@ -395,9 +393,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       // Verify overall counts
       expect(mockLogger.error).toHaveBeenCalledTimes(1); // Only from mockSystemFailInit
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only from mockSystemNull
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(1);
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
     });
 
     it('[Empty Result] should handle container returning an empty array for the tag gracefully', async () => {
@@ -475,16 +471,12 @@ describe('SystemInitializer (Tag-Based)', () => {
       );
 
       // Complete event should NOT be called
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).not.toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         'initialization:system_initializer:completed',
         expect.anything(),
         expect.anything()
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(0); // start, failed
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(0); // start, failed
 
       // Should not proceed to initialize
       expect(mockLogger.info).not.toHaveBeenCalledWith(
@@ -525,9 +517,7 @@ describe('SystemInitializer (Tag-Based)', () => {
       );
 
       // Check event dispatches
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
           systemName: 'SystemFailInit',
@@ -536,9 +526,7 @@ describe('SystemInitializer (Tag-Based)', () => {
         },
         { allowSchemaNotFound: true }
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(1);
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
 
       // Should only have the one error from mockSystemFailInit
       expect(mockLogger.error).toHaveBeenCalledTimes(1);

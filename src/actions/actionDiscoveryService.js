@@ -41,7 +41,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #logger;
 
   /**
-   * Creates an instance of ActionDiscoverySystem.
+   * Creates an instance of ActionDiscoveryService.
    *
    * @param {object} dependencies - The required dependencies injected by the container.
    * @param {GameDataRepository} dependencies.gameDataRepository - Repository for retrieving action definitions.
@@ -63,12 +63,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
     // 1. Validate logger dependency first
     try {
-      validateDependency(logger, 'ActionDiscoverySystem: logger', console, {
+      validateDependency(logger, 'ActionDiscoveryService: logger', console, {
         requiredMethods: ['info', 'debug', 'warn', 'error'],
       });
       this.#logger = logger;
     } catch (e) {
-      const errorMsg = `ActionDiscoverySystem Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
+      const errorMsg = `ActionDiscoveryService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       // eslint-disable-next-line no-console
       console.error(errorMsg);
       throw new Error(errorMsg);
@@ -78,7 +78,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     try {
       validateDependency(
         gameDataRepository,
-        'ActionDiscoverySystem: gameDataRepository',
+        'ActionDiscoveryService: gameDataRepository',
         this.#logger,
         {
           requiredMethods: ['getAllActionDefinitions'],
@@ -86,7 +86,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       );
       validateDependency(
         entityManager,
-        'ActionDiscoverySystem: entityManager',
+        'ActionDiscoveryService: entityManager',
         this.#logger,
         {
           requiredMethods: ['getComponentData', 'getEntityInstance'],
@@ -94,7 +94,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       );
       validateDependency(
         actionValidationService,
-        'ActionDiscoverySystem: actionValidationService',
+        'ActionDiscoveryService: actionValidationService',
         this.#logger,
         {
           requiredMethods: ['isValid'],
@@ -102,7 +102,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       );
       validateDependency(
         formatActionCommandFn,
-        'ActionDiscoverySystem: formatActionCommandFn',
+        'ActionDiscoveryService: formatActionCommandFn',
         this.#logger,
         {
           isFunction: true,
@@ -110,7 +110,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       );
       validateDependency(
         getEntityIdsForScopesFn,
-        'ActionDiscoverySystem: getEntityIdsForScopesFn',
+        'ActionDiscoveryService: getEntityIdsForScopesFn',
         this.#logger,
         {
           isFunction: true,
@@ -118,7 +118,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       );
     } catch (e) {
       this.#logger.error(
-        `ActionDiscoverySystem Constructor: Dependency validation failed. Error: ${e.message}`
+        `ActionDiscoveryService Constructor: Dependency validation failed. Error: ${e.message}`
       );
       throw e;
     }
@@ -130,7 +130,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
 
-    this.#logger.info('ActionDiscoverySystem initialized.');
+    this.#logger.info('ActionDiscoveryService initialized.');
   }
 
   /**

@@ -362,7 +362,7 @@ class WorldLoader {
             const reason = `Manifest not found in registry for mod ID '${modId}'. Skipping content load.`;
             this.#logger.error(`WorldLoader: ${reason}`);
             this.#validatedEventDispatcher
-              .dispatchValidated(
+              .dispatch(
                 'initialization:world_loader:mod_load_failed',
                 {
                   modId,
@@ -469,7 +469,7 @@ class WorldLoader {
                 totalCounts[typeName].errors += 1;
                 // --- END: Error Handling ---
                 this.#validatedEventDispatcher
-                  .dispatchValidated(
+                  .dispatch(
                     'initialization:world_loader:content_load_failed',
                     {
                       modId,
@@ -508,7 +508,7 @@ class WorldLoader {
             error
           );
           this.#validatedEventDispatcher
-            .dispatchValidated(
+            .dispatch(
               'initialization:world_loader:mod_load_failed',
               {
                 modId,

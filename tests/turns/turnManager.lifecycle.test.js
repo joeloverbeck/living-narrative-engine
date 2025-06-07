@@ -74,7 +74,7 @@ let mockUnsubscribeFunction;
 const mockValidatedEventDispatcher = () => {
   mockUnsubscribeFunction = jest.fn();
   return {
-    dispatchValidated: jest.fn().mockResolvedValue(true),
+    dispatch: jest.fn().mockResolvedValue(true),
     subscribe: jest.fn((eventName, callback) => mockUnsubscribeFunction),
     unsubscribe: jest.fn(),
   };
@@ -178,7 +178,7 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
         ),
         expect.any(Error)
       );
-      expect(dispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           details: expect.stringContaining(
@@ -203,7 +203,7 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
         ),
         subscribeError
       );
-      expect(dispatcher.dispatchValidated).toHaveBeenCalledWith(
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({ details: subscribeError.message })
       );

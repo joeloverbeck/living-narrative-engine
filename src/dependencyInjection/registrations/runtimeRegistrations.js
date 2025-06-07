@@ -16,7 +16,7 @@ import InputSetupService from '../../setup/inputSetupService.js';
 /** @typedef {import('../../events/eventBus.js').default} EventBus */ // Assuming EventBus is concrete (Needed? Check if InputSetup needs it) -> No, uses VED
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Assuming EntityManager is concrete
 /** @typedef {import('../../data/gameDataRepository.js').GameDataRepository} GameDataRepository */ // Assuming concrete
-/** @typedef {import('../../../interfaces/coreServices.js').IActionDiscoverySystem} IActionDiscoverySystem */
+/** @typedef {import('../../../interfaces/coreServices.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../../interfaces/coreServices.js').ITurnManager} ITurnManager */
 /** @typedef {import('../../turns/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver} ITurnHandlerResolver */

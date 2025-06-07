@@ -32,7 +32,7 @@ const createMockLogger = () => ({
 
 /** @returns {IValidatedEventDispatcher} */
 const createMockVed = () => ({
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
   // Add subscribe/unsubscribe if needed by base or derived classes during tests
   subscribe: jest.fn(() => ({ unsubscribe: jest.fn() })),
 });
@@ -145,7 +145,7 @@ describe('RendererBase', () => {
       ).toThrow(
         'ConcreteRenderer: ValidatedEventDispatcher dependency is missing or invalid.'
       );
-      // Test case for invalid type (missing dispatchValidated function)
+      // Test case for invalid type (missing dispatch function)
       expect(
         () =>
           new ConcreteRenderer({

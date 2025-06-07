@@ -38,7 +38,7 @@ jest.mock('../../src/actions/actionFormatter.js');
 jest.mock('../../src/entities/entityScopeService.js');
 jest.mock('../../src/utils/locationUtils.js');
 
-describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
+describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   /** @type {jest.Mocked<ActionDiscoveryService>} */ // Type it as mocked if you intend to spy on its methods, though usually test SUT directly.
   let actionDiscoverySystem;
   /** @type {jest.Mocked<GameDataRepository>} */
@@ -177,7 +177,7 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
       if (instanceId === HERO_INSTANCE_ID) return mockHeroEntity;
       if (instanceId === GUILD_INSTANCE_ID) return mockAdventurersGuildLocation;
       // For simplicity, we are not mocking the "isekai:town" entity instance in this test setup
-      // If ActionDiscoverySystem needed to fetch it (e.g. to check its properties), it would return undefined
+      // If ActionDiscoveryService needed to fetch it (e.g. to check its properties), it would return undefined
       return undefined;
     });
 
@@ -305,7 +305,7 @@ describe('ActionDiscoverySystem - Go Action (Fixed State)', () => {
       mockLogger
     );
 
-    // ActionDiscoverySystem logs INSTANCE IDs
+    // ActionDiscoveryService logs INSTANCE IDs
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `Found ${availableExits.length} available exits for location: ${GUILD_INSTANCE_ID} via getAvailableExits.`
     );

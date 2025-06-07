@@ -71,7 +71,7 @@ const mockEntityManager = {
   hasComponent: jest.fn(),
 };
 const mockvalidatedEventDispatcher = {
-  dispatchValidated: jest.fn().mockResolvedValue(true),
+  dispatch: jest.fn().mockResolvedValue(true),
 };
 const mockSystemDataRegistry = { query: jest.fn(), registerSource: jest.fn() };
 // If ICommandOutcomeInterpreter gets resolved and ISafeEventDispatcher is needed:

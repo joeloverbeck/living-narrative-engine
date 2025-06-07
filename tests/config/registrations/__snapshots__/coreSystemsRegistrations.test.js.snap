@@ -3,7 +3,7 @@
 exports[`registerCoreSystems should match snapshot for registration calls 1`] = `
 [
   [
-    "IActionDiscoverySystem",
+    "IActionDiscoveryService",
     [Function],
     {
       "lifecycle": "singletonFactory",

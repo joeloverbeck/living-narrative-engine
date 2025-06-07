@@ -123,10 +123,10 @@ class TurnManager extends ITurnManager {
     }
     if (
       !dispatcher ||
-      typeof dispatcher.dispatchValidated !== 'function' ||
+      typeof dispatcher.dispatch !== 'function' ||
       typeof dispatcher.subscribe !== 'function'
     ) {
-      const errorMsg = `${className} requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).`;
+      const errorMsg = `${className} requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).`;
       (logger || console).error(errorMsg);
       throw new Error(errorMsg);
     }
@@ -368,7 +368,7 @@ class TurnManager extends ITurnManager {
           `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
         );
         try {
-          await this.#dispatcher.dispatchValidated('core:turn_started', {
+          await this.#dispatcher.dispatch('core:turn_started', {
             entityId: actorId,
             entityType: entityType,
           });
@@ -676,7 +676,7 @@ class TurnManager extends ITurnManager {
     const stackString =
       detailsOrError instanceof Error ? detailsOrError.stack : undefined;
     try {
-      await this.#dispatcher.dispatchValidated(SYSTEM_ERROR_OCCURRED_ID, {
+      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: message,
         type: 'error',
         details: detailString,

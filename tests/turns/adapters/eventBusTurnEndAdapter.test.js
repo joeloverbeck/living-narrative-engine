@@ -11,7 +11,7 @@ const mockSafeDispatcher = {
 };
 
 const mockVed = {
-  dispatchValidated: jest.fn().mockResolvedValue(true), // Default mock success
+  dispatch: jest.fn().mockResolvedValue(true), // Default mock success
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
 };
@@ -30,7 +30,7 @@ describe('EventBusTurnEndAdapter', () => {
     jest.resetAllMocks();
     // Reset mocks to default behavior for each test
     mockSafeDispatcher.dispatch.mockResolvedValue(true);
-    mockVed.dispatchValidated.mockResolvedValue(true);
+    mockVed.dispatch.mockResolvedValue(true);
   });
 
   it('should throw an error if no valid dispatcher is provided', () => {
@@ -119,7 +119,7 @@ describe('EventBusTurnEndAdapter', () => {
     );
   });
 
-  it('should call dispatchValidated with correct arguments when using IValidatedEventDispatcher', async () => {
+  it('should call dispatch with correct arguments when using IValidatedEventDispatcher', async () => {
     const adapter = new EventBusTurnEndAdapter({
       validatedEventDispatcher: mockVed,
       logger: mockLogger,
@@ -129,9 +129,9 @@ describe('EventBusTurnEndAdapter', () => {
 
     await adapter.notifyTurnEnded(entityId, success);
 
-    expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
     // Test that the payload dispatched now includes 'entityId' and 'success'
-    expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockVed.dispatch).toHaveBeenCalledWith(
       TURN_ENDED_ID,
       { entityId, success } // Adjusted expectation
     );
@@ -168,8 +168,8 @@ describe('EventBusTurnEndAdapter', () => {
     );
   });
 
-  it('should resolve void if dispatchValidated succeeds', async () => {
-    mockVed.dispatchValidated.mockResolvedValueOnce(true);
+  it('should resolve void if dispatch succeeds', async () => {
+    mockVed.dispatch.mockResolvedValueOnce(true);
     const adapter = new EventBusTurnEndAdapter({
       validatedEventDispatcher: mockVed,
       logger: mockLogger,
@@ -178,7 +178,7 @@ describe('EventBusTurnEndAdapter', () => {
     const expectedSuccess = true; // turnEnded always calls notifyTurnEnded with true
 
     await expect(adapter.turnEnded(entityId)).resolves.toBeUndefined();
-    expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
     // Adjusted log message expectation to include the success status
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
@@ -187,9 +187,9 @@ describe('EventBusTurnEndAdapter', () => {
     );
   });
 
-  it('should reject if dispatchValidated throws an error', async () => {
+  it('should reject if dispatch throws an error', async () => {
     const dispatchError = new Error('VED failed for turn end');
-    mockVed.dispatchValidated.mockRejectedValueOnce(dispatchError);
+    mockVed.dispatch.mockRejectedValueOnce(dispatchError);
     const adapter = new EventBusTurnEndAdapter({
       validatedEventDispatcher: mockVed,
       logger: mockLogger,
@@ -197,7 +197,7 @@ describe('EventBusTurnEndAdapter', () => {
     const entityId = 'system_actor';
 
     await expect(adapter.turnEnded(entityId)).rejects.toThrow(dispatchError);
-    expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
       `EventBusTurnEndAdapter: Error dispatching ${TURN_ENDED_ID} for ${entityId}. Error: ${dispatchError.message}`,
       dispatchError

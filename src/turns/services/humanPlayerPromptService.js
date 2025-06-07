@@ -3,7 +3,7 @@
 
 // --- Interface/Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem */
+/** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /**
  * @typedef {object} DiscoveredActionInfo
  * @property {string} id - The unique ID of the action.
@@ -27,7 +27,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../../constants/eventIds.js';
 /**
  * @typedef {object} PlayerPromptServiceDependencies
  * @property {ILogger} logger - The logging service.
- * @property {IActionDiscoverySystem} actionDiscoverySystem - Service to discover available actions.
+ * @property {IActionDiscoveryService} actionDiscoverySystem - Service to discover available actions.
  * @property {IPromptOutputPort} promptOutputPort - Port for sending prompts to the player.
  * @property {IWorldContext} worldContext - Service to access current world state (like entity locations).
  * @property {IEntityManager} entityManager - Service to manage entity instances.
@@ -77,7 +77,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../../constants/eventIds.js';
 class HumanPlayerPromptService extends IHumanPlayerPromptService {
   /** @type {ILogger} */
   #logger;
-  /** @type {IActionDiscoverySystem} */
+  /** @type {IActionDiscoveryService} */
   #actionDiscoverySystem;
   /** @type {IPromptOutputPort} */
   #promptOutputPort;
@@ -101,7 +101,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
    * Validates a constructor dependency, checking for its presence and required methods.
    * Uses console.error for logging as this runs before the class logger is fully confirmed.
    * @param {any} dependency - The dependency instance to validate.
-   * @param {string} dependencyName - The name of the dependency (e.g., "ILogger", "IActionDiscoverySystem") for error messages.
+   * @param {string} dependencyName - The name of the dependency (e.g., "ILogger", "IActionDiscoveryService") for error messages.
    * @param {string[]} [requiredMethods] - An array of method names that must exist on the dependency.
    * @throws {Error} If the dependency is null/undefined or a required method is missing.
    */
@@ -151,7 +151,7 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
     ]);
     this.#logger = logger;
 
-    this._validateDependency(actionDiscoverySystem, 'IActionDiscoverySystem', [
+    this._validateDependency(actionDiscoverySystem, 'IActionDiscoveryService', [
       'getValidActions',
     ]);
     this.#actionDiscoverySystem = actionDiscoverySystem;

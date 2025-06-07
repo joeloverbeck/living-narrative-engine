@@ -20,7 +20,7 @@ const createMockLogger = () => ({
   error: jest.fn(),
   debug: jest.fn(),
 });
-const createMockActionDiscoverySystem = () => ({ getValidActions: jest.fn() });
+const createMockActionDiscoveryService = () => ({ getValidActions: jest.fn() });
 const createMockPromptOutputPort = () => ({ prompt: jest.fn() });
 const createMockWorldContext = () => ({ getLocationOfEntity: jest.fn() });
 const createMockEntityManager = () => ({ getEntityInstance: jest.fn() });
@@ -28,11 +28,11 @@ const createMockGameDataRepository = () => ({ getActionDefinition: jest.fn() });
 const createMockValidatedEventDispatcher = () => ({
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
 });
 
 let mockLogger,
-  mockActionDiscoverySystem,
+  mockActionDiscoveryService,
   mockPromptOutputPort,
   mockWorldContext,
   mockEntityManager,
@@ -44,7 +44,7 @@ let mockLogger,
 
 beforeEach(() => {
   mockLogger = createMockLogger();
-  mockActionDiscoverySystem = createMockActionDiscoverySystem();
+  mockActionDiscoveryService = createMockActionDiscoveryService();
   mockPromptOutputPort = createMockPromptOutputPort();
   mockWorldContext = createMockWorldContext();
   mockEntityManager = createMockEntityManager();
@@ -53,7 +53,7 @@ beforeEach(() => {
 
   validDependencies = {
     logger: mockLogger,
-    actionDiscoverySystem: mockActionDiscoverySystem,
+    actionDiscoverySystem: mockActionDiscoveryService,
     promptOutputPort: mockPromptOutputPort,
     worldContext: mockWorldContext,
     entityManager: mockEntityManager,
@@ -140,7 +140,7 @@ describe('PlayerPromptService prompt Method', () => {
     const expectedResolution = { action: speakAction, speech: chosenSpeech };
 
     mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
-    mockActionDiscoverySystem.getValidActions.mockResolvedValue(
+    mockActionDiscoveryService.getValidActions.mockResolvedValue(
       mockDiscoveredActions
     );
     mockPromptOutputPort.prompt.mockResolvedValue(undefined);
@@ -181,7 +181,7 @@ describe('PlayerPromptService prompt Method', () => {
 
     beforeEach(() => {
       mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
-      mockActionDiscoverySystem.getValidActions.mockRejectedValue(
+      mockActionDiscoveryService.getValidActions.mockRejectedValue(
         discoveryError
       );
     });
@@ -241,7 +241,7 @@ describe('PlayerPromptService prompt Method', () => {
         { id: 'action2', name: 'Action Two', command: 'do two' },
       ];
       mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocationInst);
-      mockActionDiscoverySystem.getValidActions.mockResolvedValue(
+      mockActionDiscoveryService.getValidActions.mockResolvedValue(
         mockDiscoveredActionsList
       );
       mockPromptOutputPort.prompt.mockResolvedValue(undefined);

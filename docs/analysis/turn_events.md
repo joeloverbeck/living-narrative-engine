@@ -1,6 +1,6 @@
 # Analysis Document: UI Event Dispatches (Ticket 5.1)
 
-**Document Purpose:** To identify all direct dispatches of events prefixed with `textUI:` from core logic components (TurnManager, CommandProcessor, PlayerTurnHandler, AITurnHandler) using the Validated Event Dispatcher (`dispatchValidated`).
+**Document Purpose:** To identify all direct dispatches of events prefixed with `textUI:` from core logic components (TurnManager, CommandProcessor, PlayerTurnHandler, AITurnHandler) using the Validated Event Dispatcher (`dispatch`).
 
 **Analysis Date:** 2025-05-02
 

@@ -51,12 +51,9 @@ class ShutdownService {
    * @param {AppContainer} dependencies.container - The application's dependency container.
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
-   * // REMOVED: gameLoop from dependencies
-   * // @param {GameLoop} dependencies.gameLoop - The main game loop instance.
    * @throws {Error} If any required dependency (container, logger, validatedEventDispatcher) is missing or invalid.
    */
   constructor({ container, logger, validatedEventDispatcher }) {
-    // REMOVED: gameLoop from destructuring
     // --- Dependency Validation ---
     if (!container) {
       const errorMsg =
@@ -83,22 +80,22 @@ class ShutdownService {
       }
       throw new Error(errorMsg);
     }
+
+    // FIX: Check for the correct 'dispatch' method name
     if (
       !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatchValidated !== 'function'
+      typeof validatedEventDispatcher.dispatch !== 'function'
     ) {
       const errorMsg =
         "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'.";
       logger.error(errorMsg);
       throw new Error(errorMsg);
     }
-    // REMOVED: Validation for gameLoop
 
     // --- Store Dependencies ---
     this.#container = container;
     this.#logger = logger;
     this.#validatedEventDispatcher = validatedEventDispatcher;
-    // REMOVED: Assignment of #gameLoop
 
     this.#logger.info(
       'ShutdownService: Instance created successfully with dependencies.'
@@ -118,7 +115,7 @@ class ShutdownService {
 
     const startPayload = {};
     try {
-      await this.#validatedEventDispatcher.dispatchValidated(
+      await this.#validatedEventDispatcher.dispatch(
         'shutdown:shutdown_service:started',
         startPayload,
         { allowSchemaNotFound: true }
@@ -134,7 +131,7 @@ class ShutdownService {
     }
 
     try {
-      await this.#validatedEventDispatcher.dispatchValidated(
+      await this.#validatedEventDispatcher.dispatch(
         'ui:show_message',
         {
           text: 'System shutting down...',
@@ -262,7 +259,7 @@ class ShutdownService {
       this.#logger.info('ShutdownService: Shutdown sequence finished.');
       const completedPayload = {};
       try {
-        await this.#validatedEventDispatcher.dispatchValidated(
+        await this.#validatedEventDispatcher.dispatch(
           'shutdown:shutdown_service:completed',
           completedPayload,
           { allowSchemaNotFound: true }
@@ -287,7 +284,7 @@ class ShutdownService {
         stack: error?.stack,
       };
       try {
-        await this.#validatedEventDispatcher.dispatchValidated(
+        await this.#validatedEventDispatcher.dispatch(
           'shutdown:shutdown_service:failed',
           failedPayload,
           { allowSchemaNotFound: true }

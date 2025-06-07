@@ -217,7 +217,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
 
     // *** ADDED: Mock for ValidatedEventDispatcher ***
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined), // Mock the method used
+      dispatch: jest.fn().mockResolvedValue(undefined), // Mock the method used
     };
 
     // --- 2. Define Mock Data (as per TEST-LOADER-7.3) ---
@@ -553,9 +553,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
     // Verify registry.clear was called only once at the beginning
     expect(mockRegistry.clear).toHaveBeenCalledTimes(1);
 
-    expect(
-      mockValidatedEventDispatcher.dispatchValidated
-    ).not.toHaveBeenCalledWith(
+    expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
       expect.stringContaining('failed'), // Ensure no failure events were dispatched
       expect.anything(),
       expect.anything()

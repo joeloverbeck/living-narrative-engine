@@ -92,7 +92,7 @@
  * @property {DiToken} IWorldContext - Token for managing the overall world context interface.
  * @property {DiToken} ICommandParser - Token for parsing player commands interface.
  * @property {DiToken} ICommandProcessor - Token for the command processing service interface.
- * @property {DiToken} IActionDiscoverySystem - Token for the action discovery system interface.
+ * @property {DiToken} IActionDiscoveryService - Token for the action discovery system interface.
  * @property {DiToken} IInputHandler - Token for handling player input interface.
  * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
  * @property {DiToken} ITurnManager - Token for the turn management service interface.
@@ -221,7 +221,7 @@ export const tokens = Object.freeze({
   IWorldContext: 'IWorldContext',
   ICommandParser: 'ICommandParser',
   ICommandProcessor: 'ICommandProcessor',
-  IActionDiscoverySystem: 'IActionDiscoverySystem',
+  IActionDiscoveryService: 'IActionDiscoveryService',
   IInputHandler: 'IInputHandler',
   ITurnOrderService: 'ITurnOrderService',
   ITurnManager: 'ITurnManager',

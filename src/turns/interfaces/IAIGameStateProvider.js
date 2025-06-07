@@ -12,7 +12,7 @@
  * @description Defines the contract for a component that gathers and structures game state
  * information relevant to an AI actor's decision-making.
  * The concrete implementation of this interface will be responsible for interacting
- * with game systems (like EntityManager, ActionDiscoverySystem, actor components)
+ * with game systems (like EntityManager, ActionDiscoveryService, actor components)
  * and compiling the data into the AIGameStateDTO.
  */
 export class IAIGameStateProvider {
@@ -23,7 +23,7 @@ export class IAIGameStateProvider {
    *
    * @async
    * @param {Entity} actor - The AI-controlled entity for whom the game state is being built.
-   * @param {ITurnContext} turnContext - The context of the current turn, providing access to game services like EntityManager, ActionDiscoverySystem, etc.
+   * @param {ITurnContext} turnContext - The context of the current turn, providing access to game services like EntityManager, ActionDiscoveryService, etc.
    * @param {ILogger} logger - An instance of the logger for recording information, warnings, or errors during the state gathering process.
    * @returns {Promise<AIGameStateDTO>} A promise that resolves to the AIGameStateDTO object,
    * containing all relevant information for the AI.

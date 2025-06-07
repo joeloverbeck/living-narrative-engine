@@ -21,7 +21,7 @@ const mockDocumentContext = {
 
 const mockValidatedEventDispatcher = {
   subscribe: jest.fn(() => jest.fn()), // Ensure subscribe returns a mock unsubscribe function
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
 };
 
 // Helper to create mock elements with tagName property

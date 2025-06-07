@@ -155,7 +155,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     mockGameConfigLoader = { loadConfig: jest.fn() };
     mockModManifestLoader = { loadRequestedManifests: jest.fn() };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined), // Mock the method used
+      dispatch: jest.fn().mockResolvedValue(undefined), // Mock the method used
     };
 
     // Mock individual content loaders - Ensure they return the expected { count, overrides, errors } structure

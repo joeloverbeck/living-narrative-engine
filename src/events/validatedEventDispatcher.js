@@ -78,7 +78,7 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    * @param {boolean} [options.allowSchemaNotFound] - If true, suppresses warnings when dispatching occurs specifically because an event definition or its associated payload schema was not found or not yet loaded.
    * @returns {Promise<boolean>} A promise resolving to `true` if the event was successfully dispatched, and `false` otherwise.
    */
-  async dispatchValidated(eventName, payload, options = {}) {
+  async dispatch(eventName, payload, options = {}) {
     const { allowSchemaNotFound = false } = options;
     let shouldDispatch = true;
     let validationAttempted = false;

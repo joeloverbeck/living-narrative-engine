@@ -52,7 +52,7 @@ class InputHandler extends IInputHandler {
     // Updated validation for the new dependency
     if (
       !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatchValidated !== 'function' ||
+      typeof validatedEventDispatcher.dispatch !== 'function' ||
       typeof validatedEventDispatcher.subscribe !== 'function'
     ) {
       throw new Error(
@@ -150,7 +150,7 @@ class InputHandler extends IInputHandler {
             event.preventDefault();
             console.log("InputHandler: Detected 'I' key press. Dispatching ui:toggle_inventory.");
             // Use the new dispatcher
-            this.#validatedEventDispatcher.dispatchValidated('ui:toggle_inventory', {})
+            this.#validatedEventDispatcher.dispatch('ui:toggle_inventory', {})
                 .catch(err => console.error("InputHandler: Failed to dispatch 'ui:toggle_inventory'", err));
         }
         */

@@ -41,7 +41,7 @@ const createValidMocks = () => ({
     createChildLogger: jest.fn(() => createValidMocks().logger), // Allow child logger creation if needed
   },
   dispatcher: {
-    dispatchValidated: jest.fn(),
+    dispatch: jest.fn(),
     subscribe: jest.fn(() => jest.fn()), // subscribe returns an unsubscribe function
   },
   turnHandlerResolver: {
@@ -179,7 +179,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
   // Dispatcher
   it('should throw if dispatcher is null or undefined', () => {
     const expectedErrorMsg =
-      'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).';
+      'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).';
     const options = { ...validOptions, dispatcher: null };
     expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
     // Logger is valid here, so check logger.error
@@ -188,21 +188,21 @@ describe('TurnManager - Constructor Dependency Validation', () => {
     expect(console.error).not.toHaveBeenCalledWith(expectedErrorMsg);
   });
 
-  it('should throw if dispatcher is invalid (missing dispatchValidated)', () => {
-    const invalidDispatcher = { subscribe: jest.fn(() => jest.fn()) }; // Missing dispatchValidated
+  it('should throw if dispatcher is invalid (missing dispatch)', () => {
+    const invalidDispatcher = { subscribe: jest.fn(() => jest.fn()) }; // Missing dispatch
     const options = { ...validOptions, dispatcher: invalidDispatcher };
     const expectedErrorMsg =
-      'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).';
+      'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).';
     expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
     expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
     expect(console.error).not.toHaveBeenCalledWith(expectedErrorMsg);
   });
 
   it('should throw if dispatcher is invalid (missing subscribe)', () => {
-    const invalidDispatcher = { dispatchValidated: jest.fn() }; // Missing subscribe
+    const invalidDispatcher = { dispatch: jest.fn() }; // Missing subscribe
     const options = { ...validOptions, dispatcher: invalidDispatcher };
     const expectedErrorMsg =
-      'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).';
+      'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).';
     expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
     expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
     expect(console.error).not.toHaveBeenCalledWith(expectedErrorMsg);

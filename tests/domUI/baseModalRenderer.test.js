@@ -230,7 +230,7 @@ describe('BaseModalRenderer', () => {
       logger: mockLogger,
       documentContext: mockDocumentContextService,
       validatedEventDispatcher: {
-        dispatchValidated: jest.fn(),
+        dispatch: jest.fn(),
         subscribe: jest.fn(),
       },
       elementsConfig: elementsConfig,
@@ -301,7 +301,7 @@ describe('BaseModalRenderer', () => {
         documentContext: tempDocContext,
         elementsConfig: { modalElement: '#modal', closeButton: '#close' },
         validatedEventDispatcher: {
-          dispatchValidated: jest.fn(),
+          dispatch: jest.fn(),
           subscribe: jest.fn(),
         },
       });
@@ -324,7 +324,7 @@ describe('BaseModalRenderer', () => {
         documentContext: tempDocContext,
         elementsConfig: { modalElement: '#modal', closeButton: '#close' },
         validatedEventDispatcher: {
-          dispatchValidated: jest.fn(),
+          dispatch: jest.fn(),
           subscribe: jest.fn(),
         },
       });
@@ -353,7 +353,7 @@ describe('BaseModalRenderer', () => {
         documentContext: tempDocContext,
         elementsConfig: configWithoutClose,
         validatedEventDispatcher: {
-          dispatchValidated: jest.fn(),
+          dispatch: jest.fn(),
           subscribe: jest.fn(),
         },
       });
@@ -559,7 +559,7 @@ describe('BaseModalRenderer', () => {
         logger: mockLogger,
         documentContext: mockDocumentContextService,
         validatedEventDispatcher: {
-          dispatchValidated: jest.fn(),
+          dispatch: jest.fn(),
           subscribe: jest.fn(),
         },
         elementsConfig: elementsConfig,
@@ -795,7 +795,7 @@ describe('BaseModalRenderer', () => {
         logger: mockLogger,
         documentContext: mockDocumentContextService,
         validatedEventDispatcher: {
-          dispatchValidated: jest.fn(),
+          dispatch: jest.fn(),
           subscribe: jest.fn(),
         },
         elementsConfig: elementsConfig,

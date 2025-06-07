@@ -110,7 +110,7 @@ describe('SaveGameUI', () => {
 
     mockValidatedEventDispatcher = {
       subscribe: jest.fn(() => ({ unsubscribe: jest.fn() })),
-      dispatchValidated: jest.fn(),
+      dispatch: jest.fn(),
     };
 
     mockGameEngine = { triggerManualSave: jest.fn() };

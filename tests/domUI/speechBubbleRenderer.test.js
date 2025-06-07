@@ -164,7 +164,7 @@ const createMockDocumentContext = () => {
 const createMockValidatedEventDispatcher = () => ({
   subscribe: jest.fn(() => ({ unsubscribe: jest.fn() })),
   dispatch: jest.fn(),
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
 });
 
 const createMockEntityManager = () => ({ getEntityInstance: jest.fn() });

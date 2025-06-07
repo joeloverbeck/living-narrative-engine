@@ -47,7 +47,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
       this.#isSafeDispatcher = true;
     } else if (
       validatedEventDispatcher &&
-      typeof validatedEventDispatcher.dispatchValidated === 'function'
+      typeof validatedEventDispatcher.dispatch === 'function'
     ) {
       this.#dispatcher = validatedEventDispatcher;
       this.#isSafeDispatcher = false;
@@ -70,7 +70,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
    * @param {DiscoveredActionInfo[]} availableActions - An array of objects describing the actions.
    * @param {string} [error] - An optional error message.
    * @returns {Promise<void>} Resolves after the dispatch attempt. Does not typically propagate dispatch success/failure unless VED throws uncaught.
-   * @throws {Error} Only if using VED directly and `dispatchValidated` throws an unhandled error.
+   * @throws {Error} Only if using VED directly and `dispatch` throws an unhandled error.
    */
   async prompt(entityId, availableActions, error) {
     // Basic validation
@@ -115,7 +115,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
       try {
         await /** @type {IValidatedEventDispatcher} */ (
           this.#dispatcher
-        ).dispatchValidated('core:player_turn_prompt', payload);
+        ).dispatch('core:player_turn_prompt', payload);
         return Promise.resolve(); // Resolve void after successful dispatch
       } catch (dispatchError) {
         // If VED throws, log it and re-throw? Or just log?

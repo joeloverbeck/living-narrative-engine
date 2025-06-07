@@ -50,7 +50,7 @@
  */
 
 /**
- * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem
+ * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  */
 
 /**
@@ -151,12 +151,14 @@ export class ITurnContext {
    * Retrieves the global Action-Discovery System so callers can ask
    * "what can this actor do **right now**".
    *
-   * @returns {IActionDiscoverySystem}
+   * @returns {IActionDiscoveryService}
    * @throws {Error} if it is missing from the context.
    */
-  getActionDiscoverySystem() {
+  getActionDiscoveryService() {
     //  <<< NEW
-    throw new Error("Method 'getActionDiscoverySystem()' must be implemented.");
+    throw new Error(
+      "Method 'getActionDiscoveryService()' must be implemented."
+    );
   }
 
   /**

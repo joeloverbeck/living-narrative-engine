@@ -51,7 +51,7 @@ class SystemInitializer {
       throw new Error('SystemInitializer requires an ILogger instance.');
     if (
       !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatchValidated !== 'function'
+      typeof validatedEventDispatcher.dispatch !== 'function'
     )
       throw new Error(
         'SystemInitializer requires a valid ValidatedEventDispatcher.'
@@ -150,7 +150,7 @@ class SystemInitializer {
           stack: initError?.stack,
         };
         this.#validatedEventDispatcher
-          .dispatchValidated('system:initialization_failed', failurePayload, {
+          .dispatch('system:initialization_failed', failurePayload, {
             allowSchemaNotFound: true,
           })
           .then(() =>

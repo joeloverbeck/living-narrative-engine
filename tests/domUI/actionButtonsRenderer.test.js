@@ -191,7 +191,7 @@ describe('ActionButtonsRenderer', () => {
 
     const actualUnsubscribeFn = jest.fn();
     mockVed.subscribe.mockReturnValue(actualUnsubscribeFn);
-    mockVed.dispatchValidated.mockResolvedValue(true);
+    mockVed.dispatch.mockResolvedValue(true);
 
     if (actionButtonsContainerElement) {
       // Guard for safety, though it should exist
@@ -434,7 +434,7 @@ describe('ActionButtonsRenderer', () => {
       await mockExamineButton.click();
       expect(renderer.selectedAction).toEqual(actionToSelect);
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
-      expect(mockVed.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockVed.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining(
           `${CLASS_PREFIX} Action selected: '${actionToSelect.name}' (ID: ${actionToSelect.id})`
@@ -534,8 +534,8 @@ describe('ActionButtonsRenderer', () => {
       expect(renderer.elements.sendButtonElement.disabled).toBe(true);
     });
 
-    it('should call dispatchValidated, then log error, when dispatchValidated returns false (send button click)', async () => {
-      mockVed.dispatchValidated.mockResolvedValue(false);
+    it('should call dispatch, then log error, when dispatch returns false (send button click)', async () => {
+      mockVed.dispatch.mockResolvedValue(false);
       const action = createTestAction(
         'test:inv',
         'Inventory',
@@ -568,7 +568,7 @@ describe('ActionButtonsRenderer', () => {
 
       await mockSendButton.click(); // Click the main send button (from global setup)
 
-      expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockVed.dispatch).toHaveBeenCalledWith(
         PLAYER_TURN_SUBMITTED_EVENT,
         expect.objectContaining({
           submittedByActorId: testActorId,
@@ -585,9 +585,9 @@ describe('ActionButtonsRenderer', () => {
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
     });
 
-    it('should call dispatchValidated, then log error, when dispatchValidated throws (send button click)', async () => {
+    it('should call dispatch, then log error, when dispatch throws (send button click)', async () => {
       const testError = new Error('Dispatch failed');
-      mockVed.dispatchValidated.mockRejectedValue(testError);
+      mockVed.dispatch.mockRejectedValue(testError);
       const action = createTestAction(
         'test:help',
         'Help',
@@ -620,7 +620,7 @@ describe('ActionButtonsRenderer', () => {
 
       await mockSendButton.click(); // Click the main send button
 
-      expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
+      expect(mockVed.dispatch).toHaveBeenCalledWith(
         PLAYER_TURN_SUBMITTED_EVENT,
         expect.objectContaining({
           submittedByActorId: testActorId,
@@ -629,7 +629,7 @@ describe('ActionButtonsRenderer', () => {
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `${CLASS_PREFIX} Exception during dispatchValidated for '${PLAYER_TURN_SUBMITTED_EVENT}'.`
+          `${CLASS_PREFIX} Exception during dispatch for '${PLAYER_TURN_SUBMITTED_EVENT}'.`
         ),
         expect.objectContaining({
           error: testError,
@@ -684,7 +684,7 @@ describe('ActionButtonsRenderer', () => {
       mockActionButton.textContent = ''; // Simulate text content change
       await mockActionButton.click(); // Click the action button itself
 
-      expect(mockVed.dispatchValidated).not.toHaveBeenCalled();
+      expect(mockVed.dispatch).not.toHaveBeenCalled();
       expect(renderer.selectedAction).toEqual(action);
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
     });

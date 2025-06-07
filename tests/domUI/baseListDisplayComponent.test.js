@@ -71,7 +71,7 @@ describe('BaseListDisplayComponent', () => {
 
     mockValidatedEventDispatcher = {
       subscribe: jest.fn(),
-      dispatchValidated: jest.fn(),
+      dispatch: jest.fn(),
     };
     mockDomElementFactory = new DomElementFactory(mockDocumentContext);
     jest.spyOn(mockDomElementFactory, 'p');

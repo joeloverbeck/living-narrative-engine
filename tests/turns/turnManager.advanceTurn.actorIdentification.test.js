@@ -26,7 +26,7 @@ const mockLogger = {
 
 const mockDispatcher = {
   dispatch: jest.fn(),
-  dispatchValidated: jest.fn().mockResolvedValue(true),
+  dispatch: jest.fn().mockResolvedValue(true),
   subscribe: jest.fn().mockReturnValue(jest.fn()), // Returns mock unsubscribe
 };
 
@@ -87,7 +87,7 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
       createMockEntity('initial-actor-for-start')
     );
 
-    mockDispatcher.dispatchValidated.mockClear().mockResolvedValue(true);
+    mockDispatcher.dispatch.mockClear().mockResolvedValue(true);
     mockUnsubscribe = jest.fn();
     mockDispatcher.subscribe
       .mockClear()
@@ -126,14 +126,14 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
     mockLogger.debug.mockClear();
     mockLogger.warn.mockClear();
     mockLogger.error.mockClear();
-    mockDispatcher.dispatchValidated.mockClear();
+    mockDispatcher.dispatch.mockClear();
     mockTurnOrderService.isEmpty.mockClear();
     mockTurnOrderService.getNextEntity.mockClear();
     mockTurnHandlerResolver.resolveHandler.mockClear();
     mockTurnHandler.startTurn.mockClear();
 
     mockTurnOrderService.isEmpty.mockResolvedValue(false);
-    mockDispatcher.dispatchValidated.mockResolvedValue(true);
+    mockDispatcher.dispatch.mockResolvedValue(true);
     // Default resolver for tests will use the generic mockTurnHandler unless overridden in a test
     mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockTurnHandler);
   });
@@ -167,13 +167,10 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
     expect(mockLogger.info).toHaveBeenCalledWith(
       `>>> Starting turn initiation for Entity: ${playerActor.id} (${entityType}) <<<`
     );
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:turn_started',
-      {
-        entityId: playerActor.id,
-        entityType: entityType,
-      }
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
+      entityId: playerActor.id,
+      entityType: entityType,
+    });
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(
       playerActor
     );
@@ -212,13 +209,10 @@ describe('TurnManager: advanceTurn() - Actor Identification & Handling (Queue No
     expect(mockLogger.info).toHaveBeenCalledWith(
       `>>> Starting turn initiation for Entity: ${aiActor.id} (${entityType}) <<<`
     );
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'core:turn_started',
-      {
-        entityId: aiActor.id,
-        entityType: entityType,
-      }
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
+      entityId: aiActor.id,
+      entityType: entityType,
+    });
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(
       aiActor
     );

@@ -270,7 +270,7 @@ describe('ActionButtonsRenderer', () => {
     }
 
     mockVed.subscribe = jest.fn().mockReturnValue(jest.fn());
-    mockVed.dispatchValidated = jest.fn().mockResolvedValue(true);
+    mockVed.dispatch = jest.fn().mockResolvedValue(true);
   });
 
   afterEach(() => {

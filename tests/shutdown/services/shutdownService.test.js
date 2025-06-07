@@ -40,7 +40,7 @@ describe('ShutdownService', () => {
     };
     mockValidatedEventDispatcher = {
       // Default success, allow overriding in tests
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
     // REMOVED: mockGameLoop setup
     mockTurnManager = {
@@ -198,15 +198,15 @@ describe('ShutdownService', () => {
       );
     });
 
-    it('should throw an error if validatedEventDispatcher is invalid (missing dispatchValidated)', () => {
-      const invalidDispatcher = { dispatch: jest.fn() };
+    it('should throw an error if validatedEventDispatcher is invalid (missing dispatch)', () => {
+      // FIX: Use an empty object for clarity. This mock is invalid because it lacks '.dispatch()'.
+      const invalidDispatcher = {};
       expect(
         () =>
           new ShutdownService({
             container: mockContainer,
             logger: mockLogger,
             validatedEventDispatcher: invalidDispatcher,
-            // gameLoop removed
           })
       ).toThrow(
         "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
@@ -253,7 +253,7 @@ describe('ShutdownService', () => {
         mockShutdownableSystem2,
       ]);
       mockContainer.disposeSingletons.mockReset(); // Ensure clean state for dispose tests
-      mockValidatedEventDispatcher.dispatchValidated
+      mockValidatedEventDispatcher.dispatch
         .mockReset()
         .mockResolvedValue(undefined); // Reset dispatch mocks
     });
@@ -269,8 +269,7 @@ describe('ShutdownService', () => {
       const loggerDebugCalls = mockLogger.debug.mock.calls.map(
         (call) => call[0]
       );
-      const dispatchCalls =
-        mockValidatedEventDispatcher.dispatchValidated.mock.calls;
+      const dispatchCalls = mockValidatedEventDispatcher.dispatch.mock.calls;
 
       // Expect constructor log first (index 0)
       expect(loggerInfoCalls[0]).toBe(
@@ -358,9 +357,7 @@ describe('ShutdownService', () => {
 
       // 7. No errors or failure events
       expect(mockLogger.error).not.toHaveBeenCalled();
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).not.toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         'shutdown:shutdown_service:failed',
         expect.anything(),
         expect.anything()
@@ -410,16 +407,12 @@ describe('ShutdownService', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'shutdown:shutdown_service:completed',
         {},
         { allowSchemaNotFound: true }
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).not.toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         'shutdown:shutdown_service:failed',
         expect.anything(),
         expect.anything()
@@ -476,9 +469,7 @@ describe('ShutdownService', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'shutdown:shutdown_service:completed',
         {},
         { allowSchemaNotFound: true }
@@ -519,9 +510,7 @@ describe('ShutdownService', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'shutdown:shutdown_service:completed',
         {},
         { allowSchemaNotFound: true }
@@ -559,16 +548,12 @@ describe('ShutdownService', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ShutdownService: Shutdown sequence finished.'
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'shutdown:shutdown_service:completed',
         {},
         { allowSchemaNotFound: true }
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).not.toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         'shutdown:shutdown_service:failed',
         expect.anything(),
         expect.anything()
@@ -595,18 +580,14 @@ describe('ShutdownService', () => {
       );
 
       // Verify 'failed' event was NOT dispatched because the error was handled gracefully within the sequence
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).not.toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         'shutdown:shutdown_service:failed',
         expect.anything(),
         expect.anything()
       );
 
       // Verify 'completed' event WAS dispatched because the sequence continued
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'shutdown:shutdown_service:completed',
         expect.anything(),
         expect.anything()
@@ -626,7 +607,7 @@ describe('ShutdownService', () => {
     it('should log errors but continue if dispatching "started" event fails', async () => {
       const dispatchError = new Error('Dispatch failed');
       // Ensure other dispatches succeed
-      mockValidatedEventDispatcher.dispatchValidated.mockImplementation(
+      mockValidatedEventDispatcher.dispatch.mockImplementation(
         async (event) => {
           if (event === 'shutdown:shutdown_service:started') {
             throw dispatchError;
@@ -648,9 +629,7 @@ describe('ShutdownService', () => {
       expect(mockContainer.resolveByTag).toHaveBeenCalled();
       expect(mockShutdownableSystem1.shutdown).toHaveBeenCalled();
       expect(mockContainer.disposeSingletons).toHaveBeenCalled();
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'shutdown:shutdown_service:completed',
         expect.anything(),
         expect.anything()
@@ -661,7 +640,7 @@ describe('ShutdownService', () => {
 
     it('should log errors if dispatching "completed" event fails', async () => {
       const dispatchError = new Error('Dispatch completed failed');
-      mockValidatedEventDispatcher.dispatchValidated.mockImplementation(
+      mockValidatedEventDispatcher.dispatch.mockImplementation(
         async (event) => {
           if (event === 'shutdown:shutdown_service:completed') {
             throw dispatchError;
@@ -717,7 +696,7 @@ describe('ShutdownService', () => {
       });
 
       // 2. Mock the dispatcher to throw only when 'failed' is dispatched
-      mockValidatedEventDispatcher.dispatchValidated.mockImplementation(
+      mockValidatedEventDispatcher.dispatch.mockImplementation(
         async (event, payload) => {
           if (event === 'shutdown:shutdown_service:failed') {
             expect(payload.error).toBe(criticalError.message); // Verify correct error passed
@@ -752,7 +731,7 @@ describe('ShutdownService', () => {
       mockTurnManager.stop.mockImplementationOnce(async () => {
         throw stopError;
       });
-      mockValidatedEventDispatcher.dispatchValidated.mockImplementation(
+      mockValidatedEventDispatcher.dispatch.mockImplementation(
         async (event) => {
           if (event === 'shutdown:shutdown_service:completed') {
             throw dispatchCompletedError; // Make the *completed* dispatch fail
@@ -770,9 +749,7 @@ describe('ShutdownService', () => {
       );
 
       // Verify attempt to dispatch 'completed'
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'shutdown:shutdown_service:completed',
         {},
         { allowSchemaNotFound: true }
@@ -785,9 +762,7 @@ describe('ShutdownService', () => {
       );
 
       // Verify 'failed' event was NOT dispatched
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).not.toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         'shutdown:shutdown_service:failed',
         expect.anything(),
         expect.anything()

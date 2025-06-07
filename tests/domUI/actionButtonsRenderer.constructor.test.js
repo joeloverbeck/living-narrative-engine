@@ -138,7 +138,7 @@ describe('ActionButtonsRenderer', () => {
 
     // VED spies
     jest.spyOn(mockVed, 'subscribe').mockReturnValue(jest.fn()); // Returns the unsubscribe function
-    jest.spyOn(mockVed, 'dispatchValidated').mockResolvedValue(true);
+    jest.spyOn(mockVed, 'dispatch').mockResolvedValue(true);
     jest.spyOn(mockVed, 'unsubscribe');
 
     // Spy on container's methods

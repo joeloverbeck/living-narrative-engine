@@ -46,7 +46,7 @@ describe('TurnManager', () => {
     unsubscribeTurnEndedSpy = jest.fn(); // Initialize the spy for the unsubscribe function
 
     mockDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
       subscribe: jest.fn((eventType, handler) => {
         if (!dispatcherHandlers[eventType]) {
           dispatcherHandlers[eventType] = [];
@@ -168,7 +168,7 @@ describe('TurnManager', () => {
 
   describe('Constructor and Start/Stop', () => {
     it('should throw error if dispatcher is missing subscribe method', () => {
-      const invalidDispatcher = { dispatchValidated: jest.fn() }; // Missing subscribe
+      const invalidDispatcher = { dispatch: jest.fn() }; // Missing subscribe
       expect(
         () =>
           new TurnManager({
@@ -179,7 +179,7 @@ describe('TurnManager', () => {
             turnHandlerResolver: mockTurnHandlerResolver,
           })
       ).toThrow(
-        'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatchValidated and subscribe methods).'
+        'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).'
       );
     });
 

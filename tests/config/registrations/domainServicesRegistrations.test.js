@@ -16,7 +16,7 @@
 /** @typedef {import('../../../src/commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService} ITurnOrderService */
 /** @typedef {import('../../../src/turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */ // Changed to interface
-/** @typedef {import('../../../src/interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem */
+/** @typedef {import('../../../src/interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../../src/turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {any} AppContainer */
 
@@ -37,7 +37,7 @@ const mockWorldContextInstance = {
   getCurrentActor: jest.fn(),
 };
 const mockCommandParserInstance = { parse: jest.fn() };
-const mockActionDiscoverySystemInstance = { getValidActions: jest.fn() };
+const mockActionDiscoveryServiceInstance = { getValidActions: jest.fn() };
 const mockPromptOutputPortInstance = { prompt: jest.fn() };
 const mockActionValidationServiceInstance = { validateAction: jest.fn() };
 const mockPayloadValueResolverServiceInstance = { resolveValue: jest.fn() };
@@ -143,7 +143,7 @@ const mockEntityManager = {
   getEntitiesInLocation: jest.fn(),
 };
 const mockValidatedEventDispatcher = {
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
   subscribe: jest.fn(),
 };
 const mockSafeEventDispatcher = {
@@ -213,8 +213,8 @@ const createMockContainer = () => {
         return mockPlayerPromptServiceInstance;
 
       if (token === tokens.ICommandParser) return mockCommandParserInstance;
-      if (token === tokens.IActionDiscoverySystem)
-        return mockActionDiscoverySystemInstance;
+      if (token === tokens.IActionDiscoveryService)
+        return mockActionDiscoveryServiceInstance;
       if (token === tokens.IPromptOutputPort)
         return mockPromptOutputPortInstance;
       if (token === tokens.TargetResolutionService)
@@ -386,8 +386,8 @@ describe('registerDomainServices', () => {
       lifecycle: 'singleton',
     }); // For CommandProcessor factory
     mockContainer.register(
-      tokens.IActionDiscoverySystem,
-      mockActionDiscoverySystemInstance,
+      tokens.IActionDiscoveryService,
+      mockActionDiscoveryServiceInstance,
       { lifecycle: 'singleton' }
     ); // For PlayerPromptService factory
     mockContainer.register(
@@ -442,7 +442,7 @@ describe('registerDomainServices', () => {
     Object.values(mockPayloadValueResolverServiceInstance).forEach((fn) =>
       fn.mockClear?.()
     );
-    Object.values(mockActionDiscoverySystemInstance).forEach((fn) =>
+    Object.values(mockActionDiscoveryServiceInstance).forEach((fn) =>
       fn.mockClear?.()
     );
     Object.values(mockPromptOutputPortInstance).forEach((fn) =>
@@ -593,7 +593,7 @@ describe('registerDomainServices', () => {
     expect(HumanPlayerPromptService).toHaveBeenCalledWith(
       expect.objectContaining({
         logger: mockLogger,
-        actionDiscoverySystem: mockActionDiscoverySystemInstance,
+        actionDiscoverySystem: mockActionDiscoveryServiceInstance,
         promptOutputPort: mockPromptOutputPortInstance,
         worldContext: mockWorldContextInstance,
         entityManager: mockEntityManager, // Factory resolves IEntityManager to mockEntityManager

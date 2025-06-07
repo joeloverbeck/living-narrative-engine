@@ -75,7 +75,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
 
     // Mock ValidatedEventDispatcher (AC1 - Added)
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined), // Basic mock
+      dispatch: jest.fn().mockResolvedValue(undefined), // Basic mock
     };
 
     // --- Create Mock System Instances ---
@@ -170,7 +170,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
         .mockImplementation(() => {});
       // Need valid mocks for resolver and dispatcher for this specific test
       const tempResolver = { resolveByTag: jest.fn() };
-      const tempDispatcher = { dispatchValidated: jest.fn() };
+      const tempDispatcher = { dispatch: jest.fn() };
       const action = () =>
         new SystemInitializer({
           resolver: tempResolver,
@@ -193,7 +193,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => {});
       const tempResolver = { resolveByTag: jest.fn() };
-      const tempDispatcher = { dispatchValidated: jest.fn() };
+      const tempDispatcher = { dispatch: jest.fn() };
       const action = () =>
         new SystemInitializer({
           resolver: tempResolver,
@@ -244,9 +244,9 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
     });
 
     // Added test for ValidatedEventDispatcher invalid type
-    it('should throw an error if ValidatedEventDispatcher does not support dispatchValidated', () => {
+    it('should throw an error if ValidatedEventDispatcher does not support dispatch', () => {
       const tempResolver = { resolveByTag: jest.fn() };
-      const invalidDispatcher = { someOtherMethod: jest.fn() }; // Missing dispatchValidated
+      const invalidDispatcher = { someOtherMethod: jest.fn() }; // Missing dispatch
       const action = () =>
         new SystemInitializer({
           resolver: tempResolver,
@@ -453,14 +453,10 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
 
       // Verify Event Dispatching (Added)
       // FIX: Updated expected count based on actual events dispatched
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(1);
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
 
       // Check specific event calls
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
           systemName: 'SystemFailInit',
@@ -507,9 +503,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled();
 
       // Verify Event Dispatching (Added)
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(0);
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(0);
     });
 
     it('[Non-Array Result Scenario] should handle resolver returning non-array gracefully and dispatch events', async () => {
@@ -548,9 +542,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockLogger.warn).toHaveBeenCalledTimes(1); // Only the non-array warning
 
       // Verify Event Dispatching (Added)
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(0);
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(0);
     });
 
     it('[Resolver Error Scenario] should log the resolution error, dispatch failed event, and re-throw', async () => {
@@ -588,9 +580,7 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       expect(mockSystemGood1.initialize).not.toHaveBeenCalled();
 
       // Verify Event Dispatching (Added)
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(0);
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(0);
     });
 
     it('[Individual Init Error Scenario] should log specific init error, dispatch events, and continue with others', async () => {
@@ -649,12 +639,8 @@ describe('SystemInitializer (Tag-Based Refactor)', () => {
       );
 
       // Verify Event Dispatching (Added)
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
           systemName: 'SystemFailInit',

@@ -14,7 +14,7 @@
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoverySystem_Interface */
+/** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
@@ -67,7 +67,7 @@ export function registerCoreSystems(container) {
   logger.info('Core Systems Registration: Starting...');
 
   registrar.tagged(INITIALIZABLE).singletonFactory(
-    tokens.IActionDiscoverySystem,
+    tokens.IActionDiscoveryService,
     (c) =>
       new ActionDiscoveryService({
         gameDataRepository: /** @type {IGameDataRepository} */ (
@@ -83,7 +83,7 @@ export function registerCoreSystems(container) {
       })
   );
   logger.debug(
-    `Core Systems Registration: Registered ${String(tokens.IActionDiscoverySystem)} tagged with ${INITIALIZABLE.join(', ')}.`
+    `Core Systems Registration: Registered ${String(tokens.IActionDiscoveryService)} tagged with ${INITIALIZABLE.join(', ')}.`
   );
   registrationCount++;
 
@@ -149,8 +149,8 @@ export function registerCoreSystems(container) {
       entityManager: /** @type {IEntityManager_Interface} */ (
         c.resolve(tokens.IEntityManager)
       ),
-      actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (
-        c.resolve(tokens.IActionDiscoverySystem)
+      actionDiscoverySystem: /** @type {IActionDiscoveryService_Interface} */ (
+        c.resolve(tokens.IActionDiscoveryService)
       ),
       promptBuilder: /** @type {IPromptBuilder} */ (
         c.resolve(tokens.IPromptBuilder)
@@ -235,9 +235,10 @@ export function registerCoreSystems(container) {
         entityManager: /** @type {IEntityManager_Interface} */ (
           c.resolve(tokens.IEntityManager)
         ),
-        actionDiscoverySystem: /** @type {IActionDiscoverySystem_Interface} */ (
-          c.resolve(tokens.IActionDiscoverySystem)
-        ),
+        actionDiscoverySystem:
+          /** @type {IActionDiscoveryService_Interface} */ (
+            c.resolve(tokens.IActionDiscoveryService)
+          ),
         promptBuilder: /** @type {IPromptBuilder} */ (
           c.resolve(tokens.IPromptBuilder)
         ),

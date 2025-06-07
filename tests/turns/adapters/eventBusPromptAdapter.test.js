@@ -10,7 +10,7 @@ const mockSafeDispatcher = {
 };
 
 const mockVed = {
-  dispatchValidated: jest.fn().mockResolvedValue(true), // Default mock success
+  dispatch: jest.fn().mockResolvedValue(true), // Default mock success
   // Add subscribe/unsubscribe if needed for other tests/classes
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
@@ -168,7 +168,7 @@ describe('EventBusPromptAdapter', () => {
     );
   });
 
-  it('should call dispatchValidated with correct arguments when using IValidatedEventDispatcher', async () => {
+  it('should call dispatch with correct arguments when using IValidatedEventDispatcher', async () => {
     const adapter = new EventBusPromptAdapter({
       validatedEventDispatcher: mockVed,
     });
@@ -178,15 +178,12 @@ describe('EventBusPromptAdapter', () => {
 
     await adapter.prompt(entityId, actions, errorMsg);
 
-    expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockVed.dispatchValidated).toHaveBeenCalledWith(
-      'core:player_turn_prompt',
-      {
-        entityId: entityId,
-        availableActions: actions,
-        error: errorMsg,
-      }
-    );
+    expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockVed.dispatch).toHaveBeenCalledWith('core:player_turn_prompt', {
+      entityId: entityId,
+      availableActions: actions,
+      error: errorMsg,
+    });
     expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled(); // Ensure safe wasn't called
   });
 
@@ -203,8 +200,8 @@ describe('EventBusPromptAdapter', () => {
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
   });
 
-  it('should resolve void if dispatchValidated succeeds', async () => {
-    mockVed.dispatchValidated.mockResolvedValueOnce(true);
+  it('should resolve void if dispatch succeeds', async () => {
+    mockVed.dispatch.mockResolvedValueOnce(true);
     const adapter = new EventBusPromptAdapter({
       validatedEventDispatcher: mockVed,
     });
@@ -212,12 +209,12 @@ describe('EventBusPromptAdapter', () => {
     const actions = [];
 
     await expect(adapter.prompt(entityId, actions)).resolves.toBeUndefined();
-    expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
   });
 
-  it('should reject if dispatchValidated throws an error', async () => {
+  it('should reject if dispatch throws an error', async () => {
     const dispatchError = new Error('VED dispatch failed');
-    mockVed.dispatchValidated.mockRejectedValueOnce(dispatchError);
+    mockVed.dispatch.mockRejectedValueOnce(dispatchError);
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console error
     const adapter = new EventBusPromptAdapter({
       validatedEventDispatcher: mockVed,
@@ -228,7 +225,7 @@ describe('EventBusPromptAdapter', () => {
     await expect(adapter.prompt(entityId, actions)).rejects.toThrow(
       dispatchError
     );
-    expect(mockVed.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining(
         "Error dispatching 'core:player_turn_prompt' via VED"

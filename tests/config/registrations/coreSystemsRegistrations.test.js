@@ -90,7 +90,7 @@ const createMockContainer = () => {
           return {
             /* basic mock */
           }; // Added for TurnManager factory potential needs
-        if (token === tokens.IActionDiscoverySystem)
+        if (token === tokens.IActionDiscoveryService)
           return {
             /* basic mock */
           }; // Added for PlayerTurnHandler/AITurnHandler
@@ -167,7 +167,7 @@ describe('registerCoreSystems', () => {
     tokens.OpenableSystem,
     tokens.HealthSystem,
     tokens.StatusEffectSystem,
-    tokens.IActionDiscoverySystem,
+    tokens.IActionDiscoveryService,
     tokens.ITurnManager, // Ensure ITurnManager is correctly listed if tagged
   ]; // Count should be 19
 

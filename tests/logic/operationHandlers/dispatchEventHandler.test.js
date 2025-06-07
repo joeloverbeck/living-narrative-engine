@@ -9,16 +9,14 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 // --- JSDoc Imports ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */ // Corrected path assumption
 /** @typedef {import('../../../src/logic/defs.js').ExecutionContext} ExecutionContext */ // Corrected path assumption
-/** @typedef {import('../../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path assumption
+/** @typedef {import('../../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path assumption
 /** @typedef {import('../../../src/events/eventBus.js').default} EventBus */ // Corrected path assumption
 
-// --- Mock ValidatedEventDispatcher ---
+// --- Mock ValidatedEventDispatcher (for VED-specific tests) ---
+// FIX: Cleaned up mock. It only has `dispatch` to simulate a VED.
+// Tests requiring EventBus features will define their own, more specific mocks.
 const mockDispatcher = {
-  dispatchValidated: jest.fn(),
-  // Mock 'dispatch' as well for completeness if testing fallback logic
   dispatch: jest.fn(),
-  // Mock listenerCount if needed for EventBus fallback tests
-  listenerCount: jest.fn().mockReturnValue(1),
 };
 
 // --- Mock Logger ---
@@ -48,13 +46,10 @@ describe('DispatchEventHandler', () => {
     // Reset mocks before each test
     jest.clearAllMocks();
 
-    // Mock dispatchValidated to return a resolved promise by default
-    mockDispatcher.dispatchValidated.mockResolvedValue(true);
-    // Mock dispatch (EventBus fallback) if needed
-    mockDispatcher.dispatch.mockResolvedValue(undefined); // EventBus dispatch often returns void/undefined
-    mockDispatcher.listenerCount.mockReturnValue(1); // Default listener count for EventBus path
+    // FIX: Simplified beforeEach. Default mock is for the VED path.
+    mockDispatcher.dispatch.mockResolvedValue(true);
 
-    // Create a new handler instance for isolation
+    // Create a new handler instance for isolation using the VED-like mock
     handler = new DispatchEventHandler({
       dispatcher: mockDispatcher,
       logger: mockLogger,
@@ -87,15 +82,7 @@ describe('DispatchEventHandler', () => {
     ).toThrow(
       'DispatchEventHandler requires a valid ValidatedEventDispatcher (preferred) or EventBus instance.'
     );
-    expect(
-      () =>
-        new DispatchEventHandler({
-          dispatcher: { dispatchValidated: 'not-a-function' },
-          logger: mockLogger,
-        })
-    ).toThrow(
-      'DispatchEventHandler requires a valid ValidatedEventDispatcher (preferred) or EventBus instance.'
-    );
+    // FIX: Removed redundant test case for `dispatch` which no longer exists
     expect(
       () =>
         new DispatchEventHandler({
@@ -152,7 +139,7 @@ describe('DispatchEventHandler', () => {
   });
 
   // --- execute() Tests - Valid Parameters ---
-  test('execute should call dispatcher.dispatchValidated with correct eventType and payload', async () => {
+  test('execute should call dispatcher.dispatch with correct eventType and payload', async () => {
     const params = {
       eventType: 'PLAYER_ACTION',
       payload: { action: 'move', direction: 'north' },
@@ -161,14 +148,11 @@ describe('DispatchEventHandler', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0)); // Allow async .then/.catch to run
 
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'PLAYER_ACTION',
-      {
-        action: 'move',
-        direction: 'north',
-      }
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('PLAYER_ACTION', {
+      action: 'move',
+      direction: 'north',
+    });
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Attempting to dispatch event "PLAYER_ACTION"'),
       expect.anything()
@@ -180,16 +164,13 @@ describe('DispatchEventHandler', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
-  test('execute should call dispatcher.dispatchValidated with eventType and default empty payload if payload is missing', async () => {
+  test('execute should call dispatcher.dispatch with eventType and default empty payload if payload is missing', async () => {
     const params = { eventType: 'GAME_STARTED' }; // No payload property
     handler.execute(params, mockEvaluationContext);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'GAME_STARTED',
-      {}
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('GAME_STARTED', {});
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Attempting to dispatch event "GAME_STARTED"'),
       expect.anything()
@@ -201,16 +182,13 @@ describe('DispatchEventHandler', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
-  test('execute should call dispatcher.dispatchValidated with eventType and default empty payload if payload is null', async () => {
+  test('execute should call dispatcher.dispatch with eventType and default empty payload if payload is null', async () => {
     const params = { eventType: 'PLAYER_LOGOUT', payload: null };
     handler.execute(params, mockEvaluationContext);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'PLAYER_LOGOUT',
-      {}
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('PLAYER_LOGOUT', {});
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Attempting to dispatch event "PLAYER_LOGOUT"'),
       expect.anything()
@@ -222,16 +200,13 @@ describe('DispatchEventHandler', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
-  test('execute should call dispatcher.dispatchValidated with eventType and default empty payload if payload is undefined', async () => {
+  test('execute should call dispatcher.dispatch with eventType and default empty payload if payload is undefined', async () => {
     const params = { eventType: 'CONFIG_RELOADED', payload: undefined };
     handler.execute(params, mockEvaluationContext);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'CONFIG_RELOADED',
-      {}
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('CONFIG_RELOADED', {});
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Attempting to dispatch event "CONFIG_RELOADED"'),
       expect.anything()
@@ -243,17 +218,15 @@ describe('DispatchEventHandler', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
-  // *** TEST FIX: This should now pass because trimming is done in the handler ***
   test('execute should trim whitespace from eventType', async () => {
     const params = { eventType: '  SPACED_EVENT  ', payload: { data: 1 } };
     handler.execute(params, mockEvaluationContext);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      'SPACED_EVENT',
-      { data: 1 }
-    ); // Trimmed eventType
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('SPACED_EVENT', {
+      data: 1,
+    }); // Trimmed eventType
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Attempting to dispatch event "SPACED_EVENT"'),
       expect.anything()
@@ -271,7 +244,6 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled();
     expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
@@ -282,7 +254,6 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled();
     expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
@@ -294,7 +265,6 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled();
     expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
@@ -306,7 +276,6 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled();
     expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
@@ -317,22 +286,19 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled();
     expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     mockLogger.error.mockClear(); // Clear for next check
 
     handler.execute({ eventType: '   ', payload: {} }, mockEvaluationContext);
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    // The check now happens *after* trimming, so the specific message might change slightly if you adjusted it
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled();
     expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  // *** TEST FIX: Make assertion slightly more specific, although expect.anything() should have worked ***
+  // FIX: Corrected a faulty assertion in this test.
   test('execute should log warning and dispatch with empty payload if payload is not an object (e.g., string)', async () => {
     const originalPayload = 'this is a string';
     const params = {
@@ -343,24 +309,21 @@ describe('DispatchEventHandler', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-    // Check the logged warning and context object more specifically
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
         "Resolved 'payload' is not an object (got string). Using empty object {}."
       ),
       expect.objectContaining({
-        // Use objectContaining for more robust check
         eventType: 'INVALID_PAYLOAD_TYPE',
-        resolvedPayload: originalPayload, // Check that the original invalid payload was logged
+        resolvedPayload: originalPayload,
       })
     );
     // Should still attempt dispatch with the default empty object
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       'INVALID_PAYLOAD_TYPE',
       {}
     );
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled(); // Shouldn't fallback here
     expect(mockLogger.error).not.toHaveBeenCalled();
     // Check success log still happens
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -377,33 +340,27 @@ describe('DispatchEventHandler', () => {
   });
 
   // --- execute() Tests - Placeholder Resolution (Now Testing Dispatch of Pre-Resolved Data) ---
-  // *** TEST FIX: Update test to reflect that the handler expects pre-resolved data ***
   test('execute should dispatch payload with pre-resolved data', async () => {
-    // Define the data *as it should be* after resolution happened *before* this handler
     const preResolvedParams = {
       eventType: 'PLACEHOLDER_TEST',
       payload: {
-        actorName: 'Alice', // Value resolved previously
-        eventName: 'TEST_EVENT', // Value resolved previously
-        customVar: 123, // Value resolved previously
-        nonExistent: '$target.nonExistentProperty', // Assuming unresolved placeholders are kept literal
-        notAPlaceholder: 'just a string', // Literal string remains
+        actorName: 'Alice',
+        eventName: 'TEST_EVENT',
+        customVar: 123,
+        nonExistent: '$target.nonExistentProperty',
+        notAPlaceholder: 'just a string',
       },
     };
 
-    // Pass the pre-resolved data to the handler.
-    // mockEvaluationContext is passed but not used for resolution *within* this handler.
     handler.execute(preResolvedParams, mockEvaluationContext);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
-    // Verify the handler passed the pre-resolved data directly to the dispatcher
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledWith(
-      preResolvedParams.eventType, // Should be 'PLACEHOLDER_TEST'
-      preResolvedParams.payload // Should be the object with already resolved values
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      preResolvedParams.eventType,
+      preResolvedParams.payload
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
-    // Check logs still happen
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         'Attempting to dispatch event "PLACEHOLDER_TEST"'
@@ -419,18 +376,15 @@ describe('DispatchEventHandler', () => {
 
   // --- execute() Tests - Error Handling ---
   test('execute should log synchronous error if dispatcher call throws immediately', () => {
-    // No async needed if error is sync
     const syncError = new Error('Dispatcher sync fail!');
-    mockDispatcher.dispatchValidated.mockImplementationOnce(() => {
+    mockDispatcher.dispatch.mockImplementationOnce(() => {
       throw syncError;
     });
     const params = { eventType: 'SYNC_FAIL_EVENT', payload: {} };
 
     handler.execute(params, mockEvaluationContext);
 
-    // No async wait needed here
-
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining(
@@ -438,28 +392,26 @@ describe('DispatchEventHandler', () => {
       ),
       expect.objectContaining({ error: syncError })
     );
-    // Only the initial "Attempting..." debug log should occur
     expect(mockLogger.debug).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Attempting to dispatch event "SYNC_FAIL_EVENT"'),
       expect.anything()
     );
-    // Ensure success log did NOT happen
     expect(mockLogger.debug).not.toHaveBeenCalledWith(
       expect.stringContaining('dispatched (Validated).')
     );
   });
 
-  test('execute should log error if async dispatchValidated rejects', async () => {
+  test('execute should log error if async dispatch rejects', async () => {
     const asyncError = new Error('Dispatcher async fail!');
-    mockDispatcher.dispatchValidated.mockRejectedValueOnce(asyncError);
+    mockDispatcher.dispatch.mockRejectedValueOnce(asyncError);
     const params = { eventType: 'ASYNC_FAIL_EVENT', payload: {} };
 
     handler.execute(params, mockEvaluationContext);
 
     await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for promise rejection
 
-    expect(mockDispatcher.dispatchValidated).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         'Attempting to dispatch event "ASYNC_FAIL_EVENT"'
@@ -481,10 +433,11 @@ describe('DispatchEventHandler', () => {
   });
 
   // --- execute() Tests - EventBus Fallback ---
-  test('execute should use eventBus.dispatch if dispatcher lacks dispatchValidated', async () => {
+  // FIX: This test now passes because the handler logic is corrected and correctly identifies the EventBus mock.
+  test('execute should use eventBus.dispatch if dispatcher has listenerCount', async () => {
     const mockEventBus = {
-      dispatch: jest.fn().mockResolvedValue(undefined), // Mock EventBus dispatch
-      listenerCount: jest.fn().mockReturnValue(1), // Mock listener count > 0
+      dispatch: jest.fn().mockResolvedValue(undefined),
+      listenerCount: jest.fn().mockReturnValue(1),
     };
     const busHandler = new DispatchEventHandler({
       dispatcher: mockEventBus,
@@ -494,19 +447,17 @@ describe('DispatchEventHandler', () => {
 
     busHandler.execute(params, mockEvaluationContext);
 
-    await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for promise resolution
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
     expect(mockEventBus.dispatch).toHaveBeenCalledWith('BUS_EVENT', { id: 1 });
-    // Check listenerCount was called within the .then() block
     expect(mockEventBus.listenerCount).toHaveBeenCalledWith('BUS_EVENT');
-    expect(mockDispatcher.dispatchValidated).not.toHaveBeenCalled(); // Ensure original mock wasn't called
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalled(); // Ensure default VED mock wasn't called
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Attempting to dispatch event "BUS_EVENT"'),
       expect.anything()
     );
-    // Check the success log from the EventBus path's .then block
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         'Dispatched "BUS_EVENT" to 1 listener(s) via EventBus.'
@@ -516,11 +467,12 @@ describe('DispatchEventHandler', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
+  // FIX: Added listenerCount to the mock so the handler takes the correct (EventBus) path.
   test('execute should log error if async EventBus dispatch rejects', async () => {
     const asyncBusError = new Error('EventBus async fail!');
     const mockEventBus = {
-      dispatch: jest.fn().mockRejectedValue(asyncBusError), // Mock EventBus dispatch to reject
-      // No listenerCount mock needed if dispatch fails before .then()
+      dispatch: jest.fn().mockRejectedValue(asyncBusError),
+      listenerCount: jest.fn(), // MUST be present to trigger EventBus logic path
     };
     const busHandler = new DispatchEventHandler({
       dispatcher: mockEventBus,
@@ -530,7 +482,7 @@ describe('DispatchEventHandler', () => {
 
     busHandler.execute(params, mockEvaluationContext);
 
-    await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for promise rejection
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -550,10 +502,11 @@ describe('DispatchEventHandler', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
+  // FIX: This test now passes because the handler logic is corrected.
   test('execute should log warning if EventBus dispatch succeeds but has no listeners', async () => {
     const mockEventBusNoListeners = {
-      dispatch: jest.fn().mockResolvedValue(undefined), // Mock EventBus dispatch succeeds
-      listenerCount: jest.fn().mockReturnValue(0), // Mock listener count to be 0
+      dispatch: jest.fn().mockResolvedValue(undefined),
+      listenerCount: jest.fn().mockReturnValue(0),
     };
     const busHandler = new DispatchEventHandler({
       dispatcher: mockEventBusNoListeners,
@@ -563,7 +516,7 @@ describe('DispatchEventHandler', () => {
 
     busHandler.execute(params, mockEvaluationContext);
 
-    await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for promise resolution
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockEventBusNoListeners.dispatch).toHaveBeenCalledTimes(1);
     expect(mockEventBusNoListeners.dispatch).toHaveBeenCalledWith(
@@ -584,11 +537,8 @@ describe('DispatchEventHandler', () => {
       ),
       expect.anything()
     );
-    // Check that the specific success debug log did NOT happen
     expect(mockLogger.debug).not.toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Dispatched "NO_LISTENERS_EVENT" to 0 listener(s) via EventBus.'
-      )
+      expect.stringContaining('Dispatched "NO_LISTENERS_EVENT"')
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
   });

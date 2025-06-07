@@ -21,7 +21,7 @@ const createMockLogger = () => ({
   error: jest.fn(),
   debug: jest.fn(),
 });
-const createMockActionDiscoverySystem = () => ({ getValidActions: jest.fn() });
+const createMockActionDiscoveryService = () => ({ getValidActions: jest.fn() });
 const createMockPromptOutputPort = () => ({ prompt: jest.fn() });
 const createMockWorldContext = () => ({ getLocationOfEntity: jest.fn() });
 const createMockEntityManager = () => ({ getEntityInstance: jest.fn() });
@@ -43,7 +43,7 @@ const tick = (count = 1) => {
 describe('PlayerPromptService - Further Scenarios', () => {
   let service;
   let mockLogger;
-  let mockActionDiscoverySystem;
+  let mockActionDiscoveryService;
   let mockPromptOutputPort;
   let mockWorldContext;
   let mockValidatedEventDispatcher;
@@ -56,7 +56,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    mockActionDiscoverySystem = createMockActionDiscoverySystem();
+    mockActionDiscoveryService = createMockActionDiscoveryService();
     mockPromptOutputPort = createMockPromptOutputPort();
     mockWorldContext = createMockWorldContext();
     mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
@@ -65,7 +65,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
 
     service = new HumanPlayerPromptService({
       logger: mockLogger,
-      actionDiscoverySystem: mockActionDiscoverySystem,
+      actionDiscoverySystem: mockActionDiscoveryService,
       promptOutputPort: mockPromptOutputPort,
       worldContext: mockWorldContext,
       entityManager: mockEntityManager,
@@ -86,7 +86,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
     ];
 
     mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
-    mockActionDiscoverySystem.getValidActions.mockResolvedValue(
+    mockActionDiscoveryService.getValidActions.mockResolvedValue(
       discoveredActions
     );
     mockPromptOutputPort.prompt.mockResolvedValue(undefined); // Default successful prompt
@@ -123,15 +123,15 @@ describe('PlayerPromptService - Further Scenarios', () => {
           'Prompt aborted by signal during location fetch.'
         );
       }
-      expect(mockActionDiscoverySystem.getValidActions).not.toHaveBeenCalled();
+      expect(mockActionDiscoveryService.getValidActions).not.toHaveBeenCalled();
     });
 
     it('should throw AbortError if signal aborts after action discovery but before output port prompt', async () => {
       const abortController = new AbortController();
       const options = { cancellationSignal: abortController.signal };
 
-      let originalGetValidActions = mockActionDiscoverySystem.getValidActions;
-      mockActionDiscoverySystem.getValidActions = jest.fn(async (...args) => {
+      let originalGetValidActions = mockActionDiscoveryService.getValidActions;
+      mockActionDiscoveryService.getValidActions = jest.fn(async (...args) => {
         const result = await originalGetValidActions(...args);
         abortController.abort();
         return result;
@@ -191,7 +191,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
 
     testCases.forEach(({ name, error, expectedCause, rethrows, errorCode }) => {
       it(`should correctly handle and log ${name} from getValidActions`, async () => {
-        mockActionDiscoverySystem.getValidActions.mockRejectedValue(error);
+        mockActionDiscoveryService.getValidActions.mockRejectedValue(error);
 
         const promptPromise = service.prompt(validActor);
 
@@ -317,7 +317,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
             specificExpectedErrorMessageForMatcher = error.message;
           }
 
-          mockActionDiscoverySystem.getValidActions.mockResolvedValue(
+          mockActionDiscoveryService.getValidActions.mockResolvedValue(
             discoveredActions
           );
 
@@ -498,7 +498,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
         name: 'Valid Action',
         command: 'do valid',
       };
-      mockActionDiscoverySystem.getValidActions.mockResolvedValue([
+      mockActionDiscoveryService.getValidActions.mockResolvedValue([
         malformedAction,
         validDiscoveredAction,
       ]);
@@ -534,7 +534,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
         name: 'Valid Action',
         command: 'do valid',
       };
-      mockActionDiscoverySystem.getValidActions.mockResolvedValue([
+      mockActionDiscoveryService.getValidActions.mockResolvedValue([
         discoverableButMalformed,
         validDiscoveredAction,
       ]);
@@ -562,7 +562,7 @@ describe('PlayerPromptService - Further Scenarios', () => {
 
     it('should log warning but resolve if selected action is missing a name', async () => {
       const actionWithoutName = { id: 'action:no-name', command: 'do no name' };
-      mockActionDiscoverySystem.getValidActions.mockResolvedValue([
+      mockActionDiscoveryService.getValidActions.mockResolvedValue([
         actionWithoutName,
       ]);
 

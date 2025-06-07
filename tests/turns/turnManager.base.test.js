@@ -42,7 +42,7 @@ const mockLogger = {
 
 // *** FIXED: Added mock for the 'subscribe' method ***
 const mockDispatcher = {
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
   subscribe: jest.fn(() => jest.fn()), // Mock subscribe to return a mock unsubscribe function
 };
 // --- END FIXED ---
@@ -84,7 +84,7 @@ describe('TurnManager', () => {
     // Re-initialize basic mock configurations
     mockTurnOrderService.isEmpty.mockResolvedValue(true);
     mockTurnOrderService.getNextEntity.mockResolvedValue(null);
-    mockDispatcher.dispatchValidated.mockResolvedValue(true);
+    mockDispatcher.dispatch.mockResolvedValue(true);
     // *** FIXED: Reset the new mock method too ***
     mockDispatcher.subscribe.mockClear();
     // Make sure the inner unsubscribe mock is also cleared/reset if needed,

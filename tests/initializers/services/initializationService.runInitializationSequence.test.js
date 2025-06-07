@@ -37,7 +37,7 @@ describe('InitializationService', () => {
       warn: jest.fn(),
     };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
     mockWorldLoader = {
       loadWorld: jest.fn().mockResolvedValue(undefined),
@@ -164,9 +164,7 @@ describe('InitializationService', () => {
           .map((call) => call[0])
           .filter((token) => token !== tokens.ILogger);
         expect(relevantResolveCalls.length).toBe(0); // No other services should be resolved.
-        expect(
-          mockValidatedEventDispatcher.dispatchValidated
-        ).not.toHaveBeenCalled();
+        expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalled();
       }
     );
 
@@ -212,9 +210,7 @@ describe('InitializationService', () => {
         call[0].includes('CRITICAL ERROR during initialization sequence')
       );
       expect(criticalErrorCalls.length).toBe(0);
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).not.toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         'initialization:initialization_service:failed',
         expect.anything(),
         expect.anything()
@@ -236,9 +232,7 @@ describe('InitializationService', () => {
         expectedError
       );
       // ... (rest of the testFailure helper remains largely the same) ...
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'initialization:initialization_service:failed',
         expect.objectContaining({
           worldName: MOCK_WORLD_NAME,
@@ -247,12 +241,12 @@ describe('InitializationService', () => {
         { allowSchemaNotFound: true }
       );
       const failedEventCall =
-        mockValidatedEventDispatcher.dispatchValidated.mock.calls.find(
+        mockValidatedEventDispatcher.dispatch.mock.calls.find(
           (call) => call[0] === 'initialization:initialization_service:failed'
         );
       const failedEventResult = failedEventCall
-        ? mockValidatedEventDispatcher.dispatchValidated.mock.results[
-            mockValidatedEventDispatcher.dispatchValidated.mock.calls.indexOf(
+        ? mockValidatedEventDispatcher.dispatch.mock.results[
+            mockValidatedEventDispatcher.dispatch.mock.calls.indexOf(
               failedEventCall
             )
           ]
@@ -266,9 +260,7 @@ describe('InitializationService', () => {
         );
       }
 
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'ui:show_fatal_error',
         expect.objectContaining({
           title: 'Fatal Initialization Error',
@@ -276,23 +268,24 @@ describe('InitializationService', () => {
         })
       );
       const fatalErrorCall =
-        mockValidatedEventDispatcher.dispatchValidated.mock.calls.find(
+        mockValidatedEventDispatcher.dispatch.mock.calls.find(
           (call) => call[0] === 'ui:show_fatal_error'
         );
       const fatalErrorResult = fatalErrorCall
-        ? mockValidatedEventDispatcher.dispatchValidated.mock.results[
-            mockValidatedEventDispatcher.dispatchValidated.mock.calls.indexOf(
+        ? mockValidatedEventDispatcher.dispatch.mock.results[
+            mockValidatedEventDispatcher.dispatch.mock.calls.indexOf(
               fatalErrorCall
             )
           ]
         : undefined;
 
       if (fatalErrorResult?.type !== 'throw') {
-        expect(
-          mockValidatedEventDispatcher.dispatchValidated
-        ).toHaveBeenCalledWith('textUI:disable_input', {
-          message: 'Fatal error during initialization. Cannot continue.',
-        });
+        expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
+          'textUI:disable_input',
+          {
+            message: 'Fatal error during initialization. Cannot continue.',
+          }
+        );
         expect(mockLogger.info).toHaveBeenCalledWith(
           'InitializationService: Dispatched ui:show_fatal_error and textUI:disable_input events.'
         );
@@ -302,9 +295,7 @@ describe('InitializationService', () => {
       expect(result.error).toBeInstanceOf(Error);
       expect(result.error.message).toBe(expectedError.message);
 
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).not.toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         'initialization:initialization_service:completed',
         expect.anything(),
         expect.anything()
@@ -487,7 +478,7 @@ describe('InitializationService', () => {
 
       mockWorldLoader.loadWorld.mockRejectedValue(mainError);
       let dispatchCallCount = 0;
-      mockValidatedEventDispatcher.dispatchValidated.mockImplementation(
+      mockValidatedEventDispatcher.dispatch.mockImplementation(
         async (eventName) => {
           dispatchCallCount++;
           if (eventName === 'initialization:initialization_service:failed') {
@@ -519,15 +510,13 @@ describe('InitializationService', () => {
         `InitializationService: Failed to dispatch UI error events after initialization failure:`,
         dispatchError
       );
-      expect(
-        mockValidatedEventDispatcher.dispatchValidated
-      ).toHaveBeenCalledWith(
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'initialization:initialization_service:failed',
         expect.anything(),
         expect.anything()
       );
       const uiDispatchAttempted =
-        mockValidatedEventDispatcher.dispatchValidated.mock.calls.some(
+        mockValidatedEventDispatcher.dispatch.mock.calls.some(
           (call) =>
             call[0] === 'ui:show_fatal_error' ||
             call[0] === 'textUI:disable_input'

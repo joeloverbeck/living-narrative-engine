@@ -202,7 +202,7 @@ describe('Adapter Registrations - registerAdapters', () => {
     };
 
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn(),
+      dispatch: jest.fn(),
       subscribe: jest.fn(),
       unsubscribe: jest.fn(),
     };

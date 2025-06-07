@@ -156,10 +156,9 @@ describe('ActionButtonsRenderer', () => {
     jest.spyOn(mockLogger, 'debug');
 
     if (!jest.isMockFunction(mockVed.subscribe)) mockVed.subscribe = jest.fn();
-    if (!jest.isMockFunction(mockVed.dispatchValidated))
-      mockVed.dispatchValidated = jest.fn();
+    if (!jest.isMockFunction(mockVed.dispatch)) mockVed.dispatch = jest.fn();
     mockVed.subscribe.mockReturnValue({ unsubscribe: jest.fn() });
-    mockVed.dispatchValidated.mockResolvedValue(true);
+    mockVed.dispatch.mockResolvedValue(true);
 
     jest.spyOn(actionButtonsContainer, 'appendChild');
     jest.spyOn(actionButtonsContainer, 'removeChild');

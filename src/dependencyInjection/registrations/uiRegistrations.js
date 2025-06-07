@@ -267,7 +267,8 @@ export function registerUI(
       new ChatAlertRenderer({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        // **FIX**: Provide the ISafeEventDispatcher under the new expected key.
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
         alertRouter: c.resolve(tokens.AlertRouter),
         alertMessageFormatter: c.resolve(tokens.IAlertMessageFormatter),
@@ -276,8 +277,6 @@ export function registerUI(
   logger.debug(`UI Registrations: Registered ${tokens.ChatAlertRenderer}.`);
 
   // --- 3. Register Facade ---
-  // CORRECTED: Pass an array of dependency tokens. The DI container's resolve logic
-  // (especially the mock one in the test) will map these to an object for the constructor.
   registrar.single(tokens.DomUiFacade, DomUiFacade, [
     tokens.ActionButtonsRenderer,
     tokens.LocationRenderer,

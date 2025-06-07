@@ -40,7 +40,7 @@ describe('_getAvailableActions – location ID handling', () => {
 
   const mockTurnContext = {
     getEntityManager: () => null, // not needed for this test
-    getActionDiscoverySystem: () => mockADS,
+    getActionDiscoveryService: () => mockADS,
     game: {},
   };
 
@@ -49,7 +49,7 @@ describe('_getAvailableActions – location ID handling', () => {
     capturedCtx = undefined;
   });
 
-  it('passes a plain string ID (not an object) to ActionDiscoverySystem', async () => {
+  it('passes a plain string ID (not an object) to ActionDiscoveryService', async () => {
     const provider = new AIGameStateProvider();
     await provider._getAvailableActions(
       makeMockActor(),

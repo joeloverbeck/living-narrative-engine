@@ -66,7 +66,7 @@ const createMockDocumentContext = () => {
 /** @returns {import('../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} */
 const createMockVed = () => ({
   subscribe: jest.fn(() => jest.fn()),
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
 });
 
 /**

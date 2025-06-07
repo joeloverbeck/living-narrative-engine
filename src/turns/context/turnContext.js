@@ -64,7 +64,7 @@
  * @property {SubscriptionLifecycleManager} [subscriptionManager]
  * @property {ITurnEndPort} [turnEndPort]
  * @property {IEntityManager} [entityManager]
- * @property {IActionDiscoverySystem}    [actionDiscoverySystem]
+ * @property {IActionDiscoveryService}    [actionDiscoverySystem]
  * // Add other services as needed by ITurnContext methods
  */
 
@@ -285,13 +285,13 @@ export class TurnContext extends ITurnContext {
   }
 
   /** @override */
-  getActionDiscoverySystem() {
+  getActionDiscoveryService() {
     if (!this.#services.actionDiscoverySystem) {
       this.#logger.error(
-        'TurnContext: ActionDiscoverySystem not available in services bag.'
+        'TurnContext: ActionDiscoveryService not available in services bag.'
       );
       throw new Error(
-        'TurnContext: ActionDiscoverySystem not available in services bag.'
+        'TurnContext: ActionDiscoveryService not available in services bag.'
       );
     }
     return this.#services.actionDiscoverySystem;

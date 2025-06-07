@@ -83,7 +83,7 @@ describe('WorldInitializer', () => {
       getComponentDefinition: jest.fn(),
     };
     mockValidatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(undefined),
+      dispatch: jest.fn().mockResolvedValue(undefined),
     };
     mockLogger = {
       info: jest.fn(),

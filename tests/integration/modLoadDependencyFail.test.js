@@ -369,7 +369,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
 
     // <<< ADDED: Mock ValidatedEventDispatcher >>>
     validatedEventDispatcher = {
-      dispatchValidated: jest.fn().mockResolvedValue(), // Simple mock returning a resolved promise
+      dispatch: jest.fn().mockResolvedValue(), // Simple mock returning a resolved promise
     };
 
     /* -------------------- Real ModManifestLoader ------------------------- */

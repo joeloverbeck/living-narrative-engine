@@ -344,14 +344,14 @@ export class AIGameStateProvider extends IAIGameStateProvider {
     let availableActionsDto = [];
 
     try {
-      if (typeof turnContext.getActionDiscoverySystem !== 'function') {
+      if (typeof turnContext.getActionDiscoveryService !== 'function') {
         logger.warn(
-          `AIGameStateProvider: ITurnContext for actor ${actor.id} has no getActionDiscoverySystem() method. Action discovery skipped.`
+          `AIGameStateProvider: ITurnContext for actor ${actor.id} has no getActionDiscoveryService() method. Action discovery skipped.`
         );
         return availableActionsDto;
       }
 
-      const ads = turnContext.getActionDiscoverySystem();
+      const ads = turnContext.getActionDiscoveryService();
 
       // --------------------------------------------------
       // Grab EntityManager (may be null if not exposed)

@@ -15,8 +15,8 @@ import {
 const mockVed = {
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
-  // Add dispatchValidated if needed by other potential methods, though not directly used here
-  dispatchValidated: jest.fn(),
+  // Add dispatch if needed by other potential methods, though not directly used here
+  dispatch: jest.fn(),
 };
 
 describe('EventBusCommandInputGateway', () => {

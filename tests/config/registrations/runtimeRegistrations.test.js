@@ -12,7 +12,7 @@
 /** @typedef {import('../../../src/events/eventBus.js').default} EventBus */
 /** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../../src/data/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../../../src/actions/actionDiscoveryService.js').ActionDiscoveryService} ActionDiscoverySystem */
+/** @typedef {import('../../../src/actions/actionDiscoveryService.js').ActionDiscoveryService} ActionDiscoveryService */
 /** @typedef {import('../../../src/events/safeEventDispatcher.js').SafeEventDispatcher} SafeEventDispatcher */
 /** @typedef {import('../../../src/setup/inputSetupService.js').default} InputSetupService */
 /** @typedef {import('../../../src/turns/turnManager.js').default} TurnManager */
@@ -54,7 +54,7 @@ jest.mock('../../../src/commands/commandParser.js');
 jest.mock('../../../src/context/worldContext.js');
 jest.mock('../../../src/turns/order/turnOrderService.js'); // Mocking TurnOrderService
 // Mock core systems dependencies if needed by other registrations called in tests
-jest.mock('../../../src/actions/actionDiscoveryService.js'); // Mocking ActionDiscoverySystem
+jest.mock('../../../src/actions/actionDiscoveryService.js'); // Mocking ActionDiscoveryService
 jest.mock('../../../src/turns/services/turnHandlerResolver.js');
 
 // --- Import AFTER mocking ---
@@ -66,8 +66,8 @@ import CommandProcessorMock from '../../../src/commands/commandProcessor.js';
 import CommandParserMock from '../../../src/commands/commandParser.js';
 import GameStateManagerMock from '../../../src/context/worldContext.js';
 import { TurnOrderService as TurnOrderServiceMock } from '../../../src/turns/order/turnOrderService.js';
-// --- CORRECTION: Import the NAMED export 'ActionDiscoverySystem' and alias it ---
-import { ActionDiscoveryService as ActionDiscoverySystemMock } from '../../../src/actions/actionDiscoveryService.js';
+// --- CORRECTION: Import the NAMED export 'ActionDiscoveryService' and alias it ---
+import { ActionDiscoveryService as ActionDiscoveryServiceMock } from '../../../src/actions/actionDiscoveryService.js';
 import TurnHandlerResolverMock from '../../../src/turns/services/turnHandlerResolver.js';
 
 // --- Mock Implementations (Core & External Dependencies) ---
@@ -94,7 +94,7 @@ const mockGameDataRepository = {
   getActionDefinition: jest.fn(),
   getAllActionDefinitions: jest.fn(() => []),
 }; // Mock getAllActionDefinitions
-// REMOVED: mockActionDiscoverySystemObject - using imported mock now
+// REMOVED: mockActionDiscoveryServiceObject - using imported mock now
 const mockSafeEventDispatcher = {
   dispatch: jest.fn(),
   subscribe: jest.fn(),
@@ -338,10 +338,10 @@ describe('registerRuntime', () => {
     mockContainer.register(tokens.ITurnOrderService, TurnOrderServiceMock, {
       lifecycle: 'singleton',
     });
-    // Use the imported alias ActionDiscoverySystemMock which now points to the correct mock
+    // Use the imported alias ActionDiscoveryServiceMock which now points to the correct mock
     mockContainer.register(
-      tokens.IActionDiscoverySystem,
-      ActionDiscoverySystemMock,
+      tokens.IActionDiscoveryService,
+      ActionDiscoveryServiceMock,
       { lifecycle: 'singleton' }
     );
     mockContainer.register(
@@ -400,7 +400,7 @@ describe('registerRuntime', () => {
     Object.values(mockEventBus).forEach((fn) => fn?.mockClear?.());
     Object.values(mockEntityManager).forEach((fn) => fn?.mockClear?.());
     Object.values(mockGameDataRepository).forEach((fn) => fn?.mockClear?.());
-    // REMOVED: Clearing mockActionDiscoverySystemObject
+    // REMOVED: Clearing mockActionDiscoveryServiceObject
     Object.values(mockSafeEventDispatcher).forEach((fn) => fn?.mockClear?.());
     Object.values(mockTurnHandlerResolverObject).forEach((fn) =>
       fn?.mockClear?.()
@@ -437,8 +437,8 @@ describe('registerRuntime', () => {
     CommandParserMock.mockClear();
     GameStateManagerMock.mockClear();
     TurnOrderServiceMock.mockClear(); // Should work now
-    // Use the imported alias ActionDiscoverySystemMock which now points to the correct mock
-    ActionDiscoverySystemMock.mockClear(); // <<< This should now work
+    // Use the imported alias ActionDiscoveryServiceMock which now points to the correct mock
+    ActionDiscoveryServiceMock.mockClear(); // <<< This should now work
     TurnHandlerResolverMock.mockClear();
     // REMOVED: GameLoop.mockClear();
   });

@@ -34,7 +34,7 @@ jest.mock('../../src/actions/actionFormatter.js');
 jest.mock('../../src/entities/entityScopeService.js');
 
 // --- Test Suite ---
-describe('ActionDiscoverySystem - Wait Action Tests', () => {
+describe('ActionDiscoveryService - Wait Action Tests', () => {
   // Renamed describe for clarity
   /** @type {ActionDiscoveryService} */
   let actionDiscoverySystem;

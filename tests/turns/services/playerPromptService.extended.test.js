@@ -21,7 +21,7 @@ const createMockLogger = () => ({
   error: jest.fn(),
   debug: jest.fn(),
 });
-const createMockActionDiscoverySystem = () => ({ getValidActions: jest.fn() });
+const createMockActionDiscoveryService = () => ({ getValidActions: jest.fn() });
 const createMockPromptOutputPort = () => ({ prompt: jest.fn() });
 const createMockWorldContext = () => ({ getLocationOfEntity: jest.fn() });
 const createMockEntityManager = () => ({ getEntityInstance: jest.fn() });
@@ -29,7 +29,7 @@ const createMockGameDataRepository = () => ({ getActionDefinition: jest.fn() });
 const createMockValidatedEventDispatcher = () => ({
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
-  dispatchValidated: jest.fn(),
+  dispatch: jest.fn(),
 });
 
 // Helper to allow microtasks to process
@@ -43,7 +43,7 @@ const tick = (count = 1) => {
 
 describe('PlayerPromptService Constructor - Extended Validation', () => {
   let mockLogger;
-  let mockActionDiscoverySystem;
+  let mockActionDiscoveryService;
   let mockPromptOutputPort;
   let mockWorldContext;
   let mockEntityManager;
@@ -53,7 +53,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    mockActionDiscoverySystem = createMockActionDiscoverySystem();
+    mockActionDiscoveryService = createMockActionDiscoveryService();
     mockPromptOutputPort = createMockPromptOutputPort();
     mockWorldContext = createMockWorldContext();
     mockEntityManager = createMockEntityManager();
@@ -62,7 +62,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
 
     baseDependencies = {
       logger: mockLogger,
-      actionDiscoverySystem: mockActionDiscoverySystem,
+      actionDiscoverySystem: mockActionDiscoveryService,
       promptOutputPort: mockPromptOutputPort,
       worldContext: mockWorldContext,
       entityManager: mockEntityManager,
@@ -115,7 +115,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
     });
   });
 
-  describe('ActionDiscoverySystem Dependency Validation', () => {
+  describe('ActionDiscoveryService Dependency Validation', () => {
     let consoleErrorSpy;
     beforeEach(() => {
       consoleErrorSpy = jest
@@ -133,12 +133,12 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
       const testDeps = { ...deps };
       delete testDeps.actionDiscoverySystem;
       expect(() => new HumanPlayerPromptService(testDeps)).toThrow(
-        'PlayerPromptService: Missing IActionDiscoverySystem dependency.'
+        'PlayerPromptService: Missing IActionDiscoveryService dependency.'
       );
     });
     it('should throw if actionDiscoverySystem lacks getValidActions method', () => {
       const invalidSystem = {
-        ...createMockActionDiscoverySystem(),
+        ...createMockActionDiscoveryService(),
         getValidActions: undefined,
       };
       expect(
@@ -148,7 +148,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             actionDiscoverySystem: invalidSystem,
           })
       ).toThrow(
-        'PlayerPromptService: Invalid IActionDiscoverySystem dependency. Missing method: getValidActions().'
+        'PlayerPromptService: Invalid IActionDiscoveryService dependency. Missing method: getValidActions().'
       );
     });
   });
@@ -347,7 +347,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
 describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
   let service;
   let mockLogger;
-  let mockActionDiscoverySystem;
+  let mockActionDiscoveryService;
   let mockPromptOutputPort;
   let mockWorldContext;
   let mockEntityManager;
@@ -367,7 +367,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    mockActionDiscoverySystem = createMockActionDiscoverySystem();
+    mockActionDiscoveryService = createMockActionDiscoveryService();
     mockPromptOutputPort = createMockPromptOutputPort();
     mockWorldContext = createMockWorldContext();
     mockEntityManager = createMockEntityManager();
@@ -376,7 +376,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
 
     service = new HumanPlayerPromptService({
       logger: mockLogger,
-      actionDiscoverySystem: mockActionDiscoverySystem,
+      actionDiscoverySystem: mockActionDiscoveryService,
       promptOutputPort: mockPromptOutputPort,
       worldContext: mockWorldContext,
       entityManager: mockEntityManager,
@@ -388,7 +388,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
     mockLocation = new Entity('location:test', 'location-template');
 
     mockWorldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
-    mockActionDiscoverySystem.getValidActions.mockResolvedValue([
+    mockActionDiscoveryService.getValidActions.mockResolvedValue([
       ...defaultDiscoveredActions,
     ]);
     mockPromptOutputPort.prompt.mockResolvedValue(undefined);
@@ -452,7 +452,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
     it('should reject the superseded prompt with PROMPT_SUPERSEDED_BY_NEW_REQUEST for a different actor', async () => {
       const firstActor = new Entity('player:first', 'player-template');
       const firstPromptUnsubscribeFn = jest.fn();
-      mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([
+      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         ...defaultDiscoveredActions,
       ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
@@ -465,7 +465,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       mockWorldContext.getLocationOfEntity.mockResolvedValueOnce(
         new Entity('location:other', 'loc-template')
       );
-      mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([
+      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         actionDefault,
       ]);
 
@@ -508,7 +508,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
     it('should reject the superseded prompt with a specific message when re-prompting the same actor', async () => {
       const actor = new Entity('player:same', 'player-template');
       const firstPromptUnsubscribeFn = jest.fn();
-      mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([
+      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         ...defaultDiscoveredActions,
       ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
@@ -517,7 +517,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       const firstPromptPromise = service.prompt(actor);
       await tick();
 
-      mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([
+      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         actionDefault,
       ]);
       const secondPromptUnsubscribeFn = jest.fn();
@@ -555,7 +555,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       const signal = abortController.signal;
       const removeEventListenerSpy = jest.spyOn(signal, 'removeEventListener');
 
-      mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([
+      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         actionDefault,
       ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
@@ -599,7 +599,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       const erroringUnsubscribeFn = jest.fn(() => {
         throw new Error('Unsubscribe failed!');
       });
-      mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([
+      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         ...defaultDiscoveredActions,
       ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
@@ -612,7 +612,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       mockWorldContext.getLocationOfEntity.mockResolvedValueOnce(
         new Entity('location:other2', 'loc-template')
       );
-      mockActionDiscoverySystem.getValidActions.mockResolvedValueOnce([
+      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
         actionDefault,
       ]);
 

@@ -67,7 +67,7 @@ let mockUnsubscribeFunction;
 const mockValidatedEventDispatcher = () => {
   mockUnsubscribeFunction = jest.fn();
   return {
-    dispatchValidated: jest.fn(async (eventName, payload) => true),
+    dispatch: jest.fn(async (eventName, payload) => true),
     subscribe: jest.fn((eventName, callback) => mockUnsubscribeFunction),
     unsubscribe: jest.fn(),
   };
@@ -180,7 +180,7 @@ describe('TurnManager - Round Lifecycle and Turn Advancement', () => {
     expect(turnHandlerResolver.resolveHandler).toHaveBeenCalledWith(
       mockPlayerActor
     );
-    expect(dispatcher.dispatchValidated).toHaveBeenCalledWith(TURN_STARTED_ID, {
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(TURN_STARTED_ID, {
       entityId: mockPlayerActor.id,
       entityType: 'player',
     });
@@ -204,16 +204,13 @@ describe('TurnManager - Round Lifecycle and Turn Advancement', () => {
     expect(logger.error).toHaveBeenCalledWith(
       'Cannot start a new round: No active entities with an Actor component found.'
     );
-    expect(dispatcher.dispatchValidated).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message:
-          'System Error: No active actors found to start a round. Stopping game.',
-        type: 'error',
-        details:
-          'Cannot start a new round: No active entities with an Actor component found.',
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message:
+        'System Error: No active actors found to start a round. Stopping game.',
+      type: 'error',
+      details:
+        'Cannot start a new round: No active entities with an Actor component found.',
+    });
     expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
     expect(mockUnsubscribeFunction).toHaveBeenCalled();
     expect(stopSpy).toHaveBeenCalledTimes(1);
@@ -236,7 +233,7 @@ describe('TurnManager - Round Lifecycle and Turn Advancement', () => {
     expect(turnManager.getCurrentActor()).toBe(mockActor1);
     expect(turnHandlerResolver.resolveHandler).toHaveBeenCalledWith(mockActor1);
     expect(turnManager.getActiveTurnHandler()).toBe(handlerInstance);
-    expect(dispatcher.dispatchValidated).toHaveBeenCalledWith(TURN_STARTED_ID, {
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(TURN_STARTED_ID, {
       entityId: mockActor1.id,
       entityType: 'ai',
     });
