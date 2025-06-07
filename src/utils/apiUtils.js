@@ -1,5 +1,22 @@
 // src/utils/apiUtils.js
 // --- FILE START ---
+import { ensureValidLogger } from './loggerUtils.js';
+
+const RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504];
+
+/**
+ *
+ * @param currentAttempt
+ * @param baseDelayMs
+ * @param maxDelayMs
+ */
+function _calculateRetryDelay(currentAttempt, baseDelayMs, maxDelayMs) {
+  const factor = Math.pow(2, currentAttempt - 1);
+  let delay = baseDelayMs * factor;
+  delay = Math.min(delay, maxDelayMs);
+  const jitter = (Math.random() * 0.4 - 0.2) * delay;
+  return Math.max(0, Math.floor(delay + jitter));
+}
 
 /**
  * @async
@@ -16,6 +33,7 @@
  * @param {number} maxRetries Maximum number of retry attempts before failing.
  * @param {number} baseDelayMs Initial delay in milliseconds for the first retry.
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries, capping the exponential backoff.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] Optional logger instance.
  * @returns {Promise<any>} A promise that resolves with the parsed JSON response on success.
  * @throws {Error} Throws an error if all retries fail, a non-retryable HTTP error occurs,
  * or another unhandled error arises during fetching. The error message will attempt
@@ -36,8 +54,10 @@ export async function Workspace_retry(
   options,
   maxRetries,
   baseDelayMs,
-  maxDelayMs
+  maxDelayMs,
+  logger
 ) {
+  const log = ensureValidLogger(logger, 'Workspace_retry');
   // This internal recursive function handles the actual fetch attempts and retry logic.
   // It's called by Workspace_retry with the initial attempt number.
   /**
@@ -46,7 +66,10 @@ export async function Workspace_retry(
    */
   async function attemptFetchRecursive(currentAttempt) {
     try {
-      const response = await fetch(url, options); // "Workspace API call"
+      log.debug(
+        `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
+      );
+      const response = await fetch(url, options);
 
       if (!response.ok) {
         // Attempt to get more detailed error information from the response body [cite: 1]
@@ -63,8 +86,7 @@ export async function Workspace_retry(
           }
         }
 
-        // Retryable HTTP status codes based on Acceptance Criteria and
-        const isRetryableStatusCode = [408, 429, 500, 502, 503].includes(
+        const isRetryableStatusCode = RETRYABLE_HTTP_STATUS_CODES.includes(
           response.status
         );
 
@@ -77,30 +99,38 @@ export async function Workspace_retry(
             }
           }
           if (waitTimeMs === undefined) {
-            const delayFactor = Math.pow(2, currentAttempt - 1); // currentAttempt starts at 1
-            let delay = baseDelayMs * delayFactor;
-            delay = Math.min(delay, maxDelayMs); // Cap the delay [cite: 1]
-            const jitter = (Math.random() * 0.4 - 0.2) * delay;
-            waitTimeMs = Math.max(0, Math.floor(delay + jitter)); // Ensure non-negative
+            waitTimeMs = _calculateRetryDelay(
+              currentAttempt,
+              baseDelayMs,
+              maxDelayMs
+            );
           }
 
-          console.warn(
-            `Workspace_retry: Attempt ${currentAttempt}/${maxRetries} for ${url} failed with status ${response.status}. Retrying in ${waitTimeMs}ms...`
+          log.warn(
+            `Attempt ${currentAttempt}/${maxRetries} for ${url} failed with status ${response.status}. Retrying in ${waitTimeMs}ms... Error body preview: ${errorBodyText.substring(0, 100)}`
           );
           await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
           return attemptFetchRecursive(currentAttempt + 1);
         } else {
           // Non-retryable HTTP error or max retries reached for an HTTP error
           const errorMessage = `API request to ${url} failed after ${currentAttempt} attempt(s) with status ${response.status}: ${errorBodyText}`;
+          log.error(
+            `Workspace_retry: ${errorMessage} (Attempt ${currentAttempt}/${maxRetries}, Non-retryable or max retries reached)`
+          );
           const err = new Error(errorMessage);
           err.status = response.status;
           err.body = parsedErrorBody !== null ? parsedErrorBody : errorBodyText;
-          console.error(errorMessage);
           throw err;
         }
       }
-      // Assuming the successful LLM API response is JSON content [cite: 1]
-      return response.json();
+      log.debug(
+        `Workspace_retry: Attempt ${currentAttempt}/${maxRetries} for ${url} - Request successful (status ${response.status}). Parsing JSON response.`
+      );
+      const responseData = await response.json();
+      log.info(
+        `Workspace_retry: Successfully fetched and parsed JSON from ${url} after ${currentAttempt} attempt(s).`
+      );
+      return responseData;
     } catch (error) {
       // This catch block handles network errors (e.g., TypeError from fetch)
       // or errors re-thrown from the !response.ok block if they weren't caught by the specific `Error` type check.
@@ -116,29 +146,44 @@ export async function Workspace_retry(
           error.message.toLowerCase().includes('network request failed'));
 
       if (isNetworkError && currentAttempt < maxRetries) {
-        const delayFactor = Math.pow(2, currentAttempt - 1);
-        let delay = baseDelayMs * delayFactor;
-        delay = Math.min(delay, maxDelayMs);
-        const jitter = (Math.random() * 0.4 - 0.2) * delay;
-        const waitTimeMs = Math.max(0, Math.floor(delay + jitter));
+        const waitTimeMs = _calculateRetryDelay(
+          currentAttempt,
+          baseDelayMs,
+          maxDelayMs
+        );
 
-        console.warn(
+        log.warn(
           `Workspace_retry: Attempt ${currentAttempt}/${maxRetries} for ${url} failed with network error: ${error.message}. Retrying in ${waitTimeMs}ms...`
         );
         await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
         return attemptFetchRecursive(currentAttempt + 1);
       } else {
-        // Max retries reached for a network error, or it's another type of error not handled above.
-        const finalErrorMessage = `Workspace failed for ${url} after ${currentAttempt} attempt(s). Final error: ${error.message}`;
+        let finalErrorMessage;
+        if (isNetworkError) {
+          finalErrorMessage = `Workspace_retry: Failed for ${url} after ${currentAttempt} attempt(s) due to persistent network error: ${error.message}`;
+          log.error(finalErrorMessage, {
+            originalErrorName: error.name,
+            originalErrorMessage: error.message,
+          });
+        } else {
+          finalErrorMessage = `Workspace_retry: Failed for ${url} after ${currentAttempt} attempt(s). Unexpected error: ${error.message}`;
+          log.error(finalErrorMessage, {
+            originalErrorName: error.name,
+            originalErrorMessage: error.message,
+            stack: error.stack,
+          });
+        }
         const finalError = new Error(finalErrorMessage);
         finalError.status = error.status;
-        console.error(finalErrorMessage, error); // Log the original error for more context
         throw finalError;
       }
     }
   }
 
-  return attemptFetchRecursive(1); // Start with the first attempt
+  log.info(
+    `Workspace_retry: Initiating request sequence for ${url} with maxRetries=${maxRetries}, baseDelayMs=${baseDelayMs}, maxDelayMs=${maxDelayMs}.`
+  );
+  return attemptFetchRecursive(1);
 }
 
 // --- FILE END ---

@@ -143,7 +143,8 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
         expect.any(Object),
         expect.any(Number),
         expect.any(Number),
-        expect.any(Number)
+        expect.any(Number),
+        loggerMock
       );
       expect(schemaValidatorMock.validate).toHaveBeenCalledWith(
         configurationMock.getContentTypeSchemaId('llm-configs'),

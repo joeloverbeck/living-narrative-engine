@@ -230,7 +230,8 @@ describe('LlmConfigLoader', () => {
         expect.any(Object),
         expect.any(Number),
         expect.any(Number),
-        expect.any(Number)
+        expect.any(Number),
+        loggerMock
       );
       expect(loggerMock.info).toHaveBeenCalledWith(
         `LlmConfigLoader: Attempting to load LLM Prompt configurations from: ${defaultLlmConfigPath}`
@@ -254,7 +255,8 @@ describe('LlmConfigLoader', () => {
         expect.any(Object),
         expect.any(Number),
         expect.any(Number),
-        expect.any(Number)
+        expect.any(Number),
+        loggerMock
       );
       expect(loggerMock.info).toHaveBeenCalledWith(
         `LlmConfigLoader: Attempting to load LLM Prompt configurations from: ${customPath}`
@@ -307,7 +309,8 @@ describe('LlmConfigLoader', () => {
         { method: 'GET', headers: { Accept: 'application/json' } },
         3,
         500,
-        5000
+        5000,
+        loggerMock
       );
       expect(configurationMock.getContentTypeSchemaId).toHaveBeenCalledWith(
         'llm-configs'
@@ -531,7 +534,8 @@ describe('LlmConfigLoader', () => {
         expect.any(Object),
         expect.any(Number),
         expect.any(Number),
-        expect.any(Number)
+        expect.any(Number),
+        loggerMock
       );
     });
 
@@ -545,7 +549,8 @@ describe('LlmConfigLoader', () => {
         expect.any(Object),
         expect.any(Number),
         expect.any(Number),
-        expect.any(Number)
+        expect.any(Number),
+        loggerMock
       );
     });
   });
