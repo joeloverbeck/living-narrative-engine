@@ -39,7 +39,7 @@ export class ActionValidationContextBuilder {
         console,
         {
           requiredMethods: ['debug', 'error', 'warn'],
-        },
+        }
       );
       this.#logger = logger;
     } catch (e) {
@@ -53,12 +53,12 @@ export class ActionValidationContextBuilder {
         entityManager,
         'ActionValidationContextBuilder: entityManager',
         this.#logger,
-        { requiredMethods: ['getEntityInstance', 'getComponentData'] },
+        { requiredMethods: ['getEntityInstance', 'getComponentData'] }
       );
       this.#entityManager = entityManager;
     } catch (e) {
       this.#logger.error(
-        `ActionValidationContextBuilder Constructor: Dependency validation failed for entityManager. Error: ${e.message}`,
+        `ActionValidationContextBuilder Constructor: Dependency validation failed for entityManager. Error: ${e.message}`
       );
       throw e;
     }
@@ -81,33 +81,33 @@ export class ActionValidationContextBuilder {
     if (!actionDefinition?.id) {
       this.#logger.error(
         'ActionValidationContextBuilder: Invalid actionDefinition provided (missing id).',
-        { actionDefinition },
+        { actionDefinition }
       );
       throw new Error(
-        'ActionValidationContextBuilder requires a valid ActionDefinition.',
+        'ActionValidationContextBuilder requires a valid ActionDefinition.'
       );
     }
     if (!actor?.id) {
       this.#logger.error(
         'ActionValidationContextBuilder: Invalid actor entity provided (missing id).',
-        { actor },
+        { actor }
       );
       throw new Error(
-        'ActionValidationContextBuilder requires a valid actor Entity.',
+        'ActionValidationContextBuilder requires a valid actor Entity.'
       );
     }
     if (!targetContext?.type) {
       this.#logger.error(
         'ActionValidationContextBuilder: Invalid targetContext provided (missing type).',
-        { targetContext },
+        { targetContext }
       );
       throw new Error(
-        'ActionValidationContextBuilder requires a valid ActionTargetContext.',
+        'ActionValidationContextBuilder requires a valid ActionTargetContext.'
       );
     }
 
     this.#logger.debug(
-      `ActionValidationContextBuilder: Building context for action '${actionDefinition.id}', actor '${actor.id}', target type '${targetContext.type}'.`,
+      `ActionValidationContextBuilder: Building context for action '${actionDefinition.id}', actor '${actor.id}', target type '${targetContext.type}'.`
     );
 
     // --- 2. Build Actor Context ---
@@ -116,7 +116,7 @@ export class ActionValidationContextBuilder {
       components: createComponentAccessor(
         actor.id,
         this.#entityManager,
-        this.#logger,
+        this.#logger
       ),
     };
 
@@ -125,7 +125,7 @@ export class ActionValidationContextBuilder {
 
     if (targetContext.type === 'entity' && targetContext.entityId) {
       const targetEntityInstance = this.#entityManager.getEntityInstance(
-        targetContext.entityId,
+        targetContext.entityId
       );
       if (targetEntityInstance) {
         targetContextForEval = {
@@ -135,20 +135,20 @@ export class ActionValidationContextBuilder {
           components: createComponentAccessor(
             targetContext.entityId,
             this.#entityManager,
-            this.#logger,
+            this.#logger
           ),
           blocker: undefined,
           exitDetails: null,
         };
       } else {
         this.#logger.warn(
-          `ActionValidationContextBuilder: Target entity '${targetContext.entityId}' not found for action '${actionDefinition.id}'. Context will have null target entity data.`,
+          `ActionValidationContextBuilder: Target entity '${targetContext.entityId}' not found for action '${actionDefinition.id}'. Context will have null target entity data.`
         );
       }
     } else if (targetContext.type === 'direction' && targetContext.direction) {
       const actorPositionData = this.#entityManager.getComponentData(
         actor.id,
-        POSITION_COMPONENT_ID,
+        POSITION_COMPONENT_ID
       );
       const actorLocationId = actorPositionData?.locationId;
       let targetBlockerValue = undefined;
@@ -159,7 +159,7 @@ export class ActionValidationContextBuilder {
           actorLocationId,
           targetContext.direction,
           this.#entityManager,
-          this.#logger,
+          this.#logger
         );
         if (matchedExit) {
           targetExitDetailsValue = matchedExit;

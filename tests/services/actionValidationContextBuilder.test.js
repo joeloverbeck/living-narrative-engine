@@ -24,7 +24,7 @@ jest.mock('../../src/logic/contextAssembler.js', () => ({
         get: (target, prop) => {
           return entityManager.getComponentData(entityId, prop);
         },
-      },
+      }
     );
   }),
 }));
@@ -66,51 +66,82 @@ describe('ActionValidationContextBuilder', () => {
 
   // (Constructor tests remain the same and should pass)
   it('should throw an error if EntityManager dependency is invalid', () => {
-    expect(() => new ActionValidationContextBuilder({
-      entityManager: null,
-      logger: mockLogger,
-    })).toThrow('Missing required dependency: ActionValidationContextBuilder: entityManager.');
+    expect(
+      () =>
+        new ActionValidationContextBuilder({
+          entityManager: null,
+          logger: mockLogger,
+        })
+    ).toThrow(
+      'Missing required dependency: ActionValidationContextBuilder: entityManager.'
+    );
     const incompleteEntityManager = { getEntityInstance: jest.fn() };
-    expect(() => new ActionValidationContextBuilder({
-      entityManager: incompleteEntityManager,
-      logger: mockLogger,
-    })).toThrow('Invalid or missing method \'getComponentData\' on dependency \'ActionValidationContextBuilder: entityManager\'.');
+    expect(
+      () =>
+        new ActionValidationContextBuilder({
+          entityManager: incompleteEntityManager,
+          logger: mockLogger,
+        })
+    ).toThrow(
+      "Invalid or missing method 'getComponentData' on dependency 'ActionValidationContextBuilder: entityManager'."
+    );
   });
 
   it('should throw an error if ILogger dependency is invalid', () => {
-    const validEntityManager = { getEntityInstance: jest.fn(), getComponentData: jest.fn() };
-    expect(() => new ActionValidationContextBuilder({
-      entityManager: validEntityManager,
-      logger: null,
-    })).toThrow('ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: Missing required dependency: ActionValidationContextBuilder: logger.');
+    const validEntityManager = {
+      getEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
+    };
+    expect(
+      () =>
+        new ActionValidationContextBuilder({
+          entityManager: validEntityManager,
+          logger: null,
+        })
+    ).toThrow(
+      'ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: Missing required dependency: ActionValidationContextBuilder: logger.'
+    );
   });
 
   it('should successfully create an instance with valid dependencies', () => {
-    expect(() => new ActionValidationContextBuilder({
-      entityManager: mockEntityManager,
-      logger: mockLogger,
-    })).not.toThrow();
+    expect(
+      () =>
+        new ActionValidationContextBuilder({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+        })
+    ).not.toThrow();
   });
 
-
   describe('buildContext', () => {
-    describe('Scenario 1: Target Type \'entity\', Entity Found', () => {
+    describe("Scenario 1: Target Type 'entity', Entity Found", () => {
       const targetId = 'target:A';
-      const targetComponents = { Inventory: { items: ['key'] }, State: { locked: false } };
+      const targetComponents = {
+        Inventory: { items: ['key'] },
+        State: { locked: false },
+      };
       const mockTargetEntity = createMockEntity(targetId);
       const targetContext = ActionTargetContext.forEntity(targetId);
 
       beforeEach(() => {
-        mockEntityManager.getEntityInstance.mockImplementation((id) => (id === targetId ? mockTargetEntity : null));
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (id === actorId) return actorComponents[componentId];
-          if (id === targetId) return targetComponents[componentId];
-          return undefined;
-        });
+        mockEntityManager.getEntityInstance.mockImplementation((id) =>
+          id === targetId ? mockTargetEntity : null
+        );
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (id === actorId) return actorComponents[componentId];
+            if (id === targetId) return targetComponents[componentId];
+            return undefined;
+          }
+        );
       });
 
       it('should build the context correctly', () => {
-        const context = builder.buildContext(sampleActionDefinition, mockActor, targetContext);
+        const context = builder.buildContext(
+          sampleActionDefinition,
+          mockActor,
+          targetContext
+        );
 
         expect(context).toBeDefined();
         expect(context.actor.id).toBe(actorId);
@@ -125,17 +156,31 @@ describe('ActionValidationContextBuilder', () => {
 
         expect(context.action).toEqual({ id: sampleActionDefinition.id });
 
-        expect(createComponentAccessor).toHaveBeenCalledWith(actorId, mockEntityManager, mockLogger);
-        expect(createComponentAccessor).toHaveBeenCalledWith(targetId, mockEntityManager, mockLogger);
+        expect(createComponentAccessor).toHaveBeenCalledWith(
+          actorId,
+          mockEntityManager,
+          mockLogger
+        );
+        expect(createComponentAccessor).toHaveBeenCalledWith(
+          targetId,
+          mockEntityManager,
+          mockLogger
+        );
       });
 
       it('should handle target entity with no components gracefully', () => {
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (id === actorId) return actorComponents[componentId];
-          if (id === targetId) return undefined; // Target has no components
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (id === actorId) return actorComponents[componentId];
+            if (id === targetId) return undefined; // Target has no components
+          }
+        );
 
-        const context = builder.buildContext(sampleActionDefinition, mockActor, targetContext);
+        const context = builder.buildContext(
+          sampleActionDefinition,
+          mockActor,
+          targetContext
+        );
 
         expect(context.target.id).toBe(targetId);
         expect(context.target.components).toBeInstanceOf(Object);
@@ -144,12 +189,18 @@ describe('ActionValidationContextBuilder', () => {
       });
 
       it('should handle actor with no components gracefully', () => {
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (id === actorId) return undefined; // Actor has no components
-          if (id === targetId) return targetComponents[componentId];
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (id === actorId) return undefined; // Actor has no components
+            if (id === targetId) return targetComponents[componentId];
+          }
+        );
 
-        const context = builder.buildContext(sampleActionDefinition, mockActor, targetContext);
+        const context = builder.buildContext(
+          sampleActionDefinition,
+          mockActor,
+          targetContext
+        );
 
         expect(context.actor.id).toBe(actorId);
         expect(context.actor.components).toBeInstanceOf(Object);
@@ -157,7 +208,7 @@ describe('ActionValidationContextBuilder', () => {
       });
     });
 
-    describe('Scenario 2: Target Type \'entity\', Entity Not Found', () => {
+    describe("Scenario 2: Target Type 'entity', Entity Not Found", () => {
       const missingTargetId = 'target:missing';
       const targetContext = ActionTargetContext.forEntity(missingTargetId);
 
@@ -166,26 +217,41 @@ describe('ActionValidationContextBuilder', () => {
       });
 
       it('should build the context with null target and log a warning', () => {
-        const context = builder.buildContext(sampleActionDefinition, mockActor, targetContext);
+        const context = builder.buildContext(
+          sampleActionDefinition,
+          mockActor,
+          targetContext
+        );
 
         expect(context.target).toBeNull();
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(`Target entity '${missingTargetId}' not found`));
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `Target entity '${missingTargetId}' not found`
+          )
+        );
       });
     });
 
-    describe('Scenario 3: Target Type \'direction\'', () => {
+    describe("Scenario 3: Target Type 'direction'", () => {
       const direction = 'north';
       const targetContext = ActionTargetContext.forDirection(direction);
 
       beforeEach(() => {
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) =>
-          (entityId === actorId && componentId === POSITION_COMPONENT_ID) ? actorComponents[POSITION_COMPONENT_ID] : undefined,
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) =>
+            entityId === actorId && componentId === POSITION_COMPONENT_ID
+              ? actorComponents[POSITION_COMPONENT_ID]
+              : undefined
         );
       });
 
       it('should build the context correctly when no exit data is found', () => {
         getExitByDirection.mockReturnValueOnce(null);
-        const context = builder.buildContext(sampleActionDefinition, mockActor, targetContext);
+        const context = builder.buildContext(
+          sampleActionDefinition,
+          mockActor,
+          targetContext
+        );
 
         expect(context.target).toEqual({
           type: 'direction',
@@ -198,11 +264,20 @@ describe('ActionValidationContextBuilder', () => {
       });
 
       it('should build the context with resolved exitDetails and blocker for a found direction target', () => {
-        const mockExitObject = { direction: 'to the crypt', target: 'loc:crypt', blocker: 'entity:heavy_door' };
+        const mockExitObject = {
+          direction: 'to the crypt',
+          target: 'loc:crypt',
+          blocker: 'entity:heavy_door',
+        };
         getExitByDirection.mockReturnValueOnce(mockExitObject);
-        const specificTargetContext = ActionTargetContext.forDirection('to the crypt');
+        const specificTargetContext =
+          ActionTargetContext.forDirection('to the crypt');
 
-        const context = builder.buildContext(sampleActionDefinition, mockActor, specificTargetContext);
+        const context = builder.buildContext(
+          sampleActionDefinition,
+          mockActor,
+          specificTargetContext
+        );
 
         expect(context.target).toEqual({
           type: 'direction',
@@ -215,53 +290,109 @@ describe('ActionValidationContextBuilder', () => {
       });
     });
 
-    describe('Scenario 4: Target Type \'none\'', () => {
+    describe("Scenario 4: Target Type 'none'", () => {
       const targetContext = ActionTargetContext.noTarget();
 
       it('should build the context correctly for no target', () => {
-        const context = builder.buildContext(sampleActionDefinition, mockActor, targetContext);
+        const context = builder.buildContext(
+          sampleActionDefinition,
+          mockActor,
+          targetContext
+        );
         expect(context.target).toBeNull();
       });
     });
 
     describe('Scenario 5: Invalid Inputs', () => {
       it('should throw Error and log error for null actionDefinition', () => {
-        const action = () => builder.buildContext(null, mockActor, ActionTargetContext.noTarget());
-        expect(action).toThrow('ActionValidationContextBuilder requires a valid ActionDefinition.');
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid actionDefinition provided'), { actionDefinition: null });
+        const action = () =>
+          builder.buildContext(null, mockActor, ActionTargetContext.noTarget());
+        expect(action).toThrow(
+          'ActionValidationContextBuilder requires a valid ActionDefinition.'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid actionDefinition provided'),
+          { actionDefinition: null }
+        );
       });
 
       it('should throw Error and log error for actionDefinition without id', () => {
         const invalidActionDef = { name: 'Action without ID' };
-        const action = () => builder.buildContext(invalidActionDef, mockActor, ActionTargetContext.noTarget());
-        expect(action).toThrow('ActionValidationContextBuilder requires a valid ActionDefinition.');
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid actionDefinition provided'), { actionDefinition: invalidActionDef });
+        const action = () =>
+          builder.buildContext(
+            invalidActionDef,
+            mockActor,
+            ActionTargetContext.noTarget()
+          );
+        expect(action).toThrow(
+          'ActionValidationContextBuilder requires a valid ActionDefinition.'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid actionDefinition provided'),
+          { actionDefinition: invalidActionDef }
+        );
       });
 
       it('should throw Error and log error for null actor', () => {
-        const action = () => builder.buildContext(sampleActionDefinition, null, ActionTargetContext.noTarget());
-        expect(action).toThrow('ActionValidationContextBuilder requires a valid actor Entity.');
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid actor entity provided'), { actor: null });
+        const action = () =>
+          builder.buildContext(
+            sampleActionDefinition,
+            null,
+            ActionTargetContext.noTarget()
+          );
+        expect(action).toThrow(
+          'ActionValidationContextBuilder requires a valid actor Entity.'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid actor entity provided'),
+          { actor: null }
+        );
       });
 
       it('should throw Error and log error for actor without id', () => {
         const invalidActor = {}; // No id
-        const action = () => builder.buildContext(sampleActionDefinition, invalidActor, ActionTargetContext.noTarget());
-        expect(action).toThrow('ActionValidationContextBuilder requires a valid actor Entity.');
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid actor entity provided'), { actor: invalidActor });
+        const action = () =>
+          builder.buildContext(
+            sampleActionDefinition,
+            invalidActor,
+            ActionTargetContext.noTarget()
+          );
+        expect(action).toThrow(
+          'ActionValidationContextBuilder requires a valid actor Entity.'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid actor entity provided'),
+          { actor: invalidActor }
+        );
       });
 
       it('should throw Error and log error for null targetContext', () => {
-        const action = () => builder.buildContext(sampleActionDefinition, mockActor, null);
-        expect(action).toThrow('ActionValidationContextBuilder requires a valid ActionTargetContext.');
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid targetContext provided'), { targetContext: null });
+        const action = () =>
+          builder.buildContext(sampleActionDefinition, mockActor, null);
+        expect(action).toThrow(
+          'ActionValidationContextBuilder requires a valid ActionTargetContext.'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid targetContext provided'),
+          { targetContext: null }
+        );
       });
 
       it('should throw Error and log error for targetContext without type', () => {
         const invalidTargetContext = { entityId: 'some-id' };
-        const action = () => builder.buildContext(sampleActionDefinition, mockActor, invalidTargetContext);
-        expect(action).toThrow('ActionValidationContextBuilder requires a valid ActionTargetContext.');
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Invalid targetContext provided'), { targetContext: invalidTargetContext });
+        const action = () =>
+          builder.buildContext(
+            sampleActionDefinition,
+            mockActor,
+            invalidTargetContext
+          );
+        expect(action).toThrow(
+          'ActionValidationContextBuilder requires a valid ActionTargetContext.'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid targetContext provided'),
+          { targetContext: invalidTargetContext }
+        );
       });
     });
   });

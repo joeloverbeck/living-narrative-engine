@@ -912,10 +912,10 @@ describe('AIPromptContentProvider', () => {
           'Consider these available actions when deciding what to do:'
         );
         expect(result).toContain(
-          '- "(actionDefinitionId: "act_look", commandString: "look_around"). Description: Observe your surroundings.'
+          '- (actionDefinitionId: "act_look", commandString: "look_around"). Description: Observe your surroundings.'
         );
         expect(result).toContain(
-          '- "(actionDefinitionId: "act_talk", commandString: "talk_to_npc"). Description: Engage in conversation.'
+          '- (actionDefinitionId: "act_talk", commandString: "talk_to_npc"). Description: Engage in conversation.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           'AIPromptContentProvider: Formatting available actions info content.'
@@ -977,8 +977,8 @@ describe('AIPromptContentProvider', () => {
           mockLoggerInstance
         );
 
-        const expectedAction1 = `- "(actionDefinitionId: "act1", commandString: "${DEFAULT_FALLBACK_ACTION_COMMAND}"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
-        const expectedAction2 = `- "(actionDefinitionId: "${DEFAULT_FALLBACK_ACTION_ID}", commandString: "cmd2"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
+        const expectedAction1 = `- (actionDefinitionId: "act1", commandString: "${DEFAULT_FALLBACK_ACTION_COMMAND}"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
+        const expectedAction2 = `- (actionDefinitionId: "${DEFAULT_FALLBACK_ACTION_ID}", commandString: "cmd2"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
 
         expect(result).toContain(expectedAction1);
         expect(result).toContain(expectedAction2);

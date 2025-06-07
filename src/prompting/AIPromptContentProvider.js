@@ -443,7 +443,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
           action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
         description = ensureTerminalPunctuation(description);
 
-        return `- "(actionDefinitionId: "${systemId}", commandString: "${baseCommand}"). Description: ${description}`;
+        return `- (actionDefinitionId: "${systemId}", commandString: "${baseCommand}"). Description: ${description}`;
       },
       noActionsMessage,
       this.#logger
