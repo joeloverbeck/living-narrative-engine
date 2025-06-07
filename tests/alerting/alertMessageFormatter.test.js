@@ -1,4 +1,4 @@
-import { AlertMessageFormatter } from '../../src/alerting/AlertMessageFormatter.js';
+import { AlertMessageFormatter } from '../../src/alerting/alertMessageFormatter.js';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 
 describe('AlertMessageFormatter', () => {
