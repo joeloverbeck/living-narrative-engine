@@ -21,14 +21,11 @@
 @import url('components/_forms.css');
 @import url('components/_messages.css');
 @import url('components/_chat-alerts.css');
-/* <<< ADDED IMPORT for alert bubbles */
+/* For error and warning bubbles */
 @import url('components/_speech-bubbles.css');
-/* <<< ADDED IMPORT for speech bubbles */
 @import url('components/_processing-indicator.css');
-/* <<< ADDED THIS IMPORT */
 @import url('components/_modals.css');
 @import url('components/_llm-selection-modal.css');
-/* Added new import */
 @import url('components/_location-info.css');
 @import url('components/_actions-widget.css');
 @import url('components/_perception-log.css');

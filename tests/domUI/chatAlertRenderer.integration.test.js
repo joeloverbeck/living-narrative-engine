@@ -119,7 +119,8 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       // --- Assert: Immediate State (Test Case 1: Identical Warnings Suppression) ---
       expect(chatPanel.children.length).toBe(1);
       const firstBubble = chatPanel.children[0];
-      expect(firstBubble.classList.contains('chat-warning-bubble')).toBe(true);
+      // FIXED: Assert against the correct camelCase class name.
+      expect(firstBubble.classList.contains('chat-warningBubble')).toBe(true);
       expect(firstBubble.textContent).toContain('Warning');
       expect(firstBubble.textContent).toContain('Connection timed out.');
 
@@ -147,9 +148,8 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       // A second bubble (the summary) should now be rendered in the DOM.
       expect(chatPanel.children.length).toBe(2);
       const summaryBubble = chatPanel.children[1];
-      expect(summaryBubble.classList.contains('chat-warning-bubble')).toBe(
-        true
-      );
+      // FIXED: Assert against the correct camelCase class name.
+      expect(summaryBubble.classList.contains('chat-warningBubble')).toBe(true);
     });
   });
 
@@ -172,10 +172,9 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       const bubble2 = chatPanel.children[1];
 
       // Check that one is a warning and one is an error.
-      const bubble1IsWarning = bubble1.classList.contains(
-        'chat-warning-bubble'
-      );
-      const bubble2IsError = bubble2.classList.contains('chat-error-bubble');
+      // FIXED: Assert against the correct camelCase class names.
+      const bubble1IsWarning = bubble1.classList.contains('chat-warningBubble');
+      const bubble2IsError = bubble2.classList.contains('chat-errorBubble');
       expect(bubble1IsWarning).toBe(true);
       expect(bubble2IsError).toBe(true);
 
@@ -205,7 +204,8 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       // One error bubble should appear.
       expect(chatPanel.children.length).toBe(1);
       const errorBubble = chatPanel.children[0];
-      expect(errorBubble.classList.contains('chat-error-bubble')).toBe(true);
+      // FIXED: Assert against the correct camelCase class name.
+      expect(errorBubble.classList.contains('chat-errorBubble')).toBe(true);
       expect(errorBubble.textContent).toContain(
         'Final attempt failed after 3 retries.'
       );

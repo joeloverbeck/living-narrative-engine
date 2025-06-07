@@ -263,7 +263,8 @@ describe('ChatAlertRenderer', () => {
 
       expect(mocks.mockChatPanel.appendChild).toHaveBeenCalledTimes(1);
       const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
-      expect(bubble.classList.contains('chat-warning-bubble')).toBe(true);
+      // FIXED: Assert against the correct camelCase class name.
+      expect(bubble.classList.contains('chat-warningBubble')).toBe(true);
     });
 
     it('should log to console when panel is not present', () => {

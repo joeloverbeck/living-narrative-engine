@@ -236,7 +236,8 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     const detailsId = `alert-details-${this.#alertIdCounter}`;
 
     const isError = type === 'error';
-    const bubbleClass = isError ? 'chat-error-bubble' : 'chat-warning-bubble';
+    // MODIFIED: Use camelCase class names to match the new centralized CSS module.
+    const bubbleClass = isError ? 'chat-errorBubble' : 'chat-warningBubble';
     const icon = isError ? '❌' : '⚠️';
     const title = isError ? 'Error' : 'Warning';
     const role = isError ? 'alert' : 'status';
