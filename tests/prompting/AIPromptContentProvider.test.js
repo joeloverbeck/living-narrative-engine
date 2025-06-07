@@ -118,32 +118,32 @@ describe('AIPromptContentProvider', () => {
     // Spy on the provider's own methods that are either delegating or complex internal logic
     validateGameStateForPromptingSpy = jest.spyOn(
       provider,
-      'validateGameStateForPrompting',
+      'validateGameStateForPrompting'
     );
     getTaskDefinitionContentSpy = jest.spyOn(
       provider,
-      'getTaskDefinitionContent',
+      'getTaskDefinitionContent'
     );
     getCharacterPersonaContentSpy = jest.spyOn(
       provider,
-      'getCharacterPersonaContent',
+      'getCharacterPersonaContent'
     );
     getCharacterPortrayalGuidelinesContentSpy = jest.spyOn(
       provider,
-      'getCharacterPortrayalGuidelinesContent',
+      'getCharacterPortrayalGuidelinesContent'
     );
     getContentPolicyContentSpy = jest.spyOn(
       provider,
-      'getContentPolicyContent',
+      'getContentPolicyContent'
     );
     getWorldContextContentSpy = jest.spyOn(provider, 'getWorldContextContent');
     getAvailableActionsInfoContentSpy = jest.spyOn(
       provider,
-      'getAvailableActionsInfoContent',
+      'getAvailableActionsInfoContent'
     );
     getFinalInstructionsContentSpy = jest.spyOn(
       provider,
-      'getFinalInstructionsContent',
+      'getFinalInstructionsContent'
     );
 
     // Default mock implementations for spies used in getPromptData
@@ -168,7 +168,7 @@ describe('AIPromptContentProvider', () => {
     test('should initialize correctly with all mocked dependencies', () => {
       expect(provider).toBeInstanceOf(AIPromptContentProvider);
       expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-        'AIPromptContentProvider initialized with new services.',
+        'AIPromptContentProvider initialized with new services.'
       );
     });
 
@@ -181,7 +181,7 @@ describe('AIPromptContentProvider', () => {
             promptStaticContentService: mockPromptStaticContentService,
             perceptionLogFormatter: mockPerceptionLogFormatterInstance,
             gameStateValidationService: mockGameStateValidationServiceInstance,
-          }),
+          })
       ).toThrow('AIPromptContentProvider: Logger is required.');
     });
 
@@ -194,9 +194,9 @@ describe('AIPromptContentProvider', () => {
             promptStaticContentService: null,
             perceptionLogFormatter: mockPerceptionLogFormatterInstance,
             gameStateValidationService: mockGameStateValidationServiceInstance,
-          }),
+          })
       ).toThrow(
-        'AIPromptContentProvider: PromptStaticContentService is required.',
+        'AIPromptContentProvider: PromptStaticContentService is required.'
       );
     });
 
@@ -209,7 +209,7 @@ describe('AIPromptContentProvider', () => {
             // @ts-ignore
             perceptionLogFormatter: null,
             gameStateValidationService: mockGameStateValidationServiceInstance,
-          }),
+          })
       ).toThrow('AIPromptContentProvider: PerceptionLogFormatter is required.');
     });
 
@@ -222,9 +222,9 @@ describe('AIPromptContentProvider', () => {
             perceptionLogFormatter: mockPerceptionLogFormatterInstance,
             // @ts-ignore
             gameStateValidationService: null,
-          }),
+          })
       ).toThrow(
-        'AIPromptContentProvider: GameStateValidationServiceForPrompting is required.',
+        'AIPromptContentProvider: GameStateValidationServiceForPrompting is required.'
       );
     });
   });
@@ -244,11 +244,11 @@ describe('AIPromptContentProvider', () => {
     test('getTaskDefinitionContent should call service and return its value', () => {
       const expected = 'Static Task Def Content';
       mockPromptStaticContentService.getCoreTaskDescriptionText.mockReturnValue(
-        expected,
+        expected
       );
       const result = provider.getTaskDefinitionContent();
       expect(
-        mockPromptStaticContentService.getCoreTaskDescriptionText,
+        mockPromptStaticContentService.getCoreTaskDescriptionText
       ).toHaveBeenCalledTimes(1);
       expect(result).toBe(expected);
     });
@@ -257,11 +257,11 @@ describe('AIPromptContentProvider', () => {
       const charName = 'TestChar';
       const expected = `Guidelines for ${charName}`;
       mockPromptStaticContentService.getCharacterPortrayalGuidelines.mockReturnValue(
-        expected,
+        expected
       );
       const result = provider.getCharacterPortrayalGuidelinesContent(charName);
       expect(
-        mockPromptStaticContentService.getCharacterPortrayalGuidelines,
+        mockPromptStaticContentService.getCharacterPortrayalGuidelines
       ).toHaveBeenCalledWith(charName);
       expect(result).toBe(expected);
     });
@@ -269,11 +269,11 @@ describe('AIPromptContentProvider', () => {
     test('getContentPolicyContent should call service and return its value', () => {
       const expected = 'Static Policy Content';
       mockPromptStaticContentService.getNc21ContentPolicyText.mockReturnValue(
-        expected,
+        expected
       );
       const result = provider.getContentPolicyContent();
       expect(
-        mockPromptStaticContentService.getNc21ContentPolicyText,
+        mockPromptStaticContentService.getNc21ContentPolicyText
       ).toHaveBeenCalledTimes(1);
       expect(result).toBe(expected);
     });
@@ -281,11 +281,11 @@ describe('AIPromptContentProvider', () => {
     test('getFinalInstructionsContent should call service and return its value', () => {
       const expected = 'Static Final Instructions';
       mockPromptStaticContentService.getFinalLlmInstructionText.mockReturnValue(
-        expected,
+        expected
       );
       const result = provider.getFinalInstructionsContent();
       expect(
-        mockPromptStaticContentService.getFinalLlmInstructionText,
+        mockPromptStaticContentService.getFinalLlmInstructionText
       ).toHaveBeenCalledTimes(1);
       expect(result).toBe(expected);
     });
@@ -303,21 +303,21 @@ describe('AIPromptContentProvider', () => {
       const dummyGameStateDto = { actorState: { id: 'test' } };
       const expectedValidationResult = { isValid: true, errorContent: null };
       mockGameStateValidationServiceInstance.validate.mockReturnValue(
-        expectedValidationResult,
+        expectedValidationResult
       );
 
       // @ts-ignore
       const result = provider.validateGameStateForPrompting(
         dummyGameStateDto,
-        mockLoggerInstance,
+        mockLoggerInstance
       );
 
       expect(
-        mockGameStateValidationServiceInstance.validate,
+        mockGameStateValidationServiceInstance.validate
       ).toHaveBeenCalledWith(dummyGameStateDto);
       expect(result).toEqual(expectedValidationResult);
       expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-        'AIPromptContentProvider.validateGameStateForPrompting: Delegating to GameStateValidationServiceForPrompting.',
+        'AIPromptContentProvider.validateGameStateForPrompting: Delegating to GameStateValidationServiceForPrompting.'
       );
     });
 
@@ -337,7 +337,7 @@ describe('AIPromptContentProvider', () => {
       provider.validateGameStateForPrompting(dummyGameStateDto, passedLogger);
 
       expect(
-        mockGameStateValidationServiceInstance.validate,
+        mockGameStateValidationServiceInstance.validate
       ).toHaveBeenCalledWith(dummyGameStateDto);
       // Crucially, `passedLogger` is not expected to be an argument to the service's validate method.
     });
@@ -349,17 +349,17 @@ describe('AIPromptContentProvider', () => {
         errorContent: 'Validation service failure',
       };
       mockGameStateValidationServiceInstance.validate.mockReturnValue(
-        expectedValidationResult,
+        expectedValidationResult
       );
 
       // @ts-ignore
       const result = provider.validateGameStateForPrompting(
         dummyGameStateDto,
-        mockLoggerInstance,
+        mockLoggerInstance
       );
 
       expect(
-        mockGameStateValidationServiceInstance.validate,
+        mockGameStateValidationServiceInstance.validate
       ).toHaveBeenCalledWith(dummyGameStateDto);
       expect(result).toEqual(expectedValidationResult);
     });
@@ -378,16 +378,16 @@ describe('AIPromptContentProvider', () => {
       const passedLogger = mockLoggerFn();
 
       await expect(provider.getPromptData(null, passedLogger)).rejects.toThrow(
-        ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING,
+        ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
       );
 
       expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(
         null,
-        passedLogger,
+        passedLogger
       );
       expect(mockLoggerInstance.error).toHaveBeenCalledWith(
         // instance logger used for internal error
-        `AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING}`,
+        `AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING}`
       );
     });
 
@@ -402,16 +402,16 @@ describe('AIPromptContentProvider', () => {
       const passedLogger = mockLoggerFn();
 
       await expect(
-        provider.getPromptData(dummyGameStateDto, passedLogger),
+        provider.getPromptData(dummyGameStateDto, passedLogger)
       ).rejects.toThrow(criticalErrorMsg);
 
       expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(
         dummyGameStateDto,
-        passedLogger,
+        passedLogger
       );
       expect(mockLoggerInstance.error).toHaveBeenCalledWith(
         // instance logger
-        `AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${criticalErrorMsg}`,
+        `AIPromptContentProvider.getPromptData: Critical game state validation failed. Reason: ${criticalErrorMsg}`
       );
     });
 
@@ -436,7 +436,7 @@ describe('AIPromptContentProvider', () => {
 
       expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(
         minimalDto,
-        passedLogger,
+        passedLogger
       );
       expect(promptData.characterName).toBe(DEFAULT_FALLBACK_CHARACTER_NAME);
       expect(promptData.userInputContent).toBe('');
@@ -445,23 +445,23 @@ describe('AIPromptContentProvider', () => {
 
       // Check that content getters were called with appropriate args
       expect(getCharacterPortrayalGuidelinesContentSpy).toHaveBeenCalledWith(
-        DEFAULT_FALLBACK_CHARACTER_NAME,
+        DEFAULT_FALLBACK_CHARACTER_NAME
       );
       expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(
         minimalDto,
-        mockLoggerInstance,
+        mockLoggerInstance
       ); // uses instance logger
       expect(getWorldContextContentSpy).toHaveBeenCalledWith(
         minimalDto,
-        mockLoggerInstance,
+        mockLoggerInstance
       );
       expect(getAvailableActionsInfoContentSpy).toHaveBeenCalledWith(
         minimalDto,
-        mockLoggerInstance,
+        mockLoggerInstance
       );
 
       expect(mockLoggerInstance.info).toHaveBeenCalledWith(
-        'AIPromptContentProvider.getPromptData: PromptData assembled successfully.',
+        'AIPromptContentProvider.getPromptData: PromptData assembled successfully.'
       );
     });
 
@@ -478,7 +478,7 @@ describe('AIPromptContentProvider', () => {
         { content: 'A strange noise formatted', timestamp: 'ts1' },
       ];
       mockPerceptionLogFormatterInstance.format.mockReturnValueOnce(
-        formattedPerceptions,
+        formattedPerceptions
       );
 
       /** @type {AIGameStateDTO} */
@@ -515,10 +515,10 @@ describe('AIPromptContentProvider', () => {
 
       expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(
         fullDto,
-        passedLogger,
+        passedLogger
       );
       expect(mockPerceptionLogFormatterInstance.format).toHaveBeenCalledWith(
-        testRawPerceptionInput,
+        testRawPerceptionInput
       );
 
       // Now include thoughtsArray: [] in the expected object:
@@ -543,23 +543,23 @@ describe('AIPromptContentProvider', () => {
       expect(getTaskDefinitionContentSpy).toHaveBeenCalled();
       expect(getCharacterPersonaContentSpy).toHaveBeenCalledWith(
         fullDto,
-        mockLoggerInstance,
+        mockLoggerInstance
       ); // uses instance logger
       expect(getCharacterPortrayalGuidelinesContentSpy).toHaveBeenCalledWith(
-        testCharName,
+        testCharName
       );
       expect(getContentPolicyContentSpy).toHaveBeenCalled();
       expect(getWorldContextContentSpy).toHaveBeenCalledWith(
         fullDto,
-        mockLoggerInstance,
+        mockLoggerInstance
       ); // uses instance logger
       expect(getAvailableActionsInfoContentSpy).toHaveBeenCalledWith(
         fullDto,
-        mockLoggerInstance,
+        mockLoggerInstance
       ); // uses instance logger
       expect(getFinalInstructionsContentSpy).toHaveBeenCalled();
       expect(mockLoggerInstance.info).toHaveBeenCalledWith(
-        'AIPromptContentProvider.getPromptData: PromptData assembled successfully.',
+        'AIPromptContentProvider.getPromptData: PromptData assembled successfully.'
       );
     });
 
@@ -583,19 +583,19 @@ describe('AIPromptContentProvider', () => {
       const passedLogger = mockLoggerFn();
 
       await expect(
-        provider.getPromptData(dummyDto, passedLogger),
+        provider.getPromptData(dummyDto, passedLogger)
       ).rejects.toThrow(
-        `AIPromptContentProvider.getPromptData: Failed to assemble PromptData due to internal error: ${internalErrorMsg}`,
+        `AIPromptContentProvider.getPromptData: Failed to assemble PromptData due to internal error: ${internalErrorMsg}`
       );
 
       expect(validateGameStateForPromptingSpy).toHaveBeenCalledWith(
         dummyDto,
-        passedLogger,
+        passedLogger
       );
       expect(mockLoggerInstance.error).toHaveBeenCalledWith(
         // instance logger
         `AIPromptContentProvider.getPromptData: Error during assembly of PromptData components: ${internalErrorMsg}`,
-        expect.objectContaining({ error: expect.any(Error) }),
+        expect.objectContaining({ error: expect.any(Error) })
       );
     });
   });
@@ -646,23 +646,23 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getCharacterPersonaContent(
           dto,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
 
         expect(result).toContain('YOU ARE Sir Reginald.');
         expect(result).toContain('Your Description: A brave knight.');
         expect(result).toContain('Your Personality: Gallant and Stoic.');
         expect(result).toContain(
-          'Your Profile / Background: Born in a noble family, trained in swordsmanship.',
+          'Your Profile / Background: Born in a noble family, trained in swordsmanship.'
         );
         expect(result).toContain('Your Likes: Justice, good ale.');
         expect(result).toContain('Your Dislikes: Dragons, injustice.');
         expect(result).toContain('Your Secrets: Afraid of spiders.');
         expect(result).toContain(
-          'Your Speech Patterns:\n- Verily!\n- Forsooth!',
+          'Your Speech Patterns:\n- Verily!\n- Forsooth!'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          'AIPromptContentProvider: Formatting character persona content.',
+          'AIPromptContentProvider: Formatting character persona content.'
         );
       });
 
@@ -674,11 +674,11 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getCharacterPersonaContent(
           dto,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toBe(PROMPT_FALLBACK_ACTOR_PROMPT_DATA_UNAVAILABLE);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
-          'AIPromptContentProvider: actorPromptData is missing in getCharacterPersonaContent. Using fallback.',
+          'AIPromptContentProvider: actorPromptData is missing in getCharacterPersonaContent. Using fallback.'
         );
       });
 
@@ -690,11 +690,11 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getCharacterPersonaContent(
           dto,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toBe(PROMPT_FALLBACK_UNKNOWN_CHARACTER_DETAILS);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
-          'AIPromptContentProvider: actorPromptData is missing in getCharacterPersonaContent. Using fallback.',
+          'AIPromptContentProvider: actorPromptData is missing in getCharacterPersonaContent. Using fallback.'
         );
       });
 
@@ -705,7 +705,7 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getCharacterPersonaContent(
           dto,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toContain(`YOU ARE ${DEFAULT_FALLBACK_CHARACTER_NAME}.`);
       });
@@ -717,14 +717,14 @@ describe('AIPromptContentProvider', () => {
         };
         let result = provider.getCharacterPersonaContent(
           dtoDefaultName,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
 
         const dtoNoDetails = { ...minimalGameStateDto, actorPromptData: {} }; // only empty object
         result = provider.getCharacterPersonaContent(
           dtoNoDetails,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
 
@@ -734,7 +734,7 @@ describe('AIPromptContentProvider', () => {
         };
         result = provider.getCharacterPersonaContent(
           dtoNullNameAndRest,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toBe(PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS);
       });
@@ -753,7 +753,7 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getCharacterPersonaContent(
           dto,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toContain('Your Personality: Friendly');
         expect(result).not.toContain('Your Profile / Background:');
@@ -790,27 +790,27 @@ describe('AIPromptContentProvider', () => {
         expect(result).toContain(`- Towards south leads to loc_throne_room.`);
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Formatted 2 items for section "Exits from your current location"',
-          ),
+            'Formatted 2 items for section "Exits from your current location"'
+          )
         );
 
         expect(result).toContain(
-          'Other characters present in this location (you cannot speak as them):',
+          'Other characters present in this location (you cannot speak as them):'
         );
         expect(result).toContain(
-          '- Guard Captain - Description: Stern and watchful.',
+          '- Guard Captain - Description: Stern and watchful.'
         );
         expect(result).toContain(
-          '- Jester - Description: Wearing colorful attire.',
+          '- Jester - Description: Wearing colorful attire.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Formatted 2 items for section "Other characters present in this location (you cannot speak as them)"',
-          ),
+            'Formatted 2 items for section "Other characters present in this location (you cannot speak as them)"'
+          )
         );
 
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          'AIPromptContentProvider: Formatting world context content.',
+          'AIPromptContentProvider: Formatting world context content.'
         );
       });
 
@@ -819,7 +819,7 @@ describe('AIPromptContentProvider', () => {
         const result = provider.getWorldContextContent(dto, mockLoggerInstance);
         expect(result).toBe(PROMPT_FALLBACK_UNKNOWN_LOCATION);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
-          'AIPromptContentProvider: currentLocation is missing in getWorldContextContent. Using fallback.',
+          'AIPromptContentProvider: currentLocation is missing in getWorldContextContent. Using fallback.'
         );
       });
 
@@ -836,30 +836,30 @@ describe('AIPromptContentProvider', () => {
         const result = provider.getWorldContextContent(dto, mockLoggerInstance);
 
         expect(result).toContain(
-          `Location: ${DEFAULT_FALLBACK_LOCATION_NAME}.`,
+          `Location: ${DEFAULT_FALLBACK_LOCATION_NAME}.`
         );
         // If description is "  ", it becomes "" after ensureTerminalPunctuation.
         expect(result).toContain(`Description: `);
         expect(result).not.toContain(
-          `Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_DESCRIPTION_RAW)}`,
+          `Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_DESCRIPTION_RAW)}`
         );
 
         expect(result).toContain('Exits from your current location:');
         expect(result).toContain(PROMPT_FALLBACK_NO_EXITS);
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Section "Exits from your current location" is empty',
-          ),
+            'Section "Exits from your current location" is empty'
+          )
         );
 
         expect(result).toContain(
-          'Other characters present in this location (you cannot speak as them):',
+          'Other characters present in this location (you cannot speak as them):'
         );
         expect(result).toContain(PROMPT_FALLBACK_ALONE_IN_LOCATION);
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Section "Other characters present in this location (you cannot speak as them)" is empty',
-          ),
+            'Section "Other characters present in this location (you cannot speak as them)" is empty'
+          )
         );
       });
 
@@ -879,7 +879,7 @@ describe('AIPromptContentProvider', () => {
         const result = provider.getWorldContextContent(dto, mockLoggerInstance);
         expect(result).toContain('- Towards east leads to village_east_gate.');
         expect(result).toContain(
-          `- Towards west leads to ${DEFAULT_FALLBACK_LOCATION_NAME}.`,
+          `- Towards west leads to ${DEFAULT_FALLBACK_LOCATION_NAME}.`
         );
       });
     });
@@ -905,25 +905,25 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getAvailableActionsInfoContent(
           dto,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
 
         expect(result).toContain(
-          'Consider these available actions when deciding what to do:',
+          'Consider these available actions when deciding what to do:'
         );
         expect(result).toContain(
-          '- "(actionDefinitionId: "act_look", commandString: "look_around"). Description: Observe your surroundings.',
+          '- "(actionDefinitionId: "act_look", commandString: "look_around"). Description: Observe your surroundings.'
         );
         expect(result).toContain(
-          '- "(actionDefinitionId: "act_talk", commandString: "talk_to_npc"). Description: Engage in conversation.',
+          '- "(actionDefinitionId: "act_talk", commandString: "talk_to_npc"). Description: Engage in conversation.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
-          'AIPromptContentProvider: Formatting available actions info content.',
+          'AIPromptContentProvider: Formatting available actions info content.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Formatted 2 items for section "Consider these available actions when deciding what to do"',
-          ),
+            'Formatted 2 items for section "Consider these available actions when deciding what to do"'
+          )
         );
       });
 
@@ -931,19 +931,19 @@ describe('AIPromptContentProvider', () => {
         const dtoNull = { ...minimalGameStateDto, availableActions: null };
         let result = provider.getAvailableActionsInfoContent(
           dtoNull,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toContain(
-          'Consider these available actions when deciding what to do:',
+          'Consider these available actions when deciding what to do:'
         );
         expect(result).toContain(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
-          'AIPromptContentProvider: No available actions provided. Using fallback message for list segment.',
+          'AIPromptContentProvider: No available actions provided. Using fallback message for list segment.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Section "Consider these available actions when deciding what to do" is empty, using empty message.',
-          ),
+            'Section "Consider these available actions when deciding what to do" is empty, using empty message.'
+          )
         );
 
         mockLoggerInstance.warn.mockClear();
@@ -951,16 +951,16 @@ describe('AIPromptContentProvider', () => {
         const dtoEmpty = { ...minimalGameStateDto, availableActions: [] };
         result = provider.getAvailableActionsInfoContent(
           dtoEmpty,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
         expect(result).toContain(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
-          'AIPromptContentProvider: No available actions provided. Using fallback message for list segment.',
+          'AIPromptContentProvider: No available actions provided. Using fallback message for list segment.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Section "Consider these available actions when deciding what to do" is empty, using empty message.',
-          ),
+            'Section "Consider these available actions when deciding what to do" is empty, using empty message.'
+          )
         );
       });
 
@@ -974,7 +974,7 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getAvailableActionsInfoContent(
           dto,
-          mockLoggerInstance,
+          mockLoggerInstance
         );
 
         const expectedAction1 = `- "(actionDefinitionId: "act1", commandString: "${DEFAULT_FALLBACK_ACTION_COMMAND}"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
