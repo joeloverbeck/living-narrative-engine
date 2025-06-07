@@ -35,6 +35,7 @@
 /** @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */ // Assuming this is the concrete class for the interface
 /** @typedef {import('../../turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
 /** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */ // Assuming this is the concrete class for the interface
+/** @typedef {import('../../turns/interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
 
 // --- System Imports ---
 import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
@@ -155,6 +156,10 @@ export function registerCoreSystems(container) {
       promptBuilder: /** @type {IPromptBuilder} */ (
         c.resolve(tokens.IPromptBuilder)
       ),
+      // Fix: Add the missing aiFallbackActionFactory dependency
+      aiFallbackActionFactory: /** @type {IAIFallbackActionFactory} */ (
+        c.resolve(tokens.IAIFallbackActionFactory)
+      ),
       aiPlayerStrategyFactory: /** @type {IAIPlayerStrategyFactory} */ (
         c.resolve(tokens.IAIPlayerStrategyFactory)
       ),
@@ -241,6 +246,10 @@ export function registerCoreSystems(container) {
           ),
         promptBuilder: /** @type {IPromptBuilder} */ (
           c.resolve(tokens.IPromptBuilder)
+        ),
+        // Fix: Add the missing aiFallbackActionFactory dependency here as well
+        aiFallbackActionFactory: /** @type {IAIFallbackActionFactory} */ (
+          c.resolve(tokens.IAIFallbackActionFactory)
         ),
         aiPlayerStrategyFactory: /** @type {IAIPlayerStrategyFactory} */ (
           c.resolve(tokens.IAIPlayerStrategyFactory)
