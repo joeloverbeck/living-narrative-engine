@@ -233,8 +233,7 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
       {
         message:
           'Internal Error: Turn order inconsistency detected. Stopping game.',
-        type: 'error',
-        details: expectedErrorMsg,
+        details: { raw: expectedErrorMsg, timestamp: expect.any(String) },
       }
     );
 
@@ -277,8 +276,11 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: 'System Error during turn advancement. Stopping game.',
-        type: 'error',
-        details: thrownError.message,
+        details: {
+          raw: thrownError.message,
+          timestamp: expect.any(String),
+          stack: expect.any(String),
+        },
       })
     );
     expect(stopSpy).toHaveBeenCalledTimes(1); // Stop *was* called internally

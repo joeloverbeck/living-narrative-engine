@@ -207,9 +207,10 @@ describe('TurnManager - Round Lifecycle and Turn Advancement', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message:
         'System Error: No active actors found to start a round. Stopping game.',
-      type: 'error',
-      details:
-        'Cannot start a new round: No active entities with an Actor component found.',
+      details: {
+        raw: 'Cannot start a new round: No active entities with an Actor component found.',
+        timestamp: expect.any(String),
+      },
     });
     expect(logger.info).toHaveBeenCalledWith('Turn Manager stopped.');
     expect(mockUnsubscribeFunction).toHaveBeenCalled();

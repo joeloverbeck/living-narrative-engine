@@ -605,11 +605,13 @@ class CommandProcessor {
     // Payload for core:system_error_occurred does NOT include eventName within it.
     const payload = {
       message: userMessage,
-      type: 'error',
-      details: internalDetails,
+      details: {
+        raw: internalDetails,
+        timestamp: new Date().toISOString(),
+      },
     };
-    if (originalError?.stack && typeof payload.details === 'string') {
-      payload.details += `\nOriginalErrorStack: ${originalError.stack}`;
+    if (originalError?.stack) {
+      payload.details.stack = originalError.stack;
     }
 
     if (originalError) {

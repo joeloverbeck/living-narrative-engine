@@ -67,8 +67,10 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       this.#logger.error(errorMsg, { receivedContextType: typeof turnContext });
       await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: 'Invalid turn context received by CommandOutcomeInterpreter.',
-        type: 'error',
-        details: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
+        details: {
+          raw: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
+          timestamp: new Date().toISOString(),
+        },
       });
       throw new Error(errorMsg);
     }
@@ -79,8 +81,10 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       this.#logger.error(errorMsg, { actorInContext: actor });
       await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: 'Invalid actor in turn context for CommandOutcomeInterpreter.',
-        type: 'error',
-        details: `Actor object in context was ${JSON.stringify(actor)}.`,
+        details: {
+          raw: `Actor object in context was ${JSON.stringify(actor)}.`,
+          timestamp: new Date().toISOString(),
+        },
       });
       throw new Error(errorMsg);
     }
@@ -92,8 +96,10 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       this.#logger.error(baseErrorMsg, { receivedResult: result });
       await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: baseErrorMsg,
-        type: 'error',
-        details: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
+        details: {
+          raw: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
+          timestamp: new Date().toISOString(),
+        },
       });
       throw new Error(baseErrorMsg);
     }
