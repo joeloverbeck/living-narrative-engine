@@ -1,0 +1,43 @@
+{
+  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "id": "core:dismiss",
+  "commandVerb": "dismiss",
+  "name": "Dismiss",
+  "description": "Dismisses one of your followers, ending their companion relationship with you.",
+  "target_domain": "followers",
+  "template": "dismiss {target}",
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            "!!": {
+              "var": "actor.components.core:leading"
+            }
+          },
+          {
+            "in": [
+              {
+                "var": "target.id"
+              },
+              {
+                "var": "actor.components.core:leading.followers"
+              }
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "target.components.core:following.leaderId"
+              },
+              {
+                "var": "actor.id"
+              }
+            ]
+          }
+        ]
+      },
+      "failure_message": "You cannot dismiss that target."
+    }
+  ]
+}

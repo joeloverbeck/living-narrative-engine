@@ -32,7 +32,13 @@
     "characters": [],
     "items": [],
     "locations": [],
-    "actions": ["wait.action.json", "go.action.json", "follow.action.json"],
+    "actions": [
+      "wait.action.json",
+      "go.action.json",
+      "follow.action.json",
+      "stop_following.action.json",
+      "dismiss.action.json"
+    ],
     "rules": [
       "turn_started.rule.json",
       "turn_ended.rule.json",
@@ -65,7 +71,10 @@
       "ui_operation_in_progress.event.json",
       "display_error.event.json",
       "display_warning.event.json",
-      "game_loaded.event.json"
+      "game_loaded.event.json",
+      "follow.event.json",
+      "stop_following.event.json",
+      "dismiss.event.json"
     ],
     "operations": []
   }

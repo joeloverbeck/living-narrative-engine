@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "id": "core:stop_following",
+  "commandVerb": "unfollow",
+  "name": "Stop Following",
+  "description": "Ends the companion relationship, causing your character to no longer follow your current leader.",
+  "target_domain": "none",
+  "template": "unfollow",
+  "prerequisites": [
+    {
+      "logic": {
+        "!!": {
+          "var": "actor.components.core:following"
+        }
+      },
+      "failure_message": "You are not following anyone."
+    }
+  ]
+}

@@ -34,7 +34,8 @@
         "inventory",
         "equipment",
         "environment",
-        "direction"
+        "direction",
+        "followers"
       ]
     },
     "prerequisites": {

@@ -154,24 +154,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         ` -> Processing action definition: ${actionDef.id} (Name: ${actionDef.name || 'N/A'})`
       );
 
-      const initialActorContext = ActionTargetContext.noTarget();
-      if (
-        !this.#actionValidationService.isValid(
-          actionDef,
-          actorEntity,
-          initialActorContext
-        )
-      ) {
-        this.#logger.debug(
-          `    - Action ${actionDef.id} skipped: Invalid for actor based on initial check.`
-        );
-        continue;
-      }
+      // --- BEGIN FIX ---
+      // The faulty "initial actor check" block that was here has been removed.
+      // Validation is now handled correctly within each domain's logic block below.
+      // --- END FIX ---
 
       const domain = actionDef.target_domain;
-      this.#logger.debug(
-        ` -> Passed initial actor check for ${actionDef.id}. Proceeding with target domain: ${domain}`
-      );
 
       try {
         if (domain === 'none' || domain === 'self') {
