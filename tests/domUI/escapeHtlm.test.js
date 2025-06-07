@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { escapeHtml } from '../../src/domUI/rendererUtils.js';
+import { escapeHtml } from '../../src/utils/rendererUtils.js';
 
 describe('escapeHtml', () => {
   it('should return an empty string for non-string inputs', () => {

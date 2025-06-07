@@ -13,7 +13,7 @@ import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
-import { DomUtils } from '../../src/domUI/domUtils.js';
+import { DomUtils } from '../../src/utils/domUtils.js';
 
 jest.mock('../../src/logging/consoleLogger.js');
 jest.mock('../../src/events/validatedEventDispatcher.js');

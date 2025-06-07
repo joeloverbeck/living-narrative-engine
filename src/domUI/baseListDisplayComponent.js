@@ -1,7 +1,7 @@
 // src/domUI/baseListDisplayComponent.js
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
-import { DomUtils } from './domUtils.js';
+import { DomUtils } from '../utils/domUtils.js';
 
 /**
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger

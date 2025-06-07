@@ -10,13 +10,13 @@ import {
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import { BaseListDisplayComponent } from '../../src/domUI/baseListDisplayComponent.js';
-import { DomUtils } from '../../src/domUI/domUtils.js';
+import { DomUtils } from '../../src/utils/domUtils.js';
 import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import { BoundDomRendererBase } from '../../src/domUI/boundDomRendererBase.js'; // For spyOn prototype
 
 // Mock DomUtils
-jest.mock('../../src/domUI/domUtils.js', () => ({
+jest.mock('../../src/utils/domUtils.js', () => ({
   DomUtils: {
     clearElement: jest.fn(),
   },

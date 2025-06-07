@@ -1,7 +1,7 @@
 // src/domUI/saveGameUI.js
 
 import { BaseModalRenderer } from './baseModalRenderer.js';
-import { DomUtils } from './domUtils.js';
+import { DomUtils } from '../utils/domUtils.js';
 import { FormatUtils } from '../utils/formatUtils.js';
 
 /**

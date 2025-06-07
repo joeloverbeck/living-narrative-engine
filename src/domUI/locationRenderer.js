@@ -1,7 +1,7 @@
 // src/domUI/locationRenderer.js
 // --- FILE START ---
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
-import { DomUtils } from './domUtils.js';
+import { DomUtils } from '../utils/domUtils.js';
 import {
   // POSITION_COMPONENT_ID, // No longer directly used for current location logic
   // NAME_COMPONENT_ID, // Handled by EntityDisplayDataProvider

@@ -10,7 +10,7 @@ import {
   createToggleElement,
   escapeHtml,
   truncateText,
-} from '../../src/domUI/rendererUtils.js';
+} from '../../src/utils/rendererUtils.js';
 
 describe('RendererUtils', () => {
   describe('escapeHtml', () => {

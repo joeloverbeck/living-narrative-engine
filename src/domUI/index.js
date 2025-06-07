@@ -11,7 +11,7 @@ export { BaseModalRenderer } from './baseModalRenderer.js'; // Added BaseModalRe
 // Export concrete classes and utilities
 export { default as DocumentContext } from './documentContext.js';
 export { default as DomElementFactory } from './domElementFactory.js';
-export * from './domUtils.js'; // Assuming DomUtils are exported like this
+export * from '../utils/domUtils.js'; // Assuming DomUtils are exported like this
 
 export * from './uiMessageRenderer.js';
 export * from './titleRenderer.js';
