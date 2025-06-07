@@ -13,7 +13,7 @@ import {
 } from '@jest/globals';
 
 // Class under test
-import { ChatAlertRenderer } from '../../src/domUI/chatAlertRenderer.js';
+import { ChatAlertRenderer } from '../../src/domUI/index.js';
 
 // Real implementation needed for creating elements within the test
 import DomElementFactory from '../../src/domUI/domElementFactory.js';

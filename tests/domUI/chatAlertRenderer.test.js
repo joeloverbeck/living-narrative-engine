@@ -8,15 +8,14 @@ import {
   afterEach,
 } from '@jest/globals';
 import { ChatAlertRenderer } from '../../src/domUI/index.js';
-import { escapeHtml } from '../../src/utils/textUtils.js';
-import { Throttler } from '../../src/alerting/Throttler.js';
+import { Throttler } from '../../src/alerting/throttler.js';
 
 // --- Mock Throttler ---
 // By defining the mock implementation outside of the factory, we can control it from our tests.
 const mockWarningAllow = jest.fn();
 const mockErrorAllow = jest.fn();
 
-jest.mock('../../src/alerting/Throttler.js', () => ({
+jest.mock('../../src/alerting/throttler.js', () => ({
   Throttler: jest.fn().mockImplementation((dispatcher, severity) => {
     // Return the correct mock based on the severity it's initialized with
     if (severity === 'warning') {

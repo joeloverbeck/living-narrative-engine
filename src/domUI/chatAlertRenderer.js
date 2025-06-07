@@ -1,8 +1,8 @@
 // src/domUI/chatAlertRenderer.js
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
-import { escapeHtml } from '../utils/textUtils.js';
-import { Throttler } from '../alerting/Throttler.js';
+import { escapeHtml } from './rendererUtils.js';
+import { Throttler } from '../alerting/throttler.js';
 import { generateKey } from '../alerting/throttleUtils.js';
 
 /**

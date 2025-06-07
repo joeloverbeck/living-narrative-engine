@@ -1,0 +1,56 @@
+/* css/components/_chat-alerts.css */
+
+/**
+ * @file Defines styles for the warning and error alert bubbles that appear in the chat/message list.
+ * @see Ticket: Safe Rendering & Truncation Utilities
+ */
+
+.chat-warningBubble,
+.chat-errorBubble {
+  /*
+     * CSS Overflow Guarantees:
+     * Ensures that long, unbroken strings (like API routes or error messages)
+     * do not break the layout of the alert bubbles.
+     */
+  max-width: 300px;
+  word-break: break-all;
+
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+  font-family: sans-serif;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.chat-warningBubble {
+  background-color: #fffbe6;
+  border: 1px solid #ffe58f;
+  color: #614700;
+}
+
+.chat-errorBubble {
+  background-color: #fff1f0;
+  border: 1px solid #ffa39e;
+  color: #820000;
+}
+
+/*
+ * Styles for the "Show more" / "Show less" toggle button.
+ * These are designed to look like subtle links rather than heavy buttons.
+ */
+.toggle-text,
+.toggle-details {
+  background: none;
+  border: none;
+  color: #0052cc;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 0.9em;
+
+  &:hover,
+  &:focus {
+    color: #003a8a;
+  }
+}

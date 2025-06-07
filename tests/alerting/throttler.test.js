@@ -11,7 +11,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { Throttler } from '../../src/alerting/Throttler.js';
+import { Throttler } from '../../src/alerting/throttler.js';
 
 // Create a mock dispatcher that conforms to the ISafeEventDispatcher interface for testing.
 const mockDispatcher = {
