@@ -128,8 +128,9 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
       if (extractedData) {
         try {
           const eventDispatcher = turnContext.getSafeEventDispatcher();
-          eventDispatcher.dispatch('core:ai_action_decided', {
-            actor,
+          // ◆ send only actorId (string), not the entire actor object
+          await eventDispatcher.dispatch('core:ai_action_decided', {
+            actorId: actor.id,
             extractedData,
           });
           logger.debug(

@@ -5,6 +5,7 @@ import { IAIPromptPipeline } from './interfaces/IAIPromptPipeline.js';
 /** @typedef {import('../turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider} IAIPromptContentProvider */
 /** @typedef {import('../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 
@@ -109,9 +110,6 @@ export class AIPromptPipeline extends IAIPromptPipeline {
       throw new Error('PromptBuilder returned an empty or invalid prompt.');
     this.#logger.info(
       `AIPromptPipeline: Generated final prompt string for actor ${actorId} using LLM config for '${currentLlmId}'.`
-    );
-    this.#logger.debug(
-      `AIPromptPipeline: Final Prompt String for ${actorId}:\n${finalPromptString}`
     );
     return finalPromptString;
   }

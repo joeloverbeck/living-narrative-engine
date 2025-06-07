@@ -1,5 +1,7 @@
+// tests/ai/thoughtPersistenceListener.test.js
+
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
-import { ThoughtPersistenceListener } from '../../src/ai/ThoughtPersistenceListener.js';
+import { ThoughtPersistenceListener } from '../../src/ai/thoughtPersistenceListener.js';
 import { persistThoughts } from '../../src/ai/thoughtPersistenceHook.js';
 
 jest.mock('../../src/ai/thoughtPersistenceHook.js', () => ({
@@ -26,8 +28,9 @@ describe('ThoughtPersistenceListener', () => {
   test('persists thoughts when entity found', () => {
     const actorEntity = {};
     entityManager.getEntityInstance.mockReturnValue(actorEntity);
+
     listener.handleEvent({
-      actor: { id: 'a1' },
+      actorId: 'a1',
       extractedData: { thoughts: 'hi' },
     });
 
@@ -41,8 +44,9 @@ describe('ThoughtPersistenceListener', () => {
 
   test('logs warning when entity missing', () => {
     entityManager.getEntityInstance.mockReturnValue(null);
+
     listener.handleEvent({
-      actor: { id: 'a1' },
+      actorId: 'a1',
       extractedData: { thoughts: 'hi' },
     });
 
@@ -53,7 +57,10 @@ describe('ThoughtPersistenceListener', () => {
   });
 
   test('does nothing when thoughts missing', () => {
-    listener.handleEvent({ actor: { id: 'a1' }, extractedData: null });
+    listener.handleEvent({
+      actorId: 'a1',
+      extractedData: null,
+    });
     expect(persistThoughts).not.toHaveBeenCalled();
   });
 });

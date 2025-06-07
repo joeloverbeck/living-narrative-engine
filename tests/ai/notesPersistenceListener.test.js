@@ -1,5 +1,7 @@
+// tests/ai/notesPersistenceListener.test.js
+
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
-import { NotesPersistenceListener } from '../../src/ai/NotesPersistenceListener.js';
+import { NotesPersistenceListener } from '../../src/ai/notesPersistenceListener.js';
 import { persistNotes } from '../../src/ai/notesPersistenceHook.js';
 
 jest.mock('../../src/ai/notesPersistenceHook.js', () => ({
@@ -26,8 +28,9 @@ describe('NotesPersistenceListener', () => {
   test('persists notes when entity found', () => {
     const actorEntity = {};
     entityManager.getEntityInstance.mockReturnValue(actorEntity);
+
     listener.handleEvent({
-      actor: { id: 'a1' },
+      actorId: 'a1',
       extractedData: { notes: ['note'] },
     });
 
@@ -41,8 +44,9 @@ describe('NotesPersistenceListener', () => {
 
   test('logs warning when entity missing', () => {
     entityManager.getEntityInstance.mockReturnValue(null);
+
     listener.handleEvent({
-      actor: { id: 'a1' },
+      actorId: 'a1',
       extractedData: { notes: ['n'] },
     });
 
@@ -53,7 +57,10 @@ describe('NotesPersistenceListener', () => {
   });
 
   test('does nothing when notes array empty', () => {
-    listener.handleEvent({ actor: { id: 'a1' }, extractedData: { notes: [] } });
+    listener.handleEvent({
+      actorId: 'a1',
+      extractedData: { notes: [] },
+    });
     expect(persistNotes).not.toHaveBeenCalled();
   });
 });

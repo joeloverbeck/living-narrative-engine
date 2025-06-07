@@ -15,8 +15,8 @@
 import { IInitializationService } from '../../interfaces/IInitializationService.js';
 import { tokens } from '../../dependencyInjection/tokens.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
-import { ThoughtPersistenceListener } from '../../ai/ThoughtPersistenceListener.js';
-import { NotesPersistenceListener } from '../../ai/NotesPersistenceListener.js';
+import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
+import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
