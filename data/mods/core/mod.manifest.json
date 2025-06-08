@@ -41,7 +41,6 @@
     ],
     "rules": [
       "entity_speech.rule.json",
-      "game_loaded.rule.json",
       "go.rule.json",
       "log_perceptible_events.rule.json",
       "player_turn_prompt.rule.json",
@@ -82,7 +81,6 @@
       "display_failed_action_result.event.json",
       "display_speech.event.json",
       "disable_input.event.json",
-      "display_message.event.json",
       "enable_input.event.json",
       "set_title.event.json",
       "update_available_actions.event.json",

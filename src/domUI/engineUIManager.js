@@ -6,7 +6,6 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
-  ENGINE_MESSAGE_DISPLAY_REQUESTED,
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
@@ -47,18 +46,11 @@ import {
  */
 
 /**
- * @typedef {object} EngineMessageDisplayRequestedPayload
- * @property {string} message - The message content to display.
- * @property {'info' | 'error' | 'fatal' | 'warning' | 'success'} type - The type of message.
- */
-
-/**
  * @typedef {import('../interfaces/IEvent.js').IEvent<EngineInitializingUIPayload>} EngineInitializingUIEvent
  * @typedef {import('../interfaces/IEvent.js').IEvent<EngineReadyUIPayload>} EngineReadyUIEvent
  * @typedef {import('../interfaces/IEvent.js').IEvent<EngineOperationInProgressUIPayload>} EngineOperationInProgressUIEvent
  * @typedef {import('../interfaces/IEvent.js').IEvent<EngineOperationFailedUIPayload>} EngineOperationFailedUIEvent
  * @typedef {import('../interfaces/IEvent.js').IEvent<EngineStoppedUIPayload>} EngineStoppedUIEvent
- * @typedef {import('../interfaces/IEvent.js').IEvent<EngineMessageDisplayRequestedPayload>} EngineMessageDisplayRequestedEvent
  * @typedef {import('../interfaces/IEvent.js').IEvent<{}>} EmptyPayloadEvent
  */
 
@@ -167,10 +159,6 @@ export class EngineUIManager {
     this.#eventDispatcher.subscribe(
       ENGINE_STOPPED_UI,
       this.#handleEngineStoppedUI.bind(this)
-    );
-    this.#eventDispatcher.subscribe(
-      ENGINE_MESSAGE_DISPLAY_REQUESTED,
-      this.#handleEngineMessageDisplayRequested.bind(this)
     );
     this.#eventDispatcher.subscribe(
       REQUEST_SHOW_SAVE_GAME_UI,
@@ -301,7 +289,9 @@ export class EngineUIManager {
       return;
     }
 
-    this.#domUiFacade.messages.render(payload.errorMessage, 'fatal');
+    this.#logger.error(
+      `EngineUIManager: ${payload.errorTitle} - ${payload.errorMessage}`
+    );
     this.#domUiFacade.input.setEnabled(false, 'Operation failed.'); // As per ticket spec
     this.#domUiFacade.title.set(payload.errorTitle);
     this.#logger.error(
@@ -334,46 +324,6 @@ export class EngineUIManager {
     this.#domUiFacade.title.set('Game Stopped'); // Optional update as per ticket
     this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_STOPPED_UI}. Input disabled. Title set to "Game Stopped".`
-    );
-  }
-
-  /**
-   * Handles the ENGINE_MESSAGE_DISPLAY_REQUESTED event. Renders a message
-   * of a specified type (info, error, etc.) in the UI.
-   *
-   * @private
-   * @param {EngineMessageDisplayRequestedEvent} event - The event object containing payload: { message: string, type: 'info' | 'error' | 'fatal' | 'warning' | 'success' }.
-   */
-  #handleEngineMessageDisplayRequested(event) {
-    const payload = event.payload;
-    this.#logger.debug(
-      `EngineUIManager: Received ${ENGINE_MESSAGE_DISPLAY_REQUESTED}`,
-      payload
-    );
-    if (
-      !payload ||
-      typeof payload.message !== 'string' ||
-      typeof payload.type !== 'string'
-    ) {
-      this.#logger.warn(
-        `EngineUIManager: Invalid or missing payload for ${ENGINE_MESSAGE_DISPLAY_REQUESTED}.`,
-        payload
-      );
-      return;
-    }
-    // Ensure type is one of the allowed values, though TS helps here at compile time.
-    const validTypes = ['info', 'error', 'fatal', 'warning', 'success'];
-    if (!validTypes.includes(payload.type)) {
-      this.#logger.warn(
-        `EngineUIManager: Invalid message type "${payload.type}" for ${ENGINE_MESSAGE_DISPLAY_REQUESTED}. Defaulting to 'info'.`,
-        payload
-      );
-      payload.type = 'info';
-    }
-
-    this.#domUiFacade.messages.render(payload.message, payload.type);
-    this.#logger.debug(
-      `EngineUIManager: Handled ${ENGINE_MESSAGE_DISPLAY_REQUESTED}. Displayed ${payload.type} message: "${payload.message.substring(0, 50)}..."`
     );
   }
 
@@ -445,10 +395,7 @@ export class EngineUIManager {
     );
     const message =
       'Cannot save at this moment (e.g. game not fully initialized or in a critical state).';
-    this.#domUiFacade.messages.render(message, 'info');
-    this.#logger.debug(
-      `EngineUIManager: Handled ${CANNOT_SAVE_GAME_INFO}. Displayed info message: "${message}"`
-    );
+    this.#logger.info(`EngineUIManager: ${message}`);
   }
 
   /**

@@ -7,7 +7,6 @@
 /** @typedef {import('./locationRenderer').LocationRenderer} LocationRenderer */
 /** @typedef {import('./titleRenderer').TitleRenderer} TitleRenderer */
 /** @typedef {import('./inputStateController').InputStateController} InputStateController */
-/** @typedef {import('./uiMessageRenderer').UiMessageRenderer} UiMessageRenderer */
 /** @typedef {import('./perceptionLogRenderer').PerceptionLogRenderer} PerceptionLogRenderer */
 /** @typedef {import('./saveGameUI').default} SaveGameUI */
 /** @typedef {import('./loadGameUI').default} LoadGameUI */
@@ -27,7 +26,6 @@ export class DomUiFacade {
   #locationRenderer;
   #titleRenderer;
   #inputStateController;
-  #uiMessageRenderer;
   #perceptionLogRenderer;
   #saveGameUI;
   #loadGameUI;
@@ -43,7 +41,6 @@ export class DomUiFacade {
    * @param {LocationRenderer} deps.locationRenderer - Renderer for location details.
    * @param {TitleRenderer} deps.titleRenderer - Renderer for the main game title.
    * @param {InputStateController} deps.inputStateController - Controller for the player input element's state.
-   * @param {UiMessageRenderer} deps.uiMessageRenderer - Renderer for UI messages (echo, info, error).
    * @param {SpeechBubbleRenderer} deps.speechBubbleRenderer - Renderer for speech bubbles.
    * @param {PerceptionLogRenderer} deps.perceptionLogRenderer - Renderer for perception logs.
    * @param {ActionResultRenderer} deps.actionResultRenderer - Renderer for action result bubbles.
@@ -57,7 +54,6 @@ export class DomUiFacade {
     locationRenderer,
     titleRenderer,
     inputStateController,
-    uiMessageRenderer,
     speechBubbleRenderer,
     perceptionLogRenderer,
     actionResultRenderer,
@@ -87,10 +83,6 @@ export class DomUiFacade {
     )
       throw new Error(
         'DomUiFacade: Missing or invalid inputStateController dependency.'
-      );
-    if (!uiMessageRenderer || typeof uiMessageRenderer.render !== 'function')
-      throw new Error(
-        'DomUiFacade: Missing or invalid uiMessageRenderer dependency.'
       );
     if (
       !speechBubbleRenderer ||
@@ -123,7 +115,6 @@ export class DomUiFacade {
     this.#locationRenderer = locationRenderer;
     this.#titleRenderer = titleRenderer;
     this.#inputStateController = inputStateController;
-    this.#uiMessageRenderer = uiMessageRenderer;
     this.#speechBubbleRenderer = speechBubbleRenderer;
     this.#perceptionLogRenderer = perceptionLogRenderer;
     this.#actionResultRenderer = actionResultRenderer;
@@ -166,15 +157,6 @@ export class DomUiFacade {
    */
   get input() {
     return this.#inputStateController;
-  }
-
-  /**
-   * Provides the UiMessageRenderer instance.
-   *
-   * @returns {UiMessageRenderer} Renderer for text messages.
-   */
-  get messages() {
-    return this.#uiMessageRenderer;
   }
 
   /**
@@ -240,7 +222,6 @@ export class DomUiFacade {
     this.#locationRenderer?.dispose?.();
     this.#titleRenderer?.dispose?.();
     this.#inputStateController?.dispose?.();
-    this.#uiMessageRenderer?.dispose?.();
     this.#speechBubbleRenderer?.dispose?.();
     this.#perceptionLogRenderer?.dispose?.();
     this.#actionResultRenderer?.dispose?.();

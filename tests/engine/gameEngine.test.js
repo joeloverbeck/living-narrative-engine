@@ -22,7 +22,6 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
-  ENGINE_MESSAGE_DISPLAY_REQUESTED,
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
@@ -454,14 +453,7 @@ describe('GameEngine', () => {
       const expectedErrorMsg =
         'Game engine is not initialized. Cannot save game.';
 
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        {
-          message: expectedErrorMsg,
-          type: 'error',
-        }
-      );
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockGamePersistenceService.saveGame).not.toHaveBeenCalled();
       expect(result).toEqual({ success: false, error: expectedErrorMsg });
     });
@@ -521,14 +513,7 @@ describe('GameEngine', () => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           `GameEngine.triggerManualSave: ${expectedErrorMsg}`
         );
-        expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-        expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-          ENGINE_MESSAGE_DISPLAY_REQUESTED,
-          {
-            message: expectedErrorMsg,
-            type: 'error',
-          }
-        );
+        expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
         expect(result).toEqual({ success: false, error: expectedErrorMsg });
 
         mockContainer.resolve = originalGlobalResolve; // Restore global mockContainer.resolve
@@ -562,19 +547,12 @@ describe('GameEngine', () => {
           type: 'manual',
         });
 
-        expect(dispatchCalls[2][0]).toBe(ENGINE_MESSAGE_DISPLAY_REQUESTED);
+        expect(dispatchCalls[2][0]).toBe(ENGINE_READY_UI);
         expect(dispatchCalls[2][1]).toEqual({
-          message: `Game "${SAVE_NAME}" saved successfully.`,
-          type: 'info',
-        });
-
-        expect(dispatchCalls[3][0]).toBe(ENGINE_READY_UI);
-        expect(dispatchCalls[3][1]).toEqual({
           activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
           message: 'Save operation finished. Ready.',
         });
-
-        expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(4);
+        expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(3);
         expect(result).toEqual(saveResultData);
       });
 
@@ -602,19 +580,13 @@ describe('GameEngine', () => {
           MOCK_ACTIVE_WORLD_FOR_SAVE
         );
 
-        expect(dispatchCalls[1][0]).toBe(ENGINE_MESSAGE_DISPLAY_REQUESTED);
+        expect(dispatchCalls[1][0]).toBe(ENGINE_READY_UI);
         expect(dispatchCalls[1][1]).toEqual({
-          message: `Manual save failed for "${SAVE_NAME}". Error: ${saveFailureData.error}`,
-          type: 'error',
-        });
-
-        expect(dispatchCalls[2][0]).toBe(ENGINE_READY_UI);
-        expect(dispatchCalls[2][1]).toEqual({
           activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
           message: 'Save operation finished. Ready.',
         });
 
-        expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(3);
+        expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(2);
         expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
           GAME_SAVED_ID,
           expect.anything()
@@ -643,19 +615,13 @@ describe('GameEngine', () => {
           MOCK_ACTIVE_WORLD_FOR_SAVE
         );
 
-        expect(dispatchCalls[1][0]).toBe(ENGINE_MESSAGE_DISPLAY_REQUESTED);
+        expect(dispatchCalls[1][0]).toBe(ENGINE_READY_UI);
         expect(dispatchCalls[1][1]).toEqual({
-          message: `Save operation encountered an unexpected error for "${SAVE_NAME}": ${unexpectedError.message}`,
-          type: 'error',
-        });
-
-        expect(dispatchCalls[2][0]).toBe(ENGINE_READY_UI);
-        expect(dispatchCalls[2][1]).toEqual({
           activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
           message: 'Save operation finished. Ready.',
         });
 
-        expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(3);
+        expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(2);
         expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
           GAME_SAVED_ID,
           expect.anything()
@@ -927,7 +893,7 @@ describe('GameEngine', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
     });
 
-    it('should dispatch ENGINE_MESSAGE_DISPLAY_REQUESTED if GamePersistenceService is unavailable and log error', () => {
+    it('should log error if GamePersistenceService is unavailable when showing save UI', () => {
       const originalResolve = mockContainer.resolve;
       mockContainer.resolve = jest.fn((token) => {
         if (token === tokens.GamePersistenceService) return null;
@@ -956,15 +922,7 @@ describe('GameEngine', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
       );
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        {
-          message:
-            'Cannot open save menu: GamePersistenceService is unavailable.',
-          type: 'error',
-        }
-      );
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockGamePersistenceService.isSavingAllowed).not.toHaveBeenCalled(); // Should not be called if service is null
 
       mockContainer.resolve = originalResolve; // Restore
@@ -992,7 +950,7 @@ describe('GameEngine', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
     });
 
-    it('should dispatch ENGINE_MESSAGE_DISPLAY_REQUESTED if GamePersistenceService is unavailable and log error', () => {
+    it('should log error if GamePersistenceService is unavailable when showing load UI', () => {
       const originalResolve = mockContainer.resolve;
       mockContainer.resolve = jest.fn((token) => {
         if (token === tokens.GamePersistenceService) return null;
@@ -1017,15 +975,7 @@ describe('GameEngine', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
       );
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        {
-          message:
-            'Cannot open load menu: GamePersistenceService is unavailable.',
-          type: 'error',
-        }
-      );
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
       mockContainer.resolve = originalResolve; // Restore
     });
   });

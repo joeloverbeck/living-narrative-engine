@@ -30,7 +30,6 @@
  * --- DOM UI Layer (Refactored) ---
  * @property {DiToken} IDocumentContext - Token for the DOM access abstraction service.
  * @property {DiToken} DomElementFactory - Token for the utility creating DOM elements.
- * @property {DiToken} UiMessageRenderer - Token for the component rendering UI messages/echoes.
  * @property {DiToken} SpeechBubbleRenderer - Token for the component rendering speech bubbles with portraits.
  * @property {DiToken} TitleRenderer - Token for the component rendering the main H1 title.
  * @property {DiToken} InputStateController - Token for the component controlling input field state.
@@ -163,7 +162,6 @@ export const tokens = Object.freeze({
   // --- DOM UI Layer (Refactored) ---
   IDocumentContext: 'IDocumentContext',
   DomElementFactory: 'DomElementFactory',
-  UiMessageRenderer: 'UiMessageRenderer',
   SpeechBubbleRenderer: 'SpeechBubbleRenderer',
   TitleRenderer: 'TitleRenderer',
   InputStateController: 'InputStateController',

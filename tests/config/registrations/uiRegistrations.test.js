@@ -120,11 +120,6 @@ describe('registerUI', () => {
 
   it('should register all other UI components', () => {
     // Spot-check a few other key registrations to ensure they are still present
-    expect(mockSingle).toHaveBeenCalledWith(
-      tokens.UiMessageRenderer,
-      expect.any(Function),
-      expect.any(Array)
-    );
     expect(mockSingletonFactory).toHaveBeenCalledWith(
       tokens.TitleRenderer,
       expect.any(Function)
