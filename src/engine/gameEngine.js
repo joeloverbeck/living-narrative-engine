@@ -2,7 +2,6 @@
 
 import { tokens } from '../dependencyInjection/tokens.js';
 import {
-  GAME_LOADED_ID,
   GAME_SAVED_ID,
   NEW_GAME_STARTED_ID,
   LOADED_GAME_STARTED_ID,
@@ -579,9 +578,6 @@ class GameEngine {
       );
     }
 
-    await this.#safeEventDispatcher.dispatch(GAME_LOADED_ID, {
-      saveIdentifier,
-    });
     await this.#safeEventDispatcher.dispatch(LOADED_GAME_STARTED_ID, {
       saveIdentifier,
       worldName: this.#activeWorld,

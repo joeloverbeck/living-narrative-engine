@@ -4,7 +4,6 @@
 export const NEW_GAME_STARTED_ID = 'core:new_game_started';
 export const LOADED_GAME_STARTED_ID = 'core:loaded_game_started';
 export const GAME_STOPPED_ID = 'core:game_stopped';
-export const GAME_LOADED_ID = 'core:game_loaded';
 export const GAME_SAVED_ID = 'core:game_saved';
 export const TURN_STARTED_ID = 'core:turn_started';
 export const TURN_ENDED_ID = 'core:turn_ended';
