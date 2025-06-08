@@ -214,7 +214,7 @@ class PerceptionUpdateService {
     // </editor-fold>
 
     try {
-      this.#logger.info(
+      this.#logger.debug(
         `PerceptionUpdateService: Processing event to add log entry in location '${locationId}'. Entry: ${entry.descriptionText}`
       );
 
@@ -238,7 +238,7 @@ class PerceptionUpdateService {
       );
 
       if (perceiverEntityIds.length === 0) {
-        this.#logger.info(
+        this.#logger.debug(
           `PerceptionUpdateService: No entities with '${PERCEPTION_LOG_COMPONENT_ID}' found in location '${locationId}'. No logs will be updated.`
         );
         return { success: true, logsUpdated: 0, warnings };
@@ -330,7 +330,7 @@ class PerceptionUpdateService {
         }
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `PerceptionUpdateService: Processed location ${locationId}. Logs updated for ${updatedCount} out of ${perceiverEntityIds.length} targeted entities. Warnings: ${warnings.length}`
       );
       return { success: true, logsUpdated: updatedCount, warnings };

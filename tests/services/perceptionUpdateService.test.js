@@ -453,7 +453,7 @@ describe('PerceptionUpdateService', () => {
         expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
         expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
         expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           `PerceptionUpdateService: No entities with '${PERCEPTION_LOG_COMPONENT_ID}' found in location '${locationId}'. No logs will be updated.`
         );
       });
@@ -484,7 +484,7 @@ describe('PerceptionUpdateService', () => {
         );
         expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
         expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           `PerceptionUpdateService: No entities with '${PERCEPTION_LOG_COMPONENT_ID}' found in location '${locationId}'. No logs will be updated.`
         );
       });
@@ -633,7 +633,7 @@ describe('PerceptionUpdateService', () => {
             logEntries: [entry],
           }
         );
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           `PerceptionUpdateService: Processed location ${locationId}. Logs updated for 2 out of 2 targeted entities. Warnings: ${result.warnings.length}`
         );
       });
