@@ -1,0 +1,79 @@
+/* css/components/_action-result-bubbles.css */
+
+/* --------------------------------------------------------------------------
+   Action‑Result Bubbles
+   --------------------------------------------------------------------------
+   Styles for visually distinct success and failure “bubbles” that appear in
+   the chat panel to report the outcome of player actions.
+
+   ↳ Accessibility
+   • Foreground / background pairs have been selected to exceed the WCAG 2.1
+     AA minimum contrast ratio of 4.5 : 1 (white #FFF on success‑green #2E7D32
+     ≈ 5.13 : 1; white on failure‑red #C62828 ≈ 5.62 : 1).
+   • Other accessibility attributes (e.g. aria‑live) are applied at the DOM
+     level by the renderer and remain outside this stylesheet’s scope.
+
+   ↳ Usage
+     <li class="action-success-bubble">You arrive at the town square.</li>
+     <li class="action-failure-bubble">The way is blocked.</li>
+
+   -------------------------------------------------------------------------- */
+
+/* Base look‑and‑feel shared by both variants --------------------------------*/
+.action-success-bubble,
+.action-failure-bubble {
+  /* Layout */
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem; /* 8 × 12 px */
+  margin: 0.25rem 0; /* vertical breathing room between bubbles */
+
+  /* Shape */
+  border-radius: 0.75rem; /* pill / bubble feel */
+  border-width: 1px;
+  border-style: solid;
+
+  /* Typography */
+  font-weight: 500;
+  line-height: 1.35;
+  word-wrap: break-word;
+
+  /* Subtle elevation so bubbles sit atop background content */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Success -------------------------------------------------------------------*/
+.action-success-bubble {
+  /* Colours chosen for > AA contrast against #FFF background */
+  background-color: #2e7d32; /* accessible green‑600 */
+  color: #ffffff; /* always readable on dark greens */
+  border-color: #1b5e20; /* deeper green for definition */
+}
+
+/* Failure -------------------------------------------------------------------*/
+.action-failure-bubble {
+  /* Colours chosen for > AA contrast against #FFF background */
+  background-color: #c62828; /* accessible red‑700 */
+  color: #ffffff; /* white reads cleanly on deep red */
+  border-color: #8e0000; /* darker red for definition */
+}
+
+/* (Optional) Motion preferences ---------------------------------------------*/
+@media (prefers-reduced-motion: no-preference) {
+  .action-success-bubble,
+  .action-failure-bubble {
+    /* quick fade‑in to draw attention without being jarring */
+    animation: fadeInScale 120ms ease-out both;
+  }
+
+  @keyframes fadeInScale {
+    0% {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}

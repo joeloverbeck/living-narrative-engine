@@ -31,6 +31,10 @@
 @import url('components/_perception-log.css');
 @import url('components/_current-turn-actor.css');
 @import url('components/_game-actions.css');
+
+/* Action-Result Bubbles */
+@import url('components/_action-result-bubbles.css');
+
 /* Add more component imports here as they are created/refactored if any were missed */
 
 /* 5. Utilities */
