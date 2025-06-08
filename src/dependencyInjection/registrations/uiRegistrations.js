@@ -284,6 +284,7 @@ export function registerUI(
   // --- 3. Register Facade ---
   registrar.single(tokens.DomUiFacade, DomUiFacade, [
     tokens.ActionButtonsRenderer,
+    tokens.ActionResultRenderer,
     tokens.LocationRenderer,
     tokens.TitleRenderer,
     tokens.InputStateController,
