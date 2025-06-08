@@ -44,6 +44,8 @@ import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.
  */
 class LLMProcessingError extends Error {
   /**
+   * Error type thrown when LLM output cannot be parsed or validated.
+   *
    * @param {string} message - The error message.
    * @param {object} details - The diagnostic details.
    */
@@ -153,10 +155,10 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         speech,
       };
 
-      logger.info(
+      logger.debug(
         `LLMResponseProcessor: Successfully validated and transformed LLM output for actor ${actorId}. Action: ${finalAction.actionDefinitionId}`
       );
-      logger.info(
+      logger.debug(
         `LLMResponseProcessor: Transformed ProcessedTurnAction details for ${actorId}:`,
         { actorId, action: finalAction, extractedData: { thoughts, notes } }
       );

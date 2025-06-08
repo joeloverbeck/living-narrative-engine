@@ -5,6 +5,8 @@ import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../../../src/turns/schemas/l
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 
 /**
+ * Creates a mocked logger object for testing.
+ *
  * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').ILogger>}
  */
 const mockLogger = () => ({
@@ -15,6 +17,8 @@ const mockLogger = () => ({
 });
 
 /**
+ * Creates a mocked schema validator for testing.
+ *
  * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').ISchemaValidator>}
  */
 const mockSchemaValidator = () => ({
@@ -127,7 +131,7 @@ describe('LLMResponseProcessor', () => {
           },
         });
 
-        expect(logger.info).toHaveBeenCalledWith(
+        expect(logger.debug).toHaveBeenCalledWith(
           `LLMResponseProcessor: Successfully validated and transformed LLM output for actor ${actorId}. Action: core:move`
         );
         expect(schemaValidatorMock.validate).toHaveBeenCalledWith(
