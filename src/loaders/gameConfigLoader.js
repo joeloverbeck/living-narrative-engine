@@ -258,7 +258,7 @@ class GameConfigLoader {
       }
       // --- END: MODLOADER-XXX IMPLEMENTATION ---
 
-      this.#logger.info(
+      this.#logger.debug(
         `GameConfigLoader: Successfully loaded and validated ${parsedConfig.mods.length} mod IDs from game config. Final order: [${parsedConfig.mods.join(', ')}]`
       );
       return parsedConfig.mods; // Return the validated (and potentially modified) mods array
