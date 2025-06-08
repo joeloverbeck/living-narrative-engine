@@ -82,7 +82,7 @@ export class BrowserStorageProvider extends IStorageProvider {
           }
         }
         this.#rootHandle = handle;
-        this.#logger.info(`Root directory selected: ${this.#rootHandle.name}`);
+        this.#logger.debug(`Root directory selected: ${this.#rootHandle.name}`);
         return this.#rootHandle;
       } catch (error) {
         if (error.name === 'AbortError') {
@@ -340,7 +340,7 @@ export class BrowserStorageProvider extends IStorageProvider {
       });
       const file = await fileHandle.getFile();
       const contents = await file.arrayBuffer();
-      this.#logger.info(
+      this.#logger.debug(
         `BrowserStorageProvider: Successfully read file ${filePath}, size: ${contents.byteLength} bytes.`
       );
       return new Uint8Array(contents);
@@ -394,7 +394,7 @@ export class BrowserStorageProvider extends IStorageProvider {
       }
 
       await directoryHandle.removeEntry(fileName);
-      this.#logger.info(
+      this.#logger.debug(
         `BrowserStorageProvider: Successfully deleted file ${normalizedFilePath}`
       );
       return { success: true };
@@ -428,7 +428,7 @@ export class BrowserStorageProvider extends IStorageProvider {
     );
     try {
       await this.#getRelativeFileHandle(filePath, { create: false });
-      this.#logger.info(
+      this.#logger.debug(
         `BrowserStorageProvider: File exists: ${filePath.replace(/^\/+|\/+$/g, '')}`
       );
       return true;
@@ -437,7 +437,7 @@ export class BrowserStorageProvider extends IStorageProvider {
         error.name === 'NotFoundError' ||
         (error.message && error.message.toLowerCase().includes('not found'))
       ) {
-        this.#logger.info(
+        this.#logger.debug(
           `BrowserStorageProvider: File does not exist: ${filePath.replace(/^\/+|\/+$/g, '')}`
         );
         return false;
@@ -446,7 +446,7 @@ export class BrowserStorageProvider extends IStorageProvider {
         error.message &&
         error.message.startsWith('Failed to obtain root directory handle')
       ) {
-        this.#logger.info(
+        this.#logger.debug(
           `BrowserStorageProvider: Cannot check file existence for ${filePath.replace(/^\/+|\/+$/g, '')} as root directory selection was not completed. Assuming false. Error: ${error.message}`
         );
         return false;
