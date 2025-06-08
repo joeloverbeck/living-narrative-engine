@@ -5,9 +5,7 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": [
-      "followers"
-    ],
+    "required": ["followers"],
     "properties": {
       "followers": {
         "description": "An array of namespaced IDs for all entities currently following this one.",

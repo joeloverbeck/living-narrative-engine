@@ -5,9 +5,7 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": [
-      "leaderId"
-    ],
+    "required": ["leaderId"],
     "properties": {
       "leaderId": {
         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",

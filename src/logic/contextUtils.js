@@ -96,7 +96,7 @@ export function resolvePlaceholders(
           logger?.warn(
             `Placeholder path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
           );
-          return input;
+          return undefined; // callers now see “no value”
         }
         logger?.debug(
           `Resolved full string placeholder ${placeholderSyntax} to: ${typeof resolvedValue === 'object' ? JSON.stringify(resolvedValue) : resolvedValue}`

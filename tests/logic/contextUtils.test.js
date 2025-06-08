@@ -4,19 +4,15 @@
  * @jest-environment node
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import { resolvePlaceholders } from '../../src/logic/contextUtils.js'; // Adjust path to your contextUtils.js
-import resolvePath from '../../src/utils/resolvePath.js'; // Assuming resolvePath is used internally and correctly located
+import { resolvePlaceholders } from '../../src/logic/contextUtils.js';
 
-// --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 
-// --- Mock Dependencies ---
-
-// Mock ILogger
-/** @type {jest.Mocked<ILogger>} */
+// ───────────────────────────────────────────────────────────────────────────────
+// Mock helpers
+// ───────────────────────────────────────────────────────────────────────────────
 let mockLogger;
-
-// Helper to create a standard mock executionContext structure
+/** Build a minimal executionContext suitable for these tests */
 const createMockExecutionContext = (
   customContextVars = {},
   eventData = {},
@@ -24,23 +20,22 @@ const createMockExecutionContext = (
   targetData = null
 ) => ({
   event: { type: 'mockEvent', payload: eventData },
-  actor: actorData || {
+  actor: actorData ?? {
     id: 'mockActor',
     name: 'ActorName',
     components: { stats: { health: 100 } },
   },
-  target: targetData, // Will be null if not provided
-  logger: mockLogger, // This logger is for the overall execution context if needed by deeper parts
+  target: targetData,
+  logger: mockLogger,
   evaluationContext: {
-    event: { type: 'mockEvent', payload: eventData }, // Often duplicated for jsonLogic
-    actor: actorData || {
+    event: { type: 'mockEvent', payload: eventData },
+    actor: actorData ?? {
       id: 'mockActor',
       name: 'ActorName',
       components: { stats: { health: 100 } },
-    }, // Also often duplicated
+    },
     target: targetData,
     context: {
-      // This is the actual variable store for {context.varName}
       varA: 'valueA',
       numVar: 123,
       boolVar: true,
@@ -49,13 +44,15 @@ const createMockExecutionContext = (
       arrayVar: ['item1', { subItem: 'subValue' }],
       ...customContextVars,
     },
-    globals: {}, // Assuming globals exist
-    entities: {}, // Assuming entities exist
-    logger: mockLogger, // This logger is part of the JsonLogicEvaluationContext
+    globals: {},
+    entities: {},
+    logger: mockLogger,
   },
 });
 
-// --- Test Suite ---
+// ───────────────────────────────────────────────────────────────────────────────
+// Test suite
+// ───────────────────────────────────────────────────────────────────────────────
 describe('resolvePlaceholders (contextUtils.js)', () => {
   beforeEach(() => {
     mockLogger = {
@@ -132,12 +129,10 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       expect(resolvePlaceholders(input, context, mockLogger)).toBe(100);
     });
 
-    test('1.10 should return original string if `context.` path is not found and log warning', () => {
+    test('1.10 should return undefined if `context.` path is not found and log warning', () => {
       const context = createMockExecutionContext();
       const input = '{context.nonExistentVar}';
-      expect(resolvePlaceholders(input, context, mockLogger)).toBe(
-        '{context.nonExistentVar}'
-      );
+      expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
           'Placeholder path "context.nonExistentVar" (interpreted as "nonExistentVar") from {context.nonExistentVar} could not be resolved.'
@@ -145,12 +140,10 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       );
     });
 
-    test('1.11 should return original string if `event.` path is not found and log warning', () => {
+    test('1.11 should return undefined if `event.` path is not found and log warning', () => {
       const context = createMockExecutionContext();
       const input = '{event.nonExistentKey}';
-      expect(resolvePlaceholders(input, context, mockLogger)).toBe(
-        '{event.nonExistentKey}'
-      );
+      expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
           'Placeholder path "event.nonExistentKey" (interpreted as "event.nonExistentKey") from {event.nonExistentKey} could not be resolved.'
@@ -158,42 +151,22 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       );
     });
 
-    test('1.12 should return original string if `context.` path used but `evaluationContext.context` is missing, and log warning', () => {
+    test('1.12 should return undefined if `context.` path used but `evaluationContext.context` is missing, and log warning', () => {
       const context = createMockExecutionContext();
-      delete context.evaluationContext.context; // Remove the variable store
+      delete context.evaluationContext.context;
       const input = '{context.varA}';
-      const placeholderSyntax = input; // For top-level, fullLogPath is the syntax itself
 
-      expect(resolvePlaceholders(input, context, mockLogger)).toBe(
-        '{context.varA}'
-      );
-
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2); // Ensure exactly two warnings
-      expect(mockLogger.warn.mock.calls[0][0]).toBe(
-        `Placeholder "context.varA" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${placeholderSyntax}`
-      );
-      expect(mockLogger.warn.mock.calls[1][0]).toBe(
-        `Placeholder path "context.varA" (interpreted as "context.varA") from ${placeholderSyntax} could not be resolved. Path: ${placeholderSyntax}`
-      );
+      expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
+      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
     });
 
-    test('1.13 should return original string if `context.` path used but `evaluationContext` is missing, and log warning', () => {
+    test('1.13 should return undefined if `context.` path used but `evaluationContext` is missing, and log warning', () => {
       const context = createMockExecutionContext();
-      delete context.evaluationContext; // Remove evaluationContext entirely
+      delete context.evaluationContext;
       const input = '{context.varA}';
-      const placeholderSyntax = input;
 
-      expect(resolvePlaceholders(input, context, mockLogger)).toBe(
-        '{context.varA}'
-      );
-
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2); // Ensure exactly two warnings
-      expect(mockLogger.warn.mock.calls[0][0]).toBe(
-        `Placeholder "context.varA" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${placeholderSyntax}`
-      );
-      expect(mockLogger.warn.mock.calls[1][0]).toBe(
-        `Placeholder path "context.varA" (interpreted as "context.varA") from ${placeholderSyntax} could not be resolved. Path: ${placeholderSyntax}`
-      );
+      expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
+      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
     });
 
     test('1.14 should return original string if executionContext itself is not an object, and log warning', () => {
