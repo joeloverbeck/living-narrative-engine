@@ -1,0 +1,44 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:entity_moved",
+  "description": "Dispatched when an entity has successfully moved from one location to another. This event triggers follower movement.",
+  "payloadSchema": {
+    "description": "Defines the payload for the 'core:entity_moved' event.",
+    "type": "object",
+    "required": [
+      "eventName",
+      "entityId",
+      "previousLocationId",
+      "currentLocationId",
+      "direction",
+      "originalCommand"
+    ],
+    "properties": {
+      "eventName": {
+        "description": "Confirms the type of event.",
+        "const": "core:entity_moved"
+      },
+      "entityId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the entity that moved."
+      },
+      "previousLocationId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the location the entity was in before the move."
+      },
+      "currentLocationId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the location the entity is now in after the move."
+      },
+      "direction": {
+        "type": "string",
+        "description": "The direction of the movement (e.g., 'north', 'west')."
+      },
+      "originalCommand": {
+        "type": "string",
+        "description": "The original command string that initiated the move."
+      }
+    },
+    "additionalProperties": false
+  }
+}

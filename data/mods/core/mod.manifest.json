@@ -85,7 +85,8 @@
       "display_message.event.json",
       "enable_input.event.json",
       "set_title.event.json",
-      "update_available_actions.event.json"
+      "update_available_actions.event.json",
+      "entity_moved.event.json"
     ],
     "operations": []
   }

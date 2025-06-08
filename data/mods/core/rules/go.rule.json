@@ -110,6 +110,21 @@
             }
           },
           {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch the primary 'entity_moved' event for systems like follower logic.",
+            "parameters": {
+              "eventType": "core:entity_moved",
+              "payload": {
+                "eventName": "core:entity_moved",
+                "entityId": "{event.payload.actorId}",
+                "previousLocationId": "{context.actorPositionComponentPreMove.locationId}",
+                "currentLocationId": "{context.resolvedTargetLocationId}",
+                "direction": "{event.payload.direction}",
+                "originalCommand": "{event.payload.originalInput}"
+              }
+            }
+          },
+          {
             "type": "QUERY_COMPONENT",
             "comment": "Fetch the name of the new target location for messaging and perception.",
             "parameters": {
