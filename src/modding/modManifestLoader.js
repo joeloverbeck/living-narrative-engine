@@ -237,9 +237,12 @@ class ModManifestLoader {
 
     /* ── 6. summary ───────────────────────────────────────────────── */
     this.#lastLoadedManifests = stored;
-    this.#logger.info(
-      `${fn}: finished – fetched ${settled.filter((s) => s.status === 'fulfilled').length}/` +
-        `${trimmedIds.length}, validated ${validated.length}, stored ${stored.size}.`
+    this.#logger.debug(
+      `${fn}: finished – fetched ${
+        settled.filter((s) => s.status === 'fulfilled').length
+      }/${
+        trimmedIds.length
+      }, validated ${validated.length}, stored ${stored.size}.`
     );
     return stored;
   }

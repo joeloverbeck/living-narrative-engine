@@ -124,7 +124,7 @@ describe('ModManifestLoader — branch edges', () => {
     expect(result.size).toBe(0);
     expect(deps.registry.store).not.toHaveBeenCalled();
     // *** FIX: Removed colon from 'fetched: 0/2' ***
-    expect(deps.logger.info).toHaveBeenCalledWith(
+    expect(deps.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('fetched 0/2')
     );
   });
@@ -206,7 +206,7 @@ describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
 
     // final summary reflects 2/3 fetched ok
     // *** FIX: Removed colon from 'fetched: 2/3' ***
-    expect(deps.logger.info).toHaveBeenCalledWith(
+    expect(deps.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('fetched 2/3')
     );
   });
