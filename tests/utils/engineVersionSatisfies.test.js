@@ -2,7 +2,7 @@
 import { describe, it, expect } from '@jest/globals';
 
 // Import the function under test
-import engineVersionSatisfies from '../../src/utils/engineVersionSatisfies.js';
+import engineVersionSatisfies from '../../src/engine/engineVersionSatisfies.js';
 
 // Import the actual engine version to test against
 import { ENGINE_VERSION } from '../../src/engine/engineVersion.js'; // Currently '0.0.1' based on package.json

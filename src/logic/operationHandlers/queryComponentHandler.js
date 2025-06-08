@@ -46,10 +46,8 @@ class QueryComponentHandler {
   }
 
   #resolveEntityId(entityRef, executionContext, logger) {
-    // --- CORRECTED: Resolve actor/target from executionContext.evaluationContext ---
     const actorId = executionContext?.evaluationContext?.actor?.id;
     const targetId = executionContext?.evaluationContext?.target?.id;
-    // --- END CORRECTION ---
 
     if (typeof entityRef === 'string') {
       const trimmedRef = entityRef.trim();

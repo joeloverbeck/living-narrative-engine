@@ -1,6 +1,6 @@
 // src/utils/engineVersionSatisfies.js
 import semver from 'semver';
-import { ENGINE_VERSION } from '../engine/engineVersion.js';
+import { ENGINE_VERSION } from './engineVersion.js';
 
 /**
  * Checks if the current engine version (ENGINE_VERSION) satisfies a given SemVer range.

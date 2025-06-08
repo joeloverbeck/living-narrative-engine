@@ -1,6 +1,6 @@
 // src/modding/modVersionValidator.js
 
-import engineVersionSatisfies from '../utils/engineVersionSatisfies.js';
+import engineVersionSatisfies from '../engine/engineVersionSatisfies.js';
 import ModDependencyError from '../errors/modDependencyError.js';
 import { ENGINE_VERSION } from '../engine/engineVersion.js'; // Import the actual engine version
 

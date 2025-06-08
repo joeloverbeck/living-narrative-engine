@@ -1,29 +1,20 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "core_follow_auto_move",
-  "comment": "Automatically queues a core:go for each co-located follower.",
+  "comment": "After a leader moves, sync their follower list and have any co-located followers attempt to follow.",
   "event_type": "core:entity_moved",
   "condition": {
-    "and": [
+    "!==": [
       {
-        "!==": [
-          {
-            "var": "actor.components.core:leading"
-          },
-          null
-        ]
+        "var": "actor"
       },
-      {
-        "!!": {
-          "var": "actor.components.core:leading.followers.length"
-        }
-      }
+      null
     ]
   },
   "actions": [
     {
       "type": "QUERY_SYSTEM_DATA",
-      "comment": "Refresh the leader cache (never trust stale).",
+      "comment": "First, authoritatively rebuild the leader's follower list.",
       "parameters": {
         "source_id": "LeaderListSyncService",
         "query_details": {
@@ -36,53 +27,79 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "IF",
+      "comment": "Now that the cache is fresh, check if the leader has any followers.",
       "parameters": {
-        "variable_name": "followers",
-        "value": "{actor.components.core:leading.followers}"
-      }
-    },
-    {
-      "type": "FOR_EACH",
-      "parameters": {
-        "collection": "context.followers",
-        "item_variable": "followerId",
-        "actions": [
+        "condition": {
+          "and": [
+            {
+              "!==": [
+                {
+                  "var": "actor.components.core:leading"
+                },
+                null
+              ]
+            },
+            {
+              "!!": {
+                "var": "actor.components.core:leading.followers.length"
+              }
+            }
+          ]
+        },
+        "then_actions": [
           {
-            "type": "QUERY_COMPONENT",
+            "type": "SET_VARIABLE",
+            "comment": "Use placeholder to resolve the complex path and store it in a simple variable.",
             "parameters": {
-              "entity_ref": {
-                "entityId": "{context.followerId}"
-              },
-              "component_type": "core:position",
-              "result_variable": "followerPos"
+              "variable_name": "followerList",
+              "value": "{actor.components.core:leading.followers}"
             }
           },
           {
-            "type": "IF",
+            "type": "FOR_EACH",
             "parameters": {
-              "condition": {
-                "==": [
-                  {
-                    "var": "context.followerPos.locationId"
-                  },
-                  {
-                    "var": "event.payload.previousLocationId"
-                  }
-                ]
-              },
-              "then_actions": [
+              "collection": "context.followerList",
+              "item_variable": "followerId",
+              "actions": [
                 {
-                  "type": "DISPATCH_EVENT",
+                  "type": "QUERY_COMPONENT",
                   "parameters": {
-                    "eventType": "core:attempt_action",
-                    "payload": {
-                      "eventName": "core:attempt_action",
-                      "actorId": "{context.followerId}",
-                      "actionId": "core:go",
-                      "direction": "{event.payload.direction}",
-                      "originalInput": "{event.payload.originalCommand}"
-                    }
+                    "entity_ref": {
+                      "entityId": "{context.followerId}"
+                    },
+                    "component_type": "core:position",
+                    "result_variable": "followerPos"
+                  }
+                },
+                {
+                  "type": "IF",
+                  "parameters": {
+                    "condition": {
+                      "==": [
+                        {
+                          "var": "context.followerPos.locationId"
+                        },
+                        {
+                          "var": "event.payload.previousLocationId"
+                        }
+                      ]
+                    },
+                    "then_actions": [
+                      {
+                        "type": "DISPATCH_EVENT",
+                        "parameters": {
+                          "eventType": "core:attempt_action",
+                          "payload": {
+                            "eventName": "core:attempt_action",
+                            "actorId": "{context.followerId}",
+                            "actionId": "core:go",
+                            "direction": "{event.payload.direction}",
+                            "originalInput": "{event.payload.originalCommand}"
+                          }
+                        }
+                      }
+                    ]
                   }
                 }
               ]
