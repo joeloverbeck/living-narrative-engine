@@ -1,4 +1,7 @@
-// src/domUI/actionResultRenderer.js
+/**
+ * @file This module handles displaying the success or failure of actions.
+ * @see src/domUI/actionResultRenderer.js
+ */
 
 /**
  * @file Defines the {@link ActionResultRenderer} class – a renderer that outputs the
@@ -78,6 +81,7 @@ export class ActionResultRenderer extends BoundDomRendererBase {
     }
 
     const elementsConfig = {
+      scrollContainer: { selector: '#outputDiv', required: true },
       listContainerElement: { selector: '#message-list', required: true },
     };
 
@@ -197,10 +201,6 @@ export class ActionResultRenderer extends BoundDomRendererBase {
    * @private
    */
   #scrollToBottom() {
-    const container = this.elements.listContainerElement;
-    if (!container) return;
-
-    // Use scrollHeight instead of behaviour smooth; CSS can handle smooth-scroll if desired.
-    container.scrollTop = container.scrollHeight;
+    this._scrollToPanelBottom('scrollContainer', 'listContainerElement');
   }
 }

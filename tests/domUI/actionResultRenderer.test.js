@@ -1,5 +1,3 @@
-// tests/domUI/actionResultRenderer.test.js
-
 /**
  * @file Unit tests for the ActionResultRenderer class.
  * @see Ticket 2.1.4
@@ -44,6 +42,7 @@ const mockValidatedEventDispatcher = {
 };
 
 let mockMessageList;
+let mockScrollContainer;
 let mockDocumentContext;
 
 describe('ActionResultRenderer', () => {
@@ -55,13 +54,21 @@ describe('ActionResultRenderer', () => {
     // Mock the DOM environment
     mockMessageList = {
       appendChild: jest.fn(),
+      // These properties are part of the element's interface but not directly used for scrolling logic under test
       scrollTop: 0,
-      scrollHeight: 100, // Mock value
+      scrollHeight: 100,
+    };
+    mockScrollContainer = {
+      scrollTop: 0,
+      scrollHeight: 250, // Mock value
     };
     mockDocumentContext = {
       query: jest.fn((selector) => {
         if (selector === '#message-list') {
           return mockMessageList;
+        }
+        if (selector === '#outputDiv') {
+          return mockScrollContainer;
         }
         return null;
       }),
@@ -81,14 +88,16 @@ describe('ActionResultRenderer', () => {
     // Clean up
     eventListeners = null;
     mockMessageList = null;
+    mockScrollContainer = null;
     mockDocumentContext = null;
   });
 
   describe('Test Case: Initialization', () => {
     it('should instantiate without errors and bind to the message list', () => {
       // The constructor is called in beforeEach. If it throws, the test fails.
-      // We can assert that the necessary DOM query was made.
+      // We can assert that the necessary DOM queries were made.
       expect(mockDocumentContext.query).toHaveBeenCalledWith('#message-list');
+      expect(mockDocumentContext.query).toHaveBeenCalledWith('#outputDiv');
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -134,7 +143,9 @@ describe('ActionResultRenderer', () => {
       expect(mockMessageList.appendChild).toHaveBeenCalledTimes(1);
 
       // Assert that the container is scrolled to the bottom
-      expect(mockMessageList.scrollTop).toBe(mockMessageList.scrollHeight);
+      expect(mockScrollContainer.scrollTop).toBe(
+        mockScrollContainer.scrollHeight
+      );
     });
   });
 
@@ -164,6 +175,11 @@ describe('ActionResultRenderer', () => {
       // Assert that the <li> is appended to the mock #message-list container.
       expect(mockMessageList.appendChild).toHaveBeenCalledWith(mockLiElement);
       expect(mockMessageList.appendChild).toHaveBeenCalledTimes(1);
+
+      // Assert that the container is scrolled to the bottom
+      expect(mockScrollContainer.scrollTop).toBe(
+        mockScrollContainer.scrollHeight
+      );
     });
   });
 

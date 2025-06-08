@@ -276,22 +276,12 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
   /**
    * Scrolls the output/chat panel to the bottom.
-   * Uses this.elements.outputDivElement provided by BoundDomRendererBase.
+   * Uses the centralized method from BoundDomRendererBase.
    *
    * @private
    */
   #scrollToBottom() {
-    if (
-      this.elements.outputDivElement &&
-      typeof this.elements.outputDivElement.scrollTop !== 'undefined'
-    ) {
-      this.elements.outputDivElement.scrollTop =
-        this.elements.outputDivElement.scrollHeight;
-    } else {
-      this.logger.warn(
-        `${this._logPrefix} Could not scroll #outputDiv. Element not found in this.elements or properties missing.`
-      );
-    }
+    this._scrollToPanelBottom('outputDivElement', 'speechContainer');
   }
 
   /**

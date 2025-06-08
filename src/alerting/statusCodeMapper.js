@@ -11,6 +11,7 @@
 
 /**
  * A map of HTTP status codes to user-friendly display messages.
+ *
  * @type {Map<number, string>}
  */
 export const statusCodeMap = new Map([
@@ -25,7 +26,6 @@ export const statusCodeMap = new Map([
 /**
  * @description Converts an event's details object, which may contain an HTTP status code,
  * into a user-friendly message and a set of developer details.
- *
  * @param {object | null | undefined} details - The details object from the event payload. May contain `statusCode`, `url`, and `raw` properties.
  * @param {string} originalMessage - The original message from the event, used as a fallback if no status code logic applies.
  * @returns {FriendlyResult} An object containing the message to display and the developer details.

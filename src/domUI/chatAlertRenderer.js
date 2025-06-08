@@ -69,6 +69,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       documentContext,
       validatedEventDispatcher: safeEventDispatcher,
       elementsConfig: {
+        scrollContainer: { selector: '#outputDiv', required: true },
         chatPanel: { selector: '#message-list', required: false },
       },
     });
@@ -144,9 +145,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
    * @private
    */
   #scrollToBottom() {
-    if (this.elements.chatPanel) {
-      this.elements.chatPanel.scrollTop = this.elements.chatPanel.scrollHeight;
-    }
+    this._scrollToPanelBottom('scrollContainer', 'chatPanel');
   }
 
   /**

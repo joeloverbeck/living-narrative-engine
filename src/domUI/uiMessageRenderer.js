@@ -2,7 +2,7 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js';
 // DomElementFactory is not explicitly imported if only used via this.#domElementFactory,
 // but good practice to keep it if it was there or if type hints are desired.
 // import DomElementFactory from './domElementFactory.js';
-import { ACTION_FAILED_ID, DISPLAY_MESSAGE_ID } from '../constants/eventIds.js';
+import { DISPLAY_MESSAGE_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
@@ -136,12 +136,6 @@ export class UiMessageRenderer extends BoundDomRendererBase {
         this.#onShow.bind(this)
       )
     );
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
-        ACTION_FAILED_ID, // Assuming this is the correct event for echoing failed actions.
-        this.#onCommandEcho.bind(this)
-      )
-    );
 
     this.logger.debug(`${this._logPrefix} Subscribed to VED events.`);
 
@@ -155,37 +149,9 @@ export class UiMessageRenderer extends BoundDomRendererBase {
 
   // #ensureMessageList() method is removed. Its logic is in the constructor.
 
-  /** Scroll the #outputDivElement (actual scroll container) to bottom. */
+  /** Scrolls the chat panel to the bottom. */
   #scrollToBottom() {
-    if (
-      this.elements.outputDivElement &&
-      typeof this.elements.outputDivElement.scrollTop !== 'undefined' &&
-      typeof this.elements.outputDivElement.scrollHeight !== 'undefined'
-    ) {
-      this.elements.outputDivElement.scrollTop =
-        this.elements.outputDivElement.scrollHeight;
-    } else {
-      this.logger.warn(
-        `${this._logPrefix} Could not scroll #outputDivElement. Element or properties missing from this.elements. Attempting fallback scroll on #messageList.`
-      );
-      if (
-        this.elements.messageList &&
-        this.elements.messageList.lastChild &&
-        typeof this.elements.messageList.lastChild.scrollIntoView === 'function'
-      ) {
-        this.elements.messageList.lastChild.scrollIntoView({
-          behavior: 'auto',
-          block: 'end',
-        });
-        this.logger.debug(
-          `${this._logPrefix} Fallback: Scrolled last message in #messageList into view.`
-        );
-      } else {
-        this.logger.warn(
-          `${this._logPrefix} Fallback scroll method also failed for #messageList or it's empty.`
-        );
-      }
-    }
+    this._scrollToPanelBottom('outputDivElement', 'messageList');
   }
 
   //----------------------------------------------------------------------
@@ -265,38 +231,6 @@ export class UiMessageRenderer extends BoundDomRendererBase {
     } else {
       this.logger.warn(
         `${this._logPrefix} Received invalid or malformed 'textUI:display_message' event object.`,
-        eventObject
-      );
-    }
-  }
-
-  /**
-   * Handles 'core:action_failed' for command echo.
-   *
-   * @param {IEvent<any>} eventObject The full event object.
-   */
-  #onCommandEcho(eventObject) {
-    const payload = eventObject?.payload;
-    if (
-      payload &&
-      typeof payload.originalInput === 'string' &&
-      payload.originalInput.trim()
-    ) {
-      this.render(`> ${payload.originalInput}`, 'echo');
-    } else if (
-      payload &&
-      payload.command &&
-      typeof payload.command === 'string' &&
-      payload.command.trim()
-    ) {
-      // Fallback for events that might use 'command' instead of 'originalInput'
-      this.logger.debug(
-        `${this._logPrefix} Echoing 'command' field from event as 'originalInput' was missing or empty.`
-      );
-      this.render(`> ${payload.command}`, 'echo');
-    } else {
-      this.logger.warn(
-        `${this._logPrefix} Received command echo event (e.g., core:action_failed) without valid originalInput or command.`,
         eventObject
       );
     }

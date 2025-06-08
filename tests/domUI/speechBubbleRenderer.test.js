@@ -1,4 +1,5 @@
-// tests/domUI/speechBubbleRenderer.test.js
+// tests/domUI / speechBubbleRenderer.test.js;
+
 import {
   describe,
   it,
@@ -8,7 +9,7 @@ import {
   afterEach,
 } from '@jest/globals';
 import { SpeechBubbleRenderer } from '../../src/domUI/index.js';
-import { BoundDomRendererBase } from '../../src/domUI/boundDomRendererBase.js';
+import { BoundDomRendererBase } from '../../src/domUI/index.js';
 import { DISPLAY_SPEECH_ID } from '../../src/constants/eventIds';
 import {
   NAME_COMPONENT_ID,
@@ -677,13 +678,19 @@ describe('SpeechBubbleRenderer', () => {
       expect(mockOutputDiv.scrollTop).toBe(mockOutputDiv.scrollHeight);
     });
 
-    it('should warn if elements.outputDivElement is not available', () => {
+    it('should warn when primary and fallback scroll containers fail', () => {
       renderer.elements.outputDivElement = null;
+      // The default mock for speechContainer (mockMessageList) has no scroll properties,
+      // so the fallback scroll attempt will also fail.
       renderer.renderSpeech('id', 'test');
+
+      // Expect a warning for the primary container failing
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Could not scroll #outputDiv. Element not found in this.elements'
-        )
+        "[SpeechBubbleRenderer] Could not scroll primary container 'outputDivElement'. Attempting fallback on 'speechContainer'."
+      );
+      // Expect a second warning for the fallback container also failing
+      expect(logger.warn).toHaveBeenCalledWith(
+        "[SpeechBubbleRenderer] Fallback scroll method also failed for 'speechContainer' or it's empty."
       );
     });
   });

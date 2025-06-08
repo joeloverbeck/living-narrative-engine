@@ -155,6 +155,52 @@ export class BoundDomRendererBase extends RendererBase {
   }
 
   /**
+   * Scrolls a designated scroll container to the bottom. This is a utility
+   * for components that add content to a scrollable panel, like a chat or log.
+   *
+   * It prioritizes scrolling the element mapped to `scrollContainerKey`.
+   * If that fails or is not present, it attempts a fallback by scrolling the
+   * last child of the element mapped to `contentContainerKey` into view.
+   *
+   * @protected
+   * @param {string} scrollContainerKey - The key in `this.elements` for the primary scrollable container (e.g., 'outputDivElement').
+   * @param {string} contentContainerKey - The key in `this.elements` for the content container, used for fallback scrolling (e.g., 'messageList').
+   */
+  _scrollToPanelBottom(scrollContainerKey, contentContainerKey) {
+    const scrollContainer = this.elements[scrollContainerKey];
+    if (
+      scrollContainer &&
+      typeof scrollContainer.scrollTop !== 'undefined' &&
+      typeof scrollContainer.scrollHeight !== 'undefined'
+    ) {
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    } else {
+      this.logger.warn(
+        `${this._logPrefix} Could not scroll primary container '${scrollContainerKey}'. Attempting fallback on '${contentContainerKey}'.`
+      );
+
+      const contentContainer = this.elements[contentContainerKey];
+      if (
+        contentContainer &&
+        contentContainer.lastElementChild && // Use lastElementChild to ignore text/comment nodes
+        typeof contentContainer.lastElementChild.scrollIntoView === 'function'
+      ) {
+        contentContainer.lastElementChild.scrollIntoView({
+          behavior: 'auto',
+          block: 'end',
+        });
+        this.logger.debug(
+          `${this._logPrefix} Fallback: Scrolled last element in '${contentContainerKey}' into view.`
+        );
+      } else {
+        this.logger.warn(
+          `${this._logPrefix} Fallback scroll method also failed for '${contentContainerKey}' or it's empty.`
+        );
+      }
+    }
+  }
+
+  /**
    * Dispose method. Calls super.dispose() for base class cleanup.
    * Derived classes can override this to add their own specific disposal logic,
    * ensuring they also call super.dispose().
