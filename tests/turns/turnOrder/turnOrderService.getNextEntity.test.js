@@ -188,11 +188,11 @@ describe('TurnOrderService', () => {
       if (mockInitiativeQueueInstance) {
         expect(mockInitiativeQueueInstance.getNext).not.toHaveBeenCalled();
       }
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: getNextEntity returned null (queue is likely empty).'
       );
-      expect(mockLogger.debug).not.toHaveBeenCalled(); // No debug log for advancing turn
+      // The advancing turn debug is not called
       expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -222,11 +222,11 @@ describe('TurnOrderService', () => {
       if (mockSimpleQueueInstance) {
         expect(mockSimpleQueueInstance.getNext).not.toHaveBeenCalled();
       }
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: getNextEntity returned null (queue is likely empty).'
       );
-      expect(mockLogger.debug).not.toHaveBeenCalled(); // No debug log for advancing turn
+      // The advancing turn debug is not called
       expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
     });

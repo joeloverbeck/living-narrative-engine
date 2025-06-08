@@ -115,6 +115,7 @@ describe('TurnOrderService', () => {
 
   afterEach(() => {
     // Optional: Verify no unexpected errors were logged during any test
+    // eslint-disable-next-line jest/no-standalone-expect
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
@@ -138,12 +139,13 @@ describe('TurnOrderService', () => {
       );
 
       // 2. Logging
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `TurnOrderService: Adding entity "${entityToAdd.id}" with initiative ${priority} to the current round.`
       );
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings for valid input
@@ -167,12 +169,13 @@ describe('TurnOrderService', () => {
       );
 
       // 2. Logging
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `TurnOrderService: Adding entity "${entityToAdd.id}" with initiative ${expectedPriority} to the current round.`
       );
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled(); // Explicit default is not a warning case
@@ -202,12 +205,13 @@ describe('TurnOrderService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `TurnOrderService.addEntity (initiative): Invalid initiative value "${invalidPriority}" provided for entity "${entityToAdd.id}". Defaulting to ${expectedPriority}.`
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `TurnOrderService: Adding entity "${entityToAdd.id}" with initiative ${expectedPriority} to the current round.`
       );
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
     });
@@ -236,12 +240,13 @@ describe('TurnOrderService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `TurnOrderService.addEntity (initiative): Invalid initiative value "${invalidPriority}" provided for entity "${entityToAdd.id}". Defaulting to ${expectedPriority}.`
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `TurnOrderService: Adding entity "${entityToAdd.id}" with initiative ${expectedPriority} to the current round.`
       );
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
     });
@@ -265,12 +270,13 @@ describe('TurnOrderService', () => {
       );
 
       // 2. Logging
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `TurnOrderService: Adding entity "${entityToAdd.id}" with initiative ${expectedPriority} to the current round.`
       );
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled(); // Undefined defaults gracefully, no warning needed
@@ -299,12 +305,13 @@ describe('TurnOrderService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `TurnOrderService.addEntity (initiative): Invalid initiative value "${invalidPriority}" provided for entity "${entityToAdd.id}". Defaulting to ${expectedPriority}.`
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `TurnOrderService: Adding entity "${entityToAdd.id}" with initiative ${expectedPriority} to the current round.`
       );
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
     });
@@ -332,12 +339,13 @@ describe('TurnOrderService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `TurnOrderService.addEntity (initiative): Invalid initiative value "${invalidPriority}" provided for entity "${entityToAdd.id}". Defaulting to ${expectedPriority}.`
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `TurnOrderService: Adding entity "${entityToAdd.id}" with initiative ${expectedPriority} to the current round.`
       );
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
     });

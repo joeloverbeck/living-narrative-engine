@@ -109,15 +109,16 @@ describe('TurnOrderService', () => {
       );
 
       // 2. Logging
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
+        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
+      );
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityIdToRemove}" processed for removal (actual removal may be lazy depending on queue type).`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
-      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -179,19 +180,21 @@ describe('TurnOrderService', () => {
       );
 
       // 2. Logging
-      // Info log IS expected, because the service logs the attempt
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      // Debug log is expected for the removal processing
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
+        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
+      );
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityIdToRemove}" processed for removal (actual removal may be lazy depending on queue type).`
       );
       // Warn log for "not found" is NOT expected, because null IS expected from initiative queue remove
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
         expect.stringContaining('not found in the current turn order queue')
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
-      );
+      // The two debug logs already asserted above
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
