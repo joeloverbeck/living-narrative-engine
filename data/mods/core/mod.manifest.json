@@ -74,7 +74,8 @@
       "game_loaded.event.json",
       "follow.event.json",
       "stop_following.event.json",
-      "dismiss.event.json"
+      "dismiss.event.json",
+      "display_successful_action_result.event.json"
     ],
     "operations": []
   }
