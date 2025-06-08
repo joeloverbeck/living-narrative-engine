@@ -63,7 +63,6 @@
       "ai_turn_processing_ended.event.json",
       "turn_ended.event.json",
       "command_parse_failed.event.json",
-      "action_executed.event.json",
       "action_failed.event.json",
       "system_warning_occurred.event.json",
       "system_error_occurred.event.json",
