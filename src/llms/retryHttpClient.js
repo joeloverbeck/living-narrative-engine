@@ -208,7 +208,7 @@ export class RetryHttpClient extends IHttpClient {
         const response = await fetch(url, options);
 
         if (response.ok) {
-          this.#logger.info(
+          this.#logger.debug(
             `RetryHttpClient.request: Success ${response.status} ${url}`
           );
           return await response.json();
