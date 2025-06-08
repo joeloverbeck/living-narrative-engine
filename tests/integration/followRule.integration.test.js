@@ -322,7 +322,11 @@ describe('core_handle_follow rule (integration)', () => {
     // 3. dispatcher sent two events with correct types
     const calls = h.validatedDispatcher.dispatch.mock.calls;
     const types = calls.map(([ev]) => ev).sort();
-    expect(types).toEqual(['core:perceptible_event', 'core:turn_ended']);
+    expect(types).toEqual([
+      'core:display_successful_action_result',
+      'core:perceptible_event',
+      'core:turn_ended',
+    ]);
 
     // 4. perceptible description interpolated
     const perceptPayload = calls.find(
@@ -363,7 +367,11 @@ describe('core_handle_follow rule (integration)', () => {
     // 3. other assertions remain the same
     const calls = h.validatedDispatcher.dispatch.mock.calls;
     const types = calls.map(([ev]) => ev).sort();
-    expect(types).toEqual(['core:perceptible_event', 'core:turn_ended']);
+    expect(types).toEqual([
+      'core:display_successful_action_result',
+      'core:perceptible_event',
+      'core:turn_ended',
+    ]);
     const perceptPayload = calls.find(
       ([t]) => t === 'core:perceptible_event'
     )[1];

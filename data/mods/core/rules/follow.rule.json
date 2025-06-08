@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "core_handle_follow",
-  "comment": "Adds core:following to the actor, rebuilds leader caches, and emits a perceptible ‘follow’ event.",
+  "comment": "Adds core:following to the actor, rebuilds leader caches, emits a perceptible ‘follow’ event, and informs the UI.",
   "event_type": "core:attempt_action",
   "condition": {
     "==": [
@@ -46,7 +46,9 @@
               "source_id": "LeaderListSyncService",
               "query_details": {
                 "action": "rebuildFor",
-                "leaderIds": ["{context.oldFollowComp.leaderId}"]
+                "leaderIds": [
+                  "{context.oldFollowComp.leaderId}"
+                ]
               },
               "result_variable": "oldLeaderSyncResult"
             }
@@ -61,14 +63,16 @@
         "source_id": "LeaderListSyncService",
         "query_details": {
           "action": "rebuildFor",
-          "leaderIds": ["{event.payload.targetId}"]
+          "leaderIds": [
+            "{event.payload.targetId}"
+          ]
         },
         "result_variable": "newLeaderSyncResult"
       }
     },
     {
       "type": "QUERY_COMPONENT",
-      "comment": "Grab human-readable names for the perceptible log.",
+      "comment": "Grab human-readable names for the perceptible log and UI message.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:name",
@@ -122,6 +126,16 @@
             "{event.payload.actorId}",
             "{event.payload.targetId}"
           ]
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch a decoupled event to the UI indicating the successful follow action.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.followerName.text} is now following {context.leaderName.text}."
         }
       }
     },
