@@ -341,7 +341,7 @@ class EntityManager extends IEntityManager {
         this.#commitEntity(entity, definitionId, actualInstanceId);
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `createEntityInstance: created '${actualInstanceId}' from '${definitionId}'.`
       );
       return entity;
