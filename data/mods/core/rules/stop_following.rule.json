@@ -1,0 +1,108 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "core:handle_stop_following",
+  "comment": "Handles the 'core:stop_following' action. Removes the follower's component, updates the old leader's cache, dispatches a conditional perceptible event, and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "core:stop_following"
+    ]
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Step 1: Get the current leader's ID for cache sync before removing the component.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:following",
+        "result_variable": "oldFollowingData"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Step 2: Authoritatively remove the following relationship from the actor.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:following"
+      }
+    },
+    {
+      "type": "QUERY_SYSTEM_DATA",
+      "comment": "Step 3: Tell the LeaderListSyncService to rebuild the cache for the old leader.",
+      "parameters": {
+        "source_id": "LeaderListSyncService",
+        "query_details": {
+          "action": "rebuildFor",
+          "leaderIds": ["{context.oldFollowingData.leaderId}"]
+        },
+        "result_variable": "leaderSyncResult"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Step 4.1: Get actor's position for co-location check.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Step 4.2: Get old leader's position for co-location check.",
+      "parameters": {
+        "entity_ref": {
+          "entityId": "{context.oldFollowingData.leaderId}"
+        },
+        "component_type": "core:position",
+        "result_variable": "oldLeaderPosition"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Step 4.3: Only dispatch a perceptible event if the actor and old leader are in the same location.",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.actorPosition.locationId"
+            },
+            {
+              "var": "context.oldLeaderPosition.locationId"
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "This event is for other characters to observe.",
+            "parameters": {
+              "eventType": "core:perceptible_event",
+              "payload": {
+                "locationId": "{context.actorPosition.locationId}",
+                "descriptionText": "{actor.name} is no longer following {target(context.oldFollowingData.leaderId).name}.",
+                "perceptionType": "state_change_observable",
+                "actorId": "{event.payload.actorId}",
+                "targetId": "{context.oldFollowingData.leaderId}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Step 5: Signal to the Turn Manager that the actor's turn is over.",
+      "parameters": {
+        "eventType": "core:turn_ended",
+        "payload": {
+          "entityId": "{event.payload.actorId}",
+          "success": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "core:handle_dismiss",
+  "comment": "Handles the 'core:dismiss' action. Removes the component from the TARGET, updates the ACTOR's (leader's) cache, dispatches a conditional perceptible event, and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "core:dismiss"
+    ]
+  },
+  "actions": [
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Step 1: Authoritatively remove the following relationship from the TARGET entity.",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "core:following"
+      }
+    },
+    {
+      "type": "QUERY_SYSTEM_DATA",
+      "comment": "Step 2: Tell the LeaderListSyncService to rebuild the cache for the ACTOR (the leader).",
+      "parameters": {
+        "source_id": "LeaderListSyncService",
+        "query_details": {
+          "action": "rebuildFor",
+          "leaderIds": ["{event.payload.actorId}"]
+        },
+        "result_variable": "leaderSyncResult"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Step 3.1: Get actor's (leader's) position for co-location check.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Step 3.2: Get target's (follower's) position for co-location check.",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "core:position",
+        "result_variable": "targetPosition"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Step 3.3: Only dispatch a perceptible event if the leader and follower are in the same location.",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.actorPosition.locationId"
+            },
+            {
+              "var": "context.targetPosition.locationId"
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "This event is for other characters to observe.",
+            "parameters": {
+              "eventType": "core:perceptible_event",
+              "payload": {
+                "locationId": "{context.actorPosition.locationId}",
+                "descriptionText": "{actor.name} has dismissed {target.name} from their service.",
+                "perceptionType": "state_change_observable",
+                "actorId": "{event.payload.actorId}",
+                "targetId": "{event.payload.targetId}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Step 4: Signal to the Turn Manager that the actor's turn is over.",
+      "parameters": {
+        "eventType": "core:turn_ended",
+        "payload": {
+          "entityId": "{event.payload.actorId}",
+          "success": true
+        }
+      }
+    }
+  ]
+}

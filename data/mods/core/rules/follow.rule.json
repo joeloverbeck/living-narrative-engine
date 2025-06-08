@@ -46,9 +46,7 @@
               "source_id": "LeaderListSyncService",
               "query_details": {
                 "action": "rebuildFor",
-                "leaderIds": [
-                  "{context.oldFollowComp.leaderId}"
-                ]
+                "leaderIds": ["{context.oldFollowComp.leaderId}"]
               },
               "result_variable": "oldLeaderSyncResult"
             }
@@ -63,9 +61,7 @@
         "source_id": "LeaderListSyncService",
         "query_details": {
           "action": "rebuildFor",
-          "leaderIds": [
-            "{event.payload.targetId}"
-          ]
+          "leaderIds": ["{event.payload.targetId}"]
         },
         "result_variable": "newLeaderSyncResult"
       }
