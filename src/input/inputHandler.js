@@ -95,8 +95,8 @@ class InputHandler extends IInputHandler {
   _subscribeToEvents() {
     // Subscribe to enable event
     this.#validatedEventDispatcher.subscribe(
-      'textUI:enable_input',
-      /** @param {SystemEventPayloads['textUI:enable_input']} _event - Ignored event payload */
+      'core:enable_input',
+      /** @param {SystemEventPayloads['core:enable_input']} _event - Ignored event payload */
       (_event) => {
         this.enable();
       }
@@ -104,14 +104,14 @@ class InputHandler extends IInputHandler {
 
     // Subscribe to disable event
     this.#validatedEventDispatcher.subscribe(
-      'textUI:disable_input',
-      /** @param {SystemEventPayloads['textUI:disable_input']} _event - Ignored event payload */
+      'core:disable_input',
+      /** @param {SystemEventPayloads['core:disable_input']} _event - Ignored event payload */
       (_event) => {
         this.disable();
       }
     );
     console.log(
-      "InputHandler: Subscribed to 'textUI:enable_input' and 'textUI:disable_input' events."
+      "InputHandler: Subscribed to 'core:enable_input' and 'core:disable_input' events."
     );
   }
 
@@ -169,25 +169,25 @@ class InputHandler extends IInputHandler {
 
   /**
    * Enables the handler to process Enter key presses in the input field and focuses it.
-   * Called internally or via 'textUI:enable_input' event.
+   * Called internally or via 'core:enable_input' event.
    */
   enable() {
     if (this.#isEnabled) return; // Avoid redundant operations
     this.#isEnabled = true;
     this.#inputElement.focus();
     // Note: Visual state (disabled attribute, placeholder) should be handled
-    // by the InputStateController listening for the same 'textUI:enable_input' event.
+    // by the InputStateController listening for the same 'core:enable_input' event.
   }
 
   /**
    * Disables the handler from processing Enter key presses in the input field.
-   * Called internally or via 'textUI:disable_input' event.
+   * Called internally or via 'core:disable_input' event.
    */
   disable() {
     if (!this.#isEnabled) return; // Avoid redundant operations
     this.#isEnabled = false;
     // Note: Visual state (disabled attribute, placeholder) should be handled
-    // by the InputStateController listening for the same 'textUI:disable_input' event.
+    // by the InputStateController listening for the same 'core:disable_input' event.
   }
 
   /**

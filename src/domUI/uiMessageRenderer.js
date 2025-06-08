@@ -214,7 +214,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
   //----------------------------------------------------------------------
 
   /**
-   * Handles the 'textUI:display_message' event.
+   * Handles the 'core:display_message' event.
    *
    * @param {IEvent<DisplayMessagePayload>} eventObject The full event object delivered by the event bus.
    */
@@ -230,7 +230,7 @@ export class UiMessageRenderer extends BoundDomRendererBase {
       this.render(message, type, allowHtml);
     } else {
       this.logger.warn(
-        `${this._logPrefix} Received invalid or malformed 'textUI:display_message' event object.`,
+        `${this._logPrefix} Received invalid or malformed 'core:display_message' event object.`,
         eventObject
       );
     }

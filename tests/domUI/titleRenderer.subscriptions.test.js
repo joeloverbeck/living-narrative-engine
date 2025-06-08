@@ -317,19 +317,19 @@ describe('TitleRenderer', () => {
       renderer.set.mockClear();
     });
 
-    it('should handle "textUI:set_title" event', () => {
+    it('should handle "core:set_title" event', () => {
       const payload = { text: 'Title from Event' };
-      simulateEvent('textUI:set_title', payload);
+      simulateEvent('core:set_title', payload);
       expect(renderer.set).toHaveBeenCalledWith('Title from Event');
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should warn on invalid "textUI:set_title" payload', () => {
+    it('should warn on invalid "core:set_title" payload', () => {
       const invalidPayload = { message: 'Wrong property' };
-      simulateEvent('textUI:set_title', invalidPayload);
+      simulateEvent('core:set_title', invalidPayload);
       expect(renderer.set).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "[TitleRenderer] Received 'textUI:set_title' with invalid payload structure or missing 'text' property:",
+        "[TitleRenderer] Received 'core:set_title' with invalid payload structure or missing 'text' property:",
         invalidPayload
       );
     });

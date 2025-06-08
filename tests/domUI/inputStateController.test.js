@@ -149,11 +149,11 @@ describe('InputStateController', () => {
       createController();
       expect(mockVed.subscribe).toHaveBeenCalledTimes(2);
       expect(mockVed.subscribe).toHaveBeenCalledWith(
-        'textUI:disable_input',
+        'core:disable_input',
         expect.any(Function)
       );
       expect(mockVed.subscribe).toHaveBeenCalledWith(
-        'textUI:enable_input',
+        'core:enable_input',
         expect.any(Function)
       );
     });
@@ -422,9 +422,9 @@ describe('InputStateController', () => {
   });
 
   describe('Event Handling (VED)', () => {
-    it('should handle valid textUI:disable_input event object', () => {
+    it('should handle valid core:disable_input event object', () => {
       const controller = createController();
-      const disableHandler = getVedHandler('textUI:disable_input');
+      const disableHandler = getVedHandler('core:disable_input');
       expect(disableHandler).toBeInstanceOf(Function);
 
       inputElement.disabled = false;
@@ -432,7 +432,7 @@ describe('InputStateController', () => {
       jest.clearAllMocks();
 
       const event = {
-        type: 'textUI:disable_input',
+        type: 'core:disable_input',
         payload: { message: 'System busy...' },
       };
       disableHandler(event);
@@ -449,21 +449,21 @@ describe('InputStateController', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should handle textUI:disable_input with missing payload (use default message)', () => {
+    it('should handle core:disable_input with missing payload (use default message)', () => {
       const controller = createController();
-      const disableHandler = getVedHandler('textUI:disable_input');
+      const disableHandler = getVedHandler('core:disable_input');
       inputElement.disabled = false;
       inputElement.placeholder = 'start';
       jest.clearAllMocks();
 
-      const event = { type: 'textUI:disable_input', payload: null };
+      const event = { type: 'core:disable_input', payload: null };
       disableHandler(event);
 
       expect(inputElement.disabled).toBe(true);
       expect(inputElement.placeholder).toBe('Input disabled.');
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Received 'textUI:disable_input' without valid 'message' string in payload, using default: \"Input disabled.\""
+          "Received 'core:disable_input' without valid 'message' string in payload, using default: \"Input disabled.\""
         ),
         { receivedEvent: event }
       );
@@ -476,15 +476,15 @@ describe('InputStateController', () => {
       expect(mockLogger.debug).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle textUI:disable_input with payload missing message property (use default message)', () => {
+    it('should handle core:disable_input with payload missing message property (use default message)', () => {
       const controller = createController();
-      const disableHandler = getVedHandler('textUI:disable_input');
+      const disableHandler = getVedHandler('core:disable_input');
       inputElement.disabled = false;
       inputElement.placeholder = 'start';
       jest.clearAllMocks();
 
       const event = {
-        type: 'textUI:disable_input',
+        type: 'core:disable_input',
         payload: { otherProp: true },
       };
       disableHandler(event);
@@ -493,7 +493,7 @@ describe('InputStateController', () => {
       expect(inputElement.placeholder).toBe('Input disabled.');
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Received 'textUI:disable_input' without valid 'message' string in payload, using default: \"Input disabled.\""
+          "Received 'core:disable_input' without valid 'message' string in payload, using default: \"Input disabled.\""
         ),
         { receivedEvent: event }
       );
@@ -506,9 +506,9 @@ describe('InputStateController', () => {
       expect(mockLogger.debug).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle valid textUI:enable_input event object', () => {
+    it('should handle valid core:enable_input event object', () => {
       const controller = createController();
-      const enableHandler = getVedHandler('textUI:enable_input');
+      const enableHandler = getVedHandler('core:enable_input');
       expect(enableHandler).toBeInstanceOf(Function);
 
       inputElement.disabled = true;
@@ -516,7 +516,7 @@ describe('InputStateController', () => {
       jest.clearAllMocks();
 
       const event = {
-        type: 'textUI:enable_input',
+        type: 'core:enable_input',
         payload: { placeholder: 'Ready for input!' },
       };
       enableHandler(event);
@@ -534,14 +534,14 @@ describe('InputStateController', () => {
     });
 
     // Ticket 3.1: Test updated for new default placeholder
-    it('should handle textUI:enable_input with missing payload (use default placeholder)', () => {
+    it('should handle core:enable_input with missing payload (use default placeholder)', () => {
       const controller = createController();
-      const enableHandler = getVedHandler('textUI:enable_input');
+      const enableHandler = getVedHandler('core:enable_input');
       inputElement.disabled = true;
       inputElement.placeholder = 'Initial';
       jest.clearAllMocks();
 
-      const event = { type: 'textUI:enable_input', payload: undefined };
+      const event = { type: 'core:enable_input', payload: undefined };
       enableHandler(event);
 
       expect(inputElement.disabled).toBe(false);
@@ -558,15 +558,15 @@ describe('InputStateController', () => {
     });
 
     // Ticket 3.1: Test updated for new default placeholder
-    it('should handle textUI:enable_input with payload missing placeholder property (use default placeholder)', () => {
+    it('should handle core:enable_input with payload missing placeholder property (use default placeholder)', () => {
       const controller = createController();
-      const enableHandler = getVedHandler('textUI:enable_input');
+      const enableHandler = getVedHandler('core:enable_input');
       inputElement.disabled = true;
       inputElement.placeholder = 'Initial';
       jest.clearAllMocks();
 
       const event = {
-        type: 'textUI:enable_input',
+        type: 'core:enable_input',
         payload: { message: 'hello' },
       };
       enableHandler(event);
@@ -586,13 +586,13 @@ describe('InputStateController', () => {
 
     it('should not log state changes if event handler does not change state', () => {
       const controller = createController();
-      const disableHandler = getVedHandler('textUI:disable_input');
+      const disableHandler = getVedHandler('core:disable_input');
       inputElement.disabled = true;
       inputElement.placeholder = 'Already Disabled';
       jest.clearAllMocks();
 
       const event = {
-        type: 'textUI:disable_input',
+        type: 'core:disable_input',
         payload: { message: 'Still Disabled...' },
       };
       disableHandler(event);

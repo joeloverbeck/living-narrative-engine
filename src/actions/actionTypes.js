@@ -42,7 +42,7 @@
  * @property {ParsedCommand} [parsedCommand] - The structured output from the command parser. Optional for contexts like discovery or target resolution where full command might not be parsed yet.
  * @property {IGameDataRepository} gameDataRepository - Provides access to loaded game definition data. // <<< CHANGED
  * @property {IEntityManager} entityManager - The manager for creating and tracking entity instances. // <<< CHANGED
- * @property {{dispatch: (eventName: string, eventData: object) => Promise<boolean>}} eventBus - Shim for validated event dispatch, typically for 'textUI:display_message'.
+ * @property {{dispatch: (eventName: string, eventData: object) => Promise<boolean>}} eventBus - Shim for validated event dispatch.
  * @property {IValidatedEventDispatcher} validatedEventDispatcher - For dispatching validated events.
  * @property {ILogger} logger - The logger instance.
  * @property {IWorldContext} worldContext - Provides access to world state information.
@@ -64,7 +64,7 @@
  *
  * @typedef {object} ActionResult
  * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack). Note: For operationHandlers focusing on intent validation (like `executeMove`, `executeUse`), success often indicates the *intent* was valid and the corresponding event was dispatched, not necessarily that the underlying action fully completed.
- * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events (e.g., "textUI:display_message", "event:move_failed"). **NOTE:** Usage varies; some operationHandlers still return messages. This might be refined later.
+ * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events. **NOTE:** Usage varies; some operationHandlers still return messages. This might be refined later.
  */
 
 // +++ TICKET 6: Add ActionAttemptPseudoEvent Typedef +++

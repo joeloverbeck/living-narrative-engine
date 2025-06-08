@@ -323,7 +323,7 @@ describe('ActionButtonsRenderer', () => {
       } else {
         const updatePayload = { actorId: MOCK_ACTOR_ID, actions: actions };
         await rendererForDescribeBlock._handleUpdateActions({
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: updatePayload,
         });
       }
@@ -460,7 +460,7 @@ describe('ActionButtonsRenderer', () => {
         rendererForThisTest._setTestCurrentActorId(MOCK_ACTOR_ID);
       } else {
         await rendererForThisTest._handleUpdateActions({
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: { actorId: MOCK_ACTOR_ID, actions: [] },
         });
       }

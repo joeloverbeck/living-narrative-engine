@@ -1,10 +1,10 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json#",
-  "id": "textUI:display_message",
+  "id": "core:display_message",
   "description": "Used extensively throughout action handlers and systems to send textual feedback to the user interface.",
   "payloadSchema": {
     "type": "object",
-    "description": "Payload for the textUI:display_message event.",
+    "description": "Payload for the core:display_message event.",
     "properties": {
       "message": {
         "type": "string",

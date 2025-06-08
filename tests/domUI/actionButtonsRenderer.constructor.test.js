@@ -222,16 +222,16 @@ describe('ActionButtonsRenderer', () => {
       });
     });
 
-    it('should subscribe to VED event textUI:update_available_actions', () => {
+    it('should subscribe to VED event core:update_available_actions', () => {
       createRenderer();
       expect(mockVed.subscribe).toHaveBeenCalledTimes(1);
       expect(mockVed.subscribe).toHaveBeenCalledWith(
-        'textUI:update_available_actions',
+        'core:update_available_actions',
         expect.any(Function)
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          "[ActionButtonsRenderer] Subscribed to VED event 'textUI:update_available_actions' via _addSubscription."
+          "[ActionButtonsRenderer] Subscribed to VED event 'core:update_available_actions' via _addSubscription."
         )
       );
     });

@@ -10,7 +10,7 @@ import { RendererBase } from './rendererBase.js';
 
 /**
  * Manages the enabled/disabled state and placeholder text of a specific HTML input element.
- * Subscribes to VED events like 'textUI:disable_input' and 'textUI:enable_input'
+ * Subscribes to VED events like 'core:disable_input' and 'core:enable_input'
  * to reactively update the input's state.
  * It also prevents the 'Enter' key from submitting forms or triggering other default actions
  * when pressed in the managed input element by intercepting the event in the capturing phase.
@@ -88,15 +88,15 @@ export class InputStateController extends RendererBase {
 
     // Use _addSubscription from RendererBase
     this._addSubscription(
-      ved.subscribe('textUI:disable_input', this.#handleDisableInput.bind(this))
+      ved.subscribe('core:disable_input', this.#handleDisableInput.bind(this))
     );
 
     this._addSubscription(
-      ved.subscribe('textUI:enable_input', this.#handleEnableInput.bind(this))
+      ved.subscribe('core:enable_input', this.#handleEnableInput.bind(this))
     );
 
     this.logger.debug(
-      `${this._logPrefix} Subscribed to VED events 'textUI:disable_input' and 'textUI:enable_input'.`
+      `${this._logPrefix} Subscribed to VED events 'core:disable_input' and 'core:enable_input'.`
     );
   }
 
@@ -119,7 +119,7 @@ export class InputStateController extends RendererBase {
   }
 
   /**
-   * Handles the 'textUI:disable_input' event.
+   * Handles the 'core:disable_input' event.
    *
    * @private
    * @param {DisableInputEvent} event - The full event object ({ type, payload }).
@@ -146,7 +146,7 @@ export class InputStateController extends RendererBase {
   }
 
   /**
-   * Handles the 'textUI:enable_input' event.
+   * Handles the 'core:enable_input' event.
    *
    * @private
    * @param {EnableInputEvent} event - The full event object ({ type, payload }).

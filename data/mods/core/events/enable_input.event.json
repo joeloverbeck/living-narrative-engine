@@ -1,10 +1,10 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json",
-  "id": "textUI:enable_input",
+  "id": "core:enable_input",
   "description": "Signals the UI to enable the primary command input field, optionally setting its placeholder text.",
   "payloadSchema": {
     "type": "object",
-    "description": "Payload for the textUI:enable_input event.",
+    "description": "Payload for the core:enable_input event.",
     "properties": {
       "placeholder": {
         "description": "Optional. The placeholder text to display in the input field when it's empty. Defaults to 'Enter command...'.",

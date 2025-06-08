@@ -399,7 +399,7 @@ describe('InitializationService', () => {
         })
       );
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'textUI:disable_input',
+        'core:disable_input',
         expect.objectContaining({
           message: expect.stringContaining('Fatal error during initialization'),
         })

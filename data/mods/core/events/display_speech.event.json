@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "textUI:display_speech",
+  "id": "core:display_speech",
   "description": "Fired when an entity's speech should be displayed in the UI, potentially with a portrait.",
   "payloadSchema": {
-    "title": "TextUI Display Speech Payload",
-    "description": "Payload for the textUI:display_speech event.",
+    "title": "Display Speech Payload",
+    "description": "Payload for the core:display_speech event.",
     "type": "object",
     "properties": {
       "entityId": {

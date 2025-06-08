@@ -323,13 +323,13 @@ class CommandProcessor {
       entityManager: this.#entityManager,
       eventBus: {
         dispatch: async (eventName, payload) => {
-          if (eventName === 'textUI:display_message') {
+          if (eventName === 'core:display_message') {
             this.#logger.debug(
               `CommandProcessor (Shim): Dispatching '${eventName}' via VED.`
             );
             // The VED expects eventName as first param, payload as second.
             // If the shim's payload contains eventName, it might conflict if VED also expects it separately.
-            // Assuming payload here is the actual data for textUI:display_message.
+            // Assuming payload here is the actual data for core:display_message.
             return this.#validatedEventDispatcher.dispatch(eventName, payload);
           } else {
             this.#logger.warn(

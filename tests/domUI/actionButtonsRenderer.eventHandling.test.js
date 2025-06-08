@@ -125,7 +125,7 @@ beforeEach(() => {
 
   mockValidatedEventDispatcher = {
     subscribe: jest.fn((eventType, handler) => {
-      if (eventType === 'textUI:update_available_actions') {
+      if (eventType === 'core:update_available_actions') {
         capturedEventHandler = handler;
       }
       return mockUnsubscribeFn;
@@ -355,22 +355,22 @@ describe('ActionButtonsRenderer', () => {
     );
   });
 
-  it('should subscribe to "textUI:update_available_actions" on construction', () => {
+  it('should subscribe to "core:update_available_actions" on construction', () => {
     createInstance();
     expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledWith(
-      'textUI:update_available_actions',
+      'core:update_available_actions',
       expect.any(Function)
     );
     expect(capturedEventHandler).toBeInstanceOf(Function);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `${CLASS_PREFIX} Subscribed to VED event 'textUI:update_available_actions' via _addSubscription.`
+        `${CLASS_PREFIX} Subscribed to VED event 'core:update_available_actions' via _addSubscription.`
       )
     );
   });
 
   describe('Event Handling (#handleUpdateActions)', () => {
-    const eventType = 'textUI:update_available_actions';
+    const eventType = 'core:update_available_actions';
     let instance;
     let refreshListSpy;
 

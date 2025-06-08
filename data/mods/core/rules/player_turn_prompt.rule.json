@@ -8,7 +8,7 @@
       "type": "DISPATCH_EVENT",
       "comment": "Signal the text UI component to enable the primary command input field.",
       "parameters": {
-        "eventType": "textUI:enable_input",
+        "eventType": "core:enable_input",
         "payload": {}
       }
     },
@@ -16,7 +16,7 @@
       "type": "DISPATCH_EVENT",
       "comment": "Signal the action buttons renderer to update with the available actions and actorId from the triggering event's payload.",
       "parameters": {
-        "eventType": "textUI:update_available_actions",
+        "eventType": "core:update_available_actions",
         "payload": {
           "actorId": "{event.payload.entityId}",
           "actions": "{event.payload.availableActions}"

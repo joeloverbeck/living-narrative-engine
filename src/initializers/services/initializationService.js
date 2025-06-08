@@ -306,11 +306,11 @@ class InitializationService extends IInitializationService {
           message: `Initialization failed for world '${worldName}'. Reason: ${errorMessage}`,
           details: error instanceof Error ? error.stack : 'No stack available.',
         });
-        await this.#validatedEventDispatcher.dispatch('textUI:disable_input', {
+        await this.#validatedEventDispatcher.dispatch('core:disable_input', {
           message: 'Fatal error during initialization. Cannot continue.',
         });
         this.#logger.debug(
-          'InitializationService: Dispatched ui:show_fatal_error and textUI:disable_input events.'
+          'InitializationService: Dispatched ui:show_fatal_error and core:disable_input events.'
         );
       } catch (dispatchError) {
         this.#logger.error(

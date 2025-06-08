@@ -24,7 +24,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  */
 
 /**
- * Represents the *inner* payload for 'textUI:update_available_actions'.
+ * Represents the *inner* payload for 'core:update_available_actions'.
  *
  * @typedef {object} UIUpdateActionsInnerPayload
  * @property {string} actorId - The ID of the actor these actions are for.
@@ -32,10 +32,10 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  */
 
 /**
- * Represents the *full event object* received by the subscriber for 'textUI:update_available_actions'.
+ * Represents the *full event object* received by the subscriber for 'core:update_available_actions'.
  *
  * @typedef {object} UIUpdateActionsEventObject
- * @property {string} type - The event type name (e.g., 'textUI:update_available_actions').
+ * @property {string} type - The event type name (e.g., 'core:update_available_actions').
  * @property {UIUpdateActionsInnerPayload} payload - The inner payload containing the actorId and actions.
  */
 
@@ -56,7 +56,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  * @augments {BaseListDisplayComponent<AvailableAction>}
  */
 export class ActionButtonsRenderer extends BaseListDisplayComponent {
-  _EVENT_TYPE_SUBSCRIBED = 'textUI:update_available_actions';
+  _EVENT_TYPE_SUBSCRIBED = 'core:update_available_actions';
 
   /** @type {AvailableAction | null} */
   selectedAction = null;
@@ -353,7 +353,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   }
 
   /**
-   * Processes the 'textUI:update_available_actions' event.
+   * Processes the 'core:update_available_actions' event.
    *
    * @param {UIUpdateActionsEventObject} eventObject - Event payload with action list.
    * @private

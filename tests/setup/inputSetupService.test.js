@@ -197,7 +197,7 @@ describe('InputSetupService', () => {
       mockSafeEventDispatcher.dispatch.mockClear();
     });
 
-    // REMOVED: Test for 'textUI:command_echo' as it's no longer dispatched by InputSetupService.
+    // REMOVED: Test for 'core:command_echo' as it's no longer dispatched by InputSetupService.
 
     // --- UPDATED: Check for 'core:submit_command' dispatch ---
     it('should call safeEventDispatcher.dispatch with core:submit_command', async () => {
@@ -213,10 +213,10 @@ describe('InputSetupService', () => {
 
     // Test for calling gameLoop.processSubmittedCommand removed
 
-    // Test for NOT calling textUI:disable_input removed (was specific to gameLoop running case)
+    // Test for NOT calling core:disable_input removed (was specific to gameLoop running case)
 
-    // REMOVED: Test for 'textUI:command_echo' before 'core:submit_command'
-    // as 'textUI:command_echo' is no longer dispatched by InputSetupService.
+    // REMOVED: Test for 'core:command_echo' before 'core:submit_command'
+    // as 'core:command_echo' is no longer dispatched by InputSetupService.
   });
 
   // Test Suite 4: Callback Logic (GameLoop Not Running) REMOVED entirely

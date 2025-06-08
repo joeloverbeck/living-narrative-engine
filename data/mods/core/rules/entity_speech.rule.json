@@ -57,7 +57,7 @@
       "type": "DISPATCH_EVENT",
       "comment": "Send the speech content and speaking entity's ID to the UI for display.",
       "parameters": {
-        "eventType": "textUI:display_speech",
+        "eventType": "core:display_speech",
         "payload": {
           "entityId": "{event.payload.entityId}",
           "speechContent": "{event.payload.speechContent}",

@@ -8,7 +8,7 @@
       "type": "DISPATCH_EVENT",
       "comment": "Send an informational message to the UI indicating that the game has been loaded, referencing the save identifier.",
       "parameters": {
-        "eventType": "textUI:display_message",
+        "eventType": "core:display_message",
         "payload": {
           "message": "Game successfully loaded from: {event.payload.saveIdentifier}.",
           "type": "info",

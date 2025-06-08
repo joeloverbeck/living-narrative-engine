@@ -274,7 +274,7 @@ describe('InitializationService', () => {
 
       if (fatalErrorResult?.type !== 'throw') {
         expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
-          'textUI:disable_input',
+          'core:disable_input',
           {
             message: 'Fatal error during initialization. Cannot continue.',
           }
@@ -474,11 +474,11 @@ describe('InitializationService', () => {
           if (eventName === 'initialization:initialization_service:failed') {
             return Promise.resolve();
           }
-          // Fail on the second relevant dispatch (ui:show_fatal_error or textUI:disable_input)
+          // Fail on the second relevant dispatch (ui:show_fatal_error or core:disable_input)
           if (
             dispatchCallCount >= 2 &&
             (eventName === 'ui:show_fatal_error' ||
-              eventName === 'textUI:disable_input')
+              eventName === 'core:disable_input')
           ) {
             throw dispatchError;
           }
@@ -509,7 +509,7 @@ describe('InitializationService', () => {
         mockValidatedEventDispatcher.dispatch.mock.calls.some(
           (call) =>
             call[0] === 'ui:show_fatal_error' ||
-            call[0] === 'textUI:disable_input'
+            call[0] === 'core:disable_input'
         );
       expect(uiDispatchAttempted).toBe(true);
     });

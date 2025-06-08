@@ -494,28 +494,28 @@ describe('ActionButtonsRenderer', () => {
       const subscribeCallArgs = mockVed.subscribe.mock.calls[0];
       const eventNameSubscribed = subscribeCallArgs[0];
       const actualEventHandler = subscribeCallArgs[1];
-      expect(eventNameSubscribed).toBe('textUI:update_available_actions');
+      expect(eventNameSubscribed).toBe('core:update_available_actions');
 
       const testCases = [
         // ... (same test cases)
         {
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: 'not an object payload',
         },
         {
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: { actorId: 'testActor', actions: 'not an array' },
         },
         {
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: { actorId: 'testActor', actions: null },
         },
         {
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: { actorId: 'testActor', actions: undefined },
         },
         {
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: {
             actorId: 'testActor',
             actions: {
@@ -524,15 +524,15 @@ describe('ActionButtonsRenderer', () => {
           },
         },
         {
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: { actorId: '', actions: [] },
         },
-        { type: 'textUI:update_available_actions', payload: null },
+        { type: 'core:update_available_actions', payload: null },
         {
-          type: 'textUI:update_available_actions',
+          type: 'core:update_available_actions',
           payload: { actorId: 'testActor' },
         },
-        { type: 'textUI:update_available_actions', payload: { actions: [] } },
+        { type: 'core:update_available_actions', payload: { actions: [] } },
       ];
 
       for (const eventInputCase of testCases) {
@@ -560,7 +560,7 @@ describe('ActionButtonsRenderer', () => {
         if (!isValidPayloadForProcessing) {
           expect(mockLogger.warn).toHaveBeenCalledWith(
             expect.stringContaining(
-              `${CLASS_PREFIX} Received invalid or incomplete event for '${eventInputCase.type || 'textUI:update_available_actions'}'. Clearing actions.`
+              `${CLASS_PREFIX} Received invalid or incomplete event for '${eventInputCase.type || 'core:update_available_actions'}'. Clearing actions.`
             ),
             { receivedObject: eventInputCase }
           );

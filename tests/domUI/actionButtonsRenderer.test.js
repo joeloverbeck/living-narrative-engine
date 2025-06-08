@@ -34,7 +34,7 @@ describe('ActionButtonsRenderer', () => {
 
   const CLASS_PREFIX = '[ActionButtonsRenderer]';
   const PLAYER_TURN_SUBMITTED_EVENT = 'core:player_turn_submitted';
-  const UPDATE_ACTIONS_EVENT_TYPE = 'textUI:update_available_actions';
+  const UPDATE_ACTIONS_EVENT_TYPE = 'core:update_available_actions';
 
   // Selectors used in the tests and SUT defaults
   const ACTION_BUTTONS_CONTAINER_SELECTOR = '#action-buttons';
@@ -375,7 +375,7 @@ describe('ActionButtonsRenderer', () => {
           });
         } else {
           throw new Error(
-            'Button Click Sim: Could not find registered handler for textUI:update_available_actions for the current renderer instance.'
+            'Button Click Sim: Could not find registered handler for core:update_available_actions for the current renderer instance.'
           );
         }
       };
@@ -685,7 +685,7 @@ describe('ActionButtonsRenderer', () => {
     });
   });
 
-  describe('VED Event Handling (textUI:update_available_actions)', () => {
+  describe('VED Event Handling (core:update_available_actions)', () => {
     let rendererInstance;
     let capturedUpdateActionsHandler;
 

@@ -190,7 +190,7 @@ describe('ActionResultRenderer', () => {
         mockValidatedEventDispatcher.subscribe.mock.calls.map(
           (call) => call[0]
         );
-      expect(subscribedEventNames).not.toContain('textUI:display_message');
+      expect(subscribedEventNames).not.toContain('core:display_message');
       expect(subscribedEventNames).not.toContain('some:other_event');
     });
   });

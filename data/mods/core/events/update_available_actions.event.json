@@ -1,11 +1,11 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json",
-  "id": "textUI:update_available_actions",
+  "id": "core:update_available_actions",
   "description": "Signals a UI component (like the action buttons renderer) to update the display of currently available player actions for a specific actor, based on the provided list of action objects.",
   "payloadSchema": {
     "type": "object",
     "title": "UIUpdateActionsPayload",
-    "description": "Defines the payload for the 'textUI:update_available_actions' event, containing the actor ID and the list of available action objects.",
+    "description": "Defines the payload for the 'core:update_available_actions' event, containing the actor ID and the list of available action objects.",
     "properties": {
       "actorId": {
         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",

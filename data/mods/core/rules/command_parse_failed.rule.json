@@ -8,7 +8,7 @@
       "type": "DISPATCH_EVENT",
       "comment": "Send the error message from the failed event payload to the UI.",
       "parameters": {
-        "eventType": "textUI:display_message",
+        "eventType": "core:display_message",
         "payload": {
           "message": "Error: {event.payload.error}",
           "type": "error"

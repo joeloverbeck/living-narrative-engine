@@ -71,7 +71,7 @@ export class TitleRenderer extends RendererBase {
 
     // Direct title setting
     this._addSubscription(
-      ved.subscribe('textUI:set_title', this.#handleSetTitle.bind(this))
+      ved.subscribe('core:set_title', this.#handleSetTitle.bind(this))
     );
 
     // Initialization Events
@@ -165,10 +165,10 @@ export class TitleRenderer extends RendererBase {
   // --- Private Event Handlers (Adapted from DomRenderer) ---
 
   /**
-   * Handles setting the main title directly via 'textUI:set_title'.
+   * Handles setting the main title directly via 'core:set_title'.
    *
    * @private
-   * @param {object} payload - Expected payload for 'textUI:set_title' (e.g., { text: string }).
+   * @param {object} payload - Expected payload for 'core:set_title' (e.g., { text: string }).
    * @param {string} eventType - The name of the triggered event.
    */
   #handleSetTitle(payload, eventType) {

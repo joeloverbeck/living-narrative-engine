@@ -40,9 +40,16 @@
       "dismiss.action.json"
     ],
     "rules": [
-      "turn_started.rule.json",
+      "command_parse_failed.rule.json",
+      "entity_speech.rule.json",
+      "game_loaded.rule.json",
+      "go.rule.json",
+      "log_perceptible_events.rule.json",
+      "player_turn_prompt.rule.json",
+      "submit_command.rule.json",
       "turn_ended.rule.json",
-      "log_perceptible_events.rule.json"
+      "turn_started.rule.json",
+      "wait.rule.json"
     ],
     "events": [
       "ai_action_decided.event.json",
@@ -76,7 +83,13 @@
       "stop_following.event.json",
       "dismiss.event.json",
       "display_successful_action_result.event.json",
-      "display_failed_action_result.event.json"
+      "display_failed_action_result.event.json",
+      "display_speech.event.json",
+      "disable_input.event.json",
+      "display_message.event.json",
+      "enable_input.event.json",
+      "set_title.event.json",
+      "update_available_actions.event.json"
     ],
     "operations": []
   }

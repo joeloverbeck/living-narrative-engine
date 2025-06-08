@@ -143,12 +143,11 @@
           },
           {
             "type": "DISPATCH_EVENT",
-            "comment": "Dispatch a message to the UI indicating the actor has moved.",
+            "comment": "Dispatch a decoupled event to the UI indicating the actor's successful move.",
             "parameters": {
-              "eventType": "textUI:display_message",
+              "eventType": "core:display_successful_action_result",
               "payload": {
-                "message": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}.",
-                "type": "info"
+                "message": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}."
               }
             }
           },
@@ -167,12 +166,11 @@
         "else_actions": [
           {
             "type": "DISPATCH_EVENT",
-            "comment": "Inform the actor that they cannot go in the specified direction (no valid exit found).",
+            "comment": "Dispatch a decoupled event to the UI informing the actor that they cannot move in the specified direction.",
             "parameters": {
-              "eventType": "textUI:display_message",
+              "eventType": "core:display_failed_action_result",
               "payload": {
-                "message": "{context.actorNameComponent.text} tries to go {event.payload.direction}, but cannot find a path or the way is blocked.",
-                "type": "warning"
+                "message": "{context.actorNameComponent.text} tries to go {event.payload.direction}, but cannot find a path or the way is blocked."
               }
             }
           },
