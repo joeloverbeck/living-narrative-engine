@@ -21,6 +21,7 @@ export * from './actionButtonsRenderer.js';
 export * from './perceptionLogRenderer.js';
 export { SpeechBubbleRenderer } from './speechBubbleRenderer.js';
 export { CurrentTurnActorRenderer } from './currentTurnActorRenderer.js';
+export { ActionResultRenderer } from './actionResultRenderer.js';
 
 // Modals & UI Components
 export { default as SaveGameUI } from './saveGameUI.js';

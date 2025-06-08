@@ -1,5 +1,4 @@
 // src/domUI/domUiFacade.js
-
 /**
  * @file Facade providing access to all UI rendering components.
  */
@@ -13,8 +12,9 @@
 /** @typedef {import('./saveGameUI').default} SaveGameUI */
 /** @typedef {import('./loadGameUI').default} LoadGameUI */
 /** @typedef {import('./llmSelectionModal').LlmSelectionModal} LlmSelectionModal */
-
 /** @typedef {import('./speechBubbleRenderer').SpeechBubbleRenderer} SpeechBubbleRenderer */
+
+/** @typedef {import('./actionResultRenderer.js').ActionResultRenderer} ActionResultRenderer */
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -33,6 +33,7 @@ export class DomUiFacade {
   #loadGameUI;
   #llmSelectionModal;
   #speechBubbleRenderer;
+  #actionResultRenderer;
 
   /**
    * Creates an instance of DomUiFacade.
@@ -45,6 +46,7 @@ export class DomUiFacade {
    * @param {UiMessageRenderer} deps.uiMessageRenderer - Renderer for UI messages (echo, info, error).
    * @param {SpeechBubbleRenderer} deps.speechBubbleRenderer - Renderer for speech bubbles.
    * @param {PerceptionLogRenderer} deps.perceptionLogRenderer - Renderer for perception logs.
+   * @param {ActionResultRenderer} deps.actionResultRenderer - Renderer for action result bubbles.
    * @param {SaveGameUI} deps.saveGameUI - The Save Game UI component.
    * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component.
    * @param {LlmSelectionModal} deps.llmSelectionModal - The LLM Selection Modal component.
@@ -58,6 +60,7 @@ export class DomUiFacade {
     uiMessageRenderer,
     speechBubbleRenderer,
     perceptionLogRenderer,
+    actionResultRenderer,
     saveGameUI,
     loadGameUI,
     llmSelectionModal,
@@ -103,6 +106,10 @@ export class DomUiFacade {
       throw new Error(
         'DomUiFacade: Missing or invalid perceptionLogRenderer dependency.'
       ); // Changed to refreshList
+    if (!actionResultRenderer)
+      throw new Error(
+        'DomUiFacade: Missing or invalid actionResultRenderer dependency.'
+      );
     if (!saveGameUI || typeof saveGameUI.show !== 'function')
       throw new Error('DomUiFacade: Missing or invalid saveGameUI dependency.');
     if (!loadGameUI || typeof loadGameUI.show !== 'function')
@@ -119,6 +126,7 @@ export class DomUiFacade {
     this.#uiMessageRenderer = uiMessageRenderer;
     this.#speechBubbleRenderer = speechBubbleRenderer;
     this.#perceptionLogRenderer = perceptionLogRenderer;
+    this.#actionResultRenderer = actionResultRenderer;
     this.#saveGameUI = saveGameUI;
     this.#loadGameUI = loadGameUI;
     this.#llmSelectionModal = llmSelectionModal;
@@ -188,6 +196,15 @@ export class DomUiFacade {
   }
 
   /**
+   * Provides the ActionResultRenderer instance.
+   *
+   * @returns {ActionResultRenderer} Renderer for success/failure action bubbles.
+   */
+  get actionResults() {
+    return this.#actionResultRenderer;
+  }
+
+  /**
    * Provides the SaveGameUI instance.
    *
    * @returns {SaveGameUI} Save game dialog component.
@@ -226,6 +243,7 @@ export class DomUiFacade {
     this.#uiMessageRenderer?.dispose?.();
     this.#speechBubbleRenderer?.dispose?.();
     this.#perceptionLogRenderer?.dispose?.();
+    this.#actionResultRenderer?.dispose?.();
     this.#saveGameUI?.dispose?.();
     this.#loadGameUI?.dispose?.();
     this.#llmSelectionModal?.dispose?.();

@@ -20,11 +20,12 @@ const mockUiMessageRenderer = { render: jest.fn(), dispose: jest.fn() };
 const mockSpeechBubbleRenderer = {
   renderSpeech: jest.fn(),
   dispose: jest.fn(),
-}; // Added mock for speechBubbleRenderer
+};
 const mockPerceptionLogRenderer = {
   refreshList: jest.fn(),
   dispose: jest.fn(),
 };
+const mockActionResultRenderer = { dispose: jest.fn() }; // Added mock for actionResultRenderer
 const mockSaveGameUI = { show: jest.fn(), dispose: jest.fn() };
 const mockLoadGameUI = { show: jest.fn(), dispose: jest.fn() };
 const mockLlmSelectionModal = { show: jest.fn(), dispose: jest.fn() };
@@ -41,8 +42,9 @@ describe('DomUiFacade', () => {
       titleRenderer: mockTitleRenderer,
       inputStateController: mockInputStateController,
       uiMessageRenderer: mockUiMessageRenderer,
-      speechBubbleRenderer: mockSpeechBubbleRenderer, // Added to validDeps
+      speechBubbleRenderer: mockSpeechBubbleRenderer,
       perceptionLogRenderer: mockPerceptionLogRenderer,
+      actionResultRenderer: mockActionResultRenderer, // Added dependency
       saveGameUI: mockSaveGameUI,
       loadGameUI: mockLoadGameUI,
       llmSelectionModal: mockLlmSelectionModal,
@@ -96,7 +98,6 @@ describe('DomUiFacade', () => {
   });
 
   it('should throw an error if speechBubbleRenderer is missing', () => {
-    // Added test for speechBubbleRenderer
     const deps = { ...validDeps };
     delete deps.speechBubbleRenderer;
     expect(() => new DomUiFacade(deps)).toThrow(
@@ -109,6 +110,15 @@ describe('DomUiFacade', () => {
     delete deps.perceptionLogRenderer;
     expect(() => new DomUiFacade(deps)).toThrow(
       'DomUiFacade: Missing or invalid perceptionLogRenderer dependency.'
+    );
+  });
+
+  // Added test for actionResultRenderer
+  it('should throw an error if actionResultRenderer is missing', () => {
+    const deps = { ...validDeps };
+    delete deps.actionResultRenderer;
+    expect(() => new DomUiFacade(deps)).toThrow(
+      'DomUiFacade: Missing or invalid actionResultRenderer dependency.'
     );
   });
 
@@ -163,7 +173,6 @@ describe('DomUiFacade', () => {
   });
 
   it('should provide a getter for speechBubbleRenderer', () => {
-    // Added getter test
     const facade = new DomUiFacade(validDeps);
     expect(facade.speechBubble).toBe(mockSpeechBubbleRenderer);
   });
@@ -171,6 +180,12 @@ describe('DomUiFacade', () => {
   it('should provide a getter for perceptionLog', () => {
     const facade = new DomUiFacade(validDeps);
     expect(facade.perceptionLog).toBe(mockPerceptionLogRenderer);
+  });
+
+  // Added getter test for actionResults
+  it('should provide a getter for actionResults', () => {
+    const facade = new DomUiFacade(validDeps);
+    expect(facade.actionResults).toBe(mockActionResultRenderer);
   });
 
   it('should provide a getter for saveGame', () => {
@@ -198,8 +213,9 @@ describe('DomUiFacade', () => {
     expect(mockTitleRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
     expect(mockUiMessageRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(mockSpeechBubbleRenderer.dispose).toHaveBeenCalledTimes(1); // Added dispose check
+    expect(mockSpeechBubbleRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
+    expect(mockActionResultRenderer.dispose).toHaveBeenCalledTimes(1); // Added dispose check
     expect(mockSaveGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(mockLlmSelectionModal.dispose).toHaveBeenCalledTimes(1);
@@ -210,12 +226,14 @@ describe('DomUiFacade', () => {
       ...validDeps,
       actionButtonsRenderer: { refreshList: jest.fn() }, // no dispose, but has refreshList
       speechBubbleRenderer: { renderSpeech: jest.fn() }, // no dispose
+      actionResultRenderer: {}, // no dispose
       saveGameUI: { show: jest.fn() }, // no dispose
     };
 
     const facade = new DomUiFacade(incompleteDeps);
     expect(() => facade.dispose()).not.toThrow();
 
+    // These should still be called
     expect(mockLocationRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(mockTitleRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(mockInputStateController.dispose).toHaveBeenCalledTimes(1);
@@ -223,5 +241,10 @@ describe('DomUiFacade', () => {
     expect(mockPerceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(mockLlmSelectionModal.dispose).toHaveBeenCalledTimes(1);
+
+    // And these should not have been called because they weren't provided.
+    expect(mockActionButtonsRenderer.dispose).not.toHaveBeenCalled();
+    expect(mockSpeechBubbleRenderer.dispose).not.toHaveBeenCalled();
+    expect(mockSaveGameUI.dispose).not.toHaveBeenCalled();
   });
 });
