@@ -1,4 +1,7 @@
-// src/domUI/speechBubbleRenderer.js
+/**
+ * @file This module listens to events related to entity speech, then displays the speech and a possible portrait.
+ * @see src/domUI/speechBubbleRenderer.js
+ */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js'; // Adjusted path
 import { DISPLAY_SPEECH_ID } from '../constants/eventIds.js';
@@ -247,6 +250,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       speechBubbleDiv.appendChild(quotedSpeechSpan);
     }
 
+    let hasPortrait = false;
     if (portraitPath) {
       const portraitImg = this.#domElementFactory.img(
         portraitPath,
@@ -254,6 +258,28 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
         'speech-portrait'
       );
       if (portraitImg) {
+        hasPortrait = true;
+
+        // Wait for the image to load before scrolling to ensure the scroll height is correct.
+        // Use a one-time listener for this.
+        this._addDomListener(
+          portraitImg,
+          'load',
+          () => this.#scrollToBottom(),
+          { once: true }
+        );
+        this._addDomListener(
+          portraitImg,
+          'error',
+          () => {
+            this.logger.warn(
+              `${this._logPrefix} Portrait image failed to load for ${speakerName}. Scrolling anyway.`
+            );
+            this.#scrollToBottom();
+          },
+          { once: true }
+        );
+
         speechEntryDiv.appendChild(portraitImg);
         speechEntryDiv.classList.add('has-portrait');
       } else {
@@ -268,7 +294,13 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
     speechEntryDiv.appendChild(speechBubbleDiv);
     this.effectiveSpeechContainer.appendChild(speechEntryDiv);
-    this.#scrollToBottom();
+
+    // If there's no portrait, the layout is stable, so we can scroll immediately.
+    // If there is a portrait, the 'onload' or 'onerror' handler will trigger the scroll.
+    if (!hasPortrait) {
+      this.#scrollToBottom();
+    }
+
     this.logger.debug(
       `${this._logPrefix} Rendered speech for ${speakerName}${isPlayer ? ' (Player)' : ''}.`
     );
