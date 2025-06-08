@@ -281,7 +281,7 @@ function resolveOrder(requestedIds, manifestsMap, logger) {
   }
 
   /* 7 – always log final order for diagnostics */
-  logger.info(
+  logger.debug(
     `modLoadOrderResolver: Resolved load order (${sorted.length} mods): ${sorted.join(' → ')}`
   );
 
