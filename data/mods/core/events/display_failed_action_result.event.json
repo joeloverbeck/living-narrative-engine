@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "core:display_failed_action_result",
+  "description": "Fired when a failed action result should be displayed in the UI.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "minLength": 1,
+        "description": "A non-empty failure message to display."
+      }
+    },
+    "required": ["message"],
+    "additionalProperties": false
+  }
+}
