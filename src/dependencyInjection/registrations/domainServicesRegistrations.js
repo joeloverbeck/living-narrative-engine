@@ -1,5 +1,6 @@
 // src/dependencyInjection/registrations/domainServicesRegistrations.js
 // ****** MODIFIED FILE ******
+
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import { TargetResolutionService } from '../../actions/targeting/targetResolutionService.js';
@@ -56,6 +57,10 @@ import GoalsSectionAssembler from '../../prompting/assembling/goalsSectionAssemb
 import LeaderListSyncService from '../../actions/services/leaderListSyncService.js';
 // +++ TICKET 11 IMPORTS END +++
 
+// +++ FOLLOW CYCLE GUARD IMPORTS START +++
+import FollowValidationService from '../../actions/services/followValidationService.js';
+// +++ FOLLOW CYCLE GUARD IMPORTS END +++
+
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -72,7 +77,7 @@ import LeaderListSyncService from '../../actions/services/leaderListSyncService.
 /** @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../entities/entityScopeService.js').getEntityIdsForScopes} GetEntityIdsForScopesFn */
-/** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
+/** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IHumanPlayerPromptService */
 /** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
 
@@ -718,8 +723,21 @@ export function registerDomainServices(container) {
         entityManager: c.resolve(tokens.IEntityManager),
       })
   );
+  log.debug(
+    `Domain Services Registration: Registered ${String(tokens.LeaderListSyncService)}.`
+  );
+
+  r.singletonFactory(
+    tokens.FollowValidationService,
+    (c) =>
+      new FollowValidationService({
+        logger: c.resolve(tokens.ILogger),
+        entityManager: c.resolve(tokens.IEntityManager),
+      })
+  );
+  log.debug(
+    `Domain Services Registration: Registered ${String(tokens.FollowValidationService)}.`
+  );
 
   log.debug('Domain-services Registration: complete.');
 }
-
-// --- FILE END ---

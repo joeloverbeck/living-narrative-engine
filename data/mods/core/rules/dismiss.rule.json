@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
-  "rule_id": "core:handle_dismiss",
+  "rule_id": "handle_dismiss",
   "comment": "Handles the 'core:dismiss' action. Removes the component from the TARGET, updates the ACTOR's (leader's) cache, dispatches a conditional perceptible event, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {

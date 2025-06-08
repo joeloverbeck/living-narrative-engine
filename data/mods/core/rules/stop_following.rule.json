@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
-  "rule_id": "core:handle_stop_following",
+  "rule_id": "handle_stop_following",
   "comment": "Handles the 'core:stop_following' action. Removes the follower's component, updates the old leader's cache, dispatches a conditional perceptible event, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {

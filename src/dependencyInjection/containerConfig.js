@@ -185,6 +185,17 @@ export function configureContainer(container, uiElements) {
     logger.debug(
       "[ContainerConfig] Data source 'LeaderListSyncService' registered in SystemDataRegistry."
     );
+
+    const followValidationInstance = container.resolve(
+      tokens.FollowValidationService
+    );
+    systemDataRegistry.registerSource(
+      'FollowValidationService',
+      followValidationInstance
+    );
+    logger.debug(
+      "[ContainerConfig] Data source 'FollowValidationService' registered in SystemDataRegistry."
+    );
   } catch (error) {
     logger.error(
       '[ContainerConfig] CRITICAL ERROR during SystemDataRegistry population:',

@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "core_handle_follow",
-  "comment": "Adds core:following to the actor, rebuilds leader caches, emits a perceptible ‘follow’ event, and informs the UI.",
+  "comment": "Checks for follow cycles, then adds core:following to the actor, rebuilds leader caches, emits a perceptible ‘follow’ event, and informs the UI.",
   "event_type": "core:attempt_action",
   "condition": {
     "==": [
@@ -13,137 +13,195 @@
   },
   "actions": [
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Remember the old leader (if any) so we can rebuild their cache too.",
+      "type": "QUERY_SYSTEM_DATA",
+      "comment": "Step 1: Check if this follow action would create a cycle.",
       "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:following",
-        "result_variable": "oldFollowComp"
-      }
-    },
-    {
-      "type": "ADD_COMPONENT",
-      "comment": "Authoritative mutation – the follower now points at the new leader.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:following",
-        "value": {
+        "source_id": "FollowValidationService",
+        "query_details": {
+          "action": "wouldCreateCycle",
+          "followerId": "{event.payload.actorId}",
           "leaderId": "{event.payload.targetId}"
-        }
+        },
+        "result_variable": "cycleCheck"
       }
     },
     {
       "type": "IF",
-      "comment": "IF an old leader existed, rebuild their cache.",
+      "comment": "Step 2.A: If a cycle is detected, reject the action.",
       "parameters": {
         "condition": {
-          "var": "context.oldFollowComp"
+          "var": "context.cycleCheck.cycleDetected"
         },
         "then_actions": [
           {
-            "type": "QUERY_SYSTEM_DATA",
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch a decoupled event to the UI indicating the failure.",
             "parameters": {
-              "source_id": "LeaderListSyncService",
-              "query_details": {
-                "action": "rebuildFor",
-                "leaderIds": ["{context.oldFollowComp.leaderId}"]
-              },
-              "result_variable": "oldLeaderSyncResult"
+              "eventType": "core:display_error_message",
+              "payload": {
+                "message": "You cannot follow {target.name}; this would create a follow cycle (e.g. A follows B, B follows A)."
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Signal to the Turn Manager that the actor's turn is over (and was unsuccessful).",
+            "parameters": {
+              "eventType": "core:turn_ended",
+              "payload": {
+                "entityId": "{event.payload.actorId}",
+                "success": false
+              }
             }
           }
         ]
       }
     },
     {
-      "type": "QUERY_SYSTEM_DATA",
-      "comment": "Unconditionally rebuild the new leader's cache.",
+      "type": "IF",
+      "comment": "Step 2.B: If NO cycle is detected, proceed with the follow action.",
       "parameters": {
-        "source_id": "LeaderListSyncService",
-        "query_details": {
-          "action": "rebuildFor",
-          "leaderIds": ["{event.payload.targetId}"]
+        "condition": {
+          "not": {
+            "var": "context.cycleCheck.cycleDetected"
+          }
         },
-        "result_variable": "newLeaderSyncResult"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Grab human-readable names for the perceptible log and UI message.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:name",
-        "result_variable": "followerName"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "parameters": {
-        "entity_ref": {
-          "entityId": "{event.payload.targetId}"
-        },
-        "component_type": "core:name",
-        "result_variable": "leaderName"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Need the location to tag the perceptible event.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:position",
-        "result_variable": "actorPos"
-      }
-    },
-    {
-      "type": "QUERY_SYSTEM_DATA",
-      "comment": "Current ISO-8601 timestamp from WorldContext.",
-      "parameters": {
-        "source_id": "WorldContext",
-        "query_details": {
-          "action": "getCurrentISOTimestamp"
-        },
-        "result_variable": "nowIso"
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
-      "comment": "Human-visible log: “<Follower> has decided to follow <Leader>”.",
-      "parameters": {
-        "eventType": "core:perceptible_event",
-        "payload": {
-          "eventName": "core:perceptible_event",
-          "locationId": "{context.actorPos.locationId}",
-          "descriptionText": "{context.followerName.text} has decided to follow {context.leaderName.text}.",
-          "timestamp": "{context.nowIso}",
-          "perceptionType": "action_target_general",
-          "actorId": "{event.payload.actorId}",
-          "targetId": "{event.payload.targetId}",
-          "involvedEntities": [
-            "{event.payload.actorId}",
-            "{event.payload.targetId}"
-          ]
-        }
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
-      "comment": "Dispatch a decoupled event to the UI indicating the successful follow action.",
-      "parameters": {
-        "eventType": "core:display_successful_action_result",
-        "payload": {
-          "message": "{context.followerName.text} is now following {context.leaderName.text}."
-        }
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
-      "comment": "Dispatch an event to indicate the actor's turn has ended after successful follow attempt.",
-      "parameters": {
-        "eventType": "core:turn_ended",
-        "payload": {
-          "entityId": "{event.payload.actorId}",
-          "success": true
-        }
+        "then_actions": [
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Remember the old leader (if any) so we can rebuild their cache too.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:following",
+              "result_variable": "oldFollowComp"
+            }
+          },
+          {
+            "type": "ADD_COMPONENT",
+            "comment": "Authoritative mutation – the follower now points at the new leader.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:following",
+              "value": {
+                "leaderId": "{event.payload.targetId}"
+              }
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "IF an old leader existed, rebuild their cache.",
+            "parameters": {
+              "condition": {
+                "var": "context.oldFollowComp"
+              },
+              "then_actions": [
+                {
+                  "type": "QUERY_SYSTEM_DATA",
+                  "parameters": {
+                    "source_id": "LeaderListSyncService",
+                    "query_details": {
+                      "action": "rebuildFor",
+                      "leaderIds": ["{context.oldFollowComp.leaderId}"]
+                    },
+                    "result_variable": "oldLeaderSyncResult"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "QUERY_SYSTEM_DATA",
+            "comment": "Unconditionally rebuild the new leader's cache.",
+            "parameters": {
+              "source_id": "LeaderListSyncService",
+              "query_details": {
+                "action": "rebuildFor",
+                "leaderIds": ["{event.payload.targetId}"]
+              },
+              "result_variable": "newLeaderSyncResult"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Grab human-readable names for the perceptible log and UI message.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:name",
+              "result_variable": "followerName"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{event.payload.targetId}"
+              },
+              "component_type": "core:name",
+              "result_variable": "leaderName"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Need the location to tag the perceptible event.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:position",
+              "result_variable": "actorPos"
+            }
+          },
+          {
+            "type": "QUERY_SYSTEM_DATA",
+            "comment": "Current ISO-8601 timestamp from WorldContext.",
+            "parameters": {
+              "source_id": "WorldContext",
+              "query_details": {
+                "action": "getCurrentISOTimestamp"
+              },
+              "result_variable": "nowIso"
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Human-visible log: “<Follower> has decided to follow <Leader>”.",
+            "parameters": {
+              "eventType": "core:perceptible_event",
+              "payload": {
+                "eventName": "core:perceptible_event",
+                "locationId": "{context.actorPos.locationId}",
+                "descriptionText": "{context.followerName.text} has decided to follow {context.leaderName.text}.",
+                "timestamp": "{context.nowIso}",
+                "perceptionType": "action_target_general",
+                "actorId": "{event.payload.actorId}",
+                "targetId": "{event.payload.targetId}",
+                "involvedEntities": [
+                  "{event.payload.actorId}",
+                  "{event.payload.targetId}"
+                ]
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch a decoupled event to the UI indicating the successful follow action.",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{actor.name} is now following {target.name}."
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch an event to indicate the actor's turn has ended after successful follow attempt.",
+            "parameters": {
+              "eventType": "core:turn_ended",
+              "payload": {
+                "entityId": "{event.payload.actorId}",
+                "success": true
+              }
+            }
+          }
+        ]
       }
     }
   ]

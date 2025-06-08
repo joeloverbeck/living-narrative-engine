@@ -294,5 +294,6 @@ export const tokens = Object.freeze({
 
   // --- Action-related services
   LeaderListSyncService: 'LeaderListSyncService',
+  FollowValidationService: 'FollowValidationService',
 });
 // --- FILE END ---
