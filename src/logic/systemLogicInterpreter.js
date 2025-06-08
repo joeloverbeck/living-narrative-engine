@@ -345,6 +345,13 @@ class SystemLogicInterpreter {
           `${tag} CRITICAL error during execution of Operation ${opType}`,
           err
         );
+
+        // Legacy / compatibility log – several integration tests expect it
+        // (Rule id is embedded in the scopeLabel: "Rule '<id>'")
+        const m = scopeLabel?.match(/Rule '(.+?)'/);
+        const ruleIdForLog = m ? m[1] : 'UNKNOWN_RULE';
+        this.#logger.error(`rule '${ruleIdForLog}' threw:`, err);
+
         break; // halt subsequent actions
       }
     }

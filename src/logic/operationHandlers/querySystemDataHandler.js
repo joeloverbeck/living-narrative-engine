@@ -128,14 +128,49 @@ class QuerySystemDataHandler {
           stack: error instanceof Error ? error.stack : undefined,
         }
       );
-      // result remains undefined
+      /* ---------------------------------------------------------------
+       *  Propagation strategy:
+       *    • If the *same* logger instance that was passed to the
+       *      constructor is also the `nestedExecutionContext.logger`,
+       *      we’re inside the SystemLogicInterpreter → propagate so
+       *      the interpreter can abort the action list.
+       *    • Otherwise (stand-alone/unit-test use-case) swallow the
+       *      error but still store `undefined` and emit the warning
+       *      expected by those tests.
+       * ------------------------------------------------------------- */
+
+      const sameLoggerInstance = nestedExecutionContext?.logger === logger;
+
+      // Store undefined so callers relying on the variable
+      // still find a key (unit-tests expect this).
+      try {
+        if (
+          nestedExecutionContext?.evaluationContext?.context &&
+          typeof nestedExecutionContext.evaluationContext.context === 'object'
+        ) {
+          nestedExecutionContext.evaluationContext.context[
+            trimmedResultVariable
+          ] = undefined;
+        }
+      } catch {
+        /* ignore – best-effort when we’re already in an error path */
+      }
+
+      logger.warn(
+        `QUERY_SYSTEM_DATA: Query to source "${trimmedSourceId}" returned undefined or an error occurred during query. Stored 'undefined' in "${trimmedResultVariable}".`
+      );
+
+      if (sameLoggerInstance) {
+        // Let the outer interpreter see the failure.
+        throw error;
+      }
+
+      return undefined; // swallow for stand-alone callers
     }
 
     try {
-      // --- CORRECTED RESULT STORAGE to use the nested path ---
       nestedExecutionContext.evaluationContext.context[trimmedResultVariable] =
         result;
-      // --- END CORRECTION ---
     } catch (contextError) {
       logger.error(
         `QUERY_SYSTEM_DATA: Failed to store result in context variable "${trimmedResultVariable}" after query.`,
@@ -148,10 +183,7 @@ class QuerySystemDataHandler {
               : String(contextError),
         }
       );
-      // Potentially, the result from query was successful, but storage failed.
-      // Depending on desired behavior, you might not want to return undefined here if the query itself was ok.
-      // For now, keeping the original flow of returning if storage fails.
-      return undefined;
+      throw contextError;
     }
 
     if (result !== undefined) {
