@@ -147,7 +147,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: Adding entity "${newEntity.id}" to the end of the round-robin queue.`
       ); // From addEntity
-      expect(mockLogger.debug).toHaveBeenCalledTimes(4); // init + add
+      expect(mockLogger.debug).toHaveBeenCalledTimes(8); // updated for debug downgrades
 
       expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -167,7 +167,7 @@ describe('TurnOrderService', () => {
       // Verify initial state if needed (optional)
       expect(SimpleRoundRobinQueue).toHaveBeenCalledTimes(1);
       expect(mockAdd).toHaveBeenCalledTimes(firstEntities.length);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: New round successfully started with ${firstEntities.length} active entities.`
       );
       // Retrieve the first instance if needed for clarity, although we'll assert on shared mocks
@@ -229,7 +229,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: Initialized SimpleRoundRobinQueue.'
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(3); // Both debug logs expected this time
+      expect(mockLogger.debug).toHaveBeenCalledTimes(6); // updated for debug downgrades
 
       // Check size mock calls specifically for the second phase
       expect(mockSize).toHaveBeenCalledTimes(1); // Only for the final log in the second startNewRound

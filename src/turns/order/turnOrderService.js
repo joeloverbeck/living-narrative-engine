@@ -145,7 +145,7 @@ export class TurnOrderService extends ITurnOrderService {
    * @throws {Error} If entities array is invalid, strategy is unsupported, or initiative data is missing/invalid when required.
    */
   startNewRound(entities, strategy, initiativeData) {
-    this.#logger.info(
+    this.#logger.debug(
       `TurnOrderService: Starting new round with strategy "${strategy}".`
     );
     this.clearCurrentRound(); // Clear previous state first
@@ -202,7 +202,7 @@ export class TurnOrderService extends ITurnOrderService {
               this.#currentQueue.add(entity, initiativeScore);
             }
           }
-          this.#logger.info(
+          this.#logger.debug(
             `TurnOrderService: Populated InitiativePriorityQueue with ${entities.length} entities.`
           );
           break;
@@ -215,7 +215,7 @@ export class TurnOrderService extends ITurnOrderService {
           for (const entity of entities) {
             this.#currentQueue.add(entity); // Priority is ignored by SimpleRoundRobinQueue
           }
-          this.#logger.info(
+          this.#logger.debug(
             `TurnOrderService: Populated SimpleRoundRobinQueue with ${entities.length} entities.`
           );
           break;
@@ -237,7 +237,7 @@ export class TurnOrderService extends ITurnOrderService {
       throw error; // Re-throw the error after logging and cleanup
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `TurnOrderService: New round successfully started with ${this.#currentQueue.size()} active entities.`
     );
   }
@@ -262,7 +262,7 @@ export class TurnOrderService extends ITurnOrderService {
         `TurnOrderService: Advancing turn to entity "${nextEntity.id}".`
       );
     } else {
-      this.#logger.info(
+      this.#logger.debug(
         'TurnOrderService: getNextEntity returned null (queue is likely empty).'
       );
     }
@@ -320,7 +320,7 @@ export class TurnOrderService extends ITurnOrderService {
           `Internal error: Unknown current strategy "${this.#currentStrategy}"`
         );
       }
-      this.#logger.info(
+      this.#logger.debug(
         `TurnOrderService: Entity "${entity.id}" successfully added to the turn order.`
       );
     } catch (error) {
@@ -366,7 +366,7 @@ export class TurnOrderService extends ITurnOrderService {
       // Log success info if the entity was directly removed (non-null return)
       // OR if it's the initiative strategy (where null signifies processing for lazy removal).
       if (removedEntity !== null || this.#currentStrategy === 'initiative') {
-        this.#logger.info(
+        this.#logger.debug(
           `TurnOrderService: Entity "${entityId}" processed for removal (actual removal may be lazy depending on queue type).`
         );
       }

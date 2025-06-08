@@ -116,7 +116,7 @@ describe('TurnOrderService', () => {
         'TurnOrderService: Initialized InitiativePriorityQueue.'
       );
       // Check *specific* calls during startNewRound BEFORE triggering more logs
-      expect(mockLogger.debug).toHaveBeenCalledTimes(3); // <<< MOVED CHECK HERE
+      expect(mockLogger.debug).toHaveBeenCalledTimes(6); // Updated for debug downgrades (includes constructor log)
 
       // Other logs from startNewRound
       expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -134,7 +134,7 @@ describe('TurnOrderService', () => {
         'TurnOrderService: Adding entity "c" with initiative 5 to the current round.'
       );
       // Total debug calls are now 2
-      expect(mockLogger.debug).toHaveBeenCalledTimes(4);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(8);
     });
 
     // Test Case: Initiative with Missing/Invalid Individual Priority
@@ -182,7 +182,7 @@ describe('TurnOrderService', () => {
         'TurnOrderService: Initialized InitiativePriorityQueue.'
       );
       // Check *specific* calls during startNewRound BEFORE triggering more logs
-      expect(mockLogger.debug).toHaveBeenCalledTimes(3); // <<< MOVED CHECK HERE
+      expect(mockLogger.debug).toHaveBeenCalledTimes(6); // Updated for debug downgrades
 
       // Check other startNewRound logs
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -198,8 +198,8 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: Adding entity "e" with initiative 20 to the current round.'
       );
-      // Total debug calls are now 2
-      expect(mockLogger.debug).toHaveBeenCalledTimes(4);
+      // Total debug calls are now higher due to debug level changes
+      expect(mockLogger.debug).toHaveBeenCalledTimes(8);
     });
 
     // Test Case: Invalid/Missing initiativeData map (No changes needed here)
@@ -273,7 +273,7 @@ describe('TurnOrderService', () => {
       expect(InitiativePriorityQueue).toHaveBeenCalledTimes(1);
       expect(mockQueueInstances.length).toBe(1);
       expect(mockAddFn).toHaveBeenCalledTimes(firstEntities.length);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: New round successfully started with ${firstEntities.length} active entities.`
       ); // Check first round final log
 
@@ -329,7 +329,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'TurnOrderService: Initialized InitiativePriorityQueue.'
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(3);
+      expect(mockLogger.debug).toHaveBeenCalledTimes(6);
     });
   }); // End describe("startNewRound ('initiative')")
 }); // End describe('TurnOrderService')

@@ -111,13 +111,19 @@ describe('TurnOrderService', () => {
       );
 
       // Assert: Logging
-      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `TurnOrderService: Adding entity "${entityToAdd.id}" to the end of the round-robin queue.`
       );
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
+        `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
+      );
 
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
 
@@ -154,7 +160,7 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: Adding entity "${entityToAdd.id}" to the end of the round-robin queue.`
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `TurnOrderService: Entity "${entityToAdd.id}" successfully added to the turn order.`
       );
     });
