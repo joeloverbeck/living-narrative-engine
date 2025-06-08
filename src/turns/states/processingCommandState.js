@@ -165,7 +165,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     // Logging `turnAction.resolvedParameters` here which is no longer expected from LLMResponseProcessor output.
     // This log will show `Params: {}` if turnAction.resolvedParameters is undefined.
     // The actual speech is in `turnAction.speech`.
-    logger.info(
+    logger.debug(
       `${this.getStateName()}: Actor ${actorId} processing action. ` +
         `ID: "${turnAction.actionDefinitionId}". ` +
         `Params: ${JSON.stringify(turnAction.resolvedParameters || {})}. ` + // This line shows resolvedParameters which should be undefined
