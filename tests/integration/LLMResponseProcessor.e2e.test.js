@@ -7,6 +7,7 @@
 /**
  * @jest-environment node
  */
+/* eslint-disable jest/no-conditional-expect */
 /* eslint-enable jsdoc/check-tag-names */
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
@@ -73,7 +74,7 @@ describe('LLMResponseProcessor', () => {
       },
     });
 
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       'LLMResponseProcessor: Successfully validated and transformed LLM output for actor actor-123. Action: core:interact'
     );
     expect(logger.error).not.toHaveBeenCalled();
@@ -189,3 +190,4 @@ describe('LLMResponseProcessor', () => {
     );
   });
 });
+/* eslint-enable jest/no-conditional-expect */
