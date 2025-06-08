@@ -413,7 +413,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
           this.#defaultConfigIdFromFile = this.#llmRootConfig.defaultConfigId;
           this.#allConfigsMap = this.#llmRootConfig.configs;
 
-          this.#logger.info(
+          this.#logger.debug(
             'ConfigurableLLMAdapter: LLM configurations loaded successfully.',
             {
               numberOfConfigs: Object.keys(this.#allConfigsMap).length,
