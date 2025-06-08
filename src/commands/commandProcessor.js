@@ -222,8 +222,10 @@ class CommandProcessor {
       this.#logger.warn(
         `CommandProcessor.#_parseCommand: Parse fail for "${commandString}" by ${actorId}. Error: ${parsingError}`
       );
-      // Dispatching core:command_parse_failed if desired
-      // await this.#dispatchWithErrorHandling('core:command_parse_failed', { actorId, commandString, error: parsingError }, 'core:command_parse_failed');
+      await this.#dispatchSystemError(
+        parsingError,
+        `Parse failed for "${commandString}" by ${actorId}. Error: ${parsingError}`
+      );
       const failureResult = this.#_createFailureResult(
         parsingError,
         `Parsing Error: ${parsingError}`
@@ -236,7 +238,7 @@ class CommandProcessor {
       const internalMsg = `No actionId from parse of "${commandString}" by ${actorId}. Output: ${JSON.stringify(parsedCommand)}`;
       const userMsg = 'Could not understand the command.';
       this.#logger.warn(`CommandProcessor.#_parseCommand: ${internalMsg}`);
-      // await this.#dispatchWithErrorHandling('core:command_parse_failed', { actorId, commandString, error: userMsg }, 'core:command_parse_failed');
+      await this.#dispatchSystemError(userMsg, internalMsg);
       const failureResult = this.#_createFailureResult(userMsg, internalMsg);
       failureResult.originalInput = commandString;
       return { parsedCommand: null, errorResult: failureResult };

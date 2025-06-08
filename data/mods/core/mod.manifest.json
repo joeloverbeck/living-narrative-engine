@@ -40,7 +40,6 @@
       "dismiss.action.json"
     ],
     "rules": [
-      "command_parse_failed.rule.json",
       "entity_speech.rule.json",
       "game_loaded.rule.json",
       "go.rule.json",
@@ -64,7 +63,6 @@
       "ai_turn_processing_started.event.json",
       "ai_turn_processing_ended.event.json",
       "turn_ended.event.json",
-      "command_parse_failed.event.json",
       "system_warning_occurred.event.json",
       "system_error_occurred.event.json",
       "submit_command.event.json",
