@@ -73,7 +73,6 @@
       "ui_request_show_load_game.event.json",
       "ui_request_show_save_game.event.json",
       "ui_stopped.event.json",
-      "game_stopped.event.json",
       "ui_operation_in_progress.event.json",
       "display_error.event.json",
       "display_warning.event.json",

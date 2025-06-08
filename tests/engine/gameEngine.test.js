@@ -14,7 +14,6 @@ import {
   GAME_SAVED_ID,
   NEW_GAME_STARTED_ID,
   LOADED_GAME_STARTED_ID,
-  GAME_STOPPED_ID,
   // --- Import new UI Event IDs ---
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
@@ -262,10 +261,6 @@ describe('GameEngine', () => {
       );
       expect(mockTurnManager.stop).toHaveBeenCalledTimes(1);
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        GAME_STOPPED_ID,
-        {}
-      );
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_STOPPED_UI,
         { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
       );
@@ -360,10 +355,6 @@ describe('GameEngine', () => {
         ENGINE_STOPPED_UI,
         { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
       );
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        GAME_STOPPED_ID,
-        {}
-      );
 
       const status = gameEngine.getEngineStatus();
       expect(status.isInitialized).toBe(false);
@@ -392,10 +383,6 @@ describe('GameEngine', () => {
       expect(mockTurnManager.stop).not.toHaveBeenCalled();
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
         ENGINE_STOPPED_UI,
-        expect.anything()
-      );
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
-        GAME_STOPPED_ID,
         expect.anything()
       );
     });
