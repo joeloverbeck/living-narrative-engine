@@ -324,7 +324,7 @@ class TurnManager extends ITurnManager {
         }
 
         const actorIds = actors.map((a) => a.id);
-        this.#logger.info(
+        this.#logger.debug(
           `Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`
         );
         const strategy = 'round-robin'; // Or determine dynamically

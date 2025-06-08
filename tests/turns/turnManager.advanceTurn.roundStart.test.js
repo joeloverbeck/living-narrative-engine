@@ -261,7 +261,7 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
 
     // --- END CORRECTION ---
     // It finds actors... (Check presence and count)
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringMatching(
         /Found 2 actors to start the round: (actor1, actor2|actor2, actor1)/
       )
