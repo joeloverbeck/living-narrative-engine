@@ -1,79 +1,94 @@
 // src/domUI/actionResultRenderer.js
 
 /**
- * @file Defines the {@link ActionResultRenderer} class – a minimal renderer responsible for
- * outputting the results of player and NPC actions to the main `#message-list` container.
+ * @file Defines the {@link ActionResultRenderer} class – a renderer that outputs the
+ * results of player and NPC actions to the main `#message-list` container.
  *
- * This class intentionally contains only boiler‑plate wiring for now.  Follow‑up tickets will add
- * concrete rendering logic once the exact action‑result payload format is finalised.
+ * This implementation fulfils ticket 2.1.3 by:
+ * • Injecting a {@link DomElementFactory} for safe, testable element creation.
+ * • Rendering success / failure bubbles on the corresponding core events.
+ * • Auto-scrolling the output list so the newest bubble is always visible.
  *
  * @module ActionResultRenderer
  */
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Type imports
+// Type imports – removed at build time
 // ────────────────────────────────────────────────────────────────────────────────
-/** @typedef {import('../interfaces/coreServices.js').ILogger}          ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+import DomElementFactory from './domElementFactory.js';
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Runtime imports
+// ────────────────────────────────────────────────────────────────────────────────
+import { BoundDomRendererBase } from './boundDomRendererBase.js';
 
 /**
  * @typedef {object} ActionResultPayload
  * @property {string} message - The narrative message to display for the action result.
  */
 
-// Base class
-import { BoundDomRendererBase } from './boundDomRendererBase.js';
-
-// ────────────────────────────────────────────────────────────────────────────────
-// Class
-// ────────────────────────────────────────────────────────────────────────────────
 /**
- * Renders the outcome of game actions (narrative descriptions, combat summaries, etc.) into the
- * chat log.  It **must** bind the `#message-list` element so higher‑level services can call
- * `render()` (to be implemented later) without worrying about DOM selectors.
- *
- * It listens for `core:display_successful_action_result` and `core:display_failed_action_result`
- * events to know when to render new content.
+ * Renders the outcome of game actions (narrative descriptions, combat summaries, etc.)
+ * into the chat log.
  *
  * @class
  * @extends {BoundDomRendererBase}
+ * @since 0.3.0
+ *
+ * @fires core:display_successful_action_result
+ * @fires core:display_failed_action_result
  *
  * @example
  * const renderer = new ActionResultRenderer({
- * logger: myLogger,
- * documentContext: new DocumentContext(),
- * safeEventDispatcher: mySafeDispatcher,
+ * logger,
+ * documentContext,
+ * safeEventDispatcher,
+ * domElementFactory: new DomElementFactory(documentContext),
  * });
- * // The renderer will now automatically handle action result events.
  */
 export class ActionResultRenderer extends BoundDomRendererBase {
+  /**
+   * @private
+   * @type {DomElementFactory}
+   */
+  #domElementFactory;
+
   /**
    * Creates an {@link ActionResultRenderer} instance.
    *
    * @param {object} deps – Constructor dependencies.
-   * @param {ILogger}               deps.logger             – Logger implementation.
-   * @param {IDocumentContext}      deps.documentContext    – Wrapper around the DOM/document.
-   * @param {ISafeEventDispatcher}  deps.safeEventDispatcher – Event dispatcher allowing safe,
-   * non‑throwing emits & subs.
+   * @param {ILogger}               deps.logger
+   * @param {IDocumentContext}      deps.documentContext
+   * @param {ISafeEventDispatcher}  deps.safeEventDispatcher
+   * @param {DomElementFactory}     deps.domElementFactory
    */
-  constructor({ logger, documentContext, safeEventDispatcher }) {
+  constructor({
+    logger,
+    documentContext,
+    safeEventDispatcher,
+    domElementFactory,
+  }) {
+    if (!domElementFactory) {
+      throw new Error(
+        '[ActionResultRenderer] domElementFactory dependency must be provided.'
+      );
+    }
+
     const elementsConfig = {
-      /**
-       * Reference to the list container.  Marked as `required` so the base class will log an error
-       * if the selector does not resolve – which is exactly what we want during development.
-       */
       listContainerElement: { selector: '#message-list', required: true },
     };
 
-    // Call the superclass, mapping the project’s preferred “validatedEventDispatcher” param name
-    // to the provided SafeEventDispatcher.
     super({
       logger,
       documentContext,
       validatedEventDispatcher: safeEventDispatcher,
       elementsConfig,
     });
+
+    /** @private */ this.#domElementFactory = domElementFactory;
 
     this.logger.debug(
       `${this._logPrefix} Instantiated. listContainerElement =`,
@@ -83,6 +98,9 @@ export class ActionResultRenderer extends BoundDomRendererBase {
     this.#subscribeToEvents();
   }
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // VED subscriptions
+  // ────────────────────────────────────────────────────────────────────────────
   /**
    * Subscribes to the necessary core events for displaying action results.
    * @private
@@ -103,33 +121,86 @@ export class ActionResultRenderer extends BoundDomRendererBase {
     );
 
     this.logger.debug(
-      `${this._logPrefix} Subscribed to 'core:display_successful_action_result' and 'core:display_failed_action_result'.`
+      `${this._logPrefix} Subscribed to action-result events (success & failure).`
     );
   }
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Event handlers
+  // ────────────────────────────────────────────────────────────────────────────
   /**
    * Handles the 'core:display_successful_action_result' event.
    * @private
-   * @param {ActionResultPayload} payload - The event payload.
+   * @param {ActionResultPayload} payload
    */
-  #handleSuccess(payload) {
-    const { message } = payload;
+  #handleSuccess({ message }) {
     this.logger.debug(
-      `${this._logPrefix} Received 'core:display_successful_action_result'. Message: "${message}"`
+      `${this._logPrefix} Rendering SUCCESS bubble. Message: "${message}"`
     );
-    // DOM rendering logic will be added in a future ticket.
+    this.#renderBubble(message, 'action-success-bubble');
   }
 
   /**
    * Handles the 'core:display_failed_action_result' event.
    * @private
-   * @param {ActionResultPayload} payload - The event payload.
+   * @param {ActionResultPayload} payload
    */
-  #handleFailure(payload) {
-    const { message } = payload;
+  #handleFailure({ message }) {
     this.logger.debug(
-      `${this._logPrefix} Received 'core:display_failed_action_result'. Message: "${message}"`
+      `${this._logPrefix} Rendering FAILURE bubble. Message: "${message}"`
     );
-    // DOM rendering logic will be added in a future ticket.
+    this.#renderBubble(message, 'action-failure-bubble');
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Rendering helpers
+  // ────────────────────────────────────────────────────────────────────────────
+  /**
+   * Creates and appends a result bubble to the message list, then scrolls to bottom.
+   *
+   * @private
+   * @param {string} message – Bubble contents.
+   * @param {string} cssClass – Either 'action-success-bubble' or 'action-failure-bubble'.
+   */
+  #renderBubble(message, cssClass) {
+    if (typeof message !== 'string' || !message.trim()) {
+      this.logger.warn(
+        `${this._logPrefix} Received invalid or empty message. Aborting bubble render.`,
+        { message }
+      );
+      return;
+    }
+    const listEl = this.elements.listContainerElement;
+
+    if (!listEl) {
+      this.logger.error(
+        `${this._logPrefix} listContainerElement not found – cannot render bubble.`
+      );
+      return;
+    }
+
+    const li = this.#domElementFactory.li(cssClass);
+    if (!li) {
+      this.logger.error(
+        `${this._logPrefix} DomElementFactory.li() returned null – cannot render bubble.`
+      );
+      return;
+    }
+
+    li.textContent = message;
+    listEl.appendChild(li);
+    this.#scrollToBottom();
+  }
+
+  /**
+   * Scrolls the message list so the newest bubble is visible.
+   * @private
+   */
+  #scrollToBottom() {
+    const container = this.elements.listContainerElement;
+    if (!container) return;
+
+    // Use scrollHeight instead of behaviour smooth; CSS can handle smooth-scroll if desired.
+    container.scrollTop = container.scrollHeight;
   }
 }
