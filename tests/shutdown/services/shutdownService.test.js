@@ -104,7 +104,7 @@ describe('ShutdownService', () => {
             // gameLoop removed
           })
       ).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Instance created successfully with dependencies.'
       );
     });
@@ -265,19 +265,18 @@ describe('ShutdownService', () => {
       await service.runShutdownSequence();
 
       // Verify order and calls
-      const loggerInfoCalls = mockLogger.info.mock.calls.map((call) => call[0]);
       const loggerDebugCalls = mockLogger.debug.mock.calls.map(
         (call) => call[0]
       );
       const dispatchCalls = mockValidatedEventDispatcher.dispatch.mock.calls;
 
       // Expect constructor log first (index 0)
-      expect(loggerInfoCalls[0]).toBe(
+      expect(loggerDebugCalls[0]).toBe(
         'ShutdownService: Instance created successfully with dependencies.'
       );
 
       // 1. Initial logs and events (Indices 1-based relative to sequence start)
-      expect(loggerInfoCalls[1]).toBe(
+      expect(loggerDebugCalls[1]).toBe(
         'ShutdownService: runShutdownSequence called. Starting shutdown sequence...'
       );
       expect(dispatchCalls[0][0]).toBe('shutdown:shutdown_service:started');
@@ -293,22 +292,22 @@ describe('ShutdownService', () => {
         'ShutdownService: Dispatched ui:show_message event.'
       );
 
-      // 2. Stop Turn Manager (Indices 2, 3) <<< UPDATED
-      expect(loggerInfoCalls[2]).toBe(
+      // 2. Stop Turn Manager (Indices 4, 5) <<< UPDATED
+      expect(loggerDebugCalls[4]).toBe(
         'ShutdownService: Resolving and stopping TurnManager...'
       );
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ITurnManager);
       expect(mockTurnManager.stop).toHaveBeenCalledTimes(1);
-      expect(loggerInfoCalls[3]).toBe(
+      expect(loggerDebugCalls[5]).toBe(
         'ShutdownService: TurnManager stop() method called successfully.'
       );
 
-      // 3. Resolve Shutdownable Systems (Indices 4, 5)
-      expect(loggerInfoCalls[4]).toBe(
+      // 3. Resolve Shutdownable Systems (Indices 6, 7)
+      expect(loggerDebugCalls[6]).toBe(
         'ShutdownService: Attempting to shut down systems tagged as SHUTDOWNABLE...'
       );
       expect(mockContainer.resolveByTag).toHaveBeenCalledWith(SHUTDOWNABLE[0]);
-      expect(loggerInfoCalls[5]).toBe(
+      expect(loggerDebugCalls[7]).toBe(
         `ShutdownService: Found 2 systems tagged as SHUTDOWNABLE.`
       );
 
@@ -317,7 +316,7 @@ describe('ShutdownService', () => {
         `ShutdownService: Attempting to call shutdown() on system: ${MOCK_SYSTEM1_NAME}...`
       );
       expect(mockShutdownableSystem1.shutdown).toHaveBeenCalledTimes(1);
-      expect(loggerInfoCalls[6]).toBe(
+      expect(loggerDebugCalls[9]).toBe(
         `ShutdownService: Successfully called shutdown() on system: ${MOCK_SYSTEM1_NAME}.`
       );
 
@@ -325,23 +324,23 @@ describe('ShutdownService', () => {
         `ShutdownService: Attempting to call shutdown() on system: ${MOCK_SYSTEM2_NAME}...`
       );
       expect(mockShutdownableSystem2.shutdown).toHaveBeenCalledTimes(1);
-      expect(loggerInfoCalls[7]).toBe(
+      expect(loggerDebugCalls[11]).toBe(
         `ShutdownService: Successfully called shutdown() on system: ${MOCK_SYSTEM2_NAME}.`
       );
 
-      expect(loggerInfoCalls[8]).toBe(
+      expect(loggerDebugCalls[12]).toBe(
         'ShutdownService: Finished processing SHUTDOWNABLE systems.'
       ); // Index: 5 (found) + 2 (systems) + 1 (finished) = 8
 
       // 5. Dispose Singletons (Indices 9, 10, 11)
-      expect(loggerInfoCalls[9]).toBe(
+      expect(loggerDebugCalls[13]).toBe(
         'ShutdownService: Checking container for singleton disposal...'
       ); // Index: 8 + 1 = 9
-      expect(loggerInfoCalls[10]).toBe(
+      expect(loggerDebugCalls[14]).toBe(
         'ShutdownService: Attempting to dispose container singletons...'
       ); // Index: 9 + 1 = 10
       expect(mockContainer.disposeSingletons).toHaveBeenCalledTimes(1);
-      expect(loggerInfoCalls[11]).toBe(
+      expect(loggerDebugCalls[15]).toBe(
         'ShutdownService: Container singletons disposed successfully.'
       ); // Index: 10 + 1 = 11
 
@@ -363,9 +362,9 @@ describe('ShutdownService', () => {
         expect.anything()
       );
 
-      // Verify total info calls match expected count
-      // Constructor(1) + Seq Start(1) + TM Resolve/Stop(2) + Resolve Systems(2) + Sys1(1) + Sys2(1) + Finished Sys(1) + Dispose Check/Attempt/Success(3) = 12
-      expect(mockLogger.info).toHaveBeenCalledTimes(12);
+      // Verify total debug calls match expected count
+      // Constructor(1) + Seq Start(1) + Start Event Logs(2) + TM Resolve/Stop(2) + Resolve Systems(2) + Sys1 Attempt/Success(2) + Sys2 Attempt/Success(2) + Finished Sys(1) + Dispose Check/Attempt/Success(3) + Final logs(2) = 18
+      expect(mockLogger.debug).toHaveBeenCalledTimes(18);
     });
 
     // REMOVED: Test for game loop already stopped - now redundant as TurnManager is always resolved/stopped unless resolve fails.
@@ -393,12 +392,12 @@ describe('ShutdownService', () => {
       // Verify system shutdown was skipped
       expect(mockShutdownableSystem1.shutdown).not.toHaveBeenCalled();
       expect(mockShutdownableSystem2.shutdown).not.toHaveBeenCalled();
-      expect(mockLogger.info).not.toHaveBeenCalledWith(
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
         'ShutdownService: Finished processing SHUTDOWNABLE systems.'
       );
 
       // Verify singleton disposal still happens AFTER the error handling for resolveByTag
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Attempting to dispose container singletons...'
       );
       expect(mockContainer.disposeSingletons).toHaveBeenCalledTimes(1);
@@ -450,15 +449,15 @@ describe('ShutdownService', () => {
 
       // Verify other systems were still called
       expect(mockShutdownableSystem1.shutdown).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `ShutdownService: Successfully called shutdown() on system: ${MOCK_SYSTEM1_NAME}.`
       );
       expect(mockShutdownableSystem2.shutdown).toHaveBeenCalledTimes(1);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         `ShutdownService: Successfully called shutdown() on system: ${MOCK_SYSTEM2_NAME}.`
       );
       // Check "Finished processing" still logged
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Finished processing SHUTDOWNABLE systems.'
       );
 
@@ -499,7 +498,7 @@ describe('ShutdownService', () => {
       expect(mockShutdownableSystem1.shutdown).toHaveBeenCalledTimes(1);
       expect(mockShutdownableSystem2.shutdown).toHaveBeenCalledTimes(1);
       // Check "Finished processing" still logged
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Finished processing SHUTDOWNABLE systems.'
       );
 
@@ -533,14 +532,14 @@ describe('ShutdownService', () => {
       expect(mockShutdownableSystem2.shutdown).toHaveBeenCalledTimes(1);
 
       // Verify error logging for disposal failure
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'ShutdownService: Attempting to dispose container singletons...'
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         'ShutdownService: Error occurred during container.disposeSingletons().',
         disposeError
       );
-      expect(mockLogger.info).not.toHaveBeenCalledWith(
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
         'ShutdownService: Container singletons disposed successfully.'
       );
 
