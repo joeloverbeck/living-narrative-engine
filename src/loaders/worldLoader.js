@@ -335,7 +335,7 @@ class WorldLoader {
         manifestsForValidation,
         this.#logger
       );
-      this.#logger.info(
+      this.#logger.debug(
         `WorldLoader: Final mod order resolved: [${this.#finalOrder.join(', ')}]`
       );
       this.#registry.store('meta', 'final_mod_order', this.#finalOrder);
@@ -540,7 +540,7 @@ class WorldLoader {
           .sort()
           .join(', ');
         const summaryMessage = `Mod '${modId}' loaded in ${modDurationMs.toFixed(2)}ms: ${typeCountsString.length > 0 ? typeCountsString : 'No items loaded'}${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
-        this.#logger.info(summaryMessage);
+        this.#logger.debug(summaryMessage);
         // --- End Per-Mod Summary Logging ---
 
         this.#logger.debug(

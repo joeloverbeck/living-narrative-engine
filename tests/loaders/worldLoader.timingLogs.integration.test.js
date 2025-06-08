@@ -241,11 +241,12 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
   });
 
   // ── Test Case: Verify Per-Mod Timing Logs ───────────────────────────────
-  it('should log per-mod performance timing information at INFO level', async () => {
+  it('should log per-mod performance timing information at DEBUG level', async () => {
     // --- Action ---
     await expect(worldLoader.loadWorld(worldName)).resolves.not.toThrow();
 
     // --- Assertions ---
+    const debugCalls = mockLogger.debug.mock.calls;
     const infoCalls = mockLogger.info.mock.calls;
 
     // Verify logs for each mod in the final order
@@ -256,7 +257,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       ); // Regex to capture duration
 
       // Find the specific log message for this mod
-      const timingLogCall = infoCalls.find((call) =>
+      const timingLogCall = debugCalls.find((call) =>
         expectedLogRegex.test(call[0])
       );
 
@@ -283,7 +284,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
         }
       }
 
-      // 3. Assert log level is INFO (implicitly checked by searching mockLogger.info.mock.calls)
+      // 3. Assert log level is DEBUG (implicitly checked by searching mockLogger.debug.mock.calls)
       // If the log wasn't found in infoCalls, the expect(timingLogCall).toBeDefined() would fail.
     }
 
