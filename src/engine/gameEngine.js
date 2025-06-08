@@ -12,7 +12,6 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
-  ENGINE_MESSAGE_DISPLAY_REQUESTED,
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
@@ -413,13 +412,6 @@ class GameEngine {
     if (!this.#isEngineInitialized) {
       const errorMsg = 'Game engine is not initialized. Cannot save game.';
       this.#logger.error(`GameEngine.triggerManualSave: ${errorMsg}`);
-      await this.#safeEventDispatcher.dispatch(
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        {
-          message: errorMsg,
-          type: 'error',
-        }
-      );
       return { success: false, error: errorMsg };
     }
 
@@ -427,13 +419,6 @@ class GameEngine {
       const errorMsg =
         'GamePersistenceService is not available. Cannot save game.';
       this.#logger.error(`GameEngine.triggerManualSave: ${errorMsg}`);
-      await this.#safeEventDispatcher.dispatch(
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        {
-          message: errorMsg,
-          type: 'error',
-        }
-      );
       return { success: false, error: errorMsg };
     }
 
@@ -474,30 +459,16 @@ class GameEngine {
           `GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`
         );
 
-        await this.#safeEventDispatcher.dispatch(
-          ENGINE_MESSAGE_DISPLAY_REQUESTED,
-          {
-            message: successMsg,
-            type: 'info',
-          }
-        );
         this.#logger.debug(
-          `GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (info) for "${saveName}".`
+          `GameEngine.triggerManualSave: Save successful. Name: "${saveName}".`
         );
       } else {
         const errorMsg = `Manual save failed for "${saveName}". Error: ${saveResult.error || 'Unknown error'}`;
         this.#logger.error(
           `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${saveResult.error}`
         );
-        await this.#safeEventDispatcher.dispatch(
-          ENGINE_MESSAGE_DISPLAY_REQUESTED,
-          {
-            message: errorMsg,
-            type: 'error',
-          }
-        );
         this.#logger.debug(
-          `GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (error) for "${saveName}".`
+          `GameEngine.triggerManualSave: Save failed. Name: "${saveName}".`
         );
       }
     } catch (error) {
@@ -512,17 +483,6 @@ class GameEngine {
         success: false,
         error: `Unexpected error during save: ${caughtErrorMsg}`,
       };
-
-      await this.#safeEventDispatcher.dispatch(
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        {
-          message: `Save operation encountered an unexpected error for "${saveName}": ${caughtErrorMsg}`,
-          type: 'error',
-        }
-      );
-      this.#logger.debug(
-        `GameEngine.triggerManualSave: Dispatched ENGINE_MESSAGE_DISPLAY_REQUESTED (critical error) for "${saveName}".`
-      );
     } finally {
       this.#logger.debug(
         `GameEngine.triggerManualSave: Dispatching ENGINE_READY_UI after save attempt for "${saveName}".`
@@ -764,7 +724,6 @@ class GameEngine {
    * It checks for the availability of the GamePersistenceService and whether saving is currently allowed.
    *
    * @memberof GameEngine
-   * @fires ENGINE_MESSAGE_DISPLAY_REQUESTED - If GamePersistenceService is unavailable.
    * @fires REQUEST_SHOW_SAVE_GAME_UI - If saving is allowed.
    * @fires CANNOT_SAVE_GAME_INFO - If saving is not currently allowed.
    */
@@ -773,11 +732,6 @@ class GameEngine {
       this.#logger.error(
         'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
       );
-      this.#safeEventDispatcher.dispatch(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
-        message:
-          'Cannot open save menu: GamePersistenceService is unavailable.',
-        type: 'error',
-      });
       return;
     }
 
@@ -795,8 +749,7 @@ class GameEngine {
       this.#logger.warn(
         'GameEngine.showSaveGameUI: Saving is not currently allowed.'
       );
-      // As per ticket: "Dispatch the CANNOT_SAVE_GAME_INFO event (or ENGINE_MESSAGE_DISPLAY_REQUESTED with the specific message: "Cannot save at this moment...")."
-      // Sticking with CANNOT_SAVE_GAME_INFO as it's more specific.
+      // Dispatch a generic notification that saving is currently disabled.
       this.#safeEventDispatcher.dispatch(CANNOT_SAVE_GAME_INFO); // Assuming CANNOT_SAVE_GAME_INFO also expects an empty payload or handles undefined gracefully. If it also has a schema requiring an object, it should also be {}.
     }
   }
@@ -807,7 +760,6 @@ class GameEngine {
    * It also checks for the availability of the GamePersistenceService.
    *
    * @memberof GameEngine
-   * @fires ENGINE_MESSAGE_DISPLAY_REQUESTED - If GamePersistenceService is unavailable.
    * @fires REQUEST_SHOW_LOAD_GAME_UI - To request the load game UI.
    */
   showLoadGameUI() {
@@ -815,11 +767,6 @@ class GameEngine {
       this.#logger.error(
         'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
       );
-      this.#safeEventDispatcher.dispatch(ENGINE_MESSAGE_DISPLAY_REQUESTED, {
-        message:
-          'Cannot open load menu: GamePersistenceService is unavailable.',
-        type: 'error',
-      });
       return;
     }
     this.#logger.debug(

@@ -15,7 +15,6 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
-  ENGINE_MESSAGE_DISPLAY_REQUESTED,
   REQUEST_SHOW_SAVE_GAME_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
@@ -56,9 +55,6 @@ describe('EngineUIManager', () => {
       },
       input: {
         setEnabled: jest.fn(),
-      },
-      messages: {
-        render: jest.fn(),
       },
       saveGame: {
         // Default state: component exists and has show method
@@ -151,7 +147,6 @@ describe('EngineUIManager', () => {
         ENGINE_OPERATION_IN_PROGRESS_UI,
         ENGINE_OPERATION_FAILED_UI,
         ENGINE_STOPPED_UI,
-        ENGINE_MESSAGE_DISPLAY_REQUESTED,
         REQUEST_SHOW_SAVE_GAME_UI,
         REQUEST_SHOW_LOAD_GAME_UI,
         CANNOT_SAVE_GAME_INFO,
@@ -316,12 +311,8 @@ describe('EngineUIManager', () => {
         payload,
       });
 
-      it('should render fatal message, disable input, and set error title', () => {
+      it('should disable input and set error title', () => {
         handler()(mockEvent(validPayload));
-        expect(mockDomUiFacade.messages.render).toHaveBeenCalledWith(
-          errorMessage,
-          'fatal'
-        );
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           false,
           'Operation failed.'
@@ -339,7 +330,6 @@ describe('EngineUIManager', () => {
           `EngineUIManager: Invalid or missing payload for ${ENGINE_OPERATION_FAILED_UI}.`,
           invalidPayload
         );
-        expect(mockDomUiFacade.messages.render).not.toHaveBeenCalled();
       });
     });
 
@@ -366,66 +356,6 @@ describe('EngineUIManager', () => {
           invalidPayload
         );
         expect(mockDomUiFacade.input.setEnabled).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('#handleEngineMessageDisplayRequested', () => {
-      const handler = () =>
-        subscribedEventHandlers[ENGINE_MESSAGE_DISPLAY_REQUESTED];
-      const message = 'A short test message.';
-      const mockEvent = (payload) => ({
-        eventId: ENGINE_MESSAGE_DISPLAY_REQUESTED,
-        payload,
-      });
-
-      const validTypes = ['info', 'error', 'fatal', 'warning', 'success'];
-      validTypes.forEach((type) => {
-        it(`should render message with type "${type}"`, () => {
-          const payload = { message, type };
-          handler()(mockEvent(payload));
-          expect(mockDomUiFacade.messages.render).toHaveBeenCalledWith(
-            message,
-            type
-          );
-        });
-      });
-
-      it('should default to "info" type and log warning if type is invalid', () => {
-        const invalidTypePayload = { message, type: 'invalidType' };
-        handler()(mockEvent(invalidTypePayload));
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          `EngineUIManager: Invalid message type "invalidType" for ${ENGINE_MESSAGE_DISPLAY_REQUESTED}. Defaulting to 'info'.`,
-          {
-            message,
-            type: 'info',
-          }
-        ); // type is modified in place
-        expect(mockDomUiFacade.messages.render).toHaveBeenCalledWith(
-          message,
-          'info'
-        );
-      });
-
-      it('should log warning on invalid payload (missing message)', () => {
-        const invalidPayload = { type: 'info' };
-        handler()(mockEvent(invalidPayload));
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          `EngineUIManager: Invalid or missing payload for ${ENGINE_MESSAGE_DISPLAY_REQUESTED}.`,
-          invalidPayload
-        );
-        expect(mockDomUiFacade.messages.render).not.toHaveBeenCalled();
-      });
-
-      it('should log warning on invalid payload (missing type)', () => {
-        const invalidPayload = { message };
-        handler()(mockEvent(invalidPayload));
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          `EngineUIManager: Invalid or missing payload for ${ENGINE_MESSAGE_DISPLAY_REQUESTED}.`,
-          invalidPayload
-        );
-        // The code actually proceeds if type is missing and payload.type is checked, which would be undefined.
-        // The validation `typeof payload.type !== 'string'` catches this.
-        expect(mockDomUiFacade.messages.render).not.toHaveBeenCalled();
       });
     });
 
@@ -486,13 +416,12 @@ describe('EngineUIManager', () => {
       const handler = () => subscribedEventHandlers[CANNOT_SAVE_GAME_INFO];
       const mockEvent = { eventId: CANNOT_SAVE_GAME_INFO, payload: {} };
 
-      it('should render an informational message', () => {
+      it('should log an informational message', () => {
         handler()(mockEvent);
         const expectedMessage =
           'Cannot save at this moment (e.g. game not fully initialized or in a critical state).';
-        expect(mockDomUiFacade.messages.render).toHaveBeenCalledWith(
-          expectedMessage,
-          'info'
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          `EngineUIManager: ${expectedMessage}`
         );
       });
     });

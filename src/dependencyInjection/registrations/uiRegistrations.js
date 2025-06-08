@@ -14,7 +14,6 @@ import AlertRouter from '../../alerting/alertRouter.js';
 
 // --- NEW DOM UI Component Imports ---
 import {
-  UiMessageRenderer,
   SpeechBubbleRenderer,
   TitleRenderer,
   InputStateController,
@@ -97,14 +96,6 @@ export function registerUI(
   logger.debug(`UI Registrations: Registered ${tokens.AlertRouter}.`);
 
   // --- 2. Register Individual Renderers / Controllers / Services ---
-
-  registrar.single(tokens.UiMessageRenderer, UiMessageRenderer, [
-    tokens.ILogger,
-    tokens.IDocumentContext,
-    tokens.IValidatedEventDispatcher,
-    tokens.DomElementFactory,
-  ]);
-  logger.debug(`UI Registrations: Registered ${tokens.UiMessageRenderer}.`);
 
   registrar.single(tokens.SpeechBubbleRenderer, SpeechBubbleRenderer, [
     tokens.ILogger,
@@ -288,7 +279,6 @@ export function registerUI(
     tokens.LocationRenderer,
     tokens.TitleRenderer,
     tokens.InputStateController,
-    tokens.UiMessageRenderer,
     tokens.SpeechBubbleRenderer,
     tokens.PerceptionLogRenderer,
     tokens.SaveGameUI,

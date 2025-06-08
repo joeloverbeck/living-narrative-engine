@@ -14,7 +14,6 @@ export const PLAYER_TURN_SUBMITTED_ID = 'core:player_turn_submitted';
 export const DISPLAY_ERROR_ID = 'core:display_error';
 export const DISPLAY_WARNING_ID = 'core:display_warning';
 export const ENTITY_SPOKE_ID = 'core:entity_spoke';
-export const DISPLAY_MESSAGE_ID = 'core:display_message';
 export const DISPLAY_SPEECH_ID = 'core:display_speech';
 export const AI_TURN_PROCESSING_STARTED = 'core:ai_turn_processing_started';
 export const AI_TURN_PROCESSING_ENDED = 'core:ai_turn_processing_ended';
@@ -100,22 +99,6 @@ export const ENGINE_OPERATION_FAILED_UI = 'core:ui_operation_failed';
 export const ENGINE_STOPPED_UI = 'core:ui_stopped';
 
 /**
- * Signals a request from the engine to display a general informational or error message to the user.
- * This is for messages not tied to a specific blocking operation's start/end/failure.
- *
- * @event ENGINE_MESSAGE_DISPLAY_REQUESTED
- * @type {string}
- * @constant
- * @example
- * // Payload structure:
- * // {
- * //   message: string,                            // The message content to display.
- * //   type: 'info' | 'error' | 'fatal' | 'warning' // The type of message, for appropriate UI styling.
- * // }
- */
-export const ENGINE_MESSAGE_DISPLAY_REQUESTED =
-  'core:ui_message_display_requested';
-
 /**
  * Signals a request from the engine to show the save game interface.
  * The UI manager should handle the presentation of the save game UI.
