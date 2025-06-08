@@ -94,7 +94,7 @@ class InputSetupService {
       // Set the callback on the InputHandler instance
       inputHandler.setCommandCallback(processInputCommand);
 
-      this.#logger.info(
+      this.#logger.debug(
         'InputSetupService: InputHandler resolved and command callback configured to dispatch core:submit_command events.'
       );
     } catch (error) {
