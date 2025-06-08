@@ -257,6 +257,7 @@ export const tokens = Object.freeze({
   QueryComponentHandler: 'QueryComponentHandler',
   SetVariableHandler: 'SetVariableHandler',
   QuerySystemDataHandler: 'QuerySystemDataHandler',
+  ForEachHandler: 'ForEachHandler',
 
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',

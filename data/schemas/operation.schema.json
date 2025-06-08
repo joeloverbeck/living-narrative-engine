@@ -20,6 +20,7 @@
             "REMOVE_COMPONENT",
             "DISPATCH_EVENT",
             "IF",
+            "FOR_EACH",
             "LOG",
             "SET_VARIABLE",
             "QUERY_SYSTEM_DATA"
@@ -194,6 +195,24 @@
             "properties": {
               "parameters": {
                 "$ref": "#/$defs/QuerySystemDataParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FOR_EACH"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/ForEachParameters"
               }
             },
             "required": ["parameters"]
@@ -487,6 +506,30 @@
         }
       },
       "required": ["source_id", "query_details", "result_variable"],
+      "additionalProperties": false
+    },
+    "ForEachParameters": {
+      "type": "object",
+      "description": "Parameters for the FOR_EACH loop operation.",
+      "properties": {
+        "collection": {
+          "type": "string",
+          "description": "JSON-Path (dot-notation) inside evaluationContext to the array to iterate (e.g. 'context.followers')"
+        },
+        "item_variable": {
+          "type": "string",
+          "description": "Variable name that receives each element inside the loop’s evaluationContext.context"
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Operation"
+          },
+          "description": "Nested operations executed once per element"
+        }
+      },
+      "required": ["collection", "item_variable", "actions"],
       "additionalProperties": false
     }
   }

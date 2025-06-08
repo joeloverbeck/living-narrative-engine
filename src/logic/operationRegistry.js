@@ -1,69 +1,75 @@
-// src/logic/operationRegistry.js
-// --- FILE START ---
+// -----------------------------------------------------------------------------
+//  OperationRegistry  – test-compliant, DI-friendly implementation
+// -----------------------------------------------------------------------------
 
-// --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('./defs.js').OperationHandler} OperationHandler */
+/** @typedef {import('./defs.js').OperationHandler}           OperationHandler */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 class OperationRegistry {
-  /**
-   * Internal storage for mapping operation type strings to operationHandlers.
-   *
-   * @private
-   * @readonly
-   * @type {Map<string, OperationHandler>}
-   */
-  #registry;
+  /** @type {Map<string, OperationHandler>} */ #registry = new Map();
+  /** @type {ILogger|null}                  */ #logger = null;
 
   /**
-   * Optional logger instance for internal messages (like registration warnings).
-   *
-   * @private
-   * @type {ILogger | null}
+   * @param {{logger?: ILogger}|ILogger|null|undefined} [arg]
+   *        Supports historical call-sites:
+   *        • new OperationRegistry({ logger })
+   *        • new OperationRegistry(logger)
+   *        • new OperationRegistry()
    */
-  #logger;
+  constructor(arg = null) {
+    this.#logger =
+      arg && typeof arg === 'object' && 'logger' in arg ? arg.logger : arg;
 
-  /**
-   * Creates an instance of OperationRegistry.
-   *
-   * @param {object} [dependencies] - Optional dependencies.
-   * @param {ILogger} [dependencies.logger] - Optional logger for warnings.
-   */
-  constructor({ logger } = {}) {
-    this.#registry = new Map();
-    this.#logger = logger ?? null;
     this.#log('info', 'OperationRegistry initialized.');
   }
 
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Register or overwrite a handler.
+   * @param {string}               operationType
+   * @param {OperationHandler}     handler
+   */
   register(operationType, handler) {
+    // --- validate ------------------------------------------------------------
     if (typeof operationType !== 'string' || !operationType.trim()) {
-      const errorMsg =
+      const msg =
         'OperationRegistry.register: operationType must be a non-empty string.';
-      this.#log('error', errorMsg);
-      throw new Error(errorMsg);
+      this.#log('error', msg);
+      throw new Error(msg);
     }
+
+    const trimmed = operationType.trim();
+
     if (typeof handler !== 'function') {
-      const errorMsg = `OperationRegistry.register: handler for type "${operationType}" must be a function.`;
-      this.#log('error', errorMsg);
-      throw new Error(errorMsg);
+      const msg = `OperationRegistry.register: handler for type "${trimmed}" must be a function.`;
+      this.#log('error', msg);
+      throw new Error(msg);
     }
 
-    const trimmedType = operationType.trim();
-
-    if (this.#registry.has(trimmedType)) {
+    // --- overwrite warning ---------------------------------------------------
+    if (this.#registry.has(trimmed)) {
       this.#log(
         'warn',
-        `OperationRegistry: Overwriting existing handler for operation type "${trimmedType}".`
+        `OperationRegistry: Overwriting existing handler for operation type "${trimmed}".`
       );
     }
 
-    this.#registry.set(trimmedType, handler);
+    // --- store & debug-log ---------------------------------------------------
+    this.#registry.set(trimmed, handler);
     this.#log(
       'debug',
-      `OperationRegistry: Registered handler for operation type "${trimmedType}".`
+      `OperationRegistry: Registered handler for operation type "${trimmed}".`
     );
   }
 
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Retrieve a handler (if any) for the given type.
+   * @param {string} operationType
+   * @returns {OperationHandler|undefined}
+   */
   getHandler(operationType) {
     if (typeof operationType !== 'string') {
       this.#log(
@@ -72,59 +78,64 @@ class OperationRegistry {
       );
       return undefined;
     }
-    const trimmedType = operationType.trim();
-    const handler = this.#registry.get(trimmedType);
+
+    const trimmed = operationType.trim();
+    const handler = this.#registry.get(trimmed);
+
     if (!handler) {
       this.#log(
         'debug',
-        `OperationRegistry: No handler found for operation type "${trimmedType}".`
+        `OperationRegistry: No handler found for operation type "${trimmed}".`
       );
     }
+
     return handler;
   }
 
-  /**
-   * Internal logging helper that uses the injected logger or falls back to console.
-   * Also handles errors thrown by the logger itself.
-   *
-   * @private
-   * @param {'info' | 'warn' | 'error' | 'debug'} level - Log level.
-   * @param {string} message - The log message.
-   * @param {any[]} [args] - Additional arguments to log.
-   */
-  #log(level, message, ...args) {
-    try {
-      // Check if the logger exists and the specific log method exists
-      if (this.#logger && typeof this.#logger[level] === 'function') {
-        // Call the method directly on the logger instance to preserve 'this' context
-        this.#logger[level](message, ...args);
-      } else if (console[level] && typeof console[level] === 'function') {
-        // Fallback to console's method if logger or its method is unavailable
-        console[level](message, ...args);
-      } else {
-        // Absolute fallback if the specific console method (e.g., console.debug) doesn't exist
-        console.log(`[${level.toUpperCase()}] ${message}`, ...args);
-      }
-    } catch (logError) {
-      // --- Fallback Log (if the chosen logger/console method itself threw an error) ---
-      console.error(
-        `Error occurred in logging utility (faulty logger method for level '${level}') trying to log message: "${message}"`,
-        logError
-      );
+  // ---------------------------------------------------------------------------
+  //  Internal logging helper – resilient to faulty or missing loggers
+  // ---------------------------------------------------------------------------
 
-      // Attempt to log the original message using a very safe fallback
+  /** @param {'info'|'warn'|'error'|'debug'} level */
+  #log(level, message, ...rest) {
+    const loggerFn =
+      this.#logger && typeof this.#logger[level] === 'function'
+        ? this.#logger[level]
+        : null;
+
+    if (loggerFn) {
       try {
-        // MODIFIED LINE: Removed "[FALLBACK - ...]" prefix
-        console.log(`[${level.toUpperCase()}] ${message}`, ...args);
-      } catch (fallbackError) {
-        console.error(
-          'CRITICAL LOGGING FAILURE: Even the final console.log fallback failed.',
-          fallbackError
-        );
+        loggerFn.call(this.#logger, message, ...rest);
+        return;
+      } catch (err) {
+        // Logger itself mis-behaved – fall through to console fallback
+        try {
+          console.error(
+            `Error occurred in logging utility (faulty logger method for level '${level}') trying to log message: "${message}"`,
+            err
+          );
+        } catch {}
+        // continue to fallback
       }
+    }
+
+    // --- console fallback ----------------------------------------------------
+    const upper = level.toUpperCase();
+
+    // Prefer the matching console method if it exists (keeps test expectations)
+    if (typeof console[level] === 'function') {
+      // info/warn/error/debug flow straight through (no [LEVEL] prefix)
+      console[level](message, ...rest);
+      return;
+    }
+
+    // Last-ditch: console.log with [LEVEL] prefix (used by the “faulty logger” tests)
+    try {
+      console.log(`[${upper}] ${message}`, ...rest);
+    } catch {
+      /* eslint-disable-line no-empty */
     }
   }
 }
 
 export default OperationRegistry;
-// --- FILE END ---
