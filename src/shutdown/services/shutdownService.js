@@ -96,7 +96,7 @@ class ShutdownService {
     this.#logger = logger;
     this.#validatedEventDispatcher = validatedEventDispatcher;
 
-    this.#logger.info(
+    this.#logger.debug(
       'ShutdownService: Instance created successfully with dependencies.'
     );
   }
@@ -108,7 +108,7 @@ class ShutdownService {
    * @returns {Promise<void>} A promise that resolves when this part of the sequence is complete.
    */
   async runShutdownSequence() {
-    this.#logger.info(
+    this.#logger.debug(
       'ShutdownService: runShutdownSequence called. Starting shutdown sequence...'
     );
 
@@ -149,7 +149,7 @@ class ShutdownService {
     let turnManager = null; // Define here for access in catch/finally
     try {
       // 1. Stop Turn Processing via TurnManager (Ticket 2.2 Task 4)
-      this.#logger.info(
+      this.#logger.debug(
         'ShutdownService: Resolving and stopping TurnManager...'
       );
       try {
@@ -157,7 +157,7 @@ class ShutdownService {
           this.#container.resolve(tokens.ITurnManager)
         );
         await turnManager.stop();
-        this.#logger.info(
+        this.#logger.debug(
           'ShutdownService: TurnManager stop() method called successfully.'
         );
       } catch (tmError) {
@@ -170,14 +170,14 @@ class ShutdownService {
       }
 
       // 2. Shutdown Tagged Systems
-      this.#logger.info(
+      this.#logger.debug(
         'ShutdownService: Attempting to shut down systems tagged as SHUTDOWNABLE...'
       );
       let shutdownableSystems = [];
       let resolveErrorOccurred = false;
       try {
         shutdownableSystems = this.#container.resolveByTag(SHUTDOWNABLE[0]);
-        this.#logger.info(
+        this.#logger.debug(
           `ShutdownService: Found ${shutdownableSystems.length} systems tagged as SHUTDOWNABLE.`
         );
       } catch (resolveError) {
@@ -198,7 +198,7 @@ class ShutdownService {
             try {
               // Assume sync for now
               system.shutdown();
-              this.#logger.info(
+              this.#logger.debug(
                 `ShutdownService: Successfully called shutdown() on system: ${systemName}.`
               );
             } catch (shutdownError) {
@@ -213,25 +213,25 @@ class ShutdownService {
             );
           }
         }
-        this.#logger.info(
+        this.#logger.debug(
           'ShutdownService: Finished processing SHUTDOWNABLE systems.'
         );
       }
 
       // 3. Dispose Container Singletons
-      this.#logger.info(
+      this.#logger.debug(
         'ShutdownService: Checking container for singleton disposal...'
       );
       if (
         this.#container &&
         typeof this.#container.disposeSingletons === 'function'
       ) {
-        this.#logger.info(
+        this.#logger.debug(
           'ShutdownService: Attempting to dispose container singletons...'
         );
         try {
           this.#container.disposeSingletons();
-          this.#logger.info(
+          this.#logger.debug(
             'ShutdownService: Container singletons disposed successfully.'
           );
         } catch (disposeError) {
