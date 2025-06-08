@@ -128,15 +128,15 @@ export class TurnContext extends ITurnContext {
    * @param {BaseTurnHandler} params.handlerInstance - The turn handler instance for requesting transitions.
    */
   constructor({
-    actor,
-    logger,
-    services,
-    strategy,
-    onEndTurnCallback,
-    isAwaitingExternalEventProvider,
-    onSetAwaitingExternalEventCallback,
-    handlerInstance,
-  }) {
+                actor,
+                logger,
+                services,
+                strategy,
+                onEndTurnCallback,
+                isAwaitingExternalEventProvider,
+                onSetAwaitingExternalEventCallback,
+                handlerInstance,
+              }) {
     super();
 
     if (!actor) {
@@ -147,17 +147,17 @@ export class TurnContext extends ITurnContext {
     }
     if (!services) {
       throw new Error(
-        'TurnContext: services bag is required (can be an empty object).'
+        'TurnContext: services bag is required (can be an empty object).',
       );
     }
     if (!strategy) {
       throw new Error(
-        'TurnContext: strategy (IActorTurnStrategy) is required.'
+        'TurnContext: strategy (IActorTurnStrategy) is required.',
       );
     }
     if (typeof strategy.decideAction !== 'function') {
       throw new Error(
-        'TurnContext: provided strategy does not have a decideAction method.'
+        'TurnContext: provided strategy does not have a decideAction method.',
       );
     }
     if (typeof onEndTurnCallback !== 'function') {
@@ -165,17 +165,17 @@ export class TurnContext extends ITurnContext {
     }
     if (typeof isAwaitingExternalEventProvider !== 'function') {
       throw new Error(
-        'TurnContext: isAwaitingExternalEventProvider function is required.'
+        'TurnContext: isAwaitingExternalEventProvider function is required.',
       );
     }
     if (typeof onSetAwaitingExternalEventCallback !== 'function') {
       throw new Error(
-        'TurnContext: onSetAwaitingExternalEventCallback function is required.'
+        'TurnContext: onSetAwaitingExternalEventCallback function is required.',
       );
     }
     if (!handlerInstance) {
       throw new Error(
-        'TurnContext: handlerInstance (BaseTurnHandler) is required for transitions.'
+        'TurnContext: handlerInstance (BaseTurnHandler) is required for transitions.',
       );
     }
 
@@ -209,10 +209,10 @@ export class TurnContext extends ITurnContext {
   getPlayerPromptService() {
     if (!this.#services.playerPromptService) {
       this.#logger.error(
-        'TurnContext: PlayerPromptService not available in services bag.'
+        'TurnContext: PlayerPromptService not available in services bag.',
       );
       throw new Error(
-        'TurnContext: PlayerPromptService not available in services bag.'
+        'TurnContext: PlayerPromptService not available in services bag.',
       );
     }
     return this.#services.playerPromptService;
@@ -222,10 +222,10 @@ export class TurnContext extends ITurnContext {
   getCommandProcessor() {
     if (!this.#services.commandProcessor) {
       this.#logger.error(
-        'TurnContext: CommandProcessor not available in services bag.'
+        'TurnContext: CommandProcessor not available in services bag.',
       );
       throw new Error(
-        'TurnContext: CommandProcessor not available in services bag.'
+        'TurnContext: CommandProcessor not available in services bag.',
       );
     }
     return this.#services.commandProcessor;
@@ -235,10 +235,10 @@ export class TurnContext extends ITurnContext {
   getCommandOutcomeInterpreter() {
     if (!this.#services.commandOutcomeInterpreter) {
       this.#logger.error(
-        'TurnContext: CommandOutcomeInterpreter not available in services bag.'
+        'TurnContext: CommandOutcomeInterpreter not available in services bag.',
       );
       throw new Error(
-        'TurnContext: CommandOutcomeInterpreter not available in services bag.'
+        'TurnContext: CommandOutcomeInterpreter not available in services bag.',
       );
     }
     return this.#services.commandOutcomeInterpreter;
@@ -248,10 +248,10 @@ export class TurnContext extends ITurnContext {
   getSafeEventDispatcher() {
     if (!this.#services.safeEventDispatcher) {
       this.#logger.error(
-        'TurnContext: SafeEventDispatcher not available in services bag.'
+        'TurnContext: SafeEventDispatcher not available in services bag.',
       );
       throw new Error(
-        'TurnContext: SafeEventDispatcher not available in services bag.'
+        'TurnContext: SafeEventDispatcher not available in services bag.',
       );
     }
     return this.#services.safeEventDispatcher;
@@ -261,10 +261,10 @@ export class TurnContext extends ITurnContext {
   getSubscriptionManager() {
     if (!this.#services.subscriptionManager) {
       this.#logger.error(
-        'TurnContext: SubscriptionManager not available in services bag.'
+        'TurnContext: SubscriptionManager not available in services bag.',
       );
       throw new Error(
-        'TurnContext: SubscriptionManager not available in services bag.'
+        'TurnContext: SubscriptionManager not available in services bag.',
       );
     }
     return this.#services.subscriptionManager;
@@ -275,10 +275,10 @@ export class TurnContext extends ITurnContext {
     // <<< ADD THIS METHOD
     if (!this.#services.entityManager) {
       this.#logger.error(
-        'TurnContext: EntityManager not available in services bag.'
+        'TurnContext: EntityManager not available in services bag.',
       );
       throw new Error(
-        'TurnContext: EntityManager not available in services bag.'
+        'TurnContext: EntityManager not available in services bag.',
       );
     }
     return this.#services.entityManager;
@@ -288,10 +288,10 @@ export class TurnContext extends ITurnContext {
   getActionDiscoveryService() {
     if (!this.#services.actionDiscoverySystem) {
       this.#logger.error(
-        'TurnContext: ActionDiscoveryService not available in services bag.'
+        'TurnContext: ActionDiscoveryService not available in services bag.',
       );
       throw new Error(
-        'TurnContext: ActionDiscoveryService not available in services bag.'
+        'TurnContext: ActionDiscoveryService not available in services bag.',
       );
     }
     return this.#services.actionDiscoverySystem;
@@ -301,10 +301,10 @@ export class TurnContext extends ITurnContext {
   getTurnEndPort() {
     if (!this.#services.turnEndPort) {
       this.#logger.error(
-        'TurnContext: TurnEndPort not available in services bag.'
+        'TurnContext: TurnEndPort not available in services bag.',
       );
       throw new Error(
-        'TurnContext: TurnEndPort not available in services bag.'
+        'TurnContext: TurnEndPort not available in services bag.',
       );
     }
     return this.#services.turnEndPort;
@@ -315,7 +315,7 @@ export class TurnContext extends ITurnContext {
     // Abort the prompt if it’s still running
     if (!this.#promptAbortController.signal.aborted) {
       this.#logger.debug(
-        `TurnContext.endTurn: Aborting prompt for actor ${this.#actor.id}.`
+        `TurnContext.endTurn: Aborting prompt for actor ${this.#actor.id}.`,
       );
       this.cancelActivePrompt();
     }
@@ -323,7 +323,7 @@ export class TurnContext extends ITurnContext {
     // NEW ➜ do nothing if the handler is already gone
     if (this.#handlerInstance?._isDestroyed) {
       this.#logger.debug(
-        `TurnContext.endTurn: Handler already destroyed – skipping onEndTurnCallback for actor ${this.#actor.id}.`
+        `TurnContext.endTurn: Handler already destroyed – skipping onEndTurnCallback for actor ${this.#actor.id}.`,
       );
       return;
     }
@@ -348,7 +348,7 @@ export class TurnContext extends ITurnContext {
    */
   cloneForActor(newActor) {
     this.#logger.warn(
-      'TurnContext.cloneForActor is deprecated. Prefer creating a new TurnContext with actor-specific dependencies. Also, AbortController is not cloned, a new one is made.'
+      'TurnContext.cloneForActor is deprecated. Prefer creating a new TurnContext with actor-specific dependencies. Also, AbortController is not cloned, a new one is made.',
     );
     if (!newActor) {
       throw new Error('TurnContext.cloneForActor: newActor is required.');
@@ -363,7 +363,7 @@ export class TurnContext extends ITurnContext {
       onEndTurnCallback: this.#onEndTurnCallback,
       isAwaitingExternalEventProvider: this.#isAwaitingExternalEventProvider,
       onSetAwaitingExternalEventCallback:
-        this.#onSetAwaitingExternalEventCallback,
+      this.#onSetAwaitingExternalEventCallback,
       handlerInstance: this.#handlerInstance,
     });
   }
@@ -372,7 +372,7 @@ export class TurnContext extends ITurnContext {
   async requestTransition(StateClass, constructorArgs = []) {
     const NewStateInstance = new StateClass(
       this.#handlerInstance,
-      ...constructorArgs
+      ...constructorArgs,
     );
     await this.#handlerInstance._transitionToState(NewStateInstance);
   }
@@ -406,7 +406,7 @@ export class TurnContext extends ITurnContext {
       !action.actionDefinitionId
     ) {
       const errorMsg =
-        "TurnContext.setChosenAction: Provided action must have a valid 'actionDefinitionId' string.";
+        'TurnContext.setChosenAction: Provided action must have a valid \'actionDefinitionId\' string.';
       this.#logger.error(errorMsg, { receivedAction: action });
       throw new Error(errorMsg);
     }
@@ -414,8 +414,8 @@ export class TurnContext extends ITurnContext {
     this.#chosenAction = action;
     this.#logger.debug(
       `TurnContext: Chosen action set for actor ${this.#actor.id}: ` +
-        `ID='${action.actionDefinitionId}', Command='${action.commandString || 'N/A'}'`,
-      { actionDetails: action }
+      `ID='${action.actionDefinitionId}', Command='${action.commandString || 'N/A'}'`,
+      { actionDetails: action },
     );
   }
 
@@ -424,12 +424,12 @@ export class TurnContext extends ITurnContext {
     if (this.#chosenAction) {
       this.#logger.debug(
         `TurnContext: Retrieving chosen action for actor ${this.#actor.id}: ` +
-          `ID='${this.#chosenAction.actionDefinitionId}', Command='${this.#chosenAction.commandString || 'N/A'}'`,
-        { actionDetails: this.#chosenAction }
+        `ID='${this.#chosenAction.actionDefinitionId}', Command='${this.#chosenAction.commandString || 'N/A'}'`,
+        { actionDetails: this.#chosenAction },
       );
     } else {
       this.#logger.debug(
-        `TurnContext: Retrieving chosen action for actor ${this.#actor.id}: No action has been set (is null).`
+        `TurnContext: Retrieving chosen action for actor ${this.#actor.id}: No action has been set (is null).`,
       );
     }
     return this.#chosenAction;
@@ -445,14 +445,19 @@ export class TurnContext extends ITurnContext {
   cancelActivePrompt() {
     if (!this.#promptAbortController.signal.aborted) {
       this.#logger.debug(
-        `TurnContext.cancelActivePrompt: Aborting prompt for actor ${this.#actor.id}.`
+        `TurnContext.cancelActivePrompt: Aborting prompt for actor ${this.#actor.id}.`,
       );
       this.#promptAbortController.abort();
     } else {
       this.#logger.debug(
-        `TurnContext.cancelActivePrompt: Prompt for actor ${this.#actor.id} already aborted.`
+        `TurnContext.cancelActivePrompt: Prompt for actor ${this.#actor.id} already aborted.`,
       );
     }
+  }
+
+  /** Convenience for logging & external wait state */
+  getChosenActionId() {
+    return this.#chosenAction?.actionDefinitionId ?? null;
   }
 
   // --- END MODIFICATION ---

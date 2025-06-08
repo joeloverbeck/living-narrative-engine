@@ -60,7 +60,10 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     }
 
     // remember actionId purely for clearer error text
-    this.#awaitingActionId = ctx.getChosenActionId?.() ?? 'unknown-action';
+    this.#awaitingActionId =
+      ctx.getChosenActionId?.() ??
+      ctx.getChosenAction?.()?.actionDefinitionId ??
+      'unknown-action';
 
     // subscribe for the normal path
     this.#unsubscribeFn = ctx
