@@ -11,7 +11,10 @@ import {
 } from '@jest/globals';
 import TurnManager from '../../src/turns/turnManager.js';
 import { ACTOR_COMPONENT_ID } from '../../src/constants/componentIds.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  AI_TURN_PROCESSING_STARTED,
+} from '../../src/constants/eventIds.js';
 
 // Mocks for dependencies
 const mockLogger = {
@@ -292,6 +295,10 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
       entityId: actor1.id,
       entityType: 'ai',
     }); // Assuming AI
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      AI_TURN_PROCESSING_STARTED,
+      { entityId: actor1.id }
+    );
     // It resolves the handler...
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1);
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(actor1);
