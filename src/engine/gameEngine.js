@@ -5,7 +5,6 @@ import {
   GAME_SAVED_ID,
   NEW_GAME_STARTED_ID,
   LOADED_GAME_STARTED_ID,
-  GAME_STOPPED_ID,
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
   ENGINE_OPERATION_IN_PROGRESS_UI,
@@ -113,7 +112,6 @@ class GameEngine {
    * @async
    * @param {string} worldName - The name of the world for the new game session.
    * @returns {Promise<void>} A promise that resolves when the preparation is complete.
-   * @fires GAME_STOPPED_ID - If an existing game is stopped via `this.stop()`.
    * @fires ENGINE_STOPPED_UI - If an existing game is stopped via `this.stop()`.
    * @memberof GameEngine
    */
@@ -345,7 +343,6 @@ class GameEngine {
    * @async
    * @returns {Promise<void>} A promise that resolves when the engine has fully stopped.
    * @fires ENGINE_STOPPED_UI - Dispatched to inform the UI that the engine is inactive.
-   * @fires GAME_STOPPED_ID - Dispatched to inform other systems that the game has stopped.
    * @memberof GameEngine
    */
   async stop() {
@@ -381,9 +378,6 @@ class GameEngine {
         'GameEngine.stop: TurnManager service not available, cannot stop.'
       );
     }
-
-    await this.#safeEventDispatcher.dispatch(GAME_STOPPED_ID, {});
-    this.#logger.debug('GameEngine.stop: GAME_STOPPED_ID event dispatched.');
 
     this.#isEngineInitialized = false;
     this.#activeWorld = null;
