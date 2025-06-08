@@ -50,7 +50,8 @@
       "wait.rule.json",
       "follow.rule.json",
       "stop_following.rule.json",
-      "dismiss.rule.json"
+      "dismiss.rule.json",
+      "follow_auto_move.rule.json"
     ],
     "events": [
       "ai_action_decided.event.json",
