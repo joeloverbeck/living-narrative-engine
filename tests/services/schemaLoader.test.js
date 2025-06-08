@@ -103,6 +103,7 @@ describe('SchemaLoader', () => {
     );
     // Clear constructor log call immediately AFTER instantiation
     mockLogger.info.mockClear();
+    mockLogger.debug.mockClear();
   });
 
   // --- Test Scenarios ---
@@ -191,7 +192,7 @@ describe('SchemaLoader', () => {
 
     // Check logs - *** UPDATED Assertions ***
     // Check the initial processing log
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `SchemaLoader: Processing ${filesToLoad.length} schemas listed in configuration...`
     );
 
@@ -201,7 +202,7 @@ describe('SchemaLoader', () => {
     );
 
     // Check final success log message (only 1 *new* schema was added)
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Schema processing complete. Added 1 new schemas')
     );
     // Ensure only expected logs were called
