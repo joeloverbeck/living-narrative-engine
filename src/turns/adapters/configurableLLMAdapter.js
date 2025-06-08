@@ -332,7 +332,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
   init({ llmConfigLoader }) {
     // Path 1: Already successfully initialized AND operational from a completed previous call.
     if (this.#isInitialized && this.#isOperational) {
-      this.#logger.info(
+      this.#logger.debug(
         'ConfigurableLLMAdapter: Already initialized and operational from a previous successful call. Skipping re-initialization logic.'
       );
       return this.#initPromise;
@@ -348,7 +348,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
 
     // Path 3: Initialization is already in progress.
     if (this.#initPromise) {
-      this.#logger.info(
+      this.#logger.debug(
         'ConfigurableLLMAdapter: Initialization is already in progress. Returning existing promise.'
       );
       return this.#initPromise;
@@ -367,7 +367,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
     // Path 5: Create and return the promise for the main asynchronous initialization process.
     this.#initPromise = (async () => {
       this.#configLoader = llmConfigLoader;
-      this.#logger.info(
+      this.#logger.debug(
         'ConfigurableLLMAdapter: Actual asynchronous initialization started with LlmConfigLoader.'
       );
       this.#currentActiveLlmId = null;
@@ -448,7 +448,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
           'ConfigurableLLMAdapter: Initialization attempt complete, but the adapter is NON-OPERATIONAL due to configuration loading issues.'
         );
       } else {
-        this.#logger.info(
+        this.#logger.debug(
           `ConfigurableLLMAdapter: Initialization attempt complete and adapter is operational.`
         );
       }
@@ -523,7 +523,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
       this.#currentActiveLlmId = llmId;
       this.#currentActiveLlmConfig = targetConfig; // targetConfig is already the new LLMModelConfig type
       const newDisplayName = targetConfig.displayName || 'N/A';
-      this.#logger.info(
+      this.#logger.debug(
         `ConfigurableLLMAdapter.setActiveLlm: Active LLM configuration changed from '${oldLlmId || 'none'}' to '${llmId}' (${newDisplayName}).`
       );
       return true;
@@ -739,7 +739,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         }
       );
     } else {
-      this.#logger.info(
+      this.#logger.debug(
         `API key not required or not found for LLM '${config.configId}', proceeding. (Is Cloud API: ${isCloudApi}, Is Server: ${this.#environmentContext.isServer()})`
       );
     }
@@ -853,7 +853,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         gameSummary,
         activeConfig
       );
-      this.#logger.info(
+      this.#logger.debug(
         `ConfigurableLLMAdapter.getAIDecision: Estimated prompt token count for LLM '${activeConfig.configId}': ${estimatedTokens}`
       );
 
@@ -896,7 +896,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
         throw new ConfigurationError(msg, { llmId: activeConfig.configId });
       }
 
-      this.#logger.info(
+      this.#logger.debug(
         `ConfigurableLLMAdapter.getAIDecision: Executing strategy for LLM '${activeConfig.configId}'.`
       );
       return await strategy.execute({

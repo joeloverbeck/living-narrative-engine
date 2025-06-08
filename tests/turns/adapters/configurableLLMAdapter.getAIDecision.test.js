@@ -394,7 +394,7 @@ describe('ConfigurableLLMAdapter', () => {
         expect(mockLlmStrategy.execute).toHaveBeenCalledWith(
           expect.objectContaining({ apiKey: null })
         );
-        expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
             "API key not required or not found for LLM 'test-llm-local-no-key-needed'"
           )
