@@ -157,7 +157,7 @@ class SchemaLoader {
       return; // Exit if no schemas are configured
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `SchemaLoader: Processing ${schemaFiles.length} schemas listed in configuration...`
     );
 
@@ -170,7 +170,7 @@ class SchemaLoader {
       const loadedSchemaCount = results.filter(
         (result) => result === true
       ).length;
-      this.#logger.info(
+      this.#logger.debug(
         `SchemaLoader: Schema processing complete. Added ${loadedSchemaCount} new schemas to the validator (others may have been skipped).`
       );
     } catch (error) {

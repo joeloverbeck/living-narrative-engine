@@ -168,6 +168,7 @@ describe('SchemaLoader Success Case', () => {
     );
     // Clear constructor log call immediately AFTER instantiation
     mockLogger.info.mockClear();
+    mockLogger.debug.mockClear();
   });
 
   // --- The Test ---
@@ -215,13 +216,13 @@ describe('SchemaLoader Success Case', () => {
     }
 
     // Check logs
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `SchemaLoader: Processing ${loadedCount} schemas listed in configuration...`
     );
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       `SchemaLoader: Schema processing complete. Added ${loadedCount} new schemas to the validator (others may have been skipped).`
     );
-    expect(mockLogger.info).toHaveBeenCalledTimes(2); // Start and End info logs
+    expect(mockLogger.debug).toHaveBeenCalledTimes(2); // Start and End logs
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
