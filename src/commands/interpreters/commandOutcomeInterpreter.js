@@ -122,15 +122,6 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       return directive;
     } else {
       // CommandProcessor detected failure
-      const userFacingError =
-        result.error || 'The action could not be completed.';
-      const eventPayload = {
-        actorId: actorId,
-        actionId: processedActionId,
-        commandString: originalInput,
-        error: userFacingError,
-        isExecutionError: false,
-      };
 
       // Any failure detected by CommandProcessor ends the turn.
       const directive = TurnDirective.END_TURN_FAILURE;
@@ -138,10 +129,6 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
         `Actor ${actorId}: CommandProcessor failure for action '${processedActionId}'. Directive: ${directive}.`
       );
 
-      await this.#dispatcher.dispatch('core:action_failed', eventPayload);
-      this.#logger.debug(
-        `CommandOutcomeInterpreter: Dispatched 'core:action_failed' for actor ${actorId}.`
-      );
       return directive;
     }
   }
