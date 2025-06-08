@@ -166,7 +166,7 @@ class TurnManager extends ITurnManager {
   async start() {
     if (this.#isRunning) {
       this.#logger.warn(
-        'TurnManager.start() called but manager is already running.',
+        'TurnManager.start() called but manager is already running.'
       );
       return;
     }
@@ -188,7 +188,7 @@ class TurnManager extends ITurnManager {
   async stop() {
     if (!this.#isRunning) {
       this.#logger.debug(
-        'TurnManager.stop() called but manager is already stopped.',
+        'TurnManager.stop() called but manager is already stopped.'
       );
       return;
     }
@@ -201,13 +201,13 @@ class TurnManager extends ITurnManager {
     ) {
       try {
         this.#logger.debug(
-          `Calling destroy() on current handler (${this.#currentHandler.constructor?.name || 'Unknown'}) for actor ${this.#currentActor?.id || 'N/A'}`,
+          `Calling destroy() on current handler (${this.#currentHandler.constructor?.name || 'Unknown'}) for actor ${this.#currentActor?.id || 'N/A'}`
         );
         await Promise.resolve(this.#currentHandler.destroy());
       } catch (destroyError) {
         this.#logger.error(
           `Error calling destroy() on current handler during stop: ${destroyError.message}`,
-          destroyError,
+          destroyError
         );
       }
     }
@@ -222,7 +222,7 @@ class TurnManager extends ITurnManager {
     } catch (error) {
       this.#logger.error(
         'Error calling turnOrderService.clearCurrentRound() during stop:',
-        error,
+        error
       );
     }
     this.#logger.debug('Turn Manager stopped.');
@@ -260,7 +260,7 @@ class TurnManager extends ITurnManager {
   async advanceTurn() {
     if (!this.#isRunning) {
       this.#logger.debug(
-        'TurnManager.advanceTurn() called while manager is not running. Returning.',
+        'TurnManager.advanceTurn() called while manager is not running. Returning.'
       );
       return;
     }
@@ -270,7 +270,7 @@ class TurnManager extends ITurnManager {
     const previousActorIdForLog = this.#currentActor?.id;
     if (previousActorIdForLog) {
       this.#logger.debug(
-        `Clearing previous actor ${previousActorIdForLog} and handler before advancing.`,
+        `Clearing previous actor ${previousActorIdForLog} and handler before advancing.`
       );
     }
     this.#currentActor = null;
@@ -281,7 +281,7 @@ class TurnManager extends ITurnManager {
 
       if (isQueueEmpty) {
         this.#logger.debug(
-          'Turn queue is empty. Preparing for new round or stopping.',
+          'Turn queue is empty. Preparing for new round or stopping.'
         );
 
         // --- NEW CHECK: Stop if previous round had no success ---
@@ -291,7 +291,7 @@ class TurnManager extends ITurnManager {
           this.#logger.error(errorMsg);
           await this.#dispatchSystemError(
             'System Error: No progress made in the last round.',
-            errorMsg,
+            errorMsg
           );
           await this.stop();
           return; // Stop processing
@@ -305,10 +305,10 @@ class TurnManager extends ITurnManager {
         // --- End Reset ---
 
         const allEntities = Array.from(
-          this.#entityManager.activeEntities.values(),
+          this.#entityManager.activeEntities.values()
         );
         const actors = allEntities.filter((e) =>
-          e.hasComponent(ACTOR_COMPONENT_ID),
+          e.hasComponent(ACTOR_COMPONENT_ID)
         );
 
         if (actors.length === 0) {
@@ -317,7 +317,7 @@ class TurnManager extends ITurnManager {
           this.#logger.error(errorMsg);
           await this.#dispatchSystemError(
             'System Error: No active actors found to start a round. Stopping game.',
-            errorMsg,
+            errorMsg
           );
           await this.stop();
           return;
@@ -325,7 +325,7 @@ class TurnManager extends ITurnManager {
 
         const actorIds = actors.map((a) => a.id);
         this.#logger.debug(
-          `Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`,
+          `Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`
         );
         const strategy = 'round-robin'; // Or determine dynamically
 
@@ -333,11 +333,11 @@ class TurnManager extends ITurnManager {
         await this.#turnOrderService.startNewRound(actors, strategy);
         this.#roundInProgress = true; // Mark round as officially in progress *after* successful start
         this.#logger.debug(
-          `Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`,
+          `Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`
         );
 
         this.#logger.debug(
-          'New round started, recursively calling advanceTurn() to process the first turn.',
+          'New round started, recursively calling advanceTurn() to process the first turn.'
         );
         await this.advanceTurn(); // Recursive call to process the first turn of the new round
         return;
@@ -352,7 +352,7 @@ class TurnManager extends ITurnManager {
           this.#logger.error(errorMsg);
           await this.#dispatchSystemError(
             'Internal Error: Turn order inconsistency detected. Stopping game.',
-            errorMsg,
+            errorMsg
           );
           await this.stop();
           return;
@@ -364,7 +364,7 @@ class TurnManager extends ITurnManager {
         const entityType = isPlayer ? 'player' : 'ai';
 
         this.#logger.debug(
-          `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`,
+          `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
         );
         try {
           await this.#dispatcher.dispatch('core:turn_started', {
@@ -374,20 +374,20 @@ class TurnManager extends ITurnManager {
         } catch (dispatchError) {
           this.#logger.error(
             `Failed to dispatch core:turn_started for ${actorId}: ${dispatchError.message}`,
-            dispatchError,
+            dispatchError
           );
           // Continue processing the turn even if event dispatch fails
         }
 
         this.#logger.debug(`Resolving turn handler for entity ${actorId}...`);
         const handler = await this.#turnHandlerResolver.resolveHandler(
-          this.#currentActor,
+          this.#currentActor
         );
         this.#currentHandler = handler; // Set the new current handler
 
         if (!handler) {
           this.#logger.warn(
-            `Could not resolve a turn handler for actor ${actorId}. Skipping turn and advancing.`,
+            `Could not resolve a turn handler for actor ${actorId}. Skipping turn and advancing.`
           );
           // Simulate an unsuccessful turn end to allow round progression check
           // Since #handleTurnEndedEvent is now called asynchronously via the event bus,
@@ -402,7 +402,7 @@ class TurnManager extends ITurnManager {
               entityId: actorId,
               success: false,
               error: new Error(
-                `No turn handler resolved for actor ${actorId}.`,
+                `No turn handler resolved for actor ${actorId}.`
               ),
             },
           });
@@ -411,7 +411,7 @@ class TurnManager extends ITurnManager {
 
         const handlerName = handler.constructor?.name || 'resolved handler';
         this.#logger.debug(
-          `Calling startTurn on ${handlerName} for entity ${actorId}`,
+          `Calling startTurn on ${handlerName} for entity ${actorId}`
         );
 
         // Start the turn, but don't await it here. Wait for TURN_ENDED_ID event.
@@ -420,16 +420,16 @@ class TurnManager extends ITurnManager {
           this.#logger.error(errorMsg, startTurnError);
           this.#dispatchSystemError(
             `Error initiating turn for ${actorId}.`,
-            startTurnError,
+            startTurnError
           ).catch((e) =>
             this.#logger.error(
-              `Failed to dispatch system error after startTurn failure: ${e.message}`,
-            ),
+              `Failed to dispatch system error after startTurn failure: ${e.message}`
+            )
           );
 
           if (this.#currentActor?.id === actorId) {
             this.#logger.warn(
-              `Manually handling turn end after startTurn initiation failure for ${actorId}.`,
+              `Manually handling turn end after startTurn initiation failure for ${actorId}.`
             );
             this.#handleTurnEndedEvent({
               type: TURN_ENDED_ID,
@@ -441,12 +441,12 @@ class TurnManager extends ITurnManager {
             });
           } else {
             this.#logger.warn(
-              `startTurn initiation failed for ${actorId}, but current actor changed before manual advance could occur. No advance triggered by this error handler.`,
+              `startTurn initiation failed for ${actorId}, but current actor changed before manual advance could occur. No advance triggered by this error handler.`
             );
           }
         });
         this.#logger.debug(
-          `Turn initiation for ${actorId} started via ${handlerName}. TurnManager now WAITING for '${TURN_ENDED_ID}' event.`,
+          `Turn initiation for ${actorId} started via ${handlerName}. TurnManager now WAITING for '${TURN_ENDED_ID}' event.`
         );
       }
     } catch (error) {
@@ -454,7 +454,7 @@ class TurnManager extends ITurnManager {
       this.#logger.error(errorMsg, error);
       await this.#dispatchSystemError(
         'System Error during turn advancement. Stopping game.',
-        error,
+        error
       );
       await this.stop();
     }
@@ -468,7 +468,7 @@ class TurnManager extends ITurnManager {
   #subscribeToTurnEnd() {
     if (this.#turnEndedUnsubscribe) {
       this.#logger.warn(
-        'Attempted to subscribe to turn end event, but already subscribed.',
+        'Attempted to subscribe to turn end event, but already subscribed.'
       );
       return;
     }
@@ -486,16 +486,16 @@ class TurnManager extends ITurnManager {
             // This catch handles synchronous errors thrown directly by #handleTurnEndedEvent
             this.#logger.error(
               `Error processing ${TURN_ENDED_ID} event (setTimeout): ${handlerError.message}`,
-              handlerError,
+              handlerError
             );
             // Note: #dispatchSystemError is async
             this.#dispatchSystemError(
               'Error processing turn ended event (setTimeout).',
-              handlerError,
+              handlerError
             ).catch((e) =>
               this.#logger.error(
-                `Failed to dispatch system error after setTimeout event handler failure: ${e.message}`,
-              ),
+                `Failed to dispatch system error after setTimeout event handler failure: ${e.message}`
+              )
             );
           }
         }, 0); // Delay of 0 ms, but schedules as a macrotask
@@ -503,31 +503,31 @@ class TurnManager extends ITurnManager {
 
       this.#turnEndedUnsubscribe = this.#dispatcher.subscribe(
         TURN_ENDED_ID,
-        handlerCallback,
+        handlerCallback
       );
       if (typeof this.#turnEndedUnsubscribe !== 'function') {
         this.#turnEndedUnsubscribe = null;
         throw new Error(
-          'Subscription function did not return an unsubscribe callback.',
+          'Subscription function did not return an unsubscribe callback.'
         );
       }
     } catch (error) {
       this.#logger.error(
         `CRITICAL: Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail. Error: ${error.message}`,
-        error,
+        error
       );
       this.#dispatchSystemError(
         `Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`,
-        error,
+        error
       ).catch((e) =>
         this.#logger.error(
-          `Failed to dispatch system error after subscription failure: ${e.message}`,
-        ),
+          `Failed to dispatch system error after subscription failure: ${e.message}`
+        )
       );
       this.stop().catch((e) =>
         this.#logger.error(
-          `Error stopping manager after subscription failure: ${e.message}`,
-        ),
+          `Error stopping manager after subscription failure: ${e.message}`
+        )
       );
     }
   }
@@ -545,14 +545,14 @@ class TurnManager extends ITurnManager {
       } catch (error) {
         this.#logger.error(
           `Error calling unsubscribe function for ${TURN_ENDED_ID}: ${error.message}`,
-          error,
+          error
         );
       } finally {
         this.#turnEndedUnsubscribe = null;
       }
     } else {
       this.#logger.debug(
-        'Attempted to unsubscribe from turn end event, but was not subscribed.',
+        'Attempted to unsubscribe from turn end event, but was not subscribed.'
       );
     }
   }
@@ -569,7 +569,7 @@ class TurnManager extends ITurnManager {
     // This method itself is not async
     if (!this.#isRunning) {
       this.#logger.debug(
-        `Received '${TURN_ENDED_ID}' but manager is stopped. Ignoring.`,
+        `Received '${TURN_ENDED_ID}' but manager is stopped. Ignoring.`
       );
       return;
     }
@@ -578,7 +578,7 @@ class TurnManager extends ITurnManager {
     if (!payload) {
       this.#logger.warn(
         `Received '${TURN_ENDED_ID}' event but it has no payload. Ignoring. Event:`,
-        event,
+        event
       );
       return;
     }
@@ -587,25 +587,25 @@ class TurnManager extends ITurnManager {
     const successStatus = payload.success;
 
     this.#logger.debug(
-      `Received '${TURN_ENDED_ID}' event for entity ${endedActorId}. Success: ${successStatus ?? 'N/A'}. Current actor: ${this.#currentActor?.id || 'None'}`,
+      `Received '${TURN_ENDED_ID}' event for entity ${endedActorId}. Success: ${successStatus ?? 'N/A'}. Current actor: ${this.#currentActor?.id || 'None'}`
     );
 
     if (!this.#currentActor || this.#currentActor.id !== endedActorId) {
       this.#logger.warn(
-        `Received '${TURN_ENDED_ID}' for entity ${endedActorId}, but current active actor is ${this.#currentActor?.id || 'None'}. This event will be IGNORED by TurnManager's primary turn cycling logic.`,
+        `Received '${TURN_ENDED_ID}' for entity ${endedActorId}, but current active actor is ${this.#currentActor?.id || 'None'}. This event will be IGNORED by TurnManager's primary turn cycling logic.`
       );
       return;
     }
 
     if (successStatus === true) {
       this.#logger.debug(
-        `Marking round as having had a successful turn (actor: ${endedActorId}).`,
+        `Marking round as having had a successful turn (actor: ${endedActorId}).`
       );
       this.#roundHadSuccessfulTurn = true;
     }
 
     this.#logger.debug(
-      `Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus === undefined ? 'N/A' : successStatus}). Advancing turn...`,
+      `Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus === undefined ? 'N/A' : successStatus}). Advancing turn...`
     );
 
     const handlerToDestroy = this.#currentHandler;
@@ -621,14 +621,14 @@ class TurnManager extends ITurnManager {
       }
       if (typeof handlerToDestroy.destroy === 'function') {
         this.#logger.debug(
-          `Calling destroy() on handler (${handlerToDestroy.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`,
+          `Calling destroy() on handler (${handlerToDestroy.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`
         );
         // destroy() can be async, handle its promise to catch errors
         Promise.resolve(handlerToDestroy.destroy()).catch((destroyError) =>
           this.#logger.error(
             `Error destroying handler for ${endedActorId} after turn end: ${destroyError.message}`,
-            destroyError,
-          ),
+            destroyError
+          )
         );
       }
     }
@@ -639,21 +639,21 @@ class TurnManager extends ITurnManager {
       this.advanceTurn().catch((advanceTurnError) => {
         this.#logger.error(
           `Error during scheduled advanceTurn after turn end for ${endedActorId}: ${advanceTurnError.message}`,
-          advanceTurnError,
+          advanceTurnError
         );
         // This is a critical failure in turn advancement, dispatch system error and stop.
         this.#dispatchSystemError(
           'Critical error during scheduled turn advancement.',
-          advanceTurnError,
+          advanceTurnError
         ).catch((e) =>
           this.#logger.error(
-            `Failed to dispatch system error for advanceTurn failure: ${e.message}`,
-          ),
+            `Failed to dispatch system error for advanceTurn failure: ${e.message}`
+          )
         );
         this.stop().catch((e) =>
           this.#logger.error(
-            `Failed to stop manager after advanceTurn failure: ${e.message}`,
-          ),
+            `Failed to stop manager after advanceTurn failure: ${e.message}`
+          )
         );
       });
     }, 0);
@@ -688,7 +688,7 @@ class TurnManager extends ITurnManager {
     } catch (dispatchError) {
       this.#logger.error(
         `Failed to dispatch ${SYSTEM_ERROR_OCCURRED_ID}: ${dispatchError.message}`,
-        dispatchError,
+        dispatchError
       );
     }
   }
