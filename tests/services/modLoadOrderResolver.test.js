@@ -109,7 +109,7 @@ describe('modLoadOrderResolver – input validation', () => {
     const manifests = createEmptyManifestMap();
     const result = resolveOrder(requested, manifests, mockLogger);
     expect(result).toEqual([]);
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Resolved load order')
     );
   });
