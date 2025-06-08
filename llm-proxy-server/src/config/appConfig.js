@@ -45,7 +45,7 @@ class AppConfigService {
   constructor(logger) {
     this._logger = logger;
 
-    this._logger.info(
+    this._logger.debug(
       'AppConfigService: Initializing and loading configurations...'
     );
     this._loadAndLogConfigs();
@@ -68,16 +68,16 @@ class AppConfigService {
     const servicePrefix = 'AppConfigService: ';
     if (envVarValue !== undefined) {
       if (envVarValue === '') {
-        this._logger.info(
+        this._logger.debug(
           `${servicePrefix}${envVarName} found in environment but is empty. Current effective value: '${finalValue === null ? 'null' : finalValue}'.`
         );
       } else {
-        this._logger.info(
+        this._logger.debug(
           `${servicePrefix}${envVarName} found in environment: '${envVarValue}'. Effective value: '${finalValue}'.`
         );
       }
     } else {
-      this._logger.info(
+      this._logger.debug(
         `${servicePrefix}${envVarName} not set in environment. ${defaultValueDescription}. Effective value: '${finalValue === null ? 'null' : finalValue}'.`
       );
     }
@@ -97,7 +97,7 @@ class AppConfigService {
       const parsedPort = parseInt(proxyPortEnv, 10);
       if (!isNaN(parsedPort) && parsedPort > 0) {
         this._proxyPort = parsedPort;
-        this._logger.info(
+        this._logger.debug(
           `${servicePrefix}PROXY_PORT found in environment: '${proxyPortEnv}'. Using port ${this._proxyPort}.`
         );
         this._isProxyPortDefaulted = false;
@@ -110,7 +110,7 @@ class AppConfigService {
       }
     } else {
       this._proxyPort = defaultProxyPort;
-      this._logger.info(
+      this._logger.debug(
         `${servicePrefix}PROXY_PORT not found in environment. Using default port ${this._proxyPort}.`
       );
       this._isProxyPortDefaulted = true;
