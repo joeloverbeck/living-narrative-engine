@@ -11,7 +11,6 @@ import {
 import GameEngine from '../../src/engine/gameEngine.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import {
-  GAME_LOADED_ID,
   GAME_SAVED_ID,
   NEW_GAME_STARTED_ID,
   LOADED_GAME_STARTED_ID,

@@ -77,7 +77,6 @@
       "ui_operation_in_progress.event.json",
       "display_error.event.json",
       "display_warning.event.json",
-      "game_loaded.event.json",
       "display_successful_action_result.event.json",
       "display_failed_action_result.event.json",
       "display_speech.event.json",
