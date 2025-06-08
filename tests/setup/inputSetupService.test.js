@@ -141,13 +141,13 @@ describe('InputSetupService', () => {
     });
 
     // --- UPDATED: Check for the new log message ---
-    it('should call logger.info with the correct configuration message', () => {
+    it('should log debug with the correct configuration message', () => {
       service.configureInputHandler();
-      // Check the specific info message was logged
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      // Check the specific debug message was logged
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'InputSetupService: InputHandler resolved and command callback configured to dispatch core:submit_command events.'
       );
-      // Optionally, check the debug message still occurs
+      // Optionally, check the initial debug message still occurs
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'InputSetupService: Attempting to configure InputHandler...'
       );
