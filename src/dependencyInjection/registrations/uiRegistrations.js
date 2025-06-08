@@ -28,6 +28,7 @@ import {
   CurrentTurnActorRenderer,
   ProcessingIndicatorController,
   ChatAlertRenderer,
+  ActionResultRenderer,
 } from '../../domUI/index.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
@@ -268,6 +269,18 @@ export function registerUI(
   );
   logger.debug(`UI Registrations: Registered ${tokens.ChatAlertRenderer}.`);
 
+  registrar.singletonFactory(
+    tokens.ActionResultRenderer,
+    (c) =>
+      new ActionResultRenderer({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+      })
+  );
+  logger.debug(`UI Registrations: Registered ${tokens.ActionResultRenderer}.`);
+
   // --- 3. Register Facade ---
   registrar.single(tokens.DomUiFacade, DomUiFacade, [
     tokens.ActionButtonsRenderer,
@@ -315,6 +328,11 @@ export function registerUI(
   container.resolve(tokens.ChatAlertRenderer);
   logger.debug(
     `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`
+  );
+
+  container.resolve(tokens.ActionResultRenderer);
+  logger.debug(
+    `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`
   );
 
   logger.debug('UI Registrations: Complete.');

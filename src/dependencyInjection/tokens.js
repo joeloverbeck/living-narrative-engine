@@ -178,6 +178,7 @@ export const tokens = Object.freeze({
   CurrentTurnActorRenderer: 'CurrentTurnActorRenderer',
   ProcessingIndicatorController: 'ProcessingIndicatorController',
   ChatAlertRenderer: 'ChatAlertRenderer',
+  ActionResultRenderer: 'ActionResultRenderer',
 
   // Loaders
   SchemaLoader: 'SchemaLoader',
