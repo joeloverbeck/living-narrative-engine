@@ -291,5 +291,8 @@ export const tokens = Object.freeze({
   IPerceptionLogFormatter: 'IPerceptionLogFormatter',
   IGameStateValidationServiceForPrompting:
     'IGameStateValidationServiceForPrompting',
+
+  // --- Action-related services
+  LeaderListSyncService: 'LeaderListSyncService',
 });
 // --- FILE END ---

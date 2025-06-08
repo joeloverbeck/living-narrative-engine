@@ -53,6 +53,7 @@ import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvi
 import ThoughtsSectionAssembler from '../../prompting/assembling/thoughtsSectionAssembler.js';
 import NotesSectionAssembler from '../../prompting/assembling/notesSectionAssembler.js';
 import GoalsSectionAssembler from '../../prompting/assembling/goalsSectionAssembler.js';
+import LeaderListSyncService from '../../actions/services/leaderListSyncService.js';
 // +++ TICKET 11 IMPORTS END +++
 
 // --- Type Imports for JSDoc ---
@@ -707,6 +708,15 @@ export function registerDomainServices(container) {
   r.single(tokens.ITurnContextFactory, ConcreteTurnContextFactory);
   log.debug(
     `Domain Services Registration: Registered ${String(tokens.ITurnContextFactory)}.`
+  );
+
+  r.singletonFactory(
+    tokens.LeaderListSyncService,
+    (c) =>
+      new LeaderListSyncService({
+        logger: c.resolve(tokens.ILogger),
+        entityManager: c.resolve(tokens.IEntityManager),
+      })
   );
 
   log.debug('Domain-services Registration: complete.');

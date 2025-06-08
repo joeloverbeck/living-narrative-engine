@@ -176,6 +176,15 @@ export function configureContainer(container, uiElements) {
     logger.debug(
       `[ContainerConfig] Data source '${perceptionUpdateServiceKey}' successfully registered in SystemDataRegistry.`
     );
+
+    const leaderSyncInstance = container.resolve(tokens.LeaderListSyncService);
+    systemDataRegistry.registerSource(
+      'LeaderListSyncService',
+      leaderSyncInstance
+    );
+    logger.debug(
+      "[ContainerConfig] Data source 'LeaderListSyncService' registered in SystemDataRegistry."
+    );
   } catch (error) {
     logger.error(
       '[ContainerConfig] CRITICAL ERROR during SystemDataRegistry population:',

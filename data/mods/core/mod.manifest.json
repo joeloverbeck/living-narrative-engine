@@ -49,7 +49,8 @@
       "submit_command.rule.json",
       "turn_ended.rule.json",
       "turn_started.rule.json",
-      "wait.rule.json"
+      "wait.rule.json",
+      "follow.rule.json"
     ],
     "events": [
       "ai_action_decided.event.json",

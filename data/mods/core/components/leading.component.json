@@ -5,13 +5,15 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["followers"],
+    "required": [
+      "followers"
+    ],
     "properties": {
       "followers": {
         "description": "An array of namespaced IDs for all entities currently following this one.",
         "type": "array",
         "items": {
-          "$ref": "common.schema.json#/definitions/namespacedId"
+          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
         },
         "default": []
       }

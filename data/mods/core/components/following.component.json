@@ -5,10 +5,12 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["leaderId"],
+    "required": [
+      "leaderId"
+    ],
     "properties": {
       "leaderId": {
-        "$ref": "common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The namespaced ID of the entity being followed (the leader)."
       }
     }
