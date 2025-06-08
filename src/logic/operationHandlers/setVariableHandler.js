@@ -257,7 +257,7 @@ class SetVariableHandler {
       );
     }
 
-    logger.info(
+    logger.debug(
       `SET_VARIABLE: Setting context variable "${trimmedVariableName}" in evaluationContext.context to value: ${finalValueStringForLog}`
     );
 
