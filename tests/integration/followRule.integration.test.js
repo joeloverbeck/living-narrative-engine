@@ -70,6 +70,12 @@ class FakeSystemDataRegistry {
     if (sourceId === 'LeaderListSyncService') {
       return this.leaderSyncService.handleQuery(details);
     }
+    // Added for WorldContext query
+    if (sourceId === 'WorldContext') {
+      if (details.action === 'getCurrentISOTimestamp') {
+        return new Date().toISOString();
+      }
+    }
     /* unreachable in this rule */
     return undefined;
   }
@@ -91,7 +97,10 @@ function buildTestHarness() {
   const logger = makeLogger();
   const leaderSyncService = new FakeLeaderSyncService(logger);
 
-  // —— load the real rule JSON from disk (unchanged engine asset) ——
+  // —— load the real rule JSON from disk (now using the modified version) ——
+  // Note: For a real test suite, you might load the JSON from the user-provided text
+  // instead of the file system to ensure the test runs against the exact version being debugged.
+  // For this example, we assume `data/mods/core/rules/follow.rule.json` is the file to test.
   const followRulePath = path.resolve('data/mods/core/rules/follow.rule.json');
   const followRuleJson = JSON.parse(fs.readFileSync(followRulePath, 'utf8'));
 
@@ -115,7 +124,7 @@ function buildTestHarness() {
 
   jest.spyOn(validatedDispatcher, 'dispatch');
 
-  // —— Operation registry with ONLY the handlers referenced by the rule ——
+  // —— Operation registry with ALL the handlers referenced by the rule ——
   const opRegistry = new OperationRegistry({ logger });
   const opInterpreter = new OperationInterpreter({
     logger,
@@ -154,7 +163,7 @@ function buildTestHarness() {
   };
 }
 
-// Dynamically import the seven operation handlers the rule uses
+// Dynamically import the operation handlers the rule uses
 function importAddHandlers(registry, deps) {
   const add = (type, mod) =>
     registry.register(type, (params, ctx) => mod.execute(params, ctx));
@@ -194,6 +203,7 @@ function importAddHandlers(registry, deps) {
       logger: deps.logger,
     })
   );
+  // REMOVED: No separate IF handler is needed as it's handled by SystemLogicInterpreter
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -203,29 +213,41 @@ const ACTOR_ID = 'actor-1';
 const OLD_LEADER = 'leader-A';
 const NEW_LEADER = 'leader-B';
 
-function seedActor(entityManager, leaderId = OLD_LEADER) {
+// Seeds an actor that is ALREADY following someone
+function seedExistingFollower(entityManager) {
+  const commonEntitySetup = {
+    getComponentData(id) {
+      return this.components.get(id);
+    },
+    addComponent(id, val) {
+      this.components.set(id, val);
+    },
+    hasComponent(id) {
+      return this.components.has(id);
+    },
+  };
+
   entityManager.activeEntities.set(ACTOR_ID, {
+    ...commonEntitySetup,
     id: ACTOR_ID,
     definitionId: 'test:actor',
     components: new Map([
       ['core:name', { text: 'Follower' }],
       ['core:position', { locationId: 'loc-1' }],
-      ['core:following', { leaderId }],
+      ['core:following', { leaderId: OLD_LEADER }],
     ]),
-    getComponentData(id) {
-      return this.components.get(id);
-    },
-    addComponent(id, val) {
-      this.components.set(id, val);
-    },
-    hasComponent(id) {
-      return this.components.has(id);
-    },
   });
   entityManager.activeEntities.set(NEW_LEADER, {
+    ...commonEntitySetup,
     id: NEW_LEADER,
     definitionId: 'test:leader',
     components: new Map([['core:name', { text: 'Leader' }]]),
+  });
+}
+
+// Seeds an actor that is NOT following anyone yet
+function seedFirstTimeFollower(entityManager) {
+  const commonEntitySetup = {
     getComponentData(id) {
       return this.components.get(id);
     },
@@ -235,6 +257,22 @@ function seedActor(entityManager, leaderId = OLD_LEADER) {
     hasComponent(id) {
       return this.components.has(id);
     },
+  };
+
+  entityManager.activeEntities.set(ACTOR_ID, {
+    ...commonEntitySetup,
+    id: ACTOR_ID,
+    definitionId: 'test:actor',
+    components: new Map([
+      ['core:name', { text: 'Follower' }],
+      ['core:position', { locationId: 'loc-1' }],
+    ]), // <-- NO core:following component
+  });
+  entityManager.activeEntities.set(NEW_LEADER, {
+    ...commonEntitySetup,
+    id: NEW_LEADER,
+    definitionId: 'test:leader',
+    components: new Map([['core:name', { text: 'Leader' }]]),
   });
 }
 
@@ -250,10 +288,11 @@ describe('core_handle_follow rule (integration)', () => {
 
   afterEach(() => {
     h.sysInterpreter.shutdown();
+    jest.clearAllMocks();
   });
 
   test('happy path – actor switches leaders, sync service called, two events dispatched', async () => {
-    seedActor(h.entityManager);
+    seedExistingFollower(h.entityManager);
 
     // — Trigger —
     await h.eventBus.dispatch('core:attempt_action', {
@@ -269,11 +308,15 @@ describe('core_handle_follow rule (integration)', () => {
       .getComponentData('core:following');
     expect(follow.leaderId).toBe(NEW_LEADER);
 
-    // 2. sync service got both IDs
-    expect(h.leaderSyncService.handleQuery).toHaveBeenCalledTimes(1);
+    // 2. sync service was called TWICE with the correct individual IDs
+    expect(h.leaderSyncService.handleQuery).toHaveBeenCalledTimes(2);
     expect(h.leaderSyncService.handleQuery).toHaveBeenCalledWith({
       action: 'rebuildFor',
-      leaderIds: [OLD_LEADER, NEW_LEADER],
+      leaderIds: [OLD_LEADER],
+    });
+    expect(h.leaderSyncService.handleQuery).toHaveBeenCalledWith({
+      action: 'rebuildFor',
+      leaderIds: [NEW_LEADER],
     });
 
     // 3. dispatcher sent two events with correct types
@@ -293,8 +336,45 @@ describe('core_handle_follow rule (integration)', () => {
     expect(h.logger.error).not.toHaveBeenCalled();
   });
 
+  test('happy path (first-time follow) – sync service called once, two events dispatched', async () => {
+    seedFirstTimeFollower(h.entityManager);
+
+    // — Trigger —
+    await h.eventBus.dispatch('core:attempt_action', {
+      actorId: ACTOR_ID,
+      targetId: NEW_LEADER,
+      actionId: 'core:follow',
+    });
+
+    // — Assertions —
+    // 1. component mutation
+    const follow = h.entityManager
+      .getEntityInstance(ACTOR_ID)
+      .getComponentData('core:following');
+    expect(follow.leaderId).toBe(NEW_LEADER);
+
+    // 2. sync service was called ONCE with only the NEW leader's ID
+    expect(h.leaderSyncService.handleQuery).toHaveBeenCalledTimes(1);
+    expect(h.leaderSyncService.handleQuery).toHaveBeenCalledWith({
+      action: 'rebuildFor',
+      leaderIds: [NEW_LEADER],
+    });
+
+    // 3. other assertions remain the same
+    const calls = h.validatedDispatcher.dispatch.mock.calls;
+    const types = calls.map(([ev]) => ev).sort();
+    expect(types).toEqual(['core:perceptible_event', 'core:turn_ended']);
+    const perceptPayload = calls.find(
+      ([t]) => t === 'core:perceptible_event'
+    )[1];
+    expect(perceptPayload.descriptionText).toBe(
+      'Follower has decided to follow Leader.'
+    );
+    expect(h.logger.error).not.toHaveBeenCalled();
+  });
+
   test('non-follow action does nothing', async () => {
-    seedActor(h.entityManager);
+    seedExistingFollower(h.entityManager);
 
     await h.eventBus.dispatch('core:attempt_action', {
       actorId: ACTOR_ID,
@@ -303,7 +383,9 @@ describe('core_handle_follow rule (integration)', () => {
     });
 
     expect(
-      h.entityManager.getComponentData(ACTOR_ID, 'core:following').leaderId
+      h.entityManager
+        .getEntityInstance(ACTOR_ID)
+        .getComponentData('core:following').leaderId
     ).toBe(OLD_LEADER);
 
     expect(h.validatedDispatcher.dispatch).not.toHaveBeenCalled();
@@ -311,7 +393,7 @@ describe('core_handle_follow rule (integration)', () => {
   });
 
   test('LeaderListSyncService error halts remaining actions but interpreter survives', async () => {
-    seedActor(h.entityManager);
+    seedExistingFollower(h.entityManager);
 
     // make the sync service explode
     h.leaderSyncService.handleQuery.mockImplementation(() => {
@@ -326,7 +408,9 @@ describe('core_handle_follow rule (integration)', () => {
 
     // addComponent executed before the explosion, so leader changed…
     expect(
-      h.entityManager.getComponentData(ACTOR_ID, 'core:following').leaderId
+      h.entityManager
+        .getEntityInstance(ACTOR_ID)
+        .getComponentData('core:following').leaderId
     ).toBe(NEW_LEADER);
 
     // …but the turn_ended event (last action in list) never fired
@@ -334,8 +418,11 @@ describe('core_handle_follow rule (integration)', () => {
     expect(types).not.toContain('core:turn_ended');
 
     // interpreter caught and logged the error, test runner didn’t crash
+    // UPDATED: Check for the actual error logged by SystemLogicInterpreter
     expect(h.logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("rule 'core_handle_follow' threw:"),
+      expect.stringContaining(
+        'CRITICAL error during execution of Operation QUERY_SYSTEM_DATA'
+      ),
       expect.any(Error)
     );
   });

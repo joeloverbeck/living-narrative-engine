@@ -33,18 +33,37 @@
       }
     },
     {
+      "type": "IF",
+      "comment": "IF an old leader existed, rebuild their cache.",
+      "parameters": {
+        "condition": {
+          "var": "context.oldFollowComp"
+        },
+        "then_actions": [
+          {
+            "type": "QUERY_SYSTEM_DATA",
+            "parameters": {
+              "source_id": "LeaderListSyncService",
+              "query_details": {
+                "action": "rebuildFor",
+                "leaderIds": ["{context.oldFollowComp.leaderId}"]
+              },
+              "result_variable": "oldLeaderSyncResult"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "QUERY_SYSTEM_DATA",
-      "comment": "Synchronise both the previous and the new leader’s derived core:leading cache.",
+      "comment": "Unconditionally rebuild the new leader's cache.",
       "parameters": {
         "source_id": "LeaderListSyncService",
         "query_details": {
           "action": "rebuildFor",
-          "leaderIds": [
-            "{context.oldFollowComp.leaderId}",
-            "{event.payload.targetId}"
-          ]
+          "leaderIds": ["{event.payload.targetId}"]
         },
-        "result_variable": "leaderSyncResult"
+        "result_variable": "newLeaderSyncResult"
       }
     },
     {
@@ -98,7 +117,11 @@
           "timestamp": "{context.nowIso}",
           "perceptionType": "action_target_general",
           "actorId": "{event.payload.actorId}",
-          "targetId": "{event.payload.targetId}"
+          "targetId": "{event.payload.targetId}",
+          "involvedEntities": [
+            "{event.payload.actorId}",
+            "{event.payload.targetId}"
+          ]
         }
       }
     },
