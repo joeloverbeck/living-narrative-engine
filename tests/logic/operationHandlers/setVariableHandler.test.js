@@ -324,7 +324,7 @@ describe('SetVariableHandler', () => {
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
       handler.execute(params, execCtx);
       expect(execCtx.evaluationContext.context['message']).toBe('Hello World');
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "message" in evaluationContext.context to value: "Hello World"'
       );
       expect(mockLoggerInstance.warn).not.toHaveBeenCalled();
@@ -336,7 +336,7 @@ describe('SetVariableHandler', () => {
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
       handler.execute(params, execCtx);
       expect(execCtx.evaluationContext.context['count']).toBe(42);
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "count" in evaluationContext.context to value: 42'
       );
     });
@@ -346,7 +346,7 @@ describe('SetVariableHandler', () => {
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
       handler.execute(params, execCtx);
       expect(execCtx.evaluationContext.context['isActive']).toBe(true);
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "isActive" in evaluationContext.context to value: true'
       );
     });
@@ -356,7 +356,7 @@ describe('SetVariableHandler', () => {
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
       handler.execute(params, execCtx);
       expect(execCtx.evaluationContext.context['isDisabled']).toBe(false);
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "isDisabled" in evaluationContext.context to value: false'
       );
     });
@@ -366,7 +366,7 @@ describe('SetVariableHandler', () => {
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
       handler.execute(params, execCtx);
       expect(execCtx.evaluationContext.context['optionalData']).toBeNull();
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "optionalData" in evaluationContext.context to value: null'
       );
     });
@@ -379,7 +379,7 @@ describe('SetVariableHandler', () => {
       expect(execCtx.evaluationContext.context['emptyConfig']).toEqual(
         objValue
       );
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         `SET_VARIABLE: Setting context variable "emptyConfig" in evaluationContext.context to value: ${JSON.stringify(objValue)}`
       );
       expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
@@ -404,7 +404,7 @@ describe('SetVariableHandler', () => {
       expect(execCtx.evaluationContext.context['literalComplexObj']).toEqual(
         objValue
       );
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         `SET_VARIABLE: Setting context variable "literalComplexObj" in evaluationContext.context to value: ${JSON.stringify(objValue)}`
       );
       mockApply.mockRestore();
@@ -416,7 +416,7 @@ describe('SetVariableHandler', () => {
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
       handler.execute(params, execCtx);
       expect(execCtx.evaluationContext.context['items']).toEqual(arrValue);
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         `SET_VARIABLE: Setting context variable "items" in evaluationContext.context to value: ${JSON.stringify(arrValue)}`
       );
     });
@@ -430,7 +430,7 @@ describe('SetVariableHandler', () => {
       expect(execCtx.evaluationContext.context).not.toHaveProperty(
         '  paddedVar  '
       );
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "paddedVar" in evaluationContext.context to value: "trimmed"'
       );
     });
@@ -447,7 +447,7 @@ describe('SetVariableHandler', () => {
       expect(execCtx.evaluationContext.context['existingVar']).toBe(
         'new value'
       );
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "existingVar" in evaluationContext.context to value: "new value"'
       );
     });
@@ -469,7 +469,7 @@ describe('SetVariableHandler', () => {
       expect(execCtx.evaluationContext.context['actorNameFromLogic']).toBe(
         'LogicActor'
       );
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "actorNameFromLogic" in evaluationContext.context to value: "LogicActor"'
       );
       expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
@@ -486,7 +486,7 @@ describe('SetVariableHandler', () => {
       );
       handler.execute(params, execCtx);
       expect(execCtx.evaluationContext.context['calculatedVar']).toBe(15);
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'SET_VARIABLE: Setting context variable "calculatedVar" in evaluationContext.context to value: 15'
       );
     });
