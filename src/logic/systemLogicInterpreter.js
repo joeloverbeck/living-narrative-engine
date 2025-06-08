@@ -6,7 +6,7 @@
 import { createJsonLogicContext } from './contextAssembler.js';
 
 /* ---------------------------------------------------------------------------
- *  Internal types (JSDoc only)
+ * Internal types (JSDoc only)
  * ------------------------------------------------------------------------- */
 /** @typedef {import('../interfaces/coreServices.js').ILogger}               ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry}        IDataRegistry */
@@ -18,7 +18,7 @@ import { createJsonLogicContext } from './contextAssembler.js';
 /** @typedef {{catchAll:SystemRule[], byAction:Map<string,SystemRule[]>}}   RuleBucket */
 
 /* ---------------------------------------------------------------------------
- *  Class
+ * Class
  * ------------------------------------------------------------------------- */
 class SystemLogicInterpreter {
   /** @type {ILogger}                  */ #logger;
@@ -66,7 +66,7 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
-  /*  Public lifecycle                                                      */
+  /* Public lifecycle                                                      */
 
   /* --------------------------------------------------------------------- */
   initialize() {
@@ -102,7 +102,7 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
-  /*  Rule caching                                                          */
+  /* Rule caching                                                          */
 
   /* --------------------------------------------------------------------- */
   #loadAndCacheRules() {
@@ -159,7 +159,7 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
-  /*  Event handling                                                        */
+  /* Event handling                                                        */
 
   /* --------------------------------------------------------------------- */
   /**
@@ -242,7 +242,7 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
-  /*  Rule processing                                                       */
+  /* Rule processing                                                       */
 
   /* --------------------------------------------------------------------- */
   #evaluateRuleCondition(rule, flatCtx) {
@@ -314,7 +314,7 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
-  /*  Action execution – intentionally public-ish for tests                 */
+  /* Action execution – intentionally public-ish for tests                 */
 
   /* --------------------------------------------------------------------- */
   _executeActions(actions, nestedCtx, scopeLabel) {
@@ -333,6 +333,35 @@ class SystemLogicInterpreter {
         );
         break;
       }
+
+      // =======================================================================
+      //  NEW LOGIC BLOCK TO HANDLE UNIVERSAL 'condition' PROPERTY
+      // =======================================================================
+      if (op.condition) {
+        let conditionResult = false;
+        try {
+          conditionResult = this.#jsonLogic.evaluate(
+            op.condition,
+            nestedCtx.evaluationContext
+          );
+        } catch (e) {
+          this.#logger.error(
+            `${tag} Condition evaluation failed for Operation ${opType}. Skipping.`,
+            e
+          );
+          continue; // Skip this operation
+        }
+
+        if (!conditionResult) {
+          this.#logger.debug(
+            `${tag} Skipping Operation ${opType} because its 'condition' property evaluated to false.`
+          );
+          continue; // Skip this operation
+        }
+      }
+      // =======================================================================
+      //  END NEW LOGIC BLOCK
+      // =======================================================================
 
       try {
         if (opType === 'IF') {

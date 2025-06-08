@@ -10,6 +10,9 @@
 /** @typedef {import('../defs.js').OperationParams}                              OperationParams */
 
 import resolvePath from '../../utils/resolvePath.js';
+import { resolvePlaceholders } from '../contextUtils.js';
+import jsonLogic from 'json-logic-js';
+import { cloneDeep } from 'lodash';
 
 /**
  * @typedef {object} ForEachParams
@@ -40,10 +43,8 @@ class ForEachHandler {
    * @param {ExecutionContext} executionContext
    */
   execute(params, executionContext) {
-    // always log to the handler’s injected logger so tests on logger.warn() work
     const log = this.#logger;
 
-    // ---------- 1. Validate input -------------------------------------------------
     if (!params || typeof params !== 'object') {
       log.warn('FOR_EACH: params missing or not an object', { params });
       return;
@@ -62,7 +63,6 @@ class ForEachHandler {
       return;
     }
 
-    // ---------- 2. Resolve collection path --------------------------------------
     const src = executionContext?.evaluationContext;
     const arr = resolvePath(src, collection.trim());
     if (!Array.isArray(arr)) {
@@ -72,11 +72,8 @@ class ForEachHandler {
       return;
     }
 
-    // ---------- 3. Loop -----------------------------------------------------------
     const ctxStore = executionContext.evaluationContext.context;
     const varName = item_variable.trim();
-
-    // track whether we need to restore or delete the variable afterward
     const hadPrior = Object.prototype.hasOwnProperty.call(ctxStore, varName);
     const savedPriorValue = hadPrior ? ctxStore[varName] : undefined;
 
@@ -87,8 +84,28 @@ class ForEachHandler {
     try {
       for (let i = 0; i < arr.length; i += 1) {
         ctxStore[varName] = arr[i];
+
         try {
-          for (const op of actions) {
+          for (const originalOp of actions) {
+            // DEEP CLONE the operation to prevent placeholder resolution from
+            // mutating the original rule template.
+            const op = cloneDeep(originalOp);
+
+            // NEW: Check for a 'condition' property on the nested action.
+            if (op.condition) {
+              const conditionResult = jsonLogic.apply(
+                op.condition,
+                executionContext.evaluationContext
+              );
+              if (!conditionResult) {
+                // If condition is false, skip this operation and continue to the next.
+                continue;
+              }
+            }
+
+            // NEW: Resolve placeholders *inside* the loop, now that the context variable is set.
+            resolvePlaceholders(op, executionContext.evaluationContext, log);
+
             this.#opInterpreter.execute(op, executionContext);
           }
         } catch (nestedErr) {
@@ -100,7 +117,6 @@ class ForEachHandler {
         }
       }
     } finally {
-      // restore previous value (or clean up) so outer scope isn’t polluted
       if (hadPrior) {
         ctxStore[varName] = savedPriorValue;
       } else {

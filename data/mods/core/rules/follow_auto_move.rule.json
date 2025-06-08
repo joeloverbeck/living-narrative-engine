@@ -19,16 +19,14 @@
         "source_id": "LeaderListSyncService",
         "query_details": {
           "action": "rebuildFor",
-          "leaderIds": [
-            "{event.payload.entityId}"
-          ]
+          "leaderIds": ["{event.payload.entityId}"]
         },
         "result_variable": "leaderSyncResult"
       }
     },
     {
       "type": "IF",
-      "comment": "Now that the cache is fresh, check if the leader has any followers.",
+      "comment": "Now that the cache is fresh, check if the moved entity is a leader with any followers.",
       "parameters": {
         "condition": {
           "and": [
@@ -41,16 +39,19 @@
               ]
             },
             {
-              "!!": {
-                "var": "actor.components.core:leading.followers.length"
-              }
+              ">": [
+                {
+                  "var": "actor.components.core:leading.followers.length"
+                },
+                0
+              ]
             }
           ]
         },
         "then_actions": [
           {
             "type": "SET_VARIABLE",
-            "comment": "Use placeholder to resolve the complex path and store it in a simple variable.",
+            "comment": "Use placeholder to resolve the complex path and store it in a simple variable for the loop.",
             "parameters": {
               "variable_name": "followerList",
               "value": "{actor.components.core:leading.followers}"
@@ -58,12 +59,14 @@
           },
           {
             "type": "FOR_EACH",
+            "comment": "For each follower, if they were in the same location as the leader, have them attempt to follow.",
             "parameters": {
               "collection": "context.followerList",
               "item_variable": "followerId",
               "actions": [
                 {
                   "type": "QUERY_COMPONENT",
+                  "comment": "Get the follower's current position.",
                   "parameters": {
                     "entity_ref": {
                       "entityId": "{context.followerId}"
@@ -73,33 +76,27 @@
                   }
                 },
                 {
-                  "type": "IF",
-                  "parameters": {
-                    "condition": {
-                      "==": [
-                        {
-                          "var": "context.followerPos.locationId"
-                        },
-                        {
-                          "var": "event.payload.previousLocationId"
-                        }
-                      ]
-                    },
-                    "then_actions": [
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Make the follower attempt to move in the same direction.",
+                  "condition": {
+                    "==": [
                       {
-                        "type": "DISPATCH_EVENT",
-                        "parameters": {
-                          "eventType": "core:attempt_action",
-                          "payload": {
-                            "eventName": "core:attempt_action",
-                            "actorId": "{context.followerId}",
-                            "actionId": "core:go",
-                            "direction": "{event.payload.direction}",
-                            "originalInput": "{event.payload.originalCommand}"
-                          }
-                        }
+                        "var": "context.followerPos.locationId"
+                      },
+                      {
+                        "var": "event.payload.previousLocationId"
                       }
                     ]
+                  },
+                  "parameters": {
+                    "eventType": "core:attempt_action",
+                    "payload": {
+                      "eventName": "core:attempt_action",
+                      "actorId": "{context.followerId}",
+                      "actionId": "core:go",
+                      "direction": "{event.payload.direction}",
+                      "originalInput": "{event.payload.originalCommand}"
+                    }
                   }
                 }
               ]

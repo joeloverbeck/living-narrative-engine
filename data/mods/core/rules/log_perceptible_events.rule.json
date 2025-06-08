@@ -32,14 +32,6 @@
         },
         "result_variable": "perceptionUpdateServiceStatus"
       }
-    },
-    {
-      "type": "LOG",
-      "comment": "Debug: Log that a perceptible event was processed.",
-      "parameters": {
-        "message": "Perceptible event (Type: {event.payload.perceptionType}) processed for location {event.payload.locationId}. Description: '{event.payload.descriptionText}'. Service status: {context.perceptionUpdateServiceStatus}",
-        "level": "debug"
-      }
     }
   ]
 }

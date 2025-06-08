@@ -30,6 +30,10 @@
           "type": "string",
           "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
         },
+        "condition": {
+          "$ref": "./json-logic.schema.json#",
+          "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+        },
         "parameters": {
           "type": "object",
           "description": "Required. Container for parameters specific to the operation 'type'. The structure is validated conditionally based on the 'type' value."

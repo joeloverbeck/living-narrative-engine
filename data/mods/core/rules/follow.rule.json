@@ -186,7 +186,7 @@
             "parameters": {
               "eventType": "core:display_successful_action_result",
               "payload": {
-                "message": "{actor.name} is now following {target.name}."
+                "message": "{context.followerName.text} is now following {context.leaderName.text}."
               }
             }
           },
