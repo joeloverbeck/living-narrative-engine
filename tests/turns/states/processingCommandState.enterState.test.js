@@ -287,7 +287,7 @@ describe('ProcessingCommandState', () => {
         `ProcessingCommandState: Entered. Actor: ${actor.getId()}. Previous state: None.`
       );
       // Log from ProcessingCommandState's enterState (about actor and command)
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `ProcessingCommandState: Actor ${actor.getId()} processing action.`
         )
