@@ -677,7 +677,7 @@ export class SaveGameUI extends BaseModalRenderer {
         saveSucceeded = true;
         finalMessage = `Game saved as "${currentSaveName}".`;
         finalMessageType = 'success';
-        this.logger.info(
+        this.logger.debug(
           `${this._logPrefix} Game saved successfully: ${result.message || `Saved as "${currentSaveName}"`}`
         );
 
