@@ -460,7 +460,7 @@ describe('AIPromptContentProvider', () => {
         mockLoggerInstance
       );
 
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'AIPromptContentProvider.getPromptData: PromptData assembled successfully.'
       );
     });
@@ -558,7 +558,7 @@ describe('AIPromptContentProvider', () => {
         mockLoggerInstance
       ); // uses instance logger
       expect(getFinalInstructionsContentSpy).toHaveBeenCalled();
-      expect(mockLoggerInstance.info).toHaveBeenCalledWith(
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
         'AIPromptContentProvider.getPromptData: PromptData assembled successfully.'
       );
     });

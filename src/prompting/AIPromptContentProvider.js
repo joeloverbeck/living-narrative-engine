@@ -255,7 +255,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       );
 
       // 7. Wrap-up / logging
-      this.#logger.info(
+      this.#logger.debug(
         'AIPromptContentProvider.getPromptData: PromptData assembled successfully.'
       );
       this.#logger.debug(
