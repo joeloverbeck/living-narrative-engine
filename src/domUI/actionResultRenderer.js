@@ -135,9 +135,10 @@ export class ActionResultRenderer extends BoundDomRendererBase {
   /**
    * Handles the 'core:display_successful_action_result' event.
    * @private
-   * @param {ActionResultPayload} payload
+   * @param {object} event - The full event object from the EventBus.
+   * @param {ActionResultPayload} event.payload - The payload of the event.
    */
-  #handleSuccess({ message }) {
+  #handleSuccess({ payload: { message } }) {
     this.logger.debug(
       `${this._logPrefix} Rendering SUCCESS bubble. Message: "${message}"`
     );
@@ -147,9 +148,10 @@ export class ActionResultRenderer extends BoundDomRendererBase {
   /**
    * Handles the 'core:display_failed_action_result' event.
    * @private
-   * @param {ActionResultPayload} payload
+   * @param {object} event - The full event object from the EventBus.
+   * @param {ActionResultPayload} event.payload - The payload of the event.
    */
-  #handleFailure({ message }) {
+  #handleFailure({ payload: { message } }) {
     this.logger.debug(
       `${this._logPrefix} Rendering FAILURE bubble. Message: "${message}"`
     );

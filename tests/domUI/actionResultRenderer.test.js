@@ -125,7 +125,7 @@ describe('ActionResultRenderer', () => {
       // Act
       // Simulate the dispatch of a core:display_successful_action_result event.
       const handler = eventListeners['core:display_successful_action_result'];
-      handler(successPayload);
+      handler({ payload: successPayload });
 
       // Assert
       // Verify that the #handleSuccess method is called (by its effects).
@@ -159,7 +159,7 @@ describe('ActionResultRenderer', () => {
       // Act
       // Simulate the dispatch of a core:display_failed_action_result event.
       const handler = eventListeners['core:display_failed_action_result'];
-      handler(failurePayload);
+      handler({ payload: failurePayload });
 
       // Assert
       // Verify that the #handleFailure method is called (by its effects).
@@ -202,7 +202,7 @@ describe('ActionResultRenderer', () => {
 
       // Act
       const handler = eventListeners['core:display_successful_action_result'];
-      handler(malformedPayload);
+      handler({ payload: malformedPayload });
 
       // Assert
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -221,7 +221,7 @@ describe('ActionResultRenderer', () => {
 
       // Act
       const handler = eventListeners['core:display_failed_action_result'];
-      handler(malformedPayload);
+      handler({ payload: malformedPayload });
 
       // Assert
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -240,7 +240,7 @@ describe('ActionResultRenderer', () => {
 
       // Act
       const handler = eventListeners['core:display_successful_action_result'];
-      const action = () => handler(emptyPayload);
+      const action = () => handler({ payload: emptyPayload });
 
       // Assert
       expect(action).not.toThrow();
