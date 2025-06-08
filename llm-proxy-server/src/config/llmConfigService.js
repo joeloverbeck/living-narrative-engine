@@ -187,7 +187,7 @@ export class LlmConfigService {
         ? path.resolve(customPath)
         : this.#_defaultLlmConfigPath;
 
-    this.#logger.info(
+    this.#logger.debug(
       `LlmConfigService: Attempting to load LLM configurations from: ${this.#resolvedConfigPath}`
     );
 
@@ -305,7 +305,7 @@ export class LlmConfigService {
 
       const llmCount = Object.keys(this.#loadedLlmConfigs.configs).length; // Using 'configs'
       const defaultId = this.#loadedLlmConfigs.defaultConfigId || 'Not set'; // CORRECTED
-      this.#logger.info(
+      this.#logger.debug(
         `LlmConfigService: Initialization successful. Loaded ${llmCount} LLM configurations. Default LLM ID: ${defaultId}. Proxy is operational.`
       );
     } catch (unexpectedError) {
