@@ -56,7 +56,6 @@
     "events": [
       "ai_action_decided.event.json",
       "new_game_started.event.json",
-      "loaded_game_started.event.json",
       "ui_ready.event.json",
       "turn_started.event.json",
       "player_turn_prompt.event.json",
