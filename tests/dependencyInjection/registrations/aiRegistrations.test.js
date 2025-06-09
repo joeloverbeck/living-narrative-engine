@@ -91,7 +91,10 @@ describe('registerAI', () => {
 
     // Register all necessary mock dependencies that `registerAI` will resolve
     container.register(tokens.ILogger, () => mockLogger);
-    container.register(tokens.ISafeEventDispatcher, () => mockSafeEventDispatcher);
+    container.register(
+      tokens.ISafeEventDispatcher,
+      () => mockSafeEventDispatcher
+    );
     container.register(
       tokens.IValidatedEventDispatcher,
       () => mockValidatedEventDispatcher
@@ -115,7 +118,10 @@ describe('registerAI', () => {
       tokens.IAIPlayerStrategyFactory,
       () => mockAIPlayerStrategyFactory
     );
-    container.register(tokens.ITurnContextFactory, () => mockTurnContextFactory);
+    container.register(
+      tokens.ITurnContextFactory,
+      () => mockTurnContextFactory
+    );
     container.register(tokens.IConfiguration, () => mockConfiguration);
   });
 
@@ -151,8 +157,12 @@ describe('registerAI', () => {
         tokens.IValidatedEventDispatcher,
         () => mockValidatedEventDispatcher
       );
-      expect(fallbackContainer.isRegistered(tokens.ISafeEventDispatcher)).toBe(false);
-      expect(fallbackContainer.isRegistered(tokens.IValidatedEventDispatcher)).toBe(true);
+      expect(fallbackContainer.isRegistered(tokens.ISafeEventDispatcher)).toBe(
+        false
+      );
+      expect(
+        fallbackContainer.isRegistered(tokens.IValidatedEventDispatcher)
+      ).toBe(true);
       registerAI(fallbackContainer);
       expect(() => fallbackContainer.resolve(tokens.IHttpClient)).not.toThrow();
       const client = fallbackContainer.resolve(tokens.IHttpClient);

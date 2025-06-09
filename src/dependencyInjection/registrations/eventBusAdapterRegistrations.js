@@ -60,19 +60,23 @@ export function registerEventBusAdapters(container) {
     // --- FIX: Check for registration before resolving optional dependencies. ---
     // This prevents c.resolve() from throwing an error if a dependency isn't registered.
     const safeDispatcher = c.isRegistered(tokens.ISafeEventDispatcher)
-      ? /** @type {ISafeEventDispatcher | null} */ (c.resolve(tokens.ISafeEventDispatcher))
+      ? /** @type {ISafeEventDispatcher | null} */ (
+          c.resolve(tokens.ISafeEventDispatcher)
+        )
       : null;
     const validatedDispatcher = c.isRegistered(tokens.IValidatedEventDispatcher)
       ? /** @type {IValidatedEventDispatcher | null} */ (
-        c.resolve(tokens.IValidatedEventDispatcher)
-      )
+          c.resolve(tokens.IValidatedEventDispatcher)
+        )
       : null;
 
     if (!safeDispatcher && !validatedDispatcher) {
       logger.error(
         `Adapter Registration: Failed to resolve either ${tokens.ISafeEventDispatcher} or ${tokens.IValidatedEventDispatcher} for ${tokens.IPromptOutputPort}.`
       );
-      throw new Error(`Missing dispatcher dependency for EventBusPromptAdapter`);
+      throw new Error(
+        `Missing dispatcher dependency for EventBusPromptAdapter`
+      );
     }
     return new EventBusPromptAdapter({
       safeEventDispatcher: safeDispatcher,
@@ -87,19 +91,23 @@ export function registerEventBusAdapters(container) {
   registrar.singletonFactory(tokens.ITurnEndPort, (c) => {
     // --- FIX: Check for registration before resolving optional dependencies. ---
     const safeDispatcher = c.isRegistered(tokens.ISafeEventDispatcher)
-      ? /** @type {ISafeEventDispatcher | null} */ (c.resolve(tokens.ISafeEventDispatcher))
+      ? /** @type {ISafeEventDispatcher | null} */ (
+          c.resolve(tokens.ISafeEventDispatcher)
+        )
       : null;
     const validatedDispatcher = c.isRegistered(tokens.IValidatedEventDispatcher)
       ? /** @type {IValidatedEventDispatcher | null} */ (
-        c.resolve(tokens.IValidatedEventDispatcher)
-      )
+          c.resolve(tokens.IValidatedEventDispatcher)
+        )
       : null;
 
     if (!safeDispatcher && !validatedDispatcher) {
       logger.error(
         `Adapter Registration: Failed to resolve either ${tokens.ISafeEventDispatcher} or ${tokens.IValidatedEventDispatcher} for ${tokens.ITurnEndPort}.`
       );
-      throw new Error(`Missing dispatcher dependency for EventBusTurnEndAdapter`);
+      throw new Error(
+        `Missing dispatcher dependency for EventBusTurnEndAdapter`
+      );
     }
     return new EventBusTurnEndAdapter({
       safeEventDispatcher: safeDispatcher,

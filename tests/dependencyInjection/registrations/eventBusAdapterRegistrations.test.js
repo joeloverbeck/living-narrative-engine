@@ -112,9 +112,13 @@ describe('registerEventBusAdapters', () => {
   describe('IPromptOutputPort (EventBusPromptAdapter) Registration', () => {
     const successCases = [
       {
-        description: 'should resolve correctly when both dispatchers are present',
+        description:
+          'should resolve correctly when both dispatchers are present',
         setup: (c) => {
-          c.register(tokens.ISafeEventDispatcher, () => mockSafeEventDispatcher);
+          c.register(
+            tokens.ISafeEventDispatcher,
+            () => mockSafeEventDispatcher
+          );
           c.register(
             tokens.IValidatedEventDispatcher,
             () => mockValidatedEventDispatcher
@@ -122,13 +126,18 @@ describe('registerEventBusAdapters', () => {
         },
       },
       {
-        description: 'should resolve correctly when only ISafeEventDispatcher is present',
+        description:
+          'should resolve correctly when only ISafeEventDispatcher is present',
         setup: (c) => {
-          c.register(tokens.ISafeEventDispatcher, () => mockSafeEventDispatcher);
+          c.register(
+            tokens.ISafeEventDispatcher,
+            () => mockSafeEventDispatcher
+          );
         },
       },
       {
-        description: 'should resolve correctly when only IValidatedEventDispatcher is present',
+        description:
+          'should resolve correctly when only IValidatedEventDispatcher is present',
         setup: (c) => {
           c.register(
             tokens.IValidatedEventDispatcher,
@@ -172,9 +181,13 @@ describe('registerEventBusAdapters', () => {
   describe('ITurnEndPort (EventBusTurnEndAdapter) Registration', () => {
     const successCases = [
       {
-        description: 'should resolve correctly when both dispatchers are present',
+        description:
+          'should resolve correctly when both dispatchers are present',
         setup: (c) => {
-          c.register(tokens.ISafeEventDispatcher, () => mockSafeEventDispatcher);
+          c.register(
+            tokens.ISafeEventDispatcher,
+            () => mockSafeEventDispatcher
+          );
           c.register(
             tokens.IValidatedEventDispatcher,
             () => mockValidatedEventDispatcher
@@ -182,13 +195,18 @@ describe('registerEventBusAdapters', () => {
         },
       },
       {
-        description: 'should resolve correctly when only ISafeEventDispatcher is present',
+        description:
+          'should resolve correctly when only ISafeEventDispatcher is present',
         setup: (c) => {
-          c.register(tokens.ISafeEventDispatcher, () => mockSafeEventDispatcher);
+          c.register(
+            tokens.ISafeEventDispatcher,
+            () => mockSafeEventDispatcher
+          );
         },
       },
       {
-        description: 'should resolve correctly when only IValidatedEventDispatcher is present',
+        description:
+          'should resolve correctly when only IValidatedEventDispatcher is present',
         setup: (c) => {
           c.register(
             tokens.IValidatedEventDispatcher,

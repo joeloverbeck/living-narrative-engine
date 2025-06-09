@@ -56,7 +56,10 @@ describe('registerCommandAndAction', () => {
     // Register all necessary mock dependencies that the SUT's factories will resolve.
     // These are dependencies external to the group of services being registered.
     container.register(tokens.ILogger, () => mockLogger);
-    container.register(tokens.IGameDataRepository, () => mockGameDataRepository);
+    container.register(
+      tokens.IGameDataRepository,
+      () => mockGameDataRepository
+    );
     container.register(tokens.IEntityManager, () => mockEntityManager);
     container.register(
       tokens.JsonLogicEvaluationService,
