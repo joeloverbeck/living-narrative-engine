@@ -17,7 +17,6 @@ import { Registrar } from '../registrarHelpers.js';
 
 // --- Service Imports ---
 import WorldContext from '../../context/worldContext.js';
-import PerceptionUpdateService from '../../perception/perceptionUpdateService.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
 
@@ -42,18 +41,6 @@ export function registerWorldAndEntity(container) {
   );
   logger.debug(
     `World and Entity Registration: Registered ${String(tokens.IWorldContext)}.`
-  );
-
-  r.singletonFactory(tokens.PerceptionUpdateService, (c) => {
-    return new PerceptionUpdateService({
-      logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-      entityManager: /** @type {IEntityManager} */ (
-        c.resolve(tokens.IEntityManager)
-      ),
-    });
-  });
-  logger.debug(
-    `World and Entity Registration: Registered ${String(tokens.PerceptionUpdateService)}.`
   );
 
   r.single(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, [

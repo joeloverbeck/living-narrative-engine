@@ -77,8 +77,6 @@
  * @property {DiToken} SystemDataRegistry - Token for the registry mapping system IDs to data sources.
  * @property {DiToken} PlayerPromptService - Token for the service managing player action prompting (implementation).
  * @property {DiToken} CommandOutcomeInterpreter - Token for the service interpreting command outcomes (implementation).
- * @property {DiToken} SubscriptionLifecycleManager - Token for managing subscription lifecycles (implementation).
- * @property {DiToken} PerceptionUpdateService - Token for the service updating perception logs.
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
  * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
  * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data.
@@ -204,7 +202,6 @@ export const tokens = Object.freeze({
   SystemDataRegistry: 'SystemDataRegistry',
   PlayerPromptService: 'PlayerPromptService',
   CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',
-  PerceptionUpdateService: 'PerceptionUpdateService',
   PlaytimeTracker: 'PlaytimeTracker',
   GamePersistenceService: 'GamePersistenceService',
   EntityDisplayDataProvider: 'EntityDisplayDataProvider',

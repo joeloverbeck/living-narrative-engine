@@ -20,7 +20,6 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 // Concrete Classes
 import WorldContext from '../../../src/context/worldContext.js';
-import PerceptionUpdateService from '../../../src/perception/perceptionUpdateService.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { EntityDisplayDataProvider } from '../../../src/entities/entityDisplayDataProvider.js';
 
@@ -57,9 +56,6 @@ describe('registerWorldAndEntity', () => {
       `World and Entity Registration: Registered ${String(tokens.IWorldContext)}.`
     );
     expect(logs).toContain(
-      `World and Entity Registration: Registered ${String(tokens.PerceptionUpdateService)}.`
-    );
-    expect(logs).toContain(
       `World and Entity Registration: Registered ${String(tokens.JsonLogicEvaluationService)}.`
     );
     expect(logs).toContain(
@@ -74,12 +70,6 @@ describe('registerWorldAndEntity', () => {
     {
       token: tokens.IWorldContext,
       Class: WorldContext,
-      lifecycle: 'singletonFactory',
-      deps: undefined,
-    },
-    {
-      token: tokens.PerceptionUpdateService,
-      Class: PerceptionUpdateService,
       lifecycle: 'singletonFactory',
       deps: undefined,
     },

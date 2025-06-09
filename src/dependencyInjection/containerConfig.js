@@ -17,7 +17,6 @@ import { LoggerConfigLoader } from '../configuration/loggerConfigLoader.js';
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../data/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../context/worldContext.js').default} WorldContext */
-/** @typedef {import('../perception/perceptionUpdateService.js').default} PerceptionUpdateService */
 
 // --- Import registration bundle functions ---
 import { registerLoaders } from './registrations/loadersRegistrations.js';
@@ -168,22 +167,6 @@ export function configureContainer(container, uiElements) {
     systemDataRegistry.registerSource(worldContextKey, worldContextInstance);
     logger.debug(
       `[ContainerConfig] Data source '${worldContextKey}' successfully registered in SystemDataRegistry.`
-    );
-
-    const perceptionUpdateServiceInstance =
-      /** @type {PerceptionUpdateService} */ (
-        container.resolve(tokens.PerceptionUpdateService)
-      );
-    const perceptionUpdateServiceKey = 'PerceptionUpdateService';
-    logger.debug(
-      `[ContainerConfig] Registering data source '${perceptionUpdateServiceKey}' in SystemDataRegistry...`
-    );
-    systemDataRegistry.registerSource(
-      perceptionUpdateServiceKey,
-      perceptionUpdateServiceInstance
-    );
-    logger.debug(
-      `[ContainerConfig] Data source '${perceptionUpdateServiceKey}' successfully registered in SystemDataRegistry.`
     );
   } catch (error) {
     logger.error(
