@@ -5,13 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Phasing out QuerySystemDataHandler.">
-      <change beforePath="$PROJECT_DIR$/src/actions/services/leaderListSyncService.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/followAutoMove.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/followAutoMove.integration.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/logic/operationHandlers/addPerceptionLogEntryHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,6 +49,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Jest.Tests in tests\\.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -64,6 +60,7 @@
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
     "nodejs_package_manager_path": "npm",
     "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
     "settings.editor.selected.configurable": "web-ide.project.structure",
@@ -101,7 +98,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749479545104</updated>
-      <workItem from="1749479546547" duration="17686000" />
+      <workItem from="1749479546547" duration="18355000" />
     </task>
     <task id="LOCAL-00001" summary="Implemented follow system.">
       <option name="closed" value="true" />
@@ -183,7 +180,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749497146527</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Phasing out QuerySystemDataHandler.">
+      <option name="closed" value="true" />
+      <created>1749497639163</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1749497639163</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
