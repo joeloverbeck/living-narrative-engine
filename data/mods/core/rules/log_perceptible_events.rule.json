@@ -1,12 +1,11 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "log_perceptible_events",
-  "comment": "Listens for 'core:perceptible_event' and delegates to PerceptionUpdateService to add entries to the 'core:perception_log' of relevant entities.",
+  "comment": "Logs perceptible events directly via ADD_PERCEPTION_LOG_ENTRY.",
   "event_type": "core:perceptible_event",
   "actions": [
     {
       "type": "SET_VARIABLE",
-      "comment": "Prepare the log entry object from the event payload for the service.",
       "parameters": {
         "variable_name": "logEntryData",
         "value": {
@@ -20,17 +19,11 @@
       }
     },
     {
-      "type": "QUERY_SYSTEM_DATA",
-      "comment": "Delegate to PerceptionUpdateService to update logs in the event's location.",
+      "type": "ADD_PERCEPTION_LOG_ENTRY",
       "parameters": {
-        "source_id": "PerceptionUpdateService",
-        "query_details": {
-          "action": "addEntryToLogsInLocation",
-          "locationId": "{event.payload.locationId}",
-          "entry": "{context.logEntryData}",
-          "originatingActorId": "{event.payload.actorId}"
-        },
-        "result_variable": "perceptionUpdateServiceStatus"
+        "location_id": "{event.payload.locationId}",
+        "entry": "{context.logEntryData}",
+        "originating_actor_id": "{event.payload.actorId}"
       }
     }
   ]

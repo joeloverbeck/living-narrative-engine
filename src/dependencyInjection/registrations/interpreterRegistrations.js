@@ -29,6 +29,7 @@ import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandl
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
 import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler';
+import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -160,6 +161,15 @@ export function registerInterpreters(container) {
           entityManager: c.resolve(tokens.IEntityManager),
         }),
     ],
+    [
+      tokens.AddPerceptionLogEntryHandler,
+      AddPerceptionLogEntryHandler,
+      (c, H) =>
+        new H({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+        }),
+    ],
   ];
 
   for (const [token, ctor, factory] of handlerFactories) {
@@ -201,6 +211,10 @@ export function registerInterpreters(container) {
     registry.register(
       'REBUILD_LEADER_LIST_CACHE',
       bind(tokens.RebuildLeaderListCacheHandler)
+    );
+    registry.register(
+      'ADD_PERCEPTION_LOG_ENTRY',
+      bind(tokens.AddPerceptionLogEntryHandler)
     );
 
     return registry;
