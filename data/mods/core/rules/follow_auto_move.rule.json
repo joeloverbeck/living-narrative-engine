@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "core_follow_auto_move",
-  "comment": "After a leader moves, sync their follower list and have any co-located followers attempt to follow.",
+  "comment": "After a leader moves, sync their follower list. For any co-located followers, move them and dispatch events to log the auto-move and inform the UI.",
   "event_type": "core:entity_moved",
   "condition": {
     "!==": [
@@ -50,8 +50,39 @@
         },
         "then_actions": [
           {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get the leader's name for event messages.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:name",
+              "result_variable": "leaderName"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get the destination location's name for event messages.",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{event.payload.currentLocationId}"
+              },
+              "component_type": "core:name",
+              "result_variable": "newLocationName"
+            }
+          },
+          {
+            "type": "QUERY_SYSTEM_DATA",
+            "comment": "Get the current timestamp for perceptible events.",
+            "parameters": {
+              "source_id": "WorldContext",
+              "query_details": {
+                "action": "getCurrentISOTimestamp"
+              },
+              "result_variable": "nowIso"
+            }
+          },
+          {
             "type": "SET_VARIABLE",
-            "comment": "Use placeholder to resolve the complex path and store it in a simple variable for the loop.",
+            "comment": "Store the follower list in a simple variable for the loop.",
             "parameters": {
               "variable_name": "followerList",
               "value": "{actor.components.core:leading.followers}"
@@ -59,14 +90,14 @@
           },
           {
             "type": "FOR_EACH",
-            "comment": "For each follower, if they were in the same location as the leader, have them attempt to follow.",
+            "comment": "For each follower, if they were in the same start location, have them follow the leader.",
             "parameters": {
               "collection": "context.followerList",
               "item_variable": "followerId",
               "actions": [
                 {
                   "type": "QUERY_COMPONENT",
-                  "comment": "Get the follower's current position.",
+                  "comment": "Get the follower's current position to check for co-location.",
                   "parameters": {
                     "entity_ref": {
                       "entityId": "{context.followerId}"
@@ -76,27 +107,69 @@
                   }
                 },
                 {
-                  "type": "DISPATCH_EVENT",
-                  "comment": "Make the follower attempt to move in the same direction.",
-                  "condition": {
-                    "==": [
+                  "type": "IF",
+                  "comment": "Only proceed if the follower was in the same location as the leader before the move.",
+                  "parameters": {
+                    "condition": {
+                      "==": [
+                        { "var": "context.followerPos.locationId" },
+                        { "var": "event.payload.previousLocationId" }
+                      ]
+                    },
+                    "then_actions": [
                       {
-                        "var": "context.followerPos.locationId"
+                        "type": "SYSTEM_MOVE_ENTITY",
+                        "comment": "Move the follower directly without using a turn-based action.",
+                        "parameters": {
+                          "entity_ref": {
+                            "entityId": "{context.followerId}"
+                          },
+                          "target_location_id": "{event.payload.currentLocationId}"
+                        }
                       },
                       {
-                        "var": "event.payload.previousLocationId"
+                        "type": "QUERY_COMPONENT",
+                        "comment": "Get the follower's name for event messages.",
+                        "parameters": {
+                          "entity_ref": {
+                            "entityId": "{context.followerId}"
+                          },
+                          "component_type": "core:name",
+                          "result_variable": "followerName"
+                        }
+                      },
+                      {
+                        "type": "DISPATCH_EVENT",
+                        "comment": "Send a perceptible event to the new location.",
+                        "parameters": {
+                          "eventType": "core:perceptible_event",
+                          "payload": {
+                            "eventName": "core:perceptible_event",
+                            "locationId": "{event.payload.currentLocationId}",
+                            "descriptionText": "{context.followerName.text} follows {context.leaderName.text} to {context.newLocationName.text}.",
+                            "timestamp": "{context.nowIso}",
+                            "perceptionType": "character_enter",
+                            "actorId": "{context.followerId}",
+                            "targetId": "{event.payload.entityId}",
+                            "involvedEntities": [],
+                            "contextualData": {
+                              "leaderId": "{event.payload.entityId}",
+                              "originLocationId": "{event.payload.previousLocationId}"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "DISPATCH_EVENT",
+                        "comment": "Inform the follower's UI that they automatically moved.",
+                        "parameters": {
+                          "eventType": "core:display_successful_action_result",
+                          "payload": {
+                            "message": "{context.followerName.text} follows {context.leaderName.text} to {context.newLocationName.text}."
+                          }
+                        }
                       }
                     ]
-                  },
-                  "parameters": {
-                    "eventType": "core:attempt_action",
-                    "payload": {
-                      "eventName": "core:attempt_action",
-                      "actorId": "{context.followerId}",
-                      "actionId": "core:go",
-                      "direction": "{event.payload.direction}",
-                      "originalInput": "{event.payload.originalCommand}"
-                    }
                   }
                 }
               ]

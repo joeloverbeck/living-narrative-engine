@@ -4,6 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import { createJsonLogicContext } from './contextAssembler.js';
+import resolvePath from '../utils/resolvePath.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -366,6 +367,12 @@ class SystemLogicInterpreter {
       try {
         if (opType === 'IF') {
           this.#handleIf(op, nestedCtx, `${scopeLabel} IF#${opIndex}`);
+        } else if (opType === 'FOR_EACH') {
+          this.#handleForEach(
+            op,
+            nestedCtx,
+            `${scopeLabel} FOR_EACH#${opIndex}`
+          );
         } else {
           this.#operationInterpreter.execute(op, nestedCtx);
         }
@@ -406,6 +413,73 @@ class SystemLogicInterpreter {
       nestedCtx,
       label
     );
+  }
+
+  #handleForEach(node, nestedCtx, label) {
+    const {
+      collection: collectionPath,
+      item_variable: itemVariable,
+      actions: nestedActions,
+    } = node.parameters || {};
+
+    if (typeof collectionPath !== 'string' || !collectionPath.trim()) {
+      this.#logger.warn(`${label}: 'collection' must be a non-empty string.`);
+      return;
+    }
+    if (typeof itemVariable !== 'string' || !itemVariable.trim()) {
+      this.#logger.warn(
+        `${label}: 'item_variable' must be a non-empty string.`
+      );
+      return;
+    }
+    if (!Array.isArray(nestedActions) || nestedActions.length === 0) {
+      this.#logger.debug(
+        `${label}: 'actions' is empty or not an array. Nothing to do.`
+      );
+      return;
+    }
+
+    const collection = resolvePath(
+      nestedCtx.evaluationContext,
+      collectionPath.trim()
+    );
+
+    if (!Array.isArray(collection)) {
+      this.#logger.warn(
+        `${label}: Path '${collectionPath}' did not resolve to an array (got ${typeof collection}). Loop skipped.`
+      );
+      return;
+    }
+
+    const contextStore = nestedCtx.evaluationContext.context;
+    const hadPrior = Object.prototype.hasOwnProperty.call(
+      contextStore,
+      itemVariable
+    );
+    const savedPriorValue = hadPrior ? contextStore[itemVariable] : undefined;
+
+    this.#logger.debug(
+      `FOR_EACH: Iterating ${collection.length} element(s) over path '${collectionPath}' → variable '${itemVariable}'.`
+    );
+
+    try {
+      for (let i = 0; i < collection.length; i++) {
+        contextStore[itemVariable] = collection[i];
+        // Recursively call _executeActions for the nested actions.
+        // The label shows the nesting level for easier debugging.
+        this._executeActions(
+          nestedActions,
+          nestedCtx,
+          `${label} > Item ${i + 1}/${collection.length}`
+        );
+      }
+    } finally {
+      if (hadPrior) {
+        contextStore[itemVariable] = savedPriorValue;
+      } else {
+        delete contextStore[itemVariable];
+      }
+    }
   }
 }
 

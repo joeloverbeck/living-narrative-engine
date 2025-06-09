@@ -405,10 +405,6 @@ describe('TitleRenderer', () => {
       };
       simulateEvent(SYSTEM_ERROR_OCCURRED_ID, payload);
       expect(renderer.set).toHaveBeenCalledWith('System Error');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('System fatal error occurred'),
-        payload
-      );
     });
   });
 

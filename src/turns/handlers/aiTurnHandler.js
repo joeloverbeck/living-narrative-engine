@@ -1,4 +1,5 @@
 // src/turns/handlers/aiTurnHandler.js
+// ****** MODIFIED FILE ******
 // ──────────────────────────────────────────────────────────────────────────────
 //  AITurnHandler Class (Refactored for Dependency Injection)
 // ──────────────────────────────────────────────────────────────────────────────
@@ -12,10 +13,10 @@
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
- * @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  * @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder
+ * @typedef {import('../ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort
  */
 
 /**
@@ -42,7 +43,7 @@ export class AITurnHandler extends BaseTurnHandler {
   #turnEndPort;
   /** @type {object} */
   #gameWorldAccess;
-  /** @type {LLMAdapter} */ // FIXED: Corrected type
+  /** @type {LLMAdapter} */
   #llmAdapter;
   /** @type {ICommandProcessor} */
   #commandProcessor;
@@ -50,8 +51,8 @@ export class AITurnHandler extends BaseTurnHandler {
   #commandOutcomeInterpreter;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
-  /** @type {SubscriptionLifecycleManager} */
-  #subscriptionManager;
+  /** @type {ICommandInputPort} */
+  #commandInputPort;
   /** @type {IEntityManager} */
   #entityManager;
   /** @type {IActionDiscoveryService} */
@@ -88,7 +89,7 @@ export class AITurnHandler extends BaseTurnHandler {
    * @param {ICommandProcessor} dependencies.commandProcessor
    * @param {ICommandOutcomeInterpreter} dependencies.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
-   * @param {SubscriptionLifecycleManager} dependencies.subscriptionManager
+   * @param {ICommandInputPort} dependencies.commandInputPort
    * @param {IEntityManager} dependencies.entityManager
    * @param {IActionDiscoveryService} dependencies.actionDiscoverySystem
    * @param {IPromptBuilder} dependencies.promptBuilder
@@ -105,11 +106,11 @@ export class AITurnHandler extends BaseTurnHandler {
     turnStateFactory,
     turnEndPort,
     gameWorldAccess,
-    llmAdapter, // FIXED: Corrected parameter name
+    llmAdapter,
     commandProcessor,
     commandOutcomeInterpreter,
     safeEventDispatcher,
-    subscriptionManager,
+    commandInputPort,
     entityManager,
     actionDiscoverySystem,
     promptBuilder,
@@ -126,15 +127,16 @@ export class AITurnHandler extends BaseTurnHandler {
     if (!turnEndPort) throw new Error('AITurnHandler: Invalid ITurnEndPort');
     if (!gameWorldAccess)
       throw new Error('AITurnHandler: Missing gameWorldAccess');
-    if (!llmAdapter) throw new Error('AITurnHandler: Invalid LLMAdapter'); // FIXED: Corrected check
+    if (!llmAdapter) throw new Error('AITurnHandler: Invalid LLMAdapter');
     if (!commandProcessor)
       throw new Error('AITurnHandler: Invalid ICommandProcessor');
     if (!commandOutcomeInterpreter)
       throw new Error('AITurnHandler: Invalid ICommandOutcomeInterpreter');
     if (!safeEventDispatcher)
       throw new Error('AITurnHandler: Invalid ISafeEventDispatcher');
-    if (!subscriptionManager)
-      throw new Error('AITurnHandler: Invalid SubscriptionLifecycleManager');
+    if (!commandInputPort)
+      // MODIFIED
+      throw new Error('AITurnHandler: Invalid ICommandInputPort');
     if (!entityManager)
       throw new Error('AITurnHandler: Invalid IEntityManager');
     if (!actionDiscoverySystem)
@@ -158,11 +160,11 @@ export class AITurnHandler extends BaseTurnHandler {
 
     this.#turnEndPort = turnEndPort;
     this.#gameWorldAccess = gameWorldAccess;
-    this.#llmAdapter = llmAdapter; // FIXED: Corrected assignment
+    this.#llmAdapter = llmAdapter;
     this.#commandProcessor = commandProcessor;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
-    this.#subscriptionManager = subscriptionManager;
+    this.#commandInputPort = commandInputPort; // MODIFIED
     this.#entityManager = entityManager;
     this.#actionDiscoverySystem = actionDiscoverySystem;
     this.#promptBuilder = promptBuilder;
@@ -197,7 +199,9 @@ export class AITurnHandler extends BaseTurnHandler {
       this.#aiAwaitingExternalEventForActorId !== currentActorInContext?.id
     ) {
       this._logger.warn(
-        `${this.constructor.name}._getAIIsAwaitingExternalEventFlag: Flag true for ${this.#aiAwaitingExternalEventForActorId}, context actor ${currentActorInContext?.id}.`
+        `${this.constructor.name}._getAIIsAwaitingExternalEventFlag: Flag true for ${
+          this.#aiAwaitingExternalEventForActorId
+        }, context actor ${currentActorInContext?.id}.`
       );
     }
     return false;
@@ -235,7 +239,7 @@ export class AITurnHandler extends BaseTurnHandler {
     this._setCurrentActorInternal(actor);
 
     const aiStrategy = this.#aiPlayerStrategyFactory.create({
-      llmAdapter: this.#llmAdapter, // FIXED: Now consistent
+      llmAdapter: this.#llmAdapter,
       aiPromptPipeline: this.#aiPromptPipeline,
       llmResponseProcessor: this.#llmResponseProcessor,
       aiFallbackActionFactory: this.#aiFallbackActionFactory,
@@ -248,7 +252,7 @@ export class AITurnHandler extends BaseTurnHandler {
       commandProcessor: this.#commandProcessor,
       commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
       safeEventDispatcher: this.#safeEventDispatcher,
-      subscriptionManager: this.#subscriptionManager,
+      commandInputPort: this.#commandInputPort, // MODIFIED
       entityManager: this.#entityManager,
       actionDiscoverySystem: this.#actionDiscoverySystem,
     };
@@ -308,11 +312,11 @@ export class AITurnHandler extends BaseTurnHandler {
     if (this._isDestroyed) return;
     this._logger.debug(`${this.constructor.name}.destroy() invoked.`);
     if (
-      this.#llmAdapter && // FIXED: Corrected property name
-      typeof this.#llmAdapter.cancelOngoingOperations === 'function' // FIXED: Corrected property name
+      this.#llmAdapter &&
+      typeof this.#llmAdapter.cancelOngoingOperations === 'function'
     ) {
       try {
-        await Promise.resolve(this.#llmAdapter.cancelOngoingOperations()); // FIXED: Corrected property name
+        await Promise.resolve(this.#llmAdapter.cancelOngoingOperations());
       } catch (e) {
         this._logger.warn(
           `${this.constructor.name}: Error cancelling LLMAdapter ops: ${e.message}`,

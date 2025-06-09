@@ -29,4 +29,5 @@ export const SHORT_TERM_MEMORY_COMPONENT_ID = 'core:short_term_memory';
 
 export const NOTES_COMPONENT_ID = 'core:notes';
 
+export const LEADING_COMPONENT_ID = 'core:leading';
 export const FOLLOWING_COMPONENT_ID = 'core:following';

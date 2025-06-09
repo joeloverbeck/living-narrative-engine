@@ -273,14 +273,10 @@ export class TitleRenderer extends RendererBase {
    * Sets a generic error title.
    *
    * @private
-   * @param {object} payload - Expected payload (e.g., { message: string, error?: Error }).
+   * @param {object} _payload - Expected payload (e.g., { message: string, error?: Error }).
    */
-  #handleFatalError(payload) {
+  #handleFatalError(_payload) {
     this.set('System Error');
-    this.logger.error(
-      `${this._logPrefix} System fatal error occurred, title updated. Message: ${payload?.message}`,
-      payload
-    );
   }
 
   // --- Public API ---

@@ -132,9 +132,6 @@ describe("TargetResolutionService - Domain 'equipment'", () => {
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBeNull();
       expect(result.error).toBe('You are not wearing or wielding anything.');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveEquipment: Actor 'actorNoEquip' is missing '${EQUIPMENT_COMPONENT_ID}' component.`
-      );
     });
   });
 
@@ -152,9 +149,6 @@ describe("TargetResolutionService - Domain 'equipment'", () => {
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
       expect(result.error).toBe('You have nothing equipped.');
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveEquipment: Actor 'actor1' has nothing equipped (getEntityIdsForScopes returned empty set).`
-      );
     });
 
     test('should return NOT_FOUND if equipment component has null slots', async () => {

@@ -24,7 +24,6 @@ import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
-import ForEachHandler from '../../src/logic/operationHandlers/forEachHandler.js';
 
 // ────────────────────────────────────────────────────────────────────────────
 // 1.  “Micro-container” – Mocks and Fakes for External Dependencies
@@ -199,7 +198,6 @@ function importAndRegisterHandlers(registry, deps) {
     dispatcher: deps.validatedDispatcher,
   });
   add('SET_VARIABLE', SetVariableHandler);
-  add('FOR_EACH', ForEachHandler);
 }
 
 // ────────────────────────────────────────────────────────────────────────────

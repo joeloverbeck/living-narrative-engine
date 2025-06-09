@@ -173,10 +173,7 @@
                 "perceptionType": "action_target_general",
                 "actorId": "{event.payload.actorId}",
                 "targetId": "{event.payload.targetId}",
-                "involvedEntities": [
-                  "{event.payload.actorId}",
-                  "{event.payload.targetId}"
-                ]
+                "involvedEntities": []
               }
             }
           },

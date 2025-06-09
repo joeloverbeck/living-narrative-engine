@@ -18,6 +18,7 @@ import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
 } from '../../constants/textDefaults.js';
+import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor';
 // --- TICKET AIPF-REFACTOR-009 END ---
 
 // ActorPromptDataDTO is defined in AIGameStateDTO.js as per the provided context
@@ -33,13 +34,13 @@ import {
  * @description Service responsible for processing raw actorState and component data
  * to populate the ActorPromptDataDTO.
  */
-class ActorDataExtractor {
+class ActorDataExtractor extends IActorDataExtractor {
   // Removed constructor comment about injecting punctuationUtil, as we're importing directly.
 
   /**
    * Extracts and transforms actor-specific data from the actorState object
    * into a structured ActorPromptDataDTO.
-   *
+   * @override
    * @param {object} actorState - The gameState.actorState object, which is a
    * map of component IDs to component data.
    * @returns {ActorPromptDataDTO} The populated DTO.

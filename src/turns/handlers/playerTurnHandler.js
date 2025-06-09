@@ -1,5 +1,5 @@
 // src/turns/handlers/playerTurnHandler.js
-// (Assuming this path is correct based on your test output context)
+// ****** MODIFIED FILE ******
 // ──────────────────────────────────────────────────────────────────────────────
 //  PlayerTurnHandler  – MODIFIED TO EXTEND BaseTurnHandler & USE ITurnContext
 // ──────────────────────────────────────────────────────────────────────────────
@@ -7,10 +7,6 @@
 import { BaseTurnHandler } from './baseTurnHandler.js';
 import { TurnContext } from '../context/turnContext.js'; // Adjusted path relative to src/turns/handlers/
 import { HumanPlayerStrategy } from '../strategies/humanPlayerStrategy.js'; // Adjusted path
-
-// This import might not be strictly necessary if SubscriptionLifecycleManagerType is well-defined elsewhere
-// and only its instance is passed. However, keeping for potential type inference or direct use if any.
-import ActualSubscriptionLifecycleManagerClass from '../../events/subscriptionLifecycleManager.js'; // Adjusted path
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -21,11 +17,9 @@ import ActualSubscriptionLifecycleManagerClass from '../../events/subscriptionLi
 /** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy */
-// Use the actual class for type if it's imported, otherwise a generic 'object' or a specific interface
-/** @typedef {ActualSubscriptionLifecycleManagerClass} SubscriptionLifecycleManagerType */
-
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
+/** @typedef {import('../ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 
 class PlayerTurnHandler extends BaseTurnHandler {
   /** @type {ICommandProcessor} */
@@ -38,8 +32,8 @@ class PlayerTurnHandler extends BaseTurnHandler {
   #commandOutcomeInterpreter;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
-  /** @type {SubscriptionLifecycleManagerType} */
-  #subscriptionManager; // This internal field name is fine, it's how it's stored.
+  /** @type {ICommandInputPort} */ // ADDED
+  #commandInputPort;
   /** @type {object} */
   #gameWorldAccess;
 
@@ -59,7 +53,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
    * @param {IPlayerPromptService} deps.playerPromptService
    * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-   * @param {SubscriptionLifecycleManagerType} deps.subscriptionLifecycleManager // <<<< CORRECTED PARAMETER NAME
+   * @param {ICommandInputPort} deps.commandInputPort // ADDED: Direct dependency
    * @param {object} [deps.gameWorldAccess]
    */
   constructor({
@@ -70,7 +64,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
     playerPromptService,
     commandOutcomeInterpreter,
     safeEventDispatcher,
-    subscriptionLifecycleManager, // <<<< CORRECTED PARAMETER NAME to match DI container's output
+    commandInputPort, // ADDED
     gameWorldAccess = {},
   }) {
     super({ logger, turnStateFactory });
@@ -87,22 +81,16 @@ class PlayerTurnHandler extends BaseTurnHandler {
       );
     if (!safeEventDispatcher)
       throw new Error('PlayerTurnHandler: safeEventDispatcher is required');
-    // --- CORRECTED CHECK BELOW ---
-    // The check is now on the corrected constructor parameter `subscriptionLifecycleManager`
-    if (!subscriptionLifecycleManager)
-      throw new Error(
-        'PlayerTurnHandler: injected subscriptionManager is required'
-      );
-    // --- END CORRECTION ---
+    // ADDED: Validate new dependency
+    if (!commandInputPort)
+      throw new Error('PlayerTurnHandler: commandInputPort is required');
 
     this.#commandProcessor = commandProcessor;
     this.#turnEndPort = turnEndPort;
     this.#playerPromptService = playerPromptService;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
-    // --- CORRECTED ASSIGNMENT BELOW ---
-    this.#subscriptionManager = subscriptionLifecycleManager; // Assigns the (now validated) injected instance
-    // --- END CORRECTION ---
+    this.#commandInputPort = commandInputPort; // ADDED
     this.#gameWorldAccess = gameWorldAccess;
 
     const initialState = this._turnStateFactory.createInitialState(this);
@@ -138,7 +126,8 @@ class PlayerTurnHandler extends BaseTurnHandler {
       commandProcessor: this.#commandProcessor,
       commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
       safeEventDispatcher: this.#safeEventDispatcher,
-      subscriptionManager: this.#subscriptionManager, // This will now be a valid instance
+      // REMOVED: subscriptionManager: this.#subscriptionManager,
+      commandInputPort: this.#commandInputPort, // ADDED
       turnEndPort: this.#turnEndPort,
     };
 
@@ -193,26 +182,11 @@ class PlayerTurnHandler extends BaseTurnHandler {
     );
     super._resetTurnStateAndResources(logCtx);
     this._clearTurnEndWaitingMechanismsInternal();
-    try {
-      if (
-        this.#subscriptionManager &&
-        typeof this.#subscriptionManager.unsubscribeAll === 'function'
-      ) {
-        this.#subscriptionManager.unsubscribeAll();
-        this._logger.debug(
-          `${this.constructor.name}: All subscriptions managed by SubscriptionLifecycleManager unsubscribed for '${logCtx}'.`
-        );
-      } else {
-        this._logger.warn(
-          `${this.constructor.name}: SubscriptionManager not available or unsubscribeAll not a function during reset for '${logCtx}'.`
-        );
-      }
-    } catch (err) {
-      this._logger.warn(
-        `${this.constructor.name}: unsubscribeAll failed during reset for '${logCtx}' – ${err.message}`,
-        err
-      );
-    }
+
+    // REMOVED: The call to subscriptionManager.unsubscribeAll() is no longer needed.
+    // Individual states are responsible for cleaning up their own subscriptions via
+    // their exitState/destroy methods, which is a more robust pattern.
+
     this.#isTerminatingNormally = false;
     this._logger.debug(
       `${this.constructor.name}: Player-specific state reset complete for '${logCtx}'.`

@@ -66,20 +66,62 @@
         },
         "then_actions": [
           {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get actor's name for the event description.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:name",
+              "result_variable": "actorName"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get target's name for the event description.",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "core:name",
+              "result_variable": "targetName"
+            }
+          },
+          {
+            "type": "QUERY_SYSTEM_DATA",
+            "comment": "Get the current timestamp for the event.",
+            "parameters": {
+              "source_id": "WorldContext",
+              "query_details": {
+                "action": "getCurrentISOTimestamp"
+              },
+              "result_variable": "nowIso"
+            }
+          },
+          {
             "type": "DISPATCH_EVENT",
             "comment": "This event is for other characters to observe.",
             "parameters": {
               "eventType": "core:perceptible_event",
               "payload": {
+                "eventName": "core:perceptible_event",
                 "locationId": "{context.actorPosition.locationId}",
-                "descriptionText": "{actor.name} has dismissed {target.name} from their service.",
+                "descriptionText": "{context.actorName.text} has dismissed {context.targetName.text} from their service.",
+                "timestamp": "{context.nowIso}",
                 "perceptionType": "state_change_observable",
                 "actorId": "{event.payload.actorId}",
-                "targetId": "{event.payload.targetId}"
+                "targetId": "{event.payload.targetId}",
+                "involvedEntities": []
               }
             }
           }
         ]
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch a decoupled event to the UI indicating the successful dismiss action.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actorName.text} dismisses {context.targetName.text} from their service."
+        }
       }
     },
     {

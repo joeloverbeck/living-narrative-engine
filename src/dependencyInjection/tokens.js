@@ -206,7 +206,6 @@ export const tokens = Object.freeze({
   SystemDataRegistry: 'SystemDataRegistry',
   PlayerPromptService: 'PlayerPromptService',
   CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',
-  SubscriptionLifecycleManager: 'SubscriptionLifecycleManager',
   PerceptionUpdateService: 'PerceptionUpdateService',
   PlaytimeTracker: 'PlaytimeTracker',
   GamePersistenceService: 'GamePersistenceService',
@@ -257,7 +256,7 @@ export const tokens = Object.freeze({
   QueryComponentHandler: 'QueryComponentHandler',
   SetVariableHandler: 'SetVariableHandler',
   QuerySystemDataHandler: 'QuerySystemDataHandler',
-  ForEachHandler: 'ForEachHandler',
+  SystemMoveEntityHandler: 'SystemMoveEntityHandler',
 
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',
@@ -294,5 +293,13 @@ export const tokens = Object.freeze({
   // --- Action-related services
   LeaderListSyncService: 'LeaderListSyncService',
   FollowValidationService: 'FollowValidationService',
+
+  // --- AI Game State Providers (New) ---
+  IEntitySummaryProvider: 'IEntitySummaryProvider',
+  IActorStateProvider: 'IActorStateProvider',
+  IPerceptionLogProvider: 'IPerceptionLogProvider',
+  IAvailableActionsProvider: 'IAvailableActionsProvider',
+  ILocationSummaryProvider: 'ILocationSummaryProvider',
+  IActorDataExtractor: 'IActorDataExtractor',
 });
 // --- FILE END ---

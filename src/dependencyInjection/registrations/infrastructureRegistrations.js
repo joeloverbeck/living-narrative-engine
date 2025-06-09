@@ -12,10 +12,6 @@ import { Registrar } from '../registrarHelpers.js';
 import { SystemServiceRegistry } from '../../registry/systemServiceRegistry.js';
 import { SystemDataRegistry } from '../../data/systemDataRegistry.js';
 
-// --- ADDED IMPORT FOR SaveLoadService ---
-import SaveLoadService from '../../persistence/saveLoadService.js';
-import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js';
-
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry
@@ -30,17 +26,13 @@ import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js'
  * @typedef {import('../../loaders/entityLoader.js').default} EntityLoader
  * @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader
  * @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader
- * @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher // For WorldLoader & Self
- * @typedef {import('../../events/safeEventDispatcher.js').default} SafeEventDispatcher
- * @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher // For SafeEventDispatcher
+ * @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
- * @typedef {import('../../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider // For SaveLoadService type hint
- * @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface // For type hint
  */
 
 /**
- *
+ * Registers foundational infrastructure services.
  * @param container
  */
 export function registerInfrastructure(container) {
@@ -62,12 +54,9 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${tokens.ISpatialIndexManager}.`
   );
 
-  // --- UPDATED WorldLoader Factory (Ticket 15) ---
-  // Now uses a dependency object constructor.
   container.register(
     tokens.WorldLoader,
     (c) => {
-      // Create the dependency object required by the constructor
       const dependencies = {
         registry: c.resolve(tokens.IDataRegistry),
         logger: c.resolve(tokens.ILogger),
@@ -83,16 +72,12 @@ export function registerInfrastructure(container) {
         modManifestLoader: c.resolve(tokens.ModManifestLoader),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       };
-      // Pass the single dependency object to the constructor
       return new WorldLoader(dependencies);
     },
     { lifecycle: 'singleton' }
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${tokens.WorldLoader} (with VED dependency).`
-  );
+  log.debug(`Infrastructure Registration: Registered ${tokens.WorldLoader}.`);
 
-  // Register GameDataRepository against IGameDataRepository token
   container.register(
     tokens.IGameDataRepository,
     (c) =>
@@ -106,7 +91,6 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${tokens.IGameDataRepository}.`
   );
 
-  // Register EntityManager against IEntityManager token
   container.register(
     tokens.IEntityManager,
     (c) =>
@@ -124,7 +108,6 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${tokens.IEntityManager}.`
   );
 
-  // --- Register ValidatedEventDispatcher against its Interface Token ---
   container.register(
     tokens.IValidatedEventDispatcher,
     (c) =>
@@ -142,7 +125,6 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${tokens.IValidatedEventDispatcher}.`
   );
 
-  // Register SafeEventDispatcher
   r.singletonFactory(
     tokens.ISafeEventDispatcher,
     (c) =>
@@ -168,7 +150,6 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${tokens.SystemServiceRegistry}.`
   );
 
-  // Register SystemDataRegistry (depends on ILogger)
   r.singletonFactory(
     tokens.SystemDataRegistry,
     (c) =>
@@ -178,29 +159,5 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${tokens.SystemDataRegistry}.`
   );
 
-  r.single(tokens.IStorageProvider, BrowserStorageProvider, [
-    tokens.ILogger /*, other dependencies */,
-  ]);
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.IStorageProvider)} implemented by BrowserStorageProvider.`
-  );
-
-  // --- ADDED REGISTRATION FOR SaveLoadService ---
-  // Assumes tokens.IStorageProvider is a valid, registered token.
-  // If IStorageProvider is not yet registered, its registration would be a prerequisite,
-  // typically also within this infrastructure bundle.
-  r.single(tokens.ISaveLoadService, SaveLoadService, [
-    tokens.ILogger,
-    tokens.IStorageProvider, // SaveLoadService constructor expects 'logger' and 'storageProvider'
-    // Registrar.single will map tokens.ILogger to 'logger' and
-    // tokens.IStorageProvider to 'storageProvider' in the dependency object.
-  ]);
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ISaveLoadService)} implemented by SaveLoadService.`
-  );
-  // --- END ADDED REGISTRATION ---
-
   log.debug('Infrastructure Registration: complete.');
 }
-
-// --- FILE END ---

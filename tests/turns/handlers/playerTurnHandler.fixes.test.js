@@ -1,4 +1,6 @@
 // tests/turns/handlers/playerTurnHandler.fixes.test.js
+// ****** MODIFIED FILE ******
+
 import {
   describe,
   expect,
@@ -20,7 +22,7 @@ describe('PlayerTurnHandler Constructor', () => {
   let mockPlayerPromptService;
   let mockCommandOutcomeInterpreter;
   let mockSafeEventDispatcher;
-  let mockSubscriptionManagerInstance; // Renamed for clarity that it's the mock instance
+  let mockCommandInputPort; // ADDED: New dependency mock
   let mockGameWorldAccess;
   let mockInitialState;
   let setInitialStateSpy;
@@ -41,7 +43,7 @@ describe('PlayerTurnHandler Constructor', () => {
     mockPlayerPromptService = {};
     mockCommandOutcomeInterpreter = {};
     mockSafeEventDispatcher = {};
-    mockSubscriptionManagerInstance = { unsubscribeAll: jest.fn() }; // This is the mock object
+    mockCommandInputPort = {}; // ADDED: New mock object
     mockGameWorldAccess = {};
 
     setInitialStateSpy = jest
@@ -65,9 +67,7 @@ describe('PlayerTurnHandler Constructor', () => {
     playerPromptService: mockPlayerPromptService,
     commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
     safeEventDispatcher: mockSafeEventDispatcher,
-    // --- CORRECTED LINE BELOW ---
-    subscriptionLifecycleManager: mockSubscriptionManagerInstance, // Key matches constructor param
-    // --- END CORRECTION ---
+    commandInputPort: mockCommandInputPort, // ADDED: Provide new dependency
     gameWorldAccess: mockGameWorldAccess,
   });
 
@@ -148,29 +148,21 @@ describe('PlayerTurnHandler Constructor', () => {
     );
   });
 
-  it('should throw an error if subscriptionManager is not provided (undefined)', () => {
+  // REWRITTEN: This test now validates the new dependency.
+  it('should throw an error if commandInputPort is not provided', () => {
     const deps = getValidDependencies();
-    // When testing missing subscriptionLifecycleManager, set that property to undefined
-    deps.subscriptionLifecycleManager = undefined;
+    delete deps.commandInputPort;
     expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: injected subscriptionManager is required'
+      'PlayerTurnHandler: commandInputPort is required'
     );
   });
 
-  it('should throw an error if subscriptionManager is not provided (null)', () => {
-    const deps = getValidDependencies();
-    // When testing missing subscriptionLifecycleManager, set that property to null
-    deps.subscriptionLifecycleManager = null;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: injected subscriptionManager is required'
-    );
-  });
+  // REMOVED: Obsolete test for subscriptionManager (null) is implicitly covered
+  // by the new test for commandInputPort.
 
   it('should construct successfully if gameWorldAccess is not provided (uses default)', () => {
     const deps = getValidDependencies();
     delete deps.gameWorldAccess; // gameWorldAccess is optional
-    // Ensure subscriptionLifecycleManager is present for this success test
-    deps.subscriptionLifecycleManager = mockSubscriptionManagerInstance;
 
     let handler;
     expect(() => {
@@ -181,8 +173,6 @@ describe('PlayerTurnHandler Constructor', () => {
 
   it('should call _setInitialState with the state from the factory', () => {
     const deps = getValidDependencies();
-    // Ensure subscriptionLifecycleManager is present for this success test
-    deps.subscriptionLifecycleManager = mockSubscriptionManagerInstance;
 
     const handler = new PlayerTurnHandler(deps);
 

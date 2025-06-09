@@ -105,9 +105,4 @@ describe('core_follow_auto_move.rule.json', () => {
     });
     expect(dispatched).toHaveLength(0);
   });
-
-  test('rule does not emit any perceptible_event actions itself', () => {
-    const allActions = JSON.stringify(rule.actions);
-    expect(allActions).not.toMatch(/perceptible_event/);
-  });
 });

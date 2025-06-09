@@ -22,14 +22,17 @@ import { LoggerConfigLoader } from '../configuration/loggerConfigLoader.js';
 // --- Import registration bundle functions ---
 import { registerLoaders } from './registrations/loadersRegistrations.js';
 import { registerInfrastructure } from './registrations/infrastructureRegistrations.js';
-import { registerUI } from './registrations/uiRegistrations.js';
-import { registerDomainServices } from './registrations/domainServicesRegistrations.js';
-import { registerCoreSystems } from './registrations/coreSystemsRegistrations.js';
+import { registerPersistence } from './registrations/persistenceRegistrations.js';
+import { registerWorldAndEntity } from './registrations/worldAndEntityRegistrations.js';
+import { registerCommandAndAction } from './registrations/commandAndActionRegistrations.js';
 import { registerInterpreters } from './registrations/interpreterRegistrations.js';
+import { registerAI } from './registrations/aiRegistrations.js';
+import { registerTurnLifecycle } from './registrations/turnLifecycleRegistrations.js';
+import { registerEventBusAdapters } from './registrations/eventBusAdapterRegistrations.js';
+import { registerUI } from './registrations/uiRegistrations.js';
 import { registerInitializers } from './registrations/initializerRegistrations.js';
 import { registerRuntime } from './registrations/runtimeRegistrations.js';
 import { registerOrchestration } from './registrations/orchestrationRegistrations.js';
-import { registerAdapters } from './registrations/adapterRegistrations.js';
 
 /** @typedef {import('./appContainer.js').default} AppContainer */
 /** @typedef {import('../../bootstrapper/UIBootstrapper.js').EssentialUIElements} EssentialUIElements */
@@ -112,25 +115,31 @@ export function configureContainer(container, uiElements) {
     '[ContainerConfig] Starting synchronous bundle registration while logger dependencyInjection continues loading in background (if not already done).'
   );
 
-  // --- *** CORRECTED REGISTRATION ORDER *** ---
-  // Infrastructure (like dispatchers, storage) must be registered before
-  // services that depend on them (like adapters).
+  // --- Registration Order ---
+  // The order is critical to ensure dependencies are available when needed.
+  // 1. Foundational loaders and infrastructure.
+  // 2. Core domain services, broken into logical areas.
+  // 3. High-level systems (AI, turns) that depend on the core services.
+  // 4. UI and application orchestration services at the top.
+
   registerLoaders(container);
-  registerInfrastructure(container); // Provides ISafeEventDispatcher
+  registerInfrastructure(container);
+  registerPersistence(container);
+  registerWorldAndEntity(container);
+  registerCommandAndAction(container);
+  registerInterpreters(container);
+  registerAI(container);
+  registerTurnLifecycle(container);
+  registerEventBusAdapters(container);
   registerUI(container, {
     outputDiv,
     inputElement,
     titleElement,
     document: doc,
   });
-  registerDomainServices(container);
-  registerInterpreters(container);
-  registerAdapters(container); // Consumes ISafeEventDispatcher - MUST be after registerInfrastructure
-  registerCoreSystems(container);
   registerInitializers(container);
   registerRuntime(container);
   registerOrchestration(container);
-  // --- *** END CORRECTION *** ---
 
   logger.debug('[ContainerConfig] All core bundles registered.');
 

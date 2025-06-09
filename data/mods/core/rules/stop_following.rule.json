@@ -14,7 +14,7 @@
   "actions": [
     {
       "type": "QUERY_COMPONENT",
-      "comment": "Step 1: Get the current leader's ID for cache sync before removing the component.",
+      "comment": "Step 1: Get the current leader's ID for later use before removing the component.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:following",
@@ -42,8 +42,19 @@
       }
     },
     {
+      "type": "QUERY_SYSTEM_DATA",
+      "comment": "Step 4.1: Get the current timestamp for the perceptible event.",
+      "parameters": {
+        "source_id": "WorldContext",
+        "query_details": {
+          "action": "getCurrentISOTimestamp"
+        },
+        "result_variable": "currentTimestamp"
+      }
+    },
+    {
       "type": "QUERY_COMPONENT",
-      "comment": "Step 4.1: Get actor's position for co-location check.",
+      "comment": "Step 4.2: Get actor's position for co-location check.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:position",
@@ -52,7 +63,16 @@
     },
     {
       "type": "QUERY_COMPONENT",
-      "comment": "Step 4.2: Get old leader's position for co-location check.",
+      "comment": "Step 4.3: Get actor's name for the event description.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:name",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Step 4.4: Get old leader's position for co-location check.",
       "parameters": {
         "entity_ref": {
           "entityId": "{context.oldFollowingData.leaderId}"
@@ -62,8 +82,19 @@
       }
     },
     {
+      "type": "QUERY_COMPONENT",
+      "comment": "Step 4.5: Get old leader's name for the event description.",
+      "parameters": {
+        "entity_ref": {
+          "entityId": "{context.oldFollowingData.leaderId}"
+        },
+        "component_type": "core:name",
+        "result_variable": "oldLeaderName"
+      }
+    },
+    {
       "type": "IF",
-      "comment": "Step 4.3: Only dispatch a perceptible event if the actor and old leader are in the same location.",
+      "comment": "Step 5: Only dispatch a perceptible event if the actor and old leader are in the same location.",
       "parameters": {
         "condition": {
           "==": [
@@ -82,11 +113,14 @@
             "parameters": {
               "eventType": "core:perceptible_event",
               "payload": {
+                "eventName": "core:perceptible_event",
+                "timestamp": "{context.currentTimestamp}",
                 "locationId": "{context.actorPosition.locationId}",
-                "descriptionText": "{actor.name} is no longer following {target(context.oldFollowingData.leaderId).name}.",
+                "descriptionText": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
                 "perceptionType": "state_change_observable",
                 "actorId": "{event.payload.actorId}",
-                "targetId": "{context.oldFollowingData.leaderId}"
+                "targetId": "{context.oldFollowingData.leaderId}",
+                "involvedEntities": []
               }
             }
           }
@@ -95,7 +129,7 @@
     },
     {
       "type": "DISPATCH_EVENT",
-      "comment": "Step 5: Signal to the Turn Manager that the actor's turn is over.",
+      "comment": "Step 6: Signal to the Turn Manager that the actor's turn is over.",
       "parameters": {
         "eventType": "core:turn_ended",
         "payload": {

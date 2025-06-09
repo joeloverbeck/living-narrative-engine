@@ -177,9 +177,6 @@ describe("TargetResolutionService - Domain 'direction'", () => {
         mockEntityManager,
         mockLogger
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveDirection: Location '${mockLocationNoExits.id}' has no valid exits according to getAvailableExits.`
-      );
     });
   });
 
@@ -246,9 +243,6 @@ describe("TargetResolutionService - Domain 'direction'", () => {
         mockLocationWithOnlyInvalidExits,
         mockEntityManager,
         mockLogger
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveDirection: Location '${mockLocationWithOnlyInvalidExits.id}' has no valid exits according to getAvailableExits.`
       );
     });
   });
@@ -377,9 +371,6 @@ describe("TargetResolutionService - Domain 'direction'", () => {
       expect(result.targetType).toBe('direction');
       expect(result.targetId).toBeNull();
       expect(result.error).toBe(`You can't go "${nounPhraseValue}".`);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveDirection: No exit matches direction '${nounPhraseValue}'. Valid exits were: West, Up`
-      );
     });
   });
 

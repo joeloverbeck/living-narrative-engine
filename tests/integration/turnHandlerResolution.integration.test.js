@@ -1,4 +1,5 @@
-// src/tests/integration/turnHandlerResolution.integration.test.js
+// tests/integration/turnHandlerResolution.integration.test.js
+// ****** MODIFIED FILE ******
 
 // -----------------------------------------------------------------------------
 //  T-08 | Integration Test – AITurnHandler Resolution and Startup
@@ -75,8 +76,6 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
     aiActor = new SimpleEntity(AI_ACTOR_ID, [ACTOR_COMPONENT_ID]);
     mockAiPromptPipeline = { generatePrompt: jest.fn() };
 
-    // FIXED: The mock state object needs to satisfy the ITurnState interface,
-    // specifically the 'enterState' method checked by the BaseTurnHandler.
     mockTurnState = {
       startTurn: jest.fn(),
       enterState: jest.fn(),
@@ -105,7 +104,7 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       commandProcessor: {},
       commandOutcomeInterpreter: {},
       safeEventDispatcher: {},
-      subscriptionManager: {},
+      commandInputPort: {}, // MODIFIED: Replaced subscriptionManager with commandInputPort
       entityManager: mockEntityManager,
       actionDiscoverySystem: {},
       promptBuilder: {},

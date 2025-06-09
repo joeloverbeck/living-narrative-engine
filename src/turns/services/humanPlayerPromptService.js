@@ -401,14 +401,18 @@ class HumanPlayerPromptService extends IHumanPlayerPromptService {
       );
     }
 
+    // --- CHANGE START ---
+    // FIX: The `actor` property has been renamed to `actingEntity` to align with the
+    // ActionContext type definition and fix the inconsistency with downstream services.
     const actionContext = {
-      actor: actor,
+      actingEntity: actor,
       currentLocation: currentLocation,
       entityManager: this.#entityManager,
       gameDataRepository: this.#gameDataRepository,
       logger: this.#logger,
       worldContext: this.#worldContext,
     };
+    // --- CHANGE END ---
     this.#logger.debug(
       `PlayerPromptService._fetchContextAndDiscoverActions: Created ActionContext for actor ${actorId}.`
     );

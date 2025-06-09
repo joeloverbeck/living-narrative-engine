@@ -1,10 +1,10 @@
 // src/turns/states/awaitingExternalTurnEndState.js
-// ────────────────────────────────────────────────────────────────────────────────
+// ****** MODIFIED FILE ******
 /**
  * Waits for a `core:turn_ended` that some rule should emit after an
  * action attempt. If nothing arrives within TIMEOUT_MS we:
- *   1. Fire `core:display_error` with details about the stalled action.
- *   2. End the turn with `success:false`, keeping the game loop alive.
+ * 1. Fire `core:display_error` with details about the stalled action.
+ * 2. End the turn with `success:false`, keeping the game loop alive.
  *
  * This guarantees the engine never hard-locks because of a missing rule.
  */
@@ -17,8 +17,8 @@ import { TURN_ENDED_ID, DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 // ─── Config ────────────────────────────────────────────────────────────────────
 /**
  * Dev / prod switch without `import.meta`.
- *   • In a Jest run NODE_ENV defaults to 'test'.
- *   • In Vite/webpack `process.env.NODE_ENV` is defined, too.
+ * • In a Jest run NODE_ENV defaults to 'test'.
+ * • In Vite/webpack `process.env.NODE_ENV` is defined, too.
  */
 const IS_DEV = (process?.env?.NODE_ENV ?? 'production') !== 'production';
 const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
@@ -65,10 +65,14 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
       ctx.getChosenAction?.()?.actionDefinitionId ??
       'unknown-action';
 
-    // subscribe for the normal path
+    // --- REFACTORED: Use SafeEventDispatcher directly ---
+    // The context now provides the dispatcher directly, bypassing the problematic manager.
+    // The returned unsubscribe function is stored and used identically to before.
     this.#unsubscribeFn = ctx
-      .getSubscriptionManager()
-      .subscribeToTurnEnded((p) => this.handleTurnEndedEvent(handler, p));
+      .getSafeEventDispatcher()
+      .subscribe(TURN_ENDED_ID, (event) =>
+        this.handleTurnEndedEvent(handler, event)
+      );
 
     // mark context
     ctx.setAwaitingExternalEvent(true, ctx.getActor().id);
@@ -78,14 +82,21 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  async handleTurnEndedEvent(handler, payload) {
+  async handleTurnEndedEvent(handler, event) {
     const ctx = this._getTurnContext();
     if (!ctx) return;
 
-    if (payload.entityId !== ctx.getActor().id) return; // not for us
+    // --- FIX: Correctly access the event payload ---
+    // The listener receives the full event object: { type, payload }.
+    // The data we need is inside the 'payload' property.
+    const eventPayload = event.payload;
+
+    if (eventPayload.entityId !== ctx.getActor().id) return; // not for us
 
     this.#clearGuards(ctx);
-    await ctx.endTurn(payload.error ?? null);
+
+    // The error, if any, is also on the event's payload property.
+    await ctx.endTurn(eventPayload.error ?? null);
   }
 
   //─────────────────────────────────────────────────────────────────────────────

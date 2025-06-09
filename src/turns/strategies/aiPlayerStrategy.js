@@ -120,9 +120,6 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
       if (!finalPromptString) {
         throw new Error('PromptBuilder returned an empty or invalid prompt.');
       }
-      this.#logger.debug(
-        `AIPlayerStrategy: Final Prompt String for ${actorId}:\n${finalPromptString}`
-      );
 
       // 5. Call LLM Adapter with the final prompt string
       const llmJsonResponse =

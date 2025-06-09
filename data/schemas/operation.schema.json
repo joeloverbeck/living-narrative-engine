@@ -23,7 +23,8 @@
             "FOR_EACH",
             "LOG",
             "SET_VARIABLE",
-            "QUERY_SYSTEM_DATA"
+            "QUERY_SYSTEM_DATA",
+            "SYSTEM_MOVE_ENTITY"
           ]
         },
         "comment": {
@@ -44,275 +45,162 @@
       "allOf": [
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "QUERY_COMPONENT"
-              }
-            },
+            "properties": { "type": { "const": "QUERY_COMPONENT" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/QueryComponentParameters"
-              }
+              "parameters": { "$ref": "#/$defs/QueryComponentParameters" }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "MODIFY_COMPONENT"
-              }
-            },
+            "properties": { "type": { "const": "MODIFY_COMPONENT" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/ModifyComponentParameters"
-              }
+              "parameters": { "$ref": "#/$defs/ModifyComponentParameters" }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "ADD_COMPONENT"
-              }
-            },
+            "properties": { "type": { "const": "ADD_COMPONENT" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/AddComponentParameters"
-              }
+              "parameters": { "$ref": "#/$defs/AddComponentParameters" }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "REMOVE_COMPONENT"
-              }
-            },
+            "properties": { "type": { "const": "REMOVE_COMPONENT" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/RemoveComponentParameters"
-              }
+              "parameters": { "$ref": "#/$defs/RemoveComponentParameters" }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "DISPATCH_EVENT"
-              }
-            },
+            "properties": { "type": { "const": "DISPATCH_EVENT" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/DispatchEventParameters"
-              }
+              "parameters": { "$ref": "#/$defs/DispatchEventParameters" }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "IF"
-              }
-            },
+            "properties": { "type": { "const": "IF" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": { "parameters": { "$ref": "#/$defs/IfParameters" } },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "LOG" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": { "parameters": { "$ref": "#/$defs/LogParameters" } },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "SET_VARIABLE" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/IfParameters"
-              }
+              "parameters": { "$ref": "#/$defs/SetVariableParameters" }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "LOG"
-              }
-            },
+            "properties": { "type": { "const": "QUERY_SYSTEM_DATA" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/LogParameters"
-              }
+              "parameters": { "$ref": "#/$defs/QuerySystemDataParameters" }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "SET_VARIABLE"
-              }
-            },
+            "properties": { "type": { "const": "FOR_EACH" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/SetVariableParameters"
-              }
+              "parameters": { "$ref": "#/$defs/ForEachParameters" }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": {
-              "type": {
-                "const": "QUERY_SYSTEM_DATA"
-              }
-            },
+            "properties": { "type": { "const": "SYSTEM_MOVE_ENTITY" } },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": {
-                "$ref": "#/$defs/QuerySystemDataParameters"
-              }
+              "parameters": { "$ref": "#/$defs/SystemMoveEntityParameters" }
             },
             "required": ["parameters"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "FOR_EACH"
-              }
-            },
-            "required": ["type"]
-          },
-          "then": {
-            "properties": {
-              "parameters": {
-                "$ref": "#/$defs/ForEachParameters"
-              }
-            },
-            "required": ["parameters"]
-          }
-        }
-      ],
-      "examples": [
-        {
-          "type": "QUERY_COMPONENT",
-          "comment": "Get the Health component of the actor entity",
-          "parameters": {
-            "entity_ref": "actor",
-            "component_type": "core:health",
-            "result_variable": "actorHealth"
-          }
-        },
-        {
-          "type": "MODIFY_COMPONENT",
-          "comment": "Decrease the actor's current HP by 10",
-          "parameters": {
-            "entity_ref": "actor",
-            "component_type": "core:health",
-            "field": "current",
-            "mode": "inc",
-            "value": -10
-          }
-        },
-        {
-          "type": "ADD_COMPONENT",
-          "comment": "Add a 'burning' status effect component to the target",
-          "parameters": {
-            "entity_ref": "target",
-            "component_type": "effect:status",
-            "value": {
-              "id": "burning",
-              "duration": 5,
-              "damagePerTick": 2
-            }
-          }
-        },
-        {
-          "type": "REMOVE_COMPONENT",
-          "comment": "Remove the 'frozen' status effect from the target",
-          "parameters": {
-            "entity_ref": "target",
-            "component_type": "effect:status_frozen"
-          }
-        },
-        {
-          "type": "DISPATCH_EVENT",
-          "parameters": {
-            "eventType": "event:quest_updated",
-            "payload": {
-              "questId": "{event.payload.questId}",
-              "newState": "completed",
-              "completedBy": "{actor.id}"
-            }
-          }
-        },
-        {
-          "type": "SET_VARIABLE",
-          "comment": "Store the player's current gold amount in a variable",
-          "parameters": {
-            "variable_name": "playerGold",
-            "value": "{actor.components['core:inventory'].gold}"
-          }
-        },
-        {
-          "type": "QUERY_SYSTEM_DATA",
-          "comment": "Query the weather system for the current temperature",
-          "parameters": {
-            "source": "weather_system",
-            "query": {
-              "type": "get_current_temperature",
-              "unit": "celsius"
-            },
-            "result_variable": "currentTemperature"
           }
         }
       ]
+    },
+    "SystemMoveEntityParameters": {
+      "type": "object",
+      "description": "Parameters for the SYSTEM_MOVE_ENTITY operation, which directly moves an entity to a new location without consuming a turn.",
+      "properties": {
+        "entity_ref": {
+          "$ref": "./common.schema.json#/definitions/entityReference",
+          "description": "Required. The entity to move."
+        },
+        "target_location_id": {
+          "type": "string",
+          "description": "Required. The namespaced ID of the location to move the entity to. Can be a placeholder string like '{event.payload.currentLocationId}'."
+        }
+      },
+      "required": ["entity_ref", "target_location_id"],
+      "additionalProperties": false
     },
     "QueryComponentParameters": {
       "type": "object",
       "description": "Parameters for the QUERY_COMPONENT operation.",
       "properties": {
         "entity_ref": {
-          "$ref": "./common.schema.json#/definitions/entityReference",
-          "description": "Required. Specifies the entity whose component is being queried."
+          "$ref": "./common.schema.json#/definitions/entityReference"
         },
         "component_type": {
-          "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. The namespaced ID of the component type to retrieve."
+          "$ref": "./common.schema.json#/definitions/namespacedId"
         },
         "result_variable": {
           "type": "string",
-          "description": "Required. Variable name in evaluationContext.context where the result will be stored. Must not contain leading/trailing whitespace.",
           "minLength": 1,
           "pattern": "^\\S(.*\\S)?$"
         }
@@ -325,46 +213,25 @@
       "description": "Parameters for the MODIFY_COMPONENT operation. Modifies a specific field within an existing component.",
       "properties": {
         "entity_ref": {
-          "$ref": "./common.schema.json#/definitions/entityReference",
-          "description": "Required. Target entity for the modification."
+          "$ref": "./common.schema.json#/definitions/entityReference"
         },
         "component_type": {
-          "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. Namespaced ID of the component containing the field."
+          "$ref": "./common.schema.json#/definitions/namespacedId"
         },
-        "field": {
-          "type": "string",
-          "description": "Required. Dot-separated path within the component to the field to modify.",
-          "minLength": 1
-        },
-        "mode": {
-          "type": "string",
-          "description": "Required. 'set' replaces the value; 'inc' adds numeric delta.",
-          "enum": ["set", "inc"]
-        },
-        "value": {
-          "description": "Required. The value to assign (for 'set') or numeric delta (for 'inc'). Placeholder resolution (using '{...}' syntax) may apply."
-        }
+        "field": { "type": "string", "minLength": 1 },
+        "mode": { "type": "string", "enum": ["set", "inc"] },
+        "value": {}
       },
       "required": ["entity_ref", "component_type", "field", "mode", "value"],
       "additionalProperties": false,
       "allOf": [
         {
           "if": {
-            "properties": {
-              "mode": {
-                "const": "inc"
-              }
-            },
+            "properties": { "mode": { "const": "inc" } },
             "required": ["mode"]
           },
           "then": {
-            "properties": {
-              "value": {
-                "type": "number",
-                "description": "Required numeric delta for 'inc' mode. Placeholder resolution (using '{...}' syntax) may apply."
-              }
-            },
+            "properties": { "value": { "type": "number" } },
             "required": ["value"]
           }
         }
@@ -375,18 +242,12 @@
       "description": "Parameters for the ADD_COMPONENT operation. Adds a component to an entity, replacing it if it already exists.",
       "properties": {
         "entity_ref": {
-          "$ref": "./common.schema.json#/definitions/entityReference",
-          "description": "Required. Specifies the entity to add the component to."
+          "$ref": "./common.schema.json#/definitions/entityReference"
         },
         "component_type": {
-          "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. The namespaced ID of the component type to add."
+          "$ref": "./common.schema.json#/definitions/namespacedId"
         },
-        "value": {
-          "type": "object",
-          "description": "Required. The data object representing the component instance to add. Placeholder resolution (using '{...}' syntax) may apply within values.",
-          "minProperties": 0
-        }
+        "value": { "type": "object", "minProperties": 0 }
       },
       "required": ["entity_ref", "component_type", "value"],
       "additionalProperties": false
@@ -396,12 +257,10 @@
       "description": "Parameters for the REMOVE_COMPONENT operation. Removes a component from an entity.",
       "properties": {
         "entity_ref": {
-          "$ref": "./common.schema.json#/definitions/entityReference",
-          "description": "Required. Specifies the entity to remove the component from."
+          "$ref": "./common.schema.json#/definitions/entityReference"
         },
         "component_type": {
-          "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. The namespaced ID of the component type to remove."
+          "$ref": "./common.schema.json#/definitions/namespacedId"
         }
       },
       "required": ["entity_ref", "component_type"],
@@ -412,42 +271,27 @@
       "description": "Parameters for the DISPATCH_EVENT operation. Sends an event through the dispatcher.",
       "properties": {
         "eventType": {
-          "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Required. Namespaced ID of the event to dispatch."
+          "$ref": "./common.schema.json#/definitions/namespacedId"
         },
-        "payload": {
-          "type": "object",
-          "description": "Optional event payload object. Defaults to {} if omitted. Strings using '{...}' syntax are treated as placeholders resolved at runtime.",
-          "default": {}
-        }
+        "payload": { "type": "object", "default": {} }
       },
       "required": ["eventType"],
-      "additionalProperties": false,
-      "$comment": "Placeholders (e.g., \"{actor.id}\", \"{event.payload.value}\") are resolved by DispatchEventHandler before dispatch."
+      "additionalProperties": false
     },
     "IfParameters": {
       "type": "object",
       "description": "Parameters for the IF operation, enabling conditional execution.",
       "properties": {
-        "condition": {
-          "$ref": "./json-logic.schema.json#",
-          "description": "Required. JSON-Logic condition to evaluate. Variables from the evaluation context (e.g., results from previous operations) can be accessed using the 'var' operator."
-        },
+        "condition": { "$ref": "./json-logic.schema.json#" },
         "then_actions": {
           "type": "array",
-          "description": "Required. Operations executed if the condition is true.",
-          "items": {
-            "$ref": "#/$defs/Operation"
-          },
-          "minItems": 1
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/Operation" }
         },
         "else_actions": {
           "type": "array",
-          "description": "Optional. Operations executed if the condition is false.",
-          "items": {
-            "$ref": "#/$defs/Operation"
-          },
-          "default": []
+          "default": [],
+          "items": { "$ref": "#/$defs/Operation" }
         }
       },
       "required": ["condition", "then_actions"],
@@ -457,14 +301,9 @@
       "type": "object",
       "description": "Parameters for the LOG operation, used for debugging.",
       "properties": {
-        "message": {
-          "type": "string",
-          "description": "Required. Message template to log (can contain placeholders like {actor.id} or {variableName}).",
-          "minLength": 1
-        },
+        "message": { "type": "string", "minLength": 1 },
         "level": {
           "type": "string",
-          "description": "Optional logging level.",
           "enum": ["debug", "info", "warn", "error"],
           "default": "info"
         }
@@ -478,13 +317,10 @@
       "properties": {
         "variable_name": {
           "type": "string",
-          "description": "Required. The name of the variable to set or update in the evaluation context. Must not contain leading/trailing whitespace.",
           "minLength": 1,
           "pattern": "^\\S(.*\\S)?$"
         },
-        "value": {
-          "description": "Required. The value to assign to the variable. Can be any valid JSON type (string, number, boolean, object, array, null). Placeholder resolution (using '{...}' syntax) applies."
-        }
+        "value": {}
       },
       "required": ["variable_name", "value"],
       "additionalProperties": false
@@ -493,18 +329,10 @@
       "type": "object",
       "description": "Parameters for the QUERY_SYSTEM_DATA operation. Queries an external system or data source and stores the result in a context variable.",
       "properties": {
-        "source_id": {
-          "type": "string",
-          "description": "Required. Identifier for the target system or data source (e.g., 'world_state', 'weather_api', 'player_stats_db').",
-          "minLength": 1
-        },
-        "query_details": {
-          "type": ["string", "object"],
-          "description": "Required. The query details to send to the source. Can be a simple string or a structured object, depending on the source's requirements. Placeholder resolution (using '{...}' syntax) may apply."
-        },
+        "source_id": { "type": "string", "minLength": 1 },
+        "query_details": { "type": ["string", "object"] },
         "result_variable": {
           "type": "string",
-          "description": "Required. Variable name in evaluationContext.context where the query result will be stored. Must not contain leading/trailing whitespace.",
           "minLength": 1,
           "pattern": "^\\S(.*\\S)?$"
         }
@@ -516,21 +344,12 @@
       "type": "object",
       "description": "Parameters for the FOR_EACH loop operation.",
       "properties": {
-        "collection": {
-          "type": "string",
-          "description": "JSON-Path (dot-notation) inside evaluationContext to the array to iterate (e.g. 'context.followers')"
-        },
-        "item_variable": {
-          "type": "string",
-          "description": "Variable name that receives each element inside the loop’s evaluationContext.context"
-        },
+        "collection": { "type": "string" },
+        "item_variable": { "type": "string" },
         "actions": {
           "type": "array",
           "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/Operation"
-          },
-          "description": "Nested operations executed once per element"
+          "items": { "$ref": "#/$defs/Operation" }
         }
       },
       "required": ["collection", "item_variable", "actions"],

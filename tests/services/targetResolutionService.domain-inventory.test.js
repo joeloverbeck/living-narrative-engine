@@ -1,4 +1,4 @@
-// src/tests/services/targetResolutionService.domain-inventory.test.js
+// tests/services/targetResolutionService.domain-inventory.test.js
 
 import {
   describe,
@@ -118,15 +118,8 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
     test('Tests behavior when the actor lacks an inventory component.', async () => {
       // Setup
       const mockActorEntity = new Entity('actor1', 'dummy'); // No inventory component added
-      // Ensure hasComponent returns false for inventory
-      const originalHasComponent = mockActorEntity.hasComponent;
-      mockActorEntity.hasComponent = jest.fn((compId) => {
-        if (compId === INVENTORY_COMPONENT_ID) return false;
-        return originalHasComponent.call(mockActorEntity, compId);
-      });
-
       const nounPhrase = 'sword';
-      const actionContext = createActionContext(nounPhrase, mockActorEntity); // Corrected context
+      const actionContext = createActionContext(nounPhrase, mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -140,23 +133,20 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       expect(result.targetId).toBeNull();
       expect(result.error).toBe('You are not carrying anything.');
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        // Check console.warn from entityScopeService
-        `entityScopeService._handleInventory: Scope 'inventory' requested but player ${mockActorEntity.id} lacks component data for ID "${INVENTORY_COMPONENT_ID}".`
-      );
-      // Check overall logger calls for this specific test
-      // TRS log will now show the actual nounPhrase used
+      // --- CHANGE START ---
+      // The console.warn from entityScopeService was removed in the refactor, which is correct.
+      // We now only check for the logger.warn from TargetResolutionService's emptyScopeCheck.
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `TargetResolutionService.resolveActionTarget called for action: '${actionDefinition.id}', actor: '${mockActorEntity.id}', noun: "${nounPhrase}"`
       );
-      // _resolveInventoryDomain log will also show the nounPhrase
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveInventoryDomain called for actor: '${mockActorEntity.id}', nounPhrase: "${nounPhrase}"`
-      );
-      // TRS internal warning about missing component (different from ESS console.warn)
+
+      // This is the new, correct warning message from within the domain configuration.
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveInventoryDomain: Actor 'actor1' is missing '${INVENTORY_COMPONENT_ID}' component (checked after getEntityIdsForScopes returned empty).`
+        `T-Service(inventory): Actor 'actor1' is missing '${INVENTORY_COMPONENT_ID}'.`
       );
+      // --- CHANGE END ---
     });
   });
 
@@ -166,7 +156,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       // Setup
       const mockActorEntity = new Entity('actor1', 'dummy');
       mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: [] }); // Empty inventory
-      const actionContext = createActionContext('sword', mockActorEntity); // Corrected context
+      const actionContext = createActionContext('sword', mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -179,16 +169,20 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBeNull();
       expect(result.error).toBe('Your inventory is empty.');
+
+      // --- CHANGE START ---
+      // The log message was updated in the refactor.
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveInventoryDomain: Actor 'actor1' inventory is empty (getEntityIdsForScopes returned empty set).`
+        `T-Service(inventory): Actor 'actor1' inventory is empty.`
       );
+      // --- CHANGE END ---
     });
 
     test('Tests behavior with an inventory component having items: null', async () => {
       // Setup
       const mockActorEntity = new Entity('actor1', 'dummy');
       mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, { items: null }); // Invalid items property
-      const actionContext = createActionContext('sword', mockActorEntity); // Corrected context
+      const actionContext = createActionContext('sword', mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -200,17 +194,21 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBeNull();
-      expect(result.error).toBe('Your inventory is empty.'); // ESS logs warning, returns empty set, TRS handles empty set
+      expect(result.error).toBe('Your inventory is empty.'); // Correct user-facing error
+
+      // --- CHANGE START ---
+      // The log message was updated in the refactor.
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveInventoryDomain: Actor 'actor1' inventory is empty (getEntityIdsForScopes returned empty set).`
+        `T-Service(inventory): Actor 'actor1' inventory is empty.`
       );
+      // --- CHANGE END ---
     });
 
     test('Tests behavior with an inventory component being an empty object {}', async () => {
       // Setup
       const mockActorEntity = new Entity('actor1', 'dummy');
       mockActorEntity.addComponent(INVENTORY_COMPONENT_ID, {}); // No items property
-      const actionContext = createActionContext('sword', mockActorEntity); // Corrected context
+      const actionContext = createActionContext('sword', mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -222,10 +220,14 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
       expect(result.targetId).toBeNull();
-      expect(result.error).toBe('Your inventory is empty.'); // ESS logs warning, returns empty set, TRS handles empty set
+      expect(result.error).toBe('Your inventory is empty.'); // Correct user-facing error
+
+      // --- CHANGE START ---
+      // The log message was updated in the refactor.
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveInventoryDomain: Actor 'actor1' inventory is empty (getEntityIdsForScopes returned empty set).`
+        `T-Service(inventory): Actor 'actor1' inventory is empty.`
       );
+      // --- CHANGE END ---
     });
   });
 
@@ -244,7 +246,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
         if (itemId === 'actor1') return mockActorEntity;
         return undefined;
       });
-      const actionContext = createActionContext('Valid Item', mockActorEntity); // Corrected context
+      const actionContext = createActionContext('Valid Item', mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -274,7 +276,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
         if (id === 'actor1') return mockActorEntity;
         return undefined;
       });
-      const actionContext = createActionContext('thing', mockActorEntity); // Corrected context
+      const actionContext = createActionContext('thing', mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -311,7 +313,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
         if (id === 'actor1') return mockActorEntity;
         return undefined;
       });
-      const actionContext = createActionContext('thing', mockActorEntity); // Corrected context
+      const actionContext = createActionContext('thing', mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -345,7 +347,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
         if (id === 'actor1') return mockActorEntity;
         return undefined;
       });
-      const actionContext = createActionContext('', mockActorEntity); // Corrected context (empty string)
+      const actionContext = createActionContext('', mockActorEntity); // empty string
 
       // Action
       const result = await service.resolveActionTarget(
@@ -380,7 +382,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
         if (id === 'actor1') return mockActorEntity;
         return undefined;
       });
-      const actionContext = createActionContext('Steel Sword', mockActorEntity); // Corrected context
+      const actionContext = createActionContext('Steel Sword', mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -417,7 +419,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
         return undefined;
       });
       const nounPhrase = 'Long';
-      const actionContext = createActionContext(nounPhrase, mockActorEntity); // Corrected context
+      const actionContext = createActionContext(nounPhrase, mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -459,7 +461,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
         if (id === 'actor1') return mockActorEntity;
         return undefined;
       });
-      const actionContext = createActionContext('Shield', mockActorEntity); // Corrected context
+      const actionContext = createActionContext('Shield', mockActorEntity);
 
       // Action
       const result = await service.resolveActionTarget(
@@ -496,7 +498,7 @@ describe("TargetResolutionService - Domain 'inventory'", () => {
       const actionContext = createActionContext(
         'Fallback Item Name',
         mockActorEntity
-      ); // Corrected context
+      );
 
       // Action
       const result = await service.resolveActionTarget(

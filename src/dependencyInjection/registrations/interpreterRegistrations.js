@@ -22,7 +22,7 @@ import QueryComponentHandler from '../../logic/operationHandlers/queryComponentH
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
 import QuerySystemDataHandler from '../../logic/operationHandlers/querySystemDataHandler.js';
-import ForEachHandler from '../../logic/operationHandlers/forEachHandler.js'; // ★ NEW
+import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler';
 
 /** @param {AppContainer} container */
 export function registerInterpreters(container) {
@@ -110,6 +110,16 @@ export function registerInterpreters(container) {
           systemDataRegistry: c.resolve(tokens.SystemDataRegistry),
         }),
     ],
+    [
+      tokens.SystemMoveEntityHandler,
+      SystemMoveEntityHandler,
+      (c, h) =>
+        new h({
+          entityManager: c.resolve(tokens.IEntityManager),
+          dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+          logger: c.resolve(tokens.ILogger),
+        }),
+    ],
   ];
 
   for (const [token, ctor, factory] of handlerFactories) {
@@ -132,34 +142,19 @@ export function registerInterpreters(container) {
     reg.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));
     reg.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
     reg.register('QUERY_SYSTEM_DATA', bind(tokens.QuerySystemDataHandler));
-    // FOR_EACH will be wired a few lines below, once the interpreter exists.
+    reg.register('SYSTEM_MOVE_ENTITY', bind(tokens.SystemMoveEntityHandler));
 
     return reg;
   });
 
   // ---------------------------------------------------------------------------
-  //  OperationInterpreter  (creates + wires FOR_EACH handler)
+  //  OperationInterpreter
   // ---------------------------------------------------------------------------
   registrar.singletonFactory(tokens.OperationInterpreter, (c) => {
-    const interpreter = new OperationInterpreter({
+    return new OperationInterpreter({
       logger: c.resolve(tokens.ILogger),
       operationRegistry: c.resolve(tokens.OperationRegistry),
     });
-
-    // --- Build & register the FOR_EACH handler (needs interpreter) -------------
-    const forEach = new ForEachHandler({
-      logger: c.resolve(tokens.ILogger),
-      operationInterpreter: interpreter,
-    });
-    c.resolve(tokens.OperationRegistry).register(
-      'FOR_EACH',
-      forEach.execute.bind(forEach)
-    );
-
-    // also expose it through DI (optional)
-    container.registerInstance?.(tokens.ForEachHandler, forEach);
-
-    return interpreter;
   });
 
   // ---------------------------------------------------------------------------

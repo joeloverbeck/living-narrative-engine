@@ -1,4 +1,5 @@
-// src/tests/dependencyInjection/coreSystemsRegistrations.test.js
+// tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js
+// ****** MODIFIED FILE ******
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
 // --- DI Container & Configuration ---
@@ -15,7 +16,7 @@ import {
 } from '../../../src/constants/componentIds.js';
 
 /**
- * @typedef {import('../../src/entities/entity.js').default} Entity
+ * @typedef {import('../../../src/entities/entity.js').default} Entity
  */
 
 describe('Core Systems Registrations: Turn Handler Creation', () => {
@@ -92,14 +93,13 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           turnStateFactory: c.resolve(tokens.ITurnStateFactory),
           gameWorldAccess: c.resolve(tokens.IWorldContext),
           turnEndPort: c.resolve(tokens.ITurnEndPort),
-          // FIXED: Use the correct property name 'llmAdapter' and token 'LLMAdapter'
           llmAdapter: c.resolve(tokens.LLMAdapter),
           commandProcessor: c.resolve(tokens.ICommandProcessor),
           commandOutcomeInterpreter: c.resolve(
             tokens.ICommandOutcomeInterpreter
           ),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-          subscriptionManager: c.resolve(tokens.SubscriptionLifecycleManager),
+          commandInputPort: c.resolve(tokens.ICommandInputPort), // MODIFIED: Provide correct dependency
           entityManager: c.resolve(tokens.IEntityManager),
           actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
           promptBuilder: c.resolve(tokens.IPromptBuilder),
@@ -111,7 +111,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
           promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
           llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
-          aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline), // This was missing
+          aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
         });
       },
       { lifecycle: 'transient' }

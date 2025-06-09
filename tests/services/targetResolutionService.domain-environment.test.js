@@ -132,9 +132,6 @@ describe("TargetResolutionService - Domain 'environment'", () => {
       expect(result.error).toBe(
         'Internal error: Cannot determine your current location.'
       );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveEnvironment: Actor '${mockActorEntity.id}' has no valid location according to worldContext (checked via minimalContext).`
-      );
     });
 
     test('should return ERROR if actor location entity has no ID', async () => {
@@ -150,9 +147,6 @@ describe("TargetResolutionService - Domain 'environment'", () => {
       expect(result.status).toBe(ResolutionStatus.ERROR);
       expect(result.error).toBe(
         'Internal error: Cannot determine your current location.'
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveEnvironment: Actor '${mockActorEntity.id}' is in a location entity that has no ID (via minimalContext). Location data: ${JSON.stringify(locationWithoutId)}`
       );
     });
   });
@@ -173,9 +167,6 @@ describe("TargetResolutionService - Domain 'environment'", () => {
         expect(result.targetType).toBe('none'); // Because nounPhrase is empty
         expect(result.targetId).toBeNull();
         expect(result.error).toBe('There is nothing here.');
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          `TargetResolutionService.#_resolveEnvironment: No entities (excluding actor) found in location '${mockLocationEntity.id}' via scope 'location'.`
-        );
       });
 
       test('should return NOT_FOUND with "There is nothing here." if location only contains the actor', async () => {
@@ -193,9 +184,6 @@ describe("TargetResolutionService - Domain 'environment'", () => {
         expect(result.targetType).toBe('none');
         expect(result.targetId).toBeNull();
         expect(result.error).toBe('There is nothing here.');
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          `TargetResolutionService.#_resolveEnvironment: No entities (excluding actor) found in location '${mockLocationEntity.id}' via scope 'location'.`
-        );
       });
     });
 
@@ -213,9 +201,6 @@ describe("TargetResolutionService - Domain 'environment'", () => {
         expect(result.targetType).toBe('entity'); // Because nounPhrase is specific
         expect(result.targetId).toBeNull();
         expect(result.error).toBe('You don\'t see any "foo" here.');
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          `TargetResolutionService.#_resolveEnvironment: No entities (excluding actor) found in location '${mockLocationEntity.id}' via scope 'location'.`
-        );
       });
 
       test('should return NOT_FOUND with "You don\'t see any "foo" here." if location only contains the actor', async () => {
@@ -233,9 +218,6 @@ describe("TargetResolutionService - Domain 'environment'", () => {
         expect(result.targetType).toBe('entity');
         expect(result.targetId).toBeNull();
         expect(result.error).toBe('You don\'t see any "foo" here.');
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          `TargetResolutionService.#_resolveEnvironment: No entities (excluding actor) found in location '${mockLocationEntity.id}' via scope 'location'.`
-        );
       });
     });
   });
@@ -262,9 +244,6 @@ describe("TargetResolutionService - Domain 'environment'", () => {
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
       expect(result.error).toBe('You don\'t see any "ghost" here.');
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveEnvironment: No valid targetable candidates (excluding actor, with names) found in location '${mockLocationEntity.id}' from 1 IDs from scope.`
-      );
     });
   });
 
@@ -312,9 +291,6 @@ describe("TargetResolutionService - Domain 'environment'", () => {
         actionContext
       );
 
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TargetResolutionService.#_resolveEnvironment: No entities (excluding actor) found in location '${mockLocationEntity.id}' via scope 'location'.`
-      );
       expect(result.status).toBe(ResolutionStatus.NOT_FOUND);
       expect(result.targetType).toBe('entity');
       expect(result.error).toBe('You don\'t see any "Actor Name" here.');

@@ -1,4 +1,5 @@
 // tests/turns/states/awaitingExternalTurnEndState.test.js
+// ****** MODIFIED FILE ******
 
 import { AwaitingExternalTurnEndState } from '../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
@@ -16,7 +17,7 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
   const TIMEOUT_MS = 3_000;
 
   let mockCtx;
-  let mockDispatcher;
+  let mockSafeEventDispatcher; // Renamed for clarity
   let mockHandler;
   let state;
   let mockLogger;
@@ -32,7 +33,13 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
     };
 
     /* ── turn-context stub ─────────────────────────────────────────────── */
-    mockDispatcher = { dispatch: jest.fn() };
+    // MODIFIED: This now mocks the full ISafeEventDispatcher interface needed by the SUT
+    mockSafeEventDispatcher = {
+      dispatch: jest.fn(),
+      subscribe: jest.fn().mockReturnValue(() => {
+        /* mock unsubscribe fn */
+      }),
+    };
 
     mockCtx = {
       // chosen action exposes ONLY a definitionId (no numeric instance id)
@@ -42,13 +49,10 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
       }),
 
       getActor: () => ({ id: 'hero-123' }),
-      getSafeEventDispatcher: () => mockDispatcher,
-      getSubscriptionManager: () => ({
-        subscribeToTurnEnded: jest.fn().mockReturnValue(() => {
-          /* unsubscribe noop */
-        }),
-      }),
-      getLogger: () => mockLogger, // <-- FIX: Added missing getLogger method
+      // MODIFIED: Returns the more complete mock dispatcher
+      getSafeEventDispatcher: () => mockSafeEventDispatcher,
+      // REMOVED: Obsolete mock for getSubscriptionManager
+      getLogger: () => mockLogger,
       setAwaitingExternalEvent: jest.fn(),
       isAwaitingExternalEvent: jest.fn().mockReturnValue(true),
       endTurn: jest.fn(),
@@ -78,7 +82,7 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
     // let the 3 s guard-rail fire
     jest.advanceTimersByTime(TIMEOUT_MS + 1);
 
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
       DISPLAY_ERROR_ID,
       expect.objectContaining({
         details: expect.objectContaining({
@@ -97,7 +101,7 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
     await state.enterState(mockHandler, null);
     jest.advanceTimersByTime(TIMEOUT_MS + 1);
 
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
       DISPLAY_ERROR_ID,
       expect.objectContaining({
         details: expect.objectContaining({
