@@ -1,7 +1,6 @@
 // src/turns/constants/eventIds.js
 
 // Existing Event IDs
-export const NEW_GAME_STARTED_ID = 'core:new_game_started';
 export const GAME_SAVED_ID = 'core:game_saved';
 export const TURN_STARTED_ID = 'core:turn_started';
 export const TURN_ENDED_ID = 'core:turn_ended';

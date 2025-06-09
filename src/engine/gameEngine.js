@@ -3,7 +3,6 @@
 import { tokens } from '../dependencyInjection/tokens.js';
 import {
   GAME_SAVED_ID,
-  NEW_GAME_STARTED_ID,
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
   ENGINE_OPERATION_IN_PROGRESS_UI,
@@ -188,12 +187,11 @@ class GameEngine {
    * 2. Sets `#isEngineInitialized` to `true`.
    * 3. Sets `#isGameLoopRunning` to `true`.
    * 4. Starts a new session on `#playtimeTracker`.
-   * 5. Dispatches `NEW_GAME_STARTED_ID` event with `worldName`.
-   * 6. Logs dispatching of UI event for game ready.
-   * 7. Dispatches `ENGINE_READY_UI` event with `activeWorld` (which is `#activeWorld`) and a default message.
-   * 8. Logs start of `TurnManager`.
-   * 9. Starts the `#turnManager`.
-   * 10. Logs that the new game has started and is ready, including the active world name.
+   * 5. Logs dispatching of UI event for game ready.
+   * 6. Dispatches `ENGINE_READY_UI` event with `activeWorld` (which is `#activeWorld`) and a default message.
+   * 7. Logs start of `TurnManager`.
+   * 8. Starts the `#turnManager`.
+   * 9. Logs that the new game has started and is ready, including the active world name.
    */
   async _finalizeNewGameSuccess(worldName) {
     this.#logger.debug(
@@ -211,10 +209,6 @@ class GameEngine {
         'GameEngine._finalizeNewGameSuccess: PlaytimeTracker not available, cannot start session.'
       );
     }
-
-    await this.#safeEventDispatcher.dispatch(NEW_GAME_STARTED_ID, {
-      worldName,
-    });
 
     this.#logger.debug(
       'GameEngine._finalizeNewGameSuccess: Dispatching UI event for game ready.'

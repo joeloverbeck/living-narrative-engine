@@ -12,7 +12,6 @@ import GameEngine from '../../src/engine/gameEngine.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import {
   GAME_SAVED_ID,
-  NEW_GAME_STARTED_ID,
   // --- Import new UI Event IDs ---
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
@@ -216,10 +215,6 @@ describe('GameEngine', () => {
         mockInitializationService.runInitializationSequence
       ).toHaveBeenCalledWith(MOCK_WORLD_NAME);
       expect(mockPlaytimeTracker.startSession).toHaveBeenCalled();
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        NEW_GAME_STARTED_ID,
-        { worldName: MOCK_WORLD_NAME }
-      );
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_READY_UI,
         {
