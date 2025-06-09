@@ -30,7 +30,6 @@ import { DomainContextCompatibilityChecker } from '../../../src/validation/domai
 import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import CommandParser from '../../../src/commands/commandParser.js';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
-import LeaderListSyncService from '../../../src/actions/services/leaderListSyncService.js';
 
 describe('registerCommandAndAction', () => {
   /** @type {AppContainer} */
@@ -99,11 +98,6 @@ describe('registerCommandAndAction', () => {
       )}.`
     );
     expect(logCalls).toContain(
-      `Command and Action Registration: Registered ${String(
-        tokens.LeaderListSyncService
-      )}.`
-    );
-    expect(logCalls).toContain(
       `Command and Action Registration: Registered ${String(tokens.ICommandParser)}.`
     );
     expect(logCalls).toContain(
@@ -156,12 +150,6 @@ describe('registerCommandAndAction', () => {
       {
         token: tokens.TargetResolutionService,
         Class: TargetResolutionService,
-        lifecycle: 'singletonFactory',
-        tags: undefined,
-      },
-      {
-        token: tokens.LeaderListSyncService,
-        Class: LeaderListSyncService,
         lifecycle: 'singletonFactory',
         tags: undefined,
       },

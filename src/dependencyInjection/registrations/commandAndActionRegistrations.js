@@ -32,7 +32,6 @@ import { DomainContextCompatibilityChecker } from '../../validation/domainContex
 import { ActionValidationService } from '../../actions/validation/actionValidationService.js';
 import CommandParser from '../../commands/commandParser.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
-import LeaderListSyncService from '../../actions/services/leaderListSyncService.js';
 
 // --- Helper Function Imports ---
 import { formatActionCommand } from '../../actions/actionFormatter.js';
@@ -109,18 +108,6 @@ export function registerCommandAndAction(container) {
   });
   logger.debug(
     `Command and Action Registration: Registered ${String(tokens.TargetResolutionService)}.`
-  );
-
-  r.singletonFactory(
-    tokens.LeaderListSyncService,
-    (c) =>
-      new LeaderListSyncService({
-        logger: c.resolve(tokens.ILogger),
-        entityManager: c.resolve(tokens.IEntityManager),
-      })
-  );
-  logger.debug(
-    `Command and Action Registration: Registered ${String(tokens.LeaderListSyncService)}.`
   );
 
   // --- Command Parsing and Processing ---

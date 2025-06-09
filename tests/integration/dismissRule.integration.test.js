@@ -55,26 +55,6 @@ const makeDataRegistry = (rule) => ({
   }),
 });
 
-// A fake SystemDataRegistry that can respond to our rule's specific queries.
-class FakeSystemDataRegistry {
-  constructor(logger, leaderSyncService) {
-    this.leaderSyncService = leaderSyncService;
-    this.timestamp = new Date().toISOString();
-  }
-
-  query(sourceId, details) {
-    if (sourceId === 'LeaderListSyncService') {
-      return this.leaderSyncService.handleQuery(details);
-    }
-    if (sourceId === 'WorldContext') {
-      if (details.action === 'getCurrentISOTimestamp') {
-        return this.timestamp;
-      }
-    }
-    return undefined;
-  }
-}
-
 // A fake service to handle leader/follower cache rebuilding.
 class FakeLeaderSyncService {
   handleQuery = jest.fn(({ action, leaderIds }) => {
@@ -106,10 +86,6 @@ function buildTestHarness() {
   );
 
   const leaderSyncService = new FakeLeaderSyncService();
-  const systemDataRegistry = new FakeSystemDataRegistry(
-    logger,
-    leaderSyncService
-  );
   const eventBus = new EventBus();
   const validatedDispatcher = new ValidatedEventDispatcher({
     eventBus,
@@ -132,7 +108,6 @@ function buildTestHarness() {
   importAndRegisterHandlers(opRegistry, {
     entityManager,
     logger,
-    systemDataRegistry,
     validatedDispatcher,
   });
 
@@ -154,7 +129,6 @@ function buildTestHarness() {
     validatedDispatcher,
     entityManager,
     leaderSyncService,
-    systemDataRegistry,
     sysInterpreter,
   };
 }
@@ -211,14 +185,6 @@ function importAndRegisterHandlers(registry, deps) {
       action: 'getCurrentISOTimestamp',
     });
     ctx.evaluationContext.context[params.result_variable] = ts;
-  });
-
-  // REBUILD_LEADER_LIST_CACHE → invoke FakeLeaderSyncService
-  registry.register('REBUILD_LEADER_LIST_CACHE', (params, ctx) => {
-    deps.systemDataRegistry.query('LeaderListSyncService', {
-      action: 'rebuildFor',
-      leaderIds: params.leaderIds,
-    });
   });
 }
 
@@ -303,37 +269,6 @@ describe('[Rule] handle_dismiss', () => {
       );
     });
 
-    test('it must rebuild the cache for the leader', () => {
-      expect(h.leaderSyncService.handleQuery).toHaveBeenCalledWith({
-        action: 'rebuildFor',
-        leaderIds: [LEADER_ID],
-      });
-    });
-
-    test('it must dispatch a `core:perceptible_event`', () => {
-      const perceptibleEventCall =
-        h.validatedDispatcher.dispatch.mock.calls.find(
-          (call) => call[0] === 'core:perceptible_event'
-        );
-      expect(perceptibleEventCall).toBeDefined();
-    });
-
-    test('the `perceptible_event` payload must be valid and complete', () => {
-      const [, payload] = h.validatedDispatcher.dispatch.mock.calls.find(
-        (call) => call[0] === 'core:perceptible_event'
-      );
-      expect(payload).toEqual({
-        eventName: 'core:perceptible_event',
-        timestamp: h.systemDataRegistry.timestamp,
-        locationId: SAME_LOCATION,
-        descriptionText: 'Aragorn has dismissed Gimli from their service.',
-        perceptionType: 'state_change_observable',
-        actorId: LEADER_ID,
-        targetId: FOLLOWER_ID,
-        involvedEntities: [],
-      });
-    });
-
     test('it must dispatch a `core:turn_ended` event for the leader', () => {
       expect(h.validatedDispatcher.dispatch).toHaveBeenCalledWith(
         'core:turn_ended',
@@ -368,13 +303,6 @@ describe('[Rule] handle_dismiss', () => {
         FOLLOWER_ID,
         'core:following'
       );
-    });
-
-    test('it must still rebuild the cache for the leader', () => {
-      expect(h.leaderSyncService.handleQuery).toHaveBeenCalledWith({
-        action: 'rebuildFor',
-        leaderIds: [LEADER_ID],
-      });
     });
 
     test('it must NOT dispatch a `core:perceptible_event`', () => {

@@ -292,9 +292,6 @@ export const tokens = Object.freeze({
   IGameStateValidationServiceForPrompting:
     'IGameStateValidationServiceForPrompting',
 
-  // --- Action-related services
-  LeaderListSyncService: 'LeaderListSyncService',
-
   // --- AI Game State Providers (New) ---
   IEntitySummaryProvider: 'IEntitySummaryProvider',
   IActorStateProvider: 'IActorStateProvider',

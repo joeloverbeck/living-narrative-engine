@@ -5,14 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Phasing out QuerySystemDataHandler.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/actions/services/followValidationService.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/services/leaderListSyncService.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/stopFollowingRule.integration.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/followAutoMove.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/followAutoMove.integration.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,6 +71,22 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="DIRECTORY" />
+      <test-directory value="$PROJECT_DIR$/tests" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Jest.Tests in tests\" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -86,7 +101,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749479545104</updated>
-      <workItem from="1749479546547" duration="17324000" />
+      <workItem from="1749479546547" duration="17686000" />
     </task>
     <task id="LOCAL-00001" summary="Implemented follow system.">
       <option name="closed" value="true" />
@@ -160,7 +175,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749496219856</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Phasing out QuerySystemDataHandler.">
+      <option name="closed" value="true" />
+      <created>1749497146527</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1749497146527</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
