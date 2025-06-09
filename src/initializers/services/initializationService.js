@@ -7,7 +7,6 @@
 /** @typedef {import('../../loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('../systemInitializer.js').default} SystemInitializer */
 /** @typedef {import('../worldInitializer.js').default} WorldInitializer */
-/** @typedef {import('../../setup/inputSetupService.js').default} InputSetupService */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 // --- Interface Imports for JSDoc & `extends` ---
@@ -208,16 +207,6 @@ class InitializationService extends IInitializationService {
       this.#logger.debug(
         'InitializationService: Initial world entities instantiated and spatial index built.'
       );
-
-      this.#logger.debug('Resolving InputSetupService...');
-      const inputSetupService = /** @type {InputSetupService} */ (
-        this.#container.resolve(tokens.InputSetupService)
-      );
-      this.#logger.debug(
-        'InputSetupService resolved. Configuring input handler...'
-      );
-      inputSetupService.configureInputHandler();
-      this.#logger.debug('InitializationService: Input handler configured.');
 
       // Register AI persistence listeners
       const dispatcher =

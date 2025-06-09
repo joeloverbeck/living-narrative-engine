@@ -34,10 +34,6 @@ const mockWorldInitializer = {
   buildSpatialIndex: jest.fn(),
 };
 
-const mockInputSetupService = {
-  configureInputHandler: jest.fn(),
-};
-
 class MockDomUiFacade {
   constructor() {
     /* Empty */
@@ -87,7 +83,6 @@ beforeEach(() => {
   container.register(tokens.WorldLoader, mockWorldLoader);
   container.register(tokens.SystemInitializer, mockSystemInitializer);
   container.register(tokens.WorldInitializer, mockWorldInitializer);
-  container.register(tokens.InputSetupService, mockInputSetupService);
   container.register(tokens.DomUiFacade, MockDomUiFacade, {
     lifecycle: 'singleton',
     dependencies: [],
@@ -201,7 +196,6 @@ describe('InitializationService', () => {
 
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
       expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalled();
-      expect(mockInputSetupService.configureInputHandler).toHaveBeenCalled();
     });
 
     it('should resolve DomUiFacade using the correct token from tokens.js', async () => {
@@ -316,20 +310,6 @@ describe('InitializationService', () => {
           throw testError;
         }
       );
-      const result =
-        await initializationService.runInitializationSequence(testWorldName);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe(testError);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('CRITICAL ERROR'),
-        testError
-      );
-    });
-
-    it('should return failure and log error if InputSetupService fails', async () => {
-      mockInputSetupService.configureInputHandler.mockImplementationOnce(() => {
-        throw testError;
-      });
       const result =
         await initializationService.runInitializationSequence(testWorldName);
       expect(result.success).toBe(false);

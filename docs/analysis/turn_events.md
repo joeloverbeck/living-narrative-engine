@@ -54,7 +54,6 @@
 - **Line Number:** ~207
 - **Event Name:** `core:display_message`
 - **Payload Structure/Example:** `{ text: string, type: 'warning', recipientEntityId?: string }` (Example: `{ text: 'Please enter a command.', type: 'warning', recipientEntityId: [actorId] }`)
-- **Dispatch Context/Reason:** Warning: The player submitted an empty or invalid command string via the `core:submit_command` event.
 
 - **Line Number:** ~241
 - **Event Name:** `core:disable_input`

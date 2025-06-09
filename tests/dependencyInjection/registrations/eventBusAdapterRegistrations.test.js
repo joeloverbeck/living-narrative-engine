@@ -22,7 +22,6 @@ import { registerEventBusAdapters } from '../../../src/dependencyInjection/regis
 import { SHUTDOWNABLE } from '../../../src/dependencyInjection/tags.js';
 
 // --- Concrete Class Imports for `instanceof` checks ---
-import { EventBusCommandInputGateway } from '../../../src/turns/adapters/eventBusCommandInputGateway.js';
 import { EventBusPromptAdapter } from '../../../src/turns/adapters/eventBusPromptAdapter.js';
 import EventBusTurnEndAdapter from '../../../src/turns/adapters/eventBusTurnEndAdapter.js';
 
@@ -69,44 +68,14 @@ describe('registerEventBusAdapters', () => {
 
     expect(logCalls[0]).toBe('Event Bus Adapter Registrations: Starting...');
     expect(logCalls[1]).toContain(
-      `Registered EventBusCommandInputGateway as ${tokens.ICommandInputPort}`
-    );
-    expect(logCalls[2]).toContain(
       `Registered EventBusPromptAdapter as ${tokens.IPromptOutputPort}`
     );
-    expect(logCalls[3]).toContain(
+    expect(logCalls[2]).toContain(
       `Registered EventBusTurnEndAdapter as ${tokens.ITurnEndPort}`
     );
-    expect(logCalls[4]).toBe(
+    expect(logCalls[3]).toBe(
       'Event Bus Adapter Registrations: All registrations complete.'
     );
-  });
-
-  describe('ICommandInputPort (EventBusCommandInputGateway) Registration', () => {
-    test('should register as a tagged singleton factory', () => {
-      // Arrange
-      container.register(
-        tokens.IValidatedEventDispatcher,
-        () => mockValidatedEventDispatcher
-      );
-
-      // Act
-      registerEventBusAdapters(container);
-
-      // Assert
-      const instance = container.resolve(tokens.ICommandInputPort);
-      expect(instance).toBeInstanceOf(EventBusCommandInputGateway);
-      expect(container.resolve(tokens.ICommandInputPort)).toBe(instance);
-
-      const registrationCall = registerSpy.mock.calls.find(
-        (call) => call[0] === tokens.ICommandInputPort
-      );
-      expect(registrationCall).toBeDefined();
-
-      const options = registrationCall[2] || {};
-      expect(options.lifecycle).toBe('singletonFactory');
-      expect(options.tags).toEqual(SHUTDOWNABLE);
-    });
   });
 
   describe('IPromptOutputPort (EventBusPromptAdapter) Registration', () => {

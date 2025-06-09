@@ -109,6 +109,9 @@ class FakeLeaderSyncService {
 // 2.  Test Harness Builder
 // ────────────────────────────────────────────────────────────────────────────
 
+/**
+ *
+ */
 function buildTestHarness() {
   const logger = makeLogger();
   // We test the *original* flawed rule, but work around the flaw in the test itself.
@@ -173,6 +176,11 @@ function buildTestHarness() {
   };
 }
 
+/**
+ *
+ * @param registry
+ * @param deps
+ */
 function importAndRegisterHandlers(registry, deps) {
   const add = (type, HandlerClass, extraDeps = {}) =>
     registry.register(type, (params, context) =>
@@ -213,6 +221,15 @@ const START_LOCATION = 'loc:rivendell';
 const TARGET_LOCATION = 'loc:hollin_gate';
 const OTHER_LOCATION = 'loc:shire';
 
+/**
+ *
+ * @param entityManager
+ * @param root0
+ * @param root0.id
+ * @param root0.name
+ * @param root0.locationId
+ * @param root0.following
+ */
 function seedTestEntity(
   entityManager,
   { id, name, locationId, following = null }

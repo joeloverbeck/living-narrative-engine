@@ -20,7 +20,6 @@ let mockWorldLoader;
 let mockSystemInitializer;
 // REMOVED: let mockGameStateInitializer;
 let mockWorldInitializer;
-let mockInputSetupService;
 let mockGameLoop; // Keep the mock object itself for potential use in other tests/layers
 let mockDomUiFacade; // Added mock for DomUiFacade
 // Variable to store the original container.resolve mock implementation
@@ -49,9 +48,6 @@ describe('InitializationService', () => {
     mockWorldInitializer = {
       initializeWorldEntities: jest.fn().mockReturnValue(true),
     };
-    mockInputSetupService = {
-      configureInputHandler: jest.fn(),
-    };
     mockGameLoop = {
       // Properties if needed by other layers
     };
@@ -70,8 +66,6 @@ describe('InitializationService', () => {
           // REMOVED: GameStateInitializer case
           case 'WorldInitializer':
             return mockWorldInitializer;
-          case 'InputSetupService':
-            return mockInputSetupService;
           case tokens.DomUiFacade: // Use imported token
             return mockDomUiFacade;
           // REMOVED: GameLoop case
@@ -106,8 +100,6 @@ describe('InitializationService', () => {
           return mockSystemInitializer;
         case 'WorldInitializer':
           return mockWorldInitializer;
-        case 'InputSetupService':
-          return mockInputSetupService;
         case tokens.DomUiFacade:
           return mockDomUiFacade;
         case 'ILogger':
@@ -125,8 +117,6 @@ describe('InitializationService', () => {
           return mockSystemInitializer;
         case 'WorldInitializer':
           return mockWorldInitializer;
-        case 'InputSetupService':
-          return mockInputSetupService;
         case tokens.DomUiFacade:
           return mockDomUiFacade;
         case 'ILogger':

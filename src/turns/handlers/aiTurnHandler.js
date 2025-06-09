@@ -16,7 +16,6 @@
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  * @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder
- * @typedef {import('../ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort
  */
 
 /**
@@ -51,8 +50,6 @@ export class AITurnHandler extends BaseTurnHandler {
   #commandOutcomeInterpreter;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
-  /** @type {ICommandInputPort} */
-  #commandInputPort;
   /** @type {IEntityManager} */
   #entityManager;
   /** @type {IActionDiscoveryService} */
@@ -89,7 +86,6 @@ export class AITurnHandler extends BaseTurnHandler {
    * @param {ICommandProcessor} dependencies.commandProcessor
    * @param {ICommandOutcomeInterpreter} dependencies.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
-   * @param {ICommandInputPort} dependencies.commandInputPort
    * @param {IEntityManager} dependencies.entityManager
    * @param {IActionDiscoveryService} dependencies.actionDiscoverySystem
    * @param {IPromptBuilder} dependencies.promptBuilder
@@ -110,7 +106,6 @@ export class AITurnHandler extends BaseTurnHandler {
     commandProcessor,
     commandOutcomeInterpreter,
     safeEventDispatcher,
-    commandInputPort,
     entityManager,
     actionDiscoverySystem,
     promptBuilder,
@@ -134,9 +129,6 @@ export class AITurnHandler extends BaseTurnHandler {
       throw new Error('AITurnHandler: Invalid ICommandOutcomeInterpreter');
     if (!safeEventDispatcher)
       throw new Error('AITurnHandler: Invalid ISafeEventDispatcher');
-    if (!commandInputPort)
-      // MODIFIED
-      throw new Error('AITurnHandler: Invalid ICommandInputPort');
     if (!entityManager)
       throw new Error('AITurnHandler: Invalid IEntityManager');
     if (!actionDiscoverySystem)
@@ -164,7 +156,6 @@ export class AITurnHandler extends BaseTurnHandler {
     this.#commandProcessor = commandProcessor;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
-    this.#commandInputPort = commandInputPort; // MODIFIED
     this.#entityManager = entityManager;
     this.#actionDiscoverySystem = actionDiscoverySystem;
     this.#promptBuilder = promptBuilder;
@@ -252,7 +243,6 @@ export class AITurnHandler extends BaseTurnHandler {
       commandProcessor: this.#commandProcessor,
       commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
       safeEventDispatcher: this.#safeEventDispatcher,
-      commandInputPort: this.#commandInputPort, // MODIFIED
       entityManager: this.#entityManager,
       actionDiscoverySystem: this.#actionDiscoverySystem,
     };

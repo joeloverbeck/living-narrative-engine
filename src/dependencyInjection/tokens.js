@@ -96,7 +96,6 @@
  * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
  * @property {DiToken} ITurnManager - Token for the turn management service interface.
  * @property {DiToken} ITurnContext - Token for accessing context specific to the current turn. // <<< ENSURED THIS IS PRESENT AND NOT COMMENTED
- * @property {DiToken} ICommandInputPort - Token for the command input port interface.
  * @property {DiToken} IPromptOutputPort - Token for the prompt output port interface.
  * @property {DiToken} ITurnEndPort - Token for the turn end port interface.
  * @property {DiToken} IPlayerPromptService - Token for the player prompt service interface.
@@ -113,7 +112,6 @@
  * @property {DiToken} SystemInitializer - Token for initializing tagged systems.
  * @property {DiToken} ShutdownService - Token for the main shutdown orchestration service.
  * @property {DiToken} GameLoop - Token for the main game loop.
- * @property {DiToken} InputSetupService - Token for setting up input handling.
  *
  *
  * --- Logic/Interpretation Layer ---
@@ -223,7 +221,6 @@ export const tokens = Object.freeze({
   ITurnOrderService: 'ITurnOrderService',
   ITurnManager: 'ITurnManager',
   ITurnContext: 'ITurnContext', // <<< ENSURED THIS IS PRESENT AND NOT COMMENTED
-  ICommandInputPort: 'ICommandInputPort',
   IPromptOutputPort: 'IPromptOutputPort',
   ITurnEndPort: 'ITurnEndPort',
   IPlayerPromptService: 'IPlayerPromptService',
@@ -240,7 +237,6 @@ export const tokens = Object.freeze({
   SystemInitializer: 'SystemInitializer',
   ShutdownService: 'ShutdownService',
   GameLoop: 'GameLoop',
-  InputSetupService: 'InputSetupService',
 
   // Logic/Interpretation Layer
   OperationRegistry: 'OperationRegistry',

@@ -99,7 +99,6 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
             tokens.ICommandOutcomeInterpreter
           ),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-          commandInputPort: c.resolve(tokens.ICommandInputPort), // MODIFIED: Provide correct dependency
           entityManager: c.resolve(tokens.IEntityManager),
           actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
           promptBuilder: c.resolve(tokens.IPromptBuilder),

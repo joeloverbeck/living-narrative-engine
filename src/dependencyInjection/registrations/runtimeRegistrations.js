@@ -4,7 +4,6 @@ import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 // REMOVED: GameLoop import (no longer directly instantiated here)
 // import GameLoop from "../../gameLoop.js";
-import InputSetupService from '../../setup/inputSetupService.js';
 
 // --- Import Interfaces for Type Hinting ---
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
@@ -43,21 +42,6 @@ export function registerRuntime(container) {
   // ====================================================================
   // r.singletonFactory(tokens.GameLoop, c => { ... }); // <<< ENTIRE BLOCK REMOVED
   // log.info(`Runtime Registration: Registered ${tokens.GameLoop} (Singleton).`); // <<< REMOVED
-
-  r.singletonFactory(
-    tokens.InputSetupService,
-    (c) =>
-      new InputSetupService({
-        container: c,
-        logger: c.resolve(tokens.ILogger),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        // REMOVED: GameLoop injection - InputSetupService no longer interacts directly with GameLoop.
-        // gameLoop: c.resolve(tokens.GameLoop) // <<< LINE REMOVED
-      })
-  );
-  log.debug(
-    `Runtime Registration: Registered ${tokens.InputSetupService} (Singleton).`
-  );
 
   // Note: Other runtime services like TurnManager, TurnHandlerResolver etc.
   // are assumed to be registered elsewhere (e.g., serviceRegistrations.js or coreRegistrations.js)

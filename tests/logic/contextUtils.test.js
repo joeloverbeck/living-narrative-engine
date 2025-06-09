@@ -12,7 +12,14 @@ import { resolvePlaceholders } from '../../src/logic/contextUtils.js';
 // Mock helpers
 // ───────────────────────────────────────────────────────────────────────────────
 let mockLogger;
-/** Build a minimal executionContext suitable for these tests */
+/**
+ * Build a minimal executionContext suitable for these tests
+ *
+ * @param customContextVars
+ * @param eventData
+ * @param actorData
+ * @param targetData
+ */
 const createMockExecutionContext = (
   customContextVars = {},
   eventData = {},

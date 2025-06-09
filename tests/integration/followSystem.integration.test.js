@@ -115,6 +115,9 @@ class FakeLeaderSyncService {
 // 2.  Test Harness Builder
 // ────────────────────────────────────────────────────────────────────────────
 
+/**
+ *
+ */
 function buildTestHarness() {
   const logger = makeLogger();
   const followRule = JSON.parse(
@@ -178,6 +181,11 @@ function buildTestHarness() {
   };
 }
 
+/**
+ *
+ * @param registry
+ * @param deps
+ */
 function importAddHandlers(registry, deps) {
   class RemoveComponentHandler {
     #entityManager;
@@ -241,6 +249,15 @@ const ACTOR_C_ID = 'actor-C';
 const LOCATION_A = 'loc-a';
 const LOCATION_B = 'loc-b';
 
+/**
+ *
+ * @param entityManager
+ * @param root0
+ * @param root0.id
+ * @param root0.name
+ * @param root0.locationId
+ * @param root0.following
+ */
 function seedTestEntity(
   entityManager,
   { id, name, locationId, following = null }
@@ -546,6 +563,10 @@ describe('[Mutator Rule] Follow/Stop/Dismiss System', () => {
     const NUM_ACTORS = 8;
     const NUM_ITERATIONS = 100;
 
+    /**
+     *
+     * @param entityManager
+     */
     function assertDataConsistency(entityManager) {
       const groundTruth = new Map();
       for (const entity of entityManager.activeEntities.values()) {

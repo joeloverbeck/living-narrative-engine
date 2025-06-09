@@ -19,7 +19,6 @@ import { HumanPlayerStrategy } from '../strategies/humanPlayerStrategy.js'; // A
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy */
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
-/** @typedef {import('../ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 
 class PlayerTurnHandler extends BaseTurnHandler {
   /** @type {ICommandProcessor} */
@@ -32,8 +31,6 @@ class PlayerTurnHandler extends BaseTurnHandler {
   #commandOutcomeInterpreter;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
-  /** @type {ICommandInputPort} */ // ADDED
-  #commandInputPort;
   /** @type {object} */
   #gameWorldAccess;
 
@@ -53,7 +50,6 @@ class PlayerTurnHandler extends BaseTurnHandler {
    * @param {IPlayerPromptService} deps.playerPromptService
    * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-   * @param {ICommandInputPort} deps.commandInputPort // ADDED: Direct dependency
    * @param {object} [deps.gameWorldAccess]
    */
   constructor({
@@ -64,7 +60,6 @@ class PlayerTurnHandler extends BaseTurnHandler {
     playerPromptService,
     commandOutcomeInterpreter,
     safeEventDispatcher,
-    commandInputPort, // ADDED
     gameWorldAccess = {},
   }) {
     super({ logger, turnStateFactory });
@@ -81,16 +76,12 @@ class PlayerTurnHandler extends BaseTurnHandler {
       );
     if (!safeEventDispatcher)
       throw new Error('PlayerTurnHandler: safeEventDispatcher is required');
-    // ADDED: Validate new dependency
-    if (!commandInputPort)
-      throw new Error('PlayerTurnHandler: commandInputPort is required');
 
     this.#commandProcessor = commandProcessor;
     this.#turnEndPort = turnEndPort;
     this.#playerPromptService = playerPromptService;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
-    this.#commandInputPort = commandInputPort; // ADDED
     this.#gameWorldAccess = gameWorldAccess;
 
     const initialState = this._turnStateFactory.createInitialState(this);
@@ -127,7 +118,6 @@ class PlayerTurnHandler extends BaseTurnHandler {
       commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
       safeEventDispatcher: this.#safeEventDispatcher,
       // REMOVED: subscriptionManager: this.#subscriptionManager,
-      commandInputPort: this.#commandInputPort, // ADDED
       turnEndPort: this.#turnEndPort,
     };
 
