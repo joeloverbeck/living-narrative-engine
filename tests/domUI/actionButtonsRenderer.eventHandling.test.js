@@ -153,6 +153,26 @@ beforeEach(() => {
     nodeType: 1,
     children: [],
     firstChild: null,
+    classList: {
+      _classes: new Set(),
+      add: jest.fn(function (...cls) {
+        cls.forEach((c) => this._classes.add(c));
+      }),
+      remove: jest.fn(function (cls) {
+        this._classes.delete(cls);
+      }),
+      contains: jest.fn(function (cls) {
+        return this._classes.has(cls);
+      }),
+      _reset() {
+        this._classes.clear();
+        this.add.mockClear();
+        this.remove.mockClear();
+        this.contains.mockClear();
+      },
+    },
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
     appendChild: jest.fn(function (child) {
       this.children.push(child);
       this.firstChild = this.children[0];
@@ -213,6 +233,9 @@ beforeEach(() => {
       this.removeChild.mockClear();
       this.querySelector.mockClear();
       this.querySelectorAll.mockClear();
+      this.classList._reset();
+      this.addEventListener.mockClear();
+      this.removeEventListener.mockClear();
     },
   };
 
@@ -515,6 +538,7 @@ describe('ActionButtonsRenderer', () => {
       instance.selectedAction = null;
       instance._onListRendered(instance.availableActions, mockContainer); // Pass available actions and container
       expect(mockSendButton.disabled).toBe(true);
+      expect(mockContainer.classList.add).toHaveBeenCalledWith('actions-fade-in');
 
       mockLogger.info.mockClear(); // Clear for next part of the test
 
@@ -528,6 +552,7 @@ describe('ActionButtonsRenderer', () => {
 
       expect(mockSendButton.disabled).toBe(false);
       expect(mockActionButton.classList.add).toHaveBeenCalledWith('selected'); // Check if selected class is added
+      expect(mockContainer.classList.add).toHaveBeenCalledWith('actions-fade-in');
     });
   });
 

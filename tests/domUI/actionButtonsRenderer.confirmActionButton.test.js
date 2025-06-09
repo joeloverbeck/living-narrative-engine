@@ -211,6 +211,7 @@ describe('ActionButtonsRenderer', () => {
     }
     jest.spyOn(actionButtonsContainer, 'appendChild');
     jest.spyOn(actionButtonsContainer, 'removeChild');
+    jest.spyOn(actionButtonsContainer.classList, 'add');
 
     const sendButtonOriginal = currentDocument.getElementById(
       'player-confirm-turn-button'
@@ -410,6 +411,10 @@ describe('ActionButtonsRenderer', () => {
           'actionButtonInstance or its classList.remove spy is not defined for assertion.'
         );
       }
+
+      expect(actionButtonsContainer.classList.add).toHaveBeenCalledWith(
+        'actions-fade-out'
+      );
     });
 
     it('should dispatch event with speech: null if speech input is empty', async () => {

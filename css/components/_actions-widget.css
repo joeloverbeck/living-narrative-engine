@@ -21,6 +21,38 @@
   margin: var(--spacing-xs); /* Consistent small margin around each button */
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  #action-buttons.actions-fade-in {
+    animation: actionsFadeIn 250ms ease-out both;
+  }
+
+  #action-buttons.actions-fade-out {
+    animation: actionsFadeOut 250ms ease-in both;
+  }
+
+  @keyframes actionsFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes actionsFadeOut {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+}
+
 /* Note: Styles for specific button states within #action-buttons
    (e.g., #action-buttons button.selected, #action-buttons button.selected:hover)
    should remain in the main style.css or be moved to _buttons.css

@@ -2,6 +2,7 @@
 
 import { BaseListDisplayComponent } from './baseListDisplayComponent.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
+import { DomUtils } from '../utils/domUtils.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -57,6 +58,9 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  */
 export class ActionButtonsRenderer extends BaseListDisplayComponent {
   _EVENT_TYPE_SUBSCRIBED = 'core:update_available_actions';
+
+  static FADE_IN_CLASS = 'actions-fade-in';
+  static FADE_OUT_CLASS = 'actions-fade-out';
 
   /** @type {AvailableAction | null} */
   selectedAction = null;
@@ -319,6 +323,16 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   _onListRendered(actionsData, container) {
     if (this.#isDisposed) return;
 
+    if (container) {
+      container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
+      container.classList.add(ActionButtonsRenderer.FADE_IN_CLASS);
+      const removeClass = () => {
+        container.classList.remove(ActionButtonsRenderer.FADE_IN_CLASS);
+        container.removeEventListener('animationend', removeClass);
+      };
+      container.addEventListener('animationend', removeClass, { once: true });
+    }
+
     const actualActionButtons = container.querySelectorAll(
       'button.action-button'
     );
@@ -501,6 +515,15 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
           if (selectedButton) {
             selectedButton.classList.remove('selected');
           }
+          const container = this.elements.listContainerElement;
+          container.classList.remove(ActionButtonsRenderer.FADE_IN_CLASS);
+          container.classList.add(ActionButtonsRenderer.FADE_OUT_CLASS);
+          const cleanup = () => {
+            DomUtils.clearElement(container);
+            container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
+            container.removeEventListener('animationend', cleanup);
+          };
+          container.addEventListener('animationend', cleanup, { once: true });
         }
       } else {
         this.logger.error(
