@@ -27,6 +27,7 @@ import QuerySystemDataHandler from '../../logic/operationHandlers/querySystemDat
 import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
+import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -140,6 +141,15 @@ export function registerInterpreters(container) {
           logger: c.resolve(tokens.ILogger),
         }),
     ],
+    [
+      tokens.RebuildLeaderListCacheHandler,
+      RebuildLeaderListCacheHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+        }),
+    ],
   ];
 
   for (const [token, ctor, factory] of handlerFactories) {
@@ -177,6 +187,10 @@ export function registerInterpreters(container) {
     registry.register(
       'RESOLVE_DIRECTION',
       bind(tokens.ResolveDirectionHandler)
+    );
+    registry.register(
+      'REBUILD_LEADER_LIST_CACHE',
+      bind(tokens.RebuildLeaderListCacheHandler)
     );
 
     return registry;

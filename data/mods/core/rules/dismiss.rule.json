@@ -21,15 +21,10 @@
       }
     },
     {
-      "type": "QUERY_SYSTEM_DATA",
-      "comment": "Step 2: Tell the LeaderListSyncService to rebuild the cache for the ACTOR (the leader).",
+      "type": "REBUILD_LEADER_LIST_CACHE",
+      "comment": "Step 2: Rebuild the 'core:leading' cache for the ACTOR (the leader).",
       "parameters": {
-        "source_id": "LeaderListSyncService",
-        "query_details": {
-          "action": "rebuildFor",
-          "leaderIds": ["{event.payload.actorId}"]
-        },
-        "result_variable": "leaderSyncResult"
+        "leaderIds": ["{event.payload.actorId}"]
       }
     },
     {
@@ -84,13 +79,9 @@
             }
           },
           {
-            "type": "QUERY_SYSTEM_DATA",
-            "comment": "Get the current timestamp for the event.",
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
             "parameters": {
-              "source_id": "WorldContext",
-              "query_details": {
-                "action": "getCurrentISOTimestamp"
-              },
               "result_variable": "nowIso"
             }
           },

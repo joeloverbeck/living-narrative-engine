@@ -26,7 +26,8 @@
             "GET_TIMESTAMP",
             "RESOLVE_DIRECTION",
             "QUERY_SYSTEM_DATA",
-            "SYSTEM_MOVE_ENTITY"
+            "SYSTEM_MOVE_ENTITY",
+            "REBUILD_LEADER_LIST_CACHE"
           ]
         },
         "comment": {
@@ -272,6 +273,24 @@
             "properties": {
               "parameters": {
                 "$ref": "#/$defs/ResolveDirectionParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "REBUILD_LEADER_LIST_CACHE"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/RebuildLeaderListCacheParameters"
               }
             },
             "required": ["parameters"]
@@ -529,6 +548,22 @@
         }
       },
       "required": ["current_location_id", "direction", "result_variable"],
+      "additionalProperties": false
+    },
+    "RebuildLeaderListCacheParameters": {
+      "type": "object",
+      "description": "Rebuilds the core:leading cache for specified leader IDs.",
+      "properties": {
+        "leaderIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Array of leader entity IDs."
+        }
+      },
+      "required": ["leaderIds"],
       "additionalProperties": false
     }
   }

@@ -3,16 +3,6 @@
  * @see tests/integration/dismissRule.integration.test.js
  */
 
-// tests/integration/dismissRule.integration.test.js
-// ---------------------------------------------------------------------------
-// Issue #XX: Unit-test rule core:dismiss
-//
-// Verifies that the `handle_dismiss` rule correctly removes the follower's
-// 'core:following' component, updates the leader's cache, and conditionally
-// dispatches a valid `core:perceptible_event` based on co-location. This
-// suite validates the core logic and ensures the event payload is correct.
-// ---------------------------------------------------------------------------
-
 import {
   describe,
   beforeEach,
@@ -99,12 +89,8 @@ class FakeLeaderSyncService {
 // 2.  Test Harness Builder
 // ────────────────────────────────────────────────────────────────────────────
 
-/**
- *
- */
 function buildTestHarness() {
   const logger = makeLogger();
-  // IMPORTANT: Load the rule file being tested.
   const dismissRule = JSON.parse(
     fs.readFileSync('data/mods/core/rules/dismiss.rule.json', 'utf8')
   );
@@ -118,6 +104,7 @@ function buildTestHarness() {
     logger,
     spatialIndex
   );
+
   const leaderSyncService = new FakeLeaderSyncService();
   const systemDataRegistry = new FakeSystemDataRegistry(
     logger,
@@ -131,7 +118,7 @@ function buildTestHarness() {
     logger,
   });
 
-  // Spy on key interactions to verify outcomes.
+  // Spy on key interactions
   jest.spyOn(validatedDispatcher, 'dispatch');
   jest.spyOn(entityManager, 'removeComponent');
   jest.spyOn(leaderSyncService, 'handleQuery');
@@ -142,7 +129,6 @@ function buildTestHarness() {
     operationRegistry: opRegistry,
   });
 
-  // Register all operation handlers used by the rule.
   importAndRegisterHandlers(opRegistry, {
     entityManager,
     logger,
@@ -174,35 +160,66 @@ function buildTestHarness() {
 }
 
 /**
- *
- * @param registry
- * @param deps
+ * @param {OperationRegistry} registry
+ * @param {object} deps
  */
 function importAndRegisterHandlers(registry, deps) {
   const add = (type, HandlerClass, extraDeps = {}) =>
-    registry.register(type, (params, context) =>
-      new HandlerClass({ ...deps, ...extraDeps }).execute(params, context)
+    registry.register(type, (params, ctx) =>
+      new HandlerClass({ ...deps, ...extraDeps }).execute(params, ctx)
     );
 
   const {
     default: QueryComponentHandler,
   } = require('../../src/logic/operationHandlers/queryComponentHandler.js');
   const {
-    default: QuerySystemDataHandler,
-  } = require('../../src/logic/operationHandlers/querySystemDataHandler.js');
-  const {
     default: DispatchEventHandler,
   } = require('../../src/logic/operationHandlers/dispatchEventHandler.js');
-  const {
-    default: RemoveComponentHandler,
-  } = require('../../src/logic/operationHandlers/removeComponentHandler.js');
+
+  // Minimal RemoveComponent for 'target'
+  class RemoveComponentHandler {
+    #entityManager;
+
+    constructor(d) {
+      this.#entityManager = d.entityManager;
+    }
+
+    #resolveEntityId(ref, ctx) {
+      const ec = ctx.evaluationContext;
+      if (ref === 'actor') return ec.actor.id;
+      if (ref === 'target') return ec.target.id;
+      return ref;
+    }
+
+    execute(params, ctx) {
+      const id = this.#resolveEntityId(params.entity_ref, ctx);
+      this.#entityManager.removeComponent(id, params.component_type);
+    }
+  }
 
   add('QUERY_COMPONENT', QueryComponentHandler);
-  add('QUERY_SYSTEM_DATA', QuerySystemDataHandler);
   add('DISPATCH_EVENT', DispatchEventHandler, {
     dispatcher: deps.validatedDispatcher,
   });
-  add('REMOVE_COMPONENT', RemoveComponentHandler);
+  registry.register('REMOVE_COMPONENT', (params, ctx) =>
+    new RemoveComponentHandler(deps).execute(params, ctx)
+  );
+
+  // GET_TIMESTAMP → pull from FakeSystemDataRegistry
+  registry.register('GET_TIMESTAMP', (params, ctx) => {
+    const ts = deps.systemDataRegistry.query('WorldContext', {
+      action: 'getCurrentISOTimestamp',
+    });
+    ctx.evaluationContext.context[params.result_variable] = ts;
+  });
+
+  // REBUILD_LEADER_LIST_CACHE → invoke FakeLeaderSyncService
+  registry.register('REBUILD_LEADER_LIST_CACHE', (params, ctx) => {
+    deps.systemDataRegistry.query('LeaderListSyncService', {
+      action: 'rebuildFor',
+      leaderIds: params.leaderIds,
+    });
+  });
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -215,13 +232,8 @@ const SAME_LOCATION = 'loc:rohan';
 const OTHER_LOCATION = 'loc:gondor';
 
 /**
- *
- * @param entityManager
- * @param root0
- * @param root0.id
- * @param root0.name
- * @param root0.locationId
- * @param root0.following
+ * @param {EntityManager} entityManager
+ * @param {{id:string,name:string,locationId:string,following?:string}} opts
  */
 function seedTestEntity(
   entityManager,
@@ -234,14 +246,16 @@ function seedTestEntity(
       ['core:name', { text: name }],
       ['core:position', { locationId }],
     ]),
-    getComponentData: (cId) => entity.components.get(cId),
-    removeComponent: (cId) => entity.components.delete(cId),
+    getComponentData(cId) {
+      return this.components.get(cId);
+    },
+    removeComponent(cId) {
+      this.components.delete(cId);
+    },
   };
-
   if (following) {
     entity.components.set('core:following', { leaderId: following });
   }
-
   entityManager.activeEntities.set(id, entity);
 }
 
@@ -263,7 +277,6 @@ describe('[Rule] handle_dismiss', () => {
 
   describe('WHEN leader and follower are in the SAME location', () => {
     beforeEach(async () => {
-      // Arrange
       seedTestEntity(h.entityManager, {
         id: LEADER_ID,
         name: 'Aragorn',
@@ -276,7 +289,6 @@ describe('[Rule] handle_dismiss', () => {
         following: LEADER_ID,
       });
 
-      // Act: Leader (actor) dismisses follower (target)
       await h.eventBus.dispatch('core:attempt_action', {
         actorId: LEADER_ID,
         targetId: FOLLOWER_ID,
@@ -285,7 +297,6 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('it must remove the `core:following` component from the target', () => {
-      // Assert
       expect(h.entityManager.removeComponent).toHaveBeenCalledWith(
         FOLLOWER_ID,
         'core:following'
@@ -293,7 +304,6 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('it must rebuild the cache for the leader', () => {
-      // Assert
       expect(h.leaderSyncService.handleQuery).toHaveBeenCalledWith({
         action: 'rebuildFor',
         leaderIds: [LEADER_ID],
@@ -301,7 +311,6 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('it must dispatch a `core:perceptible_event`', () => {
-      // Assert
       const perceptibleEventCall =
         h.validatedDispatcher.dispatch.mock.calls.find(
           (call) => call[0] === 'core:perceptible_event'
@@ -310,13 +319,10 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('the `perceptible_event` payload must be valid and complete', () => {
-      // Assert
-      const perceptibleEventPayload =
-        h.validatedDispatcher.dispatch.mock.calls.find(
-          (call) => call[0] === 'core:perceptible_event'
-        )[1];
-
-      expect(perceptibleEventPayload).toEqual({
+      const [, payload] = h.validatedDispatcher.dispatch.mock.calls.find(
+        (call) => call[0] === 'core:perceptible_event'
+      );
+      expect(payload).toEqual({
         eventName: 'core:perceptible_event',
         timestamp: h.systemDataRegistry.timestamp,
         locationId: SAME_LOCATION,
@@ -329,7 +335,6 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('it must dispatch a `core:turn_ended` event for the leader', () => {
-      // Assert
       expect(h.validatedDispatcher.dispatch).toHaveBeenCalledWith(
         'core:turn_ended',
         { entityId: LEADER_ID, success: true }
@@ -339,7 +344,6 @@ describe('[Rule] handle_dismiss', () => {
 
   describe('WHEN leader and follower are in DIFFERENT locations', () => {
     beforeEach(async () => {
-      // Arrange
       seedTestEntity(h.entityManager, {
         id: LEADER_ID,
         name: 'Aragorn',
@@ -352,7 +356,6 @@ describe('[Rule] handle_dismiss', () => {
         following: LEADER_ID,
       });
 
-      // Act
       await h.eventBus.dispatch('core:attempt_action', {
         actorId: LEADER_ID,
         targetId: FOLLOWER_ID,
@@ -361,7 +364,6 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('it must still remove the `core:following` component from the target', () => {
-      // Assert
       expect(h.entityManager.removeComponent).toHaveBeenCalledWith(
         FOLLOWER_ID,
         'core:following'
@@ -369,7 +371,6 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('it must still rebuild the cache for the leader', () => {
-      // Assert
       expect(h.leaderSyncService.handleQuery).toHaveBeenCalledWith({
         action: 'rebuildFor',
         leaderIds: [LEADER_ID],
@@ -377,7 +378,6 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('it must NOT dispatch a `core:perceptible_event`', () => {
-      // Assert
       const perceptibleEventCall =
         h.validatedDispatcher.dispatch.mock.calls.find(
           (call) => call[0] === 'core:perceptible_event'
@@ -386,7 +386,6 @@ describe('[Rule] handle_dismiss', () => {
     });
 
     test('it must still dispatch a `core:turn_ended` event', () => {
-      // Assert
       expect(h.validatedDispatcher.dispatch).toHaveBeenCalledWith(
         'core:turn_ended',
         { entityId: LEADER_ID, success: true }
