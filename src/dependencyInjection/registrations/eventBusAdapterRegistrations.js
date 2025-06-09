@@ -5,7 +5,6 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort */
 /** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
 /** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 
@@ -15,7 +14,6 @@ import { Registrar } from '../registrarHelpers.js';
 import { SHUTDOWNABLE } from '../tags.js';
 
 // --- Adapter Imports ---
-import { EventBusCommandInputGateway } from '../../turns/adapters/eventBusCommandInputGateway.js';
 import { EventBusPromptAdapter } from '../../turns/adapters/eventBusPromptAdapter.js';
 import EventBusTurnEndAdapter from '../../turns/adapters/eventBusTurnEndAdapter.js';
 
@@ -29,31 +27,6 @@ export function registerEventBusAdapters(container) {
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
   logger.debug('Event Bus Adapter Registrations: Starting...');
-
-  // --- Register EventBusCommandInputGateway ---
-  registrar
-    .tagged(SHUTDOWNABLE)
-    .singletonFactory(tokens.ICommandInputPort, (c) => {
-      const ved = /** @type {IValidatedEventDispatcher} */ (
-        c.resolve(tokens.IValidatedEventDispatcher)
-      );
-      if (!ved) {
-        logger.error(
-          `Adapter Registration: Failed to resolve ${tokens.IValidatedEventDispatcher} for ${tokens.ICommandInputPort}.`
-        );
-        throw new Error(
-          `Missing dependency ${tokens.IValidatedEventDispatcher} for EventBusCommandInputGateway`
-        );
-      }
-      return new EventBusCommandInputGateway({
-        validatedEventDispatcher: ved,
-      });
-    });
-  logger.debug(
-    `Adapter Registration: Registered EventBusCommandInputGateway as ${tokens.ICommandInputPort} tagged with ${SHUTDOWNABLE.join(
-      ', '
-    )}.`
-  );
 
   // --- Register EventBusPromptAdapter ---
   registrar.singletonFactory(tokens.IPromptOutputPort, (c) => {

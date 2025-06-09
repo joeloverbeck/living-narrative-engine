@@ -19,7 +19,6 @@
 /** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
-/** @typedef {import('../../turns/ports/ICommandInputPort.js').ICommandInputPort} ICommandInputPort_Interface */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager_Interface */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
 /** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */
@@ -85,6 +84,7 @@ import { SHUTDOWNABLE } from '../tags';
 
 /**
  * Registers AI, LLM, and Prompting services.
+ *
  * @param {AppContainer} container - The DI container.
  */
 export function registerAI(container) {
@@ -296,7 +296,6 @@ export function registerAI(container) {
         commandProcessor: c.resolve(tokens.ICommandProcessor),
         commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        commandInputPort: c.resolve(tokens.ICommandInputPort),
         entityManager: c.resolve(tokens.IEntityManager),
         actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
         promptBuilder: c.resolve(tokens.IPromptBuilder),

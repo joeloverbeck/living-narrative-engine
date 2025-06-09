@@ -22,7 +22,6 @@ describe('PlayerTurnHandler Constructor', () => {
   let mockPlayerPromptService;
   let mockCommandOutcomeInterpreter;
   let mockSafeEventDispatcher;
-  let mockCommandInputPort; // ADDED: New dependency mock
   let mockGameWorldAccess;
   let mockInitialState;
   let setInitialStateSpy;
@@ -43,7 +42,6 @@ describe('PlayerTurnHandler Constructor', () => {
     mockPlayerPromptService = {};
     mockCommandOutcomeInterpreter = {};
     mockSafeEventDispatcher = {};
-    mockCommandInputPort = {}; // ADDED: New mock object
     mockGameWorldAccess = {};
 
     setInitialStateSpy = jest
@@ -67,7 +65,6 @@ describe('PlayerTurnHandler Constructor', () => {
     playerPromptService: mockPlayerPromptService,
     commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
     safeEventDispatcher: mockSafeEventDispatcher,
-    commandInputPort: mockCommandInputPort, // ADDED: Provide new dependency
     gameWorldAccess: mockGameWorldAccess,
   });
 
@@ -147,18 +144,6 @@ describe('PlayerTurnHandler Constructor', () => {
       'PlayerTurnHandler: safeEventDispatcher is required'
     );
   });
-
-  // REWRITTEN: This test now validates the new dependency.
-  it('should throw an error if commandInputPort is not provided', () => {
-    const deps = getValidDependencies();
-    delete deps.commandInputPort;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: commandInputPort is required'
-    );
-  });
-
-  // REMOVED: Obsolete test for subscriptionManager (null) is implicitly covered
-  // by the new test for commandInputPort.
 
   it('should construct successfully if gameWorldAccess is not provided (uses default)', () => {
     const deps = getValidDependencies();

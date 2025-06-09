@@ -89,7 +89,6 @@ describe('registerTurnLifecycle', () => {
       tokens.ICommandOutcomeInterpreter,
       () => mockCommandOutcome
     );
-    container.register(tokens.ICommandInputPort, () => mockCommandInput);
     // stub out the AI handler so that resolver factory has something to call
     container.register(tokens.AITurnHandler, () => mockAiTurnHandler);
   });

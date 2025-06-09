@@ -91,6 +91,9 @@ class FakeSystemDataRegistry {
 // 2.  Test Harness Builder
 // ────────────────────────────────────────────────────────────────────────────
 
+/**
+ *
+ */
 function buildTestHarness() {
   const logger = makeLogger();
   const movementRule = JSON.parse(
@@ -195,6 +198,14 @@ const ACTOR_ID = 'player:aragorn';
 const START_LOCATION_ID = 'location:rivendell';
 const TARGET_LOCATION_ID = 'location:isengard';
 
+/**
+ *
+ * @param entityManager
+ * @param root0
+ * @param root0.id
+ * @param root0.name
+ * @param root0.locationId
+ */
 function seedTestEntity(entityManager, { id, name, locationId }) {
   const entity = {
     id,

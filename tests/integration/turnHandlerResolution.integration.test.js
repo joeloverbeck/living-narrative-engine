@@ -104,7 +104,6 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       commandProcessor: {},
       commandOutcomeInterpreter: {},
       safeEventDispatcher: {},
-      commandInputPort: {}, // MODIFIED: Replaced subscriptionManager with commandInputPort
       entityManager: mockEntityManager,
       actionDiscoverySystem: {},
       promptBuilder: {},

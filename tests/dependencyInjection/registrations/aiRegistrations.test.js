@@ -108,7 +108,6 @@ describe('registerAI', () => {
       tokens.ICommandOutcomeInterpreter,
       () => mockCommandOutcomeInterpreter
     );
-    container.register(tokens.ICommandInputPort, () => mockCommandInputPort);
     container.register(tokens.IEntityManager, () => mockEntityManager);
     container.register(
       tokens.IActionDiscoveryService,

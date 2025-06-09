@@ -102,6 +102,9 @@ class FakeLeaderSyncService {
 // 2.  Test Harness Builder
 // ────────────────────────────────────────────────────────────────────────────
 
+/**
+ *
+ */
 function buildTestHarness() {
   const logger = makeLogger();
   // IMPORTANT: Load the corrected rule file for this test.
@@ -172,6 +175,11 @@ function buildTestHarness() {
   };
 }
 
+/**
+ *
+ * @param registry
+ * @param deps
+ */
 function importAndRegisterHandlers(registry, deps) {
   const add = (type, HandlerClass, extraDeps = {}) =>
     registry.register(type, (params, context) =>
@@ -208,6 +216,15 @@ const LEADER_ID = 'char:aragorn';
 const SAME_LOCATION = 'loc:rivendell';
 const OTHER_LOCATION = 'loc:bree';
 
+/**
+ *
+ * @param entityManager
+ * @param root0
+ * @param root0.id
+ * @param root0.name
+ * @param root0.locationId
+ * @param root0.following
+ */
 function seedTestEntity(
   entityManager,
   { id, name, locationId, following = null }

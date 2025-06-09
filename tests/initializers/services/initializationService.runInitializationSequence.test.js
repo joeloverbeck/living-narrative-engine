@@ -20,7 +20,6 @@ let mockValidatedEventDispatcher;
 let mockWorldLoader;
 let mockSystemInitializer;
 let mockWorldInitializer;
-let mockInputSetupService;
 let mockDomUiFacade;
 let mockLlmAdapter;
 let mockSchemaValidator;
@@ -47,9 +46,6 @@ describe('InitializationService', () => {
     };
     mockWorldInitializer = {
       initializeWorldEntities: jest.fn().mockReturnValue(true),
-    };
-    mockInputSetupService = {
-      configureInputHandler: jest.fn(),
     };
     mockDomUiFacade = {
       /* Simple mock object */
@@ -89,8 +85,6 @@ describe('InitializationService', () => {
             return mockSystemInitializer;
           case tokens.WorldInitializer:
             return mockWorldInitializer;
-          case tokens.InputSetupService:
-            return mockInputSetupService;
           case tokens.DomUiFacade:
             return mockDomUiFacade;
           case tokens.ILogger:
@@ -184,7 +178,6 @@ describe('InitializationService', () => {
         tokens.IConfiguration, // Resolved by LlmConfigLoader via container
         tokens.SystemInitializer,
         tokens.WorldInitializer,
-        tokens.InputSetupService,
         tokens.ISafeEventDispatcher,
         tokens.IEntityManager,
         tokens.DomUiFacade,
@@ -194,7 +187,6 @@ describe('InitializationService', () => {
       expect(mockLlmAdapter.init).toHaveBeenCalledTimes(1);
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
       expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalled();
-      expect(mockInputSetupService.configureInputHandler).toHaveBeenCalled();
 
       expect(result.success).toBe(true);
       expect(result.error).toBeUndefined();
@@ -393,9 +385,6 @@ describe('InitializationService', () => {
       expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
-      expect(
-        mockInputSetupService.configureInputHandler
-      ).not.toHaveBeenCalled();
     });
 
     it('should handle failure when worldInitializer.initializeWorldEntities throws', async () => {
@@ -408,58 +397,6 @@ describe('InitializationService', () => {
       expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
-      expect(
-        mockInputSetupService.configureInputHandler
-      ).not.toHaveBeenCalled();
-    });
-
-    it('should handle failure when InputSetupService resolve fails', async () => {
-      const error = new Error('Failed to resolve InputSetupService');
-      const originalResolve = mockContainer.resolve;
-      await testFailure(() => {
-        mockContainer.resolve = jest.fn((token) => {
-          if (token === tokens.ILogger) return mockLogger;
-          if (token === tokens.WorldLoader) return mockWorldLoader;
-          if (token === tokens.LLMAdapter) return mockLlmAdapter;
-          if (token === tokens.ISchemaValidator) return mockSchemaValidator;
-          if (token === tokens.IConfiguration) return mockConfiguration;
-          if (token === tokens.SystemInitializer) return mockSystemInitializer;
-          if (token === tokens.WorldInitializer) return mockWorldInitializer;
-          if (token === tokens.InputSetupService) throw error;
-          return undefined;
-        });
-      }, error);
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
-      expect(mockLlmAdapter.init).toHaveBeenCalled();
-      expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
-      expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalled();
-      expect(
-        mockInputSetupService.configureInputHandler
-      ).not.toHaveBeenCalled();
-      mockContainer.resolve = originalResolve;
-    });
-
-    it('should handle failure when inputSetupService.configureInputHandler throws', async () => {
-      const error = new Error('Input setup failed');
-      await testFailure(() => {
-        mockInputSetupService.configureInputHandler.mockImplementation(() => {
-          throw error;
-        });
-      }, error);
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
-      expect(mockLlmAdapter.init).toHaveBeenCalled();
-      expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
-      expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalled();
-      // Check that DomUiFacade resolve wasn't attempted *after* this failure
-      const resolveCalls = mockContainer.resolve.mock.calls.map(
-        (call) => call[0]
-      );
-      const indexOfInputSetup = resolveCalls.indexOf(tokens.InputSetupService);
-      const callsAfterInputSetup =
-        indexOfInputSetup === -1
-          ? []
-          : resolveCalls.slice(indexOfInputSetup + 1);
-      expect(callsAfterInputSetup).not.toContain(tokens.DomUiFacade);
     });
 
     it('should log an error if dispatching UI error events fails during main error handling', async () => {
