@@ -23,13 +23,9 @@
       }
     },
     {
-      "type": "QUERY_SYSTEM_DATA",
-      "comment": "Fetch the current ISO timestamp from WorldContext.",
+      "type": "GET_TIMESTAMP",
+      "comment": "Get the current ISO timestamp for perception logging.",
       "parameters": {
-        "source_id": "WorldContext",
-        "query_details": {
-          "action": "getCurrentISOTimestamp"
-        },
         "result_variable": "currentTimestamp"
       }
     },

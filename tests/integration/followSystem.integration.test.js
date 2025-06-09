@@ -212,10 +212,13 @@ function importAddHandlers(registry, deps) {
     }
   }
 
+  // helper to wire up a handler class H under op type `type`
   const add = (type, H, extraDeps = {}) =>
     registry.register(type, (p, c) =>
       new H({ ...deps, ...extraDeps }).execute(p, c)
     );
+
+  // existing handlers
   const {
     default: QCH,
   } = require('../../src/logic/operationHandlers/queryComponentHandler.js');
@@ -228,12 +231,32 @@ function importAddHandlers(registry, deps) {
   const {
     default: DEH,
   } = require('../../src/logic/operationHandlers/dispatchEventHandler.js');
+
+  // your two new handlers
+  const {
+    default: RLCH,
+  } = require('../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js');
+  const {
+    default: GTH,
+  } = require('../../src/logic/operationHandlers/getTimestampHandler.js');
+
+  // register them all
   add('QUERY_COMPONENT', QCH);
   add('ADD_COMPONENT', ACH, { safeEventDispatcher: deps.validatedDispatcher });
   add('QUERY_SYSTEM_DATA', QSDH, {
     systemDataRegistry: deps.systemDataRegistry,
   });
   add('DISPATCH_EVENT', DEH, { dispatcher: deps.validatedDispatcher });
+
+  // ←— these were missing!
+  add('REBUILD_LEADER_LIST_CACHE', RLCH, {
+    logger: deps.logger,
+    entityManager: deps.entityManager,
+  });
+  add('GET_TIMESTAMP', GTH, {
+    logger: deps.logger,
+  });
+
   registry.register('REMOVE_COMPONENT', (p, c) =>
     new RemoveComponentHandler(deps).execute(p, c)
   );

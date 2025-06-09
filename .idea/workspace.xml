@@ -4,15 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Preventing stupidly-long analysis times.">
-      <change afterPath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" afterDir="false" />
+    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Fixed the dismiss rule.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/schemas/operation.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operation.schema.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/followSystem.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/followSystem.integration.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,7 +82,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749479545104</updated>
-      <workItem from="1749479546547" duration="10823000" />
+      <workItem from="1749479546547" duration="11884000" />
     </task>
     <task id="LOCAL-00001" summary="Implemented follow system.">
       <option name="closed" value="true" />
@@ -128,7 +124,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749488824778</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Fixed the dismiss rule.">
+      <option name="closed" value="true" />
+      <created>1749490486242</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1749490486242</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -140,6 +144,7 @@
     <MESSAGE value="Fixed test issues." />
     <MESSAGE value="Removing QuerySystemDataHandler." />
     <MESSAGE value="Preventing stupidly-long analysis times." />
-    <option name="LAST_COMMIT_MESSAGE" value="Preventing stupidly-long analysis times." />
+    <MESSAGE value="Fixed the dismiss rule." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed the dismiss rule." />
   </component>
 </project>

@@ -81,15 +81,19 @@ class RebuildLeaderListCacheHandler {
         continue;
       }
       try {
-        this.#entityManager.addComponent(leaderId, LEADING, {
-          followers: list,
-        });
+        if (list.length > 0) {
+          // has followers → add/update the component
+          this.#entityManager.addComponent(leaderId, LEADING, {
+            followers: list,
+          });
+        } else {
+          // no followers → remove the component entirely
+          this.#entityManager.removeComponent(leaderId, LEADING);
+        }
         updated++;
       } catch (err) {
         this.#logger.error(
-          `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for '${leaderId}': ${
-            err.message || err
-          }`,
+          `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for '${leaderId}': ${err.message || err}`,
           { stack: err.stack }
         );
       }
