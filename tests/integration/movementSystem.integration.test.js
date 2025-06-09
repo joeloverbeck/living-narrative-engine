@@ -118,10 +118,7 @@ function buildTestHarness() {
     logger,
   });
   jest.spyOn(validatedDispatcher, 'dispatch');
-  // --- FIX START ---
-  // The ModifyComponentHandler uses addComponent to commit changes, so we spy on that.
   jest.spyOn(entityManager, 'addComponent');
-  // --- FIX END ---
 
   const opRegistry = new OperationRegistry({ logger });
   const opInterpreter = new OperationInterpreter({
@@ -129,7 +126,9 @@ function buildTestHarness() {
     operationRegistry: opRegistry,
   });
 
-  // Dynamically require handlers to avoid circular dependency issues in Jest
+  // ───────────────────────────────────────────────────────────
+  // Dynamically require handlers to avoid circular deps
+  // ───────────────────────────────────────────────────────────
   const {
     default: QueryComponentHandler,
   } = require('../../src/logic/operationHandlers/queryComponentHandler.js');
@@ -142,6 +141,14 @@ function buildTestHarness() {
   const {
     default: DispatchEventHandler,
   } = require('../../src/logic/operationHandlers/dispatchEventHandler.js');
+  // ─────────── NEW HANDLERS ───────────
+  const {
+    default: GetTimestampHandler,
+  } = require('../../src/logic/operationHandlers/getTimestampHandler.js');
+  const {
+    default: ResolveDirectionHandler,
+  } = require('../../src/logic/operationHandlers/resolveDirectionHandler.js');
+  // ────────────────────────────────────────────
 
   opRegistry.register('QUERY_COMPONENT', (params, context) =>
     new QueryComponentHandler({ entityManager, logger }).execute(
@@ -161,6 +168,17 @@ function buildTestHarness() {
       logger,
     }).execute(params, context)
   );
+  // ─────────── REGISTER NEW OPS ───────────
+  opRegistry.register('GET_TIMESTAMP', (params, context) =>
+    new GetTimestampHandler({ logger }).execute(params, context)
+  );
+  opRegistry.register('RESOLVE_DIRECTION', (params, context) =>
+    new ResolveDirectionHandler({
+      worldContext: fakeSystemData.worldContext,
+      logger,
+    }).execute(params, context)
+  );
+  // ────────────────────────────────────────────
   opRegistry.register('DISPATCH_EVENT', (params, context) =>
     new DispatchEventHandler({
       dispatcher: validatedDispatcher,

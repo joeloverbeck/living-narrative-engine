@@ -1,6 +1,8 @@
-// -----------------------------------------------------------------------------
-//  Interpreter-layer service registrations
-// -----------------------------------------------------------------------------
+/**
+ * @file Registers interpreter-layer services: operation handlers,
+ * operation registry/interpreter, and the system logic interpreter.
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js
+ */
 
 /** @typedef {import('../appContainer.js').default} AppContainer */
 
@@ -22,12 +24,16 @@ import QueryComponentHandler from '../../logic/operationHandlers/queryComponentH
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
 import QuerySystemDataHandler from '../../logic/operationHandlers/querySystemDataHandler.js';
-import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler';
+import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
+import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
+import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 
-/** @param {AppContainer} container */
+/**
+ * Registers all interpreter-layer services in the DI container.
+ * @param {AppContainer} container
+ */
 export function registerInterpreters(container) {
   const registrar = new Registrar(container);
-  const logger = container.resolve(tokens.ILogger);
 
   // ---------------------------------------------------------------------------
   //  Command-outcome interpreter
@@ -42,14 +48,14 @@ export function registerInterpreters(container) {
   );
 
   // ---------------------------------------------------------------------------
-  //  Individual handler singletons
+  //  Individual operation handler singletons
   // ---------------------------------------------------------------------------
   const handlerFactories = [
     [
       tokens.DispatchEventHandler,
       DispatchEventHandler,
-      (c, h) =>
-        new h({
+      (c, Handler) =>
+        new Handler({
           logger: c.resolve(tokens.ILogger),
           dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         }),
@@ -57,13 +63,13 @@ export function registerInterpreters(container) {
     [
       tokens.LogHandler,
       LogHandler,
-      (c, h) => new h({ logger: c.resolve(tokens.ILogger) }),
+      (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
     ],
     [
       tokens.ModifyComponentHandler,
       ModifyComponentHandler,
-      (c, h) =>
-        new h({
+      (c, Handler) =>
+        new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
         }),
@@ -71,8 +77,8 @@ export function registerInterpreters(container) {
     [
       tokens.AddComponentHandler,
       AddComponentHandler,
-      (c, h) =>
-        new h({
+      (c, Handler) =>
+        new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
@@ -81,8 +87,8 @@ export function registerInterpreters(container) {
     [
       tokens.RemoveComponentHandler,
       RemoveComponentHandler,
-      (c, h) =>
-        new h({
+      (c, Handler) =>
+        new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
         }),
@@ -90,8 +96,8 @@ export function registerInterpreters(container) {
     [
       tokens.QueryComponentHandler,
       QueryComponentHandler,
-      (c, h) =>
-        new h({
+      (c, Handler) =>
+        new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
         }),
@@ -99,13 +105,13 @@ export function registerInterpreters(container) {
     [
       tokens.SetVariableHandler,
       SetVariableHandler,
-      (c, h) => new h({ logger: c.resolve(tokens.ILogger) }),
+      (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
     ],
     [
       tokens.QuerySystemDataHandler,
       QuerySystemDataHandler,
-      (c, h) =>
-        new h({
+      (c, Handler) =>
+        new Handler({
           logger: c.resolve(tokens.ILogger),
           systemDataRegistry: c.resolve(tokens.SystemDataRegistry),
         }),
@@ -113,10 +119,24 @@ export function registerInterpreters(container) {
     [
       tokens.SystemMoveEntityHandler,
       SystemMoveEntityHandler,
-      (c, h) =>
-        new h({
+      (c, Handler) =>
+        new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+          logger: c.resolve(tokens.ILogger),
+        }),
+    ],
+    [
+      tokens.GetTimestampHandler,
+      GetTimestampHandler,
+      (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
+    ],
+    [
+      tokens.ResolveDirectionHandler,
+      ResolveDirectionHandler,
+      (c, Handler) =>
+        new Handler({
+          worldContext: c.resolve(tokens.IWorldContext),
           logger: c.resolve(tokens.ILogger),
         }),
     ],
@@ -130,35 +150,52 @@ export function registerInterpreters(container) {
   //  OperationRegistry
   // ---------------------------------------------------------------------------
   registrar.singletonFactory(tokens.OperationRegistry, (c) => {
-    const reg = new OperationRegistry({ logger: c.resolve(tokens.ILogger) });
+    const registry = new OperationRegistry({
+      logger: c.resolve(tokens.ILogger),
+    });
 
-    const bind = (tkn) => c.resolve(tkn).execute.bind(c.resolve(tkn));
+    // Defer resolution of handlers until execution time,
+    // so we don't prematurely pull in IWorldContext during registration.
+    const bind =
+      (tkn) =>
+      (...args) =>
+        c.resolve(tkn).execute(...args);
 
-    reg.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
-    reg.register('LOG', bind(tokens.LogHandler));
-    reg.register('MODIFY_COMPONENT', bind(tokens.ModifyComponentHandler));
-    reg.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));
-    reg.register('REMOVE_COMPONENT', bind(tokens.RemoveComponentHandler));
-    reg.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));
-    reg.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
-    reg.register('QUERY_SYSTEM_DATA', bind(tokens.QuerySystemDataHandler));
-    reg.register('SYSTEM_MOVE_ENTITY', bind(tokens.SystemMoveEntityHandler));
+    registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
+    registry.register('LOG', bind(tokens.LogHandler));
+    registry.register('MODIFY_COMPONENT', bind(tokens.ModifyComponentHandler));
+    registry.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));
+    registry.register('REMOVE_COMPONENT', bind(tokens.RemoveComponentHandler));
+    registry.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));
+    registry.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
+    registry.register('QUERY_SYSTEM_DATA', bind(tokens.QuerySystemDataHandler));
+    registry.register(
+      'SYSTEM_MOVE_ENTITY',
+      bind(tokens.SystemMoveEntityHandler)
+    );
+    registry.register('GET_TIMESTAMP', bind(tokens.GetTimestampHandler));
+    registry.register(
+      'RESOLVE_DIRECTION',
+      bind(tokens.ResolveDirectionHandler)
+    );
 
-    return reg;
+    return registry;
   });
 
   // ---------------------------------------------------------------------------
   //  OperationInterpreter
   // ---------------------------------------------------------------------------
-  registrar.singletonFactory(tokens.OperationInterpreter, (c) => {
-    return new OperationInterpreter({
-      logger: c.resolve(tokens.ILogger),
-      operationRegistry: c.resolve(tokens.OperationRegistry),
-    });
-  });
+  registrar.singletonFactory(
+    tokens.OperationInterpreter,
+    (c) =>
+      new OperationInterpreter({
+        logger: c.resolve(tokens.ILogger),
+        operationRegistry: c.resolve(tokens.OperationRegistry),
+      })
+  );
 
   // ---------------------------------------------------------------------------
-  //  SystemLogicInterpreter (tags: INITIALIZABLE, SHUTDOWNABLE)
+  //  SystemLogicInterpreter
   // ---------------------------------------------------------------------------
   registrar.tagged([...INITIALIZABLE, ...SHUTDOWNABLE]).singletonFactory(
     tokens.SystemLogicInterpreter,

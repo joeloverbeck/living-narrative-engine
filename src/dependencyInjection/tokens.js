@@ -253,6 +253,8 @@ export const tokens = Object.freeze({
   SetVariableHandler: 'SetVariableHandler',
   QuerySystemDataHandler: 'QuerySystemDataHandler',
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',
+  GetTimestampHandler: 'GetTimestampHandler',
+  ResolveDirectionHandler: 'ResolveDirectionHandler',
 
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',

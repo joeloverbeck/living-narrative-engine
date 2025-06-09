@@ -23,6 +23,8 @@
             "FOR_EACH",
             "LOG",
             "SET_VARIABLE",
+            "GET_TIMESTAMP",
+            "RESOLVE_DIRECTION",
             "QUERY_SYSTEM_DATA",
             "SYSTEM_MOVE_ENTITY"
           ]
@@ -45,128 +47,232 @@
       "allOf": [
         {
           "if": {
-            "properties": { "type": { "const": "QUERY_COMPONENT" } },
+            "properties": {
+              "type": {
+                "const": "QUERY_COMPONENT"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/QueryComponentParameters" }
+              "parameters": {
+                "$ref": "#/$defs/QueryComponentParameters"
+              }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": { "type": { "const": "MODIFY_COMPONENT" } },
+            "properties": {
+              "type": {
+                "const": "MODIFY_COMPONENT"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/ModifyComponentParameters" }
+              "parameters": {
+                "$ref": "#/$defs/ModifyComponentParameters"
+              }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": { "type": { "const": "ADD_COMPONENT" } },
+            "properties": {
+              "type": {
+                "const": "ADD_COMPONENT"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/AddComponentParameters" }
+              "parameters": {
+                "$ref": "#/$defs/AddComponentParameters"
+              }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": { "type": { "const": "REMOVE_COMPONENT" } },
+            "properties": {
+              "type": {
+                "const": "REMOVE_COMPONENT"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/RemoveComponentParameters" }
+              "parameters": {
+                "$ref": "#/$defs/RemoveComponentParameters"
+              }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": { "type": { "const": "DISPATCH_EVENT" } },
+            "properties": {
+              "type": {
+                "const": "DISPATCH_EVENT"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/DispatchEventParameters" }
+              "parameters": {
+                "$ref": "#/$defs/DispatchEventParameters"
+              }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": { "type": { "const": "IF" } },
-            "required": ["type"]
-          },
-          "then": {
-            "properties": { "parameters": { "$ref": "#/$defs/IfParameters" } },
-            "required": ["parameters"]
-          }
-        },
-        {
-          "if": {
-            "properties": { "type": { "const": "LOG" } },
-            "required": ["type"]
-          },
-          "then": {
-            "properties": { "parameters": { "$ref": "#/$defs/LogParameters" } },
-            "required": ["parameters"]
-          }
-        },
-        {
-          "if": {
-            "properties": { "type": { "const": "SET_VARIABLE" } },
+            "properties": {
+              "type": {
+                "const": "IF"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/SetVariableParameters" }
+              "parameters": {
+                "$ref": "#/$defs/IfParameters"
+              }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": { "type": { "const": "QUERY_SYSTEM_DATA" } },
+            "properties": {
+              "type": {
+                "const": "LOG"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/QuerySystemDataParameters" }
+              "parameters": {
+                "$ref": "#/$defs/LogParameters"
+              }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": { "type": { "const": "FOR_EACH" } },
+            "properties": {
+              "type": {
+                "const": "SET_VARIABLE"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/ForEachParameters" }
+              "parameters": {
+                "$ref": "#/$defs/SetVariableParameters"
+              }
             },
             "required": ["parameters"]
           }
         },
         {
           "if": {
-            "properties": { "type": { "const": "SYSTEM_MOVE_ENTITY" } },
+            "properties": {
+              "type": {
+                "const": "QUERY_SYSTEM_DATA"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/SystemMoveEntityParameters" }
+              "parameters": {
+                "$ref": "#/$defs/QuerySystemDataParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FOR_EACH"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/ForEachParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SYSTEM_MOVE_ENTITY"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/SystemMoveEntityParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "GET_TIMESTAMP"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/GetTimestampParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "RESOLVE_DIRECTION"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/ResolveDirectionParameters"
+              }
             },
             "required": ["parameters"]
           }
@@ -218,8 +324,14 @@
         "component_type": {
           "$ref": "./common.schema.json#/definitions/namespacedId"
         },
-        "field": { "type": "string", "minLength": 1 },
-        "mode": { "type": "string", "enum": ["set", "inc"] },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["set", "inc"]
+        },
         "value": {}
       },
       "required": ["entity_ref", "component_type", "field", "mode", "value"],
@@ -227,11 +339,19 @@
       "allOf": [
         {
           "if": {
-            "properties": { "mode": { "const": "inc" } },
+            "properties": {
+              "mode": {
+                "const": "inc"
+              }
+            },
             "required": ["mode"]
           },
           "then": {
-            "properties": { "value": { "type": "number" } },
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            },
             "required": ["value"]
           }
         }
@@ -247,7 +367,10 @@
         "component_type": {
           "$ref": "./common.schema.json#/definitions/namespacedId"
         },
-        "value": { "type": "object", "minProperties": 0 }
+        "value": {
+          "type": "object",
+          "minProperties": 0
+        }
       },
       "required": ["entity_ref", "component_type", "value"],
       "additionalProperties": false
@@ -273,7 +396,10 @@
         "eventType": {
           "$ref": "./common.schema.json#/definitions/namespacedId"
         },
-        "payload": { "type": "object", "default": {} }
+        "payload": {
+          "type": "object",
+          "default": {}
+        }
       },
       "required": ["eventType"],
       "additionalProperties": false
@@ -282,16 +408,22 @@
       "type": "object",
       "description": "Parameters for the IF operation, enabling conditional execution.",
       "properties": {
-        "condition": { "$ref": "./json-logic.schema.json#" },
+        "condition": {
+          "$ref": "./json-logic.schema.json#"
+        },
         "then_actions": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/$defs/Operation" }
+          "items": {
+            "$ref": "#/$defs/Operation"
+          }
         },
         "else_actions": {
           "type": "array",
           "default": [],
-          "items": { "$ref": "#/$defs/Operation" }
+          "items": {
+            "$ref": "#/$defs/Operation"
+          }
         }
       },
       "required": ["condition", "then_actions"],
@@ -301,7 +433,10 @@
       "type": "object",
       "description": "Parameters for the LOG operation, used for debugging.",
       "properties": {
-        "message": { "type": "string", "minLength": 1 },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
         "level": {
           "type": "string",
           "enum": ["debug", "info", "warn", "error"],
@@ -329,8 +464,13 @@
       "type": "object",
       "description": "Parameters for the QUERY_SYSTEM_DATA operation. Queries an external system or data source and stores the result in a context variable.",
       "properties": {
-        "source_id": { "type": "string", "minLength": 1 },
-        "query_details": { "type": ["string", "object"] },
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "query_details": {
+          "type": ["string", "object"]
+        },
         "result_variable": {
           "type": "string",
           "minLength": 1,
@@ -344,15 +484,51 @@
       "type": "object",
       "description": "Parameters for the FOR_EACH loop operation.",
       "properties": {
-        "collection": { "type": "string" },
-        "item_variable": { "type": "string" },
+        "collection": {
+          "type": "string"
+        },
+        "item_variable": {
+          "type": "string"
+        },
         "actions": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/$defs/Operation" }
+          "items": {
+            "$ref": "#/$defs/Operation"
+          }
         }
       },
       "required": ["collection", "item_variable", "actions"],
+      "additionalProperties": false
+    },
+    "GetTimestampParameters": {
+      "type": "object",
+      "properties": {
+        "result_variable": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["result_variable"],
+      "additionalProperties": false
+    },
+    "ResolveDirectionParameters": {
+      "type": "object",
+      "properties": {
+        "current_location_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["current_location_id", "direction", "result_variable"],
       "additionalProperties": false
     }
   }

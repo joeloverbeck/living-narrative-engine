@@ -4,17 +4,41 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Added integration tests for the new registrators.">
+    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Fixed test issues.">
+      <change afterPath="$PROJECT_DIR$/src/logic/operationHandlers/getTimestampHandler.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/logic/operationHandlers/resolveDirectionHandler.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constants/eventIds.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/eventIds.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/go.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/go.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operation.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operation.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/analysis/turn_events.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/analysis/turn_events.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/eventBusAdapterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/eventBusAdapterRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/runtimeRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/runtimeRegistrations.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/gameEngine.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/gameEngine.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/initializers/services/initializationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/initializers/services/initializationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchEventHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchEventHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/aiTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/aiTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/eventBusAdapterRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/eventBusAdapterRegistrations.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/engine/gameEngine.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/engine/gameEngine.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/initializers/services/initializationService.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/initializers/services/initializationService.constructor.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/initializers/services/initializationService.facadeInit.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/initializers/services/initializationService.facadeInit.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/initializers/services/initializationService.runInitializationSequence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/initializers/services/initializationService.runInitializationSequence.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/followAutoMove.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/followAutoMove.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/followSystem.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/followSystem.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/movementSystem.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/movementSystem.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/stopFollowingRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/stopFollowingRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/contextUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/contextUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,6 +93,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
+    "ts.external.directory.path": "F:\\Programas\\Programación\\WebStorm 2024.3.5\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -86,7 +111,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749479545104</updated>
-      <workItem from="1749479546547" duration="4194000" />
+      <workItem from="1749479546547" duration="8864000" />
     </task>
     <task id="LOCAL-00001" summary="Implemented follow system.">
       <option name="closed" value="true" />
@@ -104,7 +129,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749481157464</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Fixed test issues.">
+      <option name="closed" value="true" />
+      <created>1749484359604</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1749484359604</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -113,6 +146,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Implemented follow system." />
     <MESSAGE value="Added integration tests for the new registrators." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added integration tests for the new registrators." />
+    <MESSAGE value="Fixed test issues." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed test issues." />
   </component>
 </project>
