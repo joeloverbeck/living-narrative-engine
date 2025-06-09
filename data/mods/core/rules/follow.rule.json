@@ -13,15 +13,11 @@
   },
   "actions": [
     {
-      "type": "QUERY_SYSTEM_DATA",
+      "type": "CHECK_FOLLOW_CYCLE",
       "comment": "Step 1: Check if this follow action would create a cycle.",
       "parameters": {
-        "source_id": "FollowValidationService",
-        "query_details": {
-          "action": "wouldCreateCycle",
-          "followerId": "{event.payload.actorId}",
-          "leaderId": "{event.payload.targetId}"
-        },
+        "follower_id": "{event.payload.actorId}",
+        "leader_id": "{event.payload.targetId}",
         "result_variable": "cycleCheck"
       }
     },
@@ -96,29 +92,20 @@
               },
               "then_actions": [
                 {
-                  "type": "QUERY_SYSTEM_DATA",
+                  "type": "REBUILD_LEADER_LIST_CACHE",
+                  "comment": "Rebuild the 'core:leading' cache for the old leader.",
                   "parameters": {
-                    "source_id": "LeaderListSyncService",
-                    "query_details": {
-                      "action": "rebuildFor",
-                      "leaderIds": ["{context.oldFollowComp.leaderId}"]
-                    },
-                    "result_variable": "oldLeaderSyncResult"
+                    "leaderIds": ["{context.oldFollowComp.leaderId}"]
                   }
                 }
               ]
             }
           },
           {
-            "type": "QUERY_SYSTEM_DATA",
+            "type": "REBUILD_LEADER_LIST_CACHE",
             "comment": "Unconditionally rebuild the new leader's cache.",
             "parameters": {
-              "source_id": "LeaderListSyncService",
-              "query_details": {
-                "action": "rebuildFor",
-                "leaderIds": ["{event.payload.targetId}"]
-              },
-              "result_variable": "newLeaderSyncResult"
+              "leaderIds": ["{event.payload.targetId}"]
             }
           },
           {
@@ -150,13 +137,9 @@
             }
           },
           {
-            "type": "QUERY_SYSTEM_DATA",
-            "comment": "Current ISO-8601 timestamp from WorldContext.",
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
             "parameters": {
-              "source_id": "WorldContext",
-              "query_details": {
-                "action": "getCurrentISOTimestamp"
-              },
               "result_variable": "nowIso"
             }
           },

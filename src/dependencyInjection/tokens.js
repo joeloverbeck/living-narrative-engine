@@ -256,6 +256,7 @@ export const tokens = Object.freeze({
   GetTimestampHandler: 'GetTimestampHandler',
   ResolveDirectionHandler: 'ResolveDirectionHandler',
   RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
+  CheckFollowCycleHandler: 'CheckFollowCycleHandler',
 
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',

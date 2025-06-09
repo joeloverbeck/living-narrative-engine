@@ -13,15 +13,10 @@
   },
   "actions": [
     {
-      "type": "QUERY_SYSTEM_DATA",
+      "type": "REBUILD_LEADER_LIST_CACHE",
       "comment": "First, authoritatively rebuild the leader's follower list.",
       "parameters": {
-        "source_id": "LeaderListSyncService",
-        "query_details": {
-          "action": "rebuildFor",
-          "leaderIds": ["{event.payload.entityId}"]
-        },
-        "result_variable": "leaderSyncResult"
+        "leaderIds": ["{event.payload.entityId}"]
       }
     },
     {
@@ -70,13 +65,9 @@
             }
           },
           {
-            "type": "QUERY_SYSTEM_DATA",
-            "comment": "Get the current timestamp for perceptible events.",
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
             "parameters": {
-              "source_id": "WorldContext",
-              "query_details": {
-                "action": "getCurrentISOTimestamp"
-              },
               "result_variable": "nowIso"
             }
           },
@@ -112,8 +103,12 @@
                   "parameters": {
                     "condition": {
                       "==": [
-                        { "var": "context.followerPos.locationId" },
-                        { "var": "event.payload.previousLocationId" }
+                        {
+                          "var": "context.followerPos.locationId"
+                        },
+                        {
+                          "var": "event.payload.previousLocationId"
+                        }
                       ]
                     },
                     "then_actions": [

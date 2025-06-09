@@ -27,7 +27,8 @@
             "RESOLVE_DIRECTION",
             "QUERY_SYSTEM_DATA",
             "SYSTEM_MOVE_ENTITY",
-            "REBUILD_LEADER_LIST_CACHE"
+            "REBUILD_LEADER_LIST_CACHE",
+            "CHECK_FOLLOW_CYCLE"
           ]
         },
         "comment": {
@@ -291,6 +292,24 @@
             "properties": {
               "parameters": {
                 "$ref": "#/$defs/RebuildLeaderListCacheParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "CHECK_FOLLOW_CYCLE"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/CheckFollowCycleParameters"
               }
             },
             "required": ["parameters"]
@@ -564,6 +583,27 @@
         }
       },
       "required": ["leaderIds"],
+      "additionalProperties": false
+    },
+    "CheckFollowCycleParameters": {
+      "type": "object",
+      "description": "Parameters for the CHECK_FOLLOW_CYCLE operation. Checks if following would create a cycle.",
+      "properties": {
+        "follower_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "leader_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
+        }
+      },
+      "required": ["follower_id", "leader_id", "result_variable"],
       "additionalProperties": false
     }
   }

@@ -28,6 +28,7 @@ import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEnt
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
+import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -144,6 +145,15 @@ export function registerInterpreters(container) {
     [
       tokens.RebuildLeaderListCacheHandler,
       RebuildLeaderListCacheHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+        }),
+    ],
+    [
+      tokens.CheckFollowCycleHandler,
+      CheckFollowCycleHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

@@ -538,7 +538,9 @@ describe('ActionButtonsRenderer', () => {
       instance.selectedAction = null;
       instance._onListRendered(instance.availableActions, mockContainer); // Pass available actions and container
       expect(mockSendButton.disabled).toBe(true);
-      expect(mockContainer.classList.add).toHaveBeenCalledWith('actions-fade-in');
+      expect(mockContainer.classList.add).toHaveBeenCalledWith(
+        'actions-fade-in'
+      );
 
       mockLogger.info.mockClear(); // Clear for next part of the test
 
@@ -552,7 +554,9 @@ describe('ActionButtonsRenderer', () => {
 
       expect(mockSendButton.disabled).toBe(false);
       expect(mockActionButton.classList.add).toHaveBeenCalledWith('selected'); // Check if selected class is added
-      expect(mockContainer.classList.add).toHaveBeenCalledWith('actions-fade-in');
+      expect(mockContainer.classList.add).toHaveBeenCalledWith(
+        'actions-fade-in'
+      );
     });
   });
 
