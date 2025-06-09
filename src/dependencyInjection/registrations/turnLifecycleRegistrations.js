@@ -83,7 +83,8 @@ export function registerTurnLifecycle(container) {
 
   // --- Player Turn Handler ---
 
-  r.tagged(SHUTDOWNABLE).singletonFactory(
+  r.tagged(SHUTDOWNABLE).transientFactory(
+    // ⬅️  was singletonFactory
     tokens.PlayerTurnHandler,
     (c) =>
       new PlayerTurnHandler({

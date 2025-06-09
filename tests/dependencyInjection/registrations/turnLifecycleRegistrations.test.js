@@ -34,26 +34,26 @@ import { ConcreteTurnContextFactory } from '../../../src/turns/factories/concret
 
 describe('registerTurnLifecycle', () => {
   let container;
-  let mockLogger;
-  let mockActionDiscovery;
-  let mockPromptOutput;
-  let mockWorldContext;
-  let mockEntityManager;
-  let mockGameDataRepo;
-  let mockValidatedDispatcher;
-  let mockSafeDispatcher;
-  let mockCommandProcessor;
-  let mockTurnEndPort;
-  let mockCommandOutcome;
-  let mockCommandInput;
-  let mockAiTurnHandler;
   let registerSpy;
+  let mockLogger,
+    mockActionDiscovery,
+    mockPromptOutput,
+    mockWorldContext,
+    mockEntityManager,
+    mockGameDataRepo,
+    mockValidatedDispatcher,
+    mockSafeDispatcher,
+    mockCommandProcessor,
+    mockTurnEndPort,
+    mockCommandOutcome,
+    mockCommandInput,
+    mockAiTurnHandler;
 
   beforeEach(() => {
     container = new AppContainer();
     registerSpy = jest.spyOn(container, 'register');
 
-    // Core mocks
+    // core mocks
     mockLogger = mock();
     mockActionDiscovery = mock();
     mockPromptOutput = mock();
@@ -68,7 +68,7 @@ describe('registerTurnLifecycle', () => {
     mockCommandInput = mock();
     mockAiTurnHandler = mock();
 
-    // Register necessary dependencies
+    // register the bare‐minimum dependencies
     container.register(tokens.ILogger, () => mockLogger);
     container.register(
       tokens.IActionDiscoveryService,
@@ -90,6 +90,7 @@ describe('registerTurnLifecycle', () => {
       () => mockCommandOutcome
     );
     container.register(tokens.ICommandInputPort, () => mockCommandInput);
+    // stub out the AI handler so that resolver factory has something to call
     container.register(tokens.AITurnHandler, () => mockAiTurnHandler);
   });
 
@@ -106,13 +107,17 @@ describe('registerTurnLifecycle', () => {
       'Turn Lifecycle Registration: Registered Turn services and factories.'
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`
+      `Turn Lifecycle Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(
+        ', '
+      )}.`
     );
     expect(calls).toContain(
       `Turn Lifecycle Registration: Registered ${tokens.TurnHandlerResolver} with singleton resolution.`
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`
+      `Turn Lifecycle Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(
+        ', '
+      )}.`
     );
     expect(calls).toContain(
       `Turn Lifecycle Registration: Registered transient factory for ${tokens.ITurnContext}.`
@@ -151,7 +156,7 @@ describe('registerTurnLifecycle', () => {
     {
       token: tokens.PlayerTurnHandler,
       Class: PlayerTurnHandler,
-      lifecycle: 'singletonFactory',
+      lifecycle: 'transient', // ← now correctly expecting "transient"
       tags: SHUTDOWNABLE,
     },
     {
@@ -165,7 +170,6 @@ describe('registerTurnLifecycle', () => {
       lifecycle: 'singletonFactory',
       tags: INITIALIZABLE,
     },
-    // ITurnContext is transient; it resolves to null by default
   ];
 
   test.each(services)(
@@ -176,13 +180,21 @@ describe('registerTurnLifecycle', () => {
       const instance = container.resolve(token);
       expect(instance).toBeInstanceOf(Class);
 
-      // singleton vs singletonFactory all produce same instance
-      expect(container.resolve(token)).toBe(instance);
+      if (lifecycle === 'transient') {
+        // transient: each resolve is a fresh object
+        const instance2 = container.resolve(token);
+        expect(instance2).toBeInstanceOf(Class);
+        expect(instance2).not.toBe(instance);
+      } else {
+        // singleton/singletonFactory: same object on each resolve
+        expect(container.resolve(token)).toBe(instance);
+      }
 
       const call = registerSpy.mock.calls.find((c) => c[0] === token);
       expect(call).toBeDefined();
       const opts = call[2] || {};
       expect(opts.lifecycle).toBe(lifecycle);
+
       if (tags) expect(opts.tags).toEqual(tags);
       else expect(opts.tags).toBeUndefined();
     }

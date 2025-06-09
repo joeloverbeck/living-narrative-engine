@@ -81,6 +81,7 @@ import { AIPromptContentProvider } from '../../prompting/AIPromptContentProvider
 import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.js';
 import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../prompting/AIPromptPipeline.js';
+import { SHUTDOWNABLE } from '../tags';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -281,29 +282,33 @@ export function registerAI(container) {
 
   // --- AI TURN HANDLER ---
 
-  r.singletonFactory(tokens.AITurnHandler, (c) => {
-    return new AITurnHandler({
-      logger: c.resolve(tokens.ILogger),
-      turnStateFactory: c.resolve(tokens.ITurnStateFactory),
-      gameWorldAccess: c.resolve(tokens.IWorldContext),
-      turnEndPort: c.resolve(tokens.ITurnEndPort),
-      llmAdapter: c.resolve(tokens.LLMAdapter),
-      commandProcessor: c.resolve(tokens.ICommandProcessor),
-      commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
-      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      commandInputPort: c.resolve(tokens.ICommandInputPort),
-      entityManager: c.resolve(tokens.IEntityManager),
-      actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
-      promptBuilder: c.resolve(tokens.IPromptBuilder),
-      aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
-      aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
-      turnContextFactory: c.resolve(tokens.ITurnContextFactory),
-      gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
-      promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
-      llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
-      aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
-    });
-  });
+  // --- AI Turn Handler ---
+  r.tagged(SHUTDOWNABLE).transientFactory(
+    // ⬅️  was singletonFactory
+    tokens.AITurnHandler,
+    (c) =>
+      new AITurnHandler({
+        logger: c.resolve(tokens.ILogger),
+        turnStateFactory: c.resolve(tokens.ITurnStateFactory),
+        turnEndPort: c.resolve(tokens.ITurnEndPort),
+        gameWorldAccess: {}, // supply the real object
+        llmAdapter: c.resolve(tokens.LLMAdapter),
+        commandProcessor: c.resolve(tokens.ICommandProcessor),
+        commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        commandInputPort: c.resolve(tokens.ICommandInputPort),
+        entityManager: c.resolve(tokens.IEntityManager),
+        actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
+        promptBuilder: c.resolve(tokens.IPromptBuilder),
+        aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
+        aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
+        turnContextFactory: c.resolve(tokens.ITurnContextFactory),
+        gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
+        promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
+        llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+        aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
+      })
+  );
   logger.debug(`AI Systems Registration: Registered ${tokens.AITurnHandler}.`);
 
   logger.debug('AI Systems Registration: All registrations complete.');

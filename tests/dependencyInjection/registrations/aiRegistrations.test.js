@@ -310,10 +310,20 @@ describe('registerAI', () => {
   describe('AI Turn Handler', () => {
     test('should register AITurnHandler correctly', () => {
       registerAI(container);
+
+      // it resolves without throwing…
       expect(() => container.resolve(tokens.AITurnHandler)).not.toThrow();
-      const handler = container.resolve(tokens.AITurnHandler);
-      expect(handler).toBeInstanceOf(AITurnHandler);
-      expect(container.resolve(tokens.AITurnHandler)).toBe(handler);
+
+      // …and each resolve gives you a brand‐new AITurnHandler
+      const handler1 = container.resolve(tokens.AITurnHandler);
+      expect(handler1).toBeInstanceOf(AITurnHandler);
+
+      const handler2 = container.resolve(tokens.AITurnHandler);
+      expect(handler2).toBeInstanceOf(AITurnHandler);
+
+      // because it’s transient, they *must not* be the same object
+      expect(handler2).not.toBe(handler1);
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `AI Systems Registration: Registered ${tokens.AITurnHandler}.`
       );

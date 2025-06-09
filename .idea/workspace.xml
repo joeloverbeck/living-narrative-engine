@@ -4,16 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Implemented follow system.">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/persistenceRegistrations.test.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/worldAndEntityRegistrations.test.js" afterDir="false" />
+    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Added integration tests for the new registrators.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/eventBusAdapterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/eventBusAdapterRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constants/eventIds.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/eventIds.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/gameEngine.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/gameEngine.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/eventBusAdapterRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/eventBusAdapterRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/engine/gameEngine.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/engine/gameEngine.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +86,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749479545104</updated>
-      <workItem from="1749479546547" duration="1258000" />
+      <workItem from="1749479546547" duration="4194000" />
     </task>
     <task id="LOCAL-00001" summary="Implemented follow system.">
       <option name="closed" value="true" />
@@ -95,7 +96,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749480188387</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Added integration tests for the new registrators.">
+      <option name="closed" value="true" />
+      <created>1749481157464</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1749481157464</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -103,6 +112,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Implemented follow system." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented follow system." />
+    <MESSAGE value="Added integration tests for the new registrators." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added integration tests for the new registrators." />
   </component>
 </project>
