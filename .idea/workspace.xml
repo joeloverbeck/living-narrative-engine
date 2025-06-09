@@ -4,25 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Removing QuerySystemDataHandler.">
+    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Removed QuerySystemDataHandler, SystemDataRegistry, and other related classes.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/schemas/operation.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operation.schema.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/context/worldContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/context/worldContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/gameDataRepository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/gameDataRepository.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/systemDataRegistry.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/interfaces/IWorldContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IWorldContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/querySystemDataHandler.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/config/registrations/infrastructureRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/infrastructureRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/config/registrations/interpreterRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/interpreterRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/movementSystem.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/movementSystem.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/operationHandlers/querySystemDataHandler.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/systemDataRegistry.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/log_perceptible_events.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/log_perceptible_events.rule.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +98,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749479545104</updated>
-      <workItem from="1749479546547" duration="19826000" />
+      <workItem from="1749479546547" duration="20657000" />
     </task>
     <task id="LOCAL-00001" summary="Implemented follow system.">
       <option name="closed" value="true" />
@@ -220,7 +204,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749498548921</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Removed QuerySystemDataHandler, SystemDataRegistry, and other related classes.">
+      <option name="closed" value="true" />
+      <created>1749499744009</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1749499744009</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -235,6 +227,7 @@
     <MESSAGE value="Phasing out QuerySystemDataHandler." />
     <MESSAGE value="Added tests for AddPerceptionLogEntryHandler." />
     <MESSAGE value="Removing QuerySystemDataHandler." />
-    <option name="LAST_COMMIT_MESSAGE" value="Removing QuerySystemDataHandler." />
+    <MESSAGE value="Removed QuerySystemDataHandler, SystemDataRegistry, and other related classes." />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed QuerySystemDataHandler, SystemDataRegistry, and other related classes." />
   </component>
 </project>

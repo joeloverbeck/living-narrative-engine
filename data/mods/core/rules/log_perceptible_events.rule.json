@@ -22,7 +22,14 @@
       "type": "ADD_PERCEPTION_LOG_ENTRY",
       "parameters": {
         "location_id": "{event.payload.locationId}",
-        "entry": "{context.logEntryData}",
+        "entry": {
+          "descriptionText": "{event.payload.descriptionText}",
+          "timestamp": "{event.payload.timestamp}",
+          "perceptionType": "{event.payload.perceptionType}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "involvedEntities": "{event.payload.involvedEntities}"
+        },
         "originating_actor_id": "{event.payload.actorId}"
       }
     }
