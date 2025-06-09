@@ -13,7 +13,6 @@ import { tokens } from '../../src/dependencyInjection/tokens.js';
 import {
   GAME_SAVED_ID,
   NEW_GAME_STARTED_ID,
-  LOADED_GAME_STARTED_ID,
   // --- Import new UI Event IDs ---
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,

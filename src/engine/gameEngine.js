@@ -4,7 +4,6 @@ import { tokens } from '../dependencyInjection/tokens.js';
 import {
   GAME_SAVED_ID,
   NEW_GAME_STARTED_ID,
-  LOADED_GAME_STARTED_ID,
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
   ENGINE_OPERATION_IN_PROGRESS_UI,
@@ -571,11 +570,6 @@ class GameEngine {
         'GameEngine._finalizeLoadSuccess: PlaytimeTracker not available, cannot start session for loaded game.'
       );
     }
-
-    await this.#safeEventDispatcher.dispatch(LOADED_GAME_STARTED_ID, {
-      saveIdentifier,
-      worldName: this.#activeWorld,
-    });
 
     this.#logger.debug(
       'GameEngine._finalizeLoadSuccess: Dispatching UI event for game ready (after load).'
