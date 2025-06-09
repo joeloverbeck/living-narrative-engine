@@ -202,6 +202,10 @@ export function registerInterpreters(container) {
       bind(tokens.RebuildLeaderListCacheHandler)
     );
     registry.register(
+      'CHECK_FOLLOW_CYCLE',
+      bind(tokens.CheckFollowCycleHandler)
+    );
+    registry.register(
       'ADD_PERCEPTION_LOG_ENTRY',
       bind(tokens.AddPerceptionLogEntryHandler)
     );

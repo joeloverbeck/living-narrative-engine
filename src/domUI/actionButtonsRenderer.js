@@ -500,30 +500,39 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         this.logger.debug(
           `${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched for action '${actionId}' by actor '${this.#currentActorId}'.`
         );
-        if (this.elements.speechInputElement)
+        if (this.elements.speechInputElement) {
           this.elements.speechInputElement.value = '';
+        }
 
+        // clear state
         this.selectedAction = null;
         if (this.elements.sendButtonElement) {
           this.elements.sendButtonElement.disabled = true;
         }
+
+        /* ---------- UI updates ---------- */
         if (this.elements.listContainerElement) {
-          const selectedButton =
-            this.elements.listContainerElement.querySelector(
-              `button.action-button.selected[data-action-id="${actionId}"]`
-            );
+          const container = this.elements.listContainerElement;
+
+          /* 1️⃣  Remove the visual selection */
+          const selectedButton = container.querySelector(
+            `button.action-button.selected[data-action-id="${actionId}"]`
+          );
           if (selectedButton) {
             selectedButton.classList.remove('selected');
           }
-          const container = this.elements.listContainerElement;
+
+          /* 2️⃣  Play fade-out without deleting children */
           container.classList.remove(ActionButtonsRenderer.FADE_IN_CLASS);
           container.classList.add(ActionButtonsRenderer.FADE_OUT_CLASS);
-          const cleanup = () => {
-            DomUtils.clearElement(container);
+
+          const onFadeOutEnd = () => {
             container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
-            container.removeEventListener('animationend', cleanup);
+            container.removeEventListener('animationend', onFadeOutEnd);
           };
-          container.addEventListener('animationend', cleanup, { once: true });
+          container.addEventListener('animationend', onFadeOutEnd, {
+            once: true,
+          });
         }
       } else {
         this.logger.error(
@@ -540,12 +549,14 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   }
 
   /** @ignore */
+
   /* istanbul ignore next */
   _getTestCurrentActorId() {
     return this.#currentActorId;
   }
 
   /** @ignore */
+
   /* istanbul ignore next */
   _setTestCurrentActorId(actorId) {
     this.#currentActorId = actorId;
