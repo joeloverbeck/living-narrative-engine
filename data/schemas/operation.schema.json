@@ -25,7 +25,6 @@
             "SET_VARIABLE",
             "GET_TIMESTAMP",
             "RESOLVE_DIRECTION",
-            "QUERY_SYSTEM_DATA",
             "SYSTEM_MOVE_ENTITY",
             "REBUILD_LEADER_LIST_CACHE",
             "CHECK_FOLLOW_CYCLE",
@@ -187,24 +186,6 @@
             "properties": {
               "parameters": {
                 "$ref": "#/$defs/SetVariableParameters"
-              }
-            },
-            "required": ["parameters"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "QUERY_SYSTEM_DATA"
-              }
-            },
-            "required": ["type"]
-          },
-          "then": {
-            "properties": {
-              "parameters": {
-                "$ref": "#/$defs/QuerySystemDataParameters"
               }
             },
             "required": ["parameters"]
@@ -515,26 +496,6 @@
         "value": {}
       },
       "required": ["variable_name", "value"],
-      "additionalProperties": false
-    },
-    "QuerySystemDataParameters": {
-      "type": "object",
-      "description": "Parameters for the QUERY_SYSTEM_DATA operation. Queries an external system or data source and stores the result in a context variable.",
-      "properties": {
-        "source_id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "query_details": {
-          "type": ["string", "object"]
-        },
-        "result_variable": {
-          "type": "string",
-          "minLength": 1,
-          "pattern": "^\\S(.*\\S)?$"
-        }
-      },
-      "required": ["source_id", "query_details", "result_variable"],
       "additionalProperties": false
     },
     "ForEachParameters": {

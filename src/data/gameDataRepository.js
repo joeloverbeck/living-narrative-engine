@@ -238,53 +238,6 @@ export class GameDataRepository extends IGameDataRepository {
     );
     return {};
   }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  //  Generic Query Handler
-  // ────────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Handles queries directed to the GameDataRepository.
-   *
-   * @param {string | object} queryDetails - Details about the query.
-   * @returns {any | undefined} The result of the query or undefined if not supported.
-   */
-  handleQuery(queryDetails) {
-    this.#logger.debug(
-      `GameDataRepository.handleQuery received: ${JSON.stringify(queryDetails)}`
-    );
-    if (typeof queryDetails === 'string') {
-      switch (queryDetails) {
-        case 'getWorldName':
-          return this.getWorldName();
-        // Add other simple string-based queries here if needed
-        default:
-          this.#logger.warn(
-            `GameDataRepository: Unsupported string query: '${queryDetails}'`
-          );
-          return undefined;
-      }
-    } else if (typeof queryDetails === 'object' && queryDetails !== null) {
-      // Example for future complex queries:
-      // const { query_type, ...params } = queryDetails;
-      // switch (query_type) {
-      //     case 'someComplexQuery':
-      //         return this.handleSomeComplexQuery(params);
-      //     default:
-      //         this.#logger.warn(`GameDataRepository: Unsupported object query_type: '${queryDetails.query_type}'`);
-      //         return undefined;
-      // }
-      this.#logger.warn(
-        `GameDataRepository: Received object query, but no complex query types are currently supported. Query: ${JSON.stringify(queryDetails)}`
-      );
-      return undefined;
-    } else {
-      this.#logger.warn(
-        `GameDataRepository: Invalid queryDetails format. Expected string or object. Received: ${typeof queryDetails}`
-      );
-      return undefined;
-    }
-  }
 }
 
 export default GameDataRepository;

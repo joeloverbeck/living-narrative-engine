@@ -74,7 +74,6 @@
  * @property {DiToken} PlayerTurnHandler - Token for the player-specific turn handler implementation.
  * @property {DiToken} AITurnHandler - Token for the AI-specific turn handler implementation.
  * @property {DiToken} SystemServiceRegistry - Token for the registry mapping system IDs to services.
- * @property {DiToken} SystemDataRegistry - Token for the registry mapping system IDs to data sources.
  * @property {DiToken} PlayerPromptService - Token for the service managing player action prompting (implementation).
  * @property {DiToken} CommandOutcomeInterpreter - Token for the service interpreting command outcomes (implementation).
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
@@ -125,7 +124,6 @@
  * @property {DiToken} RemoveComponentHandler - Token for the 'REMOVE_COMPONENT' operation handler.
  * @property {DiToken} QueryComponentHandler - Token for the 'QUERY_COMPONENT' operation handler.
  * @property {DiToken} SetVariableHandler - Token for the 'SET_VARIABLE' operation handler.
- * @property {DiToken} QuerySystemDataHandler - Token for the 'QUERY_SYSTEM_DATA' operation handler.
  *
  * // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING START *****
  * @property {DiToken} IConfigurationProvider - Token for the LLM configuration provider interface.
@@ -199,7 +197,6 @@ export const tokens = Object.freeze({
   PlayerTurnHandler: 'PlayerTurnHandler',
   AITurnHandler: 'AITurnHandler',
   SystemServiceRegistry: 'SystemServiceRegistry',
-  SystemDataRegistry: 'SystemDataRegistry',
   PlayerPromptService: 'PlayerPromptService',
   CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',
   PlaytimeTracker: 'PlaytimeTracker',
@@ -248,7 +245,6 @@ export const tokens = Object.freeze({
   RemoveComponentHandler: 'RemoveComponentHandler',
   QueryComponentHandler: 'QueryComponentHandler',
   SetVariableHandler: 'SetVariableHandler',
-  QuerySystemDataHandler: 'QuerySystemDataHandler',
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',
   GetTimestampHandler: 'GetTimestampHandler',
   ResolveDirectionHandler: 'ResolveDirectionHandler',

@@ -4,13 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Added tests for AddPerceptionLogEntryHandler.">
+    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Removing QuerySystemDataHandler.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operation.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operation.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/context/worldContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/context/worldContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/gameDataRepository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/gameDataRepository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/systemDataRegistry.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/worldAndEntityRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/worldAndEntityRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/worldAndEntityRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/worldAndEntityRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/perceptionUpdateService.edgeCases.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/perceptionUpdateService.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/IWorldContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IWorldContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/querySystemDataHandler.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/infrastructureRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/infrastructureRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/interpreterRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/interpreterRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/movementSystem.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/movementSystem.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/operationHandlers/querySystemDataHandler.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/systemDataRegistry.test.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,7 +114,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749479545104</updated>
-      <workItem from="1749479546547" duration="18680000" />
+      <workItem from="1749479546547" duration="19826000" />
     </task>
     <task id="LOCAL-00001" summary="Implemented follow system.">
       <option name="closed" value="true" />
@@ -200,7 +212,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749498283648</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Removing QuerySystemDataHandler.">
+      <option name="closed" value="true" />
+      <created>1749498548921</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1749498548921</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -209,12 +229,12 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Implemented follow system." />
     <MESSAGE value="Added integration tests for the new registrators." />
-    <MESSAGE value="Removing QuerySystemDataHandler." />
     <MESSAGE value="Preventing stupidly-long analysis times." />
     <MESSAGE value="Fixed the dismiss rule." />
     <MESSAGE value="Fixed test issues." />
     <MESSAGE value="Phasing out QuerySystemDataHandler." />
     <MESSAGE value="Added tests for AddPerceptionLogEntryHandler." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added tests for AddPerceptionLogEntryHandler." />
+    <MESSAGE value="Removing QuerySystemDataHandler." />
+    <option name="LAST_COMMIT_MESSAGE" value="Removing QuerySystemDataHandler." />
   </component>
 </project>

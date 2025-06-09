@@ -23,7 +23,6 @@ import AddComponentHandler from '../../logic/operationHandlers/addComponentHandl
 import QueryComponentHandler from '../../logic/operationHandlers/queryComponentHandler.js';
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
-import QuerySystemDataHandler from '../../logic/operationHandlers/querySystemDataHandler.js';
 import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
@@ -111,15 +110,6 @@ export function registerInterpreters(container) {
       (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
     ],
     [
-      tokens.QuerySystemDataHandler,
-      QuerySystemDataHandler,
-      (c, Handler) =>
-        new Handler({
-          logger: c.resolve(tokens.ILogger),
-          systemDataRegistry: c.resolve(tokens.SystemDataRegistry),
-        }),
-    ],
-    [
       tokens.SystemMoveEntityHandler,
       SystemMoveEntityHandler,
       (c, Handler) =>
@@ -198,7 +188,6 @@ export function registerInterpreters(container) {
     registry.register('REMOVE_COMPONENT', bind(tokens.RemoveComponentHandler));
     registry.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));
     registry.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
-    registry.register('QUERY_SYSTEM_DATA', bind(tokens.QuerySystemDataHandler));
     registry.register(
       'SYSTEM_MOVE_ENTITY',
       bind(tokens.SystemMoveEntityHandler)

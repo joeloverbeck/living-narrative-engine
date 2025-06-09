@@ -27,7 +27,6 @@ const mockLogger = {
 const mockLogHandler = jest.fn();
 const mockModifyHandler = jest.fn();
 const mockSetVariableHandler = jest.fn();
-const mockQuerySystemDataHandler = jest.fn();
 const mockHandlerWithError = jest.fn(() => {
   throw new Error('Handler failed!');
 });
@@ -80,20 +79,6 @@ const setVariableOperation = {
 const resolvedSetVariableParameters = {
   variable_name: 'testVar',
   value: 'Hero',
-};
-
-const querySystemDataOperation = {
-  type: 'QUERY_SYSTEM_DATA',
-  parameters: {
-    source: 'test_source',
-    query: { detail: 'query detail for {event.type}' },
-    result_variable: 'queryResult',
-  },
-};
-const resolvedQuerySystemDataParameters = {
-  source: 'test_source',
-  query: { detail: 'query detail for TEST_EVENT' },
-  result_variable: 'queryResult',
 };
 
 /** operation with bad placeholder (for failing-path test) */
@@ -224,24 +209,6 @@ describe('OperationInterpreter', () => {
     expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'Executing handler for operation type "SET_VARIABLE"...'
-    );
-  });
-
-  /* QUERY_SYSTEM_DATA */
-  test('execute should call QUERY_SYSTEM_DATA handler with RESOLVED parameters via registry', () => {
-    mockRegistry.getHandler.mockImplementation((type) =>
-      type === 'QUERY_SYSTEM_DATA' ? mockQuerySystemDataHandler : undefined
-    );
-    interpreter.execute(querySystemDataOperation, mockExecutionContext);
-    expect(mockRegistry.getHandler).toHaveBeenCalledWith('QUERY_SYSTEM_DATA');
-    expect(mockQuerySystemDataHandler).toHaveBeenCalledTimes(1);
-    expect(mockQuerySystemDataHandler).toHaveBeenCalledWith(
-      resolvedQuerySystemDataParameters,
-      mockExecutionContext
-    );
-    expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Executing handler for operation type "QUERY_SYSTEM_DATA"...'
     );
   });
 

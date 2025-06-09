@@ -15,7 +15,6 @@ import { LoggerConfigLoader } from '../configuration/loggerConfigLoader.js';
 // --- Import necessary types for registry population ---
 /** @typedef {import('../registry/systemServiceRegistry.js').SystemServiceRegistry} SystemServiceRegistry */
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
-/** @typedef {import('../data/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../context/worldContext.js').default} WorldContext */
 
 // --- Import registration bundle functions ---
@@ -141,46 +140,6 @@ export function configureContainer(container, uiElements) {
   registerOrchestration(container);
 
   logger.debug('[ContainerConfig] All core bundles registered.');
-
-  // --- Populate Registries (Post-Registration Steps) ---
-  try {
-    logger.debug('[ContainerConfig] Populating SystemDataRegistry...');
-    const systemDataRegistry = /** @type {SystemDataRegistry} */ (
-      container.resolve(tokens.SystemDataRegistry)
-    );
-
-    const gameDataRepo = /** @type {GameDataRepository} */ (
-      container.resolve(tokens.IGameDataRepository)
-    );
-    systemDataRegistry.registerSource('GameDataRepository', gameDataRepo);
-    logger.debug(
-      `[ContainerConfig] Data source 'GameDataRepository' registered in SystemDataRegistry.`
-    );
-
-    const worldContextInstance = /** @type {WorldContext} */ (
-      container.resolve(tokens.IWorldContext)
-    );
-    const worldContextKey = 'WorldContext';
-    logger.debug(
-      `[ContainerConfig] Registering data source '${worldContextKey}' in SystemDataRegistry...`
-    );
-    systemDataRegistry.registerSource(worldContextKey, worldContextInstance);
-    logger.debug(
-      `[ContainerConfig] Data source '${worldContextKey}' successfully registered in SystemDataRegistry.`
-    );
-  } catch (error) {
-    logger.error(
-      '[ContainerConfig] CRITICAL ERROR during SystemDataRegistry population:',
-      {
-        message: error.message,
-        stack: error.stack,
-        errorObj: error,
-      }
-    );
-    throw new Error(`Failed to populate SystemDataRegistry: ${error.message}`, {
-      cause: error,
-    });
-  }
 
   logger.debug(
     '[ContainerConfig] Configuration and registry population complete.'

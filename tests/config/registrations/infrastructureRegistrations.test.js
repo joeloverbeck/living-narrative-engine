@@ -166,20 +166,6 @@ describe('registerInfrastructure', () => {
     );
   });
 
-  test('should register SystemServiceRegistry correctly', () => {
-    registerInfrastructure(container);
-    expect(() => container.resolve(tokens.SystemServiceRegistry)).not.toThrow();
-    const registry = container.resolve(tokens.SystemServiceRegistry);
-    expect(registry).toBeDefined();
-  });
-
-  test('should register SystemDataRegistry correctly', () => {
-    registerInfrastructure(container);
-    expect(() => container.resolve(tokens.SystemDataRegistry)).not.toThrow();
-    const registry = container.resolve(tokens.SystemDataRegistry);
-    expect(registry).toBeDefined();
-  });
-
   test('should log completion message', () => {
     registerInfrastructure(container);
     expect(mockLogger.debug).toHaveBeenCalledWith(

@@ -178,14 +178,6 @@ function importAndRegisterHandlers(registry, deps) {
   registry.register('REMOVE_COMPONENT', (params, ctx) =>
     new RemoveComponentHandler(deps).execute(params, ctx)
   );
-
-  // GET_TIMESTAMP → pull from FakeSystemDataRegistry
-  registry.register('GET_TIMESTAMP', (params, ctx) => {
-    const ts = deps.systemDataRegistry.query('WorldContext', {
-      action: 'getCurrentISOTimestamp',
-    });
-    ctx.evaluationContext.context[params.result_variable] = ts;
-  });
 }
 
 // ────────────────────────────────────────────────────────────────────────────

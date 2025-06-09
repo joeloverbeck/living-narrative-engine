@@ -216,7 +216,6 @@ class WorldContext extends IWorldContext {
 
   /**
    * Resolves a direction taken from a current location to a target location's INSTANCE ID.
-   * This method is intended to be called via SystemDataRegistry for rules.
    *
    * @param {object} queryParams - Parameters for the query.
    * @param {string} queryParams.current_location_id - The INSTANCE ID of the current location entity.
@@ -296,75 +295,6 @@ class WorldContext extends IWorldContext {
    */
   getCurrentISOTimestamp() {
     return new Date().toISOString();
-  }
-
-  /**
-   * Handles queries directed to the WorldContext via the SystemDataRegistry.
-   *
-   * @param {string | object} queryDetails - Details about the query.
-   * Can be a simple string (e.g., "getCurrentISOTimestamp")
-   * or an object (e.g., { action: "getCurrentISOTimestamp" } or { query_type: "..."}).
-   * @returns {any | undefined} The result of the query or undefined if not supported.
-   */
-  handleQuery(queryDetails) {
-    this.#logger.debug(
-      `WorldContext.handleQuery received: ${JSON.stringify(queryDetails)}`
-    );
-
-    let actionToPerform = null;
-    let queryParams = {};
-
-    if (typeof queryDetails === 'string') {
-      actionToPerform = queryDetails;
-    } else if (typeof queryDetails === 'object' && queryDetails !== null) {
-      if (
-        typeof queryDetails.action === 'string' &&
-        queryDetails.action.trim() !== ''
-      ) {
-        actionToPerform = queryDetails.action;
-        const { action: _unusedAction, ...rest } = queryDetails;
-        queryParams = rest;
-      } else if (
-        typeof queryDetails.query_type === 'string' &&
-        queryDetails.query_type.trim() !== ''
-      ) {
-        actionToPerform = queryDetails.query_type;
-        const { query_type: _unusedQueryType, ...rest } = queryDetails;
-        queryParams = rest;
-      }
-    }
-
-    if (!actionToPerform) {
-      this.#logger.warn(
-        `WorldContext: Invalid queryDetails format. Could not determine action/query_type. Received: ${JSON.stringify(queryDetails)}`
-      );
-      return undefined;
-    }
-
-    switch (actionToPerform) {
-      case 'getTargetLocationForDirection':
-        if (queryParams.current_location_id && queryParams.direction_taken) {
-          return this.getTargetLocationForDirection(queryParams);
-        } else {
-          this.#logger.warn(
-            `WorldContext: Missing 'current_location_id' or 'direction_taken' for 'getTargetLocationForDirection' query.`,
-            {
-              queryParams,
-              fullQueryDetails: queryDetails,
-            }
-          );
-          return undefined;
-        }
-      case 'getCurrentISOTimestamp':
-        return this.getCurrentISOTimestamp();
-      // Add other case statements for other actions/query_types WorldContext might support
-      default:
-        this.#logger.warn(
-          `WorldContext: Unsupported action/query_type: '${actionToPerform}'`,
-          { queryDetails }
-        );
-        return undefined;
-    }
   }
 }
 

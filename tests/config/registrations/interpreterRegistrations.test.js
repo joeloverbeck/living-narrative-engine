@@ -5,7 +5,6 @@
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/events/eventBus.js').default} EventBus */
 /** @typedef {import('../../../src/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../../src/data/systemDataRegistry.js').SystemDataRegistry} SystemDataRegistry */
 /** @typedef {import('../../../src/logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../../../src/entities/entityManager.js').default} EntityManager */ // Concrete EntityManager for mock
 /** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // Interface for resolving
@@ -34,7 +33,6 @@ jest.mock('../../../src/logic/operationHandlers/addComponentHandler.js');
 jest.mock('../../../src/logic/operationHandlers/removeComponentHandler.js');
 jest.mock('../../../src/logic/operationHandlers/queryComponentHandler.js');
 jest.mock('../../../src/logic/operationHandlers/setVariableHandler.js');
-jest.mock('../../../src/logic/operationHandlers/querySystemDataHandler.js');
 
 // --- Import AFTER mocking ---
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -47,7 +45,6 @@ import AddComponentHandler from '../../../src/logic/operationHandlers/addCompone
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
-import QuerySystemDataHandler from '../../../src/logic/operationHandlers/querySystemDataHandler.js';
 
 // --- Mock Implementations ---
 const mockLogger = {
@@ -73,7 +70,6 @@ const mockEntityManager = {
 const mockvalidatedEventDispatcher = {
   dispatch: jest.fn().mockResolvedValue(true),
 };
-const mockSystemDataRegistry = { query: jest.fn(), registerSource: jest.fn() };
 const mockSafeEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
 // --- Mock DI Container ---
@@ -228,9 +224,6 @@ describe('registerInterpreters', () => {
       mockvalidatedEventDispatcher,
       { lifecycle: 'singleton' }
     );
-    mockContainer.register(tokens.SystemDataRegistry, mockSystemDataRegistry, {
-      lifecycle: 'singleton',
-    });
 
     // Register SafeEventDispatcher for handlers that require it
     mockContainer.register(
@@ -250,7 +243,6 @@ describe('registerInterpreters', () => {
     Object.values(mockvalidatedEventDispatcher).forEach((fn) =>
       fn.mockClear?.()
     );
-    Object.values(mockSystemDataRegistry).forEach((fn) => fn.mockClear?.());
     Object.values(mockSafeEventDispatcher).forEach((fn) => fn.mockClear?.());
 
     // Clear constructor mocks defined via jest.mock() for USED handlers/interpreters
@@ -269,7 +261,6 @@ describe('registerInterpreters', () => {
     RemoveComponentHandler.mockClear?.();
     QueryComponentHandler.mockClear?.();
     SetVariableHandler.mockClear?.();
-    QuerySystemDataHandler.mockClear?.();
   }); // End beforeEach
 
   // --- Tests ---
@@ -310,11 +301,6 @@ describe('registerInterpreters', () => {
     );
     expect(mockContainer.register).toHaveBeenCalledWith(
       tokens.SetVariableHandler,
-      expect.any(Function),
-      expect.objectContaining({ lifecycle: 'singletonFactory' })
-    );
-    expect(mockContainer.register).toHaveBeenCalledWith(
-      tokens.QuerySystemDataHandler,
       expect.any(Function),
       expect.objectContaining({ lifecycle: 'singletonFactory' })
     );
@@ -430,10 +416,6 @@ describe('registerInterpreters', () => {
       'SET_VARIABLE',
       expect.any(Function)
     );
-    expect(mockInstance.register).toHaveBeenCalledWith(
-      'QUERY_SYSTEM_DATA',
-      expect.any(Function)
-    );
 
     // Ensure removed handlers weren't called
     expect(mockInstance.register).not.toHaveBeenCalledWith(
@@ -475,22 +457,6 @@ describe('registerInterpreters', () => {
     expect(SetVariableHandler).toHaveBeenCalledTimes(1);
     expect(SetVariableHandler).toHaveBeenCalledWith(
       expect.objectContaining({ logger: mockLogger })
-    );
-  });
-
-  it('resolving QuerySystemDataHandler does not throw', () => {
-    registerInterpreters(mockContainer);
-    let handler;
-    expect(() => {
-      handler = mockContainer.resolve(tokens.QuerySystemDataHandler);
-    }).not.toThrow();
-    expect(handler).toBeDefined();
-    expect(QuerySystemDataHandler).toHaveBeenCalledTimes(1);
-    expect(QuerySystemDataHandler).toHaveBeenCalledWith(
-      expect.objectContaining({
-        logger: mockLogger,
-        systemDataRegistry: mockSystemDataRegistry,
-      })
     );
   });
 }); // End describe

@@ -6,7 +6,9 @@ const createMocks = () => {
   const logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
   const commandParser = { parse: jest.fn() };
   const targetResolutionService = { resolveActionTarget: jest.fn() };
-  const validatedEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+  const validatedEventDispatcher = {
+    dispatch: jest.fn().mockResolvedValue(true),
+  };
   const safeEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
   const worldContext = { getLocationOfEntity: jest.fn() };
   const entityManager = { getEntityInstance: jest.fn() };
@@ -66,7 +68,10 @@ describe('CommandProcessor.processCommand', () => {
   test('processes command successfully', async () => {
     const actor = { id: 'actor1' };
     mocks.commandParser.parse.mockReturnValue({ actionId: 'core:look' });
-    mocks.gameDataRepository.getActionDefinition.mockReturnValue({ id: 'core:look', target_domain: 'none' });
+    mocks.gameDataRepository.getActionDefinition.mockReturnValue({
+      id: 'core:look',
+      target_domain: 'none',
+    });
     mocks.worldContext.getLocationOfEntity.mockReturnValue({ id: 'loc1' });
     mocks.targetResolutionService.resolveActionTarget.mockResolvedValue({
       status: ResolutionStatus.NONE,
@@ -80,6 +85,9 @@ describe('CommandProcessor.processCommand', () => {
       originalInput: 'look',
       actionResult: { actionId: 'core:look' },
     });
-    expect(mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith('core:attempt_action', expect.any(Object));
+    expect(mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:attempt_action',
+      expect.any(Object)
+    );
   });
 });

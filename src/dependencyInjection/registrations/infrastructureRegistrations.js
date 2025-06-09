@@ -10,7 +10,6 @@ import { SafeEventDispatcher } from '../../events/safeEventDispatcher.js';
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import { SystemServiceRegistry } from '../../registry/systemServiceRegistry.js';
-import { SystemDataRegistry } from '../../data/systemDataRegistry.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -148,15 +147,6 @@ export function registerInfrastructure(container) {
   );
   log.debug(
     `Infrastructure Registration: Registered ${tokens.SystemServiceRegistry}.`
-  );
-
-  r.singletonFactory(
-    tokens.SystemDataRegistry,
-    (c) =>
-      new SystemDataRegistry(/** @type {ILogger} */ (c.resolve(tokens.ILogger)))
-  );
-  log.debug(
-    `Infrastructure Registration: Registered ${tokens.SystemDataRegistry}.`
   );
 
   log.debug('Infrastructure Registration: complete.');
