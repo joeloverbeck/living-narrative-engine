@@ -294,7 +294,6 @@ export const tokens = Object.freeze({
 
   // --- Action-related services
   LeaderListSyncService: 'LeaderListSyncService',
-  FollowValidationService: 'FollowValidationService',
 
   // --- AI Game State Providers (New) ---
   IEntitySummaryProvider: 'IEntitySummaryProvider',

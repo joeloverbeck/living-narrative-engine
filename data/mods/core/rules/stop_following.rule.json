@@ -30,25 +30,16 @@
       }
     },
     {
-      "type": "QUERY_SYSTEM_DATA",
+      "type": "REBUILD_LEADER_LIST_CACHE",
       "comment": "Step 3: Tell the LeaderListSyncService to rebuild the cache for the old leader.",
       "parameters": {
-        "source_id": "LeaderListSyncService",
-        "query_details": {
-          "action": "rebuildFor",
-          "leaderIds": ["{context.oldFollowingData.leaderId}"]
-        },
-        "result_variable": "leaderSyncResult"
+        "leaderIds": ["{context.oldFollowingData.leaderId}"]
       }
     },
     {
-      "type": "QUERY_SYSTEM_DATA",
-      "comment": "Step 4.1: Get the current timestamp for the perceptible event.",
+      "type": "GET_TIMESTAMP",
+      "comment": "Get the current ISO timestamp for perception logging.",
       "parameters": {
-        "source_id": "WorldContext",
-        "query_details": {
-          "action": "getCurrentISOTimestamp"
-        },
         "result_variable": "currentTimestamp"
       }
     },

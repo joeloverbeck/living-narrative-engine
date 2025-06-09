@@ -45,10 +45,7 @@
           "description": "Required. Container for parameters specific to the operation 'type'. The structure is validated conditionally based on the 'type' value."
         }
       },
-      "required": [
-        "type",
-        "parameters"
-      ],
+      "required": ["type", "parameters"],
       "additionalProperties": false,
       "allOf": [
         {
@@ -58,9 +55,7 @@
                 "const": "QUERY_COMPONENT"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -68,9 +63,7 @@
                 "$ref": "#/$defs/QueryComponentParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -80,9 +73,7 @@
                 "const": "MODIFY_COMPONENT"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -90,9 +81,7 @@
                 "$ref": "#/$defs/ModifyComponentParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -102,9 +91,7 @@
                 "const": "ADD_COMPONENT"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -112,9 +99,7 @@
                 "$ref": "#/$defs/AddComponentParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -124,9 +109,7 @@
                 "const": "REMOVE_COMPONENT"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -134,9 +117,7 @@
                 "$ref": "#/$defs/RemoveComponentParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -146,9 +127,7 @@
                 "const": "DISPATCH_EVENT"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -156,9 +135,7 @@
                 "$ref": "#/$defs/DispatchEventParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -168,9 +145,7 @@
                 "const": "IF"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -178,9 +153,7 @@
                 "$ref": "#/$defs/IfParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -190,9 +163,7 @@
                 "const": "LOG"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -200,9 +171,7 @@
                 "$ref": "#/$defs/LogParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -212,9 +181,7 @@
                 "const": "SET_VARIABLE"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -222,9 +189,7 @@
                 "$ref": "#/$defs/SetVariableParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -234,9 +199,7 @@
                 "const": "QUERY_SYSTEM_DATA"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -244,9 +207,7 @@
                 "$ref": "#/$defs/QuerySystemDataParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -256,9 +217,7 @@
                 "const": "FOR_EACH"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -266,9 +225,7 @@
                 "$ref": "#/$defs/ForEachParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -278,9 +235,7 @@
                 "const": "SYSTEM_MOVE_ENTITY"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -288,9 +243,7 @@
                 "$ref": "#/$defs/SystemMoveEntityParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -307,9 +260,7 @@
                 "$ref": "#/$defs/GetTimestampParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -326,9 +277,7 @@
                 "$ref": "#/$defs/ResolveDirectionParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -338,9 +287,7 @@
                 "const": "REBUILD_LEADER_LIST_CACHE"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -348,9 +295,7 @@
                 "$ref": "#/$defs/RebuildLeaderListCacheParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -360,9 +305,7 @@
                 "const": "CHECK_FOLLOW_CYCLE"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -370,9 +313,7 @@
                 "$ref": "#/$defs/CheckFollowCycleParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         },
         {
@@ -382,9 +323,7 @@
                 "const": "ADD_PERCEPTION_LOG_ENTRY"
               }
             },
-            "required": [
-              "type"
-            ]
+            "required": ["type"]
           },
           "then": {
             "properties": {
@@ -392,9 +331,7 @@
                 "$ref": "#/$defs/AddPerceptionLogEntryParameters"
               }
             },
-            "required": [
-              "parameters"
-            ]
+            "required": ["parameters"]
           }
         }
       ]
@@ -412,10 +349,7 @@
           "description": "Required. The namespaced ID of the location to move the entity to. Can be a placeholder string like '{event.payload.currentLocationId}'."
         }
       },
-      "required": [
-        "entity_ref",
-        "target_location_id"
-      ],
+      "required": ["entity_ref", "target_location_id"],
       "additionalProperties": false
     },
     "QueryComponentParameters": {
@@ -434,11 +368,7 @@
           "pattern": "^\\S(.*\\S)?$"
         }
       },
-      "required": [
-        "entity_ref",
-        "component_type",
-        "result_variable"
-      ],
+      "required": ["entity_ref", "component_type", "result_variable"],
       "additionalProperties": false
     },
     "ModifyComponentParameters": {
@@ -457,20 +387,11 @@
         },
         "mode": {
           "type": "string",
-          "enum": [
-            "set",
-            "inc"
-          ]
+          "enum": ["set", "inc"]
         },
         "value": {}
       },
-      "required": [
-        "entity_ref",
-        "component_type",
-        "field",
-        "mode",
-        "value"
-      ],
+      "required": ["entity_ref", "component_type", "field", "mode", "value"],
       "additionalProperties": false,
       "allOf": [
         {
@@ -480,9 +401,7 @@
                 "const": "inc"
               }
             },
-            "required": [
-              "mode"
-            ]
+            "required": ["mode"]
           },
           "then": {
             "properties": {
@@ -490,9 +409,7 @@
                 "type": "number"
               }
             },
-            "required": [
-              "value"
-            ]
+            "required": ["value"]
           }
         }
       ]
@@ -512,11 +429,7 @@
           "minProperties": 0
         }
       },
-      "required": [
-        "entity_ref",
-        "component_type",
-        "value"
-      ],
+      "required": ["entity_ref", "component_type", "value"],
       "additionalProperties": false
     },
     "RemoveComponentParameters": {
@@ -530,10 +443,7 @@
           "$ref": "./common.schema.json#/definitions/namespacedId"
         }
       },
-      "required": [
-        "entity_ref",
-        "component_type"
-      ],
+      "required": ["entity_ref", "component_type"],
       "additionalProperties": false
     },
     "DispatchEventParameters": {
@@ -548,9 +458,7 @@
           "default": {}
         }
       },
-      "required": [
-        "eventType"
-      ],
+      "required": ["eventType"],
       "additionalProperties": false
     },
     "IfParameters": {
@@ -575,10 +483,7 @@
           }
         }
       },
-      "required": [
-        "condition",
-        "then_actions"
-      ],
+      "required": ["condition", "then_actions"],
       "additionalProperties": false
     },
     "LogParameters": {
@@ -591,18 +496,11 @@
         },
         "level": {
           "type": "string",
-          "enum": [
-            "debug",
-            "info",
-            "warn",
-            "error"
-          ],
+          "enum": ["debug", "info", "warn", "error"],
           "default": "info"
         }
       },
-      "required": [
-        "message"
-      ],
+      "required": ["message"],
       "additionalProperties": false
     },
     "SetVariableParameters": {
@@ -616,10 +514,7 @@
         },
         "value": {}
       },
-      "required": [
-        "variable_name",
-        "value"
-      ],
+      "required": ["variable_name", "value"],
       "additionalProperties": false
     },
     "QuerySystemDataParameters": {
@@ -631,10 +526,7 @@
           "minLength": 1
         },
         "query_details": {
-          "type": [
-            "string",
-            "object"
-          ]
+          "type": ["string", "object"]
         },
         "result_variable": {
           "type": "string",
@@ -642,11 +534,7 @@
           "pattern": "^\\S(.*\\S)?$"
         }
       },
-      "required": [
-        "source_id",
-        "query_details",
-        "result_variable"
-      ],
+      "required": ["source_id", "query_details", "result_variable"],
       "additionalProperties": false
     },
     "ForEachParameters": {
@@ -667,11 +555,7 @@
           }
         }
       },
-      "required": [
-        "collection",
-        "item_variable",
-        "actions"
-      ],
+      "required": ["collection", "item_variable", "actions"],
       "additionalProperties": false
     },
     "GetTimestampParameters": {
@@ -682,9 +566,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "result_variable"
-      ],
+      "required": ["result_variable"],
       "additionalProperties": false
     },
     "ResolveDirectionParameters": {
@@ -703,11 +585,7 @@
           "minLength": 1
         }
       },
-      "required": [
-        "current_location_id",
-        "direction",
-        "result_variable"
-      ],
+      "required": ["current_location_id", "direction", "result_variable"],
       "additionalProperties": false
     },
     "RebuildLeaderListCacheParameters": {
@@ -723,9 +601,7 @@
           "description": "Array of leader entity IDs."
         }
       },
-      "required": [
-        "leaderIds"
-      ],
+      "required": ["leaderIds"],
       "additionalProperties": false
     },
     "CheckFollowCycleParameters": {
@@ -746,11 +622,7 @@
           "pattern": "^\\S(.*\\S)?$"
         }
       },
-      "required": [
-        "follower_id",
-        "leader_id",
-        "result_variable"
-      ],
+      "required": ["follower_id", "leader_id", "result_variable"],
       "additionalProperties": false
     },
     "AddPerceptionLogEntryParameters": {
@@ -768,10 +640,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "location_id",
-        "entry"
-      ],
+      "required": ["location_id", "entry"],
       "additionalProperties": false
     }
   }

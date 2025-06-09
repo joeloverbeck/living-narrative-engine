@@ -31,7 +31,6 @@ import { ActionValidationService } from '../../../src/actions/validation/actionV
 import CommandParser from '../../../src/commands/commandParser.js';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
 import LeaderListSyncService from '../../../src/actions/services/leaderListSyncService.js';
-import FollowValidationService from '../../../src/actions/services/followValidationService.js';
 
 describe('registerCommandAndAction', () => {
   /** @type {AppContainer} */
@@ -105,11 +104,6 @@ describe('registerCommandAndAction', () => {
       )}.`
     );
     expect(logCalls).toContain(
-      `Command and Action Registration: Registered ${String(
-        tokens.FollowValidationService
-      )}.`
-    );
-    expect(logCalls).toContain(
       `Command and Action Registration: Registered ${String(tokens.ICommandParser)}.`
     );
     expect(logCalls).toContain(
@@ -168,12 +162,6 @@ describe('registerCommandAndAction', () => {
       {
         token: tokens.LeaderListSyncService,
         Class: LeaderListSyncService,
-        lifecycle: 'singletonFactory',
-        tags: undefined,
-      },
-      {
-        token: tokens.FollowValidationService,
-        Class: FollowValidationService,
         lifecycle: 'singletonFactory',
         tags: undefined,
       },

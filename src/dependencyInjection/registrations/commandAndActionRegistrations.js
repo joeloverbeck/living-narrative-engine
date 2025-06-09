@@ -33,7 +33,6 @@ import { ActionValidationService } from '../../actions/validation/actionValidati
 import CommandParser from '../../commands/commandParser.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 import LeaderListSyncService from '../../actions/services/leaderListSyncService.js';
-import FollowValidationService from '../../actions/services/followValidationService.js';
 
 // --- Helper Function Imports ---
 import { formatActionCommand } from '../../actions/actionFormatter.js';
@@ -122,18 +121,6 @@ export function registerCommandAndAction(container) {
   );
   logger.debug(
     `Command and Action Registration: Registered ${String(tokens.LeaderListSyncService)}.`
-  );
-
-  r.singletonFactory(
-    tokens.FollowValidationService,
-    (c) =>
-      new FollowValidationService({
-        logger: c.resolve(tokens.ILogger),
-        entityManager: c.resolve(tokens.IEntityManager),
-      })
-  );
-  logger.debug(
-    `Command and Action Registration: Registered ${String(tokens.FollowValidationService)}.`
   );
 
   // --- Command Parsing and Processing ---
