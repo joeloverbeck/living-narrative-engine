@@ -52,11 +52,13 @@ class MockEntity {
     this.hasComponent = jest.fn((compId) => compId in this._componentsData);
     this.componentEntries = Object.entries(this._componentsData);
   }
+
   setComponentData(id, data) {
     this._componentsData[id] = data;
     this.componentEntries = Object.entries(this._componentsData);
     this.hasComponent = jest.fn((compId) => compId in this._componentsData);
   }
+
   removeComponent(id) {
     delete this._componentsData[id];
     this.componentEntries = Object.entries(this._componentsData);
@@ -296,6 +298,7 @@ describe('AIGameStateProvider Integration Tests', () => {
             command: 'c1',
             name: DEFAULT_FALLBACK_ACTION_NAME,
             description: DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
+            params: {},
           },
         ]);
       });

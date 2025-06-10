@@ -1,5 +1,7 @@
+// src/data/providers/availableActionsProvider.js
+
 /**
- * @file This module provides the available actions data for an actor.
+ * @file Provides available actions data for an actor, now including action params.
  * @see src/data/providers/availableActionsProvider.js
  */
 
@@ -17,12 +19,15 @@ import {
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AIAvailableActionDTO} AIAvailableActionDTO */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
+
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
+/**
+ * Provider that discovers actions via the ActionDiscoveryService and surfaces
+ * id, name, command, description, AND params for AI consumption.
+ */
 export class AvailableActionsProvider extends IAvailableActionsProvider {
-  /** @type {IActionDiscoveryService} */
   #actionDiscoveryService;
-  /** @type {IEntityManager} */
   #entityManager;
 
   /**
@@ -38,27 +43,29 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
 
   /**
    * @override
+   * @param {Entity} actor
+   * @param {ITurnContext} turnContext
+   * @param {ILogger} logger
+   * @returns {Promise<AIAvailableActionDTO[]>}
    */
   async get(actor, turnContext, logger) {
     logger.debug(
       `AvailableActionsProvider: Discovering actions for actor ${actor.id}`
     );
-    /** @type {AIAvailableActionDTO[]} */
     let availableActionsDto = [];
 
     try {
       const positionComponent = actor.getComponentData(POSITION_COMPONENT_ID);
-      const currentLocationId = positionComponent?.locationId;
-      let currentLocationEntity = null;
-      if (currentLocationId && this.#entityManager) {
-        currentLocationEntity =
-          await this.#entityManager.getEntityInstance(currentLocationId);
+      const locationId = positionComponent?.locationId;
+      let locationEntity = null;
+      if (locationId) {
+        locationEntity =
+          await this.#entityManager.getEntityInstance(locationId);
       }
 
-      /** @type {import('../../systems/actionDiscoveryService.js').ActionContext} */
       const actionCtx = {
         actingEntity: actor,
-        currentLocation: currentLocationEntity,
+        currentLocation: locationEntity,
         entityManager: this.#entityManager,
         worldContext: turnContext?.game ?? {},
         logger,
@@ -72,9 +79,10 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
       if (Array.isArray(discovered)) {
         availableActionsDto = discovered.map((a) => ({
           id: a.id || DEFAULT_FALLBACK_ACTION_ID,
-          command: a.command || DEFAULT_FALLBACK_ACTION_COMMAND,
           name: a.name || DEFAULT_FALLBACK_ACTION_NAME,
+          command: a.command || DEFAULT_FALLBACK_ACTION_COMMAND,
           description: a.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
+          params: a.params || {},
         }));
       }
     } catch (err) {
@@ -84,6 +92,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
       );
       availableActionsDto = [];
     }
+
     return availableActionsDto;
   }
 }

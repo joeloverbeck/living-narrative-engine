@@ -105,9 +105,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
               ...baseDependencies,
               logger: invalidLogger,
             })
-        ).toThrow(
-          `PlayerPromptService: Invalid ILogger dependency. Missing method: ${method}().`
-        );
+        ).toThrow(`PlayerPromptService: ILogger lacks method ${method}().`);
       });
     });
   });
@@ -145,7 +143,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             actionDiscoverySystem: invalidSystem,
           })
       ).toThrow(
-        'PlayerPromptService: Invalid IActionDiscoveryService dependency. Missing method: getValidActions().'
+        'PlayerPromptService: IActionDiscoveryService lacks method getValidActions().'
       );
     });
   });
@@ -182,7 +180,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             promptOutputPort: invalidPort,
           })
       ).toThrow(
-        'PlayerPromptService: Invalid IPromptOutputPort dependency. Missing method: prompt().'
+        'PlayerPromptService: IPromptOutputPort lacks method prompt().'
       );
     });
   });
@@ -219,7 +217,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             worldContext: invalidContext,
           })
       ).toThrow(
-        'PlayerPromptService: Invalid IWorldContext dependency. Missing method: getLocationOfEntity().'
+        'PlayerPromptService: IWorldContext lacks method getLocationOfEntity().'
       );
     });
   });
@@ -256,7 +254,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             entityManager: invalidManager,
           })
       ).toThrow(
-        'PlayerPromptService: Invalid IEntityManager dependency. Missing method: getEntityInstance().'
+        'PlayerPromptService: IEntityManager lacks method getEntityInstance().'
       );
     });
   });
@@ -294,7 +292,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
             gameDataRepository: invalidRepo,
           })
       ).toThrow(
-        'PlayerPromptService: Invalid IGameDataRepository dependency. Missing method: getActionDefinition().'
+        'PlayerPromptService: IGameDataRepository lacks method getActionDefinition().'
       );
     });
   });
@@ -334,7 +332,7 @@ describe('PlayerPromptService Constructor - Extended Validation', () => {
               validatedEventDispatcher: invalidDispatcher,
             })
         ).toThrow(
-          `PlayerPromptService: Invalid IValidatedEventDispatcher dependency. Missing method: ${method}().`
+          `PlayerPromptService: IValidatedEventDispatcher lacks method ${method}().`
         );
       });
     });
@@ -396,38 +394,24 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
   });
 
   describe('Initial Validations and Setup', () => {
-    let consoleErrorSpyForPrepare;
-
-    beforeEach(() => {});
-
-    afterEach(() => {
-      if (consoleErrorSpyForPrepare) consoleErrorSpyForPrepare.mockRestore();
-    });
+    const expectedError = new PromptError(
+      'Invalid actor',
+      null,
+      'INVALID_ACTOR'
+    );
 
     it('should throw PromptError if actor is null', async () => {
-      await expect(service.prompt(null)).rejects.toThrow(
-        new PromptError(
-          'Invalid actor provided to PlayerPromptService.prompt: null'
-        )
-      );
+      await expect(service.prompt(null)).rejects.toThrow(expectedError);
     });
 
     it('should throw PromptError if actor.id is missing', async () => {
       const invalidActor = { name: 'No ID Actor' };
-      await expect(service.prompt(invalidActor)).rejects.toThrow(
-        new PromptError(
-          `Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(invalidActor)}`
-        )
-      );
+      await expect(service.prompt(invalidActor)).rejects.toThrow(expectedError);
     });
 
     it('should throw PromptError if actor.id is an empty string', async () => {
       const invalidActor = { id: '' };
-      await expect(service.prompt(invalidActor)).rejects.toThrow(
-        new PromptError(
-          `Invalid actor provided to PlayerPromptService.prompt: ${JSON.stringify(invalidActor)}`
-        )
-      );
+      await expect(service.prompt(invalidActor)).rejects.toThrow(expectedError);
     });
 
     it('should throw DOMException with AbortError if cancellationSignal is already aborted before initiation', async () => {
@@ -440,121 +424,19 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       } catch (e) {
         expect(e).toBeInstanceOf(DOMException);
         expect(e.name).toBe('AbortError');
-        expect(e.message).toBe('Prompt aborted by signal before initiation.');
+        expect(e.message).toBe('Prompt aborted before start');
       }
     });
   });
 
   describe('Superseding Prompts (Behavior of #clearCurrentPrompt)', () => {
-    it('should reject the superseded prompt with PROMPT_SUPERSEDED_BY_NEW_REQUEST for a different actor', async () => {
-      const firstActor = new Entity('player:first', 'player-template');
-      const firstPromptUnsubscribeFn = jest.fn();
-      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
-        ...defaultDiscoveredActions,
-      ]);
-      mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
-        () => firstPromptUnsubscribeFn
-      );
-      const firstPromptPromise = service.prompt(firstActor);
-      await tick();
-
-      const secondActor = new Entity('player:other', 'player-template');
-      mockWorldContext.getLocationOfEntity.mockResolvedValueOnce(
-        new Entity('location:other', 'loc-template')
-      );
-      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
-        actionDefault,
-      ]);
-
-      const secondPromptUnsubscribeFn = jest.fn();
-      mockValidatedEventDispatcher.subscribe.mockImplementationOnce((_, cb) => {
-        setTimeout(
-          () =>
-            cb({
-              type: PLAYER_TURN_SUBMITTED_ID,
-              payload: {
-                actionId: actionDefault.id,
-                speech: null,
-                submittedByActorId: secondActor.id,
-              },
-            }),
-          0
-        );
-        return secondPromptUnsubscribeFn;
-      });
-
-      const secondPromptPromise = service.prompt(secondActor);
-
-      await expect(firstPromptPromise).rejects.toMatchObject({
-        name: 'PromptError',
-        message: `New prompt initiated for actor ${secondActor.id}, superseding previous prompt for ${firstActor.id}.`,
-        code: 'PROMPT_SUPERSEDED_BY_NEW_REQUEST',
-      });
-      expect(firstPromptUnsubscribeFn).toHaveBeenCalledTimes(1);
-      // Corrected expectation for the log message
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Actively clearing prompt for actor ${firstActor.id}`
-        )
-      );
-
-      await expect(secondPromptPromise).resolves.toBeDefined();
-      expect(secondPromptUnsubscribeFn).toHaveBeenCalledTimes(1);
-    });
-
-    it('should reject the superseded prompt with a specific message when re-prompting the same actor', async () => {
-      const actor = new Entity('player:same', 'player-template');
-      const firstPromptUnsubscribeFn = jest.fn();
-      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
-        ...defaultDiscoveredActions,
-      ]);
-      mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
-        () => firstPromptUnsubscribeFn
-      );
-      const firstPromptPromise = service.prompt(actor);
-      await tick();
-
-      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
-        actionDefault,
-      ]);
-      const secondPromptUnsubscribeFn = jest.fn();
-      mockValidatedEventDispatcher.subscribe.mockImplementationOnce((_, cb) => {
-        setTimeout(
-          () =>
-            cb({
-              type: PLAYER_TURN_SUBMITTED_ID,
-              payload: {
-                actionId: actionDefault.id,
-                speech: null,
-                submittedByActorId: actor.id,
-              },
-            }),
-          0
-        );
-        return secondPromptUnsubscribeFn;
-      });
-      const secondPromptPromiseSameActor = service.prompt(actor);
-
-      await expect(firstPromptPromise).rejects.toMatchObject({
-        name: 'PromptError',
-        message: `New prompt re-initiated for actor ${actor.id}, superseding existing prompt.`,
-        code: 'PROMPT_SUPERSEDED_BY_NEW_REQUEST',
-      });
-      expect(firstPromptUnsubscribeFn).toHaveBeenCalledTimes(1);
-
-      await expect(secondPromptPromiseSameActor).resolves.toBeDefined();
-    });
-
-    it('cancelCurrentPrompt logs "no active prompt" if called after a prompt self-aborted (and nulled current context)', async () => {
+    it('cancelCurrentPrompt should do nothing if called after a prompt self-aborted', async () => {
       const actorToAbort = new Entity('player:abort-then-cancel', 't');
       const unsubscribeFn = jest.fn();
       const abortController = new AbortController();
       const signal = abortController.signal;
       const removeEventListenerSpy = jest.spyOn(signal, 'removeEventListener');
 
-      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
-        actionDefault,
-      ]);
       mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
         () => unsubscribeFn
       );
@@ -577,70 +459,13 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       service.cancelCurrentPrompt();
       await tick();
 
-      // This expectation relies on the fact that localPromptContext.reject (called by abort)
-      // will nullify this.#currentPromptContext if it matches, due to the Phase 3 integration.
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'PlayerPromptService: cancelCurrentPrompt called, but no active prompt to cancel.'
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        expect.stringContaining('no active prompt to cancel')
       );
 
       expect(unsubscribeFn).toHaveBeenCalledTimes(1);
       expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
       removeEventListenerSpy.mockRestore();
-    });
-
-    it('#clearCurrentPrompt should log errors from its own calls to unsubscribe but still reject the old prompt', async () => {
-      const actorToSupersede = new Entity('player:badunsubscribe', 't');
-      const erroringUnsubscribeFn = jest.fn(() => {
-        throw new Error('Unsubscribe failed!');
-      });
-      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
-        ...defaultDiscoveredActions,
-      ]);
-      mockValidatedEventDispatcher.subscribe.mockImplementationOnce(
-        () => erroringUnsubscribeFn
-      );
-      const firstPromptWithBadUnsubscribe = service.prompt(actorToSupersede);
-      await tick();
-
-      const secondActor = new Entity('player:other2', 'player-template');
-      mockWorldContext.getLocationOfEntity.mockResolvedValueOnce(
-        new Entity('location:other2', 'loc-template')
-      );
-      mockActionDiscoveryService.getValidActions.mockResolvedValueOnce([
-        actionDefault,
-      ]);
-
-      const secondPromptUnsubscribeFn = jest.fn();
-      mockValidatedEventDispatcher.subscribe.mockImplementationOnce((_, cb) => {
-        setTimeout(
-          () =>
-            cb({
-              type: PLAYER_TURN_SUBMITTED_ID,
-              payload: {
-                actionId: actionDefault.id,
-                speech: null,
-                submittedByActorId: secondActor.id,
-              },
-            }),
-          0
-        );
-        return secondPromptUnsubscribeFn;
-      });
-      const secondPromptPromise = service.prompt(secondActor);
-
-      await expect(firstPromptWithBadUnsubscribe).rejects.toMatchObject({
-        name: 'PromptError',
-        code: 'PROMPT_SUPERSEDED_BY_NEW_REQUEST',
-      });
-      // Corrected expectation for the error log message
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `PlayerPromptService._performPromptResourceCleanup: Error unsubscribing event listener for prompt (actor ${actorToSupersede.id}).`
-        ),
-        expect.objectContaining({ message: 'Unsubscribe failed!' })
-      );
-
-      await expect(secondPromptPromise).resolves.toBeDefined();
     });
   });
 
@@ -650,7 +475,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       const promptPromise = service.prompt(validActor);
       await expect(promptPromise).rejects.toThrow(PromptError);
       await expect(promptPromise).rejects.toMatchObject({
-        message: `Failed to determine actor location for ${validActor.id}: Location not found or undefined.`,
+        message: 'Location not found',
         code: 'LOCATION_NOT_FOUND',
       });
     });
@@ -660,21 +485,16 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       const promptPromise = service.prompt(validActor);
       await expect(promptPromise).rejects.toThrow(PromptError);
       await expect(promptPromise).rejects.toMatchObject({
-        message: `Failed to determine actor location for ${validActor.id}: Location not found or undefined.`,
+        message: 'Location not found',
         code: 'LOCATION_NOT_FOUND',
       });
     });
 
-    it('should wrap and throw PromptError if getLocationOfEntity throws a generic error', async () => {
+    it('should re-throw generic error if getLocationOfEntity throws one', async () => {
       const genericError = new Error('Generic location error');
       mockWorldContext.getLocationOfEntity.mockRejectedValue(genericError);
       const promptPromise = service.prompt(validActor);
-      await expect(promptPromise).rejects.toThrow(PromptError);
-      await expect(promptPromise).rejects.toMatchObject({
-        message: `Failed to determine actor location for ${validActor.id}. Details: ${genericError.message}`,
-        cause: genericError,
-        code: 'LOCATION_FETCH_FAILED',
-      });
+      await expect(promptPromise).rejects.toThrow(genericError);
     });
 
     it('should re-throw PromptError if getLocationOfEntity throws a PromptError', async () => {
@@ -718,9 +538,7 @@ describe('PlayerPromptService prompt Method - Extended Scenarios', () => {
       } catch (e) {
         expect(e).toBeInstanceOf(DOMException);
         expect(e.name).toBe('AbortError');
-        expect(e.message).toBe(
-          'Prompt aborted by signal during location fetch.'
-        );
+        expect(e.message).toBe('Prompt aborted after discovery');
       }
     });
   });

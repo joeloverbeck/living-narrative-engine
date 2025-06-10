@@ -160,7 +160,6 @@ describe('AIGameStateProvider', () => {
       test('should throw error if actor is null or has no ID', async () => {
         const expectedErrorMsg =
           'AIGameStateProvider: Actor is invalid or missing ID.';
-        // The refactored provider no longer logs on this error, it just throws.
         await expect(
           provider.buildGameState(null, turnContext, logger)
         ).rejects.toThrow(expectedErrorMsg);
@@ -172,7 +171,6 @@ describe('AIGameStateProvider', () => {
       test('should throw error if turnContext is null', async () => {
         const actor = new MockEntity('actor1');
         const expectedErrorMsg = `AIGameStateProvider: TurnContext is invalid for actor ${actor.id}.`;
-        // The refactored provider no longer logs on this error, it just throws.
         await expect(
           provider.buildGameState(actor, null, logger)
         ).rejects.toThrow(expectedErrorMsg);
@@ -200,7 +198,7 @@ describe('AIGameStateProvider', () => {
             mockActor,
             expect.objectContaining({
               actingEntity: mockActor,
-              currentLocation: loc, // CRITICAL: Expect the full location entity object
+              currentLocation: loc,
               entityManager,
               worldContext: turnContext.game,
               logger,
@@ -210,7 +208,6 @@ describe('AIGameStateProvider', () => {
       });
 
       test('should return empty actions and log error if ActionDiscoveryService is not available', async () => {
-        // Arrange: For this specific test, create a provider with a null ActionDiscoveryService
         const availableActionsProviderWithNullADS =
           new AvailableActionsProvider({
             actionDiscoveryService: null,
@@ -227,14 +224,12 @@ describe('AIGameStateProvider', () => {
           perceptionLogProvider: new PerceptionLogProvider(),
         });
 
-        // Act
         const gameState = await localProvider.buildGameState(
           mockActor,
           turnContext,
           logger
         );
 
-        // Assert
         expect(gameState.availableActions).toEqual([]);
         expect(logger.error).toHaveBeenCalled();
       });
@@ -247,7 +242,7 @@ describe('AIGameStateProvider', () => {
             name: 'Action One',
             description: 'Desc One',
           },
-          { id: 'action2', command: 'cmd2' }, // missing name & desc
+          { id: 'action2', command: 'cmd2' },
         ];
         actionDiscoverySystem.getValidActions.mockResolvedValue(rawActions);
 
@@ -263,12 +258,14 @@ describe('AIGameStateProvider', () => {
             command: 'cmd1',
             name: 'Action One',
             description: 'Desc One',
+            params: {},
           },
           {
             id: 'action2',
             command: 'cmd2',
-            name: DEFAULT_FALLBACK_ACTION_NAME, // Use imported constant
-            description: DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW, // Use imported constant
+            name: DEFAULT_FALLBACK_ACTION_NAME,
+            description: DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
+            params: {},
           },
         ]);
       });
@@ -290,19 +287,18 @@ describe('AIGameStateProvider', () => {
       describe('Exits Handling', () => {
         test('[CORRECTED] Malformed exit entries are filtered out or handled with defaults', async () => {
           locationEntity.setComponentData(EXITS_COMPONENT_ID, [
-            { direction: 'north', target: 'locN' }, // Valid
-            { target: 'locE_no_dir' }, // No direction, will use default
-            { direction: 'south' }, // Invalid, no target
-            { direction: 'west', target: 'locW' }, // Valid
+            { direction: 'north', target: 'locN' },
+            { target: 'locE_no_dir' },
+            { direction: 'south' },
+            { direction: 'west', target: 'locW' },
           ]);
 
-          // Simulate that target entities for these exits don't have a name or can't be found
-          const westExitLoc = new MockEntity('locW'); // Entity without a name component
+          const westExitLoc = new MockEntity('locW');
           entityManager.getEntityInstance.mockImplementation(async (id) => {
             if (id === 'loc1') return locationEntity;
-            if (id === 'locN') return null; // Not found
-            if (id === 'locE_no_dir') return null; // Not found
-            if (id === 'locW') return westExitLoc; // Found, but no name
+            if (id === 'locN') return null;
+            if (id === 'locE_no_dir') return null;
+            if (id === 'locW') return westExitLoc;
             return null;
           });
 

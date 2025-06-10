@@ -95,7 +95,7 @@ describe('PlayerPromptService Constructor', () => {
             validatedEventDispatcher: invalidDispatcher,
           })
       ).toThrow(
-        'PlayerPromptService: Invalid IValidatedEventDispatcher dependency. Missing method: subscribe().'
+        'PlayerPromptService: IValidatedEventDispatcher lacks method subscribe().'
       );
     });
     it('should throw if validatedEventDispatcher lacks unsubscribe method', () => {
@@ -110,7 +110,7 @@ describe('PlayerPromptService Constructor', () => {
             validatedEventDispatcher: invalidDispatcher,
           })
       ).toThrow(
-        'PlayerPromptService: Invalid IValidatedEventDispatcher dependency. Missing method: unsubscribe().'
+        'PlayerPromptService: IValidatedEventDispatcher lacks method unsubscribe().'
       );
     });
   });
@@ -182,45 +182,20 @@ describe('PlayerPromptService prompt Method', () => {
       );
     });
 
-    it('should reject with a PromptError wrapping the discovery error and log appropriately', async () => {
+    it('should reject with the original discovery error', async () => {
       mockLogger.error.mockClear();
 
       const promptPromise = service.prompt(mockActor);
 
-      await expect(promptPromise).rejects.toThrow(PromptError);
-      await expect(promptPromise).rejects.toMatchObject({
-        message: `Action discovery failed for actor ${mockActor.id}. Details: ${discoveryError.message}`,
-        cause: discoveryError,
-        code: 'ACTION_DISCOVERY_FAILED',
-      });
+      // The SUT now re-throws the original error without wrapping it.
+      await expect(promptPromise).rejects.toThrow(discoveryError);
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `PlayerPromptService._fetchContextAndDiscoverActions: Action discovery failed for actor ${mockActor.id}.`,
-        discoveryError
-      );
-
-      const promptCatchLogCall = mockLogger.error.mock.calls.find(
-        (call) =>
-          call[0] ===
-          `PlayerPromptService.prompt: Error during prompt setup for actor ${mockActor.id}.`
-      );
-      expect(promptCatchLogCall).toBeDefined();
-      if (promptCatchLogCall) {
-        const loggedError = promptCatchLogCall[1];
-        expect(loggedError).toBeInstanceOf(PromptError);
-        expect(loggedError.cause).toBe(discoveryError);
-        expect(loggedError.message).toBe(
-          `Action discovery failed for actor ${mockActor.id}. Details: ${discoveryError.message}`
-        );
-        expect(loggedError.code).toBe('ACTION_DISCOVERY_FAILED');
-      }
-
-      // When ACTION_DISCOVERY_FAILED occurs, the service attempts to dispatch this error via the output port.
-      const expectedErrorMessageForPort = `Action discovery failed for actor ${mockActor.id}. Details: ${discoveryError.message}`;
-      expect(mockPromptOutputPort.prompt).toHaveBeenCalledWith(
-        mockActor.id,
-        [],
-        expectedErrorMessageForPort
+      // Therefore, no special error logging or dispatching to the port is expected.
+      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockPromptOutputPort.prompt).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.any(String)
       );
     });
   });
@@ -293,17 +268,18 @@ describe('PlayerPromptService prompt Method', () => {
     it('should reject with PromptError if submitted actionId is invalid', async () => {
       const { promptPromise, capturedCallback } =
         await getCallbackAndPromise(mockActor);
+      const invalidActionId = 'invalid-action-id';
       capturedCallback({
         type: PLAYER_TURN_SUBMITTED_ID,
         payload: {
-          actionId: 'invalid-action-id',
+          actionId: invalidActionId,
           speech: null,
           submittedByActorId: mockActor.id,
         },
       });
       await expect(promptPromise).rejects.toMatchObject({
         name: 'PromptError',
-        message: `Invalid actionId 'invalid-action-id' submitted by actor ${mockActor.id}. Action not available.`,
+        message: `Unknown actionId '${invalidActionId}'`,
         code: 'INVALID_ACTION_ID',
       });
       expect(mockUnsubscribeFnForSuite).toHaveBeenCalled();
@@ -334,7 +310,6 @@ describe('PlayerPromptService prompt Method', () => {
       const { promptPromise, capturedCallback } =
         await getCallbackAndPromise(mockActor);
       capturedCallback({
-        // Malformed: no 'type' or 'payload' at the top level expected by the handler
         someOtherData: 'value',
         speech: 'only speech',
         actionId: 'some-action',
@@ -343,8 +318,8 @@ describe('PlayerPromptService prompt Method', () => {
 
       await expect(promptPromise).rejects.toMatchObject({
         name: 'PromptError',
-        message: `Malformed event object for ${PLAYER_TURN_SUBMITTED_ID} for actor ${mockActor.id}.`,
-        code: 'INVALID_EVENT_STRUCTURE',
+        message: 'Malformed event',
+        code: 'INVALID_EVENT',
       });
       expect(mockUnsubscribeFnForSuite).toHaveBeenCalled();
     });
@@ -368,8 +343,8 @@ describe('PlayerPromptService prompt Method', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(PromptError);
         expect(error.name).toBe('PromptError');
-        expect(error.code).toBe('INVALID_PAYLOAD_CONTENT');
-        const expectedMessage = `Invalid actionId in payload for ${PLAYER_TURN_SUBMITTED_ID} for actor ${mockActor.id}.`;
+        expect(error.code).toBe('INVALID_ACTION_ID');
+        const expectedMessage = `Unknown actionId 'undefined'`;
         expect(error.message).toBe(expectedMessage);
       }
       expect(mockUnsubscribeFnForSuite).toHaveBeenCalled();

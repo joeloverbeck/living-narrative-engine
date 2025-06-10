@@ -5,12 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fe1e4b63-28da-4534-b6ec-b0fb4caf42b6" name="Changes" comment="Overhauling command system.">
-      <change afterPath="$PROJECT_DIR$/tests/actions/actionDiscoveryService.actionId.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/interfaces/IActionDiscoveryService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IActionDiscoveryService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/actions/actionDiscoverySystem.go.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/actions/actionDiscoverySystem.go.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/actions/actionDiscoverySystem.wait.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/actions/actionDiscoverySystem.wait.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/providers/availableActionsProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/availableActionsProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/services/humanPlayerPromptService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/humanPlayerPromptService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/main/main.bootstrapFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/main/main.bootstrapFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/loggerConfigLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/loggerConfigLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.bugFixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.bugFixes.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.extended.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/playerPromptService.extended.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.more.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/playerPromptService.more.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/playerPromptService.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +63,8 @@
     "Jest.actionDiscoveryService.actionId.test.js.executor": "Run",
     "Jest.actionIndexingService.test.js.executor": "Run",
     "Jest.llmProviderTurnAction.schema.test.js.executor": "Run",
+    "Jest.playerPromptService.extended.test.js.executor": "Run",
+    "Jest.playerPromptService.more.test.js.executor": "Run",
     "Jest.turnScopedCache.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -77,7 +83,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.Tests in tests\">
+  <component name="RunManager" selected="Jest.playerPromptService.extended.test.js">
     <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -105,31 +111,31 @@
       <test-file value="$PROJECT_DIR$/tests/actions/actionDiscoveryService.actionId.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="actionIndexingService.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+    <configuration name="playerPromptService.extended.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
       <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/services/actionIndexingService.test.js" />
+      <test-file value="$PROJECT_DIR$/tests/turns/services/playerPromptService.extended.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="llmProviderTurnAction.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+    <configuration name="playerPromptService.more.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
       <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/llmProviderTurnAction.schema.test.js" />
+      <test-file value="$PROJECT_DIR$/tests/turns/services/playerPromptService.more.test.js" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.playerPromptService.extended.test.js" />
+        <item itemvalue="Jest.playerPromptService.more.test.js" />
         <item itemvalue="Jest.Tests in tests\" />
         <item itemvalue="Jest.actionDiscoveryService.actionId.test.js" />
         <item itemvalue="Jest.actionAttemptBuilder.test.js" />
-        <item itemvalue="Jest.llmProviderTurnAction.schema.test.js" />
-        <item itemvalue="Jest.actionIndexingService.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -148,7 +154,8 @@
       <option name="presentableId" value="Default" />
       <updated>1749564872269</updated>
       <workItem from="1749564873939" duration="83000" />
-      <workItem from="1749564985084" duration="13823000" />
+      <workItem from="1749564985084" duration="14822000" />
+      <workItem from="1749583470048" duration="3658000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded stuff from the office.">
       <option name="closed" value="true" />
@@ -182,7 +189,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749578026186</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Overhauling command system.">
+      <option name="closed" value="true" />
+      <created>1749582239262</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1749582239262</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
