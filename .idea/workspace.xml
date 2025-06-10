@@ -4,34 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fe1e4b63-28da-4534-b6ec-b0fb4caf42b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" afterDir="false" />
+    <list default="true" id="fe1e4b63-28da-4534-b6ec-b0fb4caf42b6" name="Changes" comment="Uploaded stuff from the office.">
+      <change afterPath="$PROJECT_DIR$/src/utils/turnScopedCache.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/dtos/actionComposite.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/utils/turnScopedCache.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/follow.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/follow.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/follow_auto_move.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/follow_auto_move.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/go.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/go.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/log_perceptible_events.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/log_perceptible_events.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/schemas/operation.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operation.schema.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/analysis/turn_events.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/json-logic/composite-logical-operators.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/json-logic/examples/json-logic-snippets.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/json-logic/json-logic-patterns.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/json-logic/json-logic-usage.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/resolveDirectionHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/resolveDirectionHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/systemMoveEntityHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/systemMoveEntityHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/registry/systemServiceRegistry.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,6 +51,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Jest.actionComposite.test.js.executor": "Run",
+    "Jest.turnScopedCache.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -84,12 +63,39 @@
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
     "nodejs_package_manager_path": "npm",
     "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
     "settings.editor.selected.configurable": "web-ide.project.structure",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunManager" selected="Jest.turnScopedCache.test.js">
+    <configuration name="actionComposite.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/dtos/actionComposite.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="turnScopedCache.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/utils/turnScopedCache.test.js" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Jest.turnScopedCache.test.js" />
+        <item itemvalue="Jest.actionComposite.test.js" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -105,11 +111,24 @@
       <option name="presentableId" value="Default" />
       <updated>1749564872269</updated>
       <workItem from="1749564873939" duration="83000" />
-      <workItem from="1749564985084" duration="3725000" />
+      <workItem from="1749564985084" duration="4752000" />
     </task>
+    <task id="LOCAL-00001" summary="Uploaded stuff from the office.">
+      <option name="closed" value="true" />
+      <created>1749571111073</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1749571111073</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Uploaded stuff from the office." />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploaded stuff from the office." />
   </component>
 </project>
