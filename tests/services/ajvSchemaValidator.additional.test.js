@@ -6,10 +6,10 @@ const sampleSchema = {
   $id: 'test://schemas/sample',
   type: 'object',
   properties: {
-    name: { type: 'string' }
+    name: { type: 'string' },
   },
   required: ['name'],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const validData = { name: 'Alice' };

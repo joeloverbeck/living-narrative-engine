@@ -33,7 +33,11 @@ export function createActionComposite(
   description
 ) {
   // index validation
-  if (!Number.isInteger(index) || index < 1 || index > MAX_AVAILABLE_ACTIONS_PER_TURN) {
+  if (
+    !Number.isInteger(index) ||
+    index < 1 ||
+    index > MAX_AVAILABLE_ACTIONS_PER_TURN
+  ) {
     throw new Error(
       `"index" must be an integer between 1 and ${MAX_AVAILABLE_ACTIONS_PER_TURN}, received ${index}`
     );

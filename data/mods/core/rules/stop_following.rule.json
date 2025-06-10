@@ -50,7 +50,9 @@
             "type": "MODIFY_ARRAY_FIELD",
             "comment": "Remove the actor from the old leader's 'core:leading' component followers list.",
             "parameters": {
-              "entity_ref": { "entityId": "{context.oldFollowingData.leaderId}" },
+              "entity_ref": {
+                "entityId": "{context.oldFollowingData.leaderId}"
+              },
               "component_type": "core:leading",
               "field": "followers",
               "mode": "remove_by_value",

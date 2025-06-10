@@ -294,5 +294,8 @@ export const tokens = Object.freeze({
   IAvailableActionsProvider: 'IAvailableActionsProvider',
   ILocationSummaryProvider: 'ILocationSummaryProvider',
   IActorDataExtractor: 'IActorDataExtractor',
+
+  // Core Builders
+  AttemptActionBuilder: 'AttemptActionBuilder',
 });
 // --- FILE END ---

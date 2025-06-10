@@ -26,7 +26,13 @@ describe('createActionComposite', () => {
   it('should reject out-of-range indices', () => {
     expect(() => createActionComposite(0, 'a', 'b', {}, 'c')).toThrow(/index/);
     expect(() =>
-      createActionComposite(MAX_AVAILABLE_ACTIONS_PER_TURN + 1, 'a', 'b', {}, 'c')
+      createActionComposite(
+        MAX_AVAILABLE_ACTIONS_PER_TURN + 1,
+        'a',
+        'b',
+        {},
+        'c'
+      )
     ).toThrow(/index/);
   });
 

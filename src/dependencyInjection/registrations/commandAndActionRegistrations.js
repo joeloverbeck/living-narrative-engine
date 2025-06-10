@@ -36,6 +36,7 @@ import CommandProcessor from '../../commands/commandProcessor.js';
 // --- Helper Function Imports ---
 import { formatActionCommand } from '../../actions/actionFormatter.js';
 import { getEntityIdsForScopes } from '../../entities/entityScopeService.js';
+import { AttemptActionBuilder } from '../../turns/builders/actionAttemptBuilder.js';
 
 /**
  * Registers command and action related services.
@@ -47,6 +48,14 @@ export function registerCommandAndAction(container) {
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
   logger.debug('Command and Action Registration: Starting...');
+
+  r.singletonFactory(
+    tokens.AttemptActionBuilder,
+    (c) => new AttemptActionBuilder(c.resolve(tokens.ILogger))
+  );
+  logger.debug(
+    `Command and Action Registration: Registered ${tokens.AttemptActionBuilder}.`
+  );
 
   // --- Action Discovery & Validation ---
 

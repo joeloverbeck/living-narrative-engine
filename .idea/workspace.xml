@@ -5,22 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fe1e4b63-28da-4534-b6ec-b0fb4caf42b6" name="Changes" comment="Overhauling command system.">
-      <change afterPath="$PROJECT_DIR$/tests/schemas/llmProviderTurnAction.schema.test.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/turns/services/actionIndexingService.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/turns/builders/actionAttemptBuilder.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constants/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/core.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/schemas/llmOutputSchemas.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/schemas/llmOutputSchemas.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/actionIndexingService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/actionIndexingService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/schemas/PromptOutputContract.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/PromptOutputContract.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/schemas/llmOutputSchemas.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/llmOutputSchemas.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/dtos/actionComposite.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/dtos/actionComposite.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/turnScopedCache.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/turnScopedCache.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +72,16 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.llmProviderTurnAction.schema.test.js">
+  <component name="RunManager" selected="Jest.actionAttemptBuilder.test.js">
+    <configuration name="actionAttemptBuilder.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/builders/actionAttemptBuilder.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="actionComposite.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -123,6 +120,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.actionAttemptBuilder.test.js" />
         <item itemvalue="Jest.llmProviderTurnAction.schema.test.js" />
         <item itemvalue="Jest.actionIndexingService.test.js" />
         <item itemvalue="Jest.turnScopedCache.test.js" />
@@ -145,7 +143,7 @@
       <option name="presentableId" value="Default" />
       <updated>1749564872269</updated>
       <workItem from="1749564873939" duration="83000" />
-      <workItem from="1749564985084" duration="9595000" />
+      <workItem from="1749564985084" duration="10619000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded stuff from the office.">
       <option name="closed" value="true" />
@@ -163,7 +161,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749572165327</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Overhauling command system.">
+      <option name="closed" value="true" />
+      <created>1749577022095</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1749577022095</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

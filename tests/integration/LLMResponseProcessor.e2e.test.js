@@ -16,12 +16,10 @@ const makeLogger = () => ({
 
 // Mocked schema validator factory
 const makeSchemaValidator = (isValid = true) => ({
-  validate: jest
-    .fn()
-    .mockReturnValue({
-      isValid,
-      errors: isValid ? null : [{ error: 'mock validation error' }],
-    }),
+  validate: jest.fn().mockReturnValue({
+    isValid,
+    errors: isValid ? null : [{ error: 'mock validation error' }],
+  }),
   isSchemaLoaded: jest.fn().mockReturnValue(true),
 });
 

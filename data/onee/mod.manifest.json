@@ -6,24 +6,13 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": [
-    ],
-    "characters": [
-      "jon.character.json",
-      "oneesan.character.json"
-    ],
-    "items": [
-    ],
-    "locations": [
-      "living_room.location.json"
-    ],
-    "actions": [
-    ],
-    "rules": [
-    ],
-    "events": [
-    ],
-    "operations": [
-    ]
+    "components": [],
+    "characters": ["jon.character.json", "oneesan.character.json"],
+    "items": [],
+    "locations": ["living_room.location.json"],
+    "actions": [],
+    "rules": [],
+    "events": [],
+    "operations": []
   }
 }
