@@ -4,9 +4,34 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="Added test to ensure the schema for the log perceptible events rule works.">
+    <list default="true" id="fe1e4b63-28da-4534-b6ec-b0fb4caf42b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/follow.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/follow.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/follow_auto_move.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/follow_auto_move.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/go.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/go.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/log_perceptible_events.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/log_perceptible_events.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operation.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operation.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/analysis/turn_events.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/json-logic/composite-logical-operators.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/json-logic/examples/json-logic-snippets.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/json-logic/json-logic-patterns.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/json-logic/json-logic-usage.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/resolveDirectionHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/resolveDirectionHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/systemMoveEntityHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/systemMoveEntityHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/registry/systemServiceRegistry.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,23 +48,23 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "joeloverbeck"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;joeloverbeck&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/joeloverbeck/living-narrative-engine.git",
-    "accountId": "e87db63c-2fda-4154-8e23-63c0c53d7f35"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/joeloverbeck/living-narrative-engine.git&quot;,
+    &quot;accountId&quot;: &quot;e87db63c-2fda-4154-8e23-63c0c53d7f35&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 0
-}]]></component>
-  <component name="ProjectId" id="2yH7FtQAJNS86ZyuXu4Z2SF3zcI" />
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="2yJuCidpPVr3ozjP5OIWhyQAFyl" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
@@ -49,7 +74,6 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Jest.Tests in tests\\.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -60,183 +84,32 @@
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
     "nodejs_package_manager_path": "npm",
     "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
     "settings.editor.selected.configurable": "web-ide.project.structure",
-    "ts.external.directory.path": "F:\\Programas\\Programación\\WebStorm 2024.3.5\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager">
-    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="DIRECTORY" />
-      <test-directory value="$PROJECT_DIR$/tests" />
-      <method v="2" />
-    </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Jest.Tests in tests\" />
-      </list>
-    </recent_temporary>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-WS-251.25410.117" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-WS-251.26094.131" />
       </set>
     </attachedChunks>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="5c800df0-1e5e-456a-b30b-afda012afd14" name="Changes" comment="" />
-      <created>1749479545104</created>
+      <changelist id="fe1e4b63-28da-4534-b6ec-b0fb4caf42b6" name="Changes" comment="" />
+      <created>1749564872269</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1749479545104</updated>
-      <workItem from="1749479546547" duration="21645000" />
+      <updated>1749564872269</updated>
+      <workItem from="1749564873939" duration="83000" />
+      <workItem from="1749564985084" duration="3725000" />
     </task>
-    <task id="LOCAL-00001" summary="Implemented follow system.">
-      <option name="closed" value="true" />
-      <created>1749480188387</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1749480188387</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Added integration tests for the new registrators.">
-      <option name="closed" value="true" />
-      <created>1749481157464</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1749481157464</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Fixed test issues.">
-      <option name="closed" value="true" />
-      <created>1749484359604</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1749484359604</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Removing QuerySystemDataHandler.">
-      <option name="closed" value="true" />
-      <created>1749488698540</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1749488698540</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Preventing stupidly-long analysis times.">
-      <option name="closed" value="true" />
-      <created>1749488824778</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1749488824778</updated>
-    </task>
-    <task id="LOCAL-00006" summary="Fixed the dismiss rule.">
-      <option name="closed" value="true" />
-      <created>1749490486242</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1749490486242</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Fixed test issues.">
-      <option name="closed" value="true" />
-      <created>1749491573905</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1749491573905</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Phasing out QuerySystemDataHandler.">
-      <option name="closed" value="true" />
-      <created>1749495289806</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1749495289806</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Phasing out QuerySystemDataHandler.">
-      <option name="closed" value="true" />
-      <created>1749496219856</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1749496219856</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Phasing out QuerySystemDataHandler.">
-      <option name="closed" value="true" />
-      <created>1749497146527</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1749497146527</updated>
-    </task>
-    <task id="LOCAL-00011" summary="Phasing out QuerySystemDataHandler.">
-      <option name="closed" value="true" />
-      <created>1749497639163</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1749497639163</updated>
-    </task>
-    <task id="LOCAL-00012" summary="Added tests for AddPerceptionLogEntryHandler.">
-      <option name="closed" value="true" />
-      <created>1749498283648</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1749498283648</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Removing QuerySystemDataHandler.">
-      <option name="closed" value="true" />
-      <created>1749498548921</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1749498548921</updated>
-    </task>
-    <task id="LOCAL-00014" summary="Removed QuerySystemDataHandler, SystemDataRegistry, and other related classes.">
-      <option name="closed" value="true" />
-      <created>1749499744009</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1749499744009</updated>
-    </task>
-    <task id="LOCAL-00015" summary="Added test to ensure the schema for the log perceptible events rule works.">
-      <option name="closed" value="true" />
-      <created>1749500507562</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1749500507562</updated>
-    </task>
-    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="Implemented follow system." />
-    <MESSAGE value="Added integration tests for the new registrators." />
-    <MESSAGE value="Preventing stupidly-long analysis times." />
-    <MESSAGE value="Fixed the dismiss rule." />
-    <MESSAGE value="Fixed test issues." />
-    <MESSAGE value="Phasing out QuerySystemDataHandler." />
-    <MESSAGE value="Added tests for AddPerceptionLogEntryHandler." />
-    <MESSAGE value="Removing QuerySystemDataHandler." />
-    <MESSAGE value="Removed QuerySystemDataHandler, SystemDataRegistry, and other related classes." />
-    <MESSAGE value="Added test to ensure the schema for the log perceptible events rule works." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added test to ensure the schema for the log perceptible events rule works." />
   </component>
 </project>

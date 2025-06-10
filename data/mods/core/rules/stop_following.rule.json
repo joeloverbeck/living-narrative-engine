@@ -13,120 +13,167 @@
   },
   "actions": [
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 1: Get the current leader's ID for later use before removing the component.",
+      "type": "HAS_COMPONENT",
+      "comment": "Step 1: Check if the actor is actually following anyone. This is a critical guard.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:following",
-        "result_variable": "oldFollowingData"
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "comment": "Step 2: Authoritatively remove the following relationship from the actor.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:following"
-      }
-    },
-    {
-      "type": "REBUILD_LEADER_LIST_CACHE",
-      "comment": "Step 3: Tell the LeaderListSyncService to rebuild the cache for the old leader.",
-      "parameters": {
-        "leaderIds": ["{context.oldFollowingData.leaderId}"]
-      }
-    },
-    {
-      "type": "GET_TIMESTAMP",
-      "comment": "Get the current ISO timestamp for perception logging.",
-      "parameters": {
-        "result_variable": "currentTimestamp"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 4.2: Get actor's position for co-location check.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:position",
-        "result_variable": "actorPosition"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 4.3: Get actor's name for the event description.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:name",
-        "result_variable": "actorName"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 4.4: Get old leader's position for co-location check.",
-      "parameters": {
-        "entity_ref": {
-          "entityId": "{context.oldFollowingData.leaderId}"
-        },
-        "component_type": "core:position",
-        "result_variable": "oldLeaderPosition"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 4.5: Get old leader's name for the event description.",
-      "parameters": {
-        "entity_ref": {
-          "entityId": "{context.oldFollowingData.leaderId}"
-        },
-        "component_type": "core:name",
-        "result_variable": "oldLeaderName"
+        "result_variable": "isCurrentlyFollowing"
       }
     },
     {
       "type": "IF",
-      "comment": "Step 5: Only dispatch a perceptible event if the actor and old leader are in the same location.",
+      "comment": "Step 2: Proceed only if the actor has the 'core:following' component.",
       "parameters": {
         "condition": {
-          "==": [
-            {
-              "var": "context.actorPosition.locationId"
-            },
-            {
-              "var": "context.oldLeaderPosition.locationId"
-            }
-          ]
+          "var": "context.isCurrentlyFollowing"
         },
         "then_actions": [
           {
-            "type": "DISPATCH_EVENT",
-            "comment": "This event is for other characters to observe.",
+            "type": "QUERY_COMPONENT",
+            "comment": "Get the current leader's ID for later use before removing the component.",
             "parameters": {
-              "eventType": "core:perceptible_event",
+              "entity_ref": "actor",
+              "component_type": "core:following",
+              "result_variable": "oldFollowingData"
+            }
+          },
+          {
+            "type": "REMOVE_COMPONENT",
+            "comment": "Authoritatively remove the following relationship from the actor.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:following"
+            }
+          },
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Remove the actor from the old leader's 'core:leading' component followers list.",
+            "parameters": {
+              "entity_ref": { "entityId": "{context.oldFollowingData.leaderId}" },
+              "component_type": "core:leading",
+              "field": "followers",
+              "mode": "remove_by_value",
+              "value": "{event.payload.actorId}"
+            }
+          },
+          {
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
+            "parameters": {
+              "result_variable": "currentTimestamp"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get actor's position for co-location check.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:position",
+              "result_variable": "actorPosition"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get actor's name for the event description.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:name",
+              "result_variable": "actorName"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get old leader's position for co-location check.",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.oldFollowingData.leaderId}"
+              },
+              "component_type": "core:position",
+              "result_variable": "oldLeaderPosition"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get old leader's name for the event description.",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.oldFollowingData.leaderId}"
+              },
+              "component_type": "core:name",
+              "result_variable": "oldLeaderName"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Only dispatch a perceptible event if the actor and old leader are in the same location.",
+            "parameters": {
+              "condition": {
+                "==": [
+                  {
+                    "var": "context.actorPosition.locationId"
+                  },
+                  {
+                    "var": "context.oldLeaderPosition.locationId"
+                  }
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "This event is for other characters to observe.",
+                  "parameters": {
+                    "eventType": "core:perceptible_event",
+                    "payload": {
+                      "eventName": "core:perceptible_event",
+                      "timestamp": "{context.currentTimestamp}",
+                      "locationId": "{context.actorPosition.locationId}",
+                      "descriptionText": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
+                      "perceptionType": "state_change_observable",
+                      "actorId": "{event.payload.actorId}",
+                      "targetId": "{context.oldFollowingData.leaderId}",
+                      "involvedEntities": []
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Signal to the Turn Manager that the actor's turn is over.",
+            "parameters": {
+              "eventType": "core:turn_ended",
               "payload": {
-                "eventName": "core:perceptible_event",
-                "timestamp": "{context.currentTimestamp}",
-                "locationId": "{context.actorPosition.locationId}",
-                "descriptionText": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
-                "perceptionType": "state_change_observable",
-                "actorId": "{event.payload.actorId}",
-                "targetId": "{context.oldFollowingData.leaderId}",
-                "involvedEntities": []
+                "entityId": "{event.payload.actorId}",
+                "success": true
+              }
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Inform the UI that the action failed because the actor wasn't following anyone.",
+            "parameters": {
+              "eventType": "core:display_failed_action_result",
+              "payload": {
+                "message": "You are not following anyone."
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "End the turn unsuccessfully.",
+            "parameters": {
+              "eventType": "core:turn_ended",
+              "payload": {
+                "entityId": "{event.payload.actorId}",
+                "success": false
               }
             }
           }
         ]
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
-      "comment": "Step 6: Signal to the Turn Manager that the actor's turn is over.",
-      "parameters": {
-        "eventType": "core:turn_ended",
-        "payload": {
-          "entityId": "{event.payload.actorId}",
-          "success": true
-        }
       }
     }
   ]

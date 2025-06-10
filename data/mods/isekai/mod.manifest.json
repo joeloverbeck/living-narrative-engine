@@ -7,16 +7,9 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "components": [],
-    "characters": [
-      "hero.character.json",
-      "sidekick.character.json",
-      "receptionist.character.json"
-    ],
+    "characters": ["hero.character.json", "ninja.character.json"],
     "items": [],
-    "locations": [
-      "adventurers_guild.location.json",
-      "town.location.json"
-    ],
+    "locations": ["adventurers_guild.location.json", "town.location.json"],
     "actions": [],
     "rules": [],
     "events": [],

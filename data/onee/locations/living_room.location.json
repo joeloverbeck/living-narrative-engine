@@ -1,0 +1,13 @@
+{
+  "id": "onee:living_room",
+  "components": {
+    "core:name": {
+      "text": "living room"
+    },
+    "core:description": {
+      "text": "The living room of a working-class apartment located in Irún, in the north of Spain. The living room features a sofa, a TV, a couple of bookcases, a clock that keeps ticking."
+    },
+    "core:exits": [
+    ]
+  }
+}

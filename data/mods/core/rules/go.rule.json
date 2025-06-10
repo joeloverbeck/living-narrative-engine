@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
-  "rule_id": "handle_core_go_action_with_perception",
-  "comment": "Handles the 'core:go' action. It resolves direction, moves actor, dispatches perceptible events for leaving and entering, informs UI, and ends turn. Handles invalid directions.",
+  "rule_id": "handle_go_action",
+  "comment": "Handles the 'core:go' action. It resolves direction, moves actor, dispatches perceptible events for leaving and entering, informs UI, and ends turn. Now validates component existence first.",
   "event_type": "core:attempt_action",
   "condition": {
     "==": [
@@ -13,184 +13,227 @@
   },
   "actions": [
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Fetch the name component of the actor for messaging.",
+      "type": "HAS_COMPONENT",
+      "comment": "Step 1.1: Check if the actor has a name for messaging.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:name",
-        "result_variable": "actorNameComponent"
+        "result_variable": "actorHasName"
       }
     },
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Fetch the current position component of the actor to get their current location ID (pre-move).",
+      "type": "HAS_COMPONENT",
+      "comment": "Step 1.2: Check if the actor has a position, which is required for movement.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:position",
-        "result_variable": "actorPositionComponentPreMove"
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Fetch the name of the current location (pre-move).",
-      "parameters": {
-        "entity_ref": {
-          "entityId": "{context.actorPositionComponentPreMove.locationId}"
-        },
-        "component_type": "core:name",
-        "result_variable": "currentLocationNameComponentPreMove"
-      }
-    },
-    {
-      "type": "GET_TIMESTAMP",
-      "comment": "Get the current ISO timestamp for perception logging.",
-      "parameters": {
-        "result_variable": "currentTimestamp"
-      }
-    },
-    {
-      "type": "RESOLVE_DIRECTION",
-      "comment": "Turn a direction string into a valid target location ID.",
-      "parameters": {
-        "current_location_id": "{context.actorPositionComponentPreMove.locationId}",
-        "direction": "{event.payload.direction}",
-        "result_variable": "resolvedTargetLocationId"
+        "result_variable": "actorHasPosition"
       }
     },
     {
       "type": "IF",
-      "comment": "Check if a valid target location was resolved by WorldContext.",
+      "comment": "Step 2: Proceed only if the actor has the required components to move and be identified.",
       "parameters": {
         "condition": {
-          "!=": [
-            {
-              "var": "context.resolvedTargetLocationId"
-            },
-            null
+          "and": [
+            { "var": "context.actorHasName" },
+            { "var": "context.actorHasPosition" }
           ]
         },
         "then_actions": [
           {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch perceptible event for actor leaving current location.",
-            "parameters": {
-              "eventType": "core:perceptible_event",
-              "payload": {
-                "eventName": "core:perceptible_event",
-                "locationId": "{context.actorPositionComponentPreMove.locationId}",
-                "descriptionText": "{context.actorNameComponent.text} leaves {context.currentLocationNameComponentPreMove.text} heading {event.payload.direction}.",
-                "timestamp": "{context.currentTimestamp}",
-                "perceptionType": "character_exit",
-                "actorId": "{event.payload.actorId}",
-                "targetId": null,
-                "involvedEntities": [],
-                "contextualData": {
-                  "direction": "{event.payload.direction}"
-                }
-              }
-            }
-          },
-          {
-            "type": "MODIFY_COMPONENT",
-            "comment": "Update the actor's locationId in their 'core:position' component to the new target location.",
+            "type": "QUERY_COMPONENT",
+            "comment": "Fetch the name component of the actor for messaging.",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "core:position",
-              "field": "locationId",
-              "mode": "set",
-              "value": "{context.resolvedTargetLocationId}"
-            }
-          },
-          {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch the primary 'entity_moved' event for systems like follower logic.",
-            "parameters": {
-              "eventType": "core:entity_moved",
-              "payload": {
-                "eventName": "core:entity_moved",
-                "entityId": "{event.payload.actorId}",
-                "previousLocationId": "{context.actorPositionComponentPreMove.locationId}",
-                "currentLocationId": "{context.resolvedTargetLocationId}",
-                "direction": "{event.payload.direction}",
-                "originalCommand": "{event.payload.originalInput}"
-              }
+              "component_type": "core:name",
+              "result_variable": "actorNameComponent"
             }
           },
           {
             "type": "QUERY_COMPONENT",
-            "comment": "Fetch the name of the new target location for messaging and perception.",
+            "comment": "Fetch the current position component of the actor to get their current location ID (pre-move).",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:position",
+              "result_variable": "actorPositionComponentPreMove"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Fetch the name of the current location (pre-move).",
             "parameters": {
               "entity_ref": {
-                "entityId": "{context.resolvedTargetLocationId}"
+                "entityId": "{context.actorPositionComponentPreMove.locationId}"
               },
               "component_type": "core:name",
-              "result_variable": "targetLocationNameComponent"
+              "result_variable": "currentLocationNameComponentPreMove"
             }
           },
           {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch perceptible event for actor entering new location.",
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
             "parameters": {
-              "eventType": "core:perceptible_event",
-              "payload": {
-                "eventName": "core:perceptible_event",
-                "locationId": "{context.resolvedTargetLocationId}",
-                "descriptionText": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text} (from {context.currentLocationNameComponentPreMove.text}).",
-                "timestamp": "{context.currentTimestamp}",
-                "perceptionType": "character_enter",
-                "actorId": "{event.payload.actorId}",
-                "targetId": null,
-                "involvedEntities": [],
-                "contextualData": {
-                  "originLocationId": "{context.actorPositionComponentPreMove.locationId}",
-                  "originLocationName": "{context.currentLocationNameComponentPreMove.text}"
+              "result_variable": "currentTimestamp"
+            }
+          },
+          {
+            "type": "RESOLVE_DIRECTION",
+            "comment": "Turn a direction string into a valid target location ID.",
+            "parameters": {
+              "current_location_id": "{context.actorPositionComponentPreMove.locationId}",
+              "direction": "{event.payload.direction}",
+              "result_variable": "resolvedTargetLocationId"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Check if a valid target location was resolved by WorldContext.",
+            "parameters": {
+              "condition": {
+                "!=": [{ "var": "context.resolvedTargetLocationId" }, null]
+              },
+              "then_actions": [
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch perceptible event for actor leaving current location.",
+                  "parameters": {
+                    "eventType": "core:perceptible_event",
+                    "payload": {
+                      "eventName": "core:perceptible_event",
+                      "locationId": "{context.actorPositionComponentPreMove.locationId}",
+                      "descriptionText": "{context.actorNameComponent.text} leaves {context.currentLocationNameComponentPreMove.text} heading {event.payload.direction}.",
+                      "timestamp": "{context.currentTimestamp}",
+                      "perceptionType": "character_exit",
+                      "actorId": "{event.payload.actorId}",
+                      "targetId": null,
+                      "involvedEntities": [],
+                      "contextualData": {
+                        "direction": "{event.payload.direction}"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "MODIFY_COMPONENT",
+                  "comment": "Update the actor's locationId in their 'core:position' component to the new target location.",
+                  "parameters": {
+                    "entity_ref": "actor",
+                    "component_type": "core:position",
+                    "field": "locationId",
+                    "mode": "set",
+                    "value": "{context.resolvedTargetLocationId}"
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch the primary 'entity_moved' event for systems like follower logic.",
+                  "parameters": {
+                    "eventType": "core:entity_moved",
+                    "payload": {
+                      "eventName": "core:entity_moved",
+                      "entityId": "{event.payload.actorId}",
+                      "previousLocationId": "{context.actorPositionComponentPreMove.locationId}",
+                      "currentLocationId": "{context.resolvedTargetLocationId}",
+                      "direction": "{event.payload.direction}",
+                      "originalCommand": "{event.payload.originalInput}"
+                    }
+                  }
+                },
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Fetch the name of the new target location for messaging and perception.",
+                  "parameters": {
+                    "entity_ref": {
+                      "entityId": "{context.resolvedTargetLocationId}"
+                    },
+                    "component_type": "core:name",
+                    "result_variable": "targetLocationNameComponent"
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch perceptible event for actor entering new location.",
+                  "parameters": {
+                    "eventType": "core:perceptible_event",
+                    "payload": {
+                      "eventName": "core:perceptible_event",
+                      "locationId": "{context.resolvedTargetLocationId}",
+                      "descriptionText": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text} (from {context.currentLocationNameComponentPreMove.text}).",
+                      "timestamp": "{context.currentTimestamp}",
+                      "perceptionType": "character_enter",
+                      "actorId": "{event.payload.actorId}",
+                      "targetId": null,
+                      "involvedEntities": [],
+                      "contextualData": {
+                        "originLocationId": "{context.actorPositionComponentPreMove.locationId}",
+                        "originLocationName": "{context.currentLocationNameComponentPreMove.text}"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch a decoupled event to the UI indicating the actor's successful move.",
+                  "parameters": {
+                    "eventType": "core:display_successful_action_result",
+                    "payload": {
+                      "message": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}."
+                    }
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch an event to indicate the actor's turn has ended after successful movement.",
+                  "parameters": {
+                    "eventType": "core:turn_ended",
+                    "payload": {
+                      "entityId": "{event.payload.actorId}",
+                      "success": true
+                    }
+                  }
                 }
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch a decoupled event to the UI indicating the actor's successful move.",
-            "parameters": {
-              "eventType": "core:display_successful_action_result",
-              "payload": {
-                "message": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}."
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch an event to indicate the actor's turn has ended after successful movement.",
-            "parameters": {
-              "eventType": "core:turn_ended",
-              "payload": {
-                "entityId": "{event.payload.actorId}",
-                "success": true
-              }
+              ],
+              "else_actions": [
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch a decoupled event to the UI informing the actor that they cannot move in the specified direction.",
+                  "parameters": {
+                    "eventType": "core:display_failed_action_result",
+                    "payload": {
+                      "message": "{context.actorNameComponent.text} tries to go {event.payload.direction}, but cannot find a path or the way is blocked."
+                    }
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch an event to indicate the actor's turn has ended, even on a failed move attempt.",
+                  "parameters": {
+                    "eventType": "core:turn_ended",
+                    "payload": {
+                      "entityId": "{event.payload.actorId}",
+                      "success": false,
+                      "error": {
+                        "message": "Failed to move: No valid target location resolved for the given direction."
+                      }
+                    }
+                  }
+                }
+              ]
             }
           }
         ],
         "else_actions": [
           {
             "type": "DISPATCH_EVENT",
-            "comment": "Dispatch a decoupled event to the UI informing the actor that they cannot move in the specified direction.",
-            "parameters": {
-              "eventType": "core:display_failed_action_result",
-              "payload": {
-                "message": "{context.actorNameComponent.text} tries to go {event.payload.direction}, but cannot find a path or the way is blocked."
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch an event to indicate the actor's turn has ended, even on a failed move attempt.",
+            "comment": "Action failed because actor is missing required components (e.g., position).",
             "parameters": {
               "eventType": "core:turn_ended",
               "payload": {
                 "entityId": "{event.payload.actorId}",
                 "success": false,
                 "error": {
-                  "message": "Failed to move: No valid target location resolved for the given direction."
+                  "message": "Actor is missing required components for movement."
                 }
               }
             }

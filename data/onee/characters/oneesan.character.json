@@ -1,0 +1,43 @@
+{
+  "id": "onee:oneesan",
+  "components": {
+    "core:actor": {},
+    "core:name": {
+      "text": "Noelia Torres"
+    },
+    "core:description": {
+      "text": "A twenty-six year old woman. Voluptuous frame amplified by calculated fashion choices—floaty blouses for modesty, tight jeans for allure. Platinum-blonde hair she self-dyes poorly, with roots often showing. Eyes “so light they’re wolflike,” per a former lover. A tattoo of a Basque-eagle in fading watercolor on her shoulder."
+    },
+    "core:position": {
+      "locationId": "onee:living_room",
+      "x": 0,
+      "y": 0
+    },
+    "core:perception_log": {
+      "maxEntries": 50,
+      "logEntries": []
+    },
+    "core:profile": {
+      "text": "Raised in a tight-knit Basque household where family and tradition held sway; her father worked in a local fishery, and her mother managed a neighborhood sidrería. Noelia lives with her parents in a working-class apartment in Irún, Spain, nestled near the Bidasoa River. Noelia’s intelligence and cunning were evident early, but her adolescence was marked by rebellion, including a brief runaway stint at 15. Moved out at 22 with boyfriend Miguel, a union built on codependency. Their collapse was catalyzed by her affair with a 17-year-old part-time coworker. She frames the breakup as Miguel’s “inflexibility.” Returns home after the split to a strained but permissive household. Her parents attribute her instability to bad luck rather than self-sabotage. Jon, 18, is both her obsession and her alibi."
+    },
+    "core:personality": {
+      "text": "Narcissistic charm, undercut by surprising empathy toward strays (animal or human). Insomnia-driven night owl who wanders Irún’s empty streets smoking cherry-tobacco e-cigs."
+    },
+    "core:likes": {
+      "text": "Masturbating to incest erotica, particularly those involving young males and their older sisters. She loves to tease her younger brother Jon, and Noelia relishes in the erotic tension that Jon won't acknowledge."
+    },
+    "core:dislikes": {
+      "text": "Having to feel like she needs to explain herself to her parents."
+    },
+    "core:secrets": {
+      "text": "Noelia masturbates regularly fantasizing about her younger brother Jon Ureña. She often fantasizes about seducing Jon into a sexual relationship between their parents' backs; she wishes they could spend their time alone at home fucking like rabbits."
+    },
+    "core:speech_patterns": {
+      "patterns": [
+        "You think I tease Jon just for laughs? Nah. That tension’s better than any battery-powered toy.",
+        "Sleep’s debt’s a closed account. I’d rather stalk the fridge light at 3AM.",
+        "Romantic? No, but I’ll smoke a cigarette with your name between my lips while I touch myself to midnight memories."
+      ]
+    }
+  }
+}

@@ -29,6 +29,9 @@ import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirect
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
 import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler';
 import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler';
+import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
+import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler';
+import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFieldHandler';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -160,6 +163,36 @@ export function registerInterpreters(container) {
           entityManager: c.resolve(tokens.IEntityManager),
         }),
     ],
+    [
+      tokens.QueryEntitiesHandler,
+      QueryEntitiesHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          jsonLogicEvaluationService: c.resolve(
+            tokens.JsonLogicEvaluationService
+          ),
+        }),
+    ],
+    [
+      tokens.HasComponentHandler,
+      HasComponentHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+        }),
+    ],
+    [
+      tokens.ModifyArrayFieldHandler,
+      ModifyArrayFieldHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+        }),
+    ],
   ];
 
   for (const [token, ctor, factory] of handlerFactories) {
@@ -187,6 +220,7 @@ export function registerInterpreters(container) {
     registry.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));
     registry.register('REMOVE_COMPONENT', bind(tokens.RemoveComponentHandler));
     registry.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));
+    registry.register('QUERY_ENTITIES', bind(tokens.QueryEntitiesHandler));
     registry.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
     registry.register(
       'SYSTEM_MOVE_ENTITY',
@@ -208,6 +242,11 @@ export function registerInterpreters(container) {
     registry.register(
       'ADD_PERCEPTION_LOG_ENTRY',
       bind(tokens.AddPerceptionLogEntryHandler)
+    );
+    registry.register('HAS_COMPONENT', bind(tokens.HasComponentHandler));
+    registry.register(
+      'MODIFY_ARRAY_FIELD',
+      bind(tokens.ModifyArrayFieldHandler)
     );
 
     return registry;

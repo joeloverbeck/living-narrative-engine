@@ -13,7 +13,6 @@ import { LoggerConfigLoader } from '../configuration/loggerConfigLoader.js';
 // --- Import Logger Interface for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 // --- Import necessary types for registry population ---
-/** @typedef {import('../registry/systemServiceRegistry.js').SystemServiceRegistry} SystemServiceRegistry */
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../context/worldContext.js').default} WorldContext */
 

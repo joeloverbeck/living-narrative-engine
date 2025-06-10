@@ -1,64 +1,100 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "entity_speech",
-  "comment": "Handles entity speech by querying speaker's info, fetching timestamp, dispatching a 'core:perceptible_event' for logging, and dispatching a UI speech event.",
+  "comment": "Handles entity speech by querying speaker's info, fetching timestamp, dispatching a 'core:perceptible_event' for logging, and dispatching a UI speech event. Now validates component existence first.",
   "event_type": "core:entity_spoke",
   "actions": [
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Fetch the name component of the entity that spoke (actor is event.payload.entityId).",
+      "type": "HAS_COMPONENT",
+      "comment": "Step 1.1: Check if the speaker has a name.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:name",
-        "result_variable": "speakerNameComponent"
+        "result_variable": "hasName"
       }
     },
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Fetch the position component of the entity that spoke to get their locationId.",
+      "type": "HAS_COMPONENT",
+      "comment": "Step 1.2: Check if the speaker has a position.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:position",
-        "result_variable": "speakerPositionComponent"
+        "result_variable": "hasPosition"
       }
     },
     {
-      "type": "GET_TIMESTAMP",
-      "comment": "Get the current ISO timestamp for perception logging.",
+      "type": "IF",
+      "comment": "Step 2: Only proceed if the entity has the required components.",
       "parameters": {
-        "result_variable": "currentTimestamp"
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
-      "comment": "Dispatch a perceptible event for the speech act, to be logged.",
-      "parameters": {
-        "eventType": "core:perceptible_event",
-        "payload": {
-          "eventName": "core:perceptible_event",
-          "locationId": "{context.speakerPositionComponent.locationId}",
-          "descriptionText": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
-          "timestamp": "{context.currentTimestamp}",
-          "perceptionType": "speech_local",
-          "actorId": "{event.payload.entityId}",
-          "targetId": null,
-          "involvedEntities": [],
-          "contextualData": {
-            "speechContent": "{event.payload.speechContent}"
+        "condition": {
+          "and": [
+            {
+              "var": "context.hasName"
+            },
+            {
+              "var": "context.hasPosition"
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Fetch the name component of the entity that spoke (actor is event.payload.entityId).",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:name",
+              "result_variable": "speakerNameComponent"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Fetch the position component of the entity that spoke to get their locationId.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:position",
+              "result_variable": "speakerPositionComponent"
+            }
+          },
+          {
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
+            "parameters": {
+              "result_variable": "currentTimestamp"
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch a perceptible event for the speech act, to be logged.",
+            "parameters": {
+              "eventType": "core:perceptible_event",
+              "payload": {
+                "eventName": "core:perceptible_event",
+                "locationId": "{context.speakerPositionComponent.locationId}",
+                "descriptionText": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
+                "timestamp": "{context.currentTimestamp}",
+                "perceptionType": "speech_local",
+                "actorId": "{event.payload.entityId}",
+                "targetId": null,
+                "involvedEntities": [],
+                "contextualData": {
+                  "speechContent": "{event.payload.speechContent}"
+                }
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Send the speech content and speaking entity's ID to the UI for display.",
+            "parameters": {
+              "eventType": "core:display_speech",
+              "payload": {
+                "entityId": "{event.payload.entityId}",
+                "speechContent": "{event.payload.speechContent}",
+                "allowHtml": false
+              }
+            }
           }
-        }
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
-      "comment": "Send the speech content and speaking entity's ID to the UI for display.",
-      "parameters": {
-        "eventType": "core:display_speech",
-        "payload": {
-          "entityId": "{event.payload.entityId}",
-          "speechContent": "{event.payload.speechContent}",
-          "allowHtml": false
-        }
+        ]
       }
     }
   ]

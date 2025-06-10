@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/rule.schema.json",
+  "$schema": "http://example.com/schemas/rule.json",
   "rule_id": "handle_dismiss",
   "comment": "Handles the 'core:dismiss' action. Removes the component from the TARGET, updates the ACTOR's (leader's) cache, dispatches a conditional perceptible event, and ends the turn.",
   "event_type": "core:attempt_action",
@@ -21,48 +21,130 @@
       }
     },
     {
-      "type": "REBUILD_LEADER_LIST_CACHE",
-      "comment": "Step 2: Rebuild the 'core:leading' cache for the ACTOR (the leader).",
-      "parameters": {
-        "leaderIds": ["{event.payload.actorId}"]
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 3.1: Get actor's (leader's) position for co-location check.",
+      "type": "MODIFY_ARRAY_FIELD",
+      "comment": "Step 2: Remove the follower from the ACTOR's (leader's) 'core:leading' component.",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "core:position",
-        "result_variable": "actorPosition"
+        "component_type": "core:leading",
+        "field": "followers",
+        "mode": "remove_by_value",
+        "value": "{event.payload.targetId}"
       }
     },
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 3.2: Get target's (follower's) position for co-location check.",
+      "type": "HAS_COMPONENT",
+      "comment": "Step 3.1: Check for actor's name component for messaging.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:name",
+        "result_variable": "hasActorName"
+      }
+    },
+    {
+      "type": "HAS_COMPONENT",
+      "comment": "Step 3.2: Check for target's name component for messaging.",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "core:position",
-        "result_variable": "targetPosition"
+        "component_type": "core:name",
+        "result_variable": "hasTargetName"
       }
     },
     {
       "type": "IF",
-      "comment": "Step 3.3: Only dispatch a perceptible event if the leader and follower are in the same location.",
+      "comment": "Step 3.3: Only dispatch UI/perceptible events if names are available to prevent malformed messages.",
       "parameters": {
         "condition": {
-          "==": [
+          "and": [
             {
-              "var": "context.actorPosition.locationId"
+              "var": "context.hasActorName"
             },
             {
-              "var": "context.targetPosition.locationId"
+              "var": "context.hasTargetName"
             }
           ]
         },
         "then_actions": [
           {
             "type": "QUERY_COMPONENT",
-            "comment": "Get actor's name for the event description.",
+            "comment": "Get actor's (leader's) position for co-location check.",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "core:position",
+              "result_variable": "actorPosition"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get target's (follower's) position for co-location check.",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "core:position",
+              "result_variable": "targetPosition"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Only dispatch a perceptible event if the leader and follower are in the same location.",
+            "parameters": {
+              "condition": {
+                "==": [
+                  {
+                    "var": "context.actorPosition.locationId"
+                  },
+                  {
+                    "var": "context.targetPosition.locationId"
+                  }
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Get actor's name for the event description.",
+                  "parameters": {
+                    "entity_ref": "actor",
+                    "component_type": "core:name",
+                    "result_variable": "actorName"
+                  }
+                },
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Get target's name for the event description.",
+                  "parameters": {
+                    "entity_ref": "target",
+                    "component_type": "core:name",
+                    "result_variable": "targetName"
+                  }
+                },
+                {
+                  "type": "GET_TIMESTAMP",
+                  "comment": "Get the current ISO timestamp for perception logging.",
+                  "parameters": {
+                    "result_variable": "nowIso"
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "This event is for other characters to observe.",
+                  "parameters": {
+                    "eventType": "core:perceptible_event",
+                    "payload": {
+                      "eventName": "core:perceptible_event",
+                      "locationId": "{context.actorPosition.locationId}",
+                      "descriptionText": "{context.actorName.text} has dismissed {context.targetName.text} from their service.",
+                      "timestamp": "{context.nowIso}",
+                      "perceptionType": "state_change_observable",
+                      "actorId": "{event.payload.actorId}",
+                      "targetId": "{event.payload.targetId}",
+                      "involvedEntities": []
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Get actor's name for the UI message.",
             "parameters": {
               "entity_ref": "actor",
               "component_type": "core:name",
@@ -71,7 +153,7 @@
           },
           {
             "type": "QUERY_COMPONENT",
-            "comment": "Get target's name for the event description.",
+            "comment": "Get target's name for the UI message.",
             "parameters": {
               "entity_ref": "target",
               "component_type": "core:name",
@@ -79,40 +161,16 @@
             }
           },
           {
-            "type": "GET_TIMESTAMP",
-            "comment": "Get the current ISO timestamp for perception logging.",
-            "parameters": {
-              "result_variable": "nowIso"
-            }
-          },
-          {
             "type": "DISPATCH_EVENT",
-            "comment": "This event is for other characters to observe.",
+            "comment": "Dispatch a decoupled event to the UI indicating the successful dismiss action.",
             "parameters": {
-              "eventType": "core:perceptible_event",
+              "eventType": "core:display_successful_action_result",
               "payload": {
-                "eventName": "core:perceptible_event",
-                "locationId": "{context.actorPosition.locationId}",
-                "descriptionText": "{context.actorName.text} has dismissed {context.targetName.text} from their service.",
-                "timestamp": "{context.nowIso}",
-                "perceptionType": "state_change_observable",
-                "actorId": "{event.payload.actorId}",
-                "targetId": "{event.payload.targetId}",
-                "involvedEntities": []
+                "message": "{context.actorName.text} dismisses {context.targetName.text} from their service."
               }
             }
           }
         ]
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
-      "comment": "Dispatch a decoupled event to the UI indicating the successful dismiss action.",
-      "parameters": {
-        "eventType": "core:display_successful_action_result",
-        "payload": {
-          "message": "{context.actorName.text} dismisses {context.targetName.text} from their service."
-        }
       }
     },
     {

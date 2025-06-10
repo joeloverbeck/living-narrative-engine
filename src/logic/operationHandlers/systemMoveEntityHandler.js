@@ -64,7 +64,9 @@ class SystemMoveEntityHandler {
 
     // 1. Validate parameters
     const { entity_ref, target_location_id } = params;
-    if (!entity_ref || !target_location_id) {
+    // **CORRECTED**: Check specifically for null/undefined instead of any falsy value for entity_ref.
+    // An empty string is an invalid *value* (handled later), not a *missing parameter*.
+    if (entity_ref == null || !target_location_id) {
       log.warn(
         `${opName}: "entity_ref" and "target_location_id" are required.`
       );

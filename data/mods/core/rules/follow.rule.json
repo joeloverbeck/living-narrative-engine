@@ -64,12 +64,43 @@
         },
         "then_actions": [
           {
-            "type": "QUERY_COMPONENT",
-            "comment": "Remember the old leader (if any) so we can rebuild their cache too.",
+            "type": "HAS_COMPONENT",
+            "comment": "Check if the actor was previously following someone.",
             "parameters": {
               "entity_ref": "actor",
               "component_type": "core:following",
-              "result_variable": "oldFollowComp"
+              "result_variable": "wasFollowing"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "IF an old leader existed, get their ID and rebuild their cache.",
+            "parameters": {
+              "condition": {
+                "var": "context.wasFollowing"
+              },
+              "then_actions": [
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Now that we know the component exists, get its data.",
+                  "parameters": {
+                    "entity_ref": "actor",
+                    "component_type": "core:following",
+                    "result_variable": "oldFollowComp"
+                  }
+                },
+                {
+                  "type": "MODIFY_ARRAY_FIELD",
+                  "comment": "Remove this actor from the old leader's 'core:leading' component.",
+                  "parameters": {
+                    "entity_ref": { "entityId": "{context.oldFollowComp.leaderId}" },
+                    "component_type": "core:leading",
+                    "field": "followers",
+                    "mode": "remove_by_value",
+                    "value": "{event.payload.actorId}"
+                  }
+                }
+              ]
             }
           },
           {
@@ -84,28 +115,14 @@
             }
           },
           {
-            "type": "IF",
-            "comment": "IF an old leader existed, rebuild their cache.",
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Add this actor to the new leader's 'core:leading' component followers list.",
             "parameters": {
-              "condition": {
-                "var": "context.oldFollowComp"
-              },
-              "then_actions": [
-                {
-                  "type": "REBUILD_LEADER_LIST_CACHE",
-                  "comment": "Rebuild the 'core:leading' cache for the old leader.",
-                  "parameters": {
-                    "leaderIds": ["{context.oldFollowComp.leaderId}"]
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "type": "REBUILD_LEADER_LIST_CACHE",
-            "comment": "Unconditionally rebuild the new leader's cache.",
-            "parameters": {
-              "leaderIds": ["{event.payload.targetId}"]
+              "entity_ref": { "entityId": "{event.payload.targetId}" },
+              "component_type": "core:leading",
+              "field": "followers",
+              "mode": "push",
+              "value": "{event.payload.actorId}"
             }
           },
           {

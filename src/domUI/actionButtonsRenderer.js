@@ -2,7 +2,6 @@
 
 import { BaseListDisplayComponent } from './baseListDisplayComponent.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
-import { DomUtils } from '../utils/domUtils.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger

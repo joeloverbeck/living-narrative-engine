@@ -196,7 +196,6 @@ export const tokens = Object.freeze({
   TurnHandlerResolver: 'TurnHandlerResolver',
   PlayerTurnHandler: 'PlayerTurnHandler',
   AITurnHandler: 'AITurnHandler',
-  SystemServiceRegistry: 'SystemServiceRegistry',
   PlayerPromptService: 'PlayerPromptService',
   CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',
   PlaytimeTracker: 'PlaytimeTracker',
@@ -214,7 +213,7 @@ export const tokens = Object.freeze({
   IInputHandler: 'IInputHandler',
   ITurnOrderService: 'ITurnOrderService',
   ITurnManager: 'ITurnManager',
-  ITurnContext: 'ITurnContext', // <<< ENSURED THIS IS PRESENT AND NOT COMMENTED
+  ITurnContext: 'ITurnContext',
   IPromptOutputPort: 'IPromptOutputPort',
   ITurnEndPort: 'ITurnEndPort',
   IPlayerPromptService: 'IPlayerPromptService',
@@ -224,7 +223,7 @@ export const tokens = Object.freeze({
   ISaveLoadService: 'ISaveLoadService',
   IStorageProvider: 'IStorageProvider',
   IInitializationService: 'IInitializationService',
-  LLMAdapter: 'LLMAdapter', // FIXED: Renamed from ILLMAdapter
+  LLMAdapter: 'LLMAdapter',
 
   // Initialization & Orchestration
   WorldInitializer: 'WorldInitializer',
@@ -251,6 +250,9 @@ export const tokens = Object.freeze({
   RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
   CheckFollowCycleHandler: 'CheckFollowCycleHandler',
   AddPerceptionLogEntryHandler: 'AddPerceptionLogEntryHandler',
+  QueryEntitiesHandler: 'QueryEntitiesHandler',
+  HasComponentHandler: 'HasComponentHandler',
+  ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
 
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',
