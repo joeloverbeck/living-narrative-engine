@@ -1,20 +1,12 @@
-/**
- * @file This module does an integration test for the behavior of LLMResponseProcessor.
- * @see tests/integration/LLMResponseProcessor.e2e.test.js
- */
+// tests/integration/LLMResponseProcessor.e2e.test.js
 
-/* eslint-disable jsdoc/check-tag-names */
-/**
- * @jest-environment node
- */
-/* eslint-disable jest/no-conditional-expect */
-/* eslint-enable jsdoc/check-tag-names */
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
-import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
-// The test needs to assert against the specific error type
-import { LLMProcessingError } from '../../src/turns/services/LLMResponseProcessor.js';
+import {
+  LLMResponseProcessor,
+  LLMProcessingError,
+} from '../../src/turns/services/LLMResponseProcessor.js';
 
-// Mock dependencies to isolate the SUT (System Under Test)
+// Mocked logger for capturing logs
 const makeLogger = () => ({
   debug: jest.fn(),
   info: jest.fn(),
@@ -22,17 +14,14 @@ const makeLogger = () => ({
   error: jest.fn(),
 });
 
-/**
- * Creates a mock schema validator.
- *
- * @param {boolean} isValid - The desired validation outcome.
- * @returns {import('../../src/interfaces/coreServices.js').ISchemaValidator} A mock validator instance.
- */
+// Mocked schema validator factory
 const makeSchemaValidator = (isValid = true) => ({
-  validate: jest.fn().mockReturnValue({
-    isValid,
-    errors: isValid ? null : [{ error: 'mock validation error' }],
-  }),
+  validate: jest
+    .fn()
+    .mockReturnValue({
+      isValid,
+      errors: isValid ? null : [{ error: 'mock validation error' }],
+    }),
   isSchemaLoaded: jest.fn().mockReturnValue(true),
 });
 
@@ -47,8 +36,7 @@ describe('LLMResponseProcessor', () => {
     const schemaValidator = makeSchemaValidator(true);
     const processor = new LLMResponseProcessor({ schemaValidator });
     const llmJsonResponse = JSON.stringify({
-      actionDefinitionId: 'core:interact',
-      commandString: 'talk to Bob',
+      chosenActionId: 4,
       speech: 'Hello Bob!',
       thoughts: 'I should greet Bob.',
       notes: ['Note 1', 'Note 2'],
@@ -60,12 +48,11 @@ describe('LLMResponseProcessor', () => {
       logger
     );
 
-    // This test correctly assumes the success path returns an object, not a throw.
     expect(result).toEqual({
       success: true,
       action: {
-        actionDefinitionId: 'core:interact',
-        commandString: 'talk to Bob',
+        actionDefinitionId: '4',
+        commandString: '',
         speech: 'Hello Bob!',
       },
       extractedData: {
@@ -75,20 +62,20 @@ describe('LLMResponseProcessor', () => {
     });
 
     expect(logger.debug).toHaveBeenCalledWith(
-      'LLMResponseProcessor: Successfully validated and transformed LLM output for actor actor-123. Action: core:interact'
+      expect.stringContaining(
+        'LLMResponseProcessor: Validated LLM output for actor actor-123. Chosen ID: 4'
+      )
     );
     expect(logger.error).not.toHaveBeenCalled();
   });
 
-  test('should trim whitespace from actionDefinitionId and commandString', async () => {
+  test('should map chosenActionId to string and set empty commandString', async () => {
     const schemaValidator = makeSchemaValidator(true);
     const processor = new LLMResponseProcessor({ schemaValidator });
     const llmJsonResponse = JSON.stringify({
-      actionDefinitionId: '  core:wait  ',
-      commandString: '  wait  ',
+      chosenActionId: 7,
       speech: 'Just waiting.',
       thoughts: 'Time to wait.',
-      notes: [],
     });
 
     const result = await processor.processResponse(
@@ -99,22 +86,21 @@ describe('LLMResponseProcessor', () => {
 
     expect(result.success).toBe(true);
     expect(result.action).toEqual({
-      actionDefinitionId: 'core:wait',
-      commandString: 'wait',
+      actionDefinitionId: '7',
+      commandString: '',
       speech: 'Just waiting.',
     });
   });
 
   test('should throw a detailed error for a JSON response that fails schema validation', async () => {
-    const schemaValidator = makeSchemaValidator(false); // Simulate validation failure
+    const schemaValidator = makeSchemaValidator(false);
     const processor = new LLMResponseProcessor({ schemaValidator });
     const invalidJson = JSON.stringify({
-      speech: 'I am doing something invalid.',
-      thoughts: 'This structure is wrong.',
+      speech: 'Invalid structure',
+      thoughts: 'Missing chosenActionId',
     });
     const actorId = 'actor-123';
 
-    // FIX: Assert that the promise rejects with a specific error type.
     await expect(
       processor.processResponse(invalidJson, actorId, logger)
     ).rejects.toThrow(LLMProcessingError);
@@ -122,7 +108,6 @@ describe('LLMResponseProcessor', () => {
     try {
       await processor.processResponse(invalidJson, actorId, logger);
     } catch (e) {
-      // FIX: Check properties of the thrown error.
       expect(e.details.errorContext).toBe('json_schema_validation_error');
       expect(e.details.rawLlmResponse).toBe(invalidJson);
       expect(e.details.validationErrors).toBeDefined();
@@ -137,20 +122,18 @@ describe('LLMResponseProcessor', () => {
   test('should throw a detailed error for a non-JSON string', async () => {
     const schemaValidator = makeSchemaValidator(true);
     const processor = new LLMResponseProcessor({ schemaValidator });
-    const nonJsonString = 'This is not JSON.';
+    const nonJson = 'Not JSON';
     const actorId = 'actor-123';
 
-    // FIX: Assert that the promise rejects.
     await expect(
-      processor.processResponse(nonJsonString, actorId, logger)
+      processor.processResponse(nonJson, actorId, logger)
     ).rejects.toThrow(LLMProcessingError);
 
     try {
-      await processor.processResponse(nonJsonString, actorId, logger);
+      await processor.processResponse(nonJson, actorId, logger);
     } catch (e) {
-      // FIX: Check properties of the thrown error.
       expect(e.details.errorContext).toBe('json_parse_error');
-      expect(e.details.rawLlmResponse).toBe(nonJsonString);
+      expect(e.details.rawLlmResponse).toBe(nonJson);
     }
 
     expect(logger.error).toHaveBeenCalledWith(
@@ -166,12 +149,11 @@ describe('LLMResponseProcessor', () => {
     const processor = new LLMResponseProcessor({ schemaValidator });
     const actorId = 'actor-123';
     const llmJsonResponse = JSON.stringify({
-      actionDefinitionId: 'core:wait',
-      commandString: 'wait',
+      chosenActionId: 3,
       speech: '',
-      thoughts: 'I should not be setting goals.',
+      thoughts: 'No goals here.',
       notes: [],
-      goals: ['This should be ignored'],
+      goals: ['Ignored'],
     });
 
     const result = await processor.processResponse(
@@ -181,13 +163,11 @@ describe('LLMResponseProcessor', () => {
     );
 
     expect(result.success).toBe(true);
-    expect(result.action.actionDefinitionId).toBe('core:wait');
+    expect(result.action.actionDefinitionId).toBe('3');
     expect(result.extractedData.goals).toBeUndefined();
 
-    // FIX: Update the expected log message to match the SUT's more specific output.
     expect(logger.warn).toHaveBeenCalledWith(
       `LLMResponseProcessor: LLM for actor ${actorId} attempted to return goals; ignoring.`
     );
   });
 });
-/* eslint-enable jest/no-conditional-expect */

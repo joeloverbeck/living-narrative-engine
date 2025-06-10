@@ -42,7 +42,7 @@ import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.
  * Thrown by LLMResponseProcessor when LLM output fails parsing or validation.
  * Contains detailed diagnostic information.
  */
-class LLMProcessingError extends Error {
+export class LLMProcessingError extends Error {
   /**
    * Error type thrown when LLM output cannot be parsed or validated.
    *
@@ -130,6 +130,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       });
     }
 
+    // 1a. Ignore deprecated 'goals' property
     if (
       parsedJson &&
       Object.prototype.hasOwnProperty.call(parsedJson, 'goals')
@@ -137,32 +138,25 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       logger.warn(
         `LLMResponseProcessor: LLM for actor ${actorId} attempted to return goals; ignoring.`
       );
-      // Do NOT merge or persist any goals. Intentionally skip.
+      // discard goals
     }
 
-    // 2. Validate against v3 schema (consolidated)
+    // 2. Validate against consolidated schema
     const validationResult = this.#schemaValidator.validate(
       LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
       parsedJson
     );
 
     if (validationResult.isValid) {
-      const { actionDefinitionId, commandString, speech, thoughts, notes } =
-        parsedJson;
+      const { chosenActionId, speech, thoughts, notes } = parsedJson;
       const finalAction = {
-        actionDefinitionId: actionDefinitionId.trim(),
-        commandString: commandString.trim(),
+        actionDefinitionId: String(chosenActionId),
+        commandString: '',
         speech,
       };
-
       logger.debug(
-        `LLMResponseProcessor: Successfully validated and transformed LLM output for actor ${actorId}. Action: ${finalAction.actionDefinitionId}`
+        `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: ${chosenActionId}`
       );
-      logger.debug(
-        `LLMResponseProcessor: Transformed ProcessedTurnAction details for ${actorId}:`,
-        { actorId, action: finalAction, extractedData: { thoughts, notes } }
-      );
-
       return {
         success: true,
         action: finalAction,
@@ -170,14 +164,13 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       };
     }
 
-    // 3. Schema validation failed → throw detailed error
+    // 3. Schema validation failed
     const validationErrorMsg = `LLM response JSON schema validation failed for actor ${actorId}.`;
     logger.error(`LLMResponseProcessor: ${validationErrorMsg}`, {
       validationErrors: validationResult.errors,
       parsedJson,
       actorId,
     });
-
     throw new LLMProcessingError(validationErrorMsg, {
       errorContext: 'json_schema_validation_error',
       rawLlmResponse: originalInput,

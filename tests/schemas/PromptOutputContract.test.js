@@ -1,8 +1,7 @@
 // tests/schemas/PromptOutputContract.test.js
 // -----------------------------------------------------------------------------
 // Contract tests for LLM_TURN_ACTION_RESPONSE_SCHEMA.
-// Ensures that LLM payloads conform to the schema requirements for the
-// `thoughts` field.
+// Ensures that LLM payloads conform to the consolidated schema requirements.
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
@@ -17,7 +16,7 @@ import { jest, describe, beforeAll, test, expect } from '@jest/globals';
 let validate;
 
 beforeAll(() => {
-  const ajv = new Ajv({ strict: true });
+  const ajv = new Ajv({ strict: true, allErrors: true });
   addFormats(ajv);
   validate = ajv.compile(LLM_TURN_ACTION_RESPONSE_SCHEMA);
 });
@@ -27,10 +26,9 @@ beforeAll(() => {
 // -----------------------------------------------------------------------------
 
 describe('PromptOutputContract', () => {
-  test('fails validation when thoughts field is missing', () => {
+  test('fails validation when `thoughts` field is missing', () => {
     const payload = {
-      actionDefinitionId: 'core:wait',
-      commandString: 'wait',
+      chosenActionId: 1,
       speech: '',
     };
 
@@ -39,10 +37,9 @@ describe('PromptOutputContract', () => {
     expect(validate.errors).toBeDefined();
   });
 
-  test('fails validation when thoughts is not a string', () => {
+  test('fails validation when `thoughts` is not a string', () => {
     const payload = {
-      actionDefinitionId: 'core:wait',
-      commandString: 'wait',
+      chosenActionId: 1,
       speech: '',
       thoughts: 123,
     };
@@ -54,8 +51,7 @@ describe('PromptOutputContract', () => {
 
   test('passes validation for a correct payload', () => {
     const payload = {
-      actionDefinitionId: 'core:wait',
-      commandString: 'wait',
+      chosenActionId: 1,
       speech: '',
       thoughts: 'Thinking about next move.',
     };

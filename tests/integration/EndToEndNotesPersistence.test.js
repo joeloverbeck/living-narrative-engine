@@ -10,7 +10,6 @@ import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thought
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
-import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../../src/turns/schemas/llmOutputSchemas.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import Entity from '../../src/entities/entity.js';
 import {
@@ -124,9 +123,9 @@ describe('End-to-End Notes Persistence Flow', () => {
     const prompt1 = await buildPrompt(provider, promptBuilder, actor, logger);
     expect(prompt1).not.toContain('<notes>');
 
+    // UPDATED to match new schema:
     const response = {
-      actionDefinitionId: 'core:wait',
-      commandString: 'wait',
+      chosenActionId: 1,
       speech: '',
       thoughts: 'thinking',
       notes: ['Remember the password'],

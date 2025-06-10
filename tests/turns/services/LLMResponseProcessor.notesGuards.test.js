@@ -1,9 +1,4 @@
-// --- FILE START: tests/turns/services/LLMResponseProcessor.notesGuards.test.js ---
-
-/**
- * @file This module tests notes-related behavior in LLMResponseProcessor.
- * @see tests/turns/services/LLMResponseProcessor.notesGuards.test.js
- */
+// tests/turns/services/LLMResponseProcessor.notesGuards.test.js
 
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
@@ -32,7 +27,6 @@ describe('LLMResponseProcessor - notes data extraction', () => {
 
   beforeEach(() => {
     loggerMock = mockLogger();
-    // The processor only depends on the schema validator. EntityManager is removed.
     schemaValidatorMock = mockSchemaValidator();
     processor = new LLMResponseProcessor({
       schemaValidator: schemaValidatorMock,
@@ -44,15 +38,13 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     const notesFromLlm = ['New note', 'Another new note'];
 
     const validJson = {
-      actionDefinitionId: 'some:action',
-      commandString: 'do something',
+      chosenActionId: 99,
       speech: 'hello',
       thoughts: 'thinking...',
       notes: notesFromLlm,
     };
 
     const jsonString = JSON.stringify(validJson);
-
     const result = await processor.processResponse(
       jsonString,
       actorId,
@@ -64,13 +56,12 @@ describe('LLMResponseProcessor - notes data extraction', () => {
 
     // Assert the action part is correct
     expect(result.action).toEqual({
-      actionDefinitionId: 'some:action',
-      commandString: 'do something',
+      actionDefinitionId: '99',
+      commandString: '',
       speech: 'hello',
     });
 
     // Assert that the notes array is extracted exactly as provided.
-    // The processor is not responsible for merging or deduplication.
     expect(result.extractedData.notes).toEqual(notesFromLlm);
 
     // No errors should be logged for a valid response
@@ -80,8 +71,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
   test('When "notes" key is absent, extractedData.notes is undefined', async () => {
     const actorId = 'actor-456';
     const noNotesJson = {
-      actionDefinitionId: 'another:action',
-      commandString: 'do something else',
+      chosenActionId: 42,
       speech: '',
       thoughts: 'no notes here',
       // "notes" key is absent
@@ -94,19 +84,13 @@ describe('LLMResponseProcessor - notes data extraction', () => {
       loggerMock
     );
 
-    // The operation should still be successful
     expect(result.success).toBe(true);
-
-    // The 'notes' property on the extracted data should be undefined
     expect(result.extractedData.notes).toBeUndefined();
-
-    // No errors should be logged
     expect(loggerMock.error).not.toHaveBeenCalled();
   });
 
   test('When "notes" is not an array, it fails schema validation by throwing an error', async () => {
     const actorId = 'actor-789';
-    // This test now verifies that a schema failure throws a detailed error.
     const mockValidationErrors = [
       { instancePath: '/notes', message: 'must be array' },
     ];
@@ -116,16 +100,14 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     });
 
     const invalidNotesJson = {
-      actionDefinitionId: 'invalid:action',
-      commandString: 'broken',
+      chosenActionId: 7,
       speech: '',
       thoughts: 'thoughtless',
-      notes: 'not-an-array', // notes is a string, which the schema will reject
+      notes: 'not-an-array',
     };
 
     const jsonString = JSON.stringify(invalidNotesJson);
 
-    // Assert that the promise rejects and verify the properties of the thrown error.
     await expect(
       processor.processResponse(jsonString, actorId, loggerMock)
     ).rejects.toMatchObject({
@@ -139,7 +121,6 @@ describe('LLMResponseProcessor - notes data extraction', () => {
       },
     });
 
-    // Confirm that the error was logged before being thrown.
     expect(loggerMock.error).toHaveBeenCalledWith(
       `LLMResponseProcessor: LLM response JSON schema validation failed for actor ${actorId}.`,
       expect.any(Object)

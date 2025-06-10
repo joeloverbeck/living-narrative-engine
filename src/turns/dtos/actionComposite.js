@@ -3,7 +3,7 @@
  * @see src/turns/dtos/actionComposite.js
  */
 
-import { MAX_ACTIONS_PER_TURN } from '../../constants/core.js';
+import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 
 /**
  * @typedef {Object} ActionComposite
@@ -33,9 +33,9 @@ export function createActionComposite(
   description
 ) {
   // index validation
-  if (!Number.isInteger(index) || index < 1 || index > MAX_ACTIONS_PER_TURN) {
+  if (!Number.isInteger(index) || index < 1 || index > MAX_AVAILABLE_ACTIONS_PER_TURN) {
     throw new Error(
-      `"index" must be an integer between 1 and ${MAX_ACTIONS_PER_TURN}, received ${index}`
+      `"index" must be an integer between 1 and ${MAX_AVAILABLE_ACTIONS_PER_TURN}, received ${index}`
     );
   }
 

@@ -1,7 +1,8 @@
 // tests/schemas/llmOutputSchemas.test.js
 // -----------------------------------------------------------------------------
 // Contract tests for LLM_TURN_ACTION_RESPONSE_SCHEMA.
-// Ensures the schema correctly enforces the presence and type of the `thoughts` field.
+// Ensures the schema correctly enforces the presence and type of the `thoughts` field
+// and the `chosenActionId` field of the LLM’s output.
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
@@ -16,7 +17,7 @@ import { jest, describe, test, expect, beforeAll } from '@jest/globals';
 let validate;
 
 beforeAll(() => {
-  const ajv = new Ajv({ strict: true });
+  const ajv = new Ajv({ strict: true, allErrors: true });
   addFormats(ajv);
   validate = ajv.compile(LLM_TURN_ACTION_RESPONSE_SCHEMA);
 });
@@ -28,8 +29,7 @@ beforeAll(() => {
 describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
   test('fails validation when `thoughts` field is missing', () => {
     const data = {
-      actionDefinitionId: 'x',
-      commandString: 'y',
+      chosenActionId: 1,
       speech: 'z',
       // `thoughts` is omitted
     };
@@ -40,15 +40,14 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
     // Ensure the error is specifically about the missing `thoughts` property.
     const missingThoughtsError = validate.errors.find(
       (err) =>
-        err.keyword === 'required' && err.params.missingProperty === 'thoughts'
+        err.keyword === 'required' && err.params?.missingProperty === 'thoughts'
     );
     expect(missingThoughtsError).toBeTruthy();
   });
 
   test('fails validation when `thoughts` is not a string', () => {
     const data = {
-      actionDefinitionId: 'x',
-      commandString: 'y',
+      chosenActionId: 1,
       speech: 'z',
       thoughts: 123, // invalid type
     };
@@ -64,8 +63,7 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
 
   test('passes validation when `thoughts` is a valid string', () => {
     const data = {
-      actionDefinitionId: 'x',
-      commandString: 'y',
+      chosenActionId: 1,
       speech: 'z',
       thoughts: 'Internal monologue',
     };

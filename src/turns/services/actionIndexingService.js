@@ -1,18 +1,16 @@
+// src/turns/services/actionIndexingService.js
+
 /**
- * @file This modules handles resolving available action composites by index.
- * @see src/turns/services/actionIndexingService.js
+ * @file Service for indexing raw actions into ActionComposite arrays per actor turn.
+ *       Enforces idempotence, duplicate-suppression, capping, and provides public getters.
+ * @module ActionIndexingService
  */
 
 import { TurnScopedCache } from '../../utils/turnScopedCache.js';
 import { createActionComposite } from '../dtos/actionComposite.js';
-import { MAX_ACTIONS_PER_TURN } from '../../constants/core.js';
+import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 
-/**
- * Stable JSON stringify with deterministic key ordering.
- * @param {*} value - The value to stringify.
- * @returns {string}
- * @private
- */
+/** @private */
 function stableStringify(value) {
   if (value === null || typeof value !== 'object') {
     return JSON.stringify(value);
@@ -21,31 +19,32 @@ function stableStringify(value) {
     return `[${value.map(stableStringify).join(',')}]`;
   }
   const keys = Object.keys(value).sort();
-  return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
 }
 
 /**
- * Service for indexing raw actions into ActionComposite arrays per actor turn.
+ * Service for indexing and retrieving available actions by actor per turn.
  * @class
  */
 export class ActionIndexingService {
   /**
-   * @param {{ warn(message: string): void }} [logger] - Optional logger for warnings.
+   * @param {{ warn(message: string): void, info(message: string): void }} [logger]
+   *        Optional logger for overflow and duplicate-suppression info.
    */
   constructor(logger) {
     /** @private */
     this.logger = logger || console;
-
     /** @private @type {Map<string, TurnScopedCache>} */
     this.caches = new Map();
-
-    /** @private @type {Map<string, Array>} */
+    /** @private @type {Map<string, ActionComposite[]>} */
     this.indexedLists = new Map();
   }
 
   /**
    * Assigns sequential indices to the given raw actions for the specified actor.
-   * Idempotent within the same turn: repeated calls return the same list.
+   * - **Idempotent** within the same turn.
+   * - Suppresses duplicate (actionId, params) pairs (logs INFO with count).
+   * - Caps to MAX_AVAILABLE_ACTIONS_PER_TURN (logs WARN if truncated).
    * @param {string} actorId - The ID of the actor whose turn it is.
    * @param {Array<DiscoveredActionInfo>} rawActions - Array of raw actions to index.
    * @returns {ActionComposite[]} The list of indexed action composites.
@@ -55,43 +54,47 @@ export class ActionIndexingService {
       return this.indexedLists.get(actorId);
     }
 
-    // Deduplicate by actionId and params.
     const seen = new Set();
-    const uniqueActions = [];
+    const unique = [];
+    let duplicates = 0;
+
     for (const action of rawActions) {
-      const actionId = action.actionId ?? action.id;
-      const params = action.params;
-      const key = `${actionId}|${stableStringify(params)}`;
-      if (seen.has(key)) continue;
+      const id = action.actionId ?? action.id;
+      const key = `${id}|${stableStringify(action.params)}`;
+      if (seen.has(key)) {
+        duplicates++;
+        continue;
+      }
       seen.add(key);
-      uniqueActions.push(action);
+      unique.push(action);
+    }
+    if (duplicates > 0) {
+      this.logger.info(
+        `ActionIndexingService: actor "${actorId}" suppressed ${duplicates} duplicate actions`
+      );
     }
 
-    // Handle overflow
-    let capped = uniqueActions;
-    if (uniqueActions.length > MAX_ACTIONS_PER_TURN) {
+    let capped = unique;
+    if (unique.length > MAX_AVAILABLE_ACTIONS_PER_TURN) {
+      const over = unique.length - MAX_AVAILABLE_ACTIONS_PER_TURN;
       this.logger.warn(
-        `ActionIndexingService: Capping actions from ${uniqueActions.length} to ${MAX_ACTIONS_PER_TURN}`
+        `ActionIndexingService: actor "${actorId}" truncated ${over} actions, processing only the first ${MAX_AVAILABLE_ACTIONS_PER_TURN}`
       );
-      capped = uniqueActions.slice(0, MAX_ACTIONS_PER_TURN);
+      capped = unique.slice(0, MAX_AVAILABLE_ACTIONS_PER_TURN);
     }
 
     const cache = new TurnScopedCache(this.logger);
-    const composites = capped.map((action, idx) => {
-      const index = idx + 1;
-      const actionId = action.actionId ?? action.id;
-      const commandString = action.commandString ?? action.command;
-      const description = action.description;
-      const params = action.params;
-      const composite = createActionComposite(
-        index,
-        actionId,
-        commandString,
-        params,
-        description
+    const composites = capped.map((action, i) => {
+      const idx = i + 1;
+      const comp = createActionComposite(
+        idx,
+        action.actionId ?? action.id,
+        action.commandString ?? action.command,
+        action.params,
+        action.description
       );
-      cache.add(composite);
-      return composite;
+      cache.add(comp);
+      return comp;
     });
 
     this.caches.set(actorId, cache);
@@ -102,30 +105,35 @@ export class ActionIndexingService {
   /**
    * Retrieves the previously indexed list for the given actor.
    * @param {string} actorId - The ID of the actor.
-   * @returns {ActionComposite[]} The indexed action composites, or an empty array if none.
+   * @returns {ActionComposite[]} A **new** array of the indexed composites.
+   * @throws {Error} If `indexActions` has not been called for this actor.
    */
   getIndexedList(actorId) {
-    return this.indexedLists.get(actorId) || [];
+    if (!this.indexedLists.has(actorId)) {
+      throw new Error(`No indexed action list for actor "${actorId}"`);
+    }
+    // Return a shallow copy so external mutation can't affect our internal array
+    return this.indexedLists.get(actorId).slice();
   }
 
   /**
-   * Resolves a composite by actor ID and index.
+   * Resolves a composite by actor ID and 1-based index in O(1).
    * @param {string} actorId - The ID of the actor.
-   * @param {number} index - The 1-based index of the action.
-   * @returns {ActionComposite} The resolved action composite.
-   * @throws {Error} If no composite is found for the index.
+   * @param {number} index - The 1-based index of the action to retrieve.
+   * @returns {ActionComposite}
+   * @throws {Error} If no actions are indexed for this actor, or if the index is out of range.
    */
   resolve(actorId, index) {
     const cache = this.caches.get(actorId);
     if (!cache) {
       throw new Error(`No actions indexed for actor "${actorId}"`);
     }
-    const composite = cache.get(index);
-    if (!composite) {
+    const comp = cache.get(index);
+    if (!comp) {
       throw new Error(
         `No action found at index ${index} for actor "${actorId}"`
       );
     }
-    return composite;
+    return comp;
   }
 }

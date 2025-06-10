@@ -24,12 +24,6 @@ const mockLogger = () => ({
   debug: jest.fn(),
 });
 
-/**
- * Minimal helper to create a new character entity with short-term memory.
- *
- * @param {string} id - Identifier for the new character.
- * @returns {object} Plain object representing the character.
- */
 const createNewCharacter = (id) => ({
   id,
   components: {
@@ -42,15 +36,6 @@ const createNewCharacter = (id) => ({
   },
 });
 
-/**
- * Build a PromptData object and final prompt string for the given character.
- *
- * @param {AIPromptContentProvider} provider - Content provider instance.
- * @param {PromptBuilder} builder - PromptBuilder under test.
- * @param {object} character - The character entity.
- * @param {object} logger - Logger for provider calls.
- * @returns {Promise<string>} Resolved prompt string.
- */
 const buildPromptForCharacter = async (
   provider,
   builder,
@@ -77,8 +62,6 @@ describe('End-to-End Short-Term Memory Flow', () => {
   let responseProcessor;
   let character;
 
-  // This config is passed to the builder, but the test output shows that the
-  // ThoughtsSectionAssembler uses its own hardcoded formatting.
   const testConfig = {
     configId: 'thoughts_only',
     modelIdentifier: 'test/model',
@@ -130,7 +113,6 @@ describe('End-to-End Short-Term Memory Flow', () => {
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
-
     responseProcessor = new LLMResponseProcessor({
       schemaValidator,
     });
@@ -145,9 +127,9 @@ describe('End-to-End Short-Term Memory Flow', () => {
     );
     expect(prompt1.includes('Your most recent thoughts')).toBe(false);
 
+    // ← UPDATED to match new schema ↓
     const mockResponse = {
-      actionDefinitionId: 'a1',
-      commandString: 'cmd',
+      chosenActionId: 1,
       speech: 'Hello',
       thoughts: 'FirstThought',
     };
@@ -180,8 +162,6 @@ describe('End-to-End Short-Term Memory Flow', () => {
       logger
     );
 
-    // CORRECTED: This string now exactly matches the actual output from the
-    // assembler, which appears to use its own hardcoded formatting.
     const expected =
       '\nYour most recent thoughts (oldest first):\n\n- FirstThought\n';
 
