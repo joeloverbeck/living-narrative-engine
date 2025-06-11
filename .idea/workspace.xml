@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Fixed tons of errors related to PromptBuilder.">
-      <change beforePath="$PROJECT_DIR$/src/prompting/promptBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptBuilder.js" afterDir="false" />
-    </list>
+    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Implemented common validation utility for PromptBuilder." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -118,7 +116,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749651288005</updated>
-      <workItem from="1749651289753" duration="7482000" />
+      <workItem from="1749651289753" duration="7816000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -136,7 +134,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749658773582</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Implemented common validation utility for PromptBuilder.">
+      <option name="closed" value="true" />
+      <created>1749659232152</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1749659232152</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -145,6 +151,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Uploaded from the office." />
     <MESSAGE value="Fixed tons of errors related to PromptBuilder." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed tons of errors related to PromptBuilder." />
+    <MESSAGE value="Implemented common validation utility for PromptBuilder." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented common validation utility for PromptBuilder." />
   </component>
 </project>
