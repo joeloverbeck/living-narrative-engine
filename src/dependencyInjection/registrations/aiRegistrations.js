@@ -96,6 +96,9 @@ import {
 } from '../../prompting/assembling/indexedChoicesAssembler.js';
 import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
 
+// src/dependencyInjection/registrations/aiRegistrations.js
+import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
+
 /**
  * Registers AI, LLM, and Prompting services.
  *
@@ -246,13 +249,8 @@ export function registerAI(container) {
       logger: c.resolve(tokens.ILogger),
       llmConfigService: c.resolve(tokens.LLMConfigService),
       placeholderResolver: c.resolve(tokens.PlaceholderResolver),
-      standardElementAssembler: c.resolve(tokens.StandardElementAssembler),
-      perceptionLogAssembler: c.resolve(tokens.PerceptionLogAssembler),
-      thoughtsSectionAssembler: c.resolve(tokens.ThoughtsSectionAssembler),
-      notesSectionAssembler: c.resolve(tokens.NotesSectionAssembler),
-      goalsSectionAssembler: c.resolve(tokens.GoalsSectionAssembler),
-      indexedChoicesAssembler: c.resolve(tokens.IndexedChoicesAssembler),
-      // ── registry is available if we choose to inject it later ──
+      assemblerRegistry: c.resolve(tokens.AssemblerRegistry),
+      conditionEvaluator: ConditionEvaluator,
     });
   });
   logger.debug(

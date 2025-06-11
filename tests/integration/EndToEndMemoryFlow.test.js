@@ -1,19 +1,19 @@
-// tests/integration/EndToEndMemoryFlow.test.js
-
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
-import { StandardElementAssembler } from '../../src/prompting/assembling/standardElementAssembler.js';
-import { PerceptionLogAssembler } from '../../src/prompting/assembling/perceptionLogAssembler.js';
-import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
-import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
-import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
-import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import Entity from '../../src/entities/entity.js';
+
+// New imports for builder adjustments
+import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
+import * as ConditionEvaluator from '../../src/prompting/elementConditionEvaluator.js';
+import ThoughtsSectionAssembler, {
+  THOUGHTS_WRAPPER_KEY,
+} from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
 
 const mockLogger = () => ({
   info: jest.fn(),
@@ -78,12 +78,6 @@ describe('End-to-End Short-Term Memory Flow', () => {
     logger = mockLogger();
     character = createNewCharacter('char1');
 
-    const mockEntityManager = {
-      getEntityInstance: jest.fn((id) =>
-        id === character.id ? character : null
-      ),
-    };
-
     provider = new AIPromptContentProvider({
       logger,
       promptStaticContentService: new PromptStaticContentService({ logger }),
@@ -100,22 +94,23 @@ describe('End-to-End Short-Term Memory Flow', () => {
     };
     const placeholderResolver = new PlaceholderResolver(logger);
 
+    // Build and register only the thoughts_wrapper assembler
+    const assemblerRegistry = new AssemblerRegistry();
+    assemblerRegistry.register(
+      THOUGHTS_WRAPPER_KEY,
+      new ThoughtsSectionAssembler({ logger })
+    );
+
     promptBuilder = new PromptBuilder({
       logger,
       llmConfigService,
       placeholderResolver,
-      standardElementAssembler: new StandardElementAssembler({ logger }),
-      perceptionLogAssembler: new PerceptionLogAssembler({ logger }),
-      thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-      notesSectionAssembler: new NotesSectionAssembler({ logger }),
-      goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-      indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
+      assemblerRegistry,
+      conditionEvaluator: ConditionEvaluator,
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
-    responseProcessor = new LLMResponseProcessor({
-      schemaValidator,
-    });
+    responseProcessor = new LLMResponseProcessor({ schemaValidator });
   });
 
   test('thought persists and appears in next prompt', async () => {

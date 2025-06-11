@@ -1,282 +1,224 @@
-// tests/prompting/promptBuilder.test.js
-// --- FILE START ---
-import {
-  jest,
-  describe,
-  beforeEach,
-  test,
-  expect,
-  afterEach,
-} from '@jest/globals';
+/* eslint-env node */
+/* eslint jest/expect-expect: ["error", { "assertFunctionNames": ["expect"] }] */
+
+import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
-import { LLMConfigService } from '../../src/llms/llmConfigService.js';
-import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
-import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
-import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
-import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
-import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
-// Import assembler types for JSDoc
-/** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
-/** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
+import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
 
-/**
- * @typedef {import('../../src/llms/llmConfigService.js').LLMConfig} LLMConfig
- * @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger
- */
+/* ------------------------------------------------------------------------- */
+/* Helpers & simple fakes                                                    */
 
-/**
- * ------------------------------------------------------------------ *
- * Helpers                                                             *
- * -------------------------------------------------------------------
- */
+/* ------------------------------------------------------------------------- */
 
-const EXPECTED_INIT_MSG =
-  'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, Assemblers (standard, perception-log, thoughts, notes, goals), and IndexedChoicesAssembler.';
+class DummyAssembler {
+  /**
+   * @param {string} output - String returned by assemble()
+   * @param {boolean} shouldThrow - If true, assemble() throws
+   */
+  constructor(output, shouldThrow = false) {
+    this.output = output;
+    this.shouldThrow = shouldThrow;
+    this.assemble = jest.fn(this.assemble.bind(this));
+  }
 
-/** @returns {jest.Mocked<ILogger>} */
-const mockLoggerInstance = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-});
+  assemble() {
+    if (this.shouldThrow) {
+      throw new Error('dummy assembler forced failure');
+    }
+    return this.output;
+  }
+}
 
-/** @returns {jest.Mocked<LLMConfigService>} */
-const mockLlmConfigServiceInstance = () => ({
-  getConfig: jest.fn(),
-});
-
-/** @returns {jest.Mocked<PlaceholderResolver>} */
-const mockPlaceholderResolverInstance = () => ({
-  resolve: jest.fn((text) => text),
-});
-
-/** @returns {jest.Mocked<StandardElementAssembler>} */
-const mockStandardElementAssemblerInstance = () => ({
-  assemble: jest.fn().mockReturnValue(''),
-});
-
-/** @returns {jest.Mocked<PerceptionLogAssembler>} */
-const mockPerceptionLogAssemblerInstance = () => ({
-  assemble: jest.fn().mockReturnValue(''),
-});
-
-/**
- * ------------------------------------------------------------------ *
- * Mock data                                                           *
- * -------------------------------------------------------------------
- */
-
-/** @type {LLMConfig} */
-const MOCK_CONFIG_1 = {
-  configId: 'test_config_v1',
-  modelIdentifier: 'test-vendor/test-model-exact',
-  promptElements: [
-    { key: 'system_prompt', prefix: 'System: ', suffix: '\n' },
-    { key: 'user_query', prefix: 'User: ', suffix: '\n' },
-  ],
-  promptAssemblyOrder: ['system_prompt', 'user_query'],
+// A minimal placeholder resolver that is effectively a no-op.
+const passthroughPlaceholderResolver = {
+  resolve: (s) => s,
 };
 
-/**
- * ------------------------------------------------------------------ *
- * Tests                                                               *
- * -------------------------------------------------------------------
- */
+/* ------------------------------------------------------------------------- */
+/* Shared test data                                                          */
+/* ------------------------------------------------------------------------- */
 
-describe('PromptBuilder', () => {
-  /** @type {jest.Mocked<ILogger>} */ let logger;
-  /** @type {jest.Mocked<LLMConfigService>} */ let mockLlmConfigService;
-  /** @type {jest.Mocked<PlaceholderResolver>} */ let mockPlaceholderResolver;
-  /** @type {jest.Mocked<StandardElementAssembler>} */ let mockStandardAssembler;
-  /** @type {jest.Mocked<PerceptionLogAssembler>} */ let mockPerceptionLogAssembler;
-  /** @type {PromptBuilder} */ let promptBuilder;
+const TEST_LLM_ID = 'unit-llm';
+
+const PROMPT_CONFIG = {
+  configId: 'config-1',
+  promptElements: [
+    { key: 'elem1' },
+    { key: 'elem2' },
+    { key: 'elem3', condition: { promptDataFlag: 'includeElem3' } },
+  ],
+  promptAssemblyOrder: ['elem1', 'elem2', 'elem3'],
+};
+
+/* ------------------------------------------------------------------------- */
+/* Test suite                                                                */
+/* ------------------------------------------------------------------------- */
+
+describe('PromptBuilder (orchestrator-only)', () => {
+  let logger;
+  let llmConfigService;
+  let assemblerRegistry;
+  let conditionEvaluator;
+  let builder; // constructed fresh per test
+
+  const makeBuilder = () =>
+    new PromptBuilder({
+      logger,
+      llmConfigService,
+      placeholderResolver: passthroughPlaceholderResolver,
+      assemblerRegistry,
+      conditionEvaluator,
+    });
+
+  /** Registers three dummy assemblers (A, B, C) in the shared registry. */
+  const registerAssemblersABC = (opts = {}) => {
+    assemblerRegistry.register(
+      'elem1',
+      new DummyAssembler('A', opts.elem1Throws)
+    );
+    assemblerRegistry.register(
+      'elem2',
+      new DummyAssembler('B', opts.elem2Throws)
+    );
+    assemblerRegistry.register(
+      'elem3',
+      new DummyAssembler('C', opts.elem3Throws)
+    );
+  };
 
   beforeEach(() => {
-    logger = mockLoggerInstance();
-    mockLlmConfigService = mockLlmConfigServiceInstance();
-    mockPlaceholderResolver = mockPlaceholderResolverInstance();
-    mockStandardAssembler = mockStandardElementAssemblerInstance();
-    mockPerceptionLogAssembler = mockPerceptionLogAssemblerInstance();
+    /* fresh spies each run */
+    logger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+    };
+
+    llmConfigService = {
+      /** @returns {Promise<object|null>} */
+      getConfig: jest.fn(async (id) =>
+        id === TEST_LLM_ID ? PROMPT_CONFIG : null
+      ),
+    };
+
+    assemblerRegistry = new AssemblerRegistry();
+
+    /* default: every condition passes */
+    conditionEvaluator = {
+      isElementConditionMet: jest.fn(() => true),
+    };
+
+    builder = makeBuilder();
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Happy-path concatenation                                                */
+  /* ──────────────────────────────────────────────────────────────────────── */
+
+  test('concatenates assembler outputs in the declared order', async () => {
+    registerAssemblersABC();
+
+    const prompt = await builder.build(TEST_LLM_ID, { includeElem3: true });
+
+    expect(prompt).toBe('ABC');
+    expect(assemblerRegistry.resolve('elem1').assemble).toHaveBeenCalledTimes(
+      1
+    );
+    expect(assemblerRegistry.resolve('elem2').assemble).toHaveBeenCalledTimes(
+      1
+    );
+    expect(assemblerRegistry.resolve('elem3').assemble).toHaveBeenCalledTimes(
+      1
+    );
+    expect(conditionEvaluator.isElementConditionMet).toHaveBeenCalledTimes(3);
   });
 
-  describe('Constructor', () => {
-    test('initializes with default console logger when none provided', () => {
-      const consoleSpy = jest
-        .spyOn(console, 'debug')
-        .mockImplementation(() => {});
-      const pb = new PromptBuilder({
-        llmConfigService: mockLlmConfigService,
-        placeholderResolver: mockPlaceholderResolver,
-        standardElementAssembler: mockStandardAssembler,
-        perceptionLogAssembler: mockPerceptionLogAssembler,
-        notesSectionAssembler: new NotesSectionAssembler({ logger }),
-        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-      });
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Conditional element skipping                                            */
+  /* ──────────────────────────────────────────────────────────────────────── */
 
-      expect(pb).toBeInstanceOf(PromptBuilder);
-      expect(consoleSpy).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
-      consoleSpy.mockRestore();
-    });
+  test('skips elements whose condition is not met', async () => {
+    registerAssemblersABC();
 
-    test('initializes with provided logger', () => {
-      promptBuilder = new PromptBuilder({
-        logger,
-        llmConfigService: mockLlmConfigService,
-        placeholderResolver: mockPlaceholderResolver,
-        standardElementAssembler: mockStandardAssembler,
-        perceptionLogAssembler: mockPerceptionLogAssembler,
-        notesSectionAssembler: new NotesSectionAssembler({ logger }),
-        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-      });
+    /* Custom condition logic: respect the includeElem3 flag */
+    conditionEvaluator.isElementConditionMet.mockImplementation(
+      (cond, data) => {
+        if (!cond) return true; // unconditional elements pass
+        return Boolean(data[cond.promptDataFlag]);
+      }
+    );
 
-      expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
-    });
+    const prompt = await builder.build(TEST_LLM_ID, { includeElem3: false });
 
-    test('initializes correctly when LLMConfigService might have initialConfigs', () => {
-      promptBuilder = new PromptBuilder({
-        logger,
-        llmConfigService: mockLlmConfigService,
-        placeholderResolver: mockPlaceholderResolver,
-        standardElementAssembler: mockStandardAssembler,
-        perceptionLogAssembler: mockPerceptionLogAssembler,
-        notesSectionAssembler: new NotesSectionAssembler({ logger }),
-        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-      });
-
-      expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
-    });
-
-    test('initializes correctly when LLMConfigService might have empty initialConfigs', () => {
-      promptBuilder = new PromptBuilder({
-        logger,
-        llmConfigService: mockLlmConfigService,
-        placeholderResolver: mockPlaceholderResolver,
-        standardElementAssembler: mockStandardAssembler,
-        perceptionLogAssembler: mockPerceptionLogAssembler,
-        notesSectionAssembler: new NotesSectionAssembler({ logger }),
-        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-      });
-
-      expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
-    });
-
-    test('initializes correctly when LLMConfigService uses configSourceIdentifier', () => {
-      promptBuilder = new PromptBuilder({
-        logger,
-        llmConfigService: mockLlmConfigService,
-        placeholderResolver: mockPlaceholderResolver,
-        standardElementAssembler: mockStandardAssembler,
-        perceptionLogAssembler: mockPerceptionLogAssembler,
-        notesSectionAssembler: new NotesSectionAssembler({ logger }),
-        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-      });
-
-      expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
-    });
-
-    test('initializes correctly regardless of LLMConfigService details', () => {
-      promptBuilder = new PromptBuilder({
-        logger,
-        llmConfigService: mockLlmConfigService,
-        placeholderResolver: mockPlaceholderResolver,
-        standardElementAssembler: mockStandardAssembler,
-        perceptionLogAssembler: mockPerceptionLogAssembler,
-        notesSectionAssembler: new NotesSectionAssembler({ logger }),
-        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-      });
-
-      expect(promptBuilder).toBeInstanceOf(PromptBuilder);
-      expect(logger.debug).toHaveBeenCalledWith(EXPECTED_INIT_MSG);
-    });
-
-    test('throws when LLMConfigService not provided', () => {
-      expect(() => {
-        new PromptBuilder({
-          logger,
-          placeholderResolver: mockPlaceholderResolver,
-          standardElementAssembler: mockStandardAssembler,
-          perceptionLogAssembler: mockPerceptionLogAssembler,
-          notesSectionAssembler: new NotesSectionAssembler({ logger }),
-          thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-          goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-          indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-        });
-      }).toThrow('PromptBuilder: LLMConfigService is a required dependency.');
-    });
-
-    test('throws when PlaceholderResolver not provided', () => {
-      expect(() => {
-        new PromptBuilder({
-          logger,
-          llmConfigService: mockLlmConfigService,
-          standardElementAssembler: mockStandardAssembler,
-          perceptionLogAssembler: mockPerceptionLogAssembler,
-          notesSectionAssembler: new NotesSectionAssembler({ logger }),
-          thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-          goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-          indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-        });
-      }).toThrow(
-        'PromptBuilder: PlaceholderResolver is a required dependency.'
-      );
-    });
-
-    test('throws when StandardElementAssembler not provided', () => {
-      expect(() => {
-        new PromptBuilder({
-          logger,
-          llmConfigService: mockLlmConfigService,
-          placeholderResolver: mockPlaceholderResolver,
-          perceptionLogAssembler: mockPerceptionLogAssembler,
-          notesSectionAssembler: new NotesSectionAssembler({ logger }),
-          thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-          goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-          indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-        });
-      }).toThrow(
-        'PromptBuilder: StandardElementAssembler is a required dependency.'
-      );
-    });
-
-    test('throws when PerceptionLogAssembler not provided', () => {
-      expect(() => {
-        new PromptBuilder({
-          logger,
-          llmConfigService: mockLlmConfigService,
-          placeholderResolver: mockPlaceholderResolver,
-          standardElementAssembler: mockStandardAssembler,
-          notesSectionAssembler: new NotesSectionAssembler({ logger }),
-          thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-          goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-          indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
-        });
-      }).toThrow(
-        'PromptBuilder: PerceptionLogAssembler is a required dependency.'
-      );
-    });
+    expect(prompt).toBe('AB'); // C omitted
+    expect(assemblerRegistry.resolve('elem3').assemble).not.toHaveBeenCalled();
   });
 
-  // TODO: Add tests for build() orchestration logic
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Registry resolution failures                                            */
+  /* ──────────────────────────────────────────────────────────────────────── */
+
+  test('throws when an assembler key is missing in the registry', async () => {
+    assemblerRegistry.register('elem1', new DummyAssembler('A'));
+    // elem2 intentionally *not* registered
+    assemblerRegistry.register('elem3', new DummyAssembler('C'));
+
+    await expect(
+      builder.build(TEST_LLM_ID, { includeElem3: true })
+    ).rejects.toThrow("No assembler registered for 'elem2'");
+  });
+
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Element-level assembler errors are surfaced via logger, prompt builds   */
+  /* ──────────────────────────────────────────────────────────────────────── */
+
+  test('continues building when an assembler throws, logs aggregated error', async () => {
+    registerAssemblersABC({ elem2Throws: true });
+
+    const prompt = await builder.build(TEST_LLM_ID, { includeElem3: true });
+
+    expect(prompt).toBe('AC'); // B failed but others present
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('failed during assembly'),
+      expect.any(Object)
+    );
+  });
+
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Guard clauses & edge-cases                                             */
+  /* ──────────────────────────────────────────────────────────────────────── */
+
+  test('returns empty string when llmConfigService returns null', async () => {
+    llmConfigService.getConfig.mockResolvedValueOnce(null);
+
+    const prompt = await builder.build('unknown-llm', {});
+
+    expect(prompt).toBe('');
+  });
+
+  test('build returns empty string for bad inputs (null promptData)', async () => {
+    registerAssemblersABC();
+
+    const prompt = await builder.build(TEST_LLM_ID, null);
+
+    expect(prompt).toBe('');
+  });
+
+  /* ──────────────────────────────────────────────────────────────────────── */
+  /* Constructor dependency validation                                       */
+  /* ──────────────────────────────────────────────────────────────────────── */
+
+  test('constructor throws when a required dependency is missing', () => {
+    expect(
+      () =>
+        new PromptBuilder({
+          // llmConfigService omitted on purpose
+          logger,
+          placeholderResolver: passthroughPlaceholderResolver,
+          assemblerRegistry,
+          conditionEvaluator,
+        })
+    ).toThrow(/LLMConfigService/);
+  });
 });
-// --- FILE END ---

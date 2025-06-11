@@ -4,12 +4,6 @@ import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
-import { StandardElementAssembler } from '../../src/prompting/assembling/standardElementAssembler.js';
-import { PerceptionLogAssembler } from '../../src/prompting/assembling/perceptionLogAssembler.js';
-import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
-import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
-import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
-import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
@@ -19,6 +13,15 @@ import {
   SHORT_TERM_MEMORY_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
+
+// NEW imports for the refactored PromptBuilder
+import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
+import * as ConditionEvaluator from '../../src/prompting/elementConditionEvaluator.js';
+import NotesSectionAssembler, {
+  NOTES_WRAPPER_KEY,
+} from '../../src/prompting/assembling/notesSectionAssembler.js';
+
+/** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -38,8 +41,7 @@ const createActor = (id) => {
   return e;
 };
 
-// This helper now builds a plain DTO that matches the structure
-// the AIPromptContentProvider expects to parse.
+// Helper to build the final prompt from provider + builder + actor
 const buildPrompt = async (provider, builder, actor, logger) => {
   const dto = {
     actorState: {
@@ -107,16 +109,25 @@ describe('End-to-End Notes Persistence Flow', () => {
       getConfig: jest.fn().mockResolvedValue(testConfig),
     };
     const placeholderResolver = new PlaceholderResolver(logger);
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Build a minimal AssemblerRegistry for 'notes_wrapper'
+    // ──────────────────────────────────────────────────────────────────────────
+    const assemblerRegistry = new AssemblerRegistry();
+    assemblerRegistry.register(
+      NOTES_WRAPPER_KEY,
+      new NotesSectionAssembler({ logger })
+    );
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Use the new PromptBuilder signature (assemblerRegistry + evaluator)
+    // ──────────────────────────────────────────────────────────────────────────
     promptBuilder = new PromptBuilder({
       logger,
       llmConfigService,
       placeholderResolver,
-      standardElementAssembler: new StandardElementAssembler({ logger }),
-      perceptionLogAssembler: new PerceptionLogAssembler({ logger }),
-      thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-      notesSectionAssembler: new NotesSectionAssembler({ logger }),
-      goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-      indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
+      assemblerRegistry,
+      conditionEvaluator: ConditionEvaluator,
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
@@ -124,10 +135,11 @@ describe('End-to-End Notes Persistence Flow', () => {
   });
 
   test('notes persist and appear in subsequent prompt', async () => {
+    // first prompt: no notes yet
     const prompt1 = await buildPrompt(provider, promptBuilder, actor, logger);
     expect(prompt1).not.toContain('<notes>');
 
-    // UPDATED to match new schema:
+    // simulate LLM response writing a note
     const response = {
       chosenActionId: 1,
       speech: '',
@@ -146,6 +158,7 @@ describe('End-to-End Notes Persistence Flow', () => {
       'Remember the password',
     ]);
 
+    // persist it on the entity
     if (processingResult.success && processingResult.extractedData.notes) {
       const notesComp = actor.getComponentData(NOTES_COMPONENT_ID);
       const newNotes = processingResult.extractedData.notes.map((text) => ({
@@ -155,10 +168,12 @@ describe('End-to-End Notes Persistence Flow', () => {
       notesComp.notes.push(...newNotes);
     }
 
+    // now the entity has one note component
     const notesComp = actor.getComponentData(NOTES_COMPONENT_ID);
     expect(notesComp.notes).toHaveLength(1);
     expect(notesComp.notes[0].text).toBe('Remember the password');
 
+    // second prompt should include the <notes> section
     const prompt2 = await buildPrompt(provider, promptBuilder, actor, logger);
     expect(prompt2).toContain('<notes>');
     expect(prompt2).toContain('- Remember the password');

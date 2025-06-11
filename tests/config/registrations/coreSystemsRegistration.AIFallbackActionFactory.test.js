@@ -1,5 +1,4 @@
 // tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js
-// ****** MODIFIED FILE ******
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
 // --- DI Container & Configuration ---
@@ -23,39 +22,53 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
   let container;
 
   beforeEach(() => {
-    // 1. Create a fresh, fully configured container for each test.
-    // This ensures we are testing the actual registration logic as it runs in the app.
+    // ──────────────────────────────────────────────────────────────────────────
+    // 1) Reset & seed DOM so UI registrations (ChatAlertRenderer, etc.) find their elements
+    // ──────────────────────────────────────────────────────────────────────────
+    document.body.innerHTML = '';
+    const outputDiv = document.createElement('div');
+    outputDiv.id = 'outputDiv';
+    const messageList = document.createElement('div');
+    messageList.id = 'message-list';
+    const inputElement = document.createElement('input');
+    inputElement.id = 'inputElement';
+    const titleElement = document.createElement('h1');
+    titleElement.id = 'titleElement';
+    document.body.append(outputDiv, messageList, inputElement, titleElement);
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 2) Create & configure the real container
+    // ──────────────────────────────────────────────────────────────────────────
     container = new AppContainer();
-    configureContainer(container, {
-      // Provide mock DOM elements required by the full configuration
-      outputDiv: document.createElement('div'),
-      inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
+    configureContainer(container, { outputDiv, inputElement, titleElement });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 3) Stub out PromptBuilder & AI-pipeline so we don’t hit their internals
+    // ──────────────────────────────────────────────────────────────────────────
+    container.register(tokens.IPromptBuilder, () => ({ build: () => '' }), {
+      lifecycle: 'singletonFactory',
+    });
+    container.register(tokens.IAIPromptPipeline, () => ({}), {
+      lifecycle: 'singletonFactory',
     });
   });
 
   it('should successfully create an AITurnHandler via the TurnHandlerResolver', async () => {
     // --- Arrange ---
-    // 1. Define a mock entity that represents an AI actor.
-    // The resolver identifies an AI by the presence of 'actor' and absence of 'player'.
     const mockAiActor = {
       id: 'ai-actor-123',
-      /** @param {string} componentId */
-      hasComponent: (componentId) => {
-        // Corrected logic: An AI actor should have ACTOR_COMPONENT_ID but not PLAYER_COMPONENT_ID.
-        if (componentId === PLAYER_COMPONENT_ID) return false;
-        if (componentId === ACTOR_COMPONENT_ID) return true;
-        return false;
-      },
+      hasComponent: (comp) =>
+        comp === ACTOR_COMPONENT_ID
+          ? true
+          : comp === PLAYER_COMPONENT_ID
+            ? false
+            : false,
     };
 
     // --- Act ---
-    // 2. Resolve the TurnHandlerResolver from the container. This is the service
-    // responsible for creating handlers.
     const resolver = container.resolve(tokens.TurnHandlerResolver);
     expect(resolver).toBeInstanceOf(TurnHandlerResolver);
 
-    // 3. Attempt to create the AI handler.
     let handler;
     await expect(async () => {
       handler = await resolver.resolveHandler(
@@ -64,8 +77,6 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     }).not.toThrow();
 
     // --- Assert ---
-    // 4. Verify that the created handler is of the correct type and is not null.
-    // This confirms the resolution logic worked correctly and passed all dependencies.
     expect(handler).toBeDefined();
     expect(handler).not.toBeNull();
     expect(handler).toBeInstanceOf(AITurnHandler);
@@ -73,26 +84,34 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
 
   it('should throw an error if AITurnHandler constructor dependencies are manually misconfigured', () => {
     // --- Arrange ---
-    // This is a sanity check. We'll register a broken factory for AITurnHandler
-    // that intentionally omits a required dependency.
-
     const brokenContainer = new AppContainer();
     configureContainer(brokenContainer, {
-      outputDiv: document.createElement('div'),
-      inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
+      outputDiv: document.getElementById('outputDiv'),
+      inputElement: document.getElementById('inputElement'),
+      titleElement: document.getElementById('titleElement'),
     });
 
-    // Override the correct registration with a broken one
+    // Stub the same two services on the broken container
+    brokenContainer.register(
+      tokens.IPromptBuilder,
+      () => ({ build: () => '' }),
+      {
+        lifecycle: 'singletonFactory',
+      }
+    );
+    brokenContainer.register(tokens.IAIPromptPipeline, () => ({}), {
+      lifecycle: 'singletonFactory',
+    });
+
+    // Override only the AITurnHandler registration, deliberately omitting the fallback factory
     brokenContainer.register(
       tokens.AITurnHandler,
-      (c) => {
-        // Intentionally create an AITurnHandler without aiFallbackActionFactory
-        return new AITurnHandler({
+      (c) =>
+        new AITurnHandler({
           logger: c.resolve(tokens.ILogger),
           turnStateFactory: c.resolve(tokens.ITurnStateFactory),
-          gameWorldAccess: c.resolve(tokens.IWorldContext),
           turnEndPort: c.resolve(tokens.ITurnEndPort),
+          gameWorldAccess: c.resolve(tokens.IWorldContext),
           llmAdapter: c.resolve(tokens.LLMAdapter),
           commandProcessor: c.resolve(tokens.ICommandProcessor),
           commandOutcomeInterpreter: c.resolve(
@@ -102,22 +121,18 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           entityManager: c.resolve(tokens.IEntityManager),
           actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
           promptBuilder: c.resolve(tokens.IPromptBuilder),
-          // --- INTENTIONALLY MISSING to trigger the expected error ---
-          // aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
-          // -----------------------------------------------------------
+          // ←— aiFallbackActionFactory is intentionally missing
           aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
           turnContextFactory: c.resolve(tokens.ITurnContextFactory),
           gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
           promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
           llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
           aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
-        });
-      },
+        }),
       { lifecycle: 'transient' }
     );
 
     // --- Act & Assert ---
-    // We expect the resolution of this misconfigured handler to fail with the exact error message.
     expect(() => brokenContainer.resolve(tokens.AITurnHandler)).toThrow(
       'AITurnHandler: Invalid IAIFallbackActionFactory'
     );

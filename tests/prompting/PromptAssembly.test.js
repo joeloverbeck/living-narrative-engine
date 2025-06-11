@@ -6,6 +6,8 @@ import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thought
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
 import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
 import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
+import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
+import * as ConditionEvaluator from '../../src/prompting/elementConditionEvaluator.js';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -62,16 +64,22 @@ describe('Prompt Assembly with short-term memory', () => {
 
     const placeholderResolver = new PlaceholderResolver(logger);
 
+    // ──────────────────────────────────────────────────────────────────────────
+    // Build and populate a minimal AssemblerRegistry for our single key:
+    // ──────────────────────────────────────────────────────────────────────────
+    const assemblerRegistry = new AssemblerRegistry();
+    assemblerRegistry.register(
+      'thoughts_wrapper',
+      new ThoughtsSectionAssembler({ logger })
+    );
+
+    // New PromptBuilder signature:
     promptBuilder = new PromptBuilder({
       logger,
       llmConfigService,
       placeholderResolver,
-      standardElementAssembler: { assemble: jest.fn().mockReturnValue('') },
-      perceptionLogAssembler: { assemble: jest.fn().mockReturnValue('') },
-      thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
-      notesSectionAssembler: new NotesSectionAssembler({ logger }),
-      goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
-      indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
+      assemblerRegistry,
+      conditionEvaluator: ConditionEvaluator,
     });
   });
 
