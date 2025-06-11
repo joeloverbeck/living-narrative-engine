@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Created string accumulator.">
-      <change afterPath="$PROJECT_DIR$/src/utils/wrapperUtils.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" afterDir="false" />
+    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Implemented wrapper util.">
+      <change afterPath="$PROJECT_DIR$/src/prompting/elementConditionEvaluator.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/prompting/elementConditionEvaluator.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm-proxy-server/tests/consoleLogger.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/llm-proxy-server/tests/consoleLogger.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,7 +120,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749651288005</updated>
-      <workItem from="1749651289753" duration="8453000" />
+      <workItem from="1749651289753" duration="8764000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -154,7 +154,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749659424166</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Implemented wrapper util.">
+      <option name="closed" value="true" />
+      <created>1749659992152</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1749659992152</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -165,6 +173,7 @@
     <MESSAGE value="Fixed tons of errors related to PromptBuilder." />
     <MESSAGE value="Implemented common validation utility for PromptBuilder." />
     <MESSAGE value="Created string accumulator." />
-    <option name="LAST_COMMIT_MESSAGE" value="Created string accumulator." />
+    <MESSAGE value="Implemented wrapper util." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented wrapper util." />
   </component>
 </project>
