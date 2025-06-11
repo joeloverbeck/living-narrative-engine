@@ -1,4 +1,4 @@
-// tests/services/promptBuilder.test.js
+// tests/prompting/promptBuilder.test.js
 // --- FILE START ---
 import {
   jest,
@@ -9,16 +9,19 @@ import {
   afterEach,
 } from '@jest/globals';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
-import { LLMConfigService } from '../../src/llms/llmConfigService.js'; // Added
+import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
-import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js'; // Added
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
+import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
+import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 // Import assembler types for JSDoc
 /** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
 /** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
 
 /**
  * @typedef {import('../../src/llms/llmConfigService.js').LLMConfig} LLMConfig
- * @typedef {import('../../src/interfaces/coreServices.js').ILogger}     ILogger
+ * @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger
  */
 
 /**
@@ -28,7 +31,7 @@ import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAs
  */
 
 const EXPECTED_INIT_MSG =
-  'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers (standard, perception‐log, thoughts, notes, goals).';
+  'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, Assemblers (standard, perception-log, thoughts, notes, goals), and IndexedChoicesAssembler.';
 
 /** @returns {jest.Mocked<ILogger>} */
 const mockLoggerInstance = () => ({
@@ -45,7 +48,7 @@ const mockLlmConfigServiceInstance = () => ({
 
 /** @returns {jest.Mocked<PlaceholderResolver>} */
 const mockPlaceholderResolverInstance = () => ({
-  resolve: jest.fn((text) => text), // Simple pass-through
+  resolve: jest.fn((text) => text),
 });
 
 /** @returns {jest.Mocked<StandardElementAssembler>} */
@@ -82,12 +85,12 @@ const MOCK_CONFIG_1 = {
  */
 
 describe('PromptBuilder', () => {
-  /** @type {jest.Mocked<ILogger>}                  */ let logger;
-  /** @type {jest.Mocked<LLMConfigService>}         */ let mockLlmConfigService;
-  /** @type {jest.Mocked<PlaceholderResolver>}      */ let mockPlaceholderResolver;
+  /** @type {jest.Mocked<ILogger>} */ let logger;
+  /** @type {jest.Mocked<LLMConfigService>} */ let mockLlmConfigService;
+  /** @type {jest.Mocked<PlaceholderResolver>} */ let mockPlaceholderResolver;
   /** @type {jest.Mocked<StandardElementAssembler>} */ let mockStandardAssembler;
-  /** @type {jest.Mocked<PerceptionLogAssembler>}   */ let mockPerceptionLogAssembler;
-  /** @type {PromptBuilder}                         */ let promptBuilder; // Used in some tests
+  /** @type {jest.Mocked<PerceptionLogAssembler>} */ let mockPerceptionLogAssembler;
+  /** @type {PromptBuilder} */ let promptBuilder;
 
   beforeEach(() => {
     logger = mockLoggerInstance();
@@ -112,6 +115,9 @@ describe('PromptBuilder', () => {
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       expect(pb).toBeInstanceOf(PromptBuilder);
@@ -127,6 +133,9 @@ describe('PromptBuilder', () => {
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -141,6 +150,9 @@ describe('PromptBuilder', () => {
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -155,6 +167,9 @@ describe('PromptBuilder', () => {
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -169,6 +184,9 @@ describe('PromptBuilder', () => {
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -183,6 +201,9 @@ describe('PromptBuilder', () => {
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       expect(promptBuilder).toBeInstanceOf(PromptBuilder);
@@ -196,6 +217,10 @@ describe('PromptBuilder', () => {
           placeholderResolver: mockPlaceholderResolver,
           standardElementAssembler: mockStandardAssembler,
           perceptionLogAssembler: mockPerceptionLogAssembler,
+          notesSectionAssembler: new NotesSectionAssembler({ logger }),
+          thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+          goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+          indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
         });
       }).toThrow('PromptBuilder: LLMConfigService is a required dependency.');
     });
@@ -207,6 +232,10 @@ describe('PromptBuilder', () => {
           llmConfigService: mockLlmConfigService,
           standardElementAssembler: mockStandardAssembler,
           perceptionLogAssembler: mockPerceptionLogAssembler,
+          notesSectionAssembler: new NotesSectionAssembler({ logger }),
+          thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+          goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+          indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
         });
       }).toThrow(
         'PromptBuilder: PlaceholderResolver is a required dependency.'
@@ -220,6 +249,10 @@ describe('PromptBuilder', () => {
           llmConfigService: mockLlmConfigService,
           placeholderResolver: mockPlaceholderResolver,
           perceptionLogAssembler: mockPerceptionLogAssembler,
+          notesSectionAssembler: new NotesSectionAssembler({ logger }),
+          thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+          goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+          indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
         });
       }).toThrow(
         'PromptBuilder: StandardElementAssembler is a required dependency.'
@@ -233,6 +266,10 @@ describe('PromptBuilder', () => {
           llmConfigService: mockLlmConfigService,
           placeholderResolver: mockPlaceholderResolver,
           standardElementAssembler: mockStandardAssembler,
+          notesSectionAssembler: new NotesSectionAssembler({ logger }),
+          thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+          goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+          indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
         });
       }).toThrow(
         'PromptBuilder: PerceptionLogAssembler is a required dependency.'

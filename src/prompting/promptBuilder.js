@@ -29,6 +29,7 @@
  * @property {boolean} [someConditionFlag] - Boolean flag that can be used to conditionally include elements.
  * @property {string} [characterSheetContent] - The character sheet content to insert into the prompt.
  * @property {boolean} [enableReasoning] - Boolean flag to indicate whether to include the reasoning section.
+ * @property {Array<{ index: number; description: string }>} [indexedChoicesArray] - Array of indexed choice composites.
  */
 
 import { IPromptBuilder } from '../interfaces/IPromptBuilder.js';
@@ -37,12 +38,14 @@ import { PerceptionLogAssembler } from './assembling/perceptionLogAssembler.js';
 import { ThoughtsSectionAssembler } from './assembling/thoughtsSectionAssembler.js';
 import { NotesSectionAssembler } from './assembling/notesSectionAssembler.js';
 import { GoalsSectionAssembler } from './assembling/goalsSectionAssembler.js';
+import { IndexedChoicesAssembler } from './assembling/indexedChoicesAssembler.js';
 
 // Special keys
 const PERCEPTION_LOG_WRAPPER_KEY = 'perception_log_wrapper';
 const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';
 const NOTES_WRAPPER_KEY = 'notes_wrapper';
 const GOALS_WRAPPER_KEY = 'goals_wrapper';
+const INDEXED_CHOICES_KEY = 'indexed_choices';
 
 export class PromptBuilder extends IPromptBuilder {
   #logger;
@@ -53,6 +56,7 @@ export class PromptBuilder extends IPromptBuilder {
   #thoughtsSectionAssembler;
   #notesSectionAssembler;
   #goalsSectionAssembler;
+  #indexedChoicesAssembler;
 
   /**
    * @param {object} dependencies - An object containing all required dependencies.
@@ -64,6 +68,7 @@ export class PromptBuilder extends IPromptBuilder {
    * @param {ThoughtsSectionAssembler} dependencies.thoughtsSectionAssembler - Assembler for thoughts section (defaults if omitted).
    * @param {NotesSectionAssembler} dependencies.notesSectionAssembler - Assembler for notes section.
    * @param {GoalsSectionAssembler} dependencies.goalsSectionAssembler - Assembler for goals section (defaults if omitted).
+   * @param {IndexedChoicesAssembler} dependencies.indexedChoicesAssembler - Assembler for indexed choice lists.
    */
   constructor({
     logger = console,
@@ -74,6 +79,7 @@ export class PromptBuilder extends IPromptBuilder {
     thoughtsSectionAssembler,
     notesSectionAssembler,
     goalsSectionAssembler,
+    indexedChoicesAssembler,
   }) {
     super();
     this.#logger = logger;
@@ -140,8 +146,16 @@ export class PromptBuilder extends IPromptBuilder {
       this.#goalsSectionAssembler = goalsSectionAssembler;
     }
 
+    if (!indexedChoicesAssembler) {
+      const errorMsg =
+        'PromptBuilder: IndexedChoicesAssembler is a required dependency.';
+      this.#logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    this.#indexedChoicesAssembler = indexedChoicesAssembler;
+
     this.#logger.debug(
-      'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, and Assemblers (standard, perception‐log, thoughts, notes, goals).'
+      'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, Assemblers (standard, perception-log, thoughts, notes, goals), and IndexedChoicesAssembler.'
     );
   }
 
@@ -223,7 +237,7 @@ export class PromptBuilder extends IPromptBuilder {
     const selectedConfig = await this.#llmConfigService.getConfig(llmId);
     if (!selectedConfig) {
       this.#logger.error(
-        `PromptBuilder.build: No configuration found or provided by LLMConfigService for llmId "${llmId}". Cannot build prompt.`
+        `PromptBuilder.build: No configuration found for llmId "${llmId}".`
       );
       return '';
     }
@@ -240,7 +254,7 @@ export class PromptBuilder extends IPromptBuilder {
       const elementConfig = promptElementsMap.get(key);
       if (!elementConfig) {
         this.#logger.warn(
-          `PromptBuilder.build: Key "${key}" from promptAssemblyOrder not found in promptElements for configId "${selectedConfig.configId}". Skipping.`
+          `PromptBuilder.build: Key "${key}" not found in promptElements. Skipping.`
         );
         continue;
       }
@@ -252,12 +266,10 @@ export class PromptBuilder extends IPromptBuilder {
         continue;
       }
 
-      this.#logger.debug(`PromptBuilder.build: Including element '${key}'.`);
-
-      let currentElementOutput = '';
-      let assemblerToUse = null;
-
-      if (key === PERCEPTION_LOG_WRAPPER_KEY) {
+      let assemblerToUse;
+      if (key === INDEXED_CHOICES_KEY) {
+        assemblerToUse = this.#indexedChoicesAssembler;
+      } else if (key === PERCEPTION_LOG_WRAPPER_KEY) {
         assemblerToUse = this.#perceptionLogAssembler;
       } else if (key === THOUGHTS_WRAPPER_KEY) {
         assemblerToUse = this.#thoughtsSectionAssembler;
@@ -271,31 +283,29 @@ export class PromptBuilder extends IPromptBuilder {
 
       if (!assemblerToUse) {
         this.#logger.warn(
-          `PromptBuilder.build: No assembler found for '${key}'. Skipping element.`
+          `PromptBuilder.build: No assembler found for '${key}'. Skipping.`
         );
         continue;
       }
 
       try {
-        currentElementOutput = assemblerToUse.assemble(
+        const chunk = assemblerToUse.assemble(
           elementConfig,
           promptData,
           this.#placeholderResolver,
           promptElementsMap
         );
+        finalPromptString += chunk;
       } catch (err) {
         this.#logger.error(
-          `PromptBuilder.build: Error assembling '${key}' with ${assemblerToUse.constructor.name}. Skipping element.`,
+          `PromptBuilder.build: Error assembling '${key}'. Skipping.`,
           { error: err }
         );
-        currentElementOutput = '';
       }
-
-      finalPromptString += currentElementOutput;
     }
 
     this.#logger.debug(
-      `PromptBuilder.build: Successfully assembled prompt for llmId: ${llmId} using config ${selectedConfig.configId}. Length: ${finalPromptString.length}`
+      `PromptBuilder.build: Finished assembling prompt (length ${finalPromptString.length}).`
     );
     return finalPromptString;
   }

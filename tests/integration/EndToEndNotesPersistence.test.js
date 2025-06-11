@@ -8,6 +8,8 @@ import { StandardElementAssembler } from '../../src/prompting/assembling/standar
 import { PerceptionLogAssembler } from '../../src/prompting/assembling/perceptionLogAssembler.js';
 import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
+import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
@@ -36,7 +38,7 @@ const createActor = (id) => {
   return e;
 };
 
-// CORRECTED: This helper now builds a plain DTO that matches the structure
+// This helper now builds a plain DTO that matches the structure
 // the AIPromptContentProvider expects to parse.
 const buildPrompt = async (provider, builder, actor, logger) => {
   const dto = {
@@ -113,6 +115,8 @@ describe('End-to-End Notes Persistence Flow', () => {
       perceptionLogAssembler: new PerceptionLogAssembler({ logger }),
       thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
       notesSectionAssembler: new NotesSectionAssembler({ logger }),
+      goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+      indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
     });
 
     schemaValidator = new AjvSchemaValidator(logger);

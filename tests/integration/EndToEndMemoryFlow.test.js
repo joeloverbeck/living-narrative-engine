@@ -7,15 +7,13 @@ import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
 import { StandardElementAssembler } from '../../src/prompting/assembling/standardElementAssembler.js';
 import { PerceptionLogAssembler } from '../../src/prompting/assembling/perceptionLogAssembler.js';
 import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
+import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
+import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
-import {
-  LLM_TURN_ACTION_RESPONSE_SCHEMA,
-  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
-} from '../../src/turns/schemas/llmOutputSchemas.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../src/constants/componentIds.js';
-import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler';
 
 const mockLogger = () => ({
   info: jest.fn(),
@@ -110,6 +108,8 @@ describe('End-to-End Short-Term Memory Flow', () => {
       perceptionLogAssembler: new PerceptionLogAssembler({ logger }),
       thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
       notesSectionAssembler: new NotesSectionAssembler({ logger }),
+      goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+      indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
@@ -127,7 +127,6 @@ describe('End-to-End Short-Term Memory Flow', () => {
     );
     expect(prompt1.includes('Your most recent thoughts')).toBe(false);
 
-    // ← UPDATED to match new schema ↓
     const mockResponse = {
       chosenActionId: 1,
       speech: 'Hello',

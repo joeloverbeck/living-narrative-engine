@@ -83,6 +83,11 @@
           "suffix": "\n</available_actions_info>\n"
         },
         {
+          "key": "indexed_choices",
+          "prefix": "<indexed_choices>\n",
+          "suffix": "\n</indexed_choices>\n"
+        },
+        {
           "key": "user_input",
           "prefix": "<user_input>\n",
           "suffix": "\n</user_input>\n"
@@ -109,6 +114,7 @@
         "notes_wrapper",
         "goals_wrapper",
         "available_actions_info",
+        "indexed_choices",
         "user_input",
         "final_instructions",
         "assistant_response_prefix"
@@ -196,6 +202,11 @@
           "suffix": "\n</available_actions_info>\n"
         },
         {
+          "key": "indexed_choices",
+          "prefix": "<indexed_choices>\n",
+          "suffix": "\n</indexed_choices>\n"
+        },
+        {
           "key": "user_input",
           "prefix": "<user_input>\n",
           "suffix": "\n</user_input>\n"
@@ -222,6 +233,7 @@
         "notes_wrapper",
         "goals_wrapper",
         "available_actions_info",
+        "indexed_choices",
         "user_input",
         "final_instructions",
         "assistant_response_prefix"
@@ -309,6 +321,11 @@
           "suffix": "\n</available_actions_info>\n"
         },
         {
+          "key": "indexed_choices",
+          "prefix": "<indexed_choices>\n",
+          "suffix": "\n</indexed_choices>\n"
+        },
+        {
           "key": "user_input",
           "prefix": "<user_input>\n",
           "suffix": "\n</user_input>\n"
@@ -335,6 +352,7 @@
         "notes_wrapper",
         "goals_wrapper",
         "available_actions_info",
+        "indexed_choices",
         "user_input",
         "final_instructions",
         "assistant_response_prefix"
@@ -422,6 +440,11 @@
           "suffix": "\n</available_actions_info>\n"
         },
         {
+          "key": "indexed_choices",
+          "prefix": "<indexed_choices>\n",
+          "suffix": "\n</indexed_choices>\n"
+        },
+        {
           "key": "user_input",
           "prefix": "<user_input>\n",
           "suffix": "\n</user_input>\n"
@@ -448,6 +471,7 @@
         "notes_wrapper",
         "goals_wrapper",
         "available_actions_info",
+        "indexed_choices",
         "user_input",
         "final_instructions",
         "assistant_response_prefix"

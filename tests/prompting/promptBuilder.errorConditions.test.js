@@ -12,6 +12,7 @@ import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 // Import assembler types for JSDoc
 /** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
 /** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
@@ -93,6 +94,7 @@ describe('PromptBuilder', () => {
       standardElementAssembler: mockStandardAssembler,
       perceptionLogAssembler: mockPerceptionLogAssembler,
       notesSectionAssembler: new NotesSectionAssembler({ logger }),
+      indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
     });
 
     // General mock for standard assembler for this suite
@@ -167,16 +169,14 @@ describe('PromptBuilder', () => {
         promptAssemblyOrder: ['a', 'b_missing'],
       };
       mockLlmConfigService.getConfig.mockResolvedValue(cfg);
-      // mockPlaceholderResolver.resolve is a pass-through by default from outer beforeEach.
-      // The mockStandardAssembler will be called for "a".
 
       const result = await promptBuilder.build('vendor/err_key_model', {
         aContent: 'Data for A',
       });
       expect(logger.warn).toHaveBeenCalledWith(
-        `PromptBuilder.build: Key "b_missing" from promptAssemblyOrder not found in promptElements for configId "${cfg.configId}". Skipping.`
+        'PromptBuilder.build: Key "b_missing" not found in promptElements. Skipping.'
       );
-      expect(result).toBe('ContentA:Data for A'); // Only 'a' should be assembled
+      expect(result).toBe('ContentA:Data for A');
     });
 
     test('should produce empty string if promptAssemblyOrder is empty', async () => {
@@ -188,15 +188,12 @@ describe('PromptBuilder', () => {
       };
       mockLlmConfigService.getConfig.mockResolvedValue(cfg);
 
-      expect(
-        await promptBuilder.build('vendor/empty_order_model', {
-          aContent: 'Data for A',
-        })
-      ).toBe('');
+      const output = await promptBuilder.build('vendor/empty_order_model', {
+        aContent: 'Data for A',
+      });
+      expect(output).toBe('');
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Successfully assembled prompt for llmId: vendor/empty_order_model using config ${cfg.configId}. Length: 0`
-        )
+        'PromptBuilder.build: Finished assembling prompt (length 0).'
       );
     });
 
@@ -209,11 +206,13 @@ describe('PromptBuilder', () => {
       };
       mockLlmConfigService.getConfig.mockResolvedValue(cfg);
 
-      expect(await promptBuilder.build('vendor/empty_elements_model', {})).toBe(
-        ''
+      const output = await promptBuilder.build(
+        'vendor/empty_elements_model',
+        {}
       );
+      expect(output).toBe('');
       expect(logger.warn).toHaveBeenCalledWith(
-        `PromptBuilder.build: Key "a_ordered_but_missing" from promptAssemblyOrder not found in promptElements for configId "${cfg.configId}". Skipping.`
+        'PromptBuilder.build: Key "a_ordered_but_missing" not found in promptElements. Skipping.'
       );
     });
 
@@ -270,7 +269,7 @@ describe('PromptBuilder', () => {
           'PlaceholderResolver: Placeholder "{user.name}" not found'
         )
       );
-      expect(result).toBe('Name: FlatValue'); // Based on the mock resolve behavior
+      expect(result).toBe('Name: FlatValue');
     });
 
     test('should log and return empty string if no configurations are loaded', async () => {
@@ -278,7 +277,7 @@ describe('PromptBuilder', () => {
 
       expect(await promptBuilder.build('any/model', {})).toBe('');
       expect(logger.error).toHaveBeenCalledWith(
-        'PromptBuilder.build: No configuration found or provided by LLMConfigService for llmId "any/model". Cannot build prompt.'
+        'PromptBuilder.build: No configuration found for llmId "any/model".'
       );
     });
   });

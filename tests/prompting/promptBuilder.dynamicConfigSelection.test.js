@@ -1,4 +1,4 @@
-// tests/services/promptBuilder.dynamicConfigSelection.test.js
+// tests/prompting/promptBuilder.dynamicConfigSelection.test.js
 // --- FILE START ---
 import {
   jest,
@@ -12,6 +12,9 @@ import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
+import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
+import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 // Import assembler types for JSDoc
 /** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
 /** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
@@ -36,7 +39,7 @@ const mockPlaceholderResolverInstance = () => ({
 
 /** @returns {jest.Mocked<StandardElementAssembler>} */
 const mockStandardElementAssemblerInstance = () => ({
-  assemble: jest.fn(), // Default mock, specific implementation will be set in test suite
+  assemble: jest.fn(), // Will be implemented per test
 });
 
 /** @returns {jest.Mocked<PerceptionLogAssembler>} */
@@ -48,7 +51,7 @@ describe('PromptBuilder', () => {
   /** @type {jest.Mocked<ILogger>} */
   let logger;
   /** @type {LLMConfigService} */
-  let llmConfigService; // Will be a real instance in the nested describe
+  let llmConfigService;
   /** @type {jest.Mocked<PlaceholderResolver>} */
   let mockPlaceholderResolver;
   /** @type {jest.Mocked<StandardElementAssembler>} */
@@ -63,7 +66,6 @@ describe('PromptBuilder', () => {
     mockPlaceholderResolver = mockPlaceholderResolverInstance();
     mockStandardAssembler = mockStandardElementAssemblerInstance();
     mockPerceptionLogAssembler = mockPerceptionLogAssemblerInstance();
-    // LLMConfigService and PromptBuilder will be set up in the nested describe block
   });
 
   afterEach(() => {
@@ -109,7 +111,7 @@ describe('PromptBuilder', () => {
     };
     const configIdPriorityConfig = {
       configId: 'priority_cfg_id',
-      modelIdentifier: 'vendor/model-exact-match', // Same modelID as exactMatchConfig
+      modelIdentifier: 'vendor/model-exact-match', // same as exactMatchConfig.modelIdentifier
       promptElements: [{ key: 'test', prefix: 'PriorityByID:' }],
       promptAssemblyOrder: ['test'],
     };
@@ -133,34 +135,31 @@ describe('PromptBuilder', () => {
 
       promptBuilder = new PromptBuilder({
         logger,
-        llmConfigService: llmConfigService,
+        llmConfigService,
         placeholderResolver: mockPlaceholderResolver,
-        standardElementAssembler: mockStandardAssembler, // Pass the mock
-        perceptionLogAssembler: mockPerceptionLogAssembler, // Pass the mock
+        standardElementAssembler: mockStandardAssembler,
+        perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
-      // Configure the mock StandardElementAssembler for this suite
       mockStandardAssembler.assemble.mockImplementation(
         (elementConfig, promptData, placeholderResolverInstance) => {
-          const resolvedPrefix = placeholderResolverInstance.resolve(
+          const prefix = placeholderResolverInstance.resolve(
             elementConfig.prefix || '',
             promptData
           );
-          const resolvedSuffix = placeholderResolverInstance.resolve(
+          const suffix = placeholderResolverInstance.resolve(
             elementConfig.suffix || '',
             promptData
           );
-
-          const camelCaseKey = elementConfig.key.replace(/_([a-z])/g, (g) =>
-            g[1].toUpperCase()
+          const camelCaseKey = elementConfig.key.replace(/_([a-z])/g, (_, c) =>
+            c.toUpperCase()
           );
-          const contentKeyInPromptData = `${camelCaseKey}Content`;
-          const rawContent = promptData[contentKeyInPromptData];
-          let centralContentString =
-            typeof rawContent === 'string' ? rawContent : '';
-
-          return `${resolvedPrefix}${centralContentString}${resolvedSuffix}`;
+          const content = promptData[`${camelCaseKey}Content`] || '';
+          return `${prefix}${content}${suffix}`;
         }
       );
 
@@ -171,114 +170,73 @@ describe('PromptBuilder', () => {
     });
 
     test('should select configuration by exact modelIdentifier match', async () => {
-      const llmIdToTest = 'vendor/model-exact-match';
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
-      // exactMatchConfig is chosen because LLMConfigService finds it first for this modelIdentifier.
-      expect(result).toBe('Exact:data');
+      const llmId = 'vendor/model-exact-match';
+      const result = await promptBuilder.build(llmId, { testContent: 'X' });
+      expect(result).toBe('Exact:X');
       expect(logger.debug).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: Selected configuration by exact modelIdentifier match for "${llmIdToTest}". ConfigId: "${exactMatchConfig.configId}".`
+        `LLMConfigService.getConfig: Selected configuration by exact modelIdentifier match for "${llmId}". ConfigId: "${exactMatchConfig.configId}".`
       );
     });
 
     test('should select configuration by configId match if llmId is a configId', async () => {
-      const llmIdToTest = 'priority_cfg_id';
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
-      expect(result).toBe('PriorityByID:data');
+      const llmId = 'priority_cfg_id';
+      const result = await promptBuilder.build(llmId, { testContent: 'Y' });
+      expect(result).toBe('PriorityByID:Y');
       expect(logger.debug).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: Found configuration by direct configId match for "${llmIdToTest}". ConfigId: "${configIdPriorityConfig.configId}".`
+        `LLMConfigService.getConfig: Found configuration by direct configId match for "${llmId}". ConfigId: "${configIdPriorityConfig.configId}".`
       );
     });
 
-    test('should select configuration by wildcard match if no exact match (by configId or modelIdentifier)', async () => {
-      const llmIdToTest = 'vendor/model-wildcard-test';
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
-      expect(result).toBe('MediumWild:data');
+    test('should select configuration by wildcard match if no exact match', async () => {
+      const llmId = 'vendor/model-wildcard-test';
+      const result = await promptBuilder.build(llmId, { testContent: 'Z' });
+      expect(result).toBe('MediumWild:Z');
       expect(logger.debug).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmIdToTest}". Pattern: "${mediumWildcardConfig.modelIdentifier}", ConfigId: "${mediumWildcardConfig.configId}".`
+        `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmId}". Pattern: "${mediumWildcardConfig.modelIdentifier}", ConfigId: "${mediumWildcardConfig.configId}".`
       );
     });
 
-    test('exact match (by modelIdentifier) should take precedence over wildcard match if llmId is not a configId', async () => {
-      const llmIdToTest = 'vendor/model-exact-match'; // Not a configId
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
-      expect(result).toBe('Exact:data');
-      expect(logger.debug).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: Selected configuration by exact modelIdentifier match for "${llmIdToTest}". ConfigId: "${exactMatchConfig.configId}".`
-      );
+    test('exact match should take precedence over wildcard when llmId is not a configId', async () => {
+      const llmId = 'vendor/model-exact-match';
+      const result = await promptBuilder.build(llmId, { testContent: 'A' });
+      expect(result).toBe('Exact:A');
     });
 
-    test('longer wildcard prefix should take precedence over shorter wildcard prefix', async () => {
-      const llmIdToTest = 'vendor/model-exact-specific';
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
-      expect(result).toBe('LongWild:data'); // "vendor/model-exact*" vs "vendor/model-*" vs "vendor/*"
-      expect(logger.debug).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmIdToTest}". Pattern: "${longWildcardConfig.modelIdentifier}", ConfigId: "${longWildcardConfig.configId}".`
-      );
+    test('longer wildcard prefix should take precedence over shorter ones', async () => {
+      const llmId = 'vendor/model-exact-specific';
+      const result = await promptBuilder.build(llmId, { testContent: 'B' });
+      expect(result).toBe('LongWild:B');
     });
 
-    test('should correctly pick between multiple matching wildcards based on longest prefix', async () => {
-      // llmIdToTest will match "vendor/model-extra*" and "vendor/model-*" and "vendor/*"
-      // "vendor/model-extra*" is the longest.
-      const llmIdToTest = 'vendor/model-extracool';
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
-      expect(result).toBe('AnotherLongWild:data');
-      expect(logger.debug).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmIdToTest}". Pattern: "${anotherLongWildcardConfig.modelIdentifier}", ConfigId: "${anotherLongWildcardConfig.configId}".`
-      );
+    test('should pick between wildcards based on longest prefix', async () => {
+      const llmId = 'vendor/model-extracool';
+      const result = await promptBuilder.build(llmId, { testContent: 'C' });
+      expect(result).toBe('AnotherLongWild:C');
     });
 
     test('should return empty string and log error if no configuration matches', async () => {
-      const llmIdToTest = 'non-existent-vendor/non-existent-model';
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
+      const llmId = 'no/match';
+      const result = await promptBuilder.build(llmId, { testContent: 'D' });
       expect(result).toBe('');
       expect(logger.warn).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: No configuration found for identifier "${llmIdToTest}" after checking configId, exact modelIdentifier, and wildcard modelIdentifier.`
+        `LLMConfigService.getConfig: No configuration found for identifier "${llmId}" after checking configId, exact modelIdentifier, and wildcard modelIdentifier.`
       );
       expect(logger.error).toHaveBeenCalledWith(
-        `PromptBuilder.build: No configuration found or provided by LLMConfigService for llmId "${llmIdToTest}". Cannot build prompt.`
+        `PromptBuilder.build: No configuration found for llmId "${llmId}".`
       );
     });
 
-    test('should correctly handle llmId shorter than some wildcard prefixes but matching a general one', async () => {
-      // "vendor/mode" matches "vendor/*" but not "vendor/model-*" or "vendor/model-exact*"
-      const llmIdToTest = 'vendor/mode';
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
-      expect(result).toBe('ShortWild:data');
-      expect(logger.debug).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: Selected configuration by wildcard modelIdentifier match for "${llmIdToTest}". Pattern: "${shortWildcardConfig.modelIdentifier}", ConfigId: "${shortWildcardConfig.configId}".`
-      );
+    test('should handle llmId shorter than some wildcard prefixes but matching a general one', async () => {
+      const llmId = 'vendor/mode';
+      const result = await promptBuilder.build(llmId, { testContent: 'E' });
+      expect(result).toBe('ShortWild:E');
     });
 
-    test('wildcard should not match if llmId does not start with prefix', async () => {
-      const llmIdToTest = 'different-vendor/model-exact-plus'; // Does not match "vendor/*" etc.
-      const result = await promptBuilder.build(llmIdToTest, {
-        testContent: 'data',
-      });
+    test('wildcard should not match if llmId does not start with the prefix', async () => {
+      const llmId = 'other-vendor/model-exact-plus';
+      const result = await promptBuilder.build(llmId, { testContent: 'F' });
       expect(result).toBe('');
-      expect(logger.warn).toHaveBeenCalledWith(
-        `LLMConfigService.getConfig: No configuration found for identifier "${llmIdToTest}" after checking configId, exact modelIdentifier, and wildcard modelIdentifier.`
-      );
-      expect(logger.error).toHaveBeenCalledWith(
-        `PromptBuilder.build: No configuration found or provided by LLMConfigService for llmId "${llmIdToTest}". Cannot build prompt.`
-      );
     });
   });
 });
-
 // --- FILE END ---

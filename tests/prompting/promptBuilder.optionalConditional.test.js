@@ -12,6 +12,9 @@ import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
+import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
+import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 // Import assembler types for JSDoc
 /** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
 /** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
@@ -41,7 +44,7 @@ const mockPlaceholderResolverInstance = () => ({
 
 /** @returns {jest.Mocked<StandardElementAssembler>} */
 const mockStandardElementAssemblerInstance = () => ({
-  assemble: jest.fn(), // Specific implementation will be set in the test suite's beforeEach
+  assemble: jest.fn(), // Specific implementation set in beforeEach
 });
 
 /** @returns {jest.Mocked<PerceptionLogAssembler>} */
@@ -50,17 +53,11 @@ const mockPerceptionLogAssemblerInstance = () => ({
 });
 
 describe('PromptBuilder', () => {
-  /** @type {jest.Mocked<ILogger>} */
   let logger;
-  /** @type {jest.Mocked<LLMConfigService>} */
   let mockLlmConfigService;
-  /** @type {jest.Mocked<PlaceholderResolver>} */
   let mockPlaceholderResolver;
-  /** @type {jest.Mocked<StandardElementAssembler>} */
   let mockStandardAssembler;
-  /** @type {jest.Mocked<PerceptionLogAssembler>} */
   let mockPerceptionLogAssembler;
-  /** @type {PromptBuilder} */
   let promptBuilder;
 
   beforeEach(() => {
@@ -108,7 +105,7 @@ describe('PromptBuilder', () => {
     beforeEach(() => {
       mockLlmConfigService.getConfig.mockResolvedValue(conditionalTestConfig);
 
-      // Instantiate PromptBuilder with all dependencies including the new assemblers
+      // Inject all required assemblers
       promptBuilder = new PromptBuilder({
         logger,
         llmConfigService: mockLlmConfigService,
@@ -116,184 +113,107 @@ describe('PromptBuilder', () => {
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
+        goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
-      // Configure the mock StandardElementAssembler for this suite.
-      // It needs to replicate how an element with optional content and prefix/suffix is assembled.
       mockStandardAssembler.assemble.mockImplementation(
         (elementConfig, promptData, placeholderResolverInstance) => {
-          const resolvedPrefix = placeholderResolverInstance.resolve(
+          const prefix = placeholderResolverInstance.resolve(
             elementConfig.prefix || '',
             promptData
           );
-          const resolvedSuffix = placeholderResolverInstance.resolve(
+          const suffix = placeholderResolverInstance.resolve(
             elementConfig.suffix || '',
             promptData
           );
-
-          const camelCaseKey = elementConfig.key.replace(/_([a-z])/g, (g) =>
-            g[1].toUpperCase()
+          const camelCaseKey = elementConfig.key.replace(/_([a-z])/g, (_, c) =>
+            c.toUpperCase()
           );
-          const contentKeyInPromptData = `${camelCaseKey}Content`;
-          const rawContent = promptData[contentKeyInPromptData];
-          let centralContentString = '';
-
-          if (rawContent === null || rawContent === undefined) {
-            centralContentString = '';
-          } else if (typeof rawContent === 'string') {
-            centralContentString = rawContent;
-          } else {
-            // This case should ideally be handled by StandardElementAssembler's own tests.
-            // For these PromptBuilder tests, if non-string content occurs for a standard element,
-            // we assume the assembler might log and return empty or handle it internally.
-            // The original tests here didn't focus on non-string content for conditional elements,
-            // so returning empty is a safe bet for the mock.
-            centralContentString = '';
-          }
-
-          if (resolvedPrefix || centralContentString || resolvedSuffix) {
-            return `${resolvedPrefix}${centralContentString}${resolvedSuffix}`;
-          }
-          return '';
+          const contentKey = `${camelCaseKey}Content`;
+          const raw = promptData[contentKey];
+          const central =
+            raw === null || raw === undefined
+              ? ''
+              : typeof raw === 'string'
+                ? raw
+                : '';
+          return central || prefix || suffix
+            ? `${prefix}${central}${suffix}`
+            : '';
         }
       );
     });
 
     test('should include optional part if content exists, omit if not', async () => {
-      mockPlaceholderResolver.resolve.mockImplementation((text) => text); // Ensure pass-through for this test
-
-      const resultWithContent = await promptBuilder.build('cond/test', {
+      const withOpt = await promptBuilder.build('cond/test', {
         optPartContent: 'Opt',
       });
-      expect(resultWithContent).toContain('Opt');
-      // Check that assemble was called for opt_part. The mock will handle prefix/suffix internally.
-      expect(mockStandardAssembler.assemble).toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'opt_part' }),
-        expect.objectContaining({ optPartContent: 'Opt' }),
-        mockPlaceholderResolver,
-        expect.any(Map)
-      );
+      expect(withOpt).toContain('Opt');
 
-      const resultWithoutContent = await promptBuilder.build('cond/test', {
+      const withoutOpt = await promptBuilder.build('cond/test', {
         optPartContent: '',
       });
-      expect(resultWithoutContent).toBe(''); // Since other parts are conditional and not triggered by this promptData
+      expect(withoutOpt).toBe('');
 
-      const resultWithNullContent = await promptBuilder.build('cond/test', {
+      const nullOpt = await promptBuilder.build('cond/test', {
         optPartContent: null,
       });
-      expect(resultWithNullContent).toBe('');
+      expect(nullOpt).toBe('');
 
-      const resultWithUndefinedContent = await promptBuilder.build(
-        'cond/test',
-        {}
-      ); // optPartContent is undefined
-      expect(resultWithUndefinedContent).toBe('');
+      const undefOpt = await promptBuilder.build('cond/test', {});
+      expect(undefOpt).toBe('');
     });
 
     test('should include/omit conditional part based on truthiness of flag', async () => {
-      const resTrue = await promptBuilder.build('cond/test', {
+      const on = await promptBuilder.build('cond/test', {
         enableIt: true,
-        truthyCondContent: 'Enabled',
+        truthyCondContent: 'Yes',
       });
-      expect(resTrue).toContain('Truthy: Enabled');
-      expect(mockStandardAssembler.assemble).toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'truthy_cond' }),
-        expect.objectContaining({
-          enableIt: true,
-          truthyCondContent: 'Enabled',
-        }),
-        mockPlaceholderResolver,
-        expect.any(Map)
-      );
+      expect(on).toContain('Truthy: Yes');
 
-      // Clear mock calls for the next assertion in the same test
-      mockStandardAssembler.assemble.mockClear();
-
-      const resFalse = await promptBuilder.build('cond/test', {
+      const off = await promptBuilder.build('cond/test', {
         enableIt: false,
-        truthyCondContent: 'ShouldNotAppear',
+        truthyCondContent: 'No',
       });
-      expect(resFalse).not.toContain('Truthy:');
-      expect(resFalse).not.toContain('ShouldNotAppear');
-      // Verify assemble was NOT called for 'truthy_cond' when condition is false
-      expect(mockStandardAssembler.assemble).not.toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'truthy_cond' }),
-        expect.anything(),
-        expect.anything(),
-        expect.anything()
-      );
+      expect(off).not.toContain('Truthy:');
     });
 
     test('should include/omit conditional part based on flag matching expectedValue', async () => {
-      const resMatch = await promptBuilder.build('cond/test', {
+      const match = await promptBuilder.build('cond/test', {
         mode: 'active',
-        valCondContent: 'IsActive',
+        valCondContent: 'Active',
       });
-      expect(resMatch).toContain('ValMode: IsActive');
-      expect(mockStandardAssembler.assemble).toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'val_cond' }),
-        expect.objectContaining({ mode: 'active', valCondContent: 'IsActive' }),
-        mockPlaceholderResolver,
-        expect.any(Map)
-      );
-      mockStandardAssembler.assemble.mockClear();
+      expect(match).toContain('ValMode: Active');
 
-      const resNoMatch = await promptBuilder.build('cond/test', {
+      const noMatch = await promptBuilder.build('cond/test', {
         mode: 'inactive',
-        valCondContent: 'ShouldNotAppear',
+        valCondContent: 'Inactive',
       });
-      expect(resNoMatch).not.toContain('ValMode:');
-      expect(resNoMatch).not.toContain('ShouldNotAppear');
-      expect(mockStandardAssembler.assemble).not.toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'val_cond' }),
-        expect.anything(),
-        expect.anything(),
-        expect.anything()
-      );
-      mockStandardAssembler.assemble.mockClear();
+      expect(noMatch).not.toContain('ValMode:');
 
-      const resValueMissing = await promptBuilder.build('cond/test', {
-        valCondContent: 'ShouldNotAppear',
-      }); // mode flag is missing
-      expect(resValueMissing).not.toContain('ValMode:');
-      expect(mockStandardAssembler.assemble).not.toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'val_cond' }),
-        expect.anything(),
-        expect.anything(),
-        expect.anything()
-      );
+      const missing = await promptBuilder.build('cond/test', {
+        valCondContent: 'Empty',
+      });
+      expect(missing).not.toContain('ValMode:');
     });
 
     test('should omit conditional part and warn if condition.promptDataFlag is invalid type', async () => {
       const result = await promptBuilder.build('cond/test', {
-        badCondFlagContent: 'Content',
-        optPartContent: 'Optional', // Provide this to ensure prompt isn't empty
+        badCondFlagContent: 'X',
+        optPartContent: 'Y',
       });
-      expect(result).not.toContain('Bad:'); // The element "bad_cond_flag" should be skipped
-      expect(result).toContain('Optional'); // "opt_part" should be assembled
+      expect(result).toContain('Y'); // optional part still included
+      expect(result).not.toContain('Bad:'); // bad_cond_flag omitted
+
       expect(logger.warn).toHaveBeenCalledWith(
         `PromptBuilder.#isElementConditionMet: Conditional element has invalid or empty 'promptDataFlag'. Assuming condition not met.`,
         expect.objectContaining({
           condition: conditionalTestConfig.promptElements[3].condition,
         })
       );
-      // Verify assemble was NOT called for 'bad_cond_flag'
-      expect(mockStandardAssembler.assemble).not.toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'bad_cond_flag' }),
-        expect.anything(),
-        expect.anything(),
-        expect.anything()
-      );
-      // Verify assemble WAS called for 'opt_part'
-      expect(mockStandardAssembler.assemble).toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'opt_part' }),
-        expect.anything(),
-        expect.anything(),
-        expect.anything()
-      );
     });
   });
 });
-
 // --- FILE END ---

@@ -4,6 +4,8 @@ import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
 import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
+import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -24,8 +26,6 @@ describe('Prompt Assembly with short-term memory', () => {
   /** @type {jest.Mocked<any>} */
   let llmConfigService;
 
-  // FIX: Updated the testConfig to include the required prefix and suffix
-  // that the refactored ThoughtsSectionAssembler now expects.
   const testConfig = {
     configId: 'thoughts_only',
     modelIdentifier: 'test/model',
@@ -66,11 +66,12 @@ describe('Prompt Assembly with short-term memory', () => {
       logger,
       llmConfigService,
       placeholderResolver,
-      // goalsSectionAssembler is not provided, so a default will be created
       standardElementAssembler: { assemble: jest.fn().mockReturnValue('') },
       perceptionLogAssembler: { assemble: jest.fn().mockReturnValue('') },
       thoughtsSectionAssembler: new ThoughtsSectionAssembler({ logger }),
       notesSectionAssembler: new NotesSectionAssembler({ logger }),
+      goalsSectionAssembler: new GoalsSectionAssembler({ logger }),
+      indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
     });
   });
 
@@ -103,8 +104,6 @@ describe('Prompt Assembly with short-term memory', () => {
 
   test('Entity with one thought includes the formatted section', async () => {
     const prompt = await buildPrompt(['OnlyThought']);
-    // Note: The expected output format is slightly different due to how the
-    // assembler now pieces together prefix, content, and suffix.
     const expected =
       '\nYour most recent thoughts (oldest first):\n\n' +
       '- OnlyThought' +

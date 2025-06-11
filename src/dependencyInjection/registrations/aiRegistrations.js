@@ -81,6 +81,7 @@ import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.
 import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../prompting/AIPromptPipeline.js';
 import { SHUTDOWNABLE } from '../tags';
+import { IndexedChoicesAssembler } from '../../prompting/assembling/indexedChoicesAssembler.js';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -191,6 +192,14 @@ export function registerAI(container) {
     (c) => new GoalsSectionAssembler({ logger: c.resolve(tokens.ILogger) })
   );
 
+  r.singletonFactory(
+    tokens.IndexedChoicesAssembler,
+    (c) => new IndexedChoicesAssembler({ logger: c.resolve(tokens.ILogger) })
+  );
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.IndexedChoicesAssembler}.`
+  );
+
   r.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
@@ -201,6 +210,7 @@ export function registerAI(container) {
       thoughtsSectionAssembler: c.resolve(tokens.ThoughtsSectionAssembler),
       notesSectionAssembler: c.resolve(tokens.NotesSectionAssembler),
       goalsSectionAssembler: c.resolve(tokens.GoalsSectionAssembler),
+      indexedChoicesAssembler: c.resolve(tokens.IndexedChoicesAssembler),
     });
   });
   logger.debug(

@@ -1,5 +1,4 @@
-// tests/services/promptBuilder.configLoading.test.js
-// --- FILE START ---
+// tests/prompting/promptBuilder.configLoading.test.js
 import {
   jest,
   describe,
@@ -9,10 +8,12 @@ import {
   afterEach,
 } from '@jest/globals';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 import { LLMConfigService } from '../../src/llms/llmConfigService.js';
 import { HttpConfigurationProvider } from '../../src/configuration/httpConfigurationProvider.js';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js'; // For mocking
+
 // Import assembler types for JSDoc
 /** @typedef {import('../../src/prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler */
 /** @typedef {import('../../src/prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler */
@@ -35,7 +36,6 @@ const mockLoggerInstance = () => ({
 /** @returns {jest.Mocked<PlaceholderResolver>} */
 const mockPlaceholderResolverInstance = () => ({
   resolve: jest.fn((str, ...dataSources) => {
-    // Basic mock implementation
     let resolvedStr = str;
     if (str && dataSources.length > 0) {
       const regex = /{([^{}]+)}/g;
@@ -147,6 +147,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       await promptBuilder.build(MOCK_CONFIG_1.configId, {
@@ -192,6 +193,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('any-llm-id', {});
@@ -230,12 +232,12 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('any-llm-id', {});
       expect(result).toBe('');
       expect(fetchSpy).toHaveBeenCalledTimes(1);
-      // This log can come from HttpConfigurationProvider or LLMConfigService depending on how error is wrapped/rethrown
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Error loading or parsing configuration from ${MOCK_CONFIG_FILE_PATH}. Detail: ${networkError.message}`
@@ -250,7 +252,6 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
 
     test('should handle malformed JSON when loading configurations', async () => {
       const syntaxError = new SyntaxError('Unexpected token');
-      // The HttpConfigurationProvider will make the detail message more specific
       const detailErrorMessage = `Failed to parse configuration data from ${MOCK_CONFIG_FILE_PATH} as JSON: ${syntaxError.message}`;
 
       fetchSpy.mockResolvedValueOnce(
@@ -276,6 +277,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('any-llm-id', {});
@@ -283,7 +285,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         `HttpConfigurationProvider: Failed to parse JSON response from ${MOCK_CONFIG_FILE_PATH}.`,
-        expect.objectContaining({ error: syntaxError.message }) // HttpConfig provider logs original error message part
+        expect.objectContaining({ error: syntaxError.message })
       );
       expect(logger.error).toHaveBeenCalledWith(
         `LLMConfigService.#loadAndCacheConfigurationsFromSource: Error loading or parsing configurations from ${MOCK_CONFIG_FILE_PATH}. Detail: ${detailErrorMessage}`,
@@ -322,6 +324,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('any-llm-id', {});
@@ -378,6 +381,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       await promptBuilder.build(MOCK_CONFIG_1.configId, {
@@ -424,6 +428,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       await promptBuilder.build('any-llm-id', {});
@@ -434,7 +439,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
       );
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          'PromptBuilder.build: No configuration found or provided by LLMConfigService for llmId "any-llm-id"'
+          'PromptBuilder.build: No configuration found for llmId "any-llm-id".'
         )
       );
       expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(
@@ -456,6 +461,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       // Check initial log from constructor
@@ -490,7 +496,6 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
     test('resetCache on LLMConfigService should clear its cache and reset its loaded flag', async () => {
       fetchSpy.mockResolvedValueOnce(
         Promise.resolve({
-          // For first load
           ok: true,
           json: async () => ({
             defaultConfigId: MOCK_CONFIG_1.configId,
@@ -513,6 +518,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       await promptBuilder.build(MOCK_CONFIG_1.configId, {
@@ -574,6 +580,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(1);
@@ -617,6 +624,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       expect(llmConfigService.getLlmConfigsCacheForTest().size).toBe(0);
@@ -668,6 +676,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
       // @ts-ignore
       llmConfigService.addOrUpdateConfigs('not an array');
@@ -693,6 +702,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         standardElementAssembler: mockStandardAssembler,
         perceptionLogAssembler: mockPerceptionLogAssembler,
         notesSectionAssembler: new NotesSectionAssembler({ logger }),
+        indexedChoicesAssembler: new IndexedChoicesAssembler({ logger }),
       });
 
       const result = await promptBuilder.build('some-id', {
@@ -706,7 +716,7 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
         )
       );
       expect(logger.error).toHaveBeenCalledWith(
-        'PromptBuilder.build: No configuration found or provided by LLMConfigService for llmId "some-id". Cannot build prompt.'
+        'PromptBuilder.build: No configuration found for llmId "some-id".'
       );
       expect(llmConfigService.getConfigsLoadedOrAttemptedFlagForTest()).toBe(
         true
@@ -714,5 +724,3 @@ describe('PromptBuilder interaction with LLMConfigService for Configuration Load
     });
   });
 });
-
-// --- FILE END ---

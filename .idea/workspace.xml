@@ -1,40 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" afterDir="false" />
+    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Uploaded from the office.">
+      <change afterPath="$PROJECT_DIR$/src/prompting/assembling/indexedChoicesAssembler.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.buttonClickSimulation.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/providers/availableActionsProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/availableActionsProvider.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/llm-configs.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/llm-configs.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/events/player_turn_submitted.event.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/events/player_turn_submitted.event.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/interfaces/IAvailableActionsProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IAvailableActionsProvider.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/IHumanPlayerPromptService.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/prompting/actionContextBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/actionContextBuilder.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/humanPlayerPromptService.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/promptBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptBuilder.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.confirmActionButton.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.confirmActionButton.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.eventHandling.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.eventHandling.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.render.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.render.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/interfaces/ITurnContext.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/interfaces/ITurnContext.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.bugFixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.bugFixes.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.extended.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.more.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/PromptAssembly.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/PromptAssembly.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.configLoading.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.configLoading.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.coreAssemblyLogic.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.coreAssemblyLogic.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.dynamicConfigSelection.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.dynamicConfigSelection.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.emptySections.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.emptySections.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.errorConditions.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.errorConditions.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.goalsSection.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.goalsSection.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.notesSection.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.notesSection.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.optionalConditional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.optionalConditional.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.specialHandlingForPerceptionLog.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.specialHandlingForPerceptionLog.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -56,12 +61,18 @@
   "associatedIndex": 0
 }]]></component>
   <component name="ProjectId" id="2yMjM7frZc1a0wqbiRWtJL1vAD7" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Jest.actionButtonsRenderer.test.js.executor": "Run",
+    "Jest.promptBuilder.configLoading.test.js.executor": "Run",
+    "Jest.promptBuilder.dynamicConfigSelection.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -69,12 +80,52 @@
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
     "nodejs_package_manager_path": "npm",
+    "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
     "settings.editor.selected.configurable": "web-ide.project.structure",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunManager" selected="Jest.promptBuilder.dynamicConfigSelection.test.js">
+    <configuration name="actionButtonsRenderer.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="promptBuilder.configLoading.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/prompting/promptBuilder.configLoading.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="promptBuilder.dynamicConfigSelection.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/prompting/promptBuilder.dynamicConfigSelection.test.js" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Jest.promptBuilder.dynamicConfigSelection.test.js" />
+        <item itemvalue="Jest.promptBuilder.configLoading.test.js" />
+        <item itemvalue="Jest.actionButtonsRenderer.test.js" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -89,11 +140,24 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749651288005</updated>
-      <workItem from="1749651289753" duration="34000" />
+      <workItem from="1749651289753" duration="7109000" />
     </task>
+    <task id="LOCAL-00001" summary="Uploaded from the office.">
+      <option name="closed" value="true" />
+      <created>1749651347853</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1749651347853</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Uploaded from the office." />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploaded from the office." />
   </component>
 </project>

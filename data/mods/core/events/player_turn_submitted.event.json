@@ -1,28 +1,25 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
-  "id": "core:player_turn_submitted",
-  "description": "Signals that the player has finalized their action choice...",
-  "payloadSchema": {
-    "type": "object",
-    "title": "CorePlayerTurnSubmittedPayload",
-    "description": "Payload for the core:player_turn_submitted event.",
-    "properties": {
-      "submittedByActorId": {
-        "type": "string",
-        "minLength": 1,
-        "description": "The instance ID of the actor who submitted this turn."
-      },
-      "actionId": {
-        "type": "string",
-        "minLength": 1,
-        "description": "The unique identifier of the selected AvailableAction."
-      },
-      "speech": {
-        "type": ["string", "null"],
-        "description": "The text from the speech input field, or null if not provided."
-      }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "core:player_turn_submitted",
+  "title": "Event: core:player_turn_submitted",
+  "description": "Signals that the player has finalized their action choice for the current turn by submitting it from the UI. The payload now uses an integer index instead of a string actionId.",
+  "type": "object",
+  "properties": {
+    "submittedByActorId": {
+      "type": "string",
+      "description": "The instance ID of the actor who submitted this turn.",
+      "minLength": 1
     },
-    "required": ["submittedByActorId", "actionId", "speech"],
-    "additionalProperties": false
-  }
+    "chosenActionId": {
+      "type": "integer",
+      "description": "The 1-based index of the action composite chosen by the player from the available list.",
+      "minimum": 1
+    },
+    "speech": {
+      "type": ["string", "null"],
+      "description": "The text from the speech input field, or null if not provided."
+    }
+  },
+  "required": ["submittedByActorId", "chosenActionId", "speech"],
+  "additionalProperties": false
 }

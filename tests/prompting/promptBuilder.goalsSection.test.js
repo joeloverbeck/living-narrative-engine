@@ -4,6 +4,7 @@
 
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';
+import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
 import { beforeEach, describe, expect, test } from '@jest/globals';
 
 // Dummy stub for StandardElementAssembler (never used in these tests)
@@ -48,7 +49,6 @@ class DummyLLMConfigService {
   }
 
   async getConfig(_llmId) {
-    // Always return the same config, ignoring input llmId
     return this._config;
   }
 }
@@ -83,6 +83,9 @@ describe('PromptBuilder → GoalsSectionAssembler integration', () => {
         debug: () => {},
       },
     });
+    const indexedChoicesAssembler = new IndexedChoicesAssembler({
+      logger: console,
+    });
 
     promptBuilder = new PromptBuilder({
       logger: console,
@@ -93,6 +96,7 @@ describe('PromptBuilder → GoalsSectionAssembler integration', () => {
       thoughtsSectionAssembler: thoughtsAssembler,
       notesSectionAssembler: notesAssembler,
       goalsSectionAssembler: goalsAssembler,
+      indexedChoicesAssembler,
     });
   });
 
@@ -110,7 +114,6 @@ describe('PromptBuilder → GoalsSectionAssembler integration', () => {
     expect(occurrences.length).toBe(1);
     expect(result).toContain('- G1');
     expect(result).toContain('- G2');
-    // The result should begin with a newline (from prefix)
     expect(result.startsWith('<goals>:')).toBe(true);
   });
 

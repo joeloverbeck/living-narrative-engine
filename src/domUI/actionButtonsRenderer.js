@@ -1,4 +1,8 @@
-// src/domUI/actionButtonsRenderer.js
+/**
+ * @file Renders available actions as buttons from an array of `ActionComposite` objects.
+ * Handles action selection and dispatches the chosen action.
+ * @see src/domUI/actionButtonsRenderer.js
+ */
 
 import { BaseListDisplayComponent } from './baseListDisplayComponent.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
@@ -45,7 +49,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  *
  * @typedef {object} CorePlayerTurnSubmittedPayload
  * @property {string} submittedByActorId - The instance ID of the actor who submitted this turn.
- * @property {NamespacedId} actionId - The unique identifier of the selected ActionComposite.
+ * @property {number} chosenActionId - The 1-based index of the chosen action composite.
  * @property {string | null} speech - The text from the speech input field, or null if empty.
  */
 
@@ -223,8 +227,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
       !actionComposite.actionId.trim() ||
       typeof actionComposite.commandString !== 'string' ||
       !actionComposite.commandString.trim() ||
-      typeof actionComposite.description !== 'string' ||
-      !actionComposite.description.trim() // description can be empty but must exist
+      typeof actionComposite.description !== 'string' // description can be empty but must exist
     ) {
       this.logger.warn(
         `${this._logPrefix} Skipping invalid action composite in _renderListItem: `,
@@ -471,14 +474,14 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
       );
     }
 
-    const { actionId, commandString } = this.selectedAction;
+    const { index, commandString } = this.selectedAction;
     this.logger.debug(
-      `${this._logPrefix} Attempting to send action: '${commandString}' (ID: ${actionId}) for actor ${this.#currentActorId}, Speech: "${speechText}"`
+      `${this._logPrefix} Attempting to send action: '${commandString}' (Index: ${index}) for actor ${this.#currentActorId}, Speech: "${speechText}"`
     );
 
     const eventPayload = {
       submittedByActorId: this.#currentActorId,
-      actionId,
+      chosenActionId: index,
       speech: speechText || null,
     };
 
@@ -490,7 +493,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
 
       if (dispatchResult) {
         this.logger.debug(
-          `${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched for action '${actionId}' by actor '${this.#currentActorId}'.`
+          `${this._logPrefix} Event '${PLAYER_TURN_SUBMITTED_ID}' dispatched for action index '${index}' by actor '${this.#currentActorId}'.`
         );
         if (this.elements.speechInputElement) {
           this.elements.speechInputElement.value = '';
@@ -527,7 +530,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         }
       } else {
         this.logger.error(
-          `${this._logPrefix} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action '${actionId}'.`,
+          `${this._logPrefix} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action index '${index}'.`,
           { payload: eventPayload }
         );
       }
@@ -540,12 +543,14 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   }
 
   /** @ignore */
+
   /* istanbul ignore next */
   _getTestCurrentActorId() {
     return this.#currentActorId;
   }
 
   /** @ignore */
+
   /* istanbul ignore next */
   _setTestCurrentActorId(actorId) {
     this.#currentActorId = actorId;

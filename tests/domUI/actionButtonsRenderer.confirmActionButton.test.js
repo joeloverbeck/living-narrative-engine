@@ -189,13 +189,12 @@ describe('ActionButtonsRenderer', () => {
 
       // Mock the factory to capture the specific button instance when it's created.
       mockDomElementFactoryInstance.button.mockImplementation((text, cls) => {
-        // FINAL CORRECTION: The arguments to createMockElement were previously incorrect.
         const btn = createMockElement(
           currentDocument,
-          'button', // tagName
-          '', // id
-          cls ? cls.split(' ') : [], // classesParam
-          text // textContent
+          'button',
+          '',
+          cls ? cls.split(' ') : [],
+          text
         );
         if (text === actionToSubmit.commandString) {
           actionButtonInstance = btn;
@@ -244,7 +243,7 @@ describe('ActionButtonsRenderer', () => {
       );
     });
 
-    it('should dispatch event with actionId and speech, clear speech, deselect, and disable send button on successful dispatch', async () => {
+    it('should dispatch event with action index and speech, clear speech, deselect, and disable send button on successful dispatch', async () => {
       commandInputElement.value = 'Player says this';
       mockVed.dispatch.mockResolvedValue(true);
 
@@ -253,7 +252,7 @@ describe('ActionButtonsRenderer', () => {
       expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
       expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
         submittedByActorId: MOCK_ACTOR_ID,
-        actionId: actionToSubmit.actionId,
+        chosenActionId: actionToSubmit.index,
         speech: 'Player says this',
       });
 
@@ -281,7 +280,7 @@ describe('ActionButtonsRenderer', () => {
 
       expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
         submittedByActorId: MOCK_ACTOR_ID,
-        actionId: actionToSubmit.actionId,
+        chosenActionId: actionToSubmit.index,
         speech: null,
       });
       expect(commandInputElement.value).toBe('');
@@ -295,7 +294,7 @@ describe('ActionButtonsRenderer', () => {
 
       expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
         submittedByActorId: MOCK_ACTOR_ID,
-        actionId: actionToSubmit.actionId,
+        chosenActionId: actionToSubmit.index,
         speech: null,
       });
 
@@ -312,7 +311,7 @@ describe('ActionButtonsRenderer', () => {
 
       expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action '${actionToSubmit.actionId}'.`,
+        `${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action index '${actionToSubmit.index}'.`,
         expect.anything()
       );
       expect(commandInputElement.value).toBe('Test speech');
