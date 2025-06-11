@@ -288,6 +288,7 @@ export const tokens = Object.freeze({
   IPerceptionLogFormatter: 'IPerceptionLogFormatter',
   IGameStateValidationServiceForPrompting:
     'IGameStateValidationServiceForPrompting',
+  AssemblerRegistry: 'AssemblerRegistry',
 
   // --- AI Game State Providers (New) ---
   IEntitySummaryProvider: 'IEntitySummaryProvider',

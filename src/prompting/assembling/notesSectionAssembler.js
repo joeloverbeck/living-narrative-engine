@@ -12,6 +12,8 @@ import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssemble
  * @typedef {import('../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver
  */
 
+export const NOTES_WRAPPER_KEY = 'notes_wrapper';
+
 export class NotesSectionAssembler extends IPromptElementAssembler {
   /**
    * @param {{logger?: ILogger}} [options]

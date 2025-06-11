@@ -2,6 +2,8 @@
 
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 
+export const INDEXED_CHOICES_KEY = 'indexed_choices';
+
 /**
  * @class IndexedChoicesAssembler
  * @implements {IPromptElementAssembler}

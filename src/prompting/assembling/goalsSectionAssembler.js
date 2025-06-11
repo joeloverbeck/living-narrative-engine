@@ -11,6 +11,8 @@ import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssemble
 
 /** @typedef {import('../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver */
 
+export const GOALS_WRAPPER_KEY = 'goals_wrapper';
+
 /**
  * @class GoalsSectionAssembler
  * @implements {IPromptElementAssembler}

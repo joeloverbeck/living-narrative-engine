@@ -20,6 +20,8 @@ import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssemble
  * @typedef {import('../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver
  */
 
+export const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';
+
 /**
  * @class ThoughtsSectionAssembler
  * @implements {IPromptElementAssembler}

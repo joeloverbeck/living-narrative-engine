@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Implemented wrapper util.">
-      <change afterPath="$PROJECT_DIR$/src/prompting/elementConditionEvaluator.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/prompting/elementConditionEvaluator.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/llm-proxy-server/tests/consoleLogger.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/llm-proxy-server/tests/consoleLogger.test.js" afterDir="false" />
+    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Implemented elementConditionEvaluator.">
+      <change afterPath="$PROJECT_DIR$/src/prompting/assemblerRegistry.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/prompting/assemblerRegistry.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,6 +52,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Jest.actionButtonsRenderer.test.js.executor": "Run",
+    "Jest.assemblerRegistry.test.js.executor": "Run",
     "Jest.promptBuilder.configLoading.test.js.executor": "Run",
     "Jest.promptBuilder.dynamicConfigSelection.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -70,7 +72,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.promptBuilder.dynamicConfigSelection.test.js">
+  <component name="RunManager" selected="Jest.assemblerRegistry.test.js">
     <configuration name="actionButtonsRenderer.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -78,6 +80,15 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="assemblerRegistry.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/prompting/assemblerRegistry.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="promptBuilder.configLoading.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -100,6 +111,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.assemblerRegistry.test.js" />
         <item itemvalue="Jest.promptBuilder.dynamicConfigSelection.test.js" />
         <item itemvalue="Jest.promptBuilder.configLoading.test.js" />
         <item itemvalue="Jest.actionButtonsRenderer.test.js" />
@@ -120,7 +132,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749651288005</updated>
-      <workItem from="1749651289753" duration="8764000" />
+      <workItem from="1749651289753" duration="9096000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -162,7 +174,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749659992152</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Implemented elementConditionEvaluator.">
+      <option name="closed" value="true" />
+      <created>1749660250843</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1749660250843</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -174,6 +194,7 @@
     <MESSAGE value="Implemented common validation utility for PromptBuilder." />
     <MESSAGE value="Created string accumulator." />
     <MESSAGE value="Implemented wrapper util." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented wrapper util." />
+    <MESSAGE value="Implemented elementConditionEvaluator." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented elementConditionEvaluator." />
   </component>
 </project>

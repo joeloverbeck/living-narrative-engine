@@ -64,10 +64,19 @@ import { HttpConfigurationProvider } from '../../configuration/httpConfiguration
 import { LLMConfigService } from '../../llms/llmConfigService.js';
 import { PlaceholderResolver } from '../../utils/placeholderResolver.js';
 import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
-import { PerceptionLogAssembler } from '../../prompting/assembling/perceptionLogAssembler.js';
-import ThoughtsSectionAssembler from '../../prompting/assembling/thoughtsSectionAssembler.js';
-import NotesSectionAssembler from '../../prompting/assembling/notesSectionAssembler.js';
-import GoalsSectionAssembler from '../../prompting/assembling/goalsSectionAssembler.js';
+import {
+  PERCEPTION_LOG_WRAPPER_KEY,
+  PerceptionLogAssembler,
+} from '../../prompting/assembling/perceptionLogAssembler.js';
+import ThoughtsSectionAssembler, {
+  THOUGHTS_WRAPPER_KEY,
+} from '../../prompting/assembling/thoughtsSectionAssembler.js';
+import NotesSectionAssembler, {
+  NOTES_WRAPPER_KEY,
+} from '../../prompting/assembling/notesSectionAssembler.js';
+import GoalsSectionAssembler, {
+  GOALS_WRAPPER_KEY,
+} from '../../prompting/assembling/goalsSectionAssembler.js';
 import { PromptBuilder } from '../../prompting/promptBuilder.js';
 import { EntitySummaryProvider } from '../../data/providers/entitySummaryProvider';
 import { ActorDataExtractor } from '../../turns/services/actorDataExtractor';
@@ -81,7 +90,11 @@ import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.
 import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../prompting/AIPromptPipeline.js';
 import { SHUTDOWNABLE } from '../tags';
-import { IndexedChoicesAssembler } from '../../prompting/assembling/indexedChoicesAssembler.js';
+import {
+  INDEXED_CHOICES_KEY,
+  IndexedChoicesAssembler,
+} from '../../prompting/assembling/indexedChoicesAssembler.js';
+import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -200,6 +213,34 @@ export function registerAI(container) {
     `AI Systems Registration: Registered ${tokens.IndexedChoicesAssembler}.`
   );
 
+  r.singletonFactory(tokens.AssemblerRegistry, (c) => {
+    const registry = new AssemblerRegistry();
+    registry.register(
+      PERCEPTION_LOG_WRAPPER_KEY,
+      c.resolve(tokens.PerceptionLogAssembler)
+    );
+    registry.register(
+      THOUGHTS_WRAPPER_KEY,
+      c.resolve(tokens.ThoughtsSectionAssembler)
+    );
+    registry.register(
+      NOTES_WRAPPER_KEY,
+      c.resolve(tokens.NotesSectionAssembler)
+    );
+    registry.register(
+      GOALS_WRAPPER_KEY,
+      c.resolve(tokens.GoalsSectionAssembler)
+    );
+    registry.register(
+      INDEXED_CHOICES_KEY,
+      c.resolve(tokens.IndexedChoicesAssembler)
+    );
+    logger.debug('AssemblerRegistry populated with all element keys');
+    return registry;
+  });
+
+  // 2️⃣ Now PromptBuilder can be registered (unchanged), and if we later swap
+  //    its switch/case for registry.resolve(key), the registry is already in DI.
   r.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
@@ -211,6 +252,7 @@ export function registerAI(container) {
       notesSectionAssembler: c.resolve(tokens.NotesSectionAssembler),
       goalsSectionAssembler: c.resolve(tokens.GoalsSectionAssembler),
       indexedChoicesAssembler: c.resolve(tokens.IndexedChoicesAssembler),
+      // ── registry is available if we choose to inject it later ──
     });
   });
   logger.debug(

@@ -7,6 +7,8 @@ import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssemble
 // to export it (e.g., PromptBuilder.js or creating a new constants file) is out of scope for PB-REFACTOR-011.
 const PERCEPTION_LOG_ENTRY_KEY = 'perception_log_entry';
 
+export const PERCEPTION_LOG_WRAPPER_KEY = 'perception_log_wrapper';
+
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  */
