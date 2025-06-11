@@ -4,26 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Implemented assembler registry.">
-      <change afterPath="$PROJECT_DIR$/src/prompting/promptAssembler.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/prompting/promptAssembler.test.js" afterDir="false" />
+    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Redid PromptBuilder.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/promptBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptBuilder.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/actions/actionFormatter.additional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/actions/actionFormatter.additional.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/PromptAssembly.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/PromptAssembly.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.configLoading.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.coreAssemblyLogic.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.dynamicConfigSelection.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.emptySections.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.errorConditions.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.goalsSection.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.notesSection.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.optionalConditional.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.specialHandlingForPerceptionLog.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptBuilder.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptBuilder.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/goalsSectionAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/goalsSectionAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/indexedChoicesAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/indexedChoicesAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/notesSectionAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/notesSectionAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/perceptionLogAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/perceptionLogAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/thoughtsSectionAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/thoughtsSectionAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/promptAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptAssembler.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -160,7 +149,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749651288005</updated>
-      <workItem from="1749651289753" duration="13047000" />
+      <workItem from="1749651289753" duration="14054000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -218,7 +207,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749660757566</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Redid PromptBuilder.">
+      <option name="closed" value="true" />
+      <created>1749664609651</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1749664609651</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -232,6 +229,7 @@
     <MESSAGE value="Implemented wrapper util." />
     <MESSAGE value="Implemented elementConditionEvaluator." />
     <MESSAGE value="Implemented assembler registry." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented assembler registry." />
+    <MESSAGE value="Redid PromptBuilder." />
+    <option name="LAST_COMMIT_MESSAGE" value="Redid PromptBuilder." />
   </component>
 </project>

@@ -1,15 +1,6 @@
-/**
- * @file src/prompting/goalsSectionAssembler.js
- * Feature ► Memory – Goals
- */
-
+// src/prompting/goalsSectionAssembler.js
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
-
-/** @typedef {import('../../interfaces/coreServices.js').ILogger}      ILogger */
-/** @typedef {import('../promptBuilder.js').PromptElement}             PromptElement */
-/** @typedef {import('../promptBuilder.js').PromptData}                PromptData */
-
-/** @typedef {import('../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver */
+import { resolveWrapper } from '../../utils/wrapperUtils.js';
 
 export const GOALS_WRAPPER_KEY = 'goals_wrapper';
 
@@ -17,40 +8,28 @@ export const GOALS_WRAPPER_KEY = 'goals_wrapper';
  * @class GoalsSectionAssembler
  * @implements {IPromptElementAssembler}
  * @description Renders the goals section when `promptData.goalsArray` is supplied.
- *
- * Output example (two goals G1, G2):
- * ```
- * <goals>\n
- * - G1
- * - G2
- *
- * ```
  */
 export class GoalsSectionAssembler extends IPromptElementAssembler {
-  /**
-   * @param {{ logger?: ILogger }} [options]
-   */
+  #logger;
+
   constructor({ logger = console } = {}) {
     super();
-    // logger parameter preserved for API consistency
+    this.#logger = logger;
   }
 
-  /**
-   * @inheritdoc
-   */
-  assemble(elementCfg, promptData, placeholderResolver /* unused map */) {
+  /** @inheritdoc */
+  assemble(elementCfg, promptData, placeholderResolver) {
     const arr = promptData?.goalsArray;
-    if (!Array.isArray(arr) || arr.length === 0) return '';
+    if (!Array.isArray(arr) || arr.length === 0) {
+      return '';
+    }
 
-    // ── Resolve optional prefix / suffix ───────────────────────────────
-    const resolvedPrefix = elementCfg?.prefix
-      ? placeholderResolver.resolve(elementCfg.prefix, promptData)
-      : '';
-    const resolvedSuffix = elementCfg?.suffix
-      ? placeholderResolver.resolve(elementCfg.suffix, promptData)
-      : '';
+    const { prefix: resolvedPrefix, suffix: resolvedSuffix } = resolveWrapper(
+      elementCfg,
+      placeholderResolver,
+      promptData
+    );
 
-    // ── Sort ascending by timestamp; invalid dates ↦ Infinity (shoved to end) ──
     const safeMs = (ts) => {
       const ms = new Date(ts).getTime();
       return Number.isFinite(ms) ? ms : Number.POSITIVE_INFINITY;
@@ -59,19 +38,16 @@ export class GoalsSectionAssembler extends IPromptElementAssembler {
       .slice()
       .sort((a, b) => safeMs(a.timestamp) - safeMs(b.timestamp));
 
-    // ── Build bullet list ──────────────────────────────────────────────
     const goalLines = sorted
-      .filter(
-        (g) => g && g.text !== null && g.text !== undefined && g.text !== ''
-      )
+      .filter((g) => g?.text)
       .map((g) => `- ${String(g.text)}`)
       .join('\n');
 
-    if (goalLines === '') return '';
+    if (!goalLines) {
+      return '';
+    }
 
-    // resolvedPrefix contains the header string (e.g. "<goals>\n")
-    const sectionCore = `${resolvedPrefix}\n${goalLines}\n${resolvedSuffix}`;
-    return sectionCore;
+    return `${resolvedPrefix}\n${goalLines}\n${resolvedSuffix}`;
   }
 }
 

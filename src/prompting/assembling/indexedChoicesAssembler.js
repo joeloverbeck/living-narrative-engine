@@ -1,36 +1,23 @@
 // src/prompting/assembling/indexedChoicesAssembler.js
-
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
+import { resolveWrapper } from '../../utils/wrapperUtils.js';
 
 export const INDEXED_CHOICES_KEY = 'indexed_choices';
 
 /**
  * @class IndexedChoicesAssembler
  * @implements {IPromptElementAssembler}
- * @description Renders promptData.indexedChoicesArray as a numbered list:
- *   1. <description>
- *   2. <description>
- *   …
- * No command strings or target IDs are ever emitted.
+ * @description Renders promptData.indexedChoicesArray as a numbered list.
  */
 export class IndexedChoicesAssembler extends IPromptElementAssembler {
   #logger;
 
-  /**
-   * @param {object} [options]
-   * @param {import('../../interfaces/coreServices.js').ILogger} [options.logger]
-   */
   constructor({ logger = console } = {}) {
     super();
     this.#logger = logger;
   }
 
-  /**
-   * @param {{ key: string; prefix?: string; suffix?: string }} elementConfig
-   * @param {{ indexedChoicesArray?: Array<{ index: number; commandString: string; description: string }> }} promptData
-   * @param {import('../../utils/placeholderResolver.js').PlaceholderResolver} placeholderResolver
-   * @returns {string}
-   */
+  /** @inheritdoc */
   assemble(elementConfig, promptData, placeholderResolver) {
     const { indexedChoicesArray } = promptData;
     if (
@@ -41,12 +28,9 @@ export class IndexedChoicesAssembler extends IPromptElementAssembler {
       return '';
     }
 
-    const prefix = placeholderResolver.resolve(
-      elementConfig.prefix ?? '',
-      promptData
-    );
-    const suffix = placeholderResolver.resolve(
-      elementConfig.suffix ?? '',
+    const { prefix: resolvedPrefix, suffix: resolvedSuffix } = resolveWrapper(
+      elementConfig,
+      placeholderResolver,
       promptData
     );
 
@@ -55,6 +39,8 @@ export class IndexedChoicesAssembler extends IPromptElementAssembler {
         `chosenActionId: ${choice.index}; ${choice.commandString} (${choice.description})`
     );
 
-    return `${prefix}${lines.join('\n')}${suffix}`;
+    return `${resolvedPrefix}${lines.join('\n')}${resolvedSuffix}`;
   }
 }
+
+export default IndexedChoicesAssembler;

@@ -76,7 +76,6 @@ export class PromptAssembler {
         );
         accumulator.append(fragment);
       } catch (error) {
-        // Capture the key and error for reporting
         errors.push({ key, error });
       }
     }
