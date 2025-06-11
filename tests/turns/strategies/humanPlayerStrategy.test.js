@@ -19,7 +19,7 @@ const mockTurnContext = {
   getPromptSignal: jest.fn(),
 };
 
-// Mock for IPlayerPromptService
+// Mock for IPromptCoordinator
 const mockPlayerPromptService = {
   prompt: jest.fn(),
 };

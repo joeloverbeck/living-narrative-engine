@@ -1,71 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="fe1e4b63-28da-4534-b6ec-b0fb4caf42b6" name="Changes" comment="Overhauling command system.">
+    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/data/providers/availableActionsProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/availableActionsProvider.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/humanPlayerPromptService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/humanPlayerPromptService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/main/main.bootstrapFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/main/main.bootstrapFlow.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/loggerConfigLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/loggerConfigLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/IAvailableActionsProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IAvailableActionsProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/IHumanPlayerPromptService.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/prompting/actionContextBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/actionContextBuilder.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/services/humanPlayerPromptService.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.confirmActionButton.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.confirmActionButton.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.eventHandling.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.eventHandling.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.render.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.render.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/interfaces/ITurnContext.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/interfaces/ITurnContext.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.bugFixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.bugFixes.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.extended.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/playerPromptService.extended.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.more.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/playerPromptService.more.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/playerPromptService.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.extended.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.more.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/playerPromptService.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="JavaScript File" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;joeloverbeck&quot;
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "joeloverbeck"
   }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/joeloverbeck/living-narrative-engine.git&quot;,
-    &quot;accountId&quot;: &quot;e87db63c-2fda-4154-8e23-63c0c53d7f35&quot;
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/joeloverbeck/living-narrative-engine.git",
+    "accountId": "e87db63c-2fda-4154-8e23-63c0c53d7f35"
   }
-}</component>
-  <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 0
-}</component>
-  <component name="ProjectId" id="2yJuCidpPVr3ozjP5OIWhyQAFyl" />
-  <component name="ProjectLevelVcsManager">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="2yMjM7frZc1a0wqbiRWtJL1vAD7" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Jest.Tests in tests\\.executor": "Run",
-    "Jest.actionAttemptBuilder.test.js.executor": "Run",
-    "Jest.actionComposite.test.js.executor": "Run",
-    "Jest.actionDiscoveryService.actionId.test.js.executor": "Run",
-    "Jest.actionIndexingService.test.js.executor": "Run",
-    "Jest.llmProviderTurnAction.schema.test.js.executor": "Run",
-    "Jest.playerPromptService.extended.test.js.executor": "Run",
-    "Jest.playerPromptService.more.test.js.executor": "Run",
-    "Jest.turnScopedCache.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -73,72 +69,12 @@
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
     "nodejs_package_manager_path": "npm",
-    "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
     "settings.editor.selected.configurable": "web-ide.project.structure",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.playerPromptService.extended.test.js">
-    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="DIRECTORY" />
-      <test-directory value="$PROJECT_DIR$/tests" />
-      <method v="2" />
-    </configuration>
-    <configuration name="actionAttemptBuilder.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/builders/actionAttemptBuilder.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="actionDiscoveryService.actionId.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/actions/actionDiscoveryService.actionId.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="playerPromptService.extended.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/services/playerPromptService.extended.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="playerPromptService.more.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/services/playerPromptService.more.test.js" />
-      <method v="2" />
-    </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Jest.playerPromptService.extended.test.js" />
-        <item itemvalue="Jest.playerPromptService.more.test.js" />
-        <item itemvalue="Jest.Tests in tests\" />
-        <item itemvalue="Jest.actionDiscoveryService.actionId.test.js" />
-        <item itemvalue="Jest.actionAttemptBuilder.test.js" />
-      </list>
-    </recent_temporary>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -148,64 +84,16 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="fe1e4b63-28da-4534-b6ec-b0fb4caf42b6" name="Changes" comment="" />
-      <created>1749564872269</created>
+      <changelist id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="" />
+      <created>1749651288005</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1749564872269</updated>
-      <workItem from="1749564873939" duration="83000" />
-      <workItem from="1749564985084" duration="14822000" />
-      <workItem from="1749583470048" duration="3658000" />
+      <updated>1749651288005</updated>
+      <workItem from="1749651289753" duration="34000" />
     </task>
-    <task id="LOCAL-00001" summary="Uploaded stuff from the office.">
-      <option name="closed" value="true" />
-      <created>1749571111073</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1749571111073</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Overhauling command system.">
-      <option name="closed" value="true" />
-      <created>1749572165326</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1749572165327</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Overhauling command system.">
-      <option name="closed" value="true" />
-      <created>1749577022095</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1749577022095</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Overhauling command system.">
-      <option name="closed" value="true" />
-      <created>1749578026186</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1749578026186</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Overhauling command system.">
-      <option name="closed" value="true" />
-      <created>1749582239262</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1749582239262</updated>
-    </task>
-    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="Uploaded stuff from the office." />
-    <MESSAGE value="Overhauling command system." />
-    <option name="LAST_COMMIT_MESSAGE" value="Overhauling command system." />
   </component>
 </project>

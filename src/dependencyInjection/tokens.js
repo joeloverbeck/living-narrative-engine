@@ -95,7 +95,7 @@
  * @property {DiToken} ITurnContext - Token for accessing context specific to the current turn. // <<< ENSURED THIS IS PRESENT AND NOT COMMENTED
  * @property {DiToken} IPromptOutputPort - Token for the prompt output port interface.
  * @property {DiToken} ITurnEndPort - Token for the turn end port interface.
- * @property {DiToken} IPlayerPromptService - Token for the player prompt service interface.
+ * @property {DiToken} IPromptCoordinator - Token for the player prompt service interface.
  * @property {DiToken} ICommandOutcomeInterpreter - Token for the command outcome interpreter interface.
  * @property {DiToken} IEntityManager - Token for the entity manager interface.
  * @property {DiToken} IGameDataRepository - Token for the game data repository interface.
@@ -216,7 +216,8 @@ export const tokens = Object.freeze({
   ITurnContext: 'ITurnContext',
   IPromptOutputPort: 'IPromptOutputPort',
   ITurnEndPort: 'ITurnEndPort',
-  IPlayerPromptService: 'IPlayerPromptService',
+  IPromptCoordinator: 'IPromptCoordinator',
+  IPlayerTurnEvents: 'IPlayerTurnEvents',
   ICommandOutcomeInterpreter: 'ICommandOutcomeInterpreter',
   IEntityManager: 'IEntityManager',
   IGameDataRepository: 'IGameDataRepository',
@@ -296,6 +297,7 @@ export const tokens = Object.freeze({
   IActorDataExtractor: 'IActorDataExtractor',
 
   // Core Builders
+  ActionContextBuilder: 'ActionContextBuilder',
   AttemptActionBuilder: 'AttemptActionBuilder',
 });
 // --- FILE END ---

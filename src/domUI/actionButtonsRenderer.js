@@ -7,20 +7,21 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
- * @typedef {import('../interfaces/CommonTypes').NamespacedId} NamespacedId
  * @typedef {import('./domElementFactory.js').default} DomElementFactoryType
  * @typedef {import('./boundDomRendererBase.js').ElementConfigEntry} ElementConfigEntry
  * @typedef {import('./boundDomRendererBase.js').ElementsConfig} ElementsConfig
  */
 
 /**
- * Represents an individual action available to the player.
- *
- * @typedef {object} AvailableAction
- * @property {NamespacedId} id - The unique ID of the action definition (e.g., 'core:wait').
- * @property {string} name - The human-readable name of the action (e.g., "Wait", "Go"). Used for tooltip titles.
- * @property {string} command - The formatted command string (e.g., 'wait', 'go north'). Used for button text and for dispatching.
+ * Represents a single available action, indexed and ready for rendering.
+ * This is the DTO received from the core engine.
+ * @typedef {object} ActionComposite
+ * @property {number} index - The 1-based index of the action in the current turn's list.
+ * @property {NamespacedId} actionId - The unique ID of the action definition (e.g., 'core:wait').
+ * @property {string} commandString - The formatted command string (e.g., 'wait', 'go north'). Used for button text.
+ * @property {object} params - Any parameters associated with the action.
  * @property {string} description - A detailed description of the action for tooltips.
+ * @see {createActionComposite}
  */
 
 /**
@@ -28,7 +29,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  *
  * @typedef {object} UIUpdateActionsInnerPayload
  * @property {string} actorId - The ID of the actor these actions are for.
- * @property {AvailableAction[]} actions - An array of action objects available to the player.
+ * @property {ActionComposite[]} actions - An array of action composites available to the player.
  */
 
 /**
@@ -44,16 +45,15 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  *
  * @typedef {object} CorePlayerTurnSubmittedPayload
  * @property {string} submittedByActorId - The instance ID of the actor who submitted this turn.
- * @property {NamespacedId} actionId - The unique identifier of the selected AvailableAction.
+ * @property {NamespacedId} actionId - The unique identifier of the selected ActionComposite.
  * @property {string | null} speech - The text from the speech input field, or null if empty.
  */
 
 /**
- * Renders available actions as buttons for player interaction.
+ * Renders available actions as buttons from an array of `ActionComposite` objects.
  * Handles action selection and dispatches the chosen action.
- * Extends BaseListDisplayComponent to manage the rendering of action buttons.
  *
- * @augments {BaseListDisplayComponent<AvailableAction>}
+ * @augments {BaseListDisplayComponent<ActionComposite>}
  */
 export class ActionButtonsRenderer extends BaseListDisplayComponent {
   _EVENT_TYPE_SUBSCRIBED = 'core:update_available_actions';
@@ -61,9 +61,9 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   static FADE_IN_CLASS = 'actions-fade-in';
   static FADE_OUT_CLASS = 'actions-fade-out';
 
-  /** @type {AvailableAction | null} */
+  /** @type {ActionComposite | null} */
   selectedAction = null;
-  /** @type {AvailableAction[]} */
+  /** @type {ActionComposite[]} */
   availableActions = [];
   #currentActorId = null;
   #isDisposed = false;
@@ -205,90 +205,79 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   }
 
   /**
+   * Creates a button element from an ActionComposite.
+   *
    * @protected
    * @override
+   * @param {ActionComposite} actionComposite - The action data to render.
+   * @returns {HTMLButtonElement | null} The button element or null if invalid.
    */
-  _renderListItem(actionObject, _itemIndex) {
+  _renderListItem(actionComposite) {
     if (this.#isDisposed) return null;
+
+    // Basic validation for the composite object
     if (
-      !actionObject ||
-      typeof actionObject.id !== 'string' ||
-      !actionObject.id.trim()
+      !actionComposite ||
+      typeof actionComposite.index !== 'number' ||
+      typeof actionComposite.actionId !== 'string' ||
+      !actionComposite.actionId.trim() ||
+      typeof actionComposite.commandString !== 'string' ||
+      !actionComposite.commandString.trim() ||
+      typeof actionComposite.description !== 'string' ||
+      !actionComposite.description.trim() // description can be empty but must exist
     ) {
       this.logger.warn(
-        `${this._logPrefix} Skipping invalid action object in _renderListItem (missing or empty id): `,
-        { actionObject }
-      );
-      return null;
-    }
-    if (
-      typeof actionObject.command !== 'string' ||
-      !actionObject.command.trim()
-    ) {
-      this.logger.warn(
-        `${this._logPrefix} Skipping invalid action object (missing command):`,
-        { actionObject }
-      );
-      return null;
-    }
-    if (typeof actionObject.name !== 'string' || !actionObject.name.trim()) {
-      this.logger.warn(
-        `${this._logPrefix} Skipping invalid action object (missing name):`,
-        { actionObject }
-      );
-      return null;
-    }
-    if (
-      typeof actionObject.description !== 'string' ||
-      !actionObject.description.trim()
-    ) {
-      this.logger.warn(
-        `${this._logPrefix} Skipping invalid action object (missing description):`,
-        { actionObject }
+        `${this._logPrefix} Skipping invalid action composite in _renderListItem: `,
+        { actionComposite }
       );
       return null;
     }
 
-    const buttonText = actionObject.command.trim();
-    const actionId = actionObject.id;
+    const buttonText = actionComposite.commandString;
+    const buttonTooltip = actionComposite.description;
+    const actionIndex = actionComposite.index;
 
-    // this.domElementFactory is guaranteed to be valid due to constructor checks
     const button = this.domElementFactory.button(buttonText, 'action-button');
     if (!button) {
       this.logger.error(
-        `${this._logPrefix} Failed to create button element for action: "${buttonText}" (ID: ${actionId}) using domElementFactory.`
+        `${this._logPrefix} Failed to create button element for action composite:`,
+        { actionComposite }
       );
       return null;
     }
 
-    let tooltipContent = `${actionObject.name.trim()}\n\nDescription:\n${actionObject.description.trim()}`;
-    button.setAttribute('title', tooltipContent);
-    button.setAttribute('data-action-id', actionId);
+    button.title = buttonTooltip;
+    button.setAttribute('data-action-index', actionIndex);
 
     button.addEventListener('click', () => {
       if (this.#isDisposed) return;
+
       const clickedAction = this.availableActions.find(
-        (a) => a.id === actionId
+        (c) => c.index === actionIndex
       );
+
       if (!clickedAction) {
         this.logger.error(
-          `${this._logPrefix} Critical: Clicked action button with ID '${actionId}' but could not find corresponding action.`,
-          { clickedActionId: actionId }
+          `${this._logPrefix} Critical: Clicked action button with index '${actionIndex}' but could not find corresponding composite.`,
+          { clickedActionIndex: actionIndex }
         );
         return;
       }
 
-      if (this.selectedAction && this.selectedAction.id === clickedAction.id) {
+      if (
+        this.selectedAction &&
+        this.selectedAction.index === clickedAction.index
+      ) {
         button.classList.remove('selected');
         this.selectedAction = null;
         this.logger.debug(
-          `${this._logPrefix} Action deselected: '${clickedAction.name}' (ID: ${clickedAction.id})`
+          `${this._logPrefix} Action deselected: '${clickedAction.commandString}' (Index: ${clickedAction.index})`
         );
       } else {
         if (this.selectedAction && this.elements.listContainerElement) {
           const previousButton =
             this.elements.listContainerElement.querySelector(
-              `button.action-button.selected[data-action-id="${this.selectedAction.id}"]`
+              `button.action-button.selected[data-action-index="${this.selectedAction.index}"]`
             );
           if (previousButton) {
             previousButton.classList.remove('selected');
@@ -297,13 +286,15 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         button.classList.add('selected');
         this.selectedAction = clickedAction;
         this.logger.debug(
-          `${this._logPrefix} Action selected: '${this.selectedAction.name}' (ID: ${this.selectedAction.id})`
+          `${this._logPrefix} Action selected: '${this.selectedAction.commandString}' (Index: ${this.selectedAction.index}, ID: ${this.selectedAction.actionId})`
         );
       }
+
       if (this.elements.sendButtonElement) {
         this.elements.sendButtonElement.disabled = !this.selectedAction;
       }
     });
+
     return button;
   }
 
@@ -325,25 +316,26 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     if (container) {
       container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
       container.classList.add(ActionButtonsRenderer.FADE_IN_CLASS);
-      const removeClass = () => {
-        container.classList.remove(ActionButtonsRenderer.FADE_IN_CLASS);
-        container.removeEventListener('animationend', removeClass);
-      };
-      container.addEventListener('animationend', removeClass, { once: true });
+      container.addEventListener(
+        'animationend',
+        () => {
+          container.classList.remove(ActionButtonsRenderer.FADE_IN_CLASS);
+        },
+        { once: true }
+      );
     }
 
-    const actualActionButtons = container.querySelectorAll(
+    const childCount = container.querySelectorAll(
       'button.action-button'
-    );
-    const childCount = actualActionButtons.length;
-
+    ).length;
     this.logger.debug(
-      `${this._logPrefix} Rendered ${childCount} action buttons. Selected action: ${this.selectedAction ? `'${this.selectedAction.name}' (ID: ${this.selectedAction.id})` : 'none'}.`
+      `${this._logPrefix} Rendered ${childCount} action buttons. Selected action: ${this.selectedAction ? `'${this.selectedAction.commandString}' (Index: ${this.selectedAction.index})` : 'none'}.`
     );
 
+    // If the previously selected action is no longer in the new list, clear the selection
     if (
       this.selectedAction &&
-      !actionsData?.find((a) => a.id === this.selectedAction?.id)
+      !actionsData?.find((c) => c.index === this.selectedAction?.index)
     ) {
       this.selectedAction = null;
       this.logger.debug(
@@ -351,9 +343,10 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
       );
     }
 
+    // Ensure the selected button has the .selected class after a re-render
     if (this.selectedAction) {
       const selectedButton = container.querySelector(
-        `button.action-button[data-action-id="${this.selectedAction.id}"]`
+        `button.action-button[data-action-index="${this.selectedAction.index}"]`
       );
       if (selectedButton && !selectedButton.classList.contains('selected')) {
         selectedButton.classList.add('selected');
@@ -366,7 +359,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   }
 
   /**
-   * Processes the 'core:update_available_actions' event.
+   * Processes the 'core:update_available_actions' event with `ActionComposite[]`.
    *
    * @param {UIUpdateActionsEventObject} eventObject - Event payload with action list.
    * @private
@@ -391,22 +384,23 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         `${this._logPrefix} Actions received for actor ID: ${this.#currentActorId}`
       );
 
-      const validActions = innerPayload.actions.filter((action) => {
+      const validActions = innerPayload.actions.filter((composite) => {
         const isValid =
-          action &&
-          typeof action === 'object' &&
-          typeof action.id === 'string' &&
-          action.id.trim().length > 0 &&
-          typeof action.name === 'string' &&
-          action.name.trim().length > 0 &&
-          typeof action.command === 'string' &&
-          action.command.trim().length > 0 &&
-          typeof action.description === 'string' &&
-          action.description.trim().length > 0;
+          composite &&
+          typeof composite === 'object' &&
+          typeof composite.index === 'number' &&
+          composite.index > 0 &&
+          typeof composite.actionId === 'string' &&
+          composite.actionId.trim().length > 0 &&
+          typeof composite.commandString === 'string' &&
+          composite.commandString.trim().length > 0 &&
+          typeof composite.description === 'string' && // Can be empty, but must be string
+          typeof composite.params === 'object' &&
+          composite.params !== null;
         if (!isValid) {
           this.logger.warn(
-            `${this._logPrefix} Invalid action object found in payload:`,
-            { action }
+            `${this._logPrefix} Invalid action composite found in payload:`,
+            { composite }
           );
         }
         return isValid;
@@ -414,7 +408,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
 
       if (validActions.length !== innerPayload.actions.length) {
         this.logger.warn(
-          `${this._logPrefix} Received '${eventTypeForLog}' with some invalid items. Only valid actions will be rendered.`
+          `${this._logPrefix} Received '${eventTypeForLog}' with some invalid items. Only valid composites will be rendered.`
         );
       }
 
@@ -477,10 +471,9 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
       );
     }
 
-    const actionId = this.selectedAction.id;
-    const actionName = this.selectedAction.name;
+    const { actionId, commandString } = this.selectedAction;
     this.logger.debug(
-      `${this._logPrefix} Attempting to send action: '${actionName}' (ID: ${actionId}) for actor ${this.#currentActorId}, Speech: "${speechText}"`
+      `${this._logPrefix} Attempting to send action: '${commandString}' (ID: ${actionId}) for actor ${this.#currentActorId}, Speech: "${speechText}"`
     );
 
     const eventPayload = {
@@ -503,35 +496,34 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
           this.elements.speechInputElement.value = '';
         }
 
-        // clear state
-        this.selectedAction = null;
-        if (this.elements.sendButtonElement) {
-          this.elements.sendButtonElement.disabled = true;
-        }
-
-        /* ---------- UI updates ---------- */
+        // --- UI updates on successful dispatch ---
         if (this.elements.listContainerElement) {
           const container = this.elements.listContainerElement;
 
-          /* 1️⃣  Remove the visual selection */
+          // 1. Remove the visual selection from the clicked button
           const selectedButton = container.querySelector(
-            `button.action-button.selected[data-action-id="${actionId}"]`
+            `button.action-button.selected[data-action-index="${this.selectedAction.index}"]`
           );
           if (selectedButton) {
             selectedButton.classList.remove('selected');
           }
 
-          /* 2️⃣  Play fade-out without deleting children */
+          // 2. Play fade-out animation
           container.classList.remove(ActionButtonsRenderer.FADE_IN_CLASS);
           container.classList.add(ActionButtonsRenderer.FADE_OUT_CLASS);
+          container.addEventListener(
+            'animationend',
+            () => {
+              container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
+            },
+            { once: true }
+          );
+        }
 
-          const onFadeOutEnd = () => {
-            container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
-            container.removeEventListener('animationend', onFadeOutEnd);
-          };
-          container.addEventListener('animationend', onFadeOutEnd, {
-            once: true,
-          });
+        // 3. Clear internal state
+        this.selectedAction = null;
+        if (this.elements.sendButtonElement) {
+          this.elements.sendButtonElement.disabled = true;
         }
       } else {
         this.logger.error(
@@ -548,14 +540,12 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
   }
 
   /** @ignore */
-
   /* istanbul ignore next */
   _getTestCurrentActorId() {
     return this.#currentActorId;
   }
 
   /** @ignore */
-
   /* istanbul ignore next */
   _setTestCurrentActorId(actorId) {
     this.#currentActorId = actorId;

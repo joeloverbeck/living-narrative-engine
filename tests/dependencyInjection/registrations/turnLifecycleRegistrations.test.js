@@ -27,10 +27,10 @@ import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
 import TurnManager from '../../../src/turns/turnManager.js';
 import PlayerTurnHandler from '../../../src/turns/handlers/playerTurnHandler.js';
 import TurnHandlerResolver from '../../../src/turns/services/turnHandlerResolver.js';
-import HumanPlayerPromptService from '../../../src/turns/services/humanPlayerPromptService.js';
 import { ConcreteTurnStateFactory } from '../../../src/turns/factories/concreteTurnStateFactory.js';
 import { ConcreteAIPlayerStrategyFactory } from '../../../src/turns/factories/concreteAIPlayerStrategyFactory.js';
 import { ConcreteTurnContextFactory } from '../../../src/turns/factories/concreteTurnContextFactory.js';
+import PromptCoordinator from '../../../src/turns/prompting/promptCoordinator';
 
 describe('registerTurnLifecycle', () => {
   let container;
@@ -148,8 +148,8 @@ describe('registerTurnLifecycle', () => {
       lifecycle: 'singleton',
     },
     {
-      token: tokens.IPlayerPromptService,
-      Class: HumanPlayerPromptService,
+      token: tokens.IPromptCoordinator,
+      Class: PromptCoordinator,
       lifecycle: 'singletonFactory',
     },
     {

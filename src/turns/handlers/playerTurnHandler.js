@@ -10,7 +10,6 @@ import { HumanPlayerStrategy } from '../strategies/humanPlayerStrategy.js'; // A
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -25,7 +24,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
   #commandProcessor;
   /** @type {ITurnEndPort} */
   #turnEndPort;
-  /** @type {IPlayerPromptService} */
+  /** @type {IPromptCoordinator} */
   #playerPromptService;
   /** @type {ICommandOutcomeInterpreter} */
   #commandOutcomeInterpreter;
@@ -47,7 +46,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
    * @param {ITurnStateFactory} deps.turnStateFactory
    * @param {ICommandProcessor} deps.commandProcessor
    * @param {ITurnEndPort} deps.turnEndPort
-   * @param {IPlayerPromptService} deps.playerPromptService
+   * @param {IPromptCoordinator} deps.playerPromptService
    * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {object} [deps.gameWorldAccess]

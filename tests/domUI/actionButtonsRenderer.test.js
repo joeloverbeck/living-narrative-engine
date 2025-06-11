@@ -41,11 +41,22 @@ describe('ActionButtonsRenderer', () => {
   const SEND_BUTTON_SELECTOR = '#player-confirm-turn-button';
   const SPEECH_INPUT_SELECTOR = '#speech-input';
 
-  const createTestAction = (id, name, command, description) => ({
-    id,
-    name,
-    command,
+  /**
+   * CORRECTED: Creates a valid ActionComposite object for testing.
+   * The original `createTestAction` created objects that are now invalid.
+   */
+  const createTestComposite = (
+    index,
+    actionId,
+    commandString,
     description,
+    params = {}
+  ) => ({
+    index,
+    actionId,
+    commandString,
+    description,
+    params,
   });
 
   const createMockElement = (
@@ -359,7 +370,6 @@ describe('ActionButtonsRenderer', () => {
       const actualUnsubscribeFn = jest.fn();
       mockVed.subscribe.mockReset().mockReturnValue(actualUnsubscribeFn);
       renderer = createRenderer();
-      // CORRECTED: Made simulateUpdateActionsEventForCurrentRenderer async and await handler call
       simulateUpdateActionsEventForCurrentRenderer = async (
         actorId,
         actions
@@ -382,17 +392,17 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should select action, enable send button, and log selection on action button click', async () => {
-      const actionToSelect = createTestAction(
+      const actionToSelect = createTestComposite(
+        1,
         'test:examine',
-        'Examine Item',
         'examine item',
         'Examines the item closely.'
       );
       const actions = [
         actionToSelect,
-        createTestAction(
+        createTestComposite(
+          2,
           'test:go_north',
-          'Go North',
           'go north',
           'Moves your character to the north.'
         ),
@@ -401,13 +411,6 @@ describe('ActionButtonsRenderer', () => {
       let mockExamineButton;
 
       mockDomElementFactoryInstance.button.mockImplementation((text, cls) => {
-        // console.log(`[DEBUG] factory.button CALLED. text: "${text}", actionToSelect.command: "${actionToSelect.command}"`);
-        // if (text === actionToSelect.command) {
-        //     console.log(`[DEBUG] MATCH! Assigning mockExamineButton for text: "${text}"`);
-        // } else {
-        //     console.log(`[DEBUG] NO MATCH for mockExamineButton. Comparing "${text}" with "${actionToSelect.command}"`);
-        // }
-
         const btn = createMockElement(
           document,
           'button',
@@ -415,17 +418,12 @@ describe('ActionButtonsRenderer', () => {
           cls ? cls.split(' ') : [],
           text
         );
-        if (text === actionToSelect.command) mockExamineButton = btn;
-
-        const actionData = actions.find((a) => a.command === text);
-        if (actionData) {
-          btn.setAttribute('data-action-id', actionData.id);
-        } else {
-          // console.log(`[DEBUG] factory.button: No action found in test's 'actions' array for text: "${text}"`);
+        if (text === actionToSelect.commandString) {
+          mockExamineButton = btn;
         }
         return btn;
       });
-      // CORRECTED: Added await
+
       await simulateUpdateActionsEventForCurrentRenderer(testActorId, actions);
       expect(mockExamineButton).toBeDefined();
       if (!mockExamineButton) return;
@@ -439,15 +437,15 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should update selection and button states when a different action is clicked', async () => {
-      const action1 = createTestAction(
+      const action1 = createTestComposite(
+        1,
         'test:action1',
-        'Action One',
         'Perform Action 1',
         'Description for Action 1.'
       );
-      const action2 = createTestAction(
+      const action2 = createTestComposite(
+        2,
         'test:action2',
-        'Action Two',
         'Perform Action 2',
         'Description for Action 2.'
       );
@@ -463,13 +461,10 @@ describe('ActionButtonsRenderer', () => {
           cls ? cls.split(' ') : [],
           text
         );
-        if (text === action1.command) mockButton1 = btn;
-        else if (text === action2.command) mockButton2 = btn;
-        const action = actions.find((a) => a.command === text);
-        if (action) btn.setAttribute('data-action-id', action.id);
+        if (text === action1.commandString) mockButton1 = btn;
+        else if (text === action2.commandString) mockButton2 = btn;
         return btn;
       });
-      // CORRECTED: Added await
       await simulateUpdateActionsEventForCurrentRenderer(testActorId, actions);
       expect(mockButton1).toBeDefined();
       expect(mockButton2).toBeDefined();
@@ -489,9 +484,9 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should deselect action if the same selected action button is clicked again', async () => {
-      const actionToSelect = createTestAction(
+      const actionToSelect = createTestComposite(
+        1,
         'test:examine',
-        'Examine Test',
         'examine test object',
         'Detailed examination.'
       );
@@ -506,11 +501,10 @@ describe('ActionButtonsRenderer', () => {
           cls ? cls.split(' ') : [],
           text
         );
-        btn.setAttribute('data-action-id', actionToSelect.id);
-        if (text === actionToSelect.command) mockExamineButton = btn;
+        if (text === actionToSelect.commandString) mockExamineButton = btn;
         return btn;
       });
-      // CORRECTED: Added await
+
       await simulateUpdateActionsEventForCurrentRenderer(testActorId, actions);
       expect(mockExamineButton).toBeDefined();
       if (!mockExamineButton) return;
@@ -531,9 +525,9 @@ describe('ActionButtonsRenderer', () => {
 
     it('should call dispatch, then log error, when dispatch returns false (send button click)', async () => {
       mockVed.dispatch.mockResolvedValue(false);
-      const action = createTestAction(
+      const action = createTestComposite(
+        1,
         'test:inv',
-        'Inventory',
         'open inventory',
         'Opens the player inventory.'
       );
@@ -548,11 +542,10 @@ describe('ActionButtonsRenderer', () => {
           cls ? cls.split(' ') : [],
           text
         );
-        btn.setAttribute('data-action-id', action.id);
-        if (text === action.command) mockActionButton = btn;
+        if (text === action.commandString) mockActionButton = btn;
         return btn;
       });
-      // CORRECTED: Added await
+
       await simulateUpdateActionsEventForCurrentRenderer(testActorId, actions);
       expect(mockActionButton).toBeDefined();
       if (!mockActionButton) return;
@@ -567,12 +560,12 @@ describe('ActionButtonsRenderer', () => {
         PLAYER_TURN_SUBMITTED_EVENT,
         expect.objectContaining({
           submittedByActorId: testActorId,
-          actionId: action.id,
+          actionId: action.actionId,
         })
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_EVENT}' for action '${action.id}'.`
+          `${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_EVENT}' for action '${action.actionId}'.`
         ),
         expect.objectContaining({ payload: expect.anything() })
       );
@@ -583,9 +576,9 @@ describe('ActionButtonsRenderer', () => {
     it('should call dispatch, then log error, when dispatch throws (send button click)', async () => {
       const testError = new Error('Dispatch failed');
       mockVed.dispatch.mockRejectedValue(testError);
-      const action = createTestAction(
+      const action = createTestComposite(
+        1,
         'test:help',
-        'Help',
         'get help',
         'Displays help information.'
       );
@@ -600,11 +593,10 @@ describe('ActionButtonsRenderer', () => {
           cls ? cls.split(' ') : [],
           text
         );
-        btn.setAttribute('data-action-id', action.id);
-        if (text === action.command) mockActionButton = btn;
+        if (text === action.commandString) mockActionButton = btn;
         return btn;
       });
-      // CORRECTED: Added await
+
       await simulateUpdateActionsEventForCurrentRenderer(testActorId, actions);
       expect(mockActionButton).toBeDefined();
       if (!mockActionButton) return;
@@ -619,7 +611,7 @@ describe('ActionButtonsRenderer', () => {
         PLAYER_TURN_SUBMITTED_EVENT,
         expect.objectContaining({
           submittedByActorId: testActorId,
-          actionId: action.id,
+          actionId: action.actionId,
         })
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -638,9 +630,9 @@ describe('ActionButtonsRenderer', () => {
     it('should select action and not dispatch, even if button textContent is empty at time of click (selection based on actionId)', async () => {
       const actionId = 'test:action1';
       const initialCommand = 'action1 command';
-      const action = createTestAction(
+      const action = createTestComposite(
+        1,
         actionId,
-        'Action One Name',
         initialCommand,
         'Desc for action1'
       );
@@ -655,25 +647,19 @@ describe('ActionButtonsRenderer', () => {
           cls ? cls.split(' ') : [],
           text
         );
-        const correspondingAction = actions.find((a) => a.command === text);
-        if (correspondingAction) {
-          btn.setAttribute('data-action-id', correspondingAction.id);
-          if (correspondingAction.id === actionId) mockActionButton = btn;
-        } else {
-          btn.setAttribute(
-            'data-action-id',
-            `generic:${text.replace(/\s+/g, '_')}`
-          );
+        if (text === initialCommand) {
+          mockActionButton = btn;
         }
         return btn;
       });
-      // CORRECTED: Added await
+
       await simulateUpdateActionsEventForCurrentRenderer(testActorId, actions);
       expect(mockActionButton).toBeDefined();
       if (!mockActionButton) return;
 
       expect(mockActionButton.textContent).toBe(initialCommand);
-      expect(mockActionButton.getAttribute('data-action-id')).toBe(actionId);
+      // The SUT sets this attribute, not the test mock
+      expect(mockActionButton.getAttribute('data-action-index')).toBe('1');
       expect(renderer.elements.sendButtonElement.disabled).toBe(true);
 
       mockActionButton.textContent = ''; // Simulate text content change
@@ -709,18 +695,12 @@ describe('ActionButtonsRenderer', () => {
       jest.spyOn(rendererInstance, 'renderList');
     });
 
-    // Note: Tests in this suite call capturedUpdateActionsHandler directly.
-    // Since #handleUpdateActions is async, if these tests need to assert
-    // state *after* refreshList completes, they might need to await the handler.
-    // However, they mostly check mock calls or state set *before* refreshList.
-
     it('should call renderList with valid actions from payload and set currentActorId', async () => {
-      // Made async
       const testActorId = 'player-test-actor-valid';
-      const validAction = createTestAction(
+      const validAction = createTestComposite(
+        1,
         'core:go_n',
         'Go North',
-        'go north',
         'Move northwards.'
       );
       const innerPayload = { actorId: testActorId, actions: [validAction] };
@@ -730,10 +710,10 @@ describe('ActionButtonsRenderer', () => {
       };
 
       mockLogger.warn.mockClear();
-      mockLogger.info.mockClear();
+      mockLogger.debug.mockClear();
       rendererInstance.renderList.mockClear();
 
-      await capturedUpdateActionsHandler(eventObject); // Added await
+      await capturedUpdateActionsHandler(eventObject);
 
       expect(rendererInstance.renderList).toHaveBeenCalled();
       expect(rendererInstance.availableActions).toEqual([validAction]);
@@ -742,35 +722,40 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should call renderList with filtered valid action objects, logging a warning, and set currentActorId', async () => {
-      // Made async
       const testActorId = 'player-test-actor-filter';
-      const validAction1 = createTestAction(
+      const validAction1 = createTestComposite(
+        1,
         'core:go_n',
         'Go North',
-        'go north',
         'Move northwards.'
       );
-      const validAction2 = createTestAction(
+      const validAction2 = createTestComposite(
+        2,
         'valid:action',
         'Do Valid Thing',
-        'Do it well',
         'This is a valid description.'
       );
-      const actionMissingDesc = {
-        id: 'invalid:desc',
-        name: 'No Desc',
-        command: 'no desc cmd',
+
+      // CORRECTED: Invalid composites now test the SUT's actual validation rules
+      const invalid_missingActionId = {
+        index: 3,
+        commandString: 'cmd',
+        description: 'desc',
+        params: {},
       };
-      const actionMissingName = {
-        id: 'invalid:name',
-        command: 'no name cmd',
-        description: 'No name desc',
+      const invalid_nullParams = {
+        index: 4,
+        actionId: 'a:id',
+        commandString: 'cmd',
+        description: 'desc',
+        params: null,
       };
-      const actionEmptyCommand = {
-        id: 'core:empty_cmd',
-        name: 'Empty Cmd',
-        command: ' ',
-        description: 'Test',
+      const invalid_badIndex = {
+        index: 0,
+        actionId: 'a:id2',
+        commandString: 'cmd2',
+        description: 'desc2',
+        params: {},
       };
 
       const innerPayload = {
@@ -779,9 +764,9 @@ describe('ActionButtonsRenderer', () => {
           validAction1,
           null,
           validAction2,
-          actionMissingDesc,
-          actionMissingName,
-          actionEmptyCommand,
+          invalid_missingActionId,
+          invalid_nullParams,
+          invalid_badIndex,
         ],
       };
       const eventObject = {
@@ -791,37 +776,40 @@ describe('ActionButtonsRenderer', () => {
       const expectedFiltered = [validAction1, validAction2];
 
       mockLogger.warn.mockClear();
-      mockLogger.info.mockClear();
+      mockLogger.debug.mockClear();
       rendererInstance.renderList.mockClear();
 
-      await capturedUpdateActionsHandler(eventObject); // Added await
+      await capturedUpdateActionsHandler(eventObject);
 
       expect(rendererInstance.renderList).toHaveBeenCalled();
       expect(rendererInstance.availableActions).toEqual(expectedFiltered);
       expect(rendererInstance._getTestCurrentActorId()).toBe(testActorId);
+
+      // Check for the generic warning
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Received '${UPDATE_ACTIONS_EVENT_TYPE}' with some invalid items. Only valid actions will be rendered.`
+        `${CLASS_PREFIX} Received '${UPDATE_ACTIONS_EVENT_TYPE}' with some invalid items. Only valid composites will be rendered.`
+      );
+
+      // Check for specific warnings (CORRECTED: using { composite: ... })
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `${CLASS_PREFIX} Invalid action composite found in payload:`,
+        { composite: null }
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Invalid action object found in payload:`,
-        { action: null }
+        `${CLASS_PREFIX} Invalid action composite found in payload:`,
+        { composite: invalid_missingActionId }
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Invalid action object found in payload:`,
-        { action: actionMissingDesc }
+        `${CLASS_PREFIX} Invalid action composite found in payload:`,
+        { composite: invalid_nullParams }
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Invalid action object found in payload:`,
-        { action: actionMissingName }
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Invalid action object found in payload:`,
-        { action: actionEmptyCommand }
+        `${CLASS_PREFIX} Invalid action composite found in payload:`,
+        { composite: invalid_badIndex }
       );
     });
 
     it('should call renderList with empty list and log warning if payload is invalid (e.g. missing actorId)', async () => {
-      // Made async
       const testCases = [
         null,
         {},
@@ -833,35 +821,34 @@ describe('ActionButtonsRenderer', () => {
         },
         {
           type: UPDATE_ACTIONS_EVENT_TYPE,
-          payload: { actions: [createTestAction('id', 'n', 'c', 'd')] },
+          // Missing actorId
+          payload: { actions: [createTestComposite(1, 'id', 'c', 'd')] },
         },
       ];
 
       for (const inputCase of testCases) {
-        // Loop compatible with async
         rendererInstance.renderList.mockClear();
         mockLogger.warn.mockClear();
-        mockLogger.info.mockClear();
+        mockLogger.debug.mockClear();
 
         const initialActorId = 'some-previous-actor';
         const initialActions = [
-          createTestAction(
-            'initial:id',
-            'Initial Name',
-            'initial_cmd',
-            'Initial Desc'
-          ),
+          createTestComposite(1, 'initial:id', 'initial_cmd', 'Initial Desc'),
         ];
+
+        // Set a valid initial state
         await capturedUpdateActionsHandler({
-          // Added await
           type: UPDATE_ACTIONS_EVENT_TYPE,
           payload: { actorId: initialActorId, actions: initialActions },
         });
         expect(rendererInstance._getTestCurrentActorId()).toBe(initialActorId);
-        rendererInstance.renderList.mockClear();
-        mockLogger.info.mockClear();
 
-        await capturedUpdateActionsHandler(inputCase); // Added await
+        // Clear mocks before testing the invalid case
+        rendererInstance.renderList.mockClear();
+        mockLogger.warn.mockClear();
+
+        // Now, send the invalid payload
+        await capturedUpdateActionsHandler(inputCase);
 
         const eventTypeForLog =
           inputCase && typeof inputCase.type === 'string'

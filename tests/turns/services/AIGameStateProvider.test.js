@@ -14,16 +14,12 @@ import {
   NAME_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
   POSITION_COMPONENT_ID,
-  EXITS_COMPONENT_ID,
   PERCEPTION_LOG_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import {
   DEFAULT_FALLBACK_LOCATION_NAME,
-  DEFAULT_FALLBACK_EXIT_DIRECTION,
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
-  DEFAULT_FALLBACK_ACTION_NAME,
-  DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
   DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW,
 } from '../../../src/constants/textDefaults.js';
 
@@ -75,6 +71,13 @@ const mockActionDiscoveryService = () => ({
   getValidActions: jest.fn(),
 });
 
+// --- CHANGE START ---
+// Added a mock for the new dependency
+const mockActionIndexingService = () => ({
+  indexActions: jest.fn(),
+});
+// --- CHANGE END ---
+
 const mockTurnContext = () => ({
   game: {},
 });
@@ -99,12 +102,18 @@ describe('AIGameStateProvider Integration Tests', () => {
   let entityManager;
   let actionDiscoverySystem;
   let mockActor;
+  // --- CHANGE START ---
+  let actionIndexingService; // Added mock instance variable
+  // --- CHANGE END ---
 
   // Helper to create the full provider stack. Allows overriding dependencies for specific tests.
   const setupProviderStack = (overrides = {}) => {
     const deps = {
       entityManager,
       actionDiscoverySystem,
+      // --- CHANGE START ---
+      actionIndexingService, // Added to default dependencies
+      // --- CHANGE END ---
       ...overrides,
     };
 
@@ -116,10 +125,15 @@ describe('AIGameStateProvider Integration Tests', () => {
       entityManager: deps.entityManager,
       summaryProvider: entitySummaryProvider,
     });
+
+    // --- CHANGE START ---
+    // Updated constructor call to include the new dependency
     availableActionsProvider = new AvailableActionsProvider({
       actionDiscoveryService: deps.actionDiscoverySystem,
       entityManager: deps.entityManager,
+      actionIndexingService: deps.actionIndexingService,
     });
+    // --- CHANGE END ---
 
     return new AIGameStateProvider({
       actorStateProvider,
@@ -135,6 +149,9 @@ describe('AIGameStateProvider Integration Tests', () => {
     turnContext = mockTurnContext();
     entityManager = mockEntityManager();
     actionDiscoverySystem = mockActionDiscoveryService();
+    // --- CHANGE START ---
+    actionIndexingService = mockActionIndexingService(); // Instantiate the new mock
+    // --- CHANGE END ---
     mockActor = new MockEntity('actor1', {
       [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
     });
@@ -273,7 +290,7 @@ describe('AIGameStateProvider Integration Tests', () => {
 
     describe('Available Actions Building', () => {
       test('should return empty actions if ADS is unavailable', async () => {
-        provider = setupProviderStack({ actionDiscoverySystem: null }); // Test with null ADS
+        provider = setupProviderStack({ actionDiscoverySystem: null });
         const { availableActions } = await provider.buildGameState(
           mockActor,
           turnContext,
@@ -283,25 +300,50 @@ describe('AIGameStateProvider Integration Tests', () => {
         expect(logger.error).toHaveBeenCalled();
       });
 
-      test('should populate actions with defaults', async () => {
-        actionDiscoverySystem.getValidActions.mockResolvedValue([
-          { id: 'a1', command: 'c1' },
-        ]);
+      // --- CHANGE START ---
+      // This is the failing test. It has been completely rewritten to
+      // reflect the new dependency and the new ActionComposite DTO.
+      test('should populate actions correctly via the provider stack', async () => {
+        // Arrange: Mock the full data flow for actions
+        const discoveredActions = [
+          {
+            id: 'a1',
+            command: 'c1',
+            description: 'Perform action c1',
+            params: {},
+          },
+        ];
+        const expectedComposites = [
+          {
+            index: 1,
+            actionId: 'a1',
+            commandString: 'c1',
+            description: 'Perform action c1',
+            params: {},
+          },
+        ];
+
+        actionDiscoverySystem.getValidActions.mockResolvedValue(
+          discoveredActions
+        );
+        actionIndexingService.indexActions.mockReturnValue(expectedComposites);
+
+        // Act
         const { availableActions } = await provider.buildGameState(
           mockActor,
           turnContext,
           logger
         );
-        expect(availableActions).toEqual([
-          {
-            id: 'a1',
-            command: 'c1',
-            name: DEFAULT_FALLBACK_ACTION_NAME,
-            description: DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
-            params: {},
-          },
-        ]);
+
+        // Assert: The final DTO contains the ActionComposites from the end of the chain.
+        expect(availableActions).toEqual(expectedComposites);
+        expect(actionDiscoverySystem.getValidActions).toHaveBeenCalled();
+        expect(actionIndexingService.indexActions).toHaveBeenCalledWith(
+          mockActor.id,
+          discoveredActions
+        );
       });
+      // --- CHANGE END ---
     });
 
     describe('Perception Log Building', () => {

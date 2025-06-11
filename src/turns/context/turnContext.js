@@ -9,10 +9,6 @@
  * @description Defines the interface for a logging service.
  */
 /**
- * @typedef {import('../interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService
- * @description Defines the interface for a service that handles player prompts.
- */
-/**
  * @typedef {import('../../game/GameWorld.js').GameWorld} GameWorld
  * // Or a more specific/minimal interface if GameWorld is too broad
  * @description Represents the game world or a minimal interface to it.
@@ -56,7 +52,7 @@
 
 /**
  * @typedef {object} TurnContextServices
- * @property {IPlayerPromptService} [playerPromptService]
+ * @property {IPromptCoordinator} [playerPromptService]
  * @property {GameWorld | object} [game] // Replace 'object' with a specific minimal game interface if applicable
  * @property {ICommandProcessor} [commandProcessor]
  * @property {ICommandOutcomeInterpreter} [commandOutcomeInterpreter]

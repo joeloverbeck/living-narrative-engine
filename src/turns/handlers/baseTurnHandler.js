@@ -248,7 +248,6 @@ export class BaseTurnHandler {
 
     this._assertHandlerActiveUnlessDestroying(fromDestroy);
     const logger = this.getLogger();
-    // ... (actor ID resolution logic remains the same) ...
     const contextActorId = this._currentTurnContext?.getActor()?.id;
     const handlerActorId = this._currentActor?.id;
     const effectiveActor =
@@ -372,7 +371,7 @@ export class BaseTurnHandler {
 
   /* ───────────────────────────── PUBLIC API ──────────────────────────── */
 
-  async startTurn(actor) {
+  async startTurn(_actor) {
     this._assertHandlerActive();
     this.getLogger().error(
       "Method 'startTurn(actor)' must be implemented by concrete subclasses of BaseTurnHandler."

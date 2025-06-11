@@ -19,11 +19,22 @@ jest.mock('../../src/logging/consoleLogger.js');
 jest.mock('../../src/events/validatedEventDispatcher.js');
 jest.mock('../../src/domUI/domElementFactory.js');
 
-const createValidTestAction = (id, name, command, description) => ({
-  id: id,
-  name: name || `Test Name for ${id}`,
-  command: command || `test_command_for_${id}`,
-  description: description || `Test description for ${id}.`,
+/**
+ * CORRECTED: Creates a valid ActionComposite object for testing.
+ * The original `createValidTestAction` created objects that are now invalid.
+ */
+const createTestComposite = (
+  index,
+  actionId,
+  commandString,
+  description,
+  params = {}
+) => ({
+  index,
+  actionId,
+  commandString,
+  description,
+  params,
 });
 
 describe('ActionButtonsRenderer', () => {
@@ -113,6 +124,7 @@ describe('ActionButtonsRenderer', () => {
             : cls.split(' ').filter((c) => c)
           : [];
         const btn = createMockElement('button', '', classes, text);
+        // The test environment might not fully respect the tagName, so we ensure it is correct.
         if (btn.tagName !== 'BUTTON') {
           Object.defineProperty(btn, 'tagName', {
             value: 'BUTTON',
@@ -195,7 +207,6 @@ describe('ActionButtonsRenderer', () => {
   };
 
   describe('render() functionality', () => {
-    // Changed describe name slightly
     it('should clear the container when rendering', async () => {
       const oldButton = createMockElement(
         'button',
@@ -203,24 +214,25 @@ describe('ActionButtonsRenderer', () => {
         [],
         'Old Button'
       );
-      actionButtonsContainer.appendChild(oldButton); // This is pre-clear
+      actionButtonsContainer.appendChild(oldButton);
 
       const renderer = await createRendererAndSettle();
-      // After settle, constructor's refreshList has run (cleared then appended empty msg)
-      // Now clear the spy history before the test's main action.
+      // The constructor's `refreshList` already ran, cleared `oldButton`, and added an empty message.
+      // We clear mock history to only track calls from this test's specific `refreshList` call.
       actionButtonsContainer.appendChild.mockClear();
       actionButtonsContainer.removeChild.mockClear();
 
+      // CORRECTED: Use `createTestComposite` to create valid action objects.
       renderer.availableActions = [
-        createValidTestAction(
+        createTestComposite(
+          1,
           'test:look',
-          'Look Around',
           'look',
           'Look at your surroundings.'
         ),
-        createValidTestAction(
+        createTestComposite(
+          2,
           'test:go_n',
-          'Go North',
           'go north',
           'Move towards the north.'
         ),
@@ -228,41 +240,23 @@ describe('ActionButtonsRenderer', () => {
 
       await renderer.refreshList();
 
-      // removeChild is called by DomUtils.clearElement to remove the empty message paragraph
-      // that was added by the constructor's refreshList.
-      // If oldButton was not cleared by constructor's refresh (because it's empty initially),
-      // this might need adjustment. Let's assume empty message was the only thing.
-      // The important removeChild is the one that DomUtils.clearElement calls on the
-      // empty message paragraph from the *constructor's* render.
-      // The oldButton was appended *before* createRendererAndSettle, so the *first*
-      // DomUtils.clearElement (in constructor's refreshList) would have removed it.
-      // The *second* DomUtils.clearElement (in the test's refreshList) removes the empty message P.
-      // We need to be careful about what `oldButton` refers to here.
-      // Let's focus on what happens AFTER mockClear.
-      // After mockClear, refreshList is called. It first clears.
-      // What was in the container before this refreshList? The empty <p> from constructor's refresh.
-      // So, removeChild should be called once for that <p>.
+      // The container had an empty message <p>, which is now removed.
       expect(actionButtonsContainer.removeChild).toHaveBeenCalledTimes(1);
-      // And that removed child should be the <p> element.
+      expect(actionButtonsContainer.appendChild).toHaveBeenCalledTimes(2);
 
+      // JSDOM's querySelectorAll on the container itself works better than querying the document.
       const finalButtons = actionButtonsContainer.querySelectorAll(
         'button.action-button'
       );
       expect(finalButtons.length).toBe(2);
 
-      let containerText = '';
-      actionButtonsContainer.childNodes.forEach((node) => {
-        if (node.tagName === 'BUTTON') containerText += node.textContent;
-      });
-      expect(containerText).not.toContain('Old Button'); // This remains valid
+      const containerText = actionButtonsContainer.textContent;
+      expect(containerText).not.toContain('Old Button');
       expect(containerText).toContain('look');
       expect(containerText).toContain('go north');
-
-      expect(actionButtonsContainer.appendChild).toHaveBeenCalledTimes(2); // For the two new buttons
     });
 
     it('should render nothing and log debug if actions list is empty', async () => {
-      // oldButton is added to check if it's removed.
       const oldButton = createMockElement(
         'button',
         'old-button-empty-test',
@@ -272,59 +266,54 @@ describe('ActionButtonsRenderer', () => {
       actionButtonsContainer.appendChild(oldButton);
 
       const renderer = await createRendererAndSettle();
-      // Constructor's refreshList removed oldButton and added empty message <p>.
-      // Spy history clear for calls made *during this test's specific action*.
+      // Constructor's refreshList removed oldButton and added an empty message.
+      // Clear history for this test's action.
       actionButtonsContainer.appendChild.mockClear();
       actionButtonsContainer.removeChild.mockClear();
       mockLogger.debug.mockClear();
-      mockLogger.info.mockClear();
 
       renderer.availableActions = [];
       await renderer.refreshList();
 
-      // The refreshList call will clear the empty message <p> from the constructor's render.
+      // refreshList clears the previous empty message, then adds a new one.
       expect(actionButtonsContainer.removeChild).toHaveBeenCalledTimes(1);
-      expect(actionButtonsContainer.children.length).toBe(1); // New empty message <p>
+      expect(actionButtonsContainer.appendChild).toHaveBeenCalledTimes(1);
+      expect(actionButtonsContainer.children.length).toBe(1); // The new empty message.
       expect(mockDomElementFactoryInstance.button).not.toHaveBeenCalled();
 
-      // Assuming SUT's _onListRendered is changed to count 'button.action-button'
       const emptyMessageP = actionButtonsContainer.querySelector(
         'p.empty-list-message'
       );
       expect(emptyMessageP).not.toBeNull();
       if (emptyMessageP)
         expect(emptyMessageP.textContent).toBe('No actions available.');
-
-      expect(actionButtonsContainer.appendChild).toHaveBeenCalledTimes(1); // For the new empty message <p>
     });
 
     it('should render buttons for each valid action object', async () => {
+      // CORRECTED: Use `createTestComposite` to provide valid data.
       const actions = [
-        createValidTestAction(
+        createTestComposite(
+          1,
           'test:look',
-          'Look Closely',
           'look',
           'Examine your surroundings.'
         ),
-        createValidTestAction(
+        createTestComposite(
+          2,
           'test:go_n',
-          'Move North',
           'go north',
           'Proceed to the north.'
         ),
-        createValidTestAction(
+        createTestComposite(
+          3,
           'test:talk',
-          'Talk to NPC',
           'talk to npc',
           'Initiate conversation.'
         ),
       ];
       const renderer = await createRendererAndSettle();
       actionButtonsContainer.appendChild.mockClear();
-      actionButtonsContainer.removeChild.mockClear();
-      mockLogger.info.mockClear();
       mockDomElementFactoryInstance.button.mockClear();
-      // DomUtils.clearElement(actionButtonsContainer); // Not needed here, refreshList will clear
 
       renderer.availableActions = actions;
       await renderer.refreshList();
@@ -339,18 +328,23 @@ describe('ActionButtonsRenderer', () => {
 
       actions.forEach((actionObject, index) => {
         expect(mockDomElementFactoryInstance.button).toHaveBeenCalledWith(
-          actionObject.command.trim(),
+          actionObject.commandString,
           'action-button'
         );
         const renderedButton = actionButtonsContainer.children[index];
         expect(renderedButton).not.toBeNull();
         expect(renderedButton.tagName).toBe('BUTTON');
-        expect(renderedButton.textContent).toBe(actionObject.command.trim());
+        expect(renderedButton.textContent).toBe(actionObject.commandString);
         expect(renderedButton.classList.contains('action-button')).toBe(true);
-        const expectedTooltip = `${actionObject.name.trim()}\n\nDescription:\n${actionObject.description.trim()}`;
-        expect(renderedButton.getAttribute('title')).toBe(expectedTooltip);
-        expect(renderedButton.getAttribute('data-action-id')).toBe(
-          actionObject.id
+
+        // FINAL CORRECTION: Assert against the `title` property directly,
+        // as this is how the SUT sets it. The mocked `getAttribute` does not
+        // reflect this property assignment.
+        expect(renderedButton.title).toBe(actionObject.description);
+
+        // The SUT now sets `data-action-index`.
+        expect(renderedButton.getAttribute('data-action-index')).toBe(
+          actionObject.index
         );
         const mockButtonFromFactory =
           mockDomElementFactoryInstance.button.mock.results[index].value;
@@ -361,71 +355,39 @@ describe('ActionButtonsRenderer', () => {
       });
     });
 
-    it('should skip invalid actions (e.g., missing name/command/description) and log warning', async () => {
-      const validAction1 = createValidTestAction(
-        'test:valid1',
-        'Valid One',
-        'do one',
-        'Description one.'
-      );
-      const invalidActionNoName = {
-        id: 'test:no_name',
-        command: 'cmd_no_name',
-        description: 'Desc no name',
-      };
-      const invalidActionNoCmd = {
-        id: 'test:no_cmd',
-        name: 'Name No Cmd',
-        description: 'Desc no cmd',
-      };
-      // ... (rest of actionsToSet definition)
+    it('should skip invalid actions and log warning', async () => {
+      // CORRECTED: This test is rewritten to test the new validation logic in `_renderListItem`.
       const actionsToSet = [
-        validAction1,
-        invalidActionNoName,
-        invalidActionNoCmd,
+        createTestComposite(1, 'test:valid1', 'do one', 'Description one.'),
         {
-          id: 'test:no_desc',
-          name: 'Name No Desc',
-          command: 'cmd_no_desc',
-          description: '',
-        },
-        createValidTestAction(
-          'test:empty_cmd',
-          'Empty Command Test',
-          ' ',
-          'Valid desc for empty cmd'
-        ),
-        createValidTestAction(
-          'test:empty_name',
-          ' ',
-          'empty_name_cmd',
-          'Description for empty name'
-        ),
-        null,
-        {
-          id: null,
-          name: 'Null Id',
-          command: 'null_id_cmd',
-          description: 'Null id desc',
+          /* invalid: missing index */ actionId: 'a:1',
+          commandString: 'c:1',
+          description: 'd:1',
         },
         {
-          id: 'test:undef_cmd',
-          name: 'Undef Cmd',
-          command: undefined,
-          description: 'Undef cmd desc',
+          index: 2,
+          /* invalid: missing actionId */ commandString: 'c:2',
+          description: 'd:2',
         },
-        {},
-        createValidTestAction(
-          'test:valid2',
-          'Valid Two',
-          'do two',
-          'Description two.'
-        ),
+        {
+          index: 3,
+          actionId: 'a:3',
+          /* invalid: missing commandString */ description: 'd:3',
+        },
+        {
+          index: 4,
+          actionId: 'a:4',
+          commandString: 'c:4' /* invalid: missing description */,
+        },
+        null, // invalid
+        createTestComposite(5, 'test:valid2', 'do two', 'Description two.'),
+        {}, // invalid
       ];
-      const expectedRenderedCount = 2;
+      const expectedRenderedCount = 2; // Only the two valid composites should render.
+      const expectedWarningCount = 6; // For the 6 invalid items.
+
       const renderer = await createRendererAndSettle();
       actionButtonsContainer.appendChild.mockClear();
-      actionButtonsContainer.removeChild.mockClear();
       mockLogger.warn.mockClear();
       mockDomElementFactoryInstance.button.mockClear();
 
@@ -442,53 +404,30 @@ describe('ActionButtonsRenderer', () => {
         expectedRenderedCount
       );
 
+      // CORRECTED: Check for the new, single warning message format.
+      expect(mockLogger.warn).toHaveBeenCalledTimes(expectedWarningCount);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object in _renderListItem (missing or empty id): `,
-        { actionObject: null }
+        `${CLASS_PREFIX} Skipping invalid action composite in _renderListItem: `,
+        { actionComposite: actionsToSet[1] }
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object (missing name):`,
-        { actionObject: invalidActionNoName }
-      );
-      // ... (all 9 warning checks) ...
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object (missing command):`,
-        { actionObject: invalidActionNoCmd }
+        `${CLASS_PREFIX} Skipping invalid action composite in _renderListItem: `,
+        { actionComposite: actionsToSet[2] }
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object (missing description):`,
-        { actionObject: actionsToSet[3] }
+        `${CLASS_PREFIX} Skipping invalid action composite in _renderListItem: `,
+        { actionComposite: null }
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object (missing command):`,
-        { actionObject: actionsToSet[4] }
+        `${CLASS_PREFIX} Skipping invalid action composite in _renderListItem: `,
+        { actionComposite: {} }
       );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object (missing name):`,
-        { actionObject: actionsToSet[5] }
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object in _renderListItem (missing or empty id): `,
-        { actionObject: actionsToSet[7] }
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object (missing command):`,
-        { actionObject: actionsToSet[8] }
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object in _renderListItem (missing or empty id): `,
-        { actionObject: {} }
-      );
-      expect(mockLogger.warn).toHaveBeenCalledTimes(9);
     });
 
     it('should treat non-array actions argument as empty list, not log error, and clear container', async () => {
       const oldButton = createMockElement('button', '', [], 'Old Button');
       const renderer = await createRendererAndSettle(); // Constructor call and its refreshList settles.
 
-      // Initial subscribe call check should be done carefully if createRendererAndSettle is reused
-      // For this specific test, we care about the subscribe done by *this* renderer instance.
-      // The mockVed is reset in beforeEach, so this will be the first call for this instance.
       expect(mockVed.subscribe).toHaveBeenCalledTimes(1);
 
       const subscribeCallArgs = mockVed.subscribe.mock.calls[0];
@@ -497,7 +436,6 @@ describe('ActionButtonsRenderer', () => {
       expect(eventNameSubscribed).toBe('core:update_available_actions');
 
       const testCases = [
-        // ... (same test cases)
         {
           type: 'core:update_available_actions',
           payload: 'not an object payload',
@@ -516,12 +454,7 @@ describe('ActionButtonsRenderer', () => {
         },
         {
           type: 'core:update_available_actions',
-          payload: {
-            actorId: 'testActor',
-            actions: {
-              /* not an array */
-            },
-          },
+          payload: { actorId: 'testActor', actions: {} },
         },
         {
           type: 'core:update_available_actions',
@@ -539,11 +472,9 @@ describe('ActionButtonsRenderer', () => {
         DomUtils.clearElement(actionButtonsContainer);
         actionButtonsContainer.appendChild(oldButton);
 
-        // Clear mocks for this iteration
         actionButtonsContainer.appendChild.mockClear();
         actionButtonsContainer.removeChild.mockClear();
         mockLogger.error.mockClear();
-        mockLogger.debug.mockClear();
         mockLogger.warn.mockClear();
         mockDomElementFactoryInstance.button.mockClear();
 
@@ -551,20 +482,12 @@ describe('ActionButtonsRenderer', () => {
 
         expect(mockLogger.error).not.toHaveBeenCalled();
 
-        const isValidPayloadForProcessing =
-          eventInputCase?.payload &&
-          typeof eventInputCase.payload.actorId === 'string' &&
-          eventInputCase.payload.actorId.trim().length > 0 &&
-          Array.isArray(eventInputCase.payload.actions);
-
-        if (!isValidPayloadForProcessing) {
-          expect(mockLogger.warn).toHaveBeenCalledWith(
-            expect.stringContaining(
-              `${CLASS_PREFIX} Received invalid or incomplete event for '${eventInputCase.type || 'core:update_available_actions'}'. Clearing actions.`
-            ),
-            { receivedObject: eventInputCase }
-          );
-        }
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `${CLASS_PREFIX} Received invalid or incomplete event for`
+          ),
+          { receivedObject: eventInputCase }
+        );
 
         expect(actionButtonsContainer.removeChild).toHaveBeenCalledWith(
           oldButton
@@ -582,54 +505,28 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should log error and skip if factory fails to create a button', async () => {
+      // CORRECTED: Use `createTestComposite`
       const actionsForRenderer = [
-        createValidTestAction('test:look', 'Look', 'look', 'Look desc.'),
-        createValidTestAction(
-          'test:fail',
-          'Fail Button',
-          'fail_command',
-          'Fail desc.'
-        ),
-        createValidTestAction(
-          'test:go_n',
-          'Go North',
-          'go north',
-          'Go north desc.'
-        ),
+        createTestComposite(1, 'test:look', 'look', 'Look desc.'),
+        createTestComposite(2, 'test:fail', 'fail_command', 'Fail desc.'),
+        createTestComposite(3, 'test:go_n', 'go north', 'Go north desc.'),
       ];
       const expectedFinalButtonCount = 2;
 
       mockDomElementFactoryInstance.button.mockReset();
       mockDomElementFactoryInstance.button.mockImplementation((text, cls) => {
-        if (text === 'fail_command') return null;
+        if (text === 'fail_command') return null; // Simulate factory failure
         const classes = cls
           ? Array.isArray(cls)
             ? cls
             : cls.split(' ').filter((c) => c)
           : [];
-        const btn = createMockElement('button', '', classes, text);
-        if (btn.tagName !== 'BUTTON') {
-          Object.defineProperty(btn, 'tagName', {
-            value: 'BUTTON',
-            configurable: true,
-          });
-        }
-        return btn;
+        return createMockElement('button', '', classes, text);
       });
-      // Ensure 'p' mock is still in place if needed by other flows after reset (it shouldn't be affected by button.mockReset)
-      if (!jest.isMockFunction(mockDomElementFactoryInstance.p)) {
-        jest
-          .spyOn(mockDomElementFactoryInstance, 'p')
-          .mockImplementation((cls, text) =>
-            createMockElement('p', '', cls, text)
-          );
-      }
 
       const renderer = await createRendererAndSettle();
       actionButtonsContainer.appendChild.mockClear();
-      actionButtonsContainer.removeChild.mockClear();
       mockLogger.error.mockClear();
-      mockLogger.info.mockClear();
 
       renderer.availableActions = actionsForRenderer;
       await renderer.refreshList();
@@ -644,8 +541,10 @@ describe('ActionButtonsRenderer', () => {
         expectedFinalButtonCount
       );
 
+      // CORRECTED: Assert the new, correct error message and payload.
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Failed to create button element for action: "fail_command" (ID: test:fail) using domElementFactory.`
+        `${CLASS_PREFIX} Failed to create button element for action composite:`,
+        { actionComposite: actionsForRenderer[1] } // The one that failed.
       );
     });
   });

@@ -17,7 +17,6 @@
 /** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../../turns/handlers/playerTurnHandler.js').default} PlayerTurnHandler_Concrete */
 /** @typedef {import('../../turns/services/turnHandlerResolver.js').default} TurnHandlerResolver_Concrete */
-/** @typedef {import('../../turns/interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../turns/interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
@@ -33,7 +32,9 @@ import TurnManager from '../../turns/turnManager.js';
 import PlayerTurnHandler from '../../turns/handlers/playerTurnHandler.js';
 import TurnHandlerResolver from '../../turns/services/turnHandlerResolver.js';
 import { TurnOrderService } from '../../turns/order/turnOrderService.js';
-import HumanPlayerPromptService from '../../turns/services/humanPlayerPromptService.js';
+import PromptCoordinator from '../../turns/prompting/promptCoordinator.js';
+import ActionContextBuilder from '../../turns/prompting/actionContextBuilder.js';
+import ValidatedEventDispatcherAdapter from '../../turns/prompting/validatedEventDispatcherAdapter.js';
 import { ConcreteTurnContextFactory } from '../../turns/factories/concreteTurnContextFactory.js';
 import { ConcreteAIPlayerStrategyFactory } from '../../turns/factories/concreteAIPlayerStrategyFactory.js';
 import { ConcreteTurnStateFactory } from '../../turns/factories/concreteTurnStateFactory.js';
@@ -64,15 +65,30 @@ export function registerTurnLifecycle(container) {
   r.single(tokens.IAIPlayerStrategyFactory, ConcreteAIPlayerStrategyFactory);
   r.single(tokens.ITurnContextFactory, ConcreteTurnContextFactory);
 
-  r.singletonFactory(tokens.IPlayerPromptService, (c) => {
-    return new HumanPlayerPromptService({
-      logger: c.resolve(tokens.ILogger),
-      actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
-      promptOutputPort: c.resolve(tokens.IPromptOutputPort),
+  // Register new singleton ActionContextBuilder.
+  r.singletonFactory(tokens.ActionContextBuilder, (c) => {
+    return new ActionContextBuilder({
       worldContext: c.resolve(tokens.IWorldContext),
       entityManager: c.resolve(tokens.IEntityManager),
       gameDataRepository: c.resolve(tokens.IGameDataRepository),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+
+  // Register ValidatedEventDispatcherAdapter as IPlayerTurnEvents.
+  r.singletonFactory(tokens.IPlayerTurnEvents, (c) => {
+    return new ValidatedEventDispatcherAdapter({
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+    });
+  });
+
+  r.singletonFactory(tokens.IPromptCoordinator, (c) => {
+    return new PromptCoordinator({
+      logger: c.resolve(tokens.ILogger),
+      actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
+      promptOutputPort: c.resolve(tokens.IPromptOutputPort),
+      actionContextBuilder: c.resolve(tokens.ActionContextBuilder),
+      playerTurnEvents: c.resolve(tokens.IPlayerTurnEvents),
     });
   });
 
@@ -83,7 +99,6 @@ export function registerTurnLifecycle(container) {
   // --- Player Turn Handler ---
 
   r.tagged(SHUTDOWNABLE).transientFactory(
-    // ⬅️  was singletonFactory
     tokens.PlayerTurnHandler,
     (c) =>
       new PlayerTurnHandler({
@@ -91,7 +106,7 @@ export function registerTurnLifecycle(container) {
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         commandProcessor: c.resolve(tokens.ICommandProcessor),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
-        playerPromptService: c.resolve(tokens.IPlayerPromptService),
+        playerPromptService: c.resolve(tokens.IPromptCoordinator),
         commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
@@ -103,8 +118,6 @@ export function registerTurnLifecycle(container) {
   // --- Turn Handler Resolver (Corrected Logic) ---
 
   r.singletonFactory(tokens.TurnHandlerResolver, (c) => {
-    // This corrected implementation resolves the singleton handlers from the container,
-    // avoiding duplication and respecting the singleton pattern.
     const createPlayerHandlerFactory = () =>
       c.resolve(tokens.PlayerTurnHandler);
     const createAiHandlerFactory = () => c.resolve(tokens.AITurnHandler);

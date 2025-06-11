@@ -5,7 +5,6 @@
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy_Interface */
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../interfaces/IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService */
 
 // JSDoc type definitions for structures expected from PlayerPromptService.prompt()
 /**
@@ -290,7 +289,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
    *
    * @param {ITurnContext} context - The ITurnContext instance.
    * @param {ILogger} logger - A valid logger instance for reporting issues.
-   * @returns {IPlayerPromptService} A valid player prompt service instance.
+   * @returns {IPromptCoordinator} A valid player prompt service instance.
    * @throws {Error} If the service cannot be retrieved from context or is invalid.
    * @private
    */

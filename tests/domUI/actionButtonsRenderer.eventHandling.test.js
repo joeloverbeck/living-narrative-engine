@@ -14,15 +14,21 @@ let mockContainer;
 let mockSendButton;
 let mockSpeechInput;
 
-// Helper to create test action objects
-const createValidTestAction = (id, name, command, description) => ({
-  id: id,
-  name: name || `Test Name for ${id}`,
-  command: command || `test_command_for_${id}`,
-  description: description || `Test description for ${id}.`,
+// Helper to create test action composite objects
+const createValidActionComposite = (
+  index,
+  actionId,
+  commandString,
+  description,
+  params = {}
+) => ({
+  index,
+  actionId: actionId || `core:action${index}`,
+  commandString: commandString || `Command ${index}`,
+  description: description || `Description for action ${index}.`,
+  params,
 });
 
-// Helper to create mock DOM elements
 /**
  *
  * @param initialText
@@ -31,6 +37,7 @@ function createButtonLikeMock(initialText = '') {
   const mock = {
     nodeType: 1, // Indicates this is an Element node
     textContent: initialText,
+    title: '',
     setAttribute: jest.fn(),
     getAttribute: jest.fn(),
     addEventListener: jest.fn(),
@@ -54,7 +61,7 @@ function createButtonLikeMock(initialText = '') {
       },
     },
     _clickHandlers: [],
-    _actionId: '',
+    _actionIndex: null,
     _disabled: false,
     get disabled() {
       return this._disabled;
@@ -82,20 +89,22 @@ function createButtonLikeMock(initialText = '') {
       this.classList._reset();
       this._clickHandlers = [];
       this.textContent = initialText;
-      this._actionId = '';
+      this._actionIndex = null;
       this._disabled = false;
       this.remove.mockClear();
       this.parentNode = null;
+      this.title = '';
       Object.keys(this)
         .filter((key) => key.startsWith('_attr_'))
         .forEach((key) => delete this[key]);
     },
   };
-  mock.getAttribute.mockImplementation((attr) =>
-    attr === 'data-action-id' ? mock._actionId : mock[`_attr_${attr}`]
-  );
+  mock.getAttribute.mockImplementation((attr) => {
+    if (attr === 'data-action-index') return mock._actionIndex;
+    return mock[`_attr_${attr}`];
+  });
   mock.setAttribute.mockImplementation((attr, value) => {
-    if (attr === 'data-action-id') mock._actionId = value;
+    if (attr === 'data-action-index') mock._actionIndex = value;
     mock[`_attr_${attr}`] = value;
   });
   mock.addEventListener.mockImplementation((event, handler) => {
@@ -192,37 +201,26 @@ beforeEach(() => {
       return [];
     }),
     querySelector: jest.fn((selector) => {
-      // Handle: button.action-button[data-action-id="..."] (without .selected)
-      let idMatch = selector.match(
-        /^button\.action-button\[data-action-id="([^"]+)"\]$/
+      // Handle: button.action-button(.selected)[data-action-index="..."]
+      const match = selector.match(
+        /button\.action-button(?<selected>\.selected)?\[data-action-index="(?<index>[^"]+)"\]/
       );
-      if (idMatch && idMatch[1]) {
-        const actionId = idMatch[1];
-        return mockContainer.children.find(
-          (btn) =>
-            btn &&
-            typeof btn.getAttribute === 'function' &&
-            btn.getAttribute('data-action-id') === actionId &&
-            btn.classList &&
-            btn.classList.contains('action-button')
-        );
-      }
-
-      // Handle: button.action-button.selected[data-action-id="..."] (with .selected - for click handler finding previous)
-      idMatch = selector.match(
-        /button\.action-button\.selected\[data-action-id="([^"]+)"/
-      );
-      if (idMatch && idMatch[1]) {
-        const actionId = idMatch[1];
-        return mockContainer.children.find(
-          (btn) =>
-            btn &&
-            typeof btn.getAttribute === 'function' &&
-            btn.getAttribute('data-action-id') === actionId &&
-            btn.classList &&
-            btn.classList.contains('action-button') &&
-            btn.classList.contains('selected')
-        );
+      if (match?.groups) {
+        const { selected, index } = match.groups;
+        return mockContainer.children.find((btn) => {
+          if (
+            !btn ||
+            !btn.classList ||
+            typeof btn.getAttribute !== 'function'
+          ) {
+            return false;
+          }
+          const hasIndex = btn.getAttribute('data-action-index') == index; // Use == for loose comparison as attribute is string
+          const hasSelected = selected
+            ? btn.classList.contains('selected')
+            : true;
+          return hasIndex && hasSelected;
+        });
       }
       return null;
     }),
@@ -408,39 +406,40 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should set availableActions and call refreshList with valid actions from event', async () => {
-      const validActions = [createValidTestAction('core:wait')];
+      const validComposites = [createValidActionComposite(1, 'core:wait')];
       const validEventObject = {
         type: eventType,
-        payload: { actorId: MOCK_ACTOR_ID, actions: validActions },
+        payload: { actorId: MOCK_ACTOR_ID, actions: validComposites },
       };
-      await capturedEventHandler(validEventObject); // SUT's #handleUpdateActions is async due to refreshList
-      expect(instance.availableActions).toEqual(validActions);
+      await capturedEventHandler(validEventObject);
+      expect(instance.availableActions).toEqual(validComposites);
       expect(instance.selectedAction).toBeNull();
       expect(refreshListSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should filter invalid actions, set valid ones, and call refreshList', async () => {
-      const validAction = createValidTestAction('core:go');
-      const invalidAction = {
-        id: 'bad',
-        name: null,
-        command: 'cmd',
+      const validComposite = createValidActionComposite(1, 'core:go');
+      const invalidComposite = {
+        index: 2,
+        actionId: null, // Invalid actionId
+        commandString: 'cmd',
         description: 'desc',
-      }; // missing name
-      const mixedActions = [validAction, invalidAction];
+        params: {},
+      };
+      const mixedComposites = [validComposite, invalidComposite];
       const eventObject = {
         type: eventType,
-        payload: { actorId: MOCK_ACTOR_ID, actions: mixedActions },
+        payload: { actorId: MOCK_ACTOR_ID, actions: mixedComposites },
       };
       await capturedEventHandler(eventObject);
-      expect(instance.availableActions).toEqual([validAction]); // Only valid action
+      expect(instance.availableActions).toEqual([validComposite]);
       expect(refreshListSpy).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Invalid action object found in payload:`,
-        { action: invalidAction }
+        `${CLASS_PREFIX} Invalid action composite found in payload:`,
+        { composite: invalidComposite }
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Received '${eventType}' with some invalid items. Only valid actions will be rendered.`
+        `${CLASS_PREFIX} Received '${eventType}' with some invalid items. Only valid composites will be rendered.`
       );
     });
 
@@ -463,49 +462,45 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('_getListItemsData should return instance.availableActions', () => {
-      const testActions = [createValidTestAction('act1')];
-      instance.availableActions = testActions;
-      expect(instance._getListItemsData()).toBe(testActions);
+      const testComposites = [createValidActionComposite(1)];
+      instance.availableActions = testComposites;
+      expect(instance._getListItemsData()).toBe(testComposites);
     });
 
-    it('_renderListItem should create a button for a valid action and attach click listener', () => {
-      const action = createValidTestAction(
+    it('_renderListItem should create a button for a valid composite and attach click listener', () => {
+      const composite = createValidActionComposite(
+        1,
         'core:action1',
-        'Action One',
-        'cmd1',
-        'Desc1'
+        'Do the thing',
+        'This is the description.'
       );
-      const button = instance._renderListItem(action, 0); // instance uses mockDomElementFactory
+      const button = instance._renderListItem(composite);
       expect(mockDomElementFactory.button).toHaveBeenCalledWith(
-        'cmd1',
+        'Do the thing',
         'action-button'
       );
       expect(button).toBeDefined();
-      expect(button.setAttribute).toHaveBeenCalledWith(
-        'title',
-        'Action One\n\nDescription:\nDesc1'
-      );
-      expect(button.setAttribute).toHaveBeenCalledWith(
-        'data-action-id',
-        'core:action1'
-      );
+      expect(button.title).toBe('This is the description.');
+      expect(button.setAttribute).toHaveBeenCalledWith('data-action-index', 1);
       expect(button.addEventListener).toHaveBeenCalledWith(
         'click',
         expect.any(Function)
       );
     });
 
-    it('_renderListItem should return null and log warning for invalid actions (e.g., missing command)', () => {
-      const invalidAction = {
-        id: 'no-cmd',
-        name: 'No Command Name',
+    it('_renderListItem should return null and log warning for invalid composites (e.g., missing commandString)', () => {
+      const invalidComposite = {
+        index: 1,
+        actionId: 'no-cmd',
+        // commandString is missing
         description: 'Valid Desc',
-      }; // Missing command
-      const button = instance._renderListItem(invalidAction, 0);
+        params: {},
+      };
+      const button = instance._renderListItem(invalidComposite);
       expect(button).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${CLASS_PREFIX} Skipping invalid action object (missing command):`,
-        { actionObject: invalidAction }
+        `${CLASS_PREFIX} Skipping invalid action composite in _renderListItem: `,
+        { actionComposite: invalidComposite }
       );
     });
 
@@ -514,46 +509,43 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('_onListRendered should log info and update send button state', () => {
-      // This test directly invokes _onListRendered.
-      // It assumes the list container (mockContainer) is already populated externally or by a previous render.
-      // We manually set up mockContainer to simulate this state.
-      instance.elements.listContainerElement = mockContainer; // Ensure instance uses our mockContainer
+      instance.elements.listContainerElement = mockContainer;
 
-      const action = createValidTestAction(
+      const composite = createValidActionComposite(
+        1,
         'act1',
-        'Action1Name',
         'act1Cmd',
         'Act1Desc'
       );
-      instance.availableActions = [action];
+      instance.availableActions = [composite];
 
       const mockActionButton = mockDomElementFactory.button(
-        action.command,
+        composite.commandString,
         'action-button'
       );
-      mockActionButton.setAttribute('data-action-id', action.id);
-      mockContainer.children = [mockActionButton]; // Manually place the button in the container for querySelector
+      mockActionButton.setAttribute(
+        'data-action-index',
+        composite.index.toString()
+      );
+      mockContainer.children = [mockActionButton];
 
       // Scenario 1: No action selected
       instance.selectedAction = null;
-      instance._onListRendered(instance.availableActions, mockContainer); // Pass available actions and container
+      instance._onListRendered(instance.availableActions, mockContainer);
       expect(mockSendButton.disabled).toBe(true);
       expect(mockContainer.classList.add).toHaveBeenCalledWith(
         'actions-fade-in'
       );
 
-      mockLogger.info.mockClear(); // Clear for next part of the test
+      mockLogger.debug.mockClear();
 
       // Scenario 2: Action is selected
-      instance.selectedAction = instance.availableActions[0]; // Select the action
-
-      // Clear any previous calls to classList.add on this specific mock button (e.g., from its creation)
+      instance.selectedAction = instance.availableActions[0];
       mockActionButton.classList.add.mockClear();
-
-      instance._onListRendered(instance.availableActions, mockContainer); // Call SUT method
+      instance._onListRendered(instance.availableActions, mockContainer);
 
       expect(mockSendButton.disabled).toBe(false);
-      expect(mockActionButton.classList.add).toHaveBeenCalledWith('selected'); // Check if selected class is added
+      expect(mockActionButton.classList.add).toHaveBeenCalledWith('selected');
       expect(mockContainer.classList.add).toHaveBeenCalledWith(
         'actions-fade-in'
       );
@@ -563,11 +555,11 @@ describe('ActionButtonsRenderer', () => {
   describe('Dispose Method', () => {
     it('should unsubscribe from VED event and perform cleanup', () => {
       const instanceToDispose = createInstance();
-      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(1); // From construction
+      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(1);
 
       instanceToDispose.dispose();
 
-      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1); // VED unsubscribe called
+      expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `${CLASS_PREFIX} Unsubscribing 1 VED event subscriptions.`
@@ -576,14 +568,9 @@ describe('ActionButtonsRenderer', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Disposing ActionButtonsRenderer.`
       );
-      // Check if listContainerElement content is cleared (mockContainer.removeChild should be called if it had children)
-      // This depends on whether refreshList was called and populated it before dispose.
-      // A simpler check might be that the logger message for clearing is present.
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Cleared listContainerElement content during dispose.`
       );
-      // Check if DOM listeners on sendButtonElement were removed (if it existed)
-      // This is handled by super.dispose() and relies on _addDomListener being used.
     });
   });
 });

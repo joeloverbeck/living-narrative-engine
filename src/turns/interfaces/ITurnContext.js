@@ -12,11 +12,6 @@
  * @description Defines the interface for a logging service.
  */
 /**
- * @typedef {import('./IHumanPlayerPromptService.js').IHumanPlayerPromptService} IPlayerPromptService
- * @description Defines the interface for a service that handles player prompts.
- * This might be generalized if AI or other entities need different input/output.
- */
-/**
  * @typedef {import('../../game/GameWorld.js').GameWorld} GameWorld
  * @description Represents the game world or a minimal interface to it.
  */
@@ -87,7 +82,7 @@ export class ITurnContext {
    * Retrieves the player prompt service for interacting with a human player.
    * Note: This might need generalization if non-player entities require analogous services.
    *
-   * @returns {IPlayerPromptService} The player prompt service instance.
+   * @returns {IPromptCoordinator} The player prompt service instance.
    * @throws {Error} If the service is not available in the current context.
    */
   getPlayerPromptService() {

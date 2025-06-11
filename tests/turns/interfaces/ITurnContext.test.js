@@ -36,7 +36,7 @@ class MockTurnContext extends ITurnContext {
     return {
       ask: jest.fn(),
       prompt: jest.fn(),
-      // Add any other methods defined in IPlayerPromptService
+      // Add any other methods defined in IPromptCoordinator
     };
   }
 

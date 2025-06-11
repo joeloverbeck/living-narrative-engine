@@ -1,6 +1,3 @@
-// src/turns/prompting/actionContextBuilder.js
-// ─────────────────────────────────────────────────────────────────────────────
-
 /**
  * @file Defines a builder responsible for creating an ActionContext.
  * @module src/turns/prompting/ActionContextBuilder
@@ -15,6 +12,7 @@
 /** @typedef {import('../../actions/actionTypes.js').ActionContext} ActionContext */
 
 import { PromptError } from '../../errors/promptError.js';
+import { validateDependency } from '../../utils/validationUtils.js';
 
 /**
  * @typedef {object} ActionContextBuilderDependencies
@@ -46,30 +44,19 @@ class ActionContextBuilder {
   #logger;
 
   /**
-   * Simple runtime-dependency guard used during construction.
-   * This is a temporary solution until a centralized dependency validation utility is available.
-   * @private
-   * @param {*} dependency - The dependency to check.
-   * @param {string} name - The name of the dependency for error messages.
-   * @throws {Error} If the dependency is missing.
-   */
-  _validateDependency(dependency, name) {
-    if (!dependency) {
-      throw new Error(
-        `ActionContextBuilder: Missing required dependency: ${name}`
-      );
-    }
-  }
-
-  /**
    * Constructs an instance of ActionContextBuilder.
    * @param {ActionContextBuilderDependencies} deps - The dependencies required by the builder.
    */
   constructor({ worldContext, entityManager, gameDataRepository, logger }) {
-    this._validateDependency(worldContext, 'worldContext');
-    this._validateDependency(entityManager, 'entityManager');
-    this._validateDependency(gameDataRepository, 'gameDataRepository');
-    this._validateDependency(logger, 'logger');
+    // Validate dependencies using the centralized utility.
+    validateDependency(logger, 'logger', console, {
+      requiredMethods: ['info', 'error', 'debug', 'warn'],
+    });
+    validateDependency(worldContext, 'worldContext', logger, {
+      requiredMethods: ['getLocationOfEntity'],
+    });
+    validateDependency(entityManager, 'entityManager', logger);
+    validateDependency(gameDataRepository, 'gameDataRepository', logger);
 
     this.#worldContext = worldContext;
     this.#entityManager = entityManager;
