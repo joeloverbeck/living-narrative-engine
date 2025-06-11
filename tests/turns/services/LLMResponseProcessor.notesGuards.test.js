@@ -38,7 +38,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     const notesFromLlm = ['New note', 'Another new note'];
 
     const validJson = {
-      chosenActionId: 99,
+      chosenIndex: 99,
       speech: 'hello',
       thoughts: 'thinking...',
       notes: notesFromLlm,
@@ -71,7 +71,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
   test('When "notes" key is absent, extractedData.notes is undefined', async () => {
     const actorId = 'actor-456';
     const noNotesJson = {
-      chosenActionId: 42,
+      chosenIndex: 42,
       speech: '',
       thoughts: 'no notes here',
       // "notes" key is absent
@@ -100,7 +100,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     });
 
     const invalidNotesJson = {
-      chosenActionId: 7,
+      chosenIndex: 7,
       speech: '',
       thoughts: 'thoughtless',
       notes: 'not-an-array',

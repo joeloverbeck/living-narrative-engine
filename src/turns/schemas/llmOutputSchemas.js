@@ -11,31 +11,42 @@
 // -----------------------------------------------------------------------------
 
 /**
- * The unique identifier used to register and retrieve the schema
- * with the AjvSchemaValidator.
- *
- * @type {string}
+ * v4 schema – chosenIndex is the only required selector now.
+ * Notes/speech/thoughts are still allowed so we don’t lose data,
+ * but only thoughts is required by the prompt contract.
  */
 export const LLM_TURN_ACTION_RESPONSE_SCHEMA_ID =
   'llmTurnActionResponseSchema/v4';
 
-/**
- * JSON Schema (v3) for the LLM's response.
- */
 export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
-  $id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
+  $id: 'http://yourdomain.com/schemas/llmTurnActionResponse.schema.json',
   $schema: 'http://json-schema.org/draft-07/schema#',
   type: 'object',
+  // No other properties allowed at the root level
+  additionalProperties: false,
   properties: {
-    chosenActionId: { type: 'integer', minimum: 1 },
-    speech: { type: 'string' },
-    thoughts: { type: 'string' },
+    // Index of the chosen action (1-based)
+    chosenIndex: {
+      type: 'integer',
+      minimum: 1,
+    },
+    // Dialogue or speech content
+    speech: {
+      type: 'string',
+    },
+    // Inner thoughts or monologue
+    thoughts: {
+      type: 'string',
+    },
+    // Optional notes or annotations; each entry must be a non-empty string
     notes: {
       type: 'array',
-      minItems: 0,
-      items: { type: 'string', minLength: 1 },
+      items: {
+        type: 'string',
+        minLength: 1,
+      },
     },
   },
-  required: ['chosenActionId', 'speech', 'thoughts'],
-  additionalProperties: false,
+  // These fields are mandatory
+  required: ['chosenIndex', 'speech', 'thoughts'],
 };

@@ -141,7 +141,7 @@ describe('End-to-End Notes Persistence Flow', () => {
 
     // simulate LLM response writing a note
     const response = {
-      chosenActionId: 1,
+      chosenIndex: 1,
       speech: '',
       thoughts: 'thinking',
       notes: ['Remember the password'],

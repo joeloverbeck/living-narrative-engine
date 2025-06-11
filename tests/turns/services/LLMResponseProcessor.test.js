@@ -55,9 +55,9 @@ describe('LLMResponseProcessor', () => {
 
   describe('processResponse', () => {
     describe('Valid Inputs', () => {
-      test('processes valid JSON with chosenActionId, speech, thoughts, and notes', async () => {
+      test('processes valid JSON with chosenIndex, speech, thoughts, and notes', async () => {
         const payload = {
-          chosenActionId: 2,
+          chosenIndex: 2,
           speech: 'Hello there',
           thoughts: 'Thinking',
           notes: ['NoteA', 'NoteB'],
@@ -93,7 +93,7 @@ describe('LLMResponseProcessor', () => {
       });
 
       test('processes valid JSON with empty speech and no notes', async () => {
-        const payload = { chosenActionId: 5, speech: '', thoughts: 'Ready' };
+        const payload = { chosenIndex: 5, speech: '', thoughts: 'Ready' };
         const llmResponse = JSON.stringify(payload);
         schemaValidatorMock.validate.mockReturnValue({
           isValid: true,
@@ -110,9 +110,9 @@ describe('LLMResponseProcessor', () => {
         expect(result.extractedData.notes).toBeUndefined();
       });
 
-      test('maps chosenActionId to string and sets empty commandString', async () => {
+      test('maps chosenIndex to string and sets empty commandString', async () => {
         const payload = {
-          chosenActionId: 7,
+          chosenIndex: 7,
           speech: 'Go',
           thoughts: 'Let’s go',
         };
@@ -154,11 +154,11 @@ describe('LLMResponseProcessor', () => {
     });
 
     describe('Schema Validation Failures', () => {
-      test('throws if chosenActionId missing', async () => {
+      test('throws if chosenIndex missing', async () => {
         const payload = { speech: 'X', thoughts: 'Y' };
         const llmResponse = JSON.stringify(payload);
         const mockErrors = [
-          { instancePath: '', message: 'missing chosenActionId' },
+          { instancePath: '', message: 'missing chosenIndex' },
         ];
         schemaValidatorMock.validate.mockReturnValue({
           isValid: false,
@@ -175,7 +175,7 @@ describe('LLMResponseProcessor', () => {
       });
 
       test('throws if speech missing', async () => {
-        const payload = { chosenActionId: 1, thoughts: 'Y' };
+        const payload = { chosenIndex: 1, thoughts: 'Y' };
         const llmResponse = JSON.stringify(payload);
         const mockErrors = [
           { instancePath: '/speech', message: 'missing speech' },
@@ -194,7 +194,7 @@ describe('LLMResponseProcessor', () => {
       });
 
       test('throws if thoughts missing', async () => {
-        const payload = { chosenActionId: 1, speech: 'X' };
+        const payload = { chosenIndex: 1, speech: 'X' };
         const llmResponse = JSON.stringify(payload);
         const mockErrors = [
           { instancePath: '/thoughts', message: 'missing thoughts' },

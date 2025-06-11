@@ -123,7 +123,7 @@ describe('End-to-End Short-Term Memory Flow', () => {
     expect(prompt1.includes('Your most recent thoughts')).toBe(false);
 
     const mockResponse = {
-      chosenActionId: 1,
+      chosenIndex: 1,
       speech: 'Hello',
       thoughts: 'FirstThought',
     };

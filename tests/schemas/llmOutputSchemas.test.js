@@ -2,7 +2,7 @@
 // -----------------------------------------------------------------------------
 // Contract tests for LLM_TURN_ACTION_RESPONSE_SCHEMA.
 // Ensures the schema correctly enforces the presence and type of the `thoughts` field
-// and the `chosenActionId` field of the LLM’s output.
+// and the `chosenIndex` field of the LLM’s output.
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
@@ -29,7 +29,7 @@ beforeAll(() => {
 describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
   test('fails validation when `thoughts` field is missing', () => {
     const data = {
-      chosenActionId: 1,
+      chosenIndex: 1,
       speech: 'z',
       // `thoughts` is omitted
     };
@@ -47,7 +47,7 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
 
   test('fails validation when `thoughts` is not a string', () => {
     const data = {
-      chosenActionId: 1,
+      chosenIndex: 1,
       speech: 'z',
       thoughts: 123, // invalid type
     };
@@ -63,7 +63,7 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
 
   test('passes validation when `thoughts` is a valid string', () => {
     const data = {
-      chosenActionId: 1,
+      chosenIndex: 1,
       speech: 'z',
       thoughts: 'Internal monologue',
     };

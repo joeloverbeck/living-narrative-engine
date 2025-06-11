@@ -34,7 +34,7 @@ describe('LLMResponseProcessor', () => {
     const schemaValidator = makeSchemaValidator(true);
     const processor = new LLMResponseProcessor({ schemaValidator });
     const llmJsonResponse = JSON.stringify({
-      chosenActionId: 4,
+      chosenIndex: 4,
       speech: 'Hello Bob!',
       thoughts: 'I should greet Bob.',
       notes: ['Note 1', 'Note 2'],
@@ -67,11 +67,11 @@ describe('LLMResponseProcessor', () => {
     expect(logger.error).not.toHaveBeenCalled();
   });
 
-  test('should map chosenActionId to string and set empty commandString', async () => {
+  test('should map chosenIndex to string and set empty commandString', async () => {
     const schemaValidator = makeSchemaValidator(true);
     const processor = new LLMResponseProcessor({ schemaValidator });
     const llmJsonResponse = JSON.stringify({
-      chosenActionId: 7,
+      chosenIndex: 7,
       speech: 'Just waiting.',
       thoughts: 'Time to wait.',
     });
@@ -95,7 +95,7 @@ describe('LLMResponseProcessor', () => {
     const processor = new LLMResponseProcessor({ schemaValidator });
     const invalidJson = JSON.stringify({
       speech: 'Invalid structure',
-      thoughts: 'Missing chosenActionId',
+      thoughts: 'Missing chosenIndex',
     });
     const actorId = 'actor-123';
 
@@ -147,7 +147,7 @@ describe('LLMResponseProcessor', () => {
     const processor = new LLMResponseProcessor({ schemaValidator });
     const actorId = 'actor-123';
     const llmJsonResponse = JSON.stringify({
-      chosenActionId: 3,
+      chosenIndex: 3,
       speech: '',
       thoughts: 'No goals here.',
       notes: [],

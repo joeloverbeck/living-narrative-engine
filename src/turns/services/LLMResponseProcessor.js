@@ -1,181 +1,116 @@
-// --- FILE START: src/turns/services/LLMResponseProcessor.js ---
-
-/** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction}   ITurnAction_Imported */
-/** @typedef {import('../../interfaces/coreServices.js').ILogger}           ILogger */
-/** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator}  ISchemaValidator */
-/** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor_Interface_Typedef */
-/** @typedef {import('../../utils/llmUtils.js').JsonProcessingError}        JsonProcessingError */
-
+/* eslint-env es2022 */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { parseAndRepairJson } from '../../utils/llmUtils.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
 
 /**
- * @typedef {object} LlmProcessingResult
- * @property {boolean} success - Indicates if processing was successful.
- * @property {ProcessedTurnAction} action - The final, usable action. If success is false, this will be a fallback action.
- * @property {object} [extractedData] - Raw data extracted from the LLM response for side-effects. Only present if success is true.
- * @property {string} [extractedData.thoughts] - The 'thoughts' string, if present.
- * @property {Array<string>} [extractedData.notes] - The 'notes' array, if present.
+ * Custom error for LLM response processing failures.
  */
-
-/**
- * @typedef {object} LlmProcessingFailureInfo
- * @property {string} errorContext - short identifier of the error type
- * @property {string} [rawResponse] - raw LLM response string, if available
- * @property {string} [cleanedResponse] - cleaned JSON string before parsing
- * @property {object} [parsedResponse] - parsed JSON object attempt
- * @property {Array<object>} [validationErrors] - validation errors from schema
- * @property {string} [parseErrorStage] - stage at which parse error occurred
- */
-
-/**
- * @typedef {object} ProcessedTurnAction
- * @property {string} actionDefinitionId - system identifier for the chosen action
- * @property {string} commandString - command string for the game parser
- * @property {string} speech - character’s spoken words
- * @property {LlmProcessingFailureInfo} [llmProcessingFailureInfo] - detailed failure info if processing failed
- * @property {object} [resolvedParameters] - any parameters resolved during processing
- */
-
-/**
- * Thrown by LLMResponseProcessor when LLM output fails parsing or validation.
- * Contains detailed diagnostic information.
- */
-export class LLMProcessingError extends Error {
+class LLMProcessingError extends Error {
   /**
-   * Error type thrown when LLM output cannot be parsed or validated.
-   *
-   * @param {string} message - The error message.
-   * @param {object} details - The diagnostic details.
+   * @param {string} message
+   * @param {object} [details]
    */
   constructor(message, details) {
     super(message);
     this.name = 'LLMProcessingError';
-    this.details = details;
+    if (details) this.details = details;
   }
 }
 
 /**
- * Concrete implementation of {@link ILLMResponseProcessor}.
+ * @implements {ILLMResponseProcessor}
  */
 export class LLMResponseProcessor extends ILLMResponseProcessor {
   /** @type {ISchemaValidator} */
   #schemaValidator;
 
   /**
-   * Constructs a new LLMResponseProcessor.
-   *
-   * @param {{ schemaValidator: ISchemaValidator }} deps - dependencies object
-   * @param {ISchemaValidator} deps.schemaValidator - validator for LLM response schemas
+   * @param {{ schemaValidator: ISchemaValidator }} options
    */
   constructor({ schemaValidator }) {
     super();
-
     if (
       !schemaValidator ||
       typeof schemaValidator.validate !== 'function' ||
       typeof schemaValidator.isSchemaLoaded !== 'function'
     ) {
-      throw new Error(
-        "LLMResponseProcessor: Constructor requires a valid ISchemaValidator instance with 'validate' and 'isSchemaLoaded' methods."
-      );
+      throw new Error('LLMResponseProcessor needs a valid ISchemaValidator');
     }
-
     this.#schemaValidator = schemaValidator;
-
-    // Unit tests may spy on this warning:
+    // Ensure the required schema is loaded
     if (
       !this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_RESPONSE_SCHEMA_ID)
     ) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `LLMResponseProcessor: Schema with ID '${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID}' is not loaded in the provided schema validator. Validation will fail.`
+      throw new Error(
+        `Schema ${LLM_TURN_ACTION_RESPONSE_SCHEMA_ID} not loaded`
       );
     }
   }
 
   /**
-   * Parses (with repair), validates, and transforms the LLM’s JSON response
-   * string into a safe {@link ProcessedTurnAction}. Throws on failure.
+   * Process a raw LLM JSON response into structured action data.
    *
-   * @override
-   * @param {string} llmJsonResponse - raw JSON response string from LLM
-   * @param {string} actorId - ID of the actor for which to process the response
-   * @param {ILogger} logger - logger instance for logging processing steps
-   * @returns {Promise<{action: ProcessedTurnAction, extractedData: object}>} promise resolving to the final result object
-   * @throws {LLMProcessingError} if parsing, validation, or transformation fails.
+   * @param {string} llmJsonResponse
+   * @param {string} actorId
+   * @param {ILogger} logger
+   * @returns {Promise<{ success: boolean; action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: string[] } }>}
    */
   async processResponse(llmJsonResponse, actorId, logger) {
-    let parsedJson;
-    const originalInput = llmJsonResponse;
+    // Ensure input is a string
+    if (typeof llmJsonResponse !== 'string') {
+      throw new LLMProcessingError(
+        `LLM response must be a JSON string for actor ${actorId}.`
+      );
+    }
 
-    // 1. Parse & repair
+    // Clean + parse (with repair)
+    let parsed;
     try {
-      parsedJson = await parseAndRepairJson(llmJsonResponse, logger);
-    } catch (e) {
-      const errorContext =
-        e.name === 'TypeError' ? 'invalid_input_type' : 'json_parse_error';
-      const message =
-        errorContext === 'invalid_input_type'
-          ? 'Invalid input type for LLM JSON response'
-          : 'Failed to parse/repair LLM JSON response';
+      parsed = await parseAndRepairJson(llmJsonResponse, logger);
+    } catch (err) {
       logger.error(
-        `LLMResponseProcessor: ${message} for actor ${actorId}. Error: ${e.message}.`,
-        { rawResponse: originalInput, actorId, errorName: e.name }
+        `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`,
+        { rawResponse: llmJsonResponse }
       );
-      throw new LLMProcessingError(message, {
-        errorContext,
-        rawLlmResponse: originalInput,
-      });
+      throw new LLMProcessingError(
+        `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`
+      );
     }
 
-    // 1a. Ignore deprecated 'goals' property
-    if (
-      parsedJson &&
-      Object.prototype.hasOwnProperty.call(parsedJson, 'goals')
-    ) {
-      logger.warn(
-        `LLMResponseProcessor: LLM for actor ${actorId} attempted to return goals; ignoring.`
-      );
-      // discard goals
-    }
-
-    // 2. Validate against consolidated schema
+    // Schema-validate
     const validationResult = this.#schemaValidator.validate(
       LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
-      parsedJson
+      parsed
     );
-
-    if (validationResult.isValid) {
-      const { chosenActionId, speech, thoughts, notes } = parsedJson;
-      const finalAction = {
-        actionDefinitionId: String(chosenActionId),
-        commandString: '',
-        speech,
-      };
-      logger.debug(
-        `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: ${chosenActionId}`
+    const { isValid, errors } = validationResult;
+    if (!isValid) {
+      logger.error(
+        `LLMResponseProcessor: schema invalid for actor ${actorId}`,
+        { errors, parsed }
       );
-      return {
-        success: true,
-        action: finalAction,
-        extractedData: { thoughts, notes },
-      };
+      throw new LLMProcessingError(
+        `LLM response JSON schema validation failed for actor ${actorId}.`,
+        { validationErrors: errors }
+      );
     }
 
-    // 3. Schema validation failed
-    const validationErrorMsg = `LLM response JSON schema validation failed for actor ${actorId}.`;
-    logger.error(`LLMResponseProcessor: ${validationErrorMsg}`, {
-      validationErrors: validationResult.errors,
-      parsedJson,
-      actorId,
-    });
-    throw new LLMProcessingError(validationErrorMsg, {
-      errorContext: 'json_schema_validation_error',
-      rawLlmResponse: originalInput,
-      parsedJsonAttempt: parsedJson,
-      validationErrors: validationResult.errors,
-    });
+    // Extract the required data
+    const { chosenIndex, speech, thoughts, notes } = parsed;
+    logger.debug(
+      `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: ${chosenIndex}`
+    );
+
+    const finalAction = { chosenIndex, speech };
+    return {
+      success: true,
+      action: finalAction,
+      extractedData: {
+        thoughts,
+        ...(notes !== undefined ? { notes } : {}),
+      },
+    };
   }
 }

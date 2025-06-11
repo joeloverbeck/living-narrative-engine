@@ -4,15 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Redid PromptBuilder.">
+    <list default="true" id="7588f72d-b3d0-4a2c-ae37-0ff75ffca84e" name="Changes" comment="Made the assemblers use a common utility.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/goalsSectionAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/goalsSectionAssembler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/indexedChoicesAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/indexedChoicesAssembler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/notesSectionAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/notesSectionAssembler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/perceptionLogAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/perceptionLogAssembler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/thoughtsSectionAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/thoughtsSectionAssembler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/promptAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ILLMResponseProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ILLMResponseProcessor.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/schemas/llmOutputSchemas.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/schemas/llmOutputSchemas.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/schemas/PromptOutputContract.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/PromptOutputContract.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/schemas/llmOutputSchemas.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/llmOutputSchemas.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/schemas/llmProviderTurnAction.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/llmProviderTurnAction.schema.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.notesGuards.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.notesGuards.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,6 +60,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Jest.PromptAssembly.test.js.executor": "Run",
+    "Jest.Tests in tests\\.executor": "Run",
     "Jest.actionButtonsRenderer.test.js.executor": "Run",
     "Jest.assemblerRegistry.test.js.executor": "Run",
     "Jest.promptAssembler.test.js.executor": "Run",
@@ -79,7 +84,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.promptBuilder.test.js">
+  <component name="RunManager" selected="Jest.Tests in tests\">
     <configuration name="PromptAssembly.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -89,6 +94,15 @@
       <test-file value="$PROJECT_DIR$/tests/prompting/PromptAssembly.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="DIRECTORY" />
+      <test-directory value="$PROJECT_DIR$/tests" />
+      <method v="2" />
+    </configuration>
     <configuration name="assemblerRegistry.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -96,15 +110,6 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/prompting/assemblerRegistry.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="promptAssembler.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/prompting/promptAssembler.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="promptBuilder.configLoading.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -127,11 +132,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.Tests in tests\" />
         <item itemvalue="Jest.promptBuilder.test.js" />
         <item itemvalue="Jest.assemblerRegistry.test.js" />
         <item itemvalue="Jest.PromptAssembly.test.js" />
         <item itemvalue="Jest.promptBuilder.configLoading.test.js" />
-        <item itemvalue="Jest.promptAssembler.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -149,7 +154,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749651288005</updated>
-      <workItem from="1749651289753" duration="14054000" />
+      <workItem from="1749651289753" duration="16230000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -215,7 +220,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749664609651</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Made the assemblers use a common utility.">
+      <option name="closed" value="true" />
+      <created>1749665744907</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1749665744907</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -230,6 +243,7 @@
     <MESSAGE value="Implemented elementConditionEvaluator." />
     <MESSAGE value="Implemented assembler registry." />
     <MESSAGE value="Redid PromptBuilder." />
-    <option name="LAST_COMMIT_MESSAGE" value="Redid PromptBuilder." />
+    <MESSAGE value="Made the assemblers use a common utility." />
+    <option name="LAST_COMMIT_MESSAGE" value="Made the assemblers use a common utility." />
   </component>
 </project>

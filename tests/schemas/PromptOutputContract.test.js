@@ -28,7 +28,7 @@ beforeAll(() => {
 describe('PromptOutputContract', () => {
   test('fails validation when `thoughts` field is missing', () => {
     const payload = {
-      chosenActionId: 1,
+      chosenIndex: 1,
       speech: '',
     };
 
@@ -39,7 +39,7 @@ describe('PromptOutputContract', () => {
 
   test('fails validation when `thoughts` is not a string', () => {
     const payload = {
-      chosenActionId: 1,
+      chosenIndex: 1,
       speech: '',
       thoughts: 123,
     };
@@ -51,7 +51,7 @@ describe('PromptOutputContract', () => {
 
   test('passes validation for a correct payload', () => {
     const payload = {
-      chosenActionId: 1,
+      chosenIndex: 1,
       speech: '',
       thoughts: 'Thinking about next move.',
     };
