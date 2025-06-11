@@ -10,26 +10,26 @@
  * @typedef {import('./assembling/notesSectionAssembler.js').default} NotesSectionAssembler
  * @typedef {import('./assembling/goalsSectionAssembler.js').default} GoalsSectionAssembler
  * @typedef {object} PromptElementCondition
- * @property {string} promptDataFlag - The name of the flag in promptData that this condition checks.
- * @property {any} [expectedValue] - Optional specific value that promptData[promptDataFlag] must equal for the condition to pass.
+ * @property {string} promptDataFlag
+ * @property {any} [expectedValue]
  * @typedef {object} PromptElement
- * @property {string} key - The unique identifier for this prompt element in the configuration.
- * @property {string} [prefix] - Optional string to prepend before the element content.
- * @property {string} [suffix] - Optional string to append after the element content.
- * @property {PromptElementCondition} [condition] - Condition object that determines whether to include this element.
+ * @property {string} key
+ * @property {string} [prefix]
+ * @property {string} [suffix]
+ * @property {PromptElementCondition} [condition]
  * @typedef {object} PerceptionLogEntry
- * @property {string} content - The textual content of the perception log entry.
- * @property {string} [role] - The role associated with this log entry (e.g., 'user', 'system').
- * @property {string} [timestamp] - ISO timestamp indicating when this perception log entry was recorded.
+ * @property {string} content
+ * @property {string} [role]
+ * @property {string} [timestamp]
  * @typedef {object} PromptData
- * @property {Array<PerceptionLogEntry>} [perceptionLogArray] - Array of perception log entries to include in the prompt.
- * @property {string[]} [thoughtsArray] - Array of thought strings to include in the prompt.
- * @property {Array<{ text: string; timestamp: string }>} [notesArray] - Array of note objects, each with 'text' and 'timestamp'.
- * @property {Array<{ text: string; timestamp: string }>} [goalsArray] - Array of goal objects, each with 'text' and 'timestamp'.
- * @property {boolean} [someConditionFlag] - Boolean flag that can be used to conditionally include elements.
- * @property {string} [characterSheetContent] - The character sheet content to insert into the prompt.
- * @property {boolean} [enableReasoning] - Boolean flag to indicate whether to include the reasoning section.
- * @property {Array<{ index: number; description: string }>} [indexedChoicesArray] - Array of indexed choice composites.
+ * @property {Array<PerceptionLogEntry>} [perceptionLogArray]
+ * @property {string[]} [thoughtsArray]
+ * @property {Array<{ text: string; timestamp: string }>} [notesArray]
+ * @property {Array<{ text: string; timestamp: string }>} [goalsArray]
+ * @property {boolean} [someConditionFlag]
+ * @property {string} [characterSheetContent]
+ * @property {boolean} [enableReasoning]
+ * @property {Array<{ index: number; description: string }>} [indexedChoicesArray]
  */
 
 import { IPromptBuilder } from '../interfaces/IPromptBuilder.js';
@@ -39,6 +39,7 @@ import { ThoughtsSectionAssembler } from './assembling/thoughtsSectionAssembler.
 import { NotesSectionAssembler } from './assembling/notesSectionAssembler.js';
 import { GoalsSectionAssembler } from './assembling/goalsSectionAssembler.js';
 import { IndexedChoicesAssembler } from './assembling/indexedChoicesAssembler.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 // Special keys
 const PERCEPTION_LOG_WRAPPER_KEY = 'perception_log_wrapper';
@@ -46,6 +47,10 @@ const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';
 const NOTES_WRAPPER_KEY = 'notes_wrapper';
 const GOALS_WRAPPER_KEY = 'goals_wrapper';
 const INDEXED_CHOICES_KEY = 'indexed_choices';
+
+// Initialization message
+const INIT_MSG =
+  'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, Assemblers (standard, perception-log, thoughts, notes, goals), and IndexedChoicesAssembler.';
 
 export class PromptBuilder extends IPromptBuilder {
   #logger;
@@ -59,16 +64,16 @@ export class PromptBuilder extends IPromptBuilder {
   #indexedChoicesAssembler;
 
   /**
-   * @param {object} dependencies - An object containing all required dependencies.
-   * @param {ILogger} [dependencies.logger] - Optional logger; defaults to console if not provided.
-   * @param {LLMConfigService} dependencies.llmConfigService - Service providing LLM configurations for building prompts.
-   * @param {PlaceholderResolver} dependencies.placeholderResolver - Utility to resolve placeholders in prompt templates.
-   * @param {StandardElementAssembler} dependencies.standardElementAssembler - Assembler for standard prompt elements.
-   * @param {PerceptionLogAssembler} dependencies.perceptionLogAssembler - Assembler for perception log sections.
-   * @param {ThoughtsSectionAssembler} dependencies.thoughtsSectionAssembler - Assembler for thoughts section (defaults if omitted).
-   * @param {NotesSectionAssembler} dependencies.notesSectionAssembler - Assembler for notes section.
-   * @param {GoalsSectionAssembler} dependencies.goalsSectionAssembler - Assembler for goals section (defaults if omitted).
-   * @param {IndexedChoicesAssembler} dependencies.indexedChoicesAssembler - Assembler for indexed choice lists.
+   * @param {object} dependencies
+   * @param {ILogger} [dependencies.logger]
+   * @param {LLMConfigService} dependencies.llmConfigService
+   * @param {PlaceholderResolver} dependencies.placeholderResolver
+   * @param {StandardElementAssembler} dependencies.standardElementAssembler
+   * @param {PerceptionLogAssembler} dependencies.perceptionLogAssembler
+   * @param {ThoughtsSectionAssembler} [dependencies.thoughtsSectionAssembler]
+   * @param {NotesSectionAssembler} dependencies.notesSectionAssembler
+   * @param {GoalsSectionAssembler} [dependencies.goalsSectionAssembler]
+   * @param {IndexedChoicesAssembler} dependencies.indexedChoicesAssembler
    */
   constructor({
     logger = console,
@@ -82,95 +87,151 @@ export class PromptBuilder extends IPromptBuilder {
     indexedChoicesAssembler,
   }) {
     super();
+
+    // Use the provided or console logger
     this.#logger = logger;
 
+    // Validate required dependencies with custom error messages
     if (!llmConfigService) {
-      const errorMsg =
-        'PromptBuilder: LLMConfigService is a required dependency.';
-      this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
+      this.#logger.error(
+        'PromptBuilder: LLMConfigService is a required dependency.'
+      );
+      throw new Error(
+        'PromptBuilder: LLMConfigService is a required dependency.'
+      );
     }
+    validateDependency(llmConfigService, 'LLMConfigService', this.#logger, {
+      requiredMethods: ['getConfig'],
+    });
     this.#llmConfigService = llmConfigService;
 
     if (!placeholderResolver) {
-      const errorMsg =
-        'PromptBuilder: PlaceholderResolver is a required dependency.';
-      this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
+      this.#logger.error(
+        'PromptBuilder: PlaceholderResolver is a required dependency.'
+      );
+      throw new Error(
+        'PromptBuilder: PlaceholderResolver is a required dependency.'
+      );
     }
+    validateDependency(
+      placeholderResolver,
+      'PlaceholderResolver',
+      this.#logger
+    );
     this.#placeholderResolver = placeholderResolver;
 
     if (!standardElementAssembler) {
-      const errorMsg =
-        'PromptBuilder: StandardElementAssembler is a required dependency.';
-      this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
+      this.#logger.error(
+        'PromptBuilder: StandardElementAssembler is a required dependency.'
+      );
+      throw new Error(
+        'PromptBuilder: StandardElementAssembler is a required dependency.'
+      );
     }
+    validateDependency(
+      standardElementAssembler,
+      'StandardElementAssembler',
+      this.#logger,
+      { requiredMethods: ['assemble'] }
+    );
     this.#standardElementAssembler = standardElementAssembler;
 
     if (!perceptionLogAssembler) {
-      const errorMsg =
-        'PromptBuilder: PerceptionLogAssembler is a required dependency.';
-      this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
+      this.#logger.error(
+        'PromptBuilder: PerceptionLogAssembler is a required dependency.'
+      );
+      throw new Error(
+        'PromptBuilder: PerceptionLogAssembler is a required dependency.'
+      );
     }
+    validateDependency(
+      perceptionLogAssembler,
+      'PerceptionLogAssembler',
+      this.#logger,
+      { requiredMethods: ['assemble'] }
+    );
     this.#perceptionLogAssembler = perceptionLogAssembler;
 
-    if (!thoughtsSectionAssembler) {
+    if (!notesSectionAssembler) {
+      this.#logger.error(
+        'PromptBuilder: NotesSectionAssembler is a required dependency.'
+      );
+      throw new Error(
+        'PromptBuilder: NotesSectionAssembler is a required dependency.'
+      );
+    }
+    validateDependency(
+      notesSectionAssembler,
+      'NotesSectionAssembler',
+      this.#logger,
+      { requiredMethods: ['assemble'] }
+    );
+    this.#notesSectionAssembler = notesSectionAssembler;
+
+    // Optional: ThoughtsSectionAssembler
+    if (thoughtsSectionAssembler) {
+      validateDependency(
+        thoughtsSectionAssembler,
+        'ThoughtsSectionAssembler',
+        this.#logger,
+        { requiredMethods: ['assemble'] }
+      );
+      this.#thoughtsSectionAssembler = thoughtsSectionAssembler;
+    } else {
       this.#logger.warn(
         'PromptBuilder: ThoughtsSectionAssembler not provided; instantiating default.'
       );
       this.#thoughtsSectionAssembler = new ThoughtsSectionAssembler({
         logger: this.#logger,
       });
+    }
+
+    // Optional: GoalsSectionAssembler
+    if (goalsSectionAssembler) {
+      validateDependency(
+        goalsSectionAssembler,
+        'GoalsSectionAssembler',
+        this.#logger,
+        { requiredMethods: ['assemble'] }
+      );
+      this.#goalsSectionAssembler = goalsSectionAssembler;
     } else {
-      this.#thoughtsSectionAssembler = thoughtsSectionAssembler;
-    }
-
-    if (!notesSectionAssembler) {
-      const errorMsg =
-        'PromptBuilder: NotesSectionAssembler is a required dependency.';
-      this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-    this.#notesSectionAssembler = notesSectionAssembler;
-
-    if (!goalsSectionAssembler) {
       this.#logger.warn(
         'PromptBuilder: GoalsSectionAssembler not provided; instantiating default.'
       );
       this.#goalsSectionAssembler = new GoalsSectionAssembler({
         logger: this.#logger,
       });
-    } else {
-      this.#goalsSectionAssembler = goalsSectionAssembler;
     }
 
     if (!indexedChoicesAssembler) {
-      const errorMsg =
-        'PromptBuilder: IndexedChoicesAssembler is a required dependency.';
-      this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
+      this.#logger.error(
+        'PromptBuilder: IndexedChoicesAssembler is a required dependency.'
+      );
+      throw new Error(
+        'PromptBuilder: IndexedChoicesAssembler is a required dependency.'
+      );
     }
+    validateDependency(
+      indexedChoicesAssembler,
+      'IndexedChoicesAssembler',
+      this.#logger,
+      { requiredMethods: ['assemble'] }
+    );
     this.#indexedChoicesAssembler = indexedChoicesAssembler;
 
-    this.#logger.debug(
-      'PromptBuilder initialized with LLMConfigService, PlaceholderResolver, Assemblers (standard, perception-log, thoughts, notes, goals), and IndexedChoicesAssembler.'
-    );
+    // Final initialization log
+    this.#logger.debug(INIT_MSG);
   }
 
+  // (rest of class unchanged: #isElementConditionMet, build, etc.)
   /**
    * @private
-   * @description Checks if a prompt element's condition is satisfied based on the provided promptData.
-   * @param {PromptElementCondition | undefined} condition - The condition object defining which flag to check and its expected value.
-   * @param {PromptData} promptData - The data object containing flags and arrays used to build the prompt.
-   * @returns {boolean} True if the condition is met (or if no condition is provided); false otherwise.
    */
   #isElementConditionMet(condition, promptData) {
     if (!condition) {
       return true;
     }
-
     if (
       typeof condition.promptDataFlag !== 'string' ||
       !condition.promptDataFlag.trim()
@@ -181,17 +242,14 @@ export class PromptBuilder extends IPromptBuilder {
       );
       return false;
     }
-
     const flagName = condition.promptDataFlag;
     const actualVal = promptData[flagName];
     let conditionMet = false;
-
     if (Object.prototype.hasOwnProperty.call(condition, 'expectedValue')) {
       conditionMet = actualVal === condition.expectedValue;
     } else {
       conditionMet = Boolean(actualVal);
     }
-
     if (!conditionMet) {
       const expectedValMsg = Object.prototype.hasOwnProperty.call(
         condition,
@@ -199,7 +257,6 @@ export class PromptBuilder extends IPromptBuilder {
       )
         ? `'${condition.expectedValue}'`
         : 'truthy';
-
       this.#logger.debug(
         `PromptBuilder.#isElementConditionMet: Flag '${flagName}' (value: ${actualVal}) did not match expected (${expectedValMsg}).`
       );
@@ -208,15 +265,14 @@ export class PromptBuilder extends IPromptBuilder {
         `PromptBuilder.#isElementConditionMet: Flag '${flagName}' condition met.`
       );
     }
-
     return conditionMet;
   }
 
   /**
-   * @description Builds the final prompt string for a given LLM ID and prompt data by assembling configured elements.
-   * @param {string} llmId - Identifier of the LLM configuration to use for building the prompt.
-   * @param {PromptData} promptData - Data object containing information to populate prompt elements.
-   * @returns {Promise<string>} A promise resolving to the assembled prompt string.
+   * Builds the final prompt string for a given LLM ID and prompt data.
+   * @param {string} llmId
+   * @param {PromptData} promptData
+   * @returns {Promise<string>}
    */
   async build(llmId, promptData) {
     this.#logger.debug(`PromptBuilder.build called for llmId: ${llmId}`);
@@ -258,7 +314,6 @@ export class PromptBuilder extends IPromptBuilder {
         );
         continue;
       }
-
       if (!this.#isElementConditionMet(elementConfig.condition, promptData)) {
         this.#logger.debug(
           `PromptBuilder.build: Skipping '${key}' due to unmet condition.`
@@ -267,35 +322,33 @@ export class PromptBuilder extends IPromptBuilder {
       }
 
       let assemblerToUse;
-      if (key === INDEXED_CHOICES_KEY) {
-        assemblerToUse = this.#indexedChoicesAssembler;
-      } else if (key === PERCEPTION_LOG_WRAPPER_KEY) {
-        assemblerToUse = this.#perceptionLogAssembler;
-      } else if (key === THOUGHTS_WRAPPER_KEY) {
-        assemblerToUse = this.#thoughtsSectionAssembler;
-      } else if (key === NOTES_WRAPPER_KEY) {
-        assemblerToUse = this.#notesSectionAssembler;
-      } else if (key === GOALS_WRAPPER_KEY) {
-        assemblerToUse = this.#goalsSectionAssembler;
-      } else {
-        assemblerToUse = this.#standardElementAssembler;
-      }
-
-      if (!assemblerToUse) {
-        this.#logger.warn(
-          `PromptBuilder.build: No assembler found for '${key}'. Skipping.`
-        );
-        continue;
+      switch (key) {
+        case INDEXED_CHOICES_KEY:
+          assemblerToUse = this.#indexedChoicesAssembler;
+          break;
+        case PERCEPTION_LOG_WRAPPER_KEY:
+          assemblerToUse = this.#perceptionLogAssembler;
+          break;
+        case THOUGHTS_WRAPPER_KEY:
+          assemblerToUse = this.#thoughtsSectionAssembler;
+          break;
+        case NOTES_WRAPPER_KEY:
+          assemblerToUse = this.#notesSectionAssembler;
+          break;
+        case GOALS_WRAPPER_KEY:
+          assemblerToUse = this.#goalsSectionAssembler;
+          break;
+        default:
+          assemblerToUse = this.#standardElementAssembler;
       }
 
       try {
-        const chunk = assemblerToUse.assemble(
+        finalPromptString += assemblerToUse.assemble(
           elementConfig,
           promptData,
           this.#placeholderResolver,
           promptElementsMap
         );
-        finalPromptString += chunk;
       } catch (err) {
         this.#logger.error(
           `PromptBuilder.build: Error assembling '${key}'. Skipping.`,
