@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Implemented ActionIndexerAdapter.">
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Reverted insane changes that o4 intended to do to ConfigurableLLMAdapter.">
+      <change afterPath="$PROJECT_DIR$/src/turns/adapters/llmChooser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/adapters/llmChooser.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/turns/adapters/configurableLLMAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/configurableLLMAdapter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ILLMAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ILLMAdapter.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,6 +54,7 @@
     "Jest.actionIndexerAdapter.test.js.executor": "Run",
     "Jest.aiStrategyErrors.test.js.executor": "Run",
     "Jest.indexedActionCompositesForAI.integration.test.js.executor": "Run",
+    "Jest.llmChooser.test.js.executor": "Run",
     "Jest.turnActionFactory.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -71,7 +73,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.actionIndexerAdapter.test.js">
+  <component name="RunManager" selected="Jest.llmChooser.test.js">
     <configuration name="actionIndexerAdapter.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -99,6 +101,15 @@
       <test-file value="$PROJECT_DIR$/tests/integration/indexedActionCompositesForAI.integration.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="llmChooser.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/adapters/llmChooser.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="turnActionFactory.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -110,6 +121,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.llmChooser.test.js" />
         <item itemvalue="Jest.actionIndexerAdapter.test.js" />
         <item itemvalue="Jest.turnActionFactory.test.js" />
         <item itemvalue="Jest.aiStrategyErrors.test.js" />
@@ -131,7 +143,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="8050000" />
+      <workItem from="1749738330206" duration="9144000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -189,7 +201,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749745668473</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Reverted insane changes that o4 intended to do to ConfigurableLLMAdapter.">
+      <option name="closed" value="true" />
+      <created>1749746772453</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1749746772453</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -204,6 +224,7 @@
     <MESSAGE value="Uploading test errors for Codex to fix." />
     <MESSAGE value="Implemented freezing utility." />
     <MESSAGE value="Implemented ActionIndexerAdapter." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented ActionIndexerAdapter." />
+    <MESSAGE value="Reverted insane changes that o4 intended to do to ConfigurableLLMAdapter." />
+    <option name="LAST_COMMIT_MESSAGE" value="Reverted insane changes that o4 intended to do to ConfigurableLLMAdapter." />
   </component>
 </project>
