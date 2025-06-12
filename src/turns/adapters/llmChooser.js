@@ -10,9 +10,11 @@
 /** @typedef {import('../interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
 /** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
+import { ILLMChooser } from '../ports/ILLMChooser';
+
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
-export class LLMChooser /* implements ILLMChooser */ {
+export class LLMChooser extends ILLMChooser {
   /** @type {IAIPromptPipeline}   */ #promptPipeline;
   /** @type {ILLMAdapter}         */ #llmAdapter;
   /** @type {ILLMResponseProcessor}*/ #responseProcessor;
@@ -27,6 +29,8 @@ export class LLMChooser /* implements ILLMChooser */ {
    * }} deps
    */
   constructor({ promptPipeline, llmAdapter, responseProcessor, logger }) {
+    super();
+
     if (!promptPipeline?.generatePrompt)
       throw new Error('LLMChooser: promptPipeline invalid');
     if (!llmAdapter?.getAIDecision)

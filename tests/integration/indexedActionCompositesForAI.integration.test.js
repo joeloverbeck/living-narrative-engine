@@ -27,9 +27,14 @@ class ContextStub {
   getLogger() {
     return this._logger;
   }
+
+  // Provide prompt signal for orchestrator
+  getPromptSignal() {
+    return undefined;
+  }
 }
 
-// ─── helper producing two discovered actions ──────────────────────────────────
+// ─── helper producing two discovered actions producing two discovered actions ──────────────────────────────────
 const buildDiscoveredActions = () => [
   {
     id: 'core:wait',
@@ -106,15 +111,49 @@ describe('AIPlayerStrategy – decideAction integration (index round-trip)', () 
     actor = new Entity('actor-001', 'test:dummy');
     context = new ContextStub(actor, logger);
 
-    strategy = new AIPlayerStrategy({
-      llmAdapter: llmAdapterMock,
-      aiPromptPipeline: aiPromptPipelineMock,
-      llmResponseProcessor: llmResponseProcessorMock,
-      aiFallbackActionFactory: fallbackFactory,
-      actionDiscoveryService: actionDiscoveryMock,
-      actionIndexingService,
+    // build orchestrator to wrap existing AI parts
+    const llmChooser = {
+      choose: jest.fn(async ({ actor, context, actions }) => {
+        const prompt = await aiPromptPipelineMock.generatePrompt(
+          actor,
+          context,
+          actions
+        );
+        const json = await llmAdapterMock.getAIDecision(prompt);
+        const processed = await llmResponseProcessorMock.processResponse(json);
+        return {
+          index: processed.action.chosenIndex,
+          speech: processed.action.speech,
+        };
+      }),
+    };
+    const turnActionFactory = {
+      create: (composite, speech) => {
+        const action = {
+          actionDefinitionId: composite.actionId,
+          resolvedParameters: composite.params,
+          commandString: composite.commandString,
+        };
+        if (speech) action.speech = speech;
+        return action;
+      },
+    };
+    const {
+      AIDecisionOrchestrator,
+    } = require('../../src/turns/orchestration/aiDecisionOrchestrator.js');
+    const {
+      ActionIndexerAdapter,
+    } = require('../../src/turns/adapters/actionIndexerAdapter.js');
+    const indexerAdapter = new ActionIndexerAdapter(actionIndexingService);
+    const orchestrator = new AIDecisionOrchestrator({
+      discoverySvc: actionDiscoveryMock,
+      indexer: indexerAdapter,
+      llmChooser,
+      turnActionFactory,
+      fallbackFactory,
       logger,
     });
+    strategy = new AIPlayerStrategy({ orchestrator, logger });
   });
 
   test('returns the ITurnAction that corresponds to the index chosen by the LLM', async () => {
