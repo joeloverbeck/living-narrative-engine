@@ -4,7 +4,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import CommandParser from '../../src/commands/commandParser.js'; // Class under test
 // Import the *named export* for type hinting and mocking purposes
-import { GameDataRepository } from '../../src/data/gameDataRepository.js'; // Use named import
+import { GameDataRepository } from '../../src/data/gameDataRepository.js';
+import { freeze } from '../utils/objectUtils'; // Use named import
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../src/actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -35,7 +36,7 @@ jest.mock('../../src/data/gameDataRepository.js', () => {
  *
  * @type {ReadonlyArray<ActionDefinition>}
  */
-const MOCK_ACTIONS = Object.freeze([
+const MOCK_ACTIONS = freeze([
   // Actions specifically required by Ticket 7 tests
   { id: 'core:go', commandVerb: 'go', name: 'Go' },
   { id: 'core:give', commandVerb: 'give', name: 'Give' }, // Needed for CPARSE-P-041

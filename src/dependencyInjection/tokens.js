@@ -5,6 +5,8 @@
  * Using tokens instead of raw strings prevents typos and aids refactoring.
  */
 
+import { freeze } from '../../tests/utils/objectUtils';
+
 /**
  * A frozen object containing all unique keys used for registering and resolving
  * services and dependencies within the application's DI container.
@@ -135,7 +137,7 @@
  * @property {DiToken} IPromptStaticContentService - Token for the service providing static prompt content.
  * @property {DiToken} IPerceptionLogFormatter - Token for the perception log formatting service.
  */
-export const tokens = Object.freeze({
+export const tokens = freeze({
   // Core Interfaces/Abstractions & Externals
   ILogger: 'ILogger',
   EventBus: 'EventBus', // Legacy

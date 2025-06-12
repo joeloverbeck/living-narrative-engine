@@ -2,6 +2,7 @@
 
 import pkg from '../../package.json';
 import semver from 'semver';
+import { freeze } from '../../tests/utils/objectUtils';
 
 const versionFromPackage = pkg.version;
 
@@ -26,6 +27,6 @@ if (!semver.valid(versionFromPackage)) {
  * @type {string}
  * @constant
  */
-export const ENGINE_VERSION = Object.freeze(versionFromPackage);
+export const ENGINE_VERSION = freeze(versionFromPackage);
 
 // Note: Defining the constant and freezing it in one step ensures immutability.

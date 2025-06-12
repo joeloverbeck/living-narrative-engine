@@ -4,6 +4,8 @@
  * @file Defines constants for turn directives used by CommandOutcomeInterpreter.
  */
 
+import { freeze } from '../../../tests/utils/objectUtils';
+
 /**
  * @enum {string}
  * @readonly
@@ -26,6 +28,6 @@ const TurnDirective = {
 };
 
 // Freeze the object to prevent modification.
-Object.freeze(TurnDirective);
+freeze(TurnDirective);
 
 export default TurnDirective;

@@ -184,7 +184,7 @@ describe('TurnOrderService', () => {
         order.push({ id: 'c' });
       }).toThrow(TypeError); // Or similar error depending on JS environment
 
-      // Note: Object.freeze() is shallow. It freezes the array but not the objects *within* it.
+      // Note: freeze() is shallow. It freezes the array but not the objects *within* it.
       // This test confirms the array is frozen as per requirements.
       // If deep freezing was required, the implementation of getCurrentOrder would need to change.
       if (order.length > 0) {

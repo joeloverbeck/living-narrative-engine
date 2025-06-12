@@ -6,7 +6,8 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js'; // Adjust path as needed
+import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
+import { freeze } from '../../utils/objectUtils'; // Adjust path as needed
 // Assuming ILogger interface definition (or use a simplified mock structure)
 // For testing, we don't need the actual interface, just an object matching the expected structure.
 
@@ -48,7 +49,7 @@ describe('TurnOrderService', () => {
       // We verify they are initialized to null by checking methods that depend on them.
       expect(serviceInstance.isEmpty()).toBe(true); // isEmpty returns true if #currentQueue is null
       expect(serviceInstance.peekNextEntity()).toBeNull(); // peekNextEntity returns null if #currentQueue is null
-      expect(serviceInstance.getCurrentOrder()).toEqual(Object.freeze([])); // getCurrentOrder returns [] if #currentQueue is null
+      expect(serviceInstance.getCurrentOrder()).toEqual(freeze([])); // getCurrentOrder returns [] if #currentQueue is null
       // No direct way to check #currentStrategy, but its initialization alongside #currentQueue is implied by the above checks.
 
       // Verify logger interaction

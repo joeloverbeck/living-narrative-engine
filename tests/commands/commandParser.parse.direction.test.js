@@ -3,7 +3,8 @@
 // --- Imports ---
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import CommandParser from '../../src/commands/commandParser.js'; // Adjusted path to CommandParser
-import { GameDataRepository } from '../../src/data/gameDataRepository.js'; // Adjusted path for GameDataRepository
+import { GameDataRepository } from '../../src/data/gameDataRepository.js';
+import { freeze } from '../utils/objectUtils'; // Adjusted path for GameDataRepository
 
 // --- Type Imports ---
 // Adjust paths assuming this test file is in src/tests/commands/
@@ -37,7 +38,7 @@ jest.mock('../../src/data/gameDataRepository.js', () => {
  *
  * @type {ReadonlyArray<ActionDefinition>}
  */
-const MOCK_ACTIONS_DIRECTION_HANDLING = Object.freeze([
+const MOCK_ACTIONS_DIRECTION_HANDLING = freeze([
   { id: 'core:go', commandVerb: 'go', name: 'Go', target_domain: 'direction' },
   {
     id: 'core:move',

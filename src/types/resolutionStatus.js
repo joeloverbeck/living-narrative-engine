@@ -1,6 +1,8 @@
 // src/types/resolutionStatus.js
 
-export const ResolutionStatus = Object.freeze({
+import { freeze } from '../../tests/utils/objectUtils';
+
+export const ResolutionStatus = freeze({
   FOUND_UNIQUE: 'FOUND_UNIQUE',
   SELF: 'SELF',
   NONE: 'NONE',

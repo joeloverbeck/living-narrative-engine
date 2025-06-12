@@ -4,6 +4,7 @@
  */
 
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
+import { freeze } from '../../../tests/utils/objectUtils';
 
 /**
  * @typedef {Object} ActionComposite
@@ -57,5 +58,5 @@ export function createActionComposite(
   }
 
   const composite = { index, actionId, commandString, params, description };
-  return Object.freeze(composite);
+  return freeze(composite);
 }

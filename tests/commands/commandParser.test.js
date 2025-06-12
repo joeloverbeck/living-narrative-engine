@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import CommandParser from '../../src/commands/commandParser.js'; // Class under test
 // Import the actual dependency for type hinting and mocking purposes
 import GameDataRepository from '../../src/data/gameDataRepository.js';
+import { freeze } from '../utils/objectUtils';
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../src/actions/actionTypes.js').ParsedCommand} ParsedCommand */
 
@@ -29,7 +30,7 @@ jest.mock('../../src/data/gameDataRepository.js', () => {
  *
  * @type {ReadonlyArray<ActionDefinition>}
  */
-const MOCK_ACTIONS = Object.freeze([
+const MOCK_ACTIONS = freeze([
   { id: 'core:look', commandVerb: 'look', name: 'Look' },
   { id: 'core:inventory', commandVerb: 'inventory', name: 'Inventory' },
   { id: 'core:take', commandVerb: 'take', name: 'Take' },

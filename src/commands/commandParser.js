@@ -12,20 +12,14 @@
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
 import { ICommandParser } from './interfaces/ICommandParser.js';
+import { freeze } from '../../tests/utils/objectUtils';
 
 /**
  * Defines the list of prepositions recognized by the parser. (No changes needed)
  *
  * @type {ReadonlyArray<string>}
  */
-const SUPPORTED_PREPOSITIONS = Object.freeze([
-  'on',
-  'at',
-  'with',
-  'in',
-  'to',
-  '>',
-]);
+const SUPPORTED_PREPOSITIONS = freeze(['on', 'at', 'with', 'in', 'to', '>']);
 
 class CommandParser extends ICommandParser {
   /**

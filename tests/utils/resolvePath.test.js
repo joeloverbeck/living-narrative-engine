@@ -3,7 +3,8 @@
  * ------------------------------------------------------------------ */
 
 import { describe, it, expect } from '@jest/globals';
-import resolvePath from '../../src/utils/resolvePath.js'; // <— adjust only if you move files
+import resolvePath from '../../src/utils/resolvePath.js';
+import { freeze } from './objectUtils'; // <— adjust only if you move files
 
 describe('utils/resolvePath', () => {
   /* -------------------------------------------------
@@ -97,8 +98,8 @@ describe('utils/resolvePath', () => {
   describe('function purity', () => {
     it('does not mutate the original object', () => {
       const obj = { a: { b: 1 } };
-      Object.freeze(obj);
-      Object.freeze(obj.a);
+      freeze(obj);
+      freeze(obj.a);
 
       // Should not throw—any mutation would violate the freeze
       expect(() => resolvePath(obj, 'a.b')).not.toThrow();

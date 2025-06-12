@@ -8,7 +8,8 @@
 import { ITurnOrderService } from '../interfaces/ITurnOrderService.js';
 import { ITurnOrderQueue } from '../interfaces/ITurnOrderQueue.js';
 import { SimpleRoundRobinQueue } from './queues/simpleRoundRobinQueue.js'; // Added import
-import { InitiativePriorityQueue } from './queues/initiativePriorityQueue.js'; // Added import
+import { InitiativePriorityQueue } from './queues/initiativePriorityQueue.js';
+import { freeze } from '../../../tests/utils/objectUtils'; // Added import
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/ITurnOrderQueue.js').Entity} Entity */
@@ -111,7 +112,7 @@ export class TurnOrderService extends ITurnOrderService {
    */
   getCurrentOrder() {
     const order = this.#currentQueue ? this.#currentQueue.toArray() : [];
-    return Object.freeze(order);
+    return freeze(order);
   }
 
   // --- Helper Method (Implemented in TASK-TURN-ORDER-001.4) ---
