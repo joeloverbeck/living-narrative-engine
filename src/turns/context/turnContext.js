@@ -52,7 +52,7 @@
 
 /**
  * @typedef {object} TurnContextServices
- * @property {IPromptCoordinator} [playerPromptService]
+ * @property {IPromptCoordinator} [promptCoordinator]
  * @property {GameWorld | object} [game] // Replace 'object' with a specific minimal game interface if applicable
  * @property {ICommandProcessor} [commandProcessor]
  * @property {ICommandOutcomeInterpreter} [commandOutcomeInterpreter]
@@ -185,7 +185,7 @@ export class TurnContext extends ITurnContext {
 
   /** @override */
   getPlayerPromptService() {
-    if (!this.#services.playerPromptService) {
+    if (!this.#services.promptCoordinator) {
       this.#logger.error(
         'TurnContext: PlayerPromptService not available in services bag.'
       );
@@ -193,7 +193,7 @@ export class TurnContext extends ITurnContext {
         'TurnContext: PlayerPromptService not available in services bag.'
       );
     }
-    return this.#services.playerPromptService;
+    return this.#services.promptCoordinator;
   }
 
   /** @override */

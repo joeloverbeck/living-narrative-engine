@@ -4,16 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Uploaded with failures for Codex.">
-      <change afterPath="$PROJECT_DIR$/tests/integration/aiDecisionMetadata.test.js" afterDir="false" />
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Fixed AI route.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/adapters/llmChooser.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/llmChooser.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/ports/IAIDecisionOrchestrator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/ports/IAIDecisionOrchestrator.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/adapters/llmChooser.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/adapters/llmChooser.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/orchestration/aiDecisionOrchestrator.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/orchestration/aiDecisionOrchestrator.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm-proxy-server/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/llm-proxy-server/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptCoordinator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptCoordinator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,22 +35,22 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "joeloverbeck"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;joeloverbeck&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/joeloverbeck/living-narrative-engine.git",
-    "accountId": "e87db63c-2fda-4154-8e23-63c0c53d7f35"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/joeloverbeck/living-narrative-engine.git&quot;,
+    &quot;accountId&quot;: &quot;e87db63c-2fda-4154-8e23-63c0c53d7f35&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 0
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="2yPZmW5MCpvTkCEsrhnhMvTZxcR" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -54,33 +59,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Jest.actionIndexerAdapter.test.js.executor": "Run",
-    "Jest.aiDecisionMetadata.test.js.executor": "Run",
-    "Jest.aiDecisionOrchestrator.test.js.executor": "Run",
-    "Jest.aiPlayerStrategy.constructor.test.js.executor": "Run",
-    "Jest.aiStrategyErrors.test.js.executor": "Run",
-    "Jest.indexedActionCompositesForAI.integration.test.js.executor": "Run",
-    "Jest.llmChooser.test.js.executor": "Run",
-    "Jest.turnActionFactory.test.js.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
-    "nodejs_package_manager_path": "npm",
-    "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
-    "settings.editor.selected.configurable": "web-ide.project.structure",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Jest.actionIndexerAdapter.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.aiDecisionMetadata.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.aiDecisionOrchestrator.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.aiPlayerStrategy.constructor.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.aiStrategyErrors.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.indexedActionCompositesForAI.integration.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.llmChooser.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.turnActionFactory.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs.jest.jest_package&quot;: &quot;G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;web-ide.project.structure&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Jest.aiDecisionMetadata.test.js">
     <configuration name="actionIndexerAdapter.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
@@ -151,7 +156,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="14923000" />
+      <workItem from="1749738330206" duration="16856000" />
+      <workItem from="1749758342420" duration="944000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -241,7 +247,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749751647220</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Fixed AI route.">
+      <option name="closed" value="true" />
+      <created>1749753709144</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1749753709144</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -260,7 +274,8 @@
     <MESSAGE value="Made changes to configurableLLMAdapter.js" />
     <MESSAGE value="Fixed tests." />
     <MESSAGE value="Uploaded with failures for Codex." />
-    <option name="LAST_COMMIT_MESSAGE" value="Uploaded with failures for Codex." />
+    <MESSAGE value="Fixed AI route." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed AI route." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -268,7 +283,6 @@
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/turns/interfaces/ILLMResponseProcessor.js</url>
           <line>19</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>

@@ -33,10 +33,10 @@ const createMockPlayerPromptService = () => ({
 });
 
 // Mock TurnContext
-const createMockTurnContext = (actor, logger, playerPromptService) => ({
+const createMockTurnContext = (actor, logger, promptCoordinator) => ({
   getActor: jest.fn(() => actor),
   getLogger: jest.fn(() => logger),
-  getPlayerPromptService: jest.fn(() => playerPromptService),
+  getPlayerPromptService: jest.fn(() => promptCoordinator),
   getPromptSignal: jest.fn(() => undefined),
 });
 
@@ -110,7 +110,7 @@ describe('HumanPlayerStrategy', () => {
       ).rejects.toThrow(promptError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${mockActor.id}.`,
+        `HumanPlayerStrategy: Error during promptCoordinator.prompt() for actor ${mockActor.id}.`,
         promptError
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -132,7 +132,7 @@ describe('HumanPlayerStrategy', () => {
       ).rejects.toThrow(abortError);
 
       expect(mockLogger.error).not.toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${mockActor.id}.`,
+        `HumanPlayerStrategy: Error during promptCoordinator.prompt() for actor ${mockActor.id}.`,
         expect.anything()
       );
       expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();

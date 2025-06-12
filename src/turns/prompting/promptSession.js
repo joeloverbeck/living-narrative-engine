@@ -1,94 +1,82 @@
 /**
- * @file Implements the PromptSession class for managing a single player prompt.
+ * @file Manages a single player prompt lifecycle (human flow).
  * @module src/turns/prompting/promptSession.js
  */
 
-// ──────────── Imports ────────────
 import { PromptError } from '../../errors/promptError.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../constants/eventIds.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 
-// ──────────── JSDoc Typedefs ────────────
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../turns/services/actionIndexingService.js').ActionIndexingService} ActionIndexingService */
 /**
- * Interface for the event bus, specifying only the methods needed by this class.
- * This avoids a direct dependency on the full IValidatedEventDispatcher interface in the constructor type.
- * @typedef {{subscribe: IValidatedEventDispatcher['subscribe']}} IPlayerTurnEvents
+ * Simplified view of the event bus – only subscribe is needed.
+ * @typedef {{subscribe: (eventId: string, fn: Function) => () => void}} IPlayerTurnEvents
  */
-/** @typedef {import('../services/humanPlayerPromptService.js').DiscoveredActionInfo} DiscoveredActionInfo */
-/** @typedef {import('../services/humanPlayerPromptService.js').PlayerPromptResolution} PlayerPromptResolution */
-/** @typedef {import('../services/humanPlayerPromptService.js').CorePlayerTurnSubmittedEvent} CorePlayerTurnSubmittedEvent */
 
 /**
- * @description Owns a single, live player prompt, managing its lifecycle including event
- * subscription, abortion, and cleanup. A PromptSession is designed for one-time use.
- * @class
+ * @typedef {object} PlayerPromptResolution
+ * @property {import('../services/humanPlayerPromptService.js').DiscoveredActionInfo} action
+ * @property {string|null} speech
+ */
+
+/**
+ * @description Owns a single, live player prompt.
+ * **Updated:** now resolves by integer `index` via ActionIndexingService.
  */
 export class PromptSession {
-  /** @type {string} */
-  #actorId;
-  /** @type {DiscoveredActionInfo[]} */
-  #actions;
-  /** @type {IPlayerTurnEvents} */
-  #eventBus;
-  /** @type {AbortSignal|undefined} */
-  #abortSignal;
-  /** @type {ILogger} */
-  #logger;
+  /** @type {string} */ #actorId;
+  /** @type {IPlayerTurnEvents} */ #eventBus;
+  /** @type {AbortSignal|undefined} */ #abortSignal;
+  /** @type {ILogger} */ #logger;
+  /** @type {ActionIndexingService} */ #actionIndexingService;
 
-  /** @type {boolean} */
-  #resolved = false;
-  /** @type {Promise<PlayerPromptResolution>|null} */
-  #promise = null;
-  /** @type {((value: PlayerPromptResolution) => void)|null} */
-  #resolveCallback = null;
-  /** @type {((reason?: any) => void)|null} */
-  #rejectCallback = null;
-  /** @type {(() => void)|null} */
-  #unsubscribe = null;
-  /** @type {(() => void)|null} */
-  #onAbort = null;
+  /** @type {boolean} */ #resolved = false;
+  /** @type {Promise<PlayerPromptResolution>|null} */ #promise = null;
+  /** @type {Function|null} */ #resolveCallback = null;
+  /** @type {Function|null} */ #rejectCallback = null;
+  /** @type {Function|null} */ #unsubscribe = null;
+  /** @type {Function|null} */ #onAbort = null;
 
   /**
-   * Creates an instance of PromptSession.
-   * @param {object} params - The constructor parameters.
-   * @param {string} params.actorId - The ID of the actor being prompted.
-   * @param {DiscoveredActionInfo[]} params.actions - The list of available actions.
-   * @param {IPlayerTurnEvents} params.eventBus - The event bus for subscribing to player input.
-   * @param {ILogger} params.logger - The logger instance.
-   * @param {AbortSignal} [params.abortSignal] - An optional signal to abort the prompt.
+   * @param {object} params
+   * @param {string} params.actorId
+   * @param {IPlayerTurnEvents} params.eventBus
+   * @param {ILogger} params.logger
+   * @param {ActionIndexingService} params.actionIndexingService
+   * @param {AbortSignal} [params.abortSignal]
    */
-  constructor({ actorId, actions, eventBus, logger, abortSignal }) {
+  constructor({
+    actorId,
+    eventBus,
+    logger,
+    actionIndexingService,
+    abortSignal,
+  }) {
     validateDependency(logger, 'logger', logger, {
       requiredMethods: ['error', 'debug'],
     });
     validateDependency(eventBus, 'eventBus', logger, {
       requiredMethods: ['subscribe'],
     });
+    validateDependency(actionIndexingService, 'actionIndexingService', logger, {
+      requiredMethods: ['resolve'],
+    });
 
     if (!actorId || typeof actorId !== 'string') {
       throw new Error('PromptSession: actorId must be a non-empty string.');
     }
-    if (!Array.isArray(actions)) {
-      throw new Error('PromptSession: actions must be an array.');
-    }
 
     this.#actorId = actorId;
-    this.#actions = actions;
     this.#eventBus = eventBus;
     this.#logger = logger;
+    this.#actionIndexingService = actionIndexingService;
     this.#abortSignal = abortSignal;
   }
 
-  /**
-   * Cleans up all resources used by the prompt session, ensuring idempotency.
-   * @private
-   */
+  // ─────────────────── Internal helpers ───────────────────
   #cleanup() {
-    if (this.#resolved) {
-      return;
-    }
+    if (this.#resolved) return;
     this.#resolved = true;
 
     if (this.#unsubscribe) {
@@ -107,22 +95,24 @@ export class PromptSession {
   }
 
   /**
-   * Handles the PLAYER_TURN_SUBMITTED_ID event.
+   * Handles `core:player_turn_submitted` events.
+   * Expects `{ index: number, speech? }` in payload.
+   * Resolves the integer to an action composite via ActionIndexingService.
    * @private
-   * @param {CorePlayerTurnSubmittedEvent} event
+   * @param {*} event
    */
   #handleEvent(event) {
     if (this.#resolved) return;
 
-    if (
-      !event ||
-      !event.payload ||
-      typeof event.payload.actionId !== 'string'
-    ) {
+    const payload = event?.payload;
+    const index = payload?.index;
+    const speech = payload?.speech ?? null;
+
+    if (!Number.isInteger(index)) {
       this.#cleanup();
       this.#rejectCallback?.(
         new PromptError(
-          'Malformed player turn event received.',
+          'Malformed or missing index in player turn event.',
           { receivedEvent: event },
           'INVALID_EVENT'
         )
@@ -130,8 +120,7 @@ export class PromptSession {
       return;
     }
 
-    const { submittedByActorId, actionId, speech = null } = event.payload;
-
+    const submittedByActorId = payload?.submittedByActorId ?? null;
     if (submittedByActorId && submittedByActorId !== this.#actorId) {
       this.#cleanup();
       this.#rejectCallback?.(
@@ -144,27 +133,34 @@ export class PromptSession {
       return;
     }
 
-    const selectedAction = this.#actions.find((a) => a.id === actionId);
-    if (!selectedAction) {
+    let composite;
+    try {
+      composite = this.#actionIndexingService.resolve(this.#actorId, index);
+    } catch (err) {
       this.#cleanup();
       this.#rejectCallback?.(
         new PromptError(
-          `Submitted actionId "${actionId}" is not a valid choice for actor ${this.#actorId}.`,
-          { submittedActionId: actionId },
-          'INVALID_ACTION_ID'
+          `Submitted index ${index} is not valid for actor ${this.#actorId}.`,
+          err,
+          'INVALID_INDEX'
         )
       );
       return;
     }
 
+    // Adapt composite back to the legacy DiscoveredActionInfo shape.
+    const selectedAction = {
+      id: composite.actionId,
+      name: composite.description || composite.actionId,
+      command: composite.commandString,
+      description: composite.description,
+      params: composite.params,
+    };
+
     this.#cleanup();
     this.#resolveCallback?.({ action: selectedAction, speech });
   }
 
-  /**
-   * Handles the abort signal firing by rejecting the promise.
-   * @private
-   */
   #handleAbort() {
     if (this.#resolved) return;
     this.#cleanup();
@@ -173,14 +169,13 @@ export class PromptSession {
     );
   }
 
+  // ─────────────────── Public API ───────────────────
   /**
-   * Initiates the prompt session.
+   * Starts listening for the submitted-turn event.
    * @returns {Promise<PlayerPromptResolution>}
    */
   run() {
-    if (this.#promise) {
-      return this.#promise;
-    }
+    if (this.#promise) return this.#promise;
 
     this.#promise = new Promise((resolve, reject) => {
       this.#resolveCallback = resolve;
@@ -201,7 +196,7 @@ export class PromptSession {
       try {
         this.#unsubscribe = this.#eventBus.subscribe(
           PLAYER_TURN_SUBMITTED_ID,
-          (event) => this.#handleEvent(event)
+          (e) => this.#handleEvent(e)
         );
       } catch (e) {
         const error = new PromptError(
@@ -217,10 +212,7 @@ export class PromptSession {
     return this.#promise;
   }
 
-  /**
-   * Imperatively cancels the prompt from an external caller.
-   * @param {any} [reason]
-   */
+  /** Imperatively cancels the prompt. */
   cancel(reason) {
     if (this.#resolved) return;
 
@@ -233,9 +225,6 @@ export class PromptSession {
       );
 
     this.#cleanup();
-    // Reverting to the original microtask-based deferral.
-    // The updated test syntax `await expect().rejects` is designed to handle
-    // this timing correctly.
     Promise.resolve().then(() => {
       this.#rejectCallback?.(cancellationError);
     });

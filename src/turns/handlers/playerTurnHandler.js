@@ -25,7 +25,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
   /** @type {ITurnEndPort} */
   #turnEndPort;
   /** @type {IPromptCoordinator} */
-  #playerPromptService;
+  #promptCoordinator;
   /** @type {ICommandOutcomeInterpreter} */
   #commandOutcomeInterpreter;
   /** @type {ISafeEventDispatcher} */
@@ -46,7 +46,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
    * @param {ITurnStateFactory} deps.turnStateFactory
    * @param {ICommandProcessor} deps.commandProcessor
    * @param {ITurnEndPort} deps.turnEndPort
-   * @param {IPromptCoordinator} deps.playerPromptService
+   * @param {IPromptCoordinator} deps.promptCoordinator
    * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {object} [deps.gameWorldAccess]
@@ -56,7 +56,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
     turnStateFactory,
     commandProcessor,
     turnEndPort,
-    playerPromptService,
+    promptCoordinator,
     commandOutcomeInterpreter,
     safeEventDispatcher,
     gameWorldAccess = {},
@@ -67,8 +67,8 @@ class PlayerTurnHandler extends BaseTurnHandler {
       throw new Error('PlayerTurnHandler: commandProcessor is required');
     if (!turnEndPort)
       throw new Error('PlayerTurnHandler: turnEndPort is required');
-    if (!playerPromptService)
-      throw new Error('PlayerTurnHandler: playerPromptService is required');
+    if (!promptCoordinator)
+      throw new Error('PlayerTurnHandler: promptCoordinator is required');
     if (!commandOutcomeInterpreter)
       throw new Error(
         'PlayerTurnHandler: commandOutcomeInterpreter is required'
@@ -78,7 +78,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
 
     this.#commandProcessor = commandProcessor;
     this.#turnEndPort = turnEndPort;
-    this.#playerPromptService = playerPromptService;
+    this.#promptCoordinator = promptCoordinator;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#gameWorldAccess = gameWorldAccess;
@@ -111,7 +111,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
 
     /** @type {TurnContextServices} */
     const servicesForContext = {
-      playerPromptService: this.#playerPromptService,
+      promptCoordinator: this.#promptCoordinator,
       game: this.#gameWorldAccess,
       commandProcessor: this.#commandProcessor,
       commandOutcomeInterpreter: this.#commandOutcomeInterpreter,

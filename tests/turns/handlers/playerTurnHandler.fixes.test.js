@@ -62,7 +62,7 @@ describe('PlayerTurnHandler Constructor', () => {
     turnStateFactory: mockTurnStateFactory,
     commandProcessor: mockCommandProcessor,
     turnEndPort: mockTurnEndPort,
-    playerPromptService: mockPlayerPromptService,
+    promptCoordinator: mockPlayerPromptService,
     commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
     safeEventDispatcher: mockSafeEventDispatcher,
     gameWorldAccess: mockGameWorldAccess,
@@ -121,11 +121,11 @@ describe('PlayerTurnHandler Constructor', () => {
     );
   });
 
-  it('should throw an error if playerPromptService is not provided', () => {
+  it('should throw an error if promptCoordinator is not provided', () => {
     const deps = getValidDependencies();
-    delete deps.playerPromptService;
+    delete deps.promptCoordinator;
     expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: playerPromptService is required'
+      'PlayerTurnHandler: promptCoordinator is required'
     );
   });
 

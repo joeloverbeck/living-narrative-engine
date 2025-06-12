@@ -1,21 +1,17 @@
 /**
- * @file Integration tests for the PromptCoordinator.
+ * @file Integration tests for PromptCoordinator (index-based flow).
  * @see tests/turns/prompting/promptCoordinator.test.js
  */
 
-import { beforeEach, describe, expect, it, jest, fail } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-// Class under test
+// ─── SUT & real collaborators ────────────────────────────────────
 import PromptCoordinator from '../../../src/turns/prompting/promptCoordinator.js';
-
-// Real dependencies for integration
 import ActionContextBuilder from '../../../src/turns/prompting/actionContextBuilder.js';
 import { PromptError } from '../../../src/errors/promptError.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../../src/constants/eventIds.js';
-// Note: We don't import PromptSession as it's an internal implementation detail of the coordinator.
 
-// --- Mocks ---
-
+// ─── Mock helpers ────────────────────────────────────────────────
 const mockLogger = () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -23,27 +19,38 @@ const mockLogger = () => ({
   debug: jest.fn(),
 });
 
-const mockActionDiscoveryService = () => ({
-  getValidActions: jest.fn(),
-});
+const mockActionDiscoveryService = () => ({ getValidActions: jest.fn() });
+const mockPromptOutputPort = () => ({ prompt: jest.fn() });
+const mockWorldContext = () => ({ getLocationOfEntity: jest.fn() });
 
-const mockPromptOutputPort = () => ({
-  prompt: jest.fn(),
-});
+/** A minimal in-memory stub for ActionIndexingService. */
+function createIndexerStub() {
+  /** @type {import('../../../src/turns/services/actionIndexingService.js').ActionComposite[]} */
+  let lastComposites = [];
+  return {
+    indexActions: jest.fn((_actorId, raw) => {
+      lastComposites = raw.map((a, i) => ({
+        index: i + 1,
+        actionId: a.id,
+        commandString: a.command,
+        description: a.name ?? a.command,
+        params: a.params ?? {},
+      }));
+      return lastComposites;
+    }),
+    resolve: jest.fn((_actorId, idx) =>
+      lastComposites.find((c) => c.index === idx)
+    ),
+  };
+}
 
-const mockWorldContext = () => ({
-  getLocationOfEntity: jest.fn(),
-});
-
-// --- Test Suite ---
+// ─── Test suite ──────────────────────────────────────────────────
 describe('PromptCoordinator Integration Test', () => {
-  jest.useRealTimers();
+  jest.useRealTimers(); // Coordinator uses async/await, no fake-timer shenanigans
 
-  // Coordinator and its real dependencies
+  // Real & mock deps
   let coordinator;
   let actionContextBuilder;
-
-  // Mocks
   let logger;
   let actionDiscoveryService;
   let promptOutputPort;
@@ -51,40 +58,34 @@ describe('PromptCoordinator Integration Test', () => {
   let worldContext;
   let entityManager;
   let gameDataRepository;
+  let indexerStub;
 
-  // Helpers for event simulation
+  // Utilities for capturing the subscribe handler
   let capturedEventHandler = null;
-  let mockUnsubscribeFn = jest.fn();
+  const mockUnsubscribeFn = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     capturedEventHandler = null;
     mockUnsubscribeFn.mockClear();
 
-    // Instantiate Mocks
+    // ─── mocks
     logger = mockLogger();
     actionDiscoveryService = mockActionDiscoveryService();
     promptOutputPort = mockPromptOutputPort();
     worldContext = mockWorldContext();
-    entityManager = {
-      /* Not directly used in this flow, can be an empty object */
-    };
-    gameDataRepository = {
-      /* Not directly used in this flow, can be an empty object */
-    };
+    indexerStub = createIndexerStub();
+    entityManager = {}; // not exercised here
+    gameDataRepository = {};
 
-    // This is the key part of the integration test setup.
-    // We mock the event bus to capture the subscription handler.
     playerTurnEvents = {
-      subscribe: jest.fn((eventId, handler) => {
-        if (eventId === PLAYER_TURN_SUBMITTED_ID) {
-          capturedEventHandler = handler;
-        }
+      subscribe: jest.fn((evtId, handler) => {
+        if (evtId === PLAYER_TURN_SUBMITTED_ID) capturedEventHandler = handler;
         return mockUnsubscribeFn;
       }),
     };
 
-    // Instantiate REAL ActionContextBuilder with mocked dependencies
+    // ─── real builder
     actionContextBuilder = new ActionContextBuilder({
       worldContext,
       entityManager,
@@ -92,17 +93,19 @@ describe('PromptCoordinator Integration Test', () => {
       logger,
     });
 
-    // Instantiate REAL PromptCoordinator with real and mocked dependencies
+    // ─── SUT
     coordinator = new PromptCoordinator({
       logger,
       actionDiscoveryService,
       promptOutputPort,
-      actionContextBuilder, // <-- Real instance
+      actionContextBuilder,
+      actionIndexingService: indexerStub,
       playerTurnEvents,
     });
   });
 
-  it('✅ Happy path: should discover, prompt, await event, and resolve with action', async () => {
+  // ──────────────────────────────────────────────────────────────
+  it('✅ Happy path: discover ➜ index ➜ prompt ➜ await ➜ resolve', async () => {
     // Arrange
     const actor = { id: 'player-1', name: 'Hero' };
     const mockLocation = { id: 'loc-1', name: 'Tavern' };
@@ -110,8 +113,8 @@ describe('PromptCoordinator Integration Test', () => {
       { id: 'core:wait', command: 'Wait' },
       { id: 'core:speak', command: 'Speak' },
     ];
-    const chosenAction = discoveredActions[0];
-    const chosenSpeech = 'I will wait.';
+    const chosenIndex = 1;
+    const chosenSpeech = 'I shall wait.';
 
     worldContext.getLocationOfEntity.mockResolvedValue(mockLocation);
     actionDiscoveryService.getValidActions.mockResolvedValue(discoveredActions);
@@ -119,44 +122,61 @@ describe('PromptCoordinator Integration Test', () => {
     // Act
     const promptPromise = coordinator.prompt(actor);
 
-    // Assert: Initial calls
+    // Flush micro-tasks so the discovery takes place
     await new Promise(process.nextTick);
 
+    // ── Assertions before player input ──
     expect(worldContext.getLocationOfEntity).toHaveBeenCalledWith(actor.id);
     expect(actionDiscoveryService.getValidActions).toHaveBeenCalledWith(
       actor,
       expect.any(Object)
     );
-    expect(promptOutputPort.prompt).toHaveBeenCalledWith(
+    // Indexer usage
+    expect(indexerStub.indexActions).toHaveBeenCalledWith(
       actor.id,
       discoveredActions
+    );
+    const indexedComposites = indexerStub.indexActions.mock.results[0].value;
+    expect(promptOutputPort.prompt).toHaveBeenCalledWith(
+      actor.id,
+      indexedComposites
     );
     expect(playerTurnEvents.subscribe).toHaveBeenCalledWith(
       PLAYER_TURN_SUBMITTED_ID,
       expect.any(Function)
     );
-    expect(capturedEventHandler).not.toBeNull();
+    expect(capturedEventHandler).toBeInstanceOf(Function);
 
-    // Act: Simulate player input event
+    // Simulate player choice
     capturedEventHandler({
       payload: {
-        actionId: chosenAction.id,
-        speech: chosenSpeech,
         submittedByActorId: actor.id,
+        index: chosenIndex,
+        speech: chosenSpeech,
       },
     });
 
-    // Assert: Final resolution
+    // Final resolution
+    const chosenComposite = indexedComposites.find(
+      (c) => c.index === chosenIndex
+    );
+    const expectedAction = {
+      id: chosenComposite.actionId,
+      name: chosenComposite.description,
+      command: chosenComposite.commandString,
+      description: chosenComposite.description,
+      params: chosenComposite.params,
+    };
+
     await expect(promptPromise).resolves.toEqual({
-      action: chosenAction,
+      action: expectedAction,
       speech: chosenSpeech,
     });
-
-    // Assert: Cleanup
     expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
   });
 
-  it('✅ Discovery error: should surface the message to the UI and propagate the rejection', async () => {
+  // ──────────────────────────────────────────────────────────────
+  it('✅ Discovery error surfaces through UI and rejects', async () => {
     // Arrange
     const actor = { id: 'player-1' };
     const mockLocation = { id: 'loc-1' };
@@ -170,15 +190,16 @@ describe('PromptCoordinator Integration Test', () => {
     actionDiscoveryService.getValidActions.mockRejectedValue(discoveryError);
 
     // Act
-    const promptPromise = coordinator.prompt(actor);
+    const p = coordinator.prompt(actor);
 
-    // Assert: This test was already using the robust `rejects` syntax.
-    await expect(promptPromise).rejects.toBe(discoveryError);
+    // Assert
+    await expect(p).rejects.toBe(discoveryError);
     expect(promptOutputPort.prompt).toHaveBeenCalledWith(
       actor.id,
       [],
       discoveryError
     );
     expect(playerTurnEvents.subscribe).not.toHaveBeenCalled();
+    expect(indexerStub.indexActions).not.toHaveBeenCalled();
   });
 });

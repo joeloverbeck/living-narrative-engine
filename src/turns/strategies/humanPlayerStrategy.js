@@ -61,7 +61,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
 
     try {
       actor = this._getActorFromContext(context, logger);
-      const playerPromptService = this._getPlayerPromptServiceFromContext(
+      const promptCoordinator = this._getPlayerPromptServiceFromContext(
         context,
         logger
       );
@@ -93,9 +93,9 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
       let playerData;
       try {
         logger.debug(
-          `HumanPlayerStrategy: Calling playerPromptService.prompt() for actor ${actor.id}${cancellationSignal ? ' with cancellation signal.' : '.'}`
+          `HumanPlayerStrategy: Calling promptCoordinator.prompt() for actor ${actor.id}${cancellationSignal ? ' with cancellation signal.' : '.'}`
         );
-        playerData = await playerPromptService.prompt(actor, {
+        playerData = await promptCoordinator.prompt(actor, {
           cancellationSignal,
         });
         logger.debug(
@@ -108,7 +108,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
             `HumanPlayerStrategy: Prompt for actor ${actor.id} was cancelled (aborted).`
           );
         } else {
-          const errorMessage = `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${actor.id}.`;
+          const errorMessage = `HumanPlayerStrategy: Error during promptCoordinator.prompt() for actor ${actor.id}.`;
           logger.error(errorMessage, promptError);
         }
         throw promptError;
@@ -121,7 +121,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
         playerData.action.id.trim() === '' ||
         typeof playerData.action.command !== 'string'
       ) {
-        const errorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${actor.id}. Action ID and command string are mandatory.`;
+        const errorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from promptCoordinator.prompt() for actor ${actor.id}. Action ID and command string are mandatory.`;
         logger.error(errorMsg, { receivedData: playerData });
         throw new Error(errorMsg + ` Received: ${JSON.stringify(playerData)}`);
       }

@@ -13,6 +13,7 @@ import { validateDependency } from '../../utils/validationUtils.js';
  * @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort
  * @typedef {import('./actionContextBuilder.js').default} ActionContextBuilder
  * @typedef {import('../interfaces/IPlayerTurnEvents.js').IPlayerTurnEvents} IPlayerTurnEvents
+ * @typedef {import('../services/actionIndexingService.js').ActionIndexingService} ActionIndexingService
  * @typedef {import('../../entities/entity.js').default} Entity
  */
 
@@ -22,35 +23,24 @@ import { validateDependency } from '../../utils/validationUtils.js';
  * @property {IActionDiscoveryService} actionDiscoveryService
  * @property {IPromptOutputPort} promptOutputPort
  * @property {ActionContextBuilder} actionContextBuilder
- * @property {IPlayerTurnEvents} playerTurnEvents - An event subscription service for player input events.
+ * @property {ActionIndexingService} actionIndexingService
+ * @property {IPlayerTurnEvents} playerTurnEvents
  */
 
 /**
  * @class PromptCoordinator
- * @description Orchestrates the process of prompting an actor for an action. It ensures only one prompt is active
- * at a time, handling discovery, presentation, and session management.
- * @exports PromptCoordinator
+ * @description Orchestrates the process of prompting an actor for an action.
+ * It now indexes every discovered action and presents choices by **integer index**.
  */
 class PromptCoordinator {
-  /** @type {ILogger} */
-  #logger;
+  /** @type {ILogger} */ #logger;
+  /** @type {IActionDiscoveryService} */ #actionDiscoveryService;
+  /** @type {IPromptOutputPort} */ #promptOutputPort;
+  /** @type {ActionContextBuilder} */ #actionContextBuilder;
+  /** @type {ActionIndexingService} */ #actionIndexingService;
+  /** @type {IPlayerTurnEvents} */ #playerTurnEvents;
 
-  /** @type {IActionDiscoveryService} */
-  #actionDiscoveryService;
-
-  /** @type {IPromptOutputPort} */
-  #promptOutputPort;
-
-  /** @type {ActionContextBuilder} */
-  #actionContextBuilder;
-
-  /** @type {IPlayerTurnEvents} */
-  #playerTurnEvents;
-
-  /**
-   * The currently active prompt session. Only one prompt can be active at a time.
-   * @type {PromptSession | null}
-   */
+  /** @type {PromptSession | null} */
   #activeSession = null;
 
   /**
@@ -61,9 +51,9 @@ class PromptCoordinator {
     actionDiscoveryService,
     promptOutputPort,
     actionContextBuilder,
+    actionIndexingService,
     playerTurnEvents,
   }) {
-    // The utility falls back to `console`, so it's safe to validate the logger first.
     validateDependency(logger, 'logger', console, {
       requiredMethods: ['info', 'error', 'debug', 'warn'],
     });
@@ -71,9 +61,7 @@ class PromptCoordinator {
       actionDiscoveryService,
       'actionDiscoveryService',
       logger,
-      {
-        requiredMethods: ['getValidActions'],
-      }
+      { requiredMethods: ['getValidActions'] }
     );
     validateDependency(promptOutputPort, 'promptOutputPort', logger, {
       requiredMethods: ['prompt'],
@@ -81,26 +69,28 @@ class PromptCoordinator {
     validateDependency(actionContextBuilder, 'actionContextBuilder', logger, {
       requiredMethods: ['buildContext'],
     });
+    validateDependency(actionIndexingService, 'actionIndexingService', logger, {
+      requiredMethods: ['indexActions', 'resolve'],
+    });
     validateDependency(playerTurnEvents, 'playerTurnEvents', logger);
 
     this.#logger = logger;
     this.#actionDiscoveryService = actionDiscoveryService;
     this.#promptOutputPort = promptOutputPort;
     this.#actionContextBuilder = actionContextBuilder;
+    this.#actionIndexingService = actionIndexingService;
     this.#playerTurnEvents = playerTurnEvents;
 
-    this.#logger.debug('PromptCoordinator initialized.');
+    this.#logger.debug('PromptCoordinator initialised.');
   }
 
   /**
    * Initiates a prompt for a given actor, cancelling any existing prompt.
    *
-   * @param {Entity} actor - The actor to prompt for an action.
+   * @param {Entity} actor
    * @param {object} [options]
-   * @param {AbortSignal} [options.cancellationSignal] - An AbortSignal to cancel the entire prompt operation.
-   * @returns {Promise<PlayerPromptResolution>} A promise that resolves with the player's chosen action and speech.
-   * @throws {DOMException<'AbortError'>} If the provided signal is aborted.
-   * @throws {PromptError} If action discovery fails or other prompt-related issues occur.
+   * @param {AbortSignal} [options.cancellationSignal]
+   * @returns {Promise<PlayerPromptResolution>}
    */
   async prompt(actor, { cancellationSignal } = {}) {
     if (cancellationSignal?.aborted) {
@@ -118,18 +108,30 @@ class PromptCoordinator {
       );
     }
 
-    let actions;
+    // ─────────────────── Discover & Index ───────────────────
+    let discoveredActions;
+    let indexedComposites;
     try {
-      this.#logger.debug(`Building context for actor ${actor.id}...`);
+      this.#logger.debug(`Building context for actor ${actor.id}…`);
       const ctx = await this.#actionContextBuilder.buildContext(actor);
 
-      this.#logger.debug(`Discovering actions for actor ${actor.id}...`);
-      actions = await this.#actionDiscoveryService.getValidActions(actor, ctx);
+      this.#logger.debug(`Discovering actions for actor ${actor.id}…`);
+      discoveredActions = await this.#actionDiscoveryService.getValidActions(
+        actor,
+        ctx
+      );
+
+      // **NEW:** 1-based indexing (dedup, cap, O(1) resolve)
+      indexedComposites = this.#actionIndexingService.indexActions(
+        actor.id,
+        discoveredActions
+      );
 
       this.#logger.debug(
-        `Displaying ${actions.length} actions to actor ${actor.id}.`
+        `Displaying ${indexedComposites.length} indexed choices to actor ${actor.id}.`
       );
-      await this.#promptOutputPort.prompt(actor.id, actions);
+
+      await this.#promptOutputPort.prompt(actor.id, indexedComposites);
     } catch (err) {
       if (
         err instanceof PromptError &&
@@ -151,12 +153,13 @@ class PromptCoordinator {
       throw err;
     }
 
+    // ─────────────────── Create Session ───────────────────
     const session = new PromptSession({
       actorId: actor.id,
-      actions,
       eventBus: this.#playerTurnEvents,
       logger: this.#logger,
       abortSignal: cancellationSignal,
+      actionIndexingService: this.#actionIndexingService,
     });
     this.#activeSession = session;
 
@@ -176,9 +179,7 @@ class PromptCoordinator {
     return sessionPromise;
   }
 
-  /**
-   * Externally cancels the currently active prompt, if one exists.
-   */
+  /** Cancels the currently active prompt, if any. */
   cancelCurrentPrompt() {
     if (this.#activeSession) {
       this.#logger.info('Externally cancelling the current prompt.');

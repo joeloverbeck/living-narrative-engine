@@ -272,7 +272,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
     };
 
     mockServices = {
-      playerPromptService: mockPlayerPromptService,
+      promptCoordinator: mockPlayerPromptService,
       subscriptionManager: mockSubscriptionManager,
       turnEndPort: mockTurnEndPort,
       game: mockGameService,

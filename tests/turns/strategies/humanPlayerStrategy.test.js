@@ -69,7 +69,7 @@ describe('HumanPlayerStrategy', () => {
   });
 
   describe('decideAction', () => {
-    it('should call playerPromptService.prompt and return a correctly structured ITurnAction', async () => {
+    it('should call promptCoordinator.prompt and return a correctly structured ITurnAction', async () => {
       const playerData = {
         action: {
           ...mockAvailableAction,
@@ -97,7 +97,7 @@ describe('HumanPlayerStrategy', () => {
 
       expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
       expect(mockMainLogger.debug).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Calling playerPromptService.prompt() for actor ${mockActor.id}.`
+        `HumanPlayerStrategy: Calling promptCoordinator.prompt() for actor ${mockActor.id}.`
       );
       expect(mockMainLogger.debug).toHaveBeenCalledWith(
         `HumanPlayerStrategy: Received playerData for actor ${mockActor.id}. Details:`,
@@ -134,13 +134,13 @@ describe('HumanPlayerStrategy', () => {
 
     it('should throw if playerData from prompt is null', async () => {
       mockPlayerPromptService.prompt.mockResolvedValueOnce(null);
-      const expectedErrorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory. Received: null`;
+      const expectedErrorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from promptCoordinator.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory. Received: null`;
 
       await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(
         expectedErrorMsg
       );
       expect(mockMainLogger.error).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`,
+        `HumanPlayerStrategy: Invalid or incomplete data received from promptCoordinator.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`,
         { receivedData: null }
       );
       expect(mockMainLogger.error).toHaveBeenCalledWith(
@@ -153,13 +153,13 @@ describe('HumanPlayerStrategy', () => {
     it('should throw if playerData.action from prompt is null', async () => {
       const playerData = { action: null, speech: 'hello' };
       mockPlayerPromptService.prompt.mockResolvedValueOnce(playerData);
-      const expectedErrorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory. Received: ${JSON.stringify(playerData)}`;
+      const expectedErrorMsg = `HumanPlayerStrategy: Invalid or incomplete data received from promptCoordinator.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory. Received: ${JSON.stringify(playerData)}`;
 
       await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(
         expectedErrorMsg
       );
       expect(mockMainLogger.error).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`,
+        `HumanPlayerStrategy: Invalid or incomplete data received from promptCoordinator.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`,
         { receivedData: playerData }
       );
       expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
@@ -171,7 +171,7 @@ describe('HumanPlayerStrategy', () => {
         speech: 'now',
       };
       mockPlayerPromptService.prompt.mockResolvedValueOnce(playerDataMissingId);
-      const expectedErrorMsgPart = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`;
+      const expectedErrorMsgPart = `HumanPlayerStrategy: Invalid or incomplete data received from promptCoordinator.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`;
       await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(
         new RegExp(
           `^${expectedErrorMsgPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`
@@ -203,7 +203,7 @@ describe('HumanPlayerStrategy', () => {
       mockPlayerPromptService.prompt.mockResolvedValueOnce(
         playerDataMissingCommand
       );
-      const expectedErrorMsgPart = `HumanPlayerStrategy: Invalid or incomplete data received from playerPromptService.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`;
+      const expectedErrorMsgPart = `HumanPlayerStrategy: Invalid or incomplete data received from promptCoordinator.prompt() for actor ${mockActor.id}. Action ID and command string are mandatory.`;
       await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(
         new RegExp(
           `^${expectedErrorMsgPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`
@@ -375,7 +375,7 @@ describe('HumanPlayerStrategy', () => {
       );
     });
 
-    it('should log info and re-throw AbortError if playerPromptService.prompt is aborted', async () => {
+    it('should log info and re-throw AbortError if promptCoordinator.prompt is aborted', async () => {
       const abortError = new DOMException('Test Abort', 'AbortError');
       mockPlayerPromptService.prompt.mockRejectedValueOnce(abortError);
 
@@ -383,7 +383,7 @@ describe('HumanPlayerStrategy', () => {
       mockTurnContext.getPromptSignal.mockReturnValueOnce(mockSignal);
 
       expect(mockMainLogger.error).not.toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Error during playerPromptService.prompt() for actor ${mockActor.id}.`,
+        `HumanPlayerStrategy: Error during promptCoordinator.prompt() for actor ${mockActor.id}.`,
         expect.anything()
       );
     });
