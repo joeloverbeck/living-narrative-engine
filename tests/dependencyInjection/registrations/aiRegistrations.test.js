@@ -40,7 +40,6 @@ import { AIPromptContentProvider } from '../../../src/prompting/AIPromptContentP
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { AIFallbackActionFactory } from '../../../src/turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
-import AITurnHandler from '../../../src/turns/handlers/aiTurnHandler.js';
 
 // --- Mocks ---
 // A plain logger object to be spied on.

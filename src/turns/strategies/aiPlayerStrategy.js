@@ -1,6 +1,3 @@
-// src/turns/strategies/aiPlayerStrategy.js
-// --- FILE START ---
-
 /**
  * @file This module implements the IActorTurnStrategy for AI-controlled characters
  * using an indexed action selection model.
@@ -19,8 +16,9 @@
 /** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
 /** @typedef {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
+/** @typedef {import('../services/actionIndexingService.js').ActionIndexingService} ActionIndexingService */
 /** @typedef {import('../dtos/actionComposite.js').ActionComposite} ActionComposite */
-/** @typedef {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo} DiscoveredActionInfo */
+/** @typedef {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo} DiscoveredActionInfo */
 
 // --- Module Imports ---
 import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
@@ -44,6 +42,10 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
   #llmResponseProcessor;
   /** @type {IAIFallbackActionFactory} */
   #aiFallbackActionFactory;
+  /** @type {IActionDiscoveryService} */
+  #actionDiscoveryService;
+  /** @type {ActionIndexingService} */
+  #actionIndexingService;
   /** @type {ILogger} */
   #logger;
 
@@ -55,6 +57,8 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
    * @param {IAIPromptPipeline} dependencies.aiPromptPipeline - Facade for generating the final prompt.
    * @param {ILLMResponseProcessor} dependencies.llmResponseProcessor - Processor for LLM responses.
    * @param {IAIFallbackActionFactory} dependencies.aiFallbackActionFactory - Factory for creating fallback actions.
+   * @param {IActionDiscoveryService} dependencies.actionDiscoveryService - Service to discover valid actions.
+   * @param {ActionIndexingService} dependencies.actionIndexingService - Service to index discovered actions.
    * @param {ILogger} dependencies.logger - Logger instance.
    * @throws {Error} If any dependency is invalid.
    */
@@ -63,6 +67,8 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     aiPromptPipeline,
     llmResponseProcessor,
     aiFallbackActionFactory,
+    actionDiscoveryService,
+    actionIndexingService,
     logger,
   }) {
     super();
@@ -90,6 +96,18 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         this.#logger,
         { requiredMethods: ['create'] }
       );
+      validateDependency(
+        actionDiscoveryService,
+        'IActionDiscoveryService',
+        this.#logger,
+        { requiredMethods: ['getValidActions'] }
+      );
+      validateDependency(
+        actionIndexingService,
+        'ActionIndexingService',
+        this.#logger,
+        { requiredMethods: ['indexActions'] }
+      );
     } catch (err) {
       this.#logger.error(`AIPlayerStrategy Constructor: ${err.message}`);
       throw err;
@@ -99,6 +117,8 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     this.#aiPromptPipeline = aiPromptPipeline;
     this.#llmResponseProcessor = llmResponseProcessor;
     this.#aiFallbackActionFactory = aiFallbackActionFactory;
+    this.#actionDiscoveryService = actionDiscoveryService;
+    this.#actionIndexingService = actionIndexingService;
 
     this.#logger.debug('AIPlayerStrategy initialized.');
   }
@@ -110,7 +130,6 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
    * @returns {Promise<AIStrategyDecision>} A promise that resolves to the AI's decided action and auxiliary data.
    */
   async decideAction(context) {
-    // 1. --- Precondition Validation ---
     if (!context) {
       throw new Error('AIPlayerStrategy received an invalid ITurnContext.');
     }
@@ -127,9 +146,15 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         `AIPlayerStrategy: Starting action decision for actor ${actorId}.`
       );
 
-      // 2. --- Discover Available Actions ---
-      const availableActions = await this._getAvailableActions(actor, context);
-      if (!availableActions) {
+      // 1. --- Discover and Index Actions (Single Source of Truth) ---
+      const discoveredActions =
+        await this.#actionDiscoveryService.getValidActions(actor, context);
+      const indexedActions = this.#actionIndexingService.indexActions(
+        actorId,
+        discoveredActions
+      );
+
+      if (!indexedActions || indexedActions.length === 0) {
         return this._createFallbackDecision(
           'no_available_actions',
           new Error('No actions were discovered for the actor.'),
@@ -137,36 +162,35 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
         );
       }
 
-      // 3. --- Query LLM for a Choice ---
-      const llmResult = await this._queryLLM(actor, context, availableActions);
+      // 2. --- Query LLM for a Choice ---
+      const llmResult = await this._queryLLM(actor, context, indexedActions);
       const chosenIndex = llmResult?.action?.chosenIndex;
       const speech = llmResult?.action?.speech || null;
 
-      // 4. --- Validate and Resolve the Choice ---
+      // 3. --- Validate and Resolve the Choice using the source-of-truth list ---
       const chosenComposite =
         Number.isInteger(chosenIndex) &&
         chosenIndex > 0 &&
-        chosenIndex <= availableActions.length
-          ? availableActions[chosenIndex - 1]
+        chosenIndex <= indexedActions.length
+          ? indexedActions[chosenIndex - 1]
           : null;
 
       if (!chosenComposite) {
         const error = new Error(
-          `LLM returned an invalid or out-of-bounds index: ${chosenIndex}. Total actions: ${availableActions.length}.`
+          `LLM returned an invalid or out-of-bounds index: ${chosenIndex}. Total actions: ${indexedActions.length}.`
         );
         return this._createFallbackDecision(
           'llm_invalid_index',
           error,
           actorId,
-          speech // Preserve speech even on this type of failure
+          speech
         );
       }
 
-      // 5. --- Construct and Return Final Decision ---
+      // 4. --- Construct and Return Final Decision ---
       const turnAction = this._buildTurnActionFromComposite(chosenComposite);
       if (speech && typeof speech === 'string' && speech.trim().length > 0) {
         turnAction.speech = speech.trim();
-        this.#logger.debug(`Actor ${actorId}: Attached speech to turnAction.`);
       }
 
       this.#logger.info(
@@ -230,38 +254,6 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
   }
 
   /**
-   * Discovers and prepares available actions for the AI.
-   * @private
-   * @param {Entity} actor - The actor making the decision.
-   * @param {ITurnContext} context - The current turn context.
-   * @returns {Promise<ActionComposite[] | null>} A promise that resolves to the list of available actions, or null if no valid actions are found.
-   * @throws {Error} If the ActionDiscoveryService is not available in the context.
-   */
-  async _getAvailableActions(actor, context) {
-    const actionDiscoveryService = context.getActionDiscoveryService();
-    if (!actionDiscoveryService) {
-      throw new Error('ActionDiscoveryService not found in the turn context.');
-    }
-
-    const discoveredActions = await actionDiscoveryService.getValidActions(
-      actor,
-      context
-    );
-
-    if (!discoveredActions || discoveredActions.length === 0) {
-      return null;
-    }
-
-    return discoveredActions.map((action, index) => ({
-      index: index + 1,
-      actionId: action.id,
-      commandString: action.command,
-      params: action.params,
-      description: action.description || action.name,
-    }));
-  }
-
-  /**
    * Generates a prompt, queries the LLM, and processes the structured response.
    * @private
    * @param {Entity} actor - The actor for whom the prompt is generated.
@@ -296,4 +288,3 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
     );
   }
 }
-// --- FILE END ---

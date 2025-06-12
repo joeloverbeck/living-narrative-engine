@@ -1,36 +1,26 @@
+/**
+ * @file Unit tests for AIPlayerStrategy constructor validation.
+ */
 import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
 import {
-  jest,
   describe,
   beforeEach,
+  afterEach,
   test,
   expect,
-  afterEach,
+  jest,
 } from '@jest/globals';
 
-/** @typedef {import('../../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
-/** @typedef {import('../../../src/prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline */
-/** @typedef {import('../../../src/turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
-/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../src/turns/interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
-
+/** Mock factories for constructor dependencies **/
 const mockLlmAdapter = () => ({
   getAIDecision: jest.fn(),
   getCurrentActiveLlmId: jest.fn(),
 });
-
-const mockAiPromptPipeline = () => ({
-  generatePrompt: jest.fn(),
-});
-
-const mockLlmResponseProcessor = () => ({
-  processResponse: jest.fn(),
-});
-
-const mockAIFallbackActionFactory = () => ({
-  create: jest.fn(),
-});
-
+const mockAiPromptPipeline = () => ({ generatePrompt: jest.fn() });
+const mockLlmResponseProcessor = () => ({ processResponse: jest.fn() });
+const mockAIFallbackActionFactory = () => ({ create: jest.fn() });
+const mockActionDiscoveryService = () => ({ getValidActions: jest.fn() });
+const mockActionIndexingService = () => ({ indexActions: jest.fn() });
 const mockLogger = () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -39,22 +29,22 @@ const mockLogger = () => ({
 });
 
 describe('AIPlayerStrategy constructor', () => {
-  /** @type {ReturnType<typeof mockLlmAdapter>} */
   let llmAdapter;
-  /** @type {ReturnType<typeof mockAiPromptPipeline>} */
   let aiPromptPipeline;
-  /** @type {ReturnType<typeof mockLlmResponseProcessor>} */
   let llmResponseProcessor;
-  /** @type {ReturnType<typeof mockAIFallbackActionFactory>} */
   let aiFallbackActionFactory;
-  /** @type {ReturnType<typeof mockLogger>} */
+  let actionDiscoveryService;
+  let actionIndexingService;
   let logger;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     llmAdapter = mockLlmAdapter();
     aiPromptPipeline = mockAiPromptPipeline();
     llmResponseProcessor = mockLlmResponseProcessor();
     aiFallbackActionFactory = mockAIFallbackActionFactory();
+    actionDiscoveryService = mockActionDiscoveryService();
+    actionIndexingService = mockActionIndexingService();
     logger = mockLogger();
   });
 
@@ -68,6 +58,8 @@ describe('AIPlayerStrategy constructor', () => {
       aiPromptPipeline,
       llmResponseProcessor,
       aiFallbackActionFactory,
+      actionDiscoveryService,
+      actionIndexingService,
       logger,
     });
     expect(instance).toBeInstanceOf(AIPlayerStrategy);
@@ -81,6 +73,8 @@ describe('AIPlayerStrategy constructor', () => {
           aiPromptPipeline: null,
           llmResponseProcessor,
           aiFallbackActionFactory,
+          actionDiscoveryService,
+          actionIndexingService,
           logger,
         })
     ).toThrow('Missing required dependency: IAIPromptPipeline.');
@@ -94,12 +88,14 @@ describe('AIPlayerStrategy constructor', () => {
           aiPromptPipeline,
           llmResponseProcessor,
           aiFallbackActionFactory,
+          actionDiscoveryService,
+          actionIndexingService,
           logger,
         })
     ).toThrow('Missing required dependency: ILLMAdapter.');
   });
 
-  test('throws if llmResponseProcessor missing', () => {
+  test('throws if llmResponseProcessor is missing', () => {
     expect(
       () =>
         new AIPlayerStrategy({
@@ -107,12 +103,14 @@ describe('AIPlayerStrategy constructor', () => {
           aiPromptPipeline,
           llmResponseProcessor: null,
           aiFallbackActionFactory,
+          actionDiscoveryService,
+          actionIndexingService,
           logger,
         })
     ).toThrow('Missing required dependency: ILLMResponseProcessor.');
   });
 
-  test('throws if aiFallbackActionFactory missing', () => {
+  test('throws if aiFallbackActionFactory is missing', () => {
     expect(
       () =>
         new AIPlayerStrategy({
@@ -120,13 +118,44 @@ describe('AIPlayerStrategy constructor', () => {
           aiPromptPipeline,
           llmResponseProcessor,
           aiFallbackActionFactory: null,
+          actionDiscoveryService,
+          actionIndexingService,
           logger,
         })
     ).toThrow('Missing required dependency: IAIFallbackActionFactory.');
   });
 
-  test('throws if logger missing', () => {
-    // Suppress console.error for this specific test case, as the validator logs before throwing.
+  test('throws if actionDiscoveryService is missing', () => {
+    expect(
+      () =>
+        new AIPlayerStrategy({
+          llmAdapter,
+          aiPromptPipeline,
+          llmResponseProcessor,
+          aiFallbackActionFactory,
+          actionDiscoveryService: null,
+          actionIndexingService,
+          logger,
+        })
+    ).toThrow('Missing required dependency: IActionDiscoveryService.');
+  });
+
+  test('throws if actionIndexingService is missing', () => {
+    expect(
+      () =>
+        new AIPlayerStrategy({
+          llmAdapter,
+          aiPromptPipeline,
+          llmResponseProcessor,
+          aiFallbackActionFactory,
+          actionDiscoveryService,
+          actionIndexingService: null,
+          logger,
+        })
+    ).toThrow('Missing required dependency: ActionIndexingService.');
+  });
+
+  test('throws if logger is missing', () => {
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
@@ -137,6 +166,8 @@ describe('AIPlayerStrategy constructor', () => {
           aiPromptPipeline,
           llmResponseProcessor,
           aiFallbackActionFactory,
+          actionDiscoveryService,
+          actionIndexingService,
           logger: null,
         })
     ).toThrow('Missing required dependency: ILogger.');

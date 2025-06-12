@@ -4,10 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Uploaded from the office.">
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Ensured the prompt includes reference to the action indexes.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/AIPromptContentProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/AIPromptContentProvider.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/AIPromptContentProvider.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/AIPromptContentProvider.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/factories/concreteAIPlayerStrategyFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/concreteAIPlayerStrategyFactory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/factories/concreteAIPlayerStrategyFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/factories/concreteAIPlayerStrategyFactory.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.decideAction.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.decideAction.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,7 +76,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="999000" />
+      <workItem from="1749738330206" duration="3644000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -79,7 +86,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749738665250</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Ensured the prompt includes reference to the action indexes.">
+      <option name="closed" value="true" />
+      <created>1749739397499</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1749739397499</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -87,6 +102,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Uploaded from the office." />
-    <option name="LAST_COMMIT_MESSAGE" value="Uploaded from the office." />
+    <MESSAGE value="Ensured the prompt includes reference to the action indexes." />
+    <option name="LAST_COMMIT_MESSAGE" value="Ensured the prompt includes reference to the action indexes." />
   </component>
 </project>

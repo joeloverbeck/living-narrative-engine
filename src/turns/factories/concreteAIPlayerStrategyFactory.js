@@ -1,5 +1,4 @@
 // src/turns/factories/ConcreteAIPlayerStrategyFactory.js
-// ****** MODIFIED FILE ******
 import { IAIPlayerStrategyFactory } from '../interfaces/IAIPlayerStrategyFactory.js';
 import { AIPlayerStrategy } from '../strategies/aiPlayerStrategy.js';
 
@@ -8,8 +7,10 @@ import { AIPlayerStrategy } from '../strategies/aiPlayerStrategy.js';
  * @typedef {import('../../prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline
  * @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
  * @typedef {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory
+ * @typedef {import('../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
+ * @typedef {import('../services/actionIndexingService.js').ActionIndexingService} ActionIndexingService
+ * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
  */
 
 /**
@@ -28,6 +29,10 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
   #llmResponseProcessor;
   /** @type {IAIFallbackActionFactory} */
   #aiFallbackActionFactory;
+  /** @type {IActionDiscoveryService} */
+  #actionDiscoveryService;
+  /** @type {ActionIndexingService} */
+  #actionIndexingService;
   /** @type {ILogger} */
   #logger;
 
@@ -39,6 +44,8 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
    * @param {IAIPromptPipeline} dependencies.aiPromptPipeline
    * @param {ILLMResponseProcessor} dependencies.llmResponseProcessor
    * @param {IAIFallbackActionFactory} dependencies.aiFallbackActionFactory
+   * @param {IActionDiscoveryService} dependencies.actionDiscoveryService
+   * @param {ActionIndexingService} dependencies.actionIndexingService
    * @param {ILogger} dependencies.logger
    */
   constructor({
@@ -46,36 +53,35 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
     aiPromptPipeline,
     llmResponseProcessor,
     aiFallbackActionFactory,
+    actionDiscoveryService,
+    actionIndexingService,
     logger,
   }) {
     super();
 
-    // Add robust validation for each dependency
-    if (!llmAdapter)
-      throw new Error('AIPlayerStrategyFactory: llmAdapter is required.');
-    if (!aiPromptPipeline)
-      throw new Error('AIPlayerStrategyFactory: aiPromptPipeline is required.');
+    if (!llmAdapter) throw new Error('llmAdapter is required.');
+    if (!aiPromptPipeline) throw new Error('aiPromptPipeline is required.');
     if (!llmResponseProcessor)
-      throw new Error(
-        'AIPlayerStrategyFactory: llmResponseProcessor is required.'
-      );
+      throw new Error('llmResponseProcessor is required.');
     if (!aiFallbackActionFactory)
-      throw new Error(
-        'AIPlayerStrategyFactory: aiFallbackActionFactory is required.'
-      );
-    if (!logger)
-      throw new Error('AIPlayerStrategyFactory: logger is required.');
+      throw new Error('aiFallbackActionFactory is required.');
+    if (!actionDiscoveryService)
+      throw new Error('actionDiscoveryService is required.');
+    if (!actionIndexingService)
+      throw new Error('actionIndexingService is required.');
+    if (!logger) throw new Error('logger is required.');
 
     this.#llmAdapter = llmAdapter;
     this.#aiPromptPipeline = aiPromptPipeline;
     this.#llmResponseProcessor = llmResponseProcessor;
     this.#aiFallbackActionFactory = aiFallbackActionFactory;
+    this.#actionDiscoveryService = actionDiscoveryService;
+    this.#actionIndexingService = actionIndexingService;
     this.#logger = logger;
   }
 
   /**
    * Creates a new AIPlayerStrategy instance using the cached dependencies.
-   * The method signature is now parameter-less.
    *
    * @returns {IActorTurnStrategy}
    */
@@ -85,6 +91,8 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
       aiPromptPipeline: this.#aiPromptPipeline,
       llmResponseProcessor: this.#llmResponseProcessor,
       aiFallbackActionFactory: this.#aiFallbackActionFactory,
+      actionDiscoveryService: this.#actionDiscoveryService,
+      actionIndexingService: this.#actionIndexingService,
       logger: this.#logger,
     });
   }

@@ -99,6 +99,7 @@ import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
 import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
 // --- ADDED IMPORT ---
 import { ConcreteAIPlayerStrategyFactory } from '../../turns/factories/concreteAIPlayerStrategyFactory.js';
+import { ActionIndexingService } from '../../turns/services/actionIndexingService';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -316,16 +317,13 @@ export function registerAI(container) {
     (c) => new AIFallbackActionFactory({ logger: c.resolve(tokens.ILogger) })
   );
 
-  // --- ADDED REGISTRATION ---
-  r.singletonFactory(tokens.IAIPlayerStrategyFactory, (c) => {
-    return new ConcreteAIPlayerStrategyFactory({
-      llmAdapter: c.resolve(tokens.LLMAdapter),
-      aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
-      llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
-      aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
-      logger: c.resolve(tokens.ILogger),
-    });
-  });
+  r.singletonFactory(
+    tokens.ActionIndexingService,
+    (c) => new ActionIndexingService(c.resolve(tokens.ILogger))
+  );
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.ActionIndexingService}.`
+  );
 
   r.singletonFactory(tokens.IAIPromptPipeline, (c) => {
     return new AIPromptPipeline({
@@ -338,6 +336,22 @@ export function registerAI(container) {
   });
   logger.debug(
     `AI Systems Registration: Registered AI Turn Pipeline services, including ${tokens.IAIPromptPipeline}.`
+  );
+
+  // --- ADDED REGISTRATION ---
+  r.singletonFactory(tokens.IAIPlayerStrategyFactory, (c) => {
+    return new ConcreteAIPlayerStrategyFactory({
+      llmAdapter: c.resolve(tokens.LLMAdapter),
+      aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
+      llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+      aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
+      actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
+      actionIndexingService: c.resolve(tokens.ActionIndexingService),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.IAIPlayerStrategyFactory} factory.`
   );
 
   // --- AI TURN HANDLER (MODIFIED) ---

@@ -1,5 +1,4 @@
 // tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js
-// ****** MODIFIED FILE ******
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
 // --- DI Container & Configuration ---
@@ -111,9 +110,19 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       lifecycle: 'singletonFactory',
     });
 
-    // MODIFIED: Add a valid registration for the AIPlayerStrategyFactory.
-    // This is necessary because the AITurnHandler depends on it, and we want to
-    // isolate the failure to the AITurnHandler's constructor, not its dependency resolution.
+    // Stub action discovery and indexing so factory can construct
+    brokenContainer.register(
+      tokens.IActionDiscoveryService,
+      () => ({ getValidActions: () => [] }),
+      { lifecycle: 'singletonFactory' }
+    );
+    brokenContainer.register(
+      tokens.ActionIndexingService,
+      () => ({ indexActions: () => [] }),
+      { lifecycle: 'singletonFactory' }
+    );
+
+    // Add a valid registration for the AIPlayerStrategyFactory.
     brokenContainer.register(
       tokens.IAIPlayerStrategyFactory,
       (c) => {
@@ -122,6 +131,8 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
           llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
           aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
+          actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
+          actionIndexingService: c.resolve(tokens.ActionIndexingService),
           logger: c.resolve(tokens.ILogger),
         });
       },
@@ -143,7 +154,6 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     );
 
     // --- Act & Assert ---
-    // The test now verifies against a dependency that is still required by the refactored constructor.
     expect(() => brokenContainer.resolve(tokens.AITurnHandler)).toThrow(
       'AITurnHandler: Invalid ITurnContextFactory'
     );

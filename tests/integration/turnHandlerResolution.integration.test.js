@@ -91,8 +91,6 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
     mockEntityManager = { getEntityInstance: (id) => ({ id }) };
     mockTurnContextFactory = { create: jest.fn() };
 
-    // A comprehensive set of stubs to satisfy the AITurnHandler constructor
-    // This is defined before the factory so we can use it to construct the factory.
     stubs = {
       logger,
       turnStateFactory: {
@@ -108,10 +106,10 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       commandOutcomeInterpreter: {},
       safeEventDispatcher: {},
       entityManager: mockEntityManager,
-      actionDiscoverySystem: {},
+      actionDiscoverySystem: {}, // original stub
       promptBuilder: {},
       aiFallbackActionFactory: { create: jest.fn() },
-      aiPlayerStrategyFactory: null, // Will be replaced below
+      aiPlayerStrategyFactory: null, // will be set below
       turnContextFactory: mockTurnContextFactory,
       gameStateProvider: {},
       promptContentProvider: {},
@@ -119,42 +117,41 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       aiPromptPipeline: mockAiPromptPipeline,
     };
 
-    // MODIFIED: Instantiate the factory with its required dependencies from the stubs.
+    // ◀️ NEW: satisfy the two DI params for your strategy‐factory
+    stubs.actionDiscoveryService = stubs.actionDiscoverySystem;
+    stubs.actionIndexingService = { indexActions: jest.fn() };
+
     aiStrategyFactory = new ConcreteAIPlayerStrategyFactory({
       llmAdapter: stubs.llmAdapter,
       aiPromptPipeline: stubs.aiPromptPipeline,
       llmResponseProcessor: stubs.llmResponseProcessor,
       aiFallbackActionFactory: stubs.aiFallbackActionFactory,
+      actionDiscoveryService: stubs.actionDiscoveryService,
+      actionIndexingService: stubs.actionIndexingService,
       logger: stubs.logger,
     });
 
-    // MODIFIED: The stubbed strategy needs its own dependencies for its constructor.
-    // We pass the `stubs` object directly, as the real `create` method is now parameterless.
     jest
       .spyOn(aiStrategyFactory, 'create')
       .mockImplementation(() => new StubAIPlayerStrategy(stubs));
 
-    // Now, insert the real, spied-upon factory instance into the stubs object.
     stubs.aiPlayerStrategyFactory = aiStrategyFactory;
 
-    // Factory function that creates a real AITurnHandler with all stubbed dependencies
     const createAiHandlerFactory = () => new AITurnHandler(stubs);
 
-    // Define the handler rules array for the new resolver constructor
     const handlerRules = [
       {
         name: 'Player',
         predicate: (actor) => actor.hasComponent(PLAYER_COMPONENT_ID),
-        factory: jest.fn(), // Mock player factory, not used in this test
+        factory: jest.fn(),
       },
       {
         name: 'AI',
         predicate: (actor) => actor.hasComponent(ACTOR_COMPONENT_ID),
-        factory: createAiHandlerFactory, // Use the real AI handler factory
+        factory: createAiHandlerFactory,
       },
     ];
 
-    // Instantiate the resolver with the new dependency structure
     resolver = new TurnHandlerResolver({
       logger,
       handlerRules,

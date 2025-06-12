@@ -274,6 +274,7 @@ export const tokens = Object.freeze({
   AIGameStateProvider: 'AIGameStateProvider',
   AIPromptContentProvider: 'AIPromptContentProvider',
   LLMResponseProcessor: 'LLMResponseProcessor',
+  ActionIndexingService: 'ActionIndexingService',
 
   IConfigurationProvider: 'IConfigurationProvider',
   LLMConfigService: 'LLMConfigService',
