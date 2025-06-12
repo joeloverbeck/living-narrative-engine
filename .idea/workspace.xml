@@ -4,15 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Made changes to configurableLLMAdapter.js">
-      <change afterPath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/turns/orchestration/aiDecisionOrchestrator.test.js" afterDir="false" />
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Fixed tests.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/adapters/llmChooser.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/llmChooser.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/indexedActionCompositesForAI.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/indexedActionCompositesForAI.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.constructor.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.decideAction.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.decideAction.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/factories/concreteAIPlayerStrategyFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/concreteAIPlayerStrategyFactory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/factories/concreteAIPlayerStrategyFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/factories/concreteAIPlayerStrategyFactory.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,7 +147,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="11367000" />
+      <workItem from="1749738330206" duration="12744000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -223,7 +221,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749747889118</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Fixed tests.">
+      <option name="closed" value="true" />
+      <created>1749750284420</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1749750284420</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -240,6 +246,7 @@
     <MESSAGE value="Implemented ActionIndexerAdapter." />
     <MESSAGE value="Reverted insane changes that o4 intended to do to ConfigurableLLMAdapter." />
     <MESSAGE value="Made changes to configurableLLMAdapter.js" />
-    <option name="LAST_COMMIT_MESSAGE" value="Made changes to configurableLLMAdapter.js" />
+    <MESSAGE value="Fixed tests." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed tests." />
   </component>
 </project>

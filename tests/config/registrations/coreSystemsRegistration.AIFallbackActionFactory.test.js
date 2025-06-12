@@ -23,9 +23,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
   let container;
 
   beforeEach(() => {
-    // ──────────────────────────────────────────────────────────────────────────
-    // 1) Reset & seed DOM so UI registrations (ChatAlertRenderer, etc.) find their elements
-    // ──────────────────────────────────────────────────────────────────────────
+    // Reset DOM for UI registrations
     document.body.innerHTML = '';
     const outputDiv = document.createElement('div');
     outputDiv.id = 'outputDiv';
@@ -37,9 +35,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     titleElement.id = 'titleElement';
     document.body.append(outputDiv, messageList, inputElement, titleElement);
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // 2) Create & configure the real container
-    // ──────────────────────────────────────────────────────────────────────────
+    // Create & configure the real container
     container = new AppContainer();
     configureContainer(container, {
       outputDiv,
@@ -48,19 +44,22 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       document,
     });
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // 3) Stub out PromptBuilder & AI-pipeline so we don’t hit their internals
-    // ──────────────────────────────────────────────────────────────────────────
+    // Stub out PromptBuilder & AI-pipeline
     container.register(tokens.IPromptBuilder, () => ({ build: () => '' }), {
       lifecycle: 'singletonFactory',
     });
     container.register(tokens.IAIPromptPipeline, () => ({}), {
       lifecycle: 'singletonFactory',
     });
+
+    // Stub out ITurnContextFactory so AITurnHandler constructor passes
+    container.register(tokens.ITurnContextFactory, () => ({}), {
+      lifecycle: 'singletonFactory',
+    });
   });
 
   it('should successfully create an AITurnHandler via the TurnHandlerResolver', async () => {
-    // --- Arrange ---
+    // Arrange
     const mockAiActor = {
       id: 'ai-actor-123',
       hasComponent: (comp) =>
@@ -71,7 +70,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
             : false,
     };
 
-    // --- Act ---
+    // Act
     const resolver = container.resolve(tokens.TurnHandlerResolver);
     expect(resolver).toBeInstanceOf(TurnHandlerResolver);
 
@@ -82,14 +81,14 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       );
     }).not.toThrow();
 
-    // --- Assert ---
+    // Assert
     expect(handler).toBeDefined();
     expect(handler).not.toBeNull();
     expect(handler).toBeInstanceOf(AITurnHandler);
   });
 
   it('should throw an error if AITurnHandler constructor dependencies are manually misconfigured', () => {
-    // --- Arrange ---
+    // Arrange
     const brokenContainer = new AppContainer();
     configureContainer(brokenContainer, {
       outputDiv: document.getElementById('outputDiv'),
@@ -98,7 +97,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       document,
     });
 
-    // Stub the same two services on the broken container
+    // Stub same two services
     brokenContainer.register(
       tokens.IPromptBuilder,
       () => ({ build: () => '' }),
@@ -110,7 +109,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       lifecycle: 'singletonFactory',
     });
 
-    // Stub action discovery and indexing so factory can construct
+    // Stub action discovery and indexing
     brokenContainer.register(
       tokens.IActionDiscoveryService,
       () => ({ getValidActions: () => [] }),
@@ -122,24 +121,24 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       { lifecycle: 'singletonFactory' }
     );
 
-    // Add a valid registration for the AIPlayerStrategyFactory.
+    // Register the new‐signature AIPlayerStrategyFactory
     brokenContainer.register(
       tokens.IAIPlayerStrategyFactory,
-      (c) => {
-        return new ConcreteAIPlayerStrategyFactory({
-          llmAdapter: c.resolve(tokens.LLMAdapter),
-          aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
-          llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
-          aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
-          actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
-          actionIndexingService: c.resolve(tokens.ActionIndexingService),
+      (c) =>
+        new ConcreteAIPlayerStrategyFactory({
+          orchestrator: {
+            decideOrFallback: () => ({
+              kind: 'fallback',
+              action: {},
+              extractedData: {},
+            }),
+          },
           logger: c.resolve(tokens.ILogger),
-        });
-      },
+        }),
       { lifecycle: 'singletonFactory' }
     );
 
-    // Override only the AITurnHandler registration, deliberately omitting a required factory
+    // Override AITurnHandler without turnContextFactory
     brokenContainer.register(
       tokens.AITurnHandler,
       (c) =>
@@ -148,12 +147,12 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           turnStateFactory: c.resolve(tokens.ITurnStateFactory),
           turnEndPort: c.resolve(tokens.ITurnEndPort),
           aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
-          // ←— turnContextFactory is intentionally missing for this test
+          // turnContextFactory intentionally omitted
         }),
       { lifecycle: 'transient' }
     );
 
-    // --- Act & Assert ---
+    // Act & Assert
     expect(() => brokenContainer.resolve(tokens.AITurnHandler)).toThrow(
       'AITurnHandler: Invalid ITurnContextFactory'
     );

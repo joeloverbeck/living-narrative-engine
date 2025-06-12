@@ -228,6 +228,12 @@ export const tokens = freeze({
   IInitializationService: 'IInitializationService',
   LLMAdapter: 'LLMAdapter',
 
+  // AI decision orchestration
+  ILLMChooser: 'ILLMChooser',
+  IActionIndexer: 'IActionIndexer',
+  ITurnActionFactory: 'ITurnActionFactory',
+  IAIDecisionOrchestrator: 'IAIDecisionOrchestrator',
+
   // Initialization & Orchestration
   WorldInitializer: 'WorldInitializer',
   SystemInitializer: 'SystemInitializer',

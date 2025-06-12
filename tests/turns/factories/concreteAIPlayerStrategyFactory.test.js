@@ -1,24 +1,15 @@
-/**
- * @file Unit tests for the ConcreteAIPlayerStrategyFactory class.
- * @description These tests ensure that the factory correctly validates its dependencies and
- * properly constructs AIPlayerStrategy instances with all required services.
- */
-
+// tests/turns/factories/concreteAIPlayerStrategyFactory.test.js
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ConcreteAIPlayerStrategyFactory } from '../../../src/turns/factories/concreteAIPlayerStrategyFactory.js';
 import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
 
-// Mock the AIPlayerStrategy class, which is the output of the factory.
-// This allows us to spy on its constructor without testing its internal logic.
+// Mock AIPlayerStrategy to spy on its constructor and return a dummy instance
 jest.mock('../../../src/turns/strategies/aiPlayerStrategy.js');
+const dummyInstance = {};
+AIPlayerStrategy.mockReturnValue(dummyInstance);
 
 // --- Mock Dependencies ---
-const mockLlmAdapter = {};
-const mockAiPromptPipeline = {};
-const mockLlmResponseProcessor = {};
-const mockAiFallbackActionFactory = {};
-const mockActionDiscoveryService = {};
-const mockActionIndexingService = {};
+const mockOrchestrator = { decideOrFallback: jest.fn() };
 const mockLogger = { debug: jest.fn(), error: jest.fn() };
 
 describe('ConcreteAIPlayerStrategyFactory', () => {
@@ -27,63 +18,37 @@ describe('ConcreteAIPlayerStrategyFactory', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     dependencies = {
-      llmAdapter: mockLlmAdapter,
-      aiPromptPipeline: mockAiPromptPipeline,
-      llmResponseProcessor: mockLlmResponseProcessor,
-      aiFallbackActionFactory: mockAiFallbackActionFactory,
-      actionDiscoveryService: mockActionDiscoveryService,
-      actionIndexingService: mockActionIndexingService,
+      orchestrator: mockOrchestrator,
       logger: mockLogger,
     };
   });
 
   describe('Constructor', () => {
-    it('should throw an error if llmAdapter is not provided', () => {
-      delete dependencies.llmAdapter;
+    it('should throw an error if orchestrator is not provided', () => {
+      delete dependencies.orchestrator;
       expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'llmAdapter is required.'
+        'orchestrator is required'
       );
     });
 
-    it('should throw an error if aiPromptPipeline is not provided', () => {
-      delete dependencies.aiPromptPipeline;
+    it('should throw an error if orchestrator.decideOrFallback is not a function', () => {
+      dependencies.orchestrator = {};
       expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'aiPromptPipeline is required.'
-      );
-    });
-
-    it('should throw an error if llmResponseProcessor is not provided', () => {
-      delete dependencies.llmResponseProcessor;
-      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'llmResponseProcessor is required.'
-      );
-    });
-
-    it('should throw an error if aiFallbackActionFactory is not provided', () => {
-      delete dependencies.aiFallbackActionFactory;
-      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'aiFallbackActionFactory is required.'
-      );
-    });
-
-    it('should throw an error if actionDiscoveryService is not provided', () => {
-      delete dependencies.actionDiscoveryService;
-      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'actionDiscoveryService is required.'
-      );
-    });
-
-    it('should throw an error if actionIndexingService is not provided', () => {
-      delete dependencies.actionIndexingService;
-      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'actionIndexingService is required.'
+        'orchestrator is required and must implement decideOrFallback()'
       );
     });
 
     it('should throw an error if logger is not provided', () => {
       delete dependencies.logger;
       expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'logger is required.'
+        'logger is required'
+      );
+    });
+
+    it('should throw an error if logger.debug is not a function', () => {
+      dependencies.logger = {};
+      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
+        'logger is required and must implement debug()'
       );
     });
 
@@ -101,15 +66,10 @@ describe('ConcreteAIPlayerStrategyFactory', () => {
 
       expect(AIPlayerStrategy).toHaveBeenCalledTimes(1);
       expect(AIPlayerStrategy).toHaveBeenCalledWith({
-        llmAdapter: mockLlmAdapter,
-        aiPromptPipeline: mockAiPromptPipeline,
-        llmResponseProcessor: mockLlmResponseProcessor,
-        aiFallbackActionFactory: mockAiFallbackActionFactory,
-        actionDiscoveryService: mockActionDiscoveryService,
-        actionIndexingService: mockActionIndexingService,
+        orchestrator: mockOrchestrator,
         logger: mockLogger,
       });
-      expect(strategyInstance).toBeInstanceOf(AIPlayerStrategy);
+      expect(strategyInstance).toBe(dummyInstance);
     });
   });
 });

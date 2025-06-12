@@ -100,6 +100,10 @@ import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.j
 // --- ADDED IMPORT ---
 import { ConcreteAIPlayerStrategyFactory } from '../../turns/factories/concreteAIPlayerStrategyFactory.js';
 import { ActionIndexingService } from '../../turns/services/actionIndexingService';
+import { AIDecisionOrchestrator } from '../../turns/orchestration/aiDecisionOrchestrator';
+import { TurnActionFactory } from '../../turns/factories/turnActionFactory';
+import { LLMChooser } from '../../turns/adapters/llmChooser';
+import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -338,18 +342,51 @@ export function registerAI(container) {
     `AI Systems Registration: Registered AI Turn Pipeline services, including ${tokens.IAIPromptPipeline}.`
   );
 
-  // --- ADDED REGISTRATION ---
-  r.singletonFactory(tokens.IAIPlayerStrategyFactory, (c) => {
-    return new ConcreteAIPlayerStrategyFactory({
-      llmAdapter: c.resolve(tokens.LLMAdapter),
-      aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
-      llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
-      aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
-      actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
-      actionIndexingService: c.resolve(tokens.ActionIndexingService),
-      logger: c.resolve(tokens.ILogger),
-    });
-  });
+  // 1) Indexer adapter
+  r.singletonFactory(
+    tokens.IActionIndexer,
+    (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
+  );
+
+  // 2) LLM chooser
+  r.singletonFactory(
+    tokens.ILLMChooser,
+    (c) =>
+      new LLMChooser({
+        promptPipeline: c.resolve(tokens.IAIPromptPipeline),
+        llmAdapter: c.resolve(tokens.LLMAdapter),
+        responseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // 3) Turn-action factory
+  r.singletonFactory(tokens.ITurnActionFactory, (c) => new TurnActionFactory());
+
+  // 4) AI decision orchestrator
+  r.singletonFactory(
+    tokens.IAIDecisionOrchestrator,
+    (c) =>
+      new AIDecisionOrchestrator({
+        discoverySvc: c.resolve(tokens.IActionDiscoveryService),
+        indexer: c.resolve(tokens.IActionIndexer),
+        llmChooser: c.resolve(tokens.ILLMChooser),
+        turnActionFactory: c.resolve(tokens.ITurnActionFactory),
+        fallbackFactory: c.resolve(tokens.IAIFallbackActionFactory),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // 5) AI-player‐strategy factory
+  r.singletonFactory(
+    tokens.IAIPlayerStrategyFactory,
+    (c) =>
+      new ConcreteAIPlayerStrategyFactory({
+        orchestrator: c.resolve(tokens.IAIDecisionOrchestrator),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
   logger.debug(
     `AI Systems Registration: Registered ${tokens.IAIPlayerStrategyFactory} factory.`
   );
