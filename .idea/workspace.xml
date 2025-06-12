@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Fixed test errors.">
-      <change afterPath="$PROJECT_DIR$/tests/integration/indexedActionCompositesForAI.integration.test.js" afterDir="false" />
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Formatting.">
+      <change afterPath="$PROJECT_DIR$/src/turns/ports/IAIDecisionOrchestrator.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/turns/ports/IActionIndexer.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/turns/ports/ILLMChooser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/turns/ports/ITurnActionFactory.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -67,7 +70,16 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Jest.aiStrategyErrors.test.js">
+    <configuration name="aiStrategyErrors.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/errors/aiStrategyErrors.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="indexedActionCompositesForAI.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -79,6 +91,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.aiStrategyErrors.test.js" />
         <item itemvalue="Jest.indexedActionCompositesForAI.integration.test.js" />
       </list>
     </recent_temporary>
@@ -97,7 +110,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="4307000" />
+      <workItem from="1749738330206" duration="5432000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -123,7 +136,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749742092436</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Created integration test to prove use of indexed actions for AI.">
+      <option name="closed" value="true" />
+      <created>1749742727568</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1749742727568</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -133,6 +154,8 @@
     <MESSAGE value="Uploaded from the office." />
     <MESSAGE value="Ensured the prompt includes reference to the action indexes." />
     <MESSAGE value="Fixed test errors." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed test errors." />
+    <MESSAGE value="Created integration test to prove use of indexed actions for AI." />
+    <MESSAGE value="Formatting." />
+    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
   </component>
 </project>

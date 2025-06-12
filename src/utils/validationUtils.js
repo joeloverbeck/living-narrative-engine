@@ -25,7 +25,7 @@ export function validateDependency(
   const effectiveLogger =
     logger && typeof logger.error === 'function' ? logger : console;
 
-  if (dependency == null) {
+  if (dependency === null) {
     // Checks for both null and undefined
     const errorMsg = `Missing required dependency: ${dependencyName}.`;
     // If the logger being validated is the one that's missing,
@@ -43,7 +43,7 @@ export function validateDependency(
   if (requiredMethods && requiredMethods.length > 0) {
     for (const method of requiredMethods) {
       if (
-        dependency[method] == null ||
+        dependency[method] === null ||
         typeof dependency[method] !== 'function'
       ) {
         // Check for null/undefined or not a function
