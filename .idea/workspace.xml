@@ -4,12 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Implemented freezing utility.">
-      <change afterPath="$PROJECT_DIR$/src/turns/adapters/actionIndexerAdapter.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/turns/factories/turnActionFactory.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/turns/adapters/actionIndexerAdapter.test.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/turns/factories/turnActionFactory.test.js" afterDir="false" />
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Implemented ActionIndexerAdapter.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/adapters/configurableLLMAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/configurableLLMAdapter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ILLMAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ILLMAdapter.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +50,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Jest.actionIndexerAdapter.test.js.executor": "Run",
     "Jest.aiStrategyErrors.test.js.executor": "Run",
     "Jest.indexedActionCompositesForAI.integration.test.js.executor": "Run",
     "Jest.turnActionFactory.test.js.executor": "Run",
@@ -132,7 +131,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="6782000" />
+      <workItem from="1749738330206" duration="8050000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -182,7 +181,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749744894572</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Implemented ActionIndexerAdapter.">
+      <option name="closed" value="true" />
+      <created>1749745668473</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1749745668473</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,6 +203,7 @@
     <MESSAGE value="Formatting." />
     <MESSAGE value="Uploading test errors for Codex to fix." />
     <MESSAGE value="Implemented freezing utility." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented freezing utility." />
+    <MESSAGE value="Implemented ActionIndexerAdapter." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented ActionIndexerAdapter." />
   </component>
 </project>
