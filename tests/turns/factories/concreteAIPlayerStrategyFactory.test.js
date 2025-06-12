@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { ConcreteAIPlayerStrategyFactory } from '../../../src/turns/factories/ConcreteAIPlayerStrategyFactory.js';
+import { ConcreteAIPlayerStrategyFactory } from '../../../src/turns/factories/concreteAIPlayerStrategyFactory.js';
 import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
 
 // Mock the AIPlayerStrategy class, which is the output of the factory.

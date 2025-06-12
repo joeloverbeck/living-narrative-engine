@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { ConcreteTurnContextFactory } from '../../../src/turns/factories/ConcreteTurnContextFactory.js';
+import { ConcreteTurnContextFactory } from '../../../src/turns/factories/concreteTurnContextFactory.js';
 import { TurnContext } from '../../../src/turns/context/turnContext.js';
 
 // Mock the TurnContext class, the factory's output, to spy on its constructor.
