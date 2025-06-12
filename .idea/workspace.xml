@@ -4,21 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Fixed AI route.">
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Implemented basic human route for indexed actions.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/llm-proxy-server/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/llm-proxy-server/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptCoordinator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptCoordinator.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -157,7 +144,7 @@
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
       <workItem from="1749738330206" duration="16856000" />
-      <workItem from="1749758342420" duration="944000" />
+      <workItem from="1749758342420" duration="1833000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -255,7 +242,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749753709144</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Implemented basic human route for indexed actions.">
+      <option name="closed" value="true" />
+      <created>1749759407633</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1749759407633</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -275,7 +270,8 @@
     <MESSAGE value="Fixed tests." />
     <MESSAGE value="Uploaded with failures for Codex." />
     <MESSAGE value="Fixed AI route." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed AI route." />
+    <MESSAGE value="Implemented basic human route for indexed actions." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented basic human route for indexed actions." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
