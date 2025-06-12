@@ -4,27 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Uploading test errors for Codex to fix.">
-      <change afterPath="$PROJECT_DIR$/tests/utils/objectUtils.js" afterDir="false" />
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Implemented freezing utility.">
+      <change afterPath="$PROJECT_DIR$/src/turns/adapters/actionIndexerAdapter.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/turns/factories/turnActionFactory.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/adapters/actionIndexerAdapter.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/factories/turnActionFactory.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/commandParser.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/commandParser.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/engineVersion.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/engineVersion.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/constants/turnDirectives.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/constants/turnDirectives.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/order/turnOrderService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/order/turnOrderService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/resolutionStatus.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/resolutionStatus.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.basic.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.basic.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.direction.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.direction.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.originalInput.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.originalInput.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositionEdgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositionEdgeCases.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositional.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbMatching.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbMatching.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbOnlyDirectObject.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbOnlyDirectObject.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/turnOrder/turnOrderService.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnOrder/turnOrderService.constructor.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/turnOrder/turnOrderService.getCurrentOrder.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnOrder/turnOrderService.getCurrentOrder.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,6 +54,7 @@
   "keyToString": {
     "Jest.aiStrategyErrors.test.js.executor": "Run",
     "Jest.indexedActionCompositesForAI.integration.test.js.executor": "Run",
+    "Jest.turnActionFactory.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -86,7 +72,16 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.aiStrategyErrors.test.js">
+  <component name="RunManager" selected="Jest.actionIndexerAdapter.test.js">
+    <configuration name="actionIndexerAdapter.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/adapters/actionIndexerAdapter.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="aiStrategyErrors.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -105,8 +100,19 @@
       <test-file value="$PROJECT_DIR$/tests/integration/indexedActionCompositesForAI.integration.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="turnActionFactory.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/factories/turnActionFactory.test.js" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.actionIndexerAdapter.test.js" />
+        <item itemvalue="Jest.turnActionFactory.test.js" />
         <item itemvalue="Jest.aiStrategyErrors.test.js" />
         <item itemvalue="Jest.indexedActionCompositesForAI.integration.test.js" />
       </list>
@@ -126,7 +132,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="6133000" />
+      <workItem from="1749738330206" duration="6782000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -168,7 +174,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749744431357</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Implemented freezing utility.">
+      <option name="closed" value="true" />
+      <created>1749744894572</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1749744894572</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -181,6 +195,7 @@
     <MESSAGE value="Created integration test to prove use of indexed actions for AI." />
     <MESSAGE value="Formatting." />
     <MESSAGE value="Uploading test errors for Codex to fix." />
-    <option name="LAST_COMMIT_MESSAGE" value="Uploading test errors for Codex to fix." />
+    <MESSAGE value="Implemented freezing utility." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented freezing utility." />
   </component>
 </project>
