@@ -1,65 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" afterDir="false" />
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Uploaded from the office.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/actions/actionTypes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionTypes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/commandProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/commandProcessor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/interfaces/ICommandProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/interfaces/ICommandProcessor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constants/eventIds.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/eventIds.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/appContainer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/appContainer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/createActionValidationContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/createActionValidationContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/AIPromptPipeline.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/AIPromptPipeline.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/interfaces/IAIPromptPipeline.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/interfaces/IAIPromptPipeline.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/builders/actionAttemptBuilder.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/factories/concreteAIPlayerStrategyFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/concreteAIPlayerStrategyFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/factories/concreteTurnContextFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/concreteTurnContextFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/aiTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/aiTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/IAIPlayerStrategyFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/IAIPlayerStrategyFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/IActorTurnStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/IActorTurnStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ILLMResponseProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ILLMResponseProcessor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContextFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContextFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/AIGameStateProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/AIGameStateProvider.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/turnHandlerResolver.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/turnHandlerResolver.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/processingCommandState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/processingCommandState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandProcessor.processCommand.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/dismissRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/createActionValidationContext.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/createActionValidationContext.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/schemas/followAutoMove.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/followAutoMove.schema.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/actionValidationService.prerequisites.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/actionValidationService.prerequisites.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/turnHandlerResolver.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/turnHandlerResolver.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/builders/__snapshots__/actionAttemptBuilder.test.js.snap" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/builders/actionAttemptBuilder.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.availableActions.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.bugFixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.bugFixes.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/AIGameStateProvider.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.goals.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.goals.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.notesGuards.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.notesGuards.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/processingCommandState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/processingCommandState.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.constructor.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.decideAction.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.decideAction.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/AIPromptContentProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/AIPromptContentProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/AIPromptContentProvider.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/AIPromptContentProvider.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +47,9 @@
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "web-ide.project.structure",
     "vue.rearranger.settings.migration": "true"
@@ -119,11 +69,24 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="37000" />
+      <workItem from="1749738330206" duration="999000" />
     </task>
+    <task id="LOCAL-00001" summary="Uploaded from the office.">
+      <option name="closed" value="true" />
+      <created>1749738665250</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1749738665250</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Uploaded from the office." />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploaded from the office." />
   </component>
 </project>

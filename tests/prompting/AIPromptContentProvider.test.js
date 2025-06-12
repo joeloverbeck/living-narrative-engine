@@ -498,10 +498,11 @@ describe('AIPromptContentProvider', () => {
         },
         availableActions: [
           {
-            id: 'action1',
-            name: 'Test Action',
-            command: 'do_test',
+            index: 1,
+            actionId: 'action1',
+            commandString: 'do_test',
             description: 'A test action.',
+            params: {},
           },
         ],
       };
@@ -890,16 +891,14 @@ describe('AIPromptContentProvider', () => {
           ...minimalGameStateDto,
           availableActions: [
             {
-              id: 'act_look',
-              command: 'look_around',
-              name: 'Look Around',
+              index: 1,
+              commandString: 'look_around',
               description: 'Observe your surroundings.',
             },
             {
-              id: 'act_talk',
-              command: 'talk_to_npc',
-              name: 'Talk to NPC',
-              description: 'Engage in conversation.',
+              index: 2,
+              commandString: 'talk_to_npc',
+              description: 'Engage in conversation', // No period
             },
           ],
         };
@@ -909,20 +908,20 @@ describe('AIPromptContentProvider', () => {
         );
 
         expect(result).toContain(
-          'Consider these available actions when deciding what to do:'
+          'Choose one of the following available actions by its index:'
         );
         expect(result).toContain(
-          '- (actionDefinitionId: "act_look", commandString: "look_around"). Description: Observe your surroundings.'
+          '[Index: 1] Command: "look_around". Description: Observe your surroundings.'
         );
         expect(result).toContain(
-          '- (actionDefinitionId: "act_talk", commandString: "talk_to_npc"). Description: Engage in conversation.'
+          '[Index: 2] Command: "talk_to_npc". Description: Engage in conversation.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           'AIPromptContentProvider: Formatting available actions info content.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Formatted 2 items for section "Consider these available actions when deciding what to do"'
+            'Formatted 2 items for section "Choose one of the following available actions by its index"'
           )
         );
       });
@@ -934,7 +933,7 @@ describe('AIPromptContentProvider', () => {
           mockLoggerInstance
         );
         expect(result).toContain(
-          'Consider these available actions when deciding what to do:'
+          'Choose one of the following available actions by its index:'
         );
         expect(result).toContain(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
@@ -942,7 +941,7 @@ describe('AIPromptContentProvider', () => {
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Section "Consider these available actions when deciding what to do" is empty, using empty message.'
+            'Section "Choose one of the following available actions by its index" is empty, using empty message.'
           )
         );
 
@@ -953,13 +952,16 @@ describe('AIPromptContentProvider', () => {
           dtoEmpty,
           mockLoggerInstance
         );
+        expect(result).toContain(
+          'Choose one of the following available actions by its index:'
+        );
         expect(result).toContain(PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE);
         expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
           'AIPromptContentProvider: No available actions provided. Using fallback message for list segment.'
         );
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'Section "Consider these available actions when deciding what to do" is empty, using empty message.'
+            'Section "Choose one of the following available actions by its index" is empty, using empty message.'
           )
         );
       });
@@ -968,8 +970,8 @@ describe('AIPromptContentProvider', () => {
         const dto = {
           ...minimalGameStateDto,
           availableActions: [
-            { id: 'act1' }, // missing command, name, desc
-            { command: 'cmd2', name: 'Action Two' }, // missing id, desc
+            { index: 1 }, // missing commandString, description
+            { index: 2, commandString: 'cmd2' }, // missing description
           ],
         };
         const result = provider.getAvailableActionsInfoContent(
@@ -977,8 +979,8 @@ describe('AIPromptContentProvider', () => {
           mockLoggerInstance
         );
 
-        const expectedAction1 = `- (actionDefinitionId: "act1", commandString: "${DEFAULT_FALLBACK_ACTION_COMMAND}"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
-        const expectedAction2 = `- (actionDefinitionId: "${DEFAULT_FALLBACK_ACTION_ID}", commandString: "cmd2"). Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
+        const expectedAction1 = `[Index: 1] Command: "${DEFAULT_FALLBACK_ACTION_COMMAND}". Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
+        const expectedAction2 = `[Index: 2] Command: "cmd2". Description: ${ensureTerminalPunctuation(DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW)}`;
 
         expect(result).toContain(expectedAction1);
         expect(result).toContain(expectedAction2);

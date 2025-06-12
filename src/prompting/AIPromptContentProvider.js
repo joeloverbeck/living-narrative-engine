@@ -7,6 +7,7 @@
 /** @typedef {import('../interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService */
 /** @typedef {import('../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
+/** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
@@ -14,9 +15,7 @@ import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
   DEFAULT_FALLBACK_LOCATION_NAME,
-  DEFAULT_FALLBACK_ACTION_ID,
   DEFAULT_FALLBACK_ACTION_COMMAND,
-  DEFAULT_FALLBACK_ACTION_NAME,
   DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW,
   PROMPT_FALLBACK_UNKNOWN_LOCATION,
   PROMPT_FALLBACK_NO_EXITS,
@@ -422,7 +421,6 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     );
     const noActionsMessage = PROMPT_FALLBACK_NO_ACTIONS_NARRATIVE;
 
-    // If availableActions is null/undefined or an empty array, log a warning:
     if (
       !gameState.availableActions ||
       !Array.isArray(gameState.availableActions) ||
@@ -434,16 +432,18 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
     }
 
     return this._formatListSegment(
-      'Consider these available actions when deciding what to do',
+      'Choose one of the following available actions by its index',
       gameState.availableActions,
       (action) => {
-        const systemId = action.id || DEFAULT_FALLBACK_ACTION_ID;
-        const baseCommand = action.command || DEFAULT_FALLBACK_ACTION_COMMAND;
+        // action is an ActionComposite, with index, commandString, description, etc.
+        const commandStr =
+          action.commandString || DEFAULT_FALLBACK_ACTION_COMMAND;
         let description =
           action.description || DEFAULT_FALLBACK_ACTION_DESCRIPTION_RAW;
         description = ensureTerminalPunctuation(description);
 
-        return `- (actionDefinitionId: "${systemId}", commandString: "${baseCommand}"). Description: ${description}`;
+        // The critical change: Add the index clearly at the start of the line.
+        return `[Index: ${action.index}] Command: "${commandStr}". Description: ${description}`;
       },
       noActionsMessage,
       this.#logger
