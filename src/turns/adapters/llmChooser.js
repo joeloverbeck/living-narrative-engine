@@ -69,9 +69,12 @@ export class LLMChooser extends ILLMChooser {
     const raw = await this.#llmAdapter.getAIDecision(prompt, abortSignal);
     const parsed = await this.#responseProcessor.processResponse(raw, actor.id);
 
+    const { action, extractedData } = parsed; // after processResponse()
     return {
-      index: parsed?.action?.chosenIndex ?? null,
-      speech: parsed?.action?.speech ?? null,
+      index: action.chosenIndex,
+      speech: action.speech,
+      thoughts: extractedData?.thoughts ?? null,
+      notes: extractedData?.notes ?? null,
     };
   }
 }

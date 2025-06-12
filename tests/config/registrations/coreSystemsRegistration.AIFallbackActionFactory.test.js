@@ -56,6 +56,17 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     container.register(tokens.ITurnContextFactory, () => ({}), {
       lifecycle: 'singletonFactory',
     });
+
+    // ── NEW: Stub out IAIPlayerStrategyFactory so AITurnHandler can be built ──
+    container.register(
+      tokens.IAIPlayerStrategyFactory,
+      () => ({
+        create: () => ({
+          // dummy strategy; resolveHandler doesn’t execute it
+        }),
+      }),
+      { lifecycle: 'singletonFactory' }
+    );
   });
 
   it('should successfully create an AITurnHandler via the TurnHandlerResolver', async () => {

@@ -4,13 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Fixed tests.">
+    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Uploaded with failures for Codex.">
+      <change afterPath="$PROJECT_DIR$/tests/integration/aiDecisionMetadata.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/factories/concreteAIPlayerStrategyFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/concreteAIPlayerStrategyFactory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/adapters/llmChooser.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/llmChooser.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/ports/IAIDecisionOrchestrator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/ports/IAIDecisionOrchestrator.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/factories/concreteAIPlayerStrategyFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/factories/concreteAIPlayerStrategyFactory.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/adapters/llmChooser.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/adapters/llmChooser.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/orchestration/aiDecisionOrchestrator.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/orchestration/aiDecisionOrchestrator.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,6 +57,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Jest.actionIndexerAdapter.test.js.executor": "Run",
+    "Jest.aiDecisionMetadata.test.js.executor": "Run",
     "Jest.aiDecisionOrchestrator.test.js.executor": "Run",
     "Jest.aiPlayerStrategy.constructor.test.js.executor": "Run",
     "Jest.aiStrategyErrors.test.js.executor": "Run",
@@ -77,7 +81,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.aiPlayerStrategy.constructor.test.js">
+  <component name="RunManager" selected="Jest.aiDecisionMetadata.test.js">
     <configuration name="actionIndexerAdapter.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -85,6 +89,15 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/turns/adapters/actionIndexerAdapter.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="aiDecisionMetadata.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/integration/aiDecisionMetadata.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="aiDecisionOrchestrator.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -114,22 +127,13 @@
       <test-file value="$PROJECT_DIR$/tests/turns/adapters/llmChooser.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="turnActionFactory.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/factories/turnActionFactory.test.js" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.aiDecisionMetadata.test.js" />
         <item itemvalue="Jest.aiPlayerStrategy.constructor.test.js" />
         <item itemvalue="Jest.aiDecisionOrchestrator.test.js" />
         <item itemvalue="Jest.llmChooser.test.js" />
         <item itemvalue="Jest.actionIndexerAdapter.test.js" />
-        <item itemvalue="Jest.turnActionFactory.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -147,7 +151,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="12744000" />
+      <workItem from="1749738330206" duration="14923000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded from the office.">
       <option name="closed" value="true" />
@@ -229,7 +233,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749750284420</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Uploaded with failures for Codex.">
+      <option name="closed" value="true" />
+      <created>1749751647220</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1749751647220</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -247,6 +259,19 @@
     <MESSAGE value="Reverted insane changes that o4 intended to do to ConfigurableLLMAdapter." />
     <MESSAGE value="Made changes to configurableLLMAdapter.js" />
     <MESSAGE value="Fixed tests." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed tests." />
+    <MESSAGE value="Uploaded with failures for Codex." />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploaded with failures for Codex." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/turns/interfaces/ILLMResponseProcessor.js</url>
+          <line>19</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

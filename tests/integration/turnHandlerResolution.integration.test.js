@@ -117,17 +117,19 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       aiPromptPipeline: mockAiPromptPipeline,
     };
 
-    // ◀️ NEW: satisfy the two DI params for your strategy‐factory
-    stubs.actionDiscoveryService = stubs.actionDiscoverySystem;
-    stubs.actionIndexingService = { indexActions: jest.fn() };
+    // Provide a stubbed IAIDecisionOrchestrator and the required logger
+    const stubOrchestrator = {
+      decideOrFallback: jest.fn(() =>
+        Promise.resolve({
+          kind: 'success',
+          action: {},
+          extractedData: { speech: null, thoughts: null, notes: null },
+        })
+      ),
+    };
 
     aiStrategyFactory = new ConcreteAIPlayerStrategyFactory({
-      llmAdapter: stubs.llmAdapter,
-      aiPromptPipeline: stubs.aiPromptPipeline,
-      llmResponseProcessor: stubs.llmResponseProcessor,
-      aiFallbackActionFactory: stubs.aiFallbackActionFactory,
-      actionDiscoveryService: stubs.actionDiscoveryService,
-      actionIndexingService: stubs.actionIndexingService,
+      orchestrator: stubOrchestrator,
       logger: stubs.logger,
     });
 

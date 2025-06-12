@@ -63,7 +63,11 @@ describe('AIDecisionOrchestrator', () => {
     const result = await orchestrator.decide({ actor, context });
     expect(result.kind).toBe('success');
     expect(result.action).toBe(fakeAction);
-    expect(result.extractedData).toEqual({ speech: 'hello!' });
+    expect(result.extractedData).toEqual({
+      speech: 'hello!',
+      notes: null,
+      thoughts: null,
+    });
   });
 
   it('no-actions path: throws NoActionsDiscoveredError', async () => {
@@ -114,6 +118,10 @@ describe('AIDecisionOrchestrator', () => {
     const result = await orchestrator.decideOrFallback({ actor, context });
     expect(result.kind).toBe('fallback');
     expect(result.action).toBe(fakeFbAction);
-    expect(result.extractedData).toEqual({ speech: null });
+    expect(result.extractedData).toEqual({
+      speech: null,
+      notes: null,
+      thoughts: null,
+    });
   });
 });

@@ -65,6 +65,11 @@ describe('LLMChooser', () => {
       actions: [],
     });
 
-    expect(result).toEqual({ index: 2, speech: 'Hello there!' });
+    expect(result).toEqual({
+      index: 2,
+      speech: 'Hello there!',
+      notes: null,
+      thoughts: null,
+    });
   });
 });
