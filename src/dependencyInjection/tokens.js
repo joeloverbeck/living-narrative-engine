@@ -300,6 +300,5 @@ export const tokens = Object.freeze({
 
   // Core Builders
   ActionContextBuilder: 'ActionContextBuilder',
-  AttemptActionBuilder: 'AttemptActionBuilder',
 });
 // --- FILE END ---

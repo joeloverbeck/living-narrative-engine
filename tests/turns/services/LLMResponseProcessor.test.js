@@ -1,8 +1,12 @@
-// tests/turns/services/LLMResponseProcessor.test.js
+/**
+ * @file Test suite for LLMResponseProcessor.
+ * @see tests/turns/services/LLMResponseProcessor.test.js
+ */
 
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../../../src/turns/schemas/llmOutputSchemas.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
+import { LLMProcessingError } from '../../../src/turns/services/LLMResponseProcessor.js';
 
 // Mocked logger
 const mockLogger = () => ({
@@ -30,6 +34,7 @@ describe('LLMResponseProcessor', () => {
     schemaValidatorMock = mockSchemaValidator();
     processor = new LLMResponseProcessor({
       schemaValidator: schemaValidatorMock,
+      logger,
     });
   });
 
@@ -40,16 +45,26 @@ describe('LLMResponseProcessor', () => {
       );
     });
 
-    test('throws if invalid schemaValidator', () => {
-      expect(() => new LLMResponseProcessor({})).toThrow();
+    test('throws if invalid dependencies are provided', () => {
+      const aLogger = mockLogger();
+      // Test with missing schemaValidator
+      expect(() => new LLMResponseProcessor({ logger: aLogger })).toThrow(
+        'LLMResponseProcessor needs a valid ISchemaValidator'
+      );
+
+      // Test with partially implemented schemaValidator (missing isSchemaLoaded)
       expect(
         () =>
           new LLMResponseProcessor({
-            schemaValidator: {
-              validate: () => {},
-            },
+            schemaValidator: { validate: () => {} },
+            logger: aLogger,
           })
-      ).toThrow();
+      ).toThrow('LLMResponseProcessor needs a valid ISchemaValidator');
+
+      // Test with missing logger
+      expect(
+        () => new LLMResponseProcessor({ schemaValidator: schemaValidatorMock })
+      ).toThrow('LLMResponseProcessor needs a valid ILogger');
     });
   });
 
@@ -68,17 +83,12 @@ describe('LLMResponseProcessor', () => {
           errors: [],
         });
 
-        const result = await processor.processResponse(
-          llmResponse,
-          actorId,
-          logger
-        );
+        const result = await processor.processResponse(llmResponse, actorId);
 
         expect(result).toEqual({
           success: true,
           action: {
-            actionDefinitionId: '2',
-            commandString: '',
+            chosenIndex: 2,
             speech: 'Hello there',
           },
           extractedData: {
@@ -100,17 +110,14 @@ describe('LLMResponseProcessor', () => {
           errors: [],
         });
 
-        const result = await processor.processResponse(
-          llmResponse,
-          actorId,
-          logger
-        );
+        const result = await processor.processResponse(llmResponse, actorId);
 
         expect(result.action.speech).toBe('');
         expect(result.extractedData.notes).toBeUndefined();
+        expect(result.action.chosenIndex).toBe(5);
       });
 
-      test('maps chosenIndex to string and sets empty commandString', async () => {
+      test('preserves chosenIndex as number and does not add commandString', async () => {
         const payload = {
           chosenIndex: 7,
           speech: 'Go',
@@ -122,13 +129,10 @@ describe('LLMResponseProcessor', () => {
           errors: [],
         });
 
-        const result = await processor.processResponse(
-          llmResponse,
-          actorId,
-          logger
-        );
-        expect(result.action.actionDefinitionId).toBe('7');
-        expect(result.action.commandString).toBe('');
+        const result = await processor.processResponse(llmResponse, actorId);
+        expect(result.action.chosenIndex).toBe(7);
+        expect(result.action).not.toHaveProperty('actionDefinitionId');
+        expect(result.action).not.toHaveProperty('commandString');
       });
     });
 
@@ -136,20 +140,20 @@ describe('LLMResponseProcessor', () => {
       test('throws LLMProcessingError for malformed JSON string', async () => {
         const badJson = '{invalid json';
         await expect(
-          processor.processResponse(badJson, actorId, logger)
-        ).rejects.toMatchObject({ name: 'LLMProcessingError' });
+          processor.processResponse(badJson, actorId)
+        ).rejects.toThrow(LLMProcessingError);
       });
 
       test('throws LLMProcessingError for null input', async () => {
-        await expect(
-          processor.processResponse(null, actorId, logger)
-        ).rejects.toMatchObject({ name: 'LLMProcessingError' });
+        await expect(processor.processResponse(null, actorId)).rejects.toThrow(
+          LLMProcessingError
+        );
       });
 
       test('throws LLMProcessingError for undefined input', async () => {
         await expect(
-          processor.processResponse(undefined, actorId, logger)
-        ).rejects.toMatchObject({ name: 'LLMProcessingError' });
+          processor.processResponse(undefined, actorId)
+        ).rejects.toThrow(LLMProcessingError);
       });
     });
 
@@ -166,7 +170,7 @@ describe('LLMResponseProcessor', () => {
         });
 
         await expect(
-          processor.processResponse(llmResponse, actorId, logger)
+          processor.processResponse(llmResponse, actorId)
         ).rejects.toMatchObject({
           name: 'LLMProcessingError',
           message: `LLM response JSON schema validation failed for actor ${actorId}.`,
@@ -186,7 +190,7 @@ describe('LLMResponseProcessor', () => {
         });
 
         await expect(
-          processor.processResponse(llmResponse, actorId, logger)
+          processor.processResponse(llmResponse, actorId)
         ).rejects.toMatchObject({
           name: 'LLMProcessingError',
           details: { validationErrors: mockErrors },
@@ -205,7 +209,7 @@ describe('LLMResponseProcessor', () => {
         });
 
         await expect(
-          processor.processResponse(llmResponse, actorId, logger)
+          processor.processResponse(llmResponse, actorId)
         ).rejects.toMatchObject({
           name: 'LLMProcessingError',
           details: { validationErrors: mockErrors },

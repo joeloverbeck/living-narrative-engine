@@ -87,12 +87,10 @@ export class TurnContext extends ITurnContext {
   #strategy;
   /** @type {OnEndTurnCallback} */
   #onEndTurnCallback;
-  /** @type {IsAwaitingExternalEventProvider} */
-  #isAwaitingExternalEventProvider;
-  /** @type {OnSetAwaitingExternalEventCallback} */
-  #onSetAwaitingExternalEventCallback;
   /** @type {BaseTurnHandler} */
   #handlerInstance; // To facilitate state transitions
+  /** @type {boolean} */
+  #isAwaitingExternalEvent = false;
 
   /**
    * The action chosen by the actor for the current turn.
@@ -119,8 +117,6 @@ export class TurnContext extends ITurnContext {
    * @param {TurnContextServices} params.services - A bag of services accessible during the turn.
    * @param {IActorTurnStrategy} params.strategy - The turn strategy for the current actor.
    * @param {OnEndTurnCallback} params.onEndTurnCallback - Callback to execute when endTurn() is called.
-   * @param {IsAwaitingExternalEventProvider} params.isAwaitingExternalEventProvider - Function to check if awaiting an external event.
-   * @param {OnSetAwaitingExternalEventCallback} params.onSetAwaitingExternalEventCallback - Callback to inform handler to set its waiting flag.
    * @param {BaseTurnHandler} params.handlerInstance - The turn handler instance for requesting transitions.
    */
   constructor({
@@ -129,8 +125,6 @@ export class TurnContext extends ITurnContext {
     services,
     strategy,
     onEndTurnCallback,
-    isAwaitingExternalEventProvider,
-    onSetAwaitingExternalEventCallback,
     handlerInstance,
   }) {
     super();
@@ -159,16 +153,6 @@ export class TurnContext extends ITurnContext {
     if (typeof onEndTurnCallback !== 'function') {
       throw new Error('TurnContext: onEndTurnCallback function is required.');
     }
-    if (typeof isAwaitingExternalEventProvider !== 'function') {
-      throw new Error(
-        'TurnContext: isAwaitingExternalEventProvider function is required.'
-      );
-    }
-    if (typeof onSetAwaitingExternalEventCallback !== 'function') {
-      throw new Error(
-        'TurnContext: onSetAwaitingExternalEventCallback function is required.'
-      );
-    }
     if (!handlerInstance) {
       throw new Error(
         'TurnContext: handlerInstance (BaseTurnHandler) is required for transitions.'
@@ -180,11 +164,9 @@ export class TurnContext extends ITurnContext {
     this.#services = services;
     this.#strategy = strategy;
     this.#onEndTurnCallback = onEndTurnCallback;
-    this.#isAwaitingExternalEventProvider = isAwaitingExternalEventProvider;
-    this.#onSetAwaitingExternalEventCallback =
-      onSetAwaitingExternalEventCallback;
     this.#handlerInstance = handlerInstance;
     this.#chosenAction = null;
+    this.#isAwaitingExternalEvent = false;
 
     // --- MODIFICATION: Initialize AbortController ---
     this.#promptAbortController = new AbortController();
@@ -330,7 +312,7 @@ export class TurnContext extends ITurnContext {
 
   /** @override */
   isAwaitingExternalEvent() {
-    return this.#isAwaitingExternalEventProvider();
+    return this.#isAwaitingExternalEvent;
   }
 
   /**
@@ -357,9 +339,6 @@ export class TurnContext extends ITurnContext {
       services: this.#services,
       strategy: this.#strategy,
       onEndTurnCallback: this.#onEndTurnCallback,
-      isAwaitingExternalEventProvider: this.#isAwaitingExternalEventProvider,
-      onSetAwaitingExternalEventCallback:
-        this.#onSetAwaitingExternalEventCallback,
       handlerInstance: this.#handlerInstance,
     });
   }
@@ -374,8 +353,11 @@ export class TurnContext extends ITurnContext {
   }
 
   /** @override */
-  setAwaitingExternalEvent(isAwaiting, actorId) {
-    this.#onSetAwaitingExternalEventCallback(isAwaiting, actorId);
+  setAwaitingExternalEvent(isAwaiting) {
+    this.#isAwaitingExternalEvent = !!isAwaiting;
+    this.getLogger().debug(
+      `TurnContext for actor ${this.getActor()?.id} 'isAwaitingExternalEvent' flag set to: ${this.#isAwaitingExternalEvent}`
+    );
   }
 
   /** @override */

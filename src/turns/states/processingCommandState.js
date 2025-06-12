@@ -275,28 +275,23 @@ export class ProcessingCommandState extends AbstractTurnState {
         return; // Error handled by _getServiceFromContext
       }
 
-      // turnAction should be valid here due to checks in enterState
-      const commandStringToProcess =
-        turnAction.commandString || turnAction.actionDefinitionId;
-
-      // Redundant check as actionDefinitionId is validated in enterState, and commandString fallback is to actionDefinitionId
-      // if (!commandStringToProcess) {
-      //     logger.error(`${this.getStateName()}: No valid command string derived from ITurnAction for actor ${actorId}.`);
-      //     await this.#handleProcessingException(turnCtx, new Error("No command string available in ITurnAction to process."), actorId);
-      //     return;
-      // }
-
+      // --- NEW LOGIC ---
+      // Instead of preparing a command string, we now directly use the turnAction object.
+      // We call the new `dispatchAction` method which bypasses parsing and target resolution.
       logger.debug(
-        `${this.getStateName()}: Invoking commandProcessor.processCommand() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}, using commandString: "${commandStringToProcess}"`
+        `${this.getStateName()}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`
       );
-      const commandResult = await commandProcessor.processCommand(
+
+      const { success, errorResult } = await commandProcessor.dispatchAction(
         actor,
-        commandStringToProcess
+        turnAction
       );
+
+      // --- END NEW LOGIC ---
 
       if (!this._isProcessing) {
         logger.warn(
-          `${this.getStateName()}: Processing flag became false after commandProcessor.processCommand() for ${actorId}. Aborting further processing.`
+          `${this.getStateName()}: Processing flag became false after commandProcessor.dispatchAction() for ${actorId}. Aborting further processing.`
         );
         return;
       }
@@ -308,7 +303,7 @@ export class ProcessingCommandState extends AbstractTurnState {
         activeTurnCtx.getActor()?.id !== actorId
       ) {
         logger.warn(
-          `${this.getStateName()}: Context is invalid, has changed, or actor mismatch after commandProcessor.processCommand() for ${actorId}. Current context actor: ${activeTurnCtx?.getActor?.()?.id ?? 'N/A'}. Aborting further processing.`
+          `${this.getStateName()}: Context is invalid, has changed, or actor mismatch after commandProcessor.dispatchAction() for ${actorId}. Current context actor: ${activeTurnCtx?.getActor?.()?.id ?? 'N/A'}. Aborting further processing.`
         );
         const contextForException =
           activeTurnCtx && typeof activeTurnCtx.getActor === 'function'
@@ -316,15 +311,27 @@ export class ProcessingCommandState extends AbstractTurnState {
             : turnCtx;
         await this.#handleProcessingException(
           contextForException,
-          new Error('Context invalid/changed after command processing.'),
+          new Error('Context invalid/changed after action dispatch.'),
           actorId,
           false
         );
         return;
       }
 
+      // We need to construct a `CommandResult`-like object for the outcome interpreter.
+      // This bridges the output of the new `dispatchAction` with the existing interpreter interface.
+      const commandResultForInterpreter = {
+        success: success,
+        turnEnded: !success, // A failed dispatch typically ends the turn with an error.
+        originalInput:
+          turnAction.commandString || turnAction.actionDefinitionId,
+        actionResult: { actionId: turnAction.actionDefinitionId },
+        error: success ? undefined : errorResult?.error,
+        internalError: success ? undefined : errorResult?.internalError,
+      };
+
       logger.debug(
-        `${this.getStateName()}: Command processing completed for actor ${actorId}. Result success: ${commandResult?.success}.`
+        `${this.getStateName()}: Action dispatch completed for actor ${actorId}. Result success: ${commandResultForInterpreter.success}.`
       );
 
       const outcomeInterpreter = await this._getServiceFromContext(
@@ -338,11 +345,11 @@ export class ProcessingCommandState extends AbstractTurnState {
       }
 
       const directiveType = await outcomeInterpreter.interpret(
-        commandResult,
+        commandResultForInterpreter,
         activeTurnCtx
       );
       logger.debug(
-        `${this.getStateName()}: Actor ${actorId} - Command result interpreted to directive: ${directiveType}`
+        `${this.getStateName()}: Actor ${actorId} - Dispatch result interpreted to directive: ${directiveType}`
       );
 
       const directiveStrategy =
@@ -364,7 +371,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       await directiveStrategy.execute(
         activeTurnCtx,
         directiveType,
-        commandResult
+        commandResultForInterpreter
       );
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} - Directive strategy ${directiveStrategy.constructor.name} executed.`
@@ -638,5 +645,4 @@ export class ProcessingCommandState extends AbstractTurnState {
     );
   }
 }
-
 // --- FILE END ---

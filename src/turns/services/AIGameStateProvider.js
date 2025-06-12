@@ -1,5 +1,4 @@
 // src/turns/services/AIGameStateProvider.js
-
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -10,7 +9,6 @@
 /** @typedef {import('../../interfaces/IActorStateProvider.js').IActorStateProvider} IActorStateProvider */
 /** @typedef {import('../../interfaces/IActorDataExtractor.js').IActorDataExtractor} IActorDataExtractor */
 /** @typedef {import('../../interfaces/ILocationSummaryProvider.js').ILocationSummaryProvider} ILocationSummaryProvider */
-/** @typedef {import('../../interfaces/IAvailableActionsProvider.js').IAvailableActionsProvider} IAvailableActionsProvider */
 /** @typedef {import('../../interfaces/IPerceptionLogProvider.js').IPerceptionLogProvider} IPerceptionLogProvider */
 
 import { IAIGameStateProvider } from '../interfaces/IAIGameStateProvider.js';
@@ -25,7 +23,6 @@ export class AIGameStateProvider extends IAIGameStateProvider {
   #actorStateProvider;
   #actorDataExtractor;
   #locationSummaryProvider;
-  #availableActionsProvider;
   #perceptionLogProvider;
 
   /**
@@ -33,21 +30,18 @@ export class AIGameStateProvider extends IAIGameStateProvider {
    * @param {IActorStateProvider} dependencies.actorStateProvider
    * @param {IActorDataExtractor} dependencies.actorDataExtractor
    * @param {ILocationSummaryProvider} dependencies.locationSummaryProvider
-   * @param {IAvailableActionsProvider} dependencies.availableActionsProvider
    * @param {IPerceptionLogProvider} dependencies.perceptionLogProvider
    */
   constructor({
     actorStateProvider,
     actorDataExtractor,
     locationSummaryProvider,
-    availableActionsProvider,
     perceptionLogProvider,
   }) {
     super();
     this.#actorStateProvider = actorStateProvider;
     this.#actorDataExtractor = actorDataExtractor;
     this.#locationSummaryProvider = locationSummaryProvider;
-    this.#availableActionsProvider = availableActionsProvider;
     this.#perceptionLogProvider = perceptionLogProvider;
   }
 
@@ -73,11 +67,6 @@ export class AIGameStateProvider extends IAIGameStateProvider {
     const actorPromptData =
       this.#actorDataExtractor.extractPromptData(actorState);
     const perceptionLog = await this.#perceptionLogProvider.get(actor, logger);
-    const availableActions = await this.#availableActionsProvider.get(
-      actor,
-      turnContext,
-      logger
-    );
     const locationSummary = await this.#locationSummaryProvider.build(
       actor,
       logger
@@ -88,7 +77,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
       actorState,
       actorPromptData,
       currentLocation: locationSummary,
-      availableActions,
+      availableActions: null,
       perceptionLog,
     };
 

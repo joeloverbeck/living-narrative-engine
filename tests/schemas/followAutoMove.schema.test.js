@@ -12,6 +12,7 @@ const jsonLogicSchema = require('../../data/schemas/json-logic.schema.json');
 
 // and your rule under test
 const rule = require('../../data/mods/core/rules/follow_auto_move.rule.json');
+const { ATTEMPT_ACTION_ID } = require('../../src/constants/eventIds.js');
 
 describe('core_follow_auto_move.rule.json', () => {
   const leaderId = 'leader1';
@@ -56,7 +57,7 @@ describe('core_follow_auto_move.rule.json', () => {
     expect(valid).toBe(true);
   });
 
-  test('happy path: two co-located followers trigger two core:attempt_action events', () => {
+  test('happy path: two co-located followers trigger two ATTEMPT_ACTION_ID events', () => {
     const positions = { f1: prevLoc, f2: prevLoc, f3: 'otherLoc' };
 
     // JSON-Logic check
@@ -72,9 +73,9 @@ describe('core_follow_auto_move.rule.json', () => {
       const loc = positions[fId];
       if (loc === prevLoc) {
         dispatched.push({
-          eventType: 'core:attempt_action',
+          eventType: ATTEMPT_ACTION_ID,
           payload: {
-            eventName: 'core:attempt_action',
+            eventName: ATTEMPT_ACTION_ID,
             actorId: fId,
             actionId: 'core:go',
             direction,

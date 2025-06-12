@@ -10,6 +10,7 @@
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 import { createComponentAccessor } from './contextAssembler.js';
+import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 
 /**
  * Builds the JsonLogic-friendly context object used by the action-validation engine.
@@ -84,7 +85,7 @@ export function createActionValidationContext(
   // +++ TICKET 6: Create the Action Attempt Pseudo Event +++
   /** @type {ActionAttemptPseudoEvent} */
   const actionAttemptEvent = {
-    eventType: 'core:attempt_action',
+    eventType: ATTEMPT_ACTION_ID,
     actionId: actionDefinition.id,
     actorId: actorEntity.id,
     targetContext: targetContext, // Include the target context directly

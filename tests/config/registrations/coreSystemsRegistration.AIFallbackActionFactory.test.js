@@ -1,4 +1,5 @@
 // tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js
+// ****** MODIFIED FILE ******
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
 // --- DI Container & Configuration ---
@@ -13,6 +14,7 @@ import {
   PLAYER_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { ConcreteAIPlayerStrategyFactory } from '../../../src/turns/factories/concreteAIPlayerStrategyFactory.js';
 
 /**
  * @typedef {import('../../../src/entities/entity.js').default} Entity
@@ -40,7 +42,12 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     // 2) Create & configure the real container
     // ──────────────────────────────────────────────────────────────────────────
     container = new AppContainer();
-    configureContainer(container, { outputDiv, inputElement, titleElement });
+    configureContainer(container, {
+      outputDiv,
+      inputElement,
+      titleElement,
+      document,
+    });
 
     // ──────────────────────────────────────────────────────────────────────────
     // 3) Stub out PromptBuilder & AI-pipeline so we don’t hit their internals
@@ -89,6 +96,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       outputDiv: document.getElementById('outputDiv'),
       inputElement: document.getElementById('inputElement'),
       titleElement: document.getElementById('titleElement'),
+      document,
     });
 
     // Stub the same two services on the broken container
@@ -103,7 +111,24 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       lifecycle: 'singletonFactory',
     });
 
-    // Override only the AITurnHandler registration, deliberately omitting the fallback factory
+    // MODIFIED: Add a valid registration for the AIPlayerStrategyFactory.
+    // This is necessary because the AITurnHandler depends on it, and we want to
+    // isolate the failure to the AITurnHandler's constructor, not its dependency resolution.
+    brokenContainer.register(
+      tokens.IAIPlayerStrategyFactory,
+      (c) => {
+        return new ConcreteAIPlayerStrategyFactory({
+          llmAdapter: c.resolve(tokens.LLMAdapter),
+          aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
+          llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+          aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
+          logger: c.resolve(tokens.ILogger),
+        });
+      },
+      { lifecycle: 'singletonFactory' }
+    );
+
+    // Override only the AITurnHandler registration, deliberately omitting a required factory
     brokenContainer.register(
       tokens.AITurnHandler,
       (c) =>
@@ -111,30 +136,16 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           logger: c.resolve(tokens.ILogger),
           turnStateFactory: c.resolve(tokens.ITurnStateFactory),
           turnEndPort: c.resolve(tokens.ITurnEndPort),
-          gameWorldAccess: c.resolve(tokens.IWorldContext),
-          llmAdapter: c.resolve(tokens.LLMAdapter),
-          commandProcessor: c.resolve(tokens.ICommandProcessor),
-          commandOutcomeInterpreter: c.resolve(
-            tokens.ICommandOutcomeInterpreter
-          ),
-          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-          entityManager: c.resolve(tokens.IEntityManager),
-          actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
-          promptBuilder: c.resolve(tokens.IPromptBuilder),
-          // ←— aiFallbackActionFactory is intentionally missing
           aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
-          turnContextFactory: c.resolve(tokens.ITurnContextFactory),
-          gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
-          promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
-          llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
-          aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
+          // ←— turnContextFactory is intentionally missing for this test
         }),
       { lifecycle: 'transient' }
     );
 
     // --- Act & Assert ---
+    // The test now verifies against a dependency that is still required by the refactored constructor.
     expect(() => brokenContainer.resolve(tokens.AITurnHandler)).toThrow(
-      'AITurnHandler: Invalid IAIFallbackActionFactory'
+      'AITurnHandler: Invalid ITurnContextFactory'
     );
   });
 });

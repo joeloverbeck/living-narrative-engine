@@ -1,4 +1,7 @@
-// tests/integration/EndToEndNotesPersistence.test.js
+/**
+ * @file This test suite ensures that notes returned by a LLM get persisted properly.
+ * @see tests/integration/EndToEndNotesPersistence.test.js
+ */
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
@@ -131,7 +134,7 @@ describe('End-to-End Notes Persistence Flow', () => {
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
-    processor = new LLMResponseProcessor({ schemaValidator });
+    processor = new LLMResponseProcessor({ schemaValidator, logger });
   });
 
   test('notes persist and appear in subsequent prompt', async () => {
@@ -149,8 +152,7 @@ describe('End-to-End Notes Persistence Flow', () => {
 
     const processingResult = await processor.processResponse(
       JSON.stringify(response),
-      actor.id,
-      logger
+      actor.id
     );
 
     expect(processingResult.success).toBe(true);

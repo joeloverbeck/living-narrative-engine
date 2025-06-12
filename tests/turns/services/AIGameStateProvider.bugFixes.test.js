@@ -27,7 +27,6 @@ import {
 import { ActorStateProvider } from '../../../src/data/providers/actorStateProvider.js';
 import { ActorDataExtractor } from '../../../src/turns/services/actorDataExtractor.js';
 import { LocationSummaryProvider } from '../../../src/data/providers/locationSummaryProvider.js';
-import { AvailableActionsProvider } from '../../../src/data/providers/availableActionsProvider.js';
 import { PerceptionLogProvider } from '../../../src/data/providers/perceptionLogProvider.js';
 import { EntitySummaryProvider } from '../../../src/data/providers/entitySummaryProvider.js';
 
@@ -71,33 +70,14 @@ const mockEntityManager = () => ({
   getEntitiesInLocation: jest.fn(),
 });
 
-const mockActionDiscoveryService = () => ({
-  getValidActions: jest.fn(),
-});
-
-// --- CHANGE START ---
-// Added mock for the new dependency
-const mockActionIndexingService = () => ({
-  indexActions: jest.fn(),
-});
-// --- CHANGE END ---
-
 const mockTurnContext = () => {
   const loggerInstance = mockLogger();
   const entityManagerInstance = mockEntityManager();
-  const actionDiscoverySystemInst = mockActionDiscoveryService();
-  // --- CHANGE START ---
-  const actionIndexingServiceInst = mockActionIndexingService();
-  // --- CHANGE END ---
 
   return {
     game: {},
     mockLoggerInstance: loggerInstance,
     mockEntityManagerInstance: entityManagerInstance,
-    mockActionDiscoveryServiceInstance: actionDiscoverySystemInst,
-    // --- CHANGE START ---
-    mockActionIndexingServiceInstance: actionIndexingServiceInst,
-    // --- CHANGE END ---
   };
 };
 
@@ -108,20 +88,12 @@ describe('AIGameStateProvider', () => {
   let logger;
   let turnContext;
   let entityManager;
-  let actionDiscoverySystem;
   let mockActor;
-  // --- CHANGE START ---
-  let actionIndexingService;
-  // --- CHANGE END ---
 
   beforeEach(() => {
     turnContext = mockTurnContext();
     logger = turnContext.mockLoggerInstance;
     entityManager = turnContext.mockEntityManagerInstance;
-    actionDiscoverySystem = turnContext.mockActionDiscoveryServiceInstance;
-    // --- CHANGE START ---
-    actionIndexingService = turnContext.mockActionIndexingServiceInstance;
-    // --- CHANGE END ---
 
     mockActor = new MockEntity('actor1', {
       [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
@@ -137,20 +109,11 @@ describe('AIGameStateProvider', () => {
       entityManager,
       summaryProvider: entitySummaryProvider,
     });
-    // --- CHANGE START ---
-    // Updated provider instantiation to include the new dependency
-    const availableActionsProvider = new AvailableActionsProvider({
-      actionDiscoveryService: actionDiscoverySystem,
-      actionIndexingService,
-      entityManager,
-    });
-    // --- CHANGE END ---
 
     provider = new AIGameStateProvider({
       actorStateProvider,
       actorDataExtractor,
       locationSummaryProvider,
-      availableActionsProvider,
       perceptionLogProvider,
     });
 
@@ -164,7 +127,6 @@ describe('AIGameStateProvider', () => {
       return null;
     });
     entityManager.getEntitiesInLocation.mockResolvedValue(new Set());
-    actionDiscoverySystem.getValidActions.mockResolvedValue([]);
 
     jest.spyOn(Date, 'now').mockReturnValue(1678886400000);
   });
@@ -195,123 +157,8 @@ describe('AIGameStateProvider', () => {
       });
     });
 
-    describe('_getAvailableActions (via buildGameState)', () => {
-      let loc;
-      beforeEach(() => {
-        loc = new MockEntity('loc1', {
-          [NAME_COMPONENT_ID]: { text: 'A Room' },
-        });
-        entityManager.getEntityInstance.mockResolvedValue(loc);
-        entityManager.getEntitiesInLocation.mockResolvedValue(new Set());
-      });
-
-      test('should return empty actions and log error if ActionDiscoveryService is not available', async () => {
-        // This test requires a custom provider setup, so we must also pass the new dependency here.
-        const availableActionsProviderWithNullADS =
-          new AvailableActionsProvider({
-            actionDiscoveryService: null,
-            actionIndexingService, // Pass the mock here too
-            entityManager,
-          });
-        const localProvider = new AIGameStateProvider({
-          actorStateProvider: new ActorStateProvider(),
-          actorDataExtractor: new ActorDataExtractor(),
-          locationSummaryProvider: new LocationSummaryProvider({
-            entityManager,
-            summaryProvider: new EntitySummaryProvider(),
-          }),
-          availableActionsProvider: availableActionsProviderWithNullADS,
-          perceptionLogProvider: new PerceptionLogProvider(),
-        });
-
-        const gameState = await localProvider.buildGameState(
-          mockActor,
-          turnContext,
-          logger
-        );
-
-        expect(gameState.availableActions).toEqual([]);
-        expect(logger.error).toHaveBeenCalled();
-      });
-
-      // --- CHANGE START ---
-      // This is the failing test. It has been rewritten to reflect the new DTO
-      // and the proper mocking of the full provider chain.
-      test('should correctly pass through actions from the provider stack', async () => {
-        // Arrange: Mock the full data flow from discovery to indexing.
-        const discoveredActions = [
-          {
-            id: 'action1',
-            command: 'cmd1',
-            name: 'Action One',
-            description: 'Desc One',
-            params: { target: 't1' },
-          },
-          {
-            id: 'action2',
-            command: 'cmd2',
-            name: 'Action Two',
-            description: 'Desc Two',
-            params: {},
-          },
-        ];
-        const expectedComposites = [
-          {
-            index: 1,
-            actionId: 'action1',
-            commandString: 'cmd1',
-            description: 'Desc One',
-            params: { target: 't1' },
-          },
-          {
-            index: 2,
-            actionId: 'action2',
-            commandString: 'cmd2',
-            description: 'Desc Two',
-            params: {},
-          },
-        ];
-        actionDiscoverySystem.getValidActions.mockResolvedValue(
-          discoveredActions
-        );
-        actionIndexingService.indexActions.mockReturnValue(expectedComposites);
-
-        // Act
-        const { availableActions } = await provider.buildGameState(
-          mockActor,
-          turnContext,
-          logger
-        );
-
-        // Assert: The final game state should contain the indexed composites.
-        expect(availableActions).toEqual(expectedComposites);
-        expect(actionIndexingService.indexActions).toHaveBeenCalledWith(
-          mockActor.id,
-          discoveredActions
-        );
-      });
-      // --- CHANGE END ---
-
-      describe('ActionContext Integrity', () => {
-        test('should call getValidActions with an ActionContext containing the full location entity', async () => {
-          await provider.buildGameState(mockActor, turnContext, logger);
-
-          expect(actionDiscoverySystem.getValidActions).toHaveBeenCalledTimes(
-            1
-          );
-          expect(actionDiscoverySystem.getValidActions).toHaveBeenCalledWith(
-            mockActor,
-            expect.objectContaining({
-              actingEntity: mockActor,
-              currentLocation: loc,
-              entityManager,
-              worldContext: turnContext.game,
-              logger,
-            })
-          );
-        });
-      });
-    });
+    // The entire `_getAvailableActions` describe block was removed as it is
+    // no longer relevant to AIGameStateProvider.
 
     describe('_buildLocationSummary (via buildGameState)', () => {
       let locationEntity;

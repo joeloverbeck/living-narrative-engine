@@ -5,6 +5,7 @@
 
 import { createJsonLogicContext } from './contextAssembler.js';
 import resolvePath from '../utils/resolvePath.js';
+import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -140,7 +141,7 @@ class SystemLogicInterpreter {
         constId = c['=='][1];
       }
 
-      if (rule.event_type === 'core:attempt_action' && constId) {
+      if (rule.event_type === ATTEMPT_ACTION_ID && constId) {
         (
           bucket.byAction.get(constId) ??
           bucket.byAction.set(constId, []).get(constId)
@@ -173,7 +174,7 @@ class SystemLogicInterpreter {
     /** @type {SystemRule[]} */
     let rules = bucket.catchAll;
 
-    if (event.type === 'core:attempt_action') {
+    if (event.type === ATTEMPT_ACTION_ID) {
       const id = event.payload?.actionId;
       const specific = id ? bucket.byAction.get(id) : null;
       if (specific) rules = [...specific, ...bucket.catchAll];

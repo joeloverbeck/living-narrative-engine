@@ -1,6 +1,10 @@
-// src/dependencyInjection/appContainer.js
-
 /* eslint-disable no-console */
+/**
+ * @file A lightweight Dependency Injection (DI) container.
+ * Manages instantiation and lifecycle of registered services/systems.
+ * @see src/dependencyInjection/appContainer.js
+ */
+
 /** @typedef {import('./tokens.js').DiToken} DiToken */
 
 /**
@@ -139,7 +143,6 @@ class AppContainer {
     }
   }
 
-  // ****** ADDED THIS METHOD TO FIX THE ERROR ******
   /**
    * Checks if a service is registered with the container.
    *
@@ -150,8 +153,6 @@ class AppContainer {
     const registrationKey = String(key);
     return this.#registrations.has(registrationKey);
   }
-
-  // ************************************************
 
   /**
    * Internal helper to create an instance based on registration info.

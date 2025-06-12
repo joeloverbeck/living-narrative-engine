@@ -1,8 +1,10 @@
-// tests/turns/services/LLMResponseProcessor.goals.test.js
+/**
+ * @file Test suite that covers goals-related behavior for LLMResponseProcessor.
+ * @see tests/turns/services/LLMResponseProcessor.goals.test.js
+ */
 
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-// Import the custom error type to assert against it specifically
 import { LLMProcessingError } from '../../../src/turns/services/LLMResponseProcessor.js';
 
 describe('LLMResponseProcessor – Handling of disallowed properties', () => {
@@ -18,12 +20,13 @@ describe('LLMResponseProcessor – Handling of disallowed properties', () => {
       error: jest.fn(),
     };
 
+    // This mock simulates a schema validator that fails if it sees a "goals" property.
     mockSchemaValidator = {
       validate: jest.fn((schemaId, data) => {
         if (Object.prototype.hasOwnProperty.call(data, 'goals')) {
           return {
             isValid: false,
-            errors: [{ message: 'extra property: goals' }],
+            errors: [{ message: "Disallowed extra property: 'goals'" }],
           };
         }
         return { isValid: true, errors: [] };
@@ -33,41 +36,51 @@ describe('LLMResponseProcessor – Handling of disallowed properties', () => {
 
     processor = new LLMResponseProcessor({
       schemaValidator: mockSchemaValidator,
+      logger: mockLogger,
     });
   });
 
-  // FIX: The test is updated to assert that an error is thrown, instead of checking a return value.
-  test('should warn, then throw a validation error if "goals" property is present', async () => {
+  test('should throw a validation error if a disallowed property like "goals" is present', async () => {
     const actorId = 'actor-123';
-    const payloadWithGoals = JSON.stringify({
-      actionDefinitionId: 'core:wait',
-      commandString: 'wait',
+    const payloadWithGoals = {
+      chosenIndex: 1,
       speech: '',
-      goals: [{ text: 'newGoal', timestamp: '2025-06-05T12:00:00Z' }],
       thoughts: 'This is a test thought.',
-    });
+      goals: [{ text: 'newGoal' }], // The disallowed property
+    };
+    const jsonPayload = JSON.stringify(payloadWithGoals);
 
-    // 1. Assert that the promise rejects with the correct error type
+    // 1. Assert that the promise rejects with the correct error type.
     await expect(
-      processor.processResponse(payloadWithGoals, actorId, mockLogger)
+      processor.processResponse(jsonPayload, actorId)
     ).rejects.toThrow(LLMProcessingError);
 
-    // 2. Assert: A specific warning for 'goals' was logged before the error was thrown.
-    expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      `LLMResponseProcessor: LLM for actor ${actorId} attempted to return goals; ignoring.`
+    // 2. Assert: NO specific warning for 'goals' should be logged. This behavior was removed.
+    expect(mockLogger.warn).not.toHaveBeenCalled();
+
+    // 3. Assert: An ERROR for the schema failure should be logged.
+    // We must run the method again to inspect the logger, as `rejects` consumes the error.
+    await processor.processResponse(jsonPayload, actorId).catch(() => {});
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      `LLMResponseProcessor: schema invalid for actor ${actorId}`,
+      {
+        errors: [{ message: "Disallowed extra property: 'goals'" }],
+        parsed: payloadWithGoals,
+      }
     );
 
-    // 3. To inspect the error's details, we can use a try/catch block
+    // 4. To inspect the error's details, we can use a try/catch block.
     try {
-      await processor.processResponse(payloadWithGoals, actorId, mockLogger);
+      await processor.processResponse(jsonPayload, actorId);
     } catch (e) {
-      // 4. Assert: The error has the correct context and includes validation details.
-      expect(e.details.errorContext).toBe('json_schema_validation_error');
+      // 5. Assert: The error details contain the validation errors from the schema validator.
+      expect(e.details).toBeDefined();
       expect(e.details.validationErrors).toBeDefined();
       expect(e.details.validationErrors[0].message).toContain(
-        'extra property: goals'
+        "Disallowed extra property: 'goals'"
       );
+      // Assert that obsolete properties are not present.
+      expect(e.details.errorContext).toBeUndefined();
     }
   });
 });

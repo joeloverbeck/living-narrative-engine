@@ -26,11 +26,13 @@ class LLMProcessingError extends Error {
 export class LLMResponseProcessor extends ILLMResponseProcessor {
   /** @type {ISchemaValidator} */
   #schemaValidator;
+  /** @type {ILogger} */
+  #logger;
 
   /**
-   * @param {{ schemaValidator: ISchemaValidator }} options
+   * @param {{ schemaValidator: ISchemaValidator, logger: ILogger }} options
    */
-  constructor({ schemaValidator }) {
+  constructor({ schemaValidator, logger }) {
     super();
     if (
       !schemaValidator ||
@@ -39,7 +41,13 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     ) {
       throw new Error('LLMResponseProcessor needs a valid ISchemaValidator');
     }
+    if (!logger) {
+      throw new Error('LLMResponseProcessor needs a valid ILogger');
+    }
+
     this.#schemaValidator = schemaValidator;
+    this.#logger = logger;
+
     // Ensure the required schema is loaded
     if (
       !this.#schemaValidator.isSchemaLoaded(LLM_TURN_ACTION_RESPONSE_SCHEMA_ID)
@@ -55,10 +63,9 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    *
    * @param {string} llmJsonResponse
    * @param {string} actorId
-   * @param {ILogger} logger
    * @returns {Promise<{ success: boolean; action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: string[] } }>}
    */
-  async processResponse(llmJsonResponse, actorId, logger) {
+  async processResponse(llmJsonResponse, actorId) {
     // Ensure input is a string
     if (typeof llmJsonResponse !== 'string') {
       throw new LLMProcessingError(
@@ -69,9 +76,9 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     // Clean + parse (with repair)
     let parsed;
     try {
-      parsed = await parseAndRepairJson(llmJsonResponse, logger);
+      parsed = await parseAndRepairJson(llmJsonResponse, this.#logger);
     } catch (err) {
-      logger.error(
+      this.#logger.error(
         `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`,
         { rawResponse: llmJsonResponse }
       );
@@ -87,7 +94,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     );
     const { isValid, errors } = validationResult;
     if (!isValid) {
-      logger.error(
+      this.#logger.error(
         `LLMResponseProcessor: schema invalid for actor ${actorId}`,
         { errors, parsed }
       );
@@ -99,7 +106,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
 
     // Extract the required data
     const { chosenIndex, speech, thoughts, notes } = parsed;
-    logger.debug(
+    this.#logger.debug(
       `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: ${chosenIndex}`
     );
 

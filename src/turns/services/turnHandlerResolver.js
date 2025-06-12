@@ -1,91 +1,71 @@
 // src/turns/services/turnHandlerResolver.js
+// --- FILE START (Entire file content as requested) ---
 
 // --- Interface Imports ---
 import { ITurnHandlerResolver } from '../interfaces/ITurnHandlerResolver.js';
-// ITurnHandler might be implicitly used by the factory return types, but not directly in this file.
 
 // --- Core Imports ---
-import {
-  PLAYER_COMPONENT_ID,
-  ACTOR_COMPONENT_ID,
-} from '../../constants/componentIds.js';
+import { validateDependency } from '../../utils/validationUtils.js';
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */
-/** @typedef {() => PlayerTurnHandler} PlayerTurnHandlerFactory */
 
-/** @typedef {() => AITurnHandler} AiTurnHandlerFactory */
+/**
+ * @typedef {object} HandlerRule
+ * @property {string} name - The name of the handler for logging purposes (e.g., "Player", "AI").
+ * @property {(actor: Entity) => boolean} predicate - A function that returns true if this rule applies to the given actor.
+ * @property {() => ITurnHandler} factory - A factory function that creates a new instance of the handler.
+ */
 
 /**
  * @class TurnHandlerResolver
  * @implements {ITurnHandlerResolver}
- * @description Service responsible for resolving the correct ITurnHandler implementation
- * based on an actor entity. It uses factory functions to create new handler instances.
+ * @description Service responsible for resolving the correct ITurnHandler using a
+ * configurable set of rules. It finds the first matching rule and uses its factory
+ * to create a new handler instance.
  */
 class TurnHandlerResolver extends ITurnHandlerResolver {
   /** @type {ILogger} */
   #logger;
-  /** @type {PlayerTurnHandlerFactory} */
-  #createPlayerTurnHandler;
-  /** @type {AiTurnHandlerFactory} */
-  #createAiTurnHandler;
+  /** @type {HandlerRule[]} */
+  #handlerRules;
 
   /**
    * Creates an instance of TurnHandlerResolver.
-   *
    * @param {object} dependencies - The dependencies required by the resolver.
    * @param {ILogger} dependencies.logger - The logging service.
-   * @param {PlayerTurnHandlerFactory} dependencies.createPlayerTurnHandler - A factory function that returns a new PlayerTurnHandler.
-   * @param {AiTurnHandlerFactory} dependencies.createAiTurnHandler - A factory function that returns a new AITurnHandler.
-   * @throws {Error} If required dependencies are missing or invalid.
+   * @param {HandlerRule[]} dependencies.handlerRules - An ordered array of rules for resolving handlers.
    */
-  constructor({ logger, createPlayerTurnHandler, createAiTurnHandler }) {
+  constructor({ logger, handlerRules }) {
     super();
-
-    if (!logger || typeof logger.debug !== 'function') {
-      console.error(
-        'TurnHandlerResolver: Invalid or missing logger dependency.'
-      );
-      throw new Error(
-        'TurnHandlerResolver: Invalid or missing logger dependency.'
-      );
-    }
+    validateDependency(logger, 'logger', logger, {
+      requiredMethods: ['debug', 'info', 'warn', 'error'],
+    });
     this.#logger = logger;
 
-    if (typeof createPlayerTurnHandler !== 'function') {
-      this.#logger.error(
-        'TurnHandlerResolver: Invalid or missing createPlayerTurnHandler factory function.'
-      );
-      throw new Error(
-        'TurnHandlerResolver: Invalid or missing createPlayerTurnHandler factory function.'
-      );
+    if (!Array.isArray(handlerRules)) {
+      const errorMsg =
+        'TurnHandlerResolver requires handlerRules to be an array.';
+      this.#logger.error(errorMsg);
+      throw new Error(errorMsg);
     }
-    this.#createPlayerTurnHandler = createPlayerTurnHandler;
-
-    if (typeof createAiTurnHandler !== 'function') {
-      this.#logger.error(
-        'TurnHandlerResolver: Invalid or missing createAiTurnHandler factory function.'
-      );
-      throw new Error(
-        'TurnHandlerResolver: Invalid or missing createAiTurnHandler factory function.'
-      );
-    }
-    this.#createAiTurnHandler = createAiTurnHandler;
+    this.#handlerRules = handlerRules;
 
     this.#logger.debug(
-      'TurnHandlerResolver initialized with handler factories.'
+      `TurnHandlerResolver initialized with ${handlerRules.length} handler rules.`
     );
   }
 
   /**
-   * Resolves the correct turn handler implementation for the given actor entity
-   * by creating a new instance using the appropriate factory.
+   * Resolves the correct turn handler for the given actor by iterating through
+   * the registered rules and using the factory of the first one that matches.
    *
+   * @override
    * @param {Entity} actor - The entity whose turn handler needs to be resolved.
    * @returns {Promise<ITurnHandler | null>} A promise that resolves with a new
-   * ITurnHandler instance for the actor, or null if no specific handler is found or the actor is invalid.
+   * ITurnHandler instance for the actor, or null if no handler is found.
    */
   async resolveHandler(actor) {
     if (!actor || !actor.id) {
@@ -94,59 +74,61 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
       );
       return null;
     }
-
     this.#logger.debug(
-      `TurnHandlerResolver: Attempting to resolve turn handler for actor ${actor.id}...`
+      `TurnHandlerResolver: Resolving handler for actor ${actor.id}...`
     );
 
-    if (actor.hasComponent(PLAYER_COMPONENT_ID)) {
-      this.#logger.debug(
-        `TurnHandlerResolver: Creating new PlayerTurnHandler for actor ${actor.id}.`
-      );
+    for (const rule of this.#handlerRules) {
       try {
-        const handler = this.#createPlayerTurnHandler();
-        // Optional: Basic check if factory returned something that looks like a handler
-        if (!handler || typeof handler.startTurn !== 'function') {
-          this.#logger.error(
-            `TurnHandlerResolver: createPlayerTurnHandler factory did not return a valid handler for actor ${actor.id}.`
+        if (rule.predicate(actor)) {
+          this.#logger.debug(
+            `Match found for actor ${actor.id}. Applying rule: '${rule.name}'.`
           );
-          return null;
+          return this.#createAndValidateHandler(rule.name, rule.factory, actor);
         }
-        return handler;
       } catch (error) {
         this.#logger.error(
-          `TurnHandlerResolver: Error creating PlayerTurnHandler for actor ${actor.id}: ${error.message}`,
+          `Error executing predicate for rule '${rule.name}' on actor ${actor.id}: ${error.message}`,
           error
+        );
+        // Continue to the next rule
+      }
+    }
+
+    this.#logger.debug(
+      `TurnHandlerResolver: No matching rule found for actor ${actor.id}. Returning null.`
+    );
+    return null;
+  }
+
+  /**
+   * [DRY HELPER] Creates and validates a handler instance using a factory.
+   * Encapsulates the try/catch, logging, and validation logic.
+   *
+   * @private
+   * @param {string} handlerName - The name of the handler for logging (e.g., "Player", "AI").
+   * @param {() => ITurnHandler} factory - The factory function to call.
+   * @param {Entity} actor - The actor for whom the handler is being created.
+   * @returns {ITurnHandler | null} The created handler or null on failure.
+   */
+  #createAndValidateHandler(handlerName, factory, actor) {
+    this.#logger.debug(
+      `TurnHandlerResolver: Creating new ${handlerName}Handler for actor ${actor.id}.`
+    );
+    try {
+      const handler = factory();
+
+      if (!handler || typeof handler.startTurn !== 'function') {
+        this.#logger.error(
+          `TurnHandlerResolver: ${handlerName} factory did not return a valid handler for actor ${actor.id}.`
         );
         return null;
       }
-    } else if (
-      actor.hasComponent(ACTOR_COMPONENT_ID) &&
-      !actor.hasComponent(PLAYER_COMPONENT_ID)
-    ) {
-      this.#logger.debug(
-        `TurnHandlerResolver: Creating new AITurnHandler for actor ${actor.id}.`
-      );
-      try {
-        const handler = this.#createAiTurnHandler();
-        // Optional: Basic check
-        if (!handler || typeof handler.startTurn !== 'function') {
-          this.#logger.error(
-            `TurnHandlerResolver: createAiTurnHandler factory did not return a valid handler for actor ${actor.id}.`
-          );
-          return null;
-        }
-        return handler;
-      } catch (error) {
-        this.#logger.error(
-          `TurnHandlerResolver: Error creating AITurnHandler for actor ${actor.id}: ${error.message}`,
-          error
-        );
-        return null;
-      }
-    } else {
-      this.#logger.debug(
-        `TurnHandlerResolver: No specific turn handler factory found for actor ${actor.id}. Returning null.`
+      return handler;
+    } catch (error) {
+      this.#logger.error(
+        `TurnHandlerResolver: Error creating ${handlerName}Handler for actor ${actor.id}: ${error.message}`,
+        error
       );
       return null;
     }
@@ -154,3 +136,4 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
 }
 
 export default TurnHandlerResolver;
+// --- FILE END ---

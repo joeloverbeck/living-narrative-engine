@@ -1,4 +1,5 @@
 // src/turns/handlers/baseTurnHandler.js
+// ****** MODIFIED FILE ******
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -6,7 +7,8 @@
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
- * @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory // NEW
+ * @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory
+ * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
  */
 
 // Remove direct imports of concrete states if they are solely created by the factory
@@ -34,22 +36,20 @@ export class BaseTurnHandler {
   /**
    * @param {object} deps
    * @param {ILogger} deps.logger
-   * @param {ITurnStateFactory} deps.turnStateFactory - Factory for creating turn states. // NEW
+   * @param {ITurnStateFactory} deps.turnStateFactory - Factory for creating turn states.
    */
   constructor({ logger, turnStateFactory }) {
-    // MODIFIED
     if (!logger) {
       console.error('BaseTurnHandler: logger is required.');
       throw new Error('BaseTurnHandler: logger is required.');
     }
     if (!turnStateFactory) {
-      // NEW
       console.error('BaseTurnHandler: turnStateFactory is required.');
       throw new Error('BaseTurnHandler: turnStateFactory is required.');
     }
 
     this._logger = logger;
-    this._turnStateFactory = turnStateFactory; // NEW
+    this._turnStateFactory = turnStateFactory;
     this._currentState = null;
   }
 
@@ -82,6 +82,19 @@ export class BaseTurnHandler {
       }
     }
     return this._currentActor;
+  }
+
+  /**
+   * Retrieves the port for signaling the end of a turn.
+   * Subclasses that manage a turn-end port should override this method.
+   * @abstract
+   * @returns {ITurnEndPort}
+   */
+  getTurnEndPort() {
+    this.getLogger().error(
+      `${this.constructor.name} does not implement getTurnEndPort.`
+    );
+    throw new Error('Method not implemented.');
   }
 
   _setCurrentActorInternal(actor) {
@@ -194,7 +207,6 @@ export class BaseTurnHandler {
           `error-entering-${newState.getStateName()}-for-${actorIdForErr}`
         );
         try {
-          // MODIFIED: Use factory
           await this._transitionToState(
             this._turnStateFactory.createIdleState(this)
           );
@@ -203,7 +215,6 @@ export class BaseTurnHandler {
             `${this.constructor.name}: CRITICAL - Failed to transition to TurnIdleState after error entering ${newState.getStateName()}. Error: ${idleErr.message}`,
             idleErr
           );
-          // MODIFIED: Use factory as a last resort
           this._currentState = this._turnStateFactory.createIdleState(this);
         }
       } else {
@@ -309,7 +320,6 @@ export class BaseTurnHandler {
       );
     }
 
-    // MODIFIED: Use factory
     await this._transitionToState(
       this._turnStateFactory.createEndingState(
         this,
@@ -437,7 +447,6 @@ export class BaseTurnHandler {
         `${name}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ?? 'N/A'}).`
       );
       try {
-        // MODIFIED: Use factory
         await this._transitionToState(
           this._turnStateFactory.createIdleState(this)
         );
@@ -446,7 +455,6 @@ export class BaseTurnHandler {
           `${name}.destroy: Error while transitioning to TurnIdleState during destroy: ${e.message}`,
           e
         );
-        // MODIFIED: Use factory as a last resort
         this._currentState = this._turnStateFactory.createIdleState(this);
         logger.warn(
           `${name}.destroy: Forcibly set state to TurnIdleState due to transition error.`
@@ -501,5 +509,3 @@ export class BaseTurnHandler {
     );
   }
 }
-
-// ──────────────────────────────────────────────────────────────────────────────

@@ -1,7 +1,11 @@
-// tests/turns/services/LLMResponseProcessor.notesGuards.test.js
+/**
+ * @file Tests notes-related behavior in LLMResponseProcessor.
+ * @see tests/turns/services/LLMResponseProcessor.notesGuards.test.js
+ */
 
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { LLMProcessingError } from '../../../src/turns/services/LLMResponseProcessor.js';
 
 // --- Mocks & Helpers ---
 
@@ -30,6 +34,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     schemaValidatorMock = mockSchemaValidator();
     processor = new LLMResponseProcessor({
       schemaValidator: schemaValidatorMock,
+      logger: loggerMock,
     });
   });
 
@@ -45,19 +50,14 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     };
 
     const jsonString = JSON.stringify(validJson);
-    const result = await processor.processResponse(
-      jsonString,
-      actorId,
-      loggerMock
-    );
+    const result = await processor.processResponse(jsonString, actorId);
 
     // Assert the overall structure is successful
     expect(result.success).toBe(true);
 
     // Assert the action part is correct
     expect(result.action).toEqual({
-      actionDefinitionId: '99',
-      commandString: '',
+      chosenIndex: 99,
       speech: 'hello',
     });
 
@@ -78,11 +78,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     };
 
     const jsonString = JSON.stringify(noNotesJson);
-    const result = await processor.processResponse(
-      jsonString,
-      actorId,
-      loggerMock
-    );
+    const result = await processor.processResponse(jsonString, actorId);
 
     expect(result.success).toBe(true);
     expect(result.extractedData.notes).toBeUndefined();
@@ -109,21 +105,24 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     const jsonString = JSON.stringify(invalidNotesJson);
 
     await expect(
-      processor.processResponse(jsonString, actorId, loggerMock)
+      processor.processResponse(jsonString, actorId)
     ).rejects.toMatchObject({
       name: 'LLMProcessingError',
       message: `LLM response JSON schema validation failed for actor ${actorId}.`,
       details: {
-        errorContext: 'json_schema_validation_error',
-        rawLlmResponse: jsonString,
-        parsedJsonAttempt: invalidNotesJson,
         validationErrors: mockValidationErrors,
       },
     });
 
+    // The processor should log the schema validation failure before throwing.
+    // We need to run it again because the `expect().rejects` consumes the error.
+    await processor.processResponse(jsonString, actorId).catch(() => {});
     expect(loggerMock.error).toHaveBeenCalledWith(
-      `LLMResponseProcessor: LLM response JSON schema validation failed for actor ${actorId}.`,
-      expect.any(Object)
+      `LLMResponseProcessor: schema invalid for actor ${actorId}`,
+      {
+        errors: mockValidationErrors,
+        parsed: invalidNotesJson,
+      }
     );
   });
 });

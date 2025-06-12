@@ -1,6 +1,4 @@
 // tests/turns/services/AIGameStateProvider.test.js
-// --- FILE START ---
-
 import {
   jest,
   describe,
@@ -27,7 +25,6 @@ import {
 import { ActorStateProvider } from '../../../src/data/providers/actorStateProvider.js';
 import { ActorDataExtractor } from '../../../src/turns/services/actorDataExtractor.js';
 import { LocationSummaryProvider } from '../../../src/data/providers/locationSummaryProvider.js';
-import { AvailableActionsProvider } from '../../../src/data/providers/availableActionsProvider.js';
 import { PerceptionLogProvider } from '../../../src/data/providers/perceptionLogProvider.js';
 import { EntitySummaryProvider } from '../../../src/data/providers/entitySummaryProvider.js';
 
@@ -67,17 +64,6 @@ const mockEntityManager = () => ({
   getEntitiesInLocation: jest.fn(),
 });
 
-const mockActionDiscoveryService = () => ({
-  getValidActions: jest.fn(),
-});
-
-// --- CHANGE START ---
-// Added a mock for the new dependency
-const mockActionIndexingService = () => ({
-  indexActions: jest.fn(),
-});
-// --- CHANGE END ---
-
 const mockTurnContext = () => ({
   game: {},
 });
@@ -92,7 +78,6 @@ describe('AIGameStateProvider Integration Tests', () => {
   let actorStateProvider;
   let actorDataExtractor;
   let locationSummaryProvider;
-  let availableActionsProvider;
   let perceptionLogProvider;
   let entitySummaryProvider;
 
@@ -100,20 +85,12 @@ describe('AIGameStateProvider Integration Tests', () => {
   let logger;
   let turnContext;
   let entityManager;
-  let actionDiscoverySystem;
   let mockActor;
-  // --- CHANGE START ---
-  let actionIndexingService; // Added mock instance variable
-  // --- CHANGE END ---
 
   // Helper to create the full provider stack. Allows overriding dependencies for specific tests.
   const setupProviderStack = (overrides = {}) => {
     const deps = {
       entityManager,
-      actionDiscoverySystem,
-      // --- CHANGE START ---
-      actionIndexingService, // Added to default dependencies
-      // --- CHANGE END ---
       ...overrides,
     };
 
@@ -126,20 +103,10 @@ describe('AIGameStateProvider Integration Tests', () => {
       summaryProvider: entitySummaryProvider,
     });
 
-    // --- CHANGE START ---
-    // Updated constructor call to include the new dependency
-    availableActionsProvider = new AvailableActionsProvider({
-      actionDiscoveryService: deps.actionDiscoverySystem,
-      entityManager: deps.entityManager,
-      actionIndexingService: deps.actionIndexingService,
-    });
-    // --- CHANGE END ---
-
     return new AIGameStateProvider({
       actorStateProvider,
       actorDataExtractor,
       locationSummaryProvider,
-      availableActionsProvider,
       perceptionLogProvider,
     });
   };
@@ -148,10 +115,6 @@ describe('AIGameStateProvider Integration Tests', () => {
     logger = mockLogger();
     turnContext = mockTurnContext();
     entityManager = mockEntityManager();
-    actionDiscoverySystem = mockActionDiscoveryService();
-    // --- CHANGE START ---
-    actionIndexingService = mockActionIndexingService(); // Instantiate the new mock
-    // --- CHANGE END ---
     mockActor = new MockEntity('actor1', {
       [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
     });
@@ -166,7 +129,6 @@ describe('AIGameStateProvider Integration Tests', () => {
     });
     entityManager.getEntityInstance.mockResolvedValue(minimalLocationEntity);
     entityManager.getEntitiesInLocation.mockResolvedValue(new Set());
-    actionDiscoverySystem.getValidActions.mockResolvedValue([]);
     jest.spyOn(Date, 'now').mockReturnValue(1678886400000);
   });
 
@@ -288,63 +250,8 @@ describe('AIGameStateProvider Integration Tests', () => {
       });
     });
 
-    describe('Available Actions Building', () => {
-      test('should return empty actions if ADS is unavailable', async () => {
-        provider = setupProviderStack({ actionDiscoverySystem: null });
-        const { availableActions } = await provider.buildGameState(
-          mockActor,
-          turnContext,
-          logger
-        );
-        expect(availableActions).toEqual([]);
-        expect(logger.error).toHaveBeenCalled();
-      });
-
-      // --- CHANGE START ---
-      // This is the failing test. It has been completely rewritten to
-      // reflect the new dependency and the new ActionComposite DTO.
-      test('should populate actions correctly via the provider stack', async () => {
-        // Arrange: Mock the full data flow for actions
-        const discoveredActions = [
-          {
-            id: 'a1',
-            command: 'c1',
-            description: 'Perform action c1',
-            params: {},
-          },
-        ];
-        const expectedComposites = [
-          {
-            index: 1,
-            actionId: 'a1',
-            commandString: 'c1',
-            description: 'Perform action c1',
-            params: {},
-          },
-        ];
-
-        actionDiscoverySystem.getValidActions.mockResolvedValue(
-          discoveredActions
-        );
-        actionIndexingService.indexActions.mockReturnValue(expectedComposites);
-
-        // Act
-        const { availableActions } = await provider.buildGameState(
-          mockActor,
-          turnContext,
-          logger
-        );
-
-        // Assert: The final DTO contains the ActionComposites from the end of the chain.
-        expect(availableActions).toEqual(expectedComposites);
-        expect(actionDiscoverySystem.getValidActions).toHaveBeenCalled();
-        expect(actionIndexingService.indexActions).toHaveBeenCalledWith(
-          mockActor.id,
-          discoveredActions
-        );
-      });
-      // --- CHANGE END ---
-    });
+    // This entire block is now obsolete and has been removed.
+    // describe('Available Actions Building', () => { ... });
 
     describe('Perception Log Building', () => {
       test('should return empty array if no perception component', async () => {
@@ -398,7 +305,6 @@ describe('AIGameStateProvider Integration Tests', () => {
       test('should call all providers and assemble the DTO', async () => {
         const actorSpy = jest.spyOn(actorStateProvider, 'build');
         const locationSpy = jest.spyOn(locationSummaryProvider, 'build');
-        const actionsSpy = jest.spyOn(availableActionsProvider, 'get');
         const perceptionSpy = jest.spyOn(perceptionLogProvider, 'get');
         const extractorSpy = jest.spyOn(
           actorDataExtractor,
@@ -413,7 +319,6 @@ describe('AIGameStateProvider Integration Tests', () => {
 
         expect(actorSpy).toHaveBeenCalledWith(mockActor, logger);
         expect(locationSpy).toHaveBeenCalledWith(mockActor, logger);
-        expect(actionsSpy).toHaveBeenCalledWith(mockActor, turnContext, logger);
         expect(perceptionSpy).toHaveBeenCalledWith(mockActor, logger);
         expect(extractorSpy).toHaveBeenCalledWith(
           actorSpy.mock.results[0].value
@@ -422,13 +327,13 @@ describe('AIGameStateProvider Integration Tests', () => {
         expect(gameState).toHaveProperty('actorState');
         expect(gameState).toHaveProperty('actorPromptData');
         expect(gameState).toHaveProperty('currentLocation');
-        expect(gameState).toHaveProperty('availableActions');
         expect(gameState).toHaveProperty('perceptionLog');
+        // Assert the new, correct behavior for availableActions
+        expect(gameState.availableActions).toBeNull();
       });
 
       test('should still build other parts if a provider returns null/empty', async () => {
         jest.spyOn(locationSummaryProvider, 'build').mockResolvedValue(null);
-        jest.spyOn(availableActionsProvider, 'get').mockResolvedValue([]);
 
         const gameState = await provider.buildGameState(
           mockActor,
@@ -437,7 +342,8 @@ describe('AIGameStateProvider Integration Tests', () => {
         );
 
         expect(gameState.currentLocation).toBeNull();
-        expect(gameState.availableActions).toEqual([]);
+        // Assert the new, correct behavior for availableActions
+        expect(gameState.availableActions).toBeNull();
         expect(gameState.actorState).not.toBeNull();
         expect(gameState.perceptionLog).not.toBeNull();
       });

@@ -5,6 +5,7 @@
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // <<< CHANGED (path adjusted)
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../events/eventBus.js').default} EventBus */ // Assuming EventBus might be an interface or a concrete type used directly
+/** @typedef {import('../constants/eventIds.js').ATTEMPT_ACTION_ID} ATTEMPT_ACTION_ID */
 // --- ADDED Import for ActionTargetContext ---
 /** @typedef {import('../models/ActionTargetContext.js').ActionTargetContext} ActionTargetContext */
 // --- ADDED Import for ActionDefinition (used in ActionAttemptPseudoEvent) ---
@@ -74,7 +75,7 @@
  * an event dispatched on the EventBus, but an informational object.
  *
  * @typedef {object} ActionAttemptPseudoEvent
- * @property {'core:attempt_action'} eventType - Discriminator indicating the nature of this object.
+ * @property {ATTEMPT_ACTION_ID} eventType - Discriminator indicating the nature of this object.
  * @property {string} actionId - The ID of the action being attempted (e.g., 'core:move').
  * @property {string} actorId - The ID of the entity attempting the action.
  * @property {ActionTargetContext} targetContext - The resolved target context for this specific attempt.

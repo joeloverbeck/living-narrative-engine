@@ -1,3 +1,4 @@
+// src/dependencyInjection/registrations/aiRegistrations.js
 /* eslint-env node */
 /**
  * @file Registers all AI-related services, including the LLM adapter, prompting pipeline, and the AITurnHandler.
@@ -19,7 +20,7 @@
 /** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
 /** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
-/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager_Interface */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager_Interface} IEntityManager_Interface */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
 /** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */
 /** @typedef {import('../../turns/interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
@@ -78,26 +79,26 @@ import GoalsSectionAssembler, {
   GOALS_WRAPPER_KEY,
 } from '../../prompting/assembling/goalsSectionAssembler.js';
 import { PromptBuilder } from '../../prompting/promptBuilder.js';
-import { EntitySummaryProvider } from '../../data/providers/entitySummaryProvider';
-import { ActorDataExtractor } from '../../turns/services/actorDataExtractor';
-import { ActorStateProvider } from '../../data/providers/actorStateProvider';
-import { PerceptionLogProvider } from '../../data/providers/perceptionLogProvider';
-import { AvailableActionsProvider } from '../../data/providers/availableActionsProvider';
-import { LocationSummaryProvider } from '../../data/providers/locationSummaryProvider';
+import { EntitySummaryProvider } from '../../data/providers/entitySummaryProvider.js';
+import { ActorDataExtractor } from '../../turns/services/actorDataExtractor.js';
+import { ActorStateProvider } from '../../data/providers/actorStateProvider.js';
+import { PerceptionLogProvider } from '../../data/providers/perceptionLogProvider.js';
+import { AvailableActionsProvider } from '../../data/providers/availableActionsProvider.js';
+import { LocationSummaryProvider } from '../../data/providers/locationSummaryProvider.js';
 import { AIGameStateProvider } from '../../turns/services/AIGameStateProvider.js';
 import { AIPromptContentProvider } from '../../prompting/AIPromptContentProvider.js';
 import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.js';
 import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../prompting/AIPromptPipeline.js';
-import { SHUTDOWNABLE } from '../tags';
+import { SHUTDOWNABLE } from '../tags.js';
 import {
   INDEXED_CHOICES_KEY,
   IndexedChoicesAssembler,
 } from '../../prompting/assembling/indexedChoicesAssembler.js';
 import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
-
-// src/dependencyInjection/registrations/aiRegistrations.js
 import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
+// --- ADDED IMPORT ---
+import { ConcreteAIPlayerStrategyFactory } from '../../turns/factories/concreteAIPlayerStrategyFactory.js';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -242,8 +243,6 @@ export function registerAI(container) {
     return registry;
   });
 
-  // 2️⃣ Now PromptBuilder can be registered (unchanged), and if we later swap
-  //    its switch/case for registry.resolve(key), the registry is already in DI.
   r.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
@@ -285,7 +284,6 @@ export function registerAI(container) {
       actorStateProvider: c.resolve(tokens.IActorStateProvider),
       actorDataExtractor: c.resolve(tokens.IActorDataExtractor),
       locationSummaryProvider: c.resolve(tokens.ILocationSummaryProvider),
-      availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
       perceptionLogProvider: c.resolve(tokens.IPerceptionLogProvider),
     });
   });
@@ -310,12 +308,24 @@ export function registerAI(container) {
     (c) =>
       new LLMResponseProcessor({
         schemaValidator: c.resolve(tokens.ISchemaValidator),
+        logger: c.resolve(tokens.ILogger), // <-- INJECT LOGGER HERE
       })
   );
   r.singletonFactory(
     tokens.IAIFallbackActionFactory,
     (c) => new AIFallbackActionFactory({ logger: c.resolve(tokens.ILogger) })
   );
+
+  // --- ADDED REGISTRATION ---
+  r.singletonFactory(tokens.IAIPlayerStrategyFactory, (c) => {
+    return new ConcreteAIPlayerStrategyFactory({
+      llmAdapter: c.resolve(tokens.LLMAdapter),
+      aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
+      llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+      aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
 
   r.singletonFactory(tokens.IAIPromptPipeline, (c) => {
     return new AIPromptPipeline({
@@ -330,35 +340,22 @@ export function registerAI(container) {
     `AI Systems Registration: Registered AI Turn Pipeline services, including ${tokens.IAIPromptPipeline}.`
   );
 
-  // --- AI TURN HANDLER ---
+  // --- AI TURN HANDLER (MODIFIED) ---
 
-  // --- AI Turn Handler ---
   r.tagged(SHUTDOWNABLE).transientFactory(
-    // ⬅️  was singletonFactory
     tokens.AITurnHandler,
     (c) =>
       new AITurnHandler({
         logger: c.resolve(tokens.ILogger),
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
-        gameWorldAccess: {}, // supply the real object
-        llmAdapter: c.resolve(tokens.LLMAdapter),
-        commandProcessor: c.resolve(tokens.ICommandProcessor),
-        commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        entityManager: c.resolve(tokens.IEntityManager),
-        actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
-        promptBuilder: c.resolve(tokens.IPromptBuilder),
-        aiFallbackActionFactory: c.resolve(tokens.IAIFallbackActionFactory),
         aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
         turnContextFactory: c.resolve(tokens.ITurnContextFactory),
-        gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
-        promptContentProvider: c.resolve(tokens.IAIPromptContentProvider),
-        llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
-        aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
       })
   );
-  logger.debug(`AI Systems Registration: Registered ${tokens.AITurnHandler}.`);
+  logger.debug(
+    `AI Systems Registration: Registered refactored ${tokens.AITurnHandler}.`
+  );
 
   logger.debug('AI Systems Registration: All registrations complete.');
 }

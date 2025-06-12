@@ -21,6 +21,7 @@ import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
+import { ATTEMPT_ACTION_ID } from '../../src/constants/eventIds.js';
 
 // ────────────────────────────────────────────────────────────────────────────
 // 1.  “Micro-container” – Mocks and Fakes for External Dependencies
@@ -247,7 +248,7 @@ describe('[Rule] handle_dismiss', () => {
         following: LEADER_ID,
       });
 
-      await h.eventBus.dispatch('core:attempt_action', {
+      await h.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: LEADER_ID,
         targetId: FOLLOWER_ID,
         actionId: 'core:dismiss',
@@ -283,7 +284,7 @@ describe('[Rule] handle_dismiss', () => {
         following: LEADER_ID,
       });
 
-      await h.eventBus.dispatch('core:attempt_action', {
+      await h.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         actorId: LEADER_ID,
         targetId: FOLLOWER_ID,
         actionId: 'core:dismiss',

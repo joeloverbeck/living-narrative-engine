@@ -46,6 +46,7 @@ jest.mock('../../src/logic/contextAssembler.js', () => ({
 }));
 // Import the *mocked* version after jest.mock()
 import { createComponentAccessor } from '../../src/logic/contextAssembler.js';
+import { ATTEMPT_ACTION_ID } from '../../src/constants/eventIds.js';
 
 // --- Test Suite ---
 
@@ -157,7 +158,7 @@ describe('Unit Test: createActionValidationContext', () => {
       // Check the structure of the new 'event' property
       expect(context.event).not.toBeNull();
       expect(context.event).toEqual({
-        eventType: 'core:attempt_action',
+        eventType: ATTEMPT_ACTION_ID,
         actionId: mockActionDefinition.id,
         actorId: mockActorEntity.id,
         targetContext: mockTargetContext,

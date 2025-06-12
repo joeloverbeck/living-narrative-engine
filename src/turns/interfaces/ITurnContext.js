@@ -1,4 +1,5 @@
 // src/turns/interfaces/ITurnContext.js
+// ****** MODIFIED FILE ******
 // ──────────────────────────────────────────────────────────────────────────────
 //  ITurnContext Interface Definition
 // ──────────────────────────────────────────────────────────────────────────────
@@ -47,6 +48,7 @@
 /**
  * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**
  * @interface ITurnContext
@@ -138,7 +140,6 @@ export class ITurnContext {
    * @throws {Error} If the service is not available in the current context.
    */
   getEntityManager() {
-    // <<< ADD THIS METHOD
     throw new Error("Method 'getEntityManager()' must be implemented.");
   }
 
@@ -150,7 +151,6 @@ export class ITurnContext {
    * @throws {Error} if it is missing from the context.
    */
   getActionDiscoveryService() {
-    //  <<< NEW
     throw new Error(
       "Method 'getActionDiscoveryService()' must be implemented."
     );
@@ -161,12 +161,12 @@ export class ITurnContext {
    *
    * @returns {ITurnEndPort} The turn end port instance.
    * @throws {Error} If the service is not available in the current context.
-     }
-     getTurnEndPort() {
-     throw new Error("Method 'getTurnEndPort()' must be implemented.");
-     }
-   
-     /**
+   */
+  getTurnEndPort() {
+    throw new Error("Method 'getTurnEndPort()' must be implemented.");
+  }
+
+  /**
    * Signals that the current turn has completed.
    * @param {Error | null} [errorOrNull] - An optional error if the turn ended abnormally.
    * @returns {void}
@@ -176,7 +176,7 @@ export class ITurnContext {
   }
 
   /**
-   * Checks if the turn is currently awaiting an external event to conclude.
+   * Checks if the turn is currently paused, awaiting an external event to resume.
    *
    * @returns {boolean} True if awaiting an external event, false otherwise.
    */
@@ -200,14 +200,12 @@ export class ITurnContext {
   }
 
   /**
-   * Informs the underlying handler about the need to wait for an external event.
-   * Primarily used by states like AwaitingExternalTurnEndState.
+   * Sets the flag indicating the turn is paused awaiting an external event.
    *
-   * @param {boolean} isAwaiting - True if the handler should mark itself as waiting.
-   * @param {string} actorId - The ID of the actor for whom the wait is being set.
+   * @param {boolean} isAwaiting - True if the turn should pause, false otherwise.
    * @returns {void}
    */
-  setAwaitingExternalEvent(isAwaiting, actorId) {
+  setAwaitingExternalEvent(isAwaiting) {
     throw new Error("Method 'setAwaitingExternalEvent()' must be implemented.");
   }
 

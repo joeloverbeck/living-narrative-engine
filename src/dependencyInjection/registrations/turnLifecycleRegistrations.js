@@ -1,3 +1,5 @@
+// src/dependencyInjection/registrations/turnLifecycleRegistrations.js
+// ****** MODIFIED FILE ******
 /**
  * @file Registers core turn-based systems, including the TurnManager, PlayerTurnHandler, and the resolver that selects the active handler.
  * @see src/dependencyInjection/registrations/turnLifecycleRegistrations.js
@@ -36,13 +38,16 @@ import PromptCoordinator from '../../turns/prompting/promptCoordinator.js';
 import ActionContextBuilder from '../../turns/prompting/actionContextBuilder.js';
 import ValidatedEventDispatcherAdapter from '../../turns/prompting/validatedEventDispatcherAdapter.js';
 import { ConcreteTurnContextFactory } from '../../turns/factories/concreteTurnContextFactory.js';
-import { ConcreteAIPlayerStrategyFactory } from '../../turns/factories/concreteAIPlayerStrategyFactory.js';
 import { ConcreteTurnStateFactory } from '../../turns/factories/concreteTurnStateFactory.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import { INITIALIZABLE, SHUTDOWNABLE } from '../tags.js';
+import {
+  PLAYER_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 
 /**
  * Registers turn lifecycle systems.
@@ -62,8 +67,22 @@ export function registerTurnLifecycle(container) {
     (c) => new TurnOrderService({ logger: c.resolve(tokens.ILogger) })
   );
   r.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
-  r.single(tokens.IAIPlayerStrategyFactory, ConcreteAIPlayerStrategyFactory);
-  r.single(tokens.ITurnContextFactory, ConcreteTurnContextFactory);
+
+  // --- MODIFIED REGISTRATION ---
+  // The TurnContextFactory now has its own dependencies, so we use a factory
+  // function to resolve and inject them from the container.
+  r.singletonFactory(tokens.ITurnContextFactory, (c) => {
+    return new ConcreteTurnContextFactory({
+      logger: c.resolve(tokens.ILogger),
+      gameWorldAccess: c.resolve(tokens.IWorldContext),
+      turnEndPort: c.resolve(tokens.ITurnEndPort),
+      commandProcessor: c.resolve(tokens.ICommandProcessor),
+      commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      entityManager: c.resolve(tokens.IEntityManager),
+      actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
+    });
+  });
 
   // Register new singleton ActionContextBuilder.
   r.singletonFactory(tokens.ActionContextBuilder, (c) => {
@@ -118,14 +137,25 @@ export function registerTurnLifecycle(container) {
   // --- Turn Handler Resolver (Corrected Logic) ---
 
   r.singletonFactory(tokens.TurnHandlerResolver, (c) => {
-    const createPlayerHandlerFactory = () =>
-      c.resolve(tokens.PlayerTurnHandler);
-    const createAiHandlerFactory = () => c.resolve(tokens.AITurnHandler);
+    // The specific logic of "what is a player?" or "what is an AI?"
+    // now lives here, completely outside the resolver class.
+    // The order is important: more specific rules must come first.
+    const handlerRules = [
+      {
+        name: 'Player',
+        predicate: (actor) => actor.hasComponent(PLAYER_COMPONENT_ID),
+        factory: () => c.resolve(tokens.PlayerTurnHandler),
+      },
+      {
+        name: 'AI',
+        predicate: (actor) => actor.hasComponent(ACTOR_COMPONENT_ID),
+        factory: () => c.resolve(tokens.AITurnHandler), // Assuming an AITurnHandler is registered with this token
+      },
+    ];
 
     return new TurnHandlerResolver({
       logger: c.resolve(tokens.ILogger),
-      createPlayerTurnHandler: createPlayerHandlerFactory,
-      createAiTurnHandler: createAiHandlerFactory,
+      handlerRules: handlerRules, // Inject the new rules array
     });
   });
   logger.debug(

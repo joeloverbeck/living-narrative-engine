@@ -1,3 +1,6 @@
+// src/prompting/AIPromptPipeline.js
+// --- FILE START ---
+
 import { IAIPromptPipeline } from './interfaces/IAIPromptPipeline.js';
 
 /** @typedef {import('../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
@@ -8,6 +11,7 @@ import { IAIPromptPipeline } from './interfaces/IAIPromptPipeline.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
+/** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 
 export class AIPromptPipeline extends IAIPromptPipeline {
   #llmAdapter;
@@ -81,9 +85,10 @@ export class AIPromptPipeline extends IAIPromptPipeline {
    *
    * @param {Entity} actor
    * @param {ITurnContext} context
+   * @param {ActionComposite[]} availableActions - The definitive, indexed list of actions.
    * @returns {Promise<string>}
    */
-  async generatePrompt(actor, context) {
+  async generatePrompt(actor, context, availableActions) {
     const actorId = actor.id;
     this.#logger.debug(
       `AIPromptPipeline: Generating prompt for actor ${actorId}.`
@@ -92,11 +97,16 @@ export class AIPromptPipeline extends IAIPromptPipeline {
     const currentLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
     if (!currentLlmId) throw new Error('Could not determine active LLM ID.');
 
+    // Build the base game state, which no longer includes actions
     const gameStateDto = await this.#gameStateProvider.buildGameState(
       actor,
       context,
       this.#logger
     );
+
+    // Augment the DTO with the definitive list of actions passed as a parameter
+    gameStateDto.availableActions = availableActions;
+
     const promptData = await this.#promptContentProvider.getPromptData(
       gameStateDto,
       this.#logger
@@ -114,3 +124,4 @@ export class AIPromptPipeline extends IAIPromptPipeline {
     return finalPromptString;
   }
 }
+// --- FILE END ---

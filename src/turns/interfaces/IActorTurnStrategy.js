@@ -43,6 +43,8 @@
  * display in UI command history, or debugging. It is not the primary driver for
  * action execution in a data-driven system. Examples: "attack goblin with sword",
  * "use health potion on self", "move north".
+ * @property {string} [speech] - Optional. Any text content the actor should say
+ * while performing the action. This is used to dispatch dialogue events.
  */
 
 /**

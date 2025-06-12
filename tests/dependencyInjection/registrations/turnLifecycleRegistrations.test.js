@@ -137,16 +137,15 @@ describe('registerTurnLifecycle', () => {
       Class: ConcreteTurnStateFactory,
       lifecycle: 'singleton',
     },
-    {
-      token: tokens.IAIPlayerStrategyFactory,
-      Class: ConcreteAIPlayerStrategyFactory,
-      lifecycle: 'singleton',
-    },
+    // --- MODIFIED TEST DATA ---
+    // The lifecycle for the factory was changed from 'singleton' to 'singletonFactory'
+    // to support constructor dependency injection. This updates the test to match.
     {
       token: tokens.ITurnContextFactory,
       Class: ConcreteTurnContextFactory,
-      lifecycle: 'singleton',
+      lifecycle: 'singletonFactory',
     },
+    // --- END MODIFICATION ---
     {
       token: tokens.IPromptCoordinator,
       Class: PromptCoordinator,
@@ -155,7 +154,7 @@ describe('registerTurnLifecycle', () => {
     {
       token: tokens.PlayerTurnHandler,
       Class: PlayerTurnHandler,
-      lifecycle: 'transient', // ← now correctly expecting "transient"
+      lifecycle: 'transient',
       tags: SHUTDOWNABLE,
     },
     {

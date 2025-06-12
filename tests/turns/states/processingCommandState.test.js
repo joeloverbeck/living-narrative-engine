@@ -1,4 +1,7 @@
-// src/tests/turns/states/processingCommandState.test.js
+/**
+ * @file Test suite for ProcessingCommandState.
+ * @see tests/turns/states/processingCommandState.test.js
+ */
 
 import {
   describe,
@@ -12,7 +15,6 @@ import {
 import { ProcessingCommandState } from '../../../src/turns/states/processingCommandState.js';
 import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 import TurnDirectiveStrategyResolver from '../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
 import { AwaitingPlayerInputState } from '../../../src/turns/states/awaitingPlayerInputState.js';
 import { AwaitingExternalTurnEndState } from '../../../src/turns/states/awaitingExternalTurnEndState.js';
@@ -41,9 +43,9 @@ const mockLogger = {
   createChildLogger: jest.fn().mockReturnThis(),
 };
 
-// CORRECTED: mockCommandProcessor definition
+// CORRECTED: The mock now uses dispatchAction, reflecting the SUT changes.
 const mockCommandProcessor = {
-  processCommand: jest.fn(), // Changed from 'process' to 'processCommand'
+  dispatchAction: jest.fn(),
 };
 
 const mockCommandOutcomeInterpreter = {
@@ -109,12 +111,14 @@ describe('ProcessingCommandState', () => {
   const commandString = 'do something';
   const defaultActionDefinitionId = 'testAction';
   let actor;
-  const testError = new Error('Test Exception');
   let consoleErrorSpy;
   let consoleWarnSpy;
   let mockTurnAction;
-  let mockSuccessfulCommandResult; // Renamed for clarity and adjusted structure
-  let mockFailedCommandResult;
+  // NEW: Mocks for the new `dispatchAction` flow
+  let mockSuccessfulDispatchResult;
+  let mockFailedDispatchResult;
+  let expectedInterpreterPayloadSuccess;
+  let expectedInterpreterPayloadFailure;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -126,18 +130,40 @@ describe('ProcessingCommandState', () => {
       resolvedParameters: { param1: 'value1' },
     };
 
-    // Adjusted to align with CommandResult typedef
-    mockSuccessfulCommandResult = {
+    // NEW: Define results from the mocked dispatchAction call
+    mockSuccessfulDispatchResult = {
       success: true,
-      turnEnded: false,
-      // No 'output' or 'Succeeded' in CommandResult typedef
+      errorResult: undefined,
     };
 
-    mockFailedCommandResult = {
+    mockFailedDispatchResult = {
       success: false,
+      errorResult: {
+        error: 'CommandProcFailure',
+        internalError: 'Detailed CommandProcFailure',
+      },
+    };
+
+    // NEW: Define expected payloads for the outcome interpreter/strategies,
+    // which are constructed inside the SUT.
+    expectedInterpreterPayloadSuccess = {
+      success: true,
       turnEnded: false,
-      error: 'CommandProcFailure', // User-facing error
-      internalError: 'Detailed CommandProcFailure',
+      originalInput:
+        mockTurnAction.commandString || mockTurnAction.actionDefinitionId,
+      actionResult: { actionId: mockTurnAction.actionDefinitionId },
+      error: undefined,
+      internalError: undefined,
+    };
+
+    expectedInterpreterPayloadFailure = {
+      success: false,
+      turnEnded: true,
+      originalInput:
+        mockTurnAction.commandString || mockTurnAction.actionDefinitionId,
+      actionResult: { actionId: mockTurnAction.actionDefinitionId },
+      error: mockFailedDispatchResult.errorResult.error,
+      internalError: mockFailedDispatchResult.errorResult.internalError,
     };
 
     mockTurnContext = {
@@ -279,11 +305,6 @@ describe('ProcessingCommandState', () => {
     processingState = new ProcessingCommandState(mockHandler, null, null);
     mockHandler._currentState = processingState;
 
-    mockLogger.debug.mockClear();
-    mockLogger.info.mockClear();
-    mockLogger.warn.mockClear();
-    mockLogger.error.mockClear();
-
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
@@ -296,9 +317,10 @@ describe('ProcessingCommandState', () => {
 
   describe('_processCommandInternal (Successful Flows and Service Interactions)', () => {
     beforeEach(() => {
-      mockCommandProcessor.processCommand
+      // CORRECTED: Mock the new dispatchAction method.
+      mockCommandProcessor.dispatchAction
         .mockReset()
-        .mockResolvedValue(mockSuccessfulCommandResult);
+        .mockResolvedValue(mockSuccessfulDispatchResult);
       mockCommandOutcomeInterpreter.interpret
         .mockReset()
         .mockReturnValue(TurnDirective.END_TURN_SUCCESS);
@@ -314,23 +336,20 @@ describe('ProcessingCommandState', () => {
 
       mockTurnContext.getActor.mockReturnValue(actor);
       mockTurnContext.isValid.mockReturnValue(true);
-      mockTurnContext.getChosenAction.mockReturnValue(mockTurnAction); // Ensure chosen action is available
-      processingState['_isProcessing'] = true; // Simulate processing started
+      mockTurnContext.getChosenAction.mockReturnValue(mockTurnAction);
+      processingState['_isProcessing'] = true;
     });
 
-    it('should correctly call ICommandProcessor.processCommand with actor and command string', async () => {
+    it('should correctly call commandProcessor.dispatchAction with actor and turnAction object', async () => {
       await processingState['_processCommandInternal'](
         mockTurnContext,
         actor,
         mockTurnAction
       );
-      expect(mockCommandProcessor.processCommand).toHaveBeenCalledTimes(1);
-      // SUT derives commandStringToProcess from turnAction.commandString or turnAction.actionDefinitionId
-      const expectedCommandString =
-        mockTurnAction.commandString || mockTurnAction.actionDefinitionId;
-      expect(mockCommandProcessor.processCommand).toHaveBeenCalledWith(
+      expect(mockCommandProcessor.dispatchAction).toHaveBeenCalledTimes(1);
+      expect(mockCommandProcessor.dispatchAction).toHaveBeenCalledWith(
         actor,
-        expectedCommandString
+        mockTurnAction
       );
     });
 
@@ -360,10 +379,11 @@ describe('ProcessingCommandState', () => {
         actor,
         mockTurnAction
       );
+      // CORRECTED: The third argument is now the CommandResult-like object constructed by the SUT.
       expect(mockRepromptStrategy.execute).toHaveBeenCalledWith(
         mockTurnContext,
         TurnDirective.RE_PROMPT,
-        mockSuccessfulCommandResult
+        expectedInterpreterPayloadSuccess
       );
     });
 
@@ -373,18 +393,20 @@ describe('ProcessingCommandState', () => {
         actor,
         mockTurnAction
       );
+      // CORRECTED: The third argument is the correctly structured payload.
       expect(mockEndTurnSuccessStrategy.execute).toHaveBeenCalledWith(
         mockTurnContext,
         TurnDirective.END_TURN_SUCCESS,
-        mockSuccessfulCommandResult
+        expectedInterpreterPayloadSuccess
       );
-      await new Promise(process.nextTick); // Allow async operations in strategy to complete
+      await new Promise(process.nextTick);
       expect(processingState['_isProcessing']).toBe(false);
     });
 
     it('should handle failed command processing (CommandResult success:false) leading to END_TURN_FAILURE', async () => {
-      mockCommandProcessor.processCommand.mockResolvedValue(
-        mockFailedCommandResult
+      // CORRECTED: Mock dispatchAction to return a failure object.
+      mockCommandProcessor.dispatchAction.mockResolvedValue(
+        mockFailedDispatchResult
       );
       mockCommandOutcomeInterpreter.interpret.mockReturnValue(
         TurnDirective.END_TURN_FAILURE
@@ -397,10 +419,11 @@ describe('ProcessingCommandState', () => {
         actor,
         mockTurnAction
       );
+      // CORRECTED: The third argument is now the failure payload.
       expect(mockEndTurnFailureStrategy.execute).toHaveBeenCalledWith(
         mockTurnContext,
         TurnDirective.END_TURN_FAILURE,
-        mockFailedCommandResult
+        expectedInterpreterPayloadFailure
       );
       await new Promise(process.nextTick);
       expect(processingState['_isProcessing']).toBe(false);
@@ -418,16 +441,16 @@ describe('ProcessingCommandState', () => {
         actor,
         mockTurnAction
       );
+      // CORRECTED: The third argument is the success payload.
       expect(mockRepromptStrategy.execute).toHaveBeenCalledWith(
         mockTurnContext,
         TurnDirective.RE_PROMPT,
-        mockSuccessfulCommandResult
+        expectedInterpreterPayloadSuccess
       );
       expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
         AwaitingPlayerInputState,
         []
       );
-      // The mock for requestTransition now sets _isProcessing to false
       expect(processingState['_isProcessing']).toBe(false);
     });
 
@@ -443,10 +466,11 @@ describe('ProcessingCommandState', () => {
         actor,
         mockTurnAction
       );
+      // CORRECTED: The third argument is the success payload.
       expect(mockWaitForEventStrategy.execute).toHaveBeenCalledWith(
         mockTurnContext,
         TurnDirective.WAIT_FOR_EVENT,
-        mockSuccessfulCommandResult
+        expectedInterpreterPayloadSuccess
       );
       expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
         AwaitingExternalTurnEndState,
@@ -458,7 +482,7 @@ describe('ProcessingCommandState', () => {
     it('should correctly manage _isProcessing flag if no transition occurs after strategy execution but turn ends', async () => {
       const nonTransitioningEndTurnStrategy = {
         execute: jest.fn().mockImplementation(async (tc) => {
-          await tc.endTurn(null); // Strategy ends the turn
+          await tc.endTurn(null);
         }),
         constructor: { name: 'NonTransitioningEndTurnStrategy' },
       };
@@ -469,7 +493,7 @@ describe('ProcessingCommandState', () => {
         nonTransitioningEndTurnStrategy
       );
 
-      processingState['_isProcessing'] = true; // Ensure it starts as true
+      processingState['_isProcessing'] = true;
       await processingState['_processCommandInternal'](
         mockTurnContext,
         actor,
@@ -479,23 +503,32 @@ describe('ProcessingCommandState', () => {
       expect(nonTransitioningEndTurnStrategy.execute).toHaveBeenCalled();
       expect(mockTurnContext.requestTransition).not.toHaveBeenCalled();
       expect(mockTurnContext.endTurn).toHaveBeenCalledWith(null);
-      // The endTurn mock will cause a transition to TurnEndingState and then TurnIdleState.
-      // If _processCommandInternal itself doesn't set _isProcessing = false before that (e.g. strategy doesn't transition)
-      // the finally block in _processCommandInternal will set it.
       expect(processingState['_isProcessing']).toBe(false);
     });
 
-    it('should process ITurnAction even if commandString is missing, using actionDefinitionId', async () => {
+    it('should process ITurnAction by calling dispatchAction, regardless of whether commandString is present', async () => {
       const actionNoCommandString = {
         actionDefinitionId: 'actionWithoutCommandStr',
-        // commandString is missing/undefined
         resolvedParameters: { p: 1 },
       };
+      // Create the expected payload for this specific action
+      const expectedPayloadNoCommandStr = {
+        success: true,
+        turnEnded: false,
+        originalInput: actionNoCommandString.actionDefinitionId, // Fallback
+        actionResult: { actionId: actionNoCommandString.actionDefinitionId },
+        error: undefined,
+        internalError: undefined,
+      };
+
       mockCommandOutcomeInterpreter.interpret.mockReturnValue(
         TurnDirective.END_TURN_SUCCESS
       );
       TurnDirectiveStrategyResolver.resolveStrategy.mockReturnValue(
         mockEndTurnSuccessStrategy
+      );
+      mockCommandProcessor.dispatchAction.mockResolvedValue(
+        mockSuccessfulDispatchResult
       );
 
       await processingState['_processCommandInternal'](
@@ -504,37 +537,43 @@ describe('ProcessingCommandState', () => {
         actionNoCommandString
       );
 
-      // SUT uses actionDefinitionId as fallback for commandStringToProcess
-      expect(mockCommandProcessor.processCommand).toHaveBeenCalledWith(
+      // CORRECTED: Verify dispatchAction was called with the object.
+      expect(mockCommandProcessor.dispatchAction).toHaveBeenCalledWith(
         actor,
-        actionNoCommandString.actionDefinitionId
+        actionNoCommandString
       );
-      expect(mockEndTurnSuccessStrategy.execute).toHaveBeenCalled();
+      // Verify the rest of the flow worked with the correct payload.
+      expect(mockEndTurnSuccessStrategy.execute).toHaveBeenCalledWith(
+        mockTurnContext,
+        TurnDirective.END_TURN_SUCCESS,
+        expectedPayloadNoCommandStr
+      );
       await new Promise(process.nextTick);
       expect(processingState['_isProcessing']).toBe(false);
     });
   });
 
+  // NOTE: Tests for enterState, exitState, and destroy are largely unaffected
+  // as the core logic change was in the private _processCommandInternal method.
+  // Minor corrections are included for robustness.
+
   describe('exitState', () => {
     beforeEach(() => {
-      mockLogger.debug.mockClear();
-      mockLogger.warn.mockClear();
       mockTurnContext.getActor.mockReturnValue(actor);
     });
 
     it('should set _isProcessing to false and log exit', async () => {
-      processingState['_isProcessing'] = false;
+      processingState['_isProcessing'] = true; // Start as true
       const nextState = new TurnIdleState(mockHandler);
-      mockTurnContext.getActor.mockReturnValue(actor);
       await processingState.exitState(mockHandler, nextState);
       expect(processingState['_isProcessing']).toBe(false);
-      const expectedLog = `ProcessingCommandState: Exiting for actor: ${actor.getId()}. Transitioning to TurnIdleState.`;
-      // Check if any of the calls to debug include the expected log string
-      expect(
-        mockLogger.debug.mock.calls.some((call) =>
-          call[0].includes(expectedLog)
-        )
-      ).toBe(true);
+      // More robust check for the log message content
+      const wasProcessingLog = mockLogger.debug.mock.calls.find((call) =>
+        call[0].includes('Exiting for actor')
+      );
+      expect(wasProcessingLog[0]).toContain(
+        `Exiting for actor ${actor.getId()} while _isProcessing was true (now false). Transitioning to TurnIdleState.`
+      );
     });
   });
 
@@ -542,10 +581,6 @@ describe('ProcessingCommandState', () => {
     let superDestroySpy;
     beforeEach(() => {
       mockTurnContext.getActor.mockReturnValue(actor);
-      mockLogger.debug.mockClear();
-      mockLogger.warn.mockClear();
-      mockLogger.error.mockClear();
-      mockTurnContext.endTurn.mockClear();
       // Spy on the superclass's destroy method
       superDestroySpy = jest
         .spyOn(

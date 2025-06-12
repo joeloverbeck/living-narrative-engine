@@ -1,5 +1,4 @@
 import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
-import { AIFallbackActionFactory } from '../../../src/turns/services/AIFallbackActionFactory.js';
 import {
   jest,
   describe,
@@ -84,9 +83,7 @@ describe('AIPlayerStrategy constructor', () => {
           aiFallbackActionFactory,
           logger,
         })
-    ).toThrow(
-      'AIPlayerStrategy: Constructor requires a valid IAIPromptPipeline.'
-    );
+    ).toThrow('Missing required dependency: IAIPromptPipeline.');
   });
 
   test('throws if llmAdapter is missing', () => {
@@ -99,7 +96,7 @@ describe('AIPlayerStrategy constructor', () => {
           aiFallbackActionFactory,
           logger,
         })
-    ).toThrow('AIPlayerStrategy: Constructor requires a valid ILLMAdapter.');
+    ).toThrow('Missing required dependency: ILLMAdapter.');
   });
 
   test('throws if llmResponseProcessor missing', () => {
@@ -112,9 +109,7 @@ describe('AIPlayerStrategy constructor', () => {
           aiFallbackActionFactory,
           logger,
         })
-    ).toThrow(
-      'AIPlayerStrategy: Constructor requires a valid ILLMResponseProcessor.'
-    );
+    ).toThrow('Missing required dependency: ILLMResponseProcessor.');
   });
 
   test('throws if aiFallbackActionFactory missing', () => {
@@ -127,12 +122,14 @@ describe('AIPlayerStrategy constructor', () => {
           aiFallbackActionFactory: null,
           logger,
         })
-    ).toThrow(
-      'AIPlayerStrategy: Constructor requires a valid IAIFallbackActionFactory.'
-    );
+    ).toThrow('Missing required dependency: IAIFallbackActionFactory.');
   });
 
   test('throws if logger missing', () => {
+    // Suppress console.error for this specific test case, as the validator logs before throwing.
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     expect(
       () =>
         new AIPlayerStrategy({
@@ -142,8 +139,7 @@ describe('AIPlayerStrategy constructor', () => {
           aiFallbackActionFactory,
           logger: null,
         })
-    ).toThrow(
-      'AIPlayerStrategy: Constructor requires a valid ILogger instance.'
-    );
+    ).toThrow('Missing required dependency: ILogger.');
+    consoleErrorSpy.mockRestore();
   });
 });

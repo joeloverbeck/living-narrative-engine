@@ -1,3 +1,8 @@
+/**
+ * @file Tests the end to end flow of memory for an AI.
+ * @see tests/integration/EndToEndMemoryFlow.test.js
+ */
+
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
@@ -6,7 +11,6 @@ import { PromptStaticContentService } from '../../src/prompting/promptStaticCont
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../src/constants/componentIds.js';
-import Entity from '../../src/entities/entity.js';
 
 // New imports for builder adjustments
 import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
@@ -110,7 +114,7 @@ describe('End-to-End Short-Term Memory Flow', () => {
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
-    responseProcessor = new LLMResponseProcessor({ schemaValidator });
+    responseProcessor = new LLMResponseProcessor({ schemaValidator, logger });
   });
 
   test('thought persists and appears in next prompt', async () => {
@@ -130,8 +134,7 @@ describe('End-to-End Short-Term Memory Flow', () => {
 
     const processingResult = await responseProcessor.processResponse(
       JSON.stringify(mockResponse),
-      character.id,
-      logger
+      character.id
     );
 
     expect(processingResult.success).toBe(true);
