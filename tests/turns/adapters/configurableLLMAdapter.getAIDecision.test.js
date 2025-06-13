@@ -4,8 +4,8 @@
 import { jest, beforeEach, describe, expect, it } from '@jest/globals';
 import {
   ConfigurableLLMAdapter,
-  ConfigurationError,
 } from '../../../src/turns/adapters/configurableLLMAdapter.js'; // Adjust path as needed
+import { ConfigurationError } from '../../../src/errors/configurationError';
 import { CLOUD_API_TYPES } from '../../../src/llms/constants/llmConstants.js'; // Adjust path as needed
 
 // Mock dependencies
@@ -68,7 +68,7 @@ describe('ConfigurableLLMAdapter', () => {
     const gameSummary = 'The game is afoot!';
     const mockSuccessDecision = JSON.stringify({
       action: 'proceed',
-      speech: "Let's go!",
+      speech: 'Let\'s go!',
     });
 
     const operationalConfigsStructure = {
@@ -88,7 +88,7 @@ describe('ConfigurableLLMAdapter', () => {
             modelIdentifier: 'cloud-model-key',
             endpointUrl: 'https://api.cloud.example.com/keytest',
             apiKeyEnvVar: 'TEST_CLOUD_KEY_VAR',
-          }
+          },
         ),
         'test-llm-local-no-key-needed': createBaseModelConfig(
           'test-llm-local-no-key-needed',
@@ -97,7 +97,7 @@ describe('ConfigurableLLMAdapter', () => {
             apiType: 'local-ollama',
             modelIdentifier: 'local-model',
             endpointUrl: 'http://localhost:11434/api/generate',
-          }
+          },
         ),
       },
     };
@@ -125,7 +125,7 @@ describe('ConfigurableLLMAdapter', () => {
       mockLlmConfigLoader.loadConfigs.mockReset();
 
       mockLlmConfigLoader.loadConfigs.mockResolvedValue(
-        getOperationalConfigs()
+        getOperationalConfigs(),
       );
       await adapter.init({ llmConfigLoader: mockLlmConfigLoader });
       expect(adapter.isOperational()).toBe(true);
@@ -151,11 +151,11 @@ describe('ConfigurableLLMAdapter', () => {
         });
         mockLogger.error.mockClear();
         await expect(
-          uninitializedAdapter.getAIDecision(gameSummary)
+          uninitializedAdapter.getAIDecision(gameSummary),
         ).rejects.toThrow(
           new Error(
-            'ConfigurableLLMAdapter: Initialization was never started. Call init() before using the adapter.'
-          )
+            'ConfigurableLLMAdapter: Initialization was never started. Call init() before using the adapter.',
+          ),
         );
       });
 
@@ -177,11 +177,11 @@ describe('ConfigurableLLMAdapter', () => {
         expect(nonOperationalAdapter.isOperational()).toBe(false);
         mockLogger.error.mockClear();
         await expect(
-          nonOperationalAdapter.getAIDecision(gameSummary)
+          nonOperationalAdapter.getAIDecision(gameSummary),
         ).rejects.toThrow(
           new Error(
-            'ConfigurableLLMAdapter: Adapter initialized but is not operational. Check configuration and logs.'
-          )
+            'ConfigurableLLMAdapter: Adapter initialized but is not operational. Check configuration and logs.',
+          ),
         );
       });
 
@@ -197,7 +197,7 @@ describe('ConfigurableLLMAdapter', () => {
           defaultConfigId: 'completely-unmatchable-default-id',
         };
         mockLlmConfigLoader.loadConfigs.mockResolvedValue(
-          configsWithUnmatchableDefault
+          configsWithUnmatchableDefault,
         );
         await adapterWithNoActiveLLM.init({
           llmConfigLoader: mockLlmConfigLoader,
@@ -205,21 +205,21 @@ describe('ConfigurableLLMAdapter', () => {
 
         expect(adapterWithNoActiveLLM.isOperational()).toBe(true);
         expect(
-          await adapterWithNoActiveLLM.getCurrentActiveLlmConfig()
+          await adapterWithNoActiveLLM.getCurrentActiveLlmConfig(),
         ).toBeNull();
 
         mockLogger.error.mockClear();
         const expectedErrorMessage =
           'No active LLM configuration is set. Use setActiveLlm() or ensure a valid defaultConfigId is in the dependencyInjection file.';
         await expect(
-          adapterWithNoActiveLLM.getAIDecision(gameSummary)
+          adapterWithNoActiveLLM.getAIDecision(gameSummary),
         ).rejects.toThrow(
-          new ConfigurationError(expectedErrorMessage, { llmId: null })
+          new ConfigurationError(expectedErrorMessage, { llmId: null }),
         );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(
-            `ConfigurableLLMAdapter.getAIDecision: ${expectedErrorMessage}`
-          )
+            `ConfigurableLLMAdapter.getAIDecision: ${expectedErrorMessage}`,
+          ),
         );
       });
     });
@@ -248,7 +248,7 @@ describe('ConfigurableLLMAdapter', () => {
           configs: {
             [baseConfigId]: invalidConfig, // The object stored here has configId = internalConfigId
             'some-other-valid-config': createBaseModelConfig(
-              'some-other-valid-config'
+              'some-other-valid-config',
             ),
           },
         };
@@ -289,7 +289,7 @@ describe('ConfigurableLLMAdapter', () => {
             await createInvalidTestSetup(invalidFieldOverride);
 
           await expect(testAdapter.getAIDecision(gameSummary)).rejects.toThrow(
-            ConfigurationError
+            ConfigurationError,
           );
 
           try {
@@ -297,7 +297,7 @@ describe('ConfigurableLLMAdapter', () => {
           } catch (e) {
             // The ID used in the error message for "Active LLM dependencyInjection '...' is invalid" should be the configId property of the active dependencyInjection
             const actualConfigIdInError = invalidFieldOverride.hasOwnProperty(
-              'configId'
+              'configId',
             )
               ? invalidFieldOverride.configId
               : 'dependencyInjection-under-test';
@@ -308,7 +308,7 @@ describe('ConfigurableLLMAdapter', () => {
                 : actualConfigIdInError;
 
             expect(e.message).toContain(
-              `Active LLM config '${displayIdInErrorMessage}' is invalid:`
+              `Active LLM config '${displayIdInErrorMessage}' is invalid:`,
             );
             expect(e.message).toContain(expectedMsgPart);
             expect(e.llmId).toBe(actualConfigIdInError); // The llmId in the error object should be the problematic configId
@@ -316,11 +316,11 @@ describe('ConfigurableLLMAdapter', () => {
               e.problematicFields.some(
                 (f) =>
                   f.reason === 'Missing or invalid' &&
-                  expectedMsgPart.startsWith(f.field)
-              )
+                  expectedMsgPart.startsWith(f.field),
+              ),
             ).toBe(true);
           }
-        }
+        },
       );
 
       it('should throw ConfigurationError if jsonOutputStrategy is not an object when provided', async () => {
@@ -328,13 +328,13 @@ describe('ConfigurableLLMAdapter', () => {
           jsonOutputStrategy: 'not-an-object',
         });
         await expect(testAdapter.getAIDecision(gameSummary)).rejects.toThrow(
-          ConfigurationError
+          ConfigurationError,
         );
         try {
           await testAdapter.getAIDecision(gameSummary);
         } catch (e) {
           expect(e.message).toContain(
-            'jsonOutputStrategy: Is required and must be an object.'
+            'jsonOutputStrategy: Is required and must be an object.',
           );
         }
       });
@@ -344,13 +344,13 @@ describe('ConfigurableLLMAdapter', () => {
           jsonOutputStrategy: { method: '  ' },
         });
         await expect(testAdapter.getAIDecision(gameSummary)).rejects.toThrow(
-          ConfigurationError
+          ConfigurationError,
         );
         try {
           await testAdapter.getAIDecision(gameSummary);
         } catch (e) {
           expect(e.message).toContain(
-            'jsonOutputStrategy.method: Is required and must be a non-empty string.'
+            'jsonOutputStrategy.method: Is required and must be a non-empty string.',
           );
         }
       });
@@ -365,7 +365,7 @@ describe('ConfigurableLLMAdapter', () => {
           operationalConfigsStructure.configs['test-llm-operational'];
         expect(mockApiKeyProvider.getKey).toHaveBeenCalledWith(
           expectedActiveConfig,
-          mockEnvironmentContext
+          mockEnvironmentContext,
         );
       });
 
@@ -381,7 +381,7 @@ describe('ConfigurableLLMAdapter', () => {
           new ConfigurationError(expectedErrorMessage, {
             llmId: llmId,
             problematicField: 'apiKey',
-          })
+          }),
         );
       });
 
@@ -392,12 +392,12 @@ describe('ConfigurableLLMAdapter', () => {
 
         await adapter.getAIDecision(gameSummary);
         expect(mockLlmStrategy.execute).toHaveBeenCalledWith(
-          expect.objectContaining({ apiKey: null })
+          expect.objectContaining({ apiKey: null }),
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "API key not required or not found for LLM 'test-llm-local-no-key-needed'"
-          )
+            'API key not required or not found for LLM \'test-llm-local-no-key-needed\'',
+          ),
         );
       });
 
@@ -410,7 +410,7 @@ describe('ConfigurableLLMAdapter', () => {
 
         await adapter.getAIDecision(gameSummary);
         expect(mockLlmStrategy.execute).toHaveBeenCalledWith(
-          expect.objectContaining({ apiKey: null })
+          expect.objectContaining({ apiKey: null }),
         );
       });
     });
@@ -422,7 +422,7 @@ describe('ConfigurableLLMAdapter', () => {
         const expectedActiveConfig =
           operationalConfigsStructure.configs['test-llm-operational'];
         expect(mockLlmStrategyFactory.getStrategy).toHaveBeenCalledWith(
-          expectedActiveConfig
+          expectedActiveConfig,
         );
       });
 
@@ -440,7 +440,7 @@ describe('ConfigurableLLMAdapter', () => {
           new ConfigurationError(expectedWrappedErrorMessage, {
             llmId: llmId,
             originalError: factoryError,
-          })
+          }),
         );
       });
 
@@ -452,7 +452,7 @@ describe('ConfigurableLLMAdapter', () => {
 
         const expectedErrorMessage = `No suitable LLM strategy could be created for the active configuration '${llmId}'. Check factory logic and LLM config apiType.`;
         await expect(adapter.getAIDecision(gameSummary)).rejects.toThrow(
-          new ConfigurationError(expectedErrorMessage, { llmId: llmId })
+          new ConfigurationError(expectedErrorMessage, { llmId: llmId }),
         );
       });
     });
@@ -488,7 +488,7 @@ describe('ConfigurableLLMAdapter', () => {
       beforeEach(async () => {
         await adapter.setActiveLlm(llmId);
         expect((await adapter.getCurrentActiveLlmConfig())?.configId).toBe(
-          llmId
+          llmId,
         );
         mockLogger.info.mockClear();
         mockLogger.error.mockClear();
@@ -499,13 +499,13 @@ describe('ConfigurableLLMAdapter', () => {
         mockApiKeyProvider.getKey.mockRejectedValue(apiKeyError);
 
         await expect(adapter.getAIDecision(gameSummary)).rejects.toThrow(
-          apiKeyError
+          apiKeyError,
         );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Error during getAIDecision for LLM '${llmId}': ${apiKeyError.message}`
+            `Error during getAIDecision for LLM '${llmId}': ${apiKeyError.message}`,
           ),
-          expect.objectContaining({ llmId: llmId, errorName: apiKeyError.name })
+          expect.objectContaining({ llmId: llmId, errorName: apiKeyError.name }),
         );
       });
 
@@ -520,18 +520,18 @@ describe('ConfigurableLLMAdapter', () => {
           new ConfigurationError(expectedWrappedMessage, {
             llmId,
             originalError: factoryGenericError,
-          })
+          }),
         );
 
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Error during getAIDecision for LLM '${llmId}': ${expectedWrappedMessage}`
+            `Error during getAIDecision for LLM '${llmId}': ${expectedWrappedMessage}`,
           ),
           expect.objectContaining({
             llmId: llmId,
             errorName: 'ConfigurationError',
-          })
+          }),
         );
       });
 
@@ -540,16 +540,16 @@ describe('ConfigurableLLMAdapter', () => {
         mockLlmStrategy.execute.mockRejectedValue(strategyExecuteError);
 
         await expect(adapter.getAIDecision(gameSummary)).rejects.toThrow(
-          strategyExecuteError
+          strategyExecuteError,
         );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Error during getAIDecision for LLM '${llmId}': ${strategyExecuteError.message}`
+            `Error during getAIDecision for LLM '${llmId}': ${strategyExecuteError.message}`,
           ),
           expect.objectContaining({
             llmId: llmId,
             errorName: strategyExecuteError.name,
-          })
+          }),
         );
       });
 
@@ -573,7 +573,7 @@ describe('ConfigurableLLMAdapter', () => {
         await testAdapter.init({ llmConfigLoader: mockLlmConfigLoader });
         expect(testAdapter.isOperational()).toBe(true);
         expect(
-          (await testAdapter.getCurrentActiveLlmConfig())?.configId
+          (await testAdapter.getCurrentActiveLlmConfig())?.configId,
         ).toBeNull();
 
         mockLogger.error.mockClear();
@@ -585,19 +585,19 @@ describe('ConfigurableLLMAdapter', () => {
             problematicFields: [
               { field: 'configId', reason: 'Missing or invalid' },
             ],
-          })
+          }),
         );
 
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         // The llmIdForLog will be this.#currentActiveLlmId ('invalid-validation-id') because activeConfig.configId is null and error.llmId is null.
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Error during getAIDecision for LLM '${configKey}': ${expectedValidationErrorMessage}`
+            `Error during getAIDecision for LLM '${configKey}': ${expectedValidationErrorMessage}`,
           ),
           expect.objectContaining({
             llmId: configKey,
             errorName: 'ConfigurationError',
-          })
+          }),
         );
       });
     });

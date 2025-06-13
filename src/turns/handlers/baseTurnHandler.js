@@ -1,6 +1,7 @@
-// src/turns/handlers/baseTurnHandler.js
-// ****** MODIFIED FILE ******
-// ──────────────────────────────────────────────────────────────────────────────
+/**
+ * @file Contains the base class for the base turn handler (used by AITurnHandler, HumanTurnHandler, etc.)
+ * @see src/turns/handlers/baseTurnHandler.js
+ */
 
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
@@ -9,15 +10,12 @@
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
  * @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory
  * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
+ * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
 
-// Remove direct imports of concrete states if they are solely created by the factory
+// REMOVED: Direct imports of concrete states are no longer needed, breaking the dependency.
 // import { TurnIdleState as ConcreteTurnIdleState } from '../states/turnIdleState.js';
 // import { TurnEndingState as ConcreteTurnEndingState } from '../states/turnEndingState.js';
-// However, instanceof checks might still require them or a more abstract check.
-// For now, let's assume instanceof checks might remain or be refactored later.
-import { TurnIdleState as ConcreteTurnIdleState } from '../states/turnIdleState.js';
-import { TurnEndingState as ConcreteTurnEndingState } from '../states/turnEndingState.js';
 
 /**
  * @abstract
@@ -148,13 +146,9 @@ export class BaseTurnHandler {
     }
 
     const prevState = this._currentState;
-    // The instanceof check for ConcreteTurnIdleState might need reconsideration
-    // if you want to avoid direct dependencies on concrete types here.
-    // For now, it's kept as is, assuming ConcreteTurnIdleState is the specific type.
-    if (
-      prevState === newState &&
-      !(newState instanceof ConcreteTurnIdleState)
-    ) {
+
+    // MODIFIED: Use the new identity method, which depends only on the abstraction.
+    if (prevState === newState && !newState.isIdle()) {
       logger.debug(
         `${this.constructor.name}: Attempted to transition to the same state ${
           prevState?.getStateName() ?? 'N/A'
@@ -192,10 +186,8 @@ export class BaseTurnHandler {
         `${this.constructor.name}: Error during ${newState.getStateName()}.enterState or onEnterState hook – ${enterErr.message}`,
         enterErr
       );
-      // Check if the current state is an idle state without direct concrete class dependency
-      // This might involve adding an `isIdle()` method to ITurnState or similar.
-      // For now, using instanceof as it was.
-      if (!(this._currentState instanceof ConcreteTurnIdleState)) {
+      // MODIFIED: Use the new identity method for the recovery check.
+      if (!this._currentState.isIdle()) {
         logger.warn(
           `${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`
         );
@@ -207,14 +199,16 @@ export class BaseTurnHandler {
           `error-entering-${newState.getStateName()}-for-${actorIdForErr}`
         );
         try {
+          // Use the factory to recover.
           await this._transitionToState(
             this._turnStateFactory.createIdleState(this)
           );
         } catch (idleErr) {
           logger.error(
-            `${this.constructor.name}: CRITICAL - Failed to transition to TurnIdleState after error entering ${newState.getStateName()}. Error: ${idleErr.message}`,
+            `${this.constructor.name}: CRITICAL - Failed to transition to TurnIdleState after error. Error: ${idleErr.message}`,
             idleErr
           );
+          // Forcibly set state as a last resort.
           this._currentState = this._turnStateFactory.createIdleState(this);
         }
       } else {
@@ -227,10 +221,6 @@ export class BaseTurnHandler {
 
   /* ───────────────────────────── LIVENESS CHECKS ──────────────────────── */
 
-  /**
-   * Throws if the handler has *finished* being destroyed.
-   * Calls made while destruction is *in progress* are tolerated.
-   */
   _assertHandlerActive() {
     if (this._isDestroyed && !this._isDestroying) {
       throw new Error(
@@ -288,11 +278,12 @@ export class BaseTurnHandler {
       );
       return;
     }
-    // The instanceof checks might need reconsideration for full abstraction
+
+    // MODIFIED: Use the new identity methods. Add a null check for safety.
     if (
       !fromDestroy &&
-      (this._currentState instanceof ConcreteTurnEndingState ||
-        this._currentState instanceof ConcreteTurnIdleState)
+      this._currentState &&
+      (this._currentState.isEnding() || this._currentState.isIdle())
     ) {
       if (turnError) {
         logger.warn(
@@ -441,8 +432,8 @@ export class BaseTurnHandler {
       }
     }
 
-    // The instanceof check might need reconsideration for full abstraction
-    if (!(this._currentState instanceof ConcreteTurnIdleState)) {
+    // MODIFIED: Use the new identity method. Add a null check for safety.
+    if (this._currentState && !this._currentState.isIdle()) {
       logger.debug(
         `${name}.destroy: Ensuring transition to TurnIdleState (current: ${this._currentState?.getStateName() ?? 'N/A'}).`
       );
@@ -506,6 +497,49 @@ export class BaseTurnHandler {
       `${this.constructor.name}.onExitState hook: Exiting ${currentState.getStateName()} to ${
         nextState?.getStateName() ?? 'None'
       }`
+    );
+  }
+
+  /* ────────────────── NEW PUBLIC TRANSITION REQUESTS ─────────────────── */
+
+  /**
+   * Initiates a transition to the Idle state using the state factory.
+   * This method should be called by states via the ITurnContext.
+   */
+  async requestIdleStateTransition() {
+    this.getLogger().debug(
+      `${this.constructor.name}: Received request to transition to Idle state.`
+    );
+    await this._transitionToState(this._turnStateFactory.createIdleState(this));
+  }
+
+  /**
+   * Initiates a transition to the AwaitingInput state using the state factory.
+   */
+  async requestAwaitingInputStateTransition() {
+    this.getLogger().debug(
+      `${this.constructor.name}: Received request to transition to AwaitingInput state.`
+    );
+    await this._transitionToState(
+      this._turnStateFactory.createAwaitingInputState(this)
+    );
+  }
+
+  /**
+   * Initiates a transition to the ProcessingCommand state using the state factory.
+   * @param {string} commandString
+   * @param {ITurnAction} turnAction
+   */
+  async requestProcessingCommandStateTransition(commandString, turnAction) {
+    this.getLogger().debug(
+      `${this.constructor.name}: Received request to transition to ProcessingCommand state.`
+    );
+    await this._transitionToState(
+      this._turnStateFactory.createProcessingCommandState(
+        this,
+        commandString,
+        turnAction
+      )
     );
   }
 }

@@ -37,12 +37,24 @@ describe('TurnContext State Isolation', () => {
       startTurn: jest.fn(),
       getStateName: () => 'MockTurnState',
       destroy: jest.fn(),
+      // FIX: Add isEnding and isIdle methods to the mock state object
+      // to match the new ITurnState interface used by BaseTurnHandler.
+      isEnding: jest.fn().mockReturnValue(false),
+      isIdle: jest.fn().mockReturnValue(false),
     };
 
     mockTurnStateFactory = {
       createInitialState: jest.fn().mockReturnValue(mockTurnState),
-      createEndingState: jest.fn().mockReturnValue(mockTurnState),
-      createIdleState: jest.fn().mockReturnValue(mockTurnState),
+      createEndingState: jest.fn().mockReturnValue({
+        ...mockTurnState,
+        isEnding: jest.fn().mockReturnValue(true),
+        getStateName: () => 'MockEndingState',
+      }),
+      createIdleState: jest.fn().mockReturnValue({
+        ...mockTurnState,
+        isIdle: jest.fn().mockReturnValue(true),
+        getStateName: () => 'MockIdleState',
+      }),
     };
 
     mockTurnEndPort = {

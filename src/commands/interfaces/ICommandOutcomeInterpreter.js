@@ -1,6 +1,6 @@
 // src/interfaces/ICommandOutcomeInterpreter.js
 // --- FILE START ---
-/** @typedef {import('../commandProcessor.js').CommandResult} CommandResult */
+/** @typedef {import('../../types/commandResult.js').CommandResult} CommandResult */
 // Or a more specific shared type
 /** @typedef {import('../../turns/constants/turnDirectives.js').default} TurnDirective */
 
@@ -20,8 +20,9 @@ export class ICommandOutcomeInterpreter {
    */
   async interpret(result, actorId) {
     throw new Error(
-      'ICommandOutcomeInterpreter.interpret method not implemented.'
+      'ICommandOutcomeInterpreter.interpret method not implemented.',
     );
   }
 }
+
 // --- FILE END ---

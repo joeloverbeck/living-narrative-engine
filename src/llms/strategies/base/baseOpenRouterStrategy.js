@@ -1,7 +1,7 @@
 // src/llms/strategies/base/baseOpenRouterStrategy.js
 // --- FILE START ---
 import { BaseChatLLMStrategy } from './baseChatLLMStrategy.js';
-import { ConfigurationError } from '../../../turns/adapters/configurableLLMAdapter.js'; // Ensure this path is correct
+import { ConfigurationError } from '../../../errors/configurationError';
 import { LLMStrategyError } from '../../errors/LLMStrategyError.js';
 // Assuming HttpClientError might be a specific type, if not, general Error is caught.
 // For actual HttpClientError type, it would be imported from its definition:

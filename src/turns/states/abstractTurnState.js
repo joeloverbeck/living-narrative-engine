@@ -5,7 +5,7 @@
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../entities/entity.js').default} Entity
- * @typedef {import('../../commands/commandProcessor.js').CommandResult} CommandResult
+ * @typedef {import('../../types/commandResult.js').CommandResult} CommandResult
  * @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum
  * @typedef {import('../../constants/eventIds.js').SystemEventPayloads} SystemEventPayloads
  * @typedef {import('../../constants/eventIds.js').TURN_ENDED_ID} TURN_ENDED_ID_TYPE
@@ -240,6 +240,16 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   getStateName() {
     return this.constructor.name; // Default implementation
+  }
+
+  /** @override */
+  isIdle() {
+    return false;
+  }
+
+  /** @override */
+  isEnding() {
+    return false;
   }
 }
 

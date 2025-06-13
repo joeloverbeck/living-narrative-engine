@@ -260,6 +260,11 @@ export class TurnEndingState extends AbstractTurnState {
     );
   }
 
+  /** @override */
+  isEnding() {
+    return true;
+  }
+
   // All other ITurnState API methods (startTurn, handleSubmittedCommand, etc.)
   // are invalid for TurnEndingState. They will use AbstractTurnState's default
   // implementations, which log an error and throw, indicating they are not applicable.

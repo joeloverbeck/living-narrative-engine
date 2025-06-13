@@ -218,6 +218,11 @@ export class TurnIdleState extends AbstractTurnState {
     await super.destroy(handler);
     logger.debug(`${this.getStateName()}: Destroy handling complete.`);
   }
+
+  /** @override */
+  isIdle() {
+    return true;
+  }
 }
 
 // --- FILE END ---

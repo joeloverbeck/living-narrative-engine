@@ -3,7 +3,7 @@
 
 import { OpenRouterJsonSchemaStrategy } from '../../../src/llms/strategies/openRouterJsonSchemaStrategy.js';
 import { LLMStrategyError } from '../../../src/llms/errors/LLMStrategyError.js';
-import { ConfigurationError } from '../../../src/turns/adapters/configurableLLMAdapter.js';
+import { ConfigurationError } from '../../../src/errors/configurationError';
 import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../../../src/llms/constants/llmConstants.js';
 import { BaseChatLLMStrategy } from '../../../src/llms/strategies/base/baseChatLLMStrategy.js';
 import {
@@ -97,7 +97,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
     it('should successfully create an instance with valid dependencies', () => {
       expect(strategy).toBeInstanceOf(OpenRouterJsonSchemaStrategy);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'OpenRouterJsonSchemaStrategy initialized.'
+        'OpenRouterJsonSchemaStrategy initialized.',
       );
     });
 
@@ -107,9 +107,9 @@ describe('OpenRouterJsonSchemaStrategy', () => {
           new OpenRouterJsonSchemaStrategy({
             httpClient: null,
             logger: mockLogger,
-          })
+          }),
       ).toThrow(
-        'OpenRouterJsonSchemaStrategy: httpClient dependency is required.'
+        'OpenRouterJsonSchemaStrategy: httpClient dependency is required.',
       );
     });
   });
@@ -126,8 +126,8 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         await expect(strategy.execute(params)).rejects.toThrow(
           new ConfigurationError(
             'OpenRouterJsonSchemaStrategy: Missing llmConfig. Cannot proceed.',
-            { llmId: 'Unknown (llmConfig missing)' }
-          )
+            { llmId: 'Unknown (llmConfig missing)' },
+          ),
         );
       });
 
@@ -141,8 +141,8 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         await expect(strategy.execute(params)).rejects.toThrow(
           new ConfigurationError(
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): Missing environmentContext. Cannot proceed.`,
-            { llmId: baseLlmConfig.configId }
-          )
+            { llmId: baseLlmConfig.configId },
+          ),
         );
       });
 
@@ -165,8 +165,8 @@ describe('OpenRouterJsonSchemaStrategy', () => {
               llmId: wrongApiTypeConfig.configId,
               problematicField: 'apiType',
               fieldValue: 'openai',
-            }
-          )
+            },
+          ),
         );
       });
 
@@ -184,8 +184,8 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             {
               llmId: baseLlmConfig.configId,
               problematicField: 'apiKey',
-            }
-          )
+            },
+          ),
         );
       });
     });
@@ -211,7 +211,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         // MODIFICATION: Updated expectation for constructPromptPayloadSpy call
         expect(constructPromptPayloadSpy).toHaveBeenCalledWith(
           mockGameSummary,
-          params.llmConfig
+          params.llmConfig,
         );
         expect(mockHttpClient.request).toHaveBeenCalledTimes(1);
 
@@ -224,24 +224,24 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         expect(requestOptions.method).toBe('POST');
         expect(requestOptions.headers['Content-Type']).toBe('application/json');
         expect(requestOptions.headers['Authorization']).toBe(
-          `Bearer ${mockApiKey}`
+          `Bearer ${mockApiKey}`,
         );
         expect(requestOptions.headers['HTTP-Referer']).toBe(
-          baseLlmConfig.providerSpecificHeaders['HTTP-Referer']
+          baseLlmConfig.providerSpecificHeaders['HTTP-Referer'],
         );
         expect(requestOptions.headers['X-Title']).toBe(
-          baseLlmConfig.providerSpecificHeaders['X-Title']
+          baseLlmConfig.providerSpecificHeaders['X-Title'],
         );
 
         expect(requestBody.model).toBe(baseLlmConfig.modelIdentifier);
         // MODIFICATION: requestBody.messages should now match the updated mockConstructedMessages
         expect(requestBody.messages).toEqual(mockConstructedMessages);
         expect(requestBody.temperature).toBe(
-          baseLlmConfig.defaultParameters.temperature
+          baseLlmConfig.defaultParameters.temperature,
         );
         expect(requestBody.response_format.type).toBe('json_schema');
         expect(requestBody.response_format.json_schema).toEqual(
-          baseLlmConfig.jsonOutputStrategy.jsonSchema
+          baseLlmConfig.jsonOutputStrategy.jsonSchema,
         );
       });
 
@@ -292,31 +292,31 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         expect(requestOptions.headers['Content-Type']).toBe('application/json');
         expect(requestOptions.headers['Authorization']).toBeUndefined();
         expect(requestOptions.headers['HTTP-Referer']).toBe(
-          currentTestLlmConfig.providerSpecificHeaders['HTTP-Referer']
+          currentTestLlmConfig.providerSpecificHeaders['HTTP-Referer'],
         );
         expect(requestOptions.headers['X-Title']).toBe(
-          currentTestLlmConfig.providerSpecificHeaders['X-Title']
+          currentTestLlmConfig.providerSpecificHeaders['X-Title'],
         );
 
         expect(finalPayloadSentToProxy.llmId).toBe(
-          currentTestLlmConfig.configId
+          currentTestLlmConfig.configId,
         );
         expect(finalPayloadSentToProxy.targetHeaders).toEqual(
-          currentTestLlmConfig.providerSpecificHeaders
+          currentTestLlmConfig.providerSpecificHeaders,
         );
 
         const actualTargetPayload = finalPayloadSentToProxy.targetPayload;
         expect(actualTargetPayload.model).toBe(
-          currentTestLlmConfig.modelIdentifier
+          currentTestLlmConfig.modelIdentifier,
         );
         // MODIFICATION: actualTargetPayload.messages should match updated mockConstructedMessages
         expect(actualTargetPayload.messages).toEqual(mockConstructedMessages);
         expect(actualTargetPayload.temperature).toBe(
-          currentTestLlmConfig.defaultParameters.temperature
+          currentTestLlmConfig.defaultParameters.temperature,
         );
         expect(actualTargetPayload.response_format.type).toBe('json_schema');
         expect(actualTargetPayload.response_format.json_schema).toEqual(
-          currentTestLlmConfig.jsonOutputStrategy.jsonSchema
+          currentTestLlmConfig.jsonOutputStrategy.jsonSchema,
         );
 
         expect(finalPayloadSentToProxy.targetLlmConfig).toBeUndefined();
@@ -357,24 +357,24 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         expect(result).toBe(expectedOutputJsonString);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content is missing. Will check tool_calls fallback.`
+            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content is missing. Will check tool_calls fallback.`,
           ),
-          expect.objectContaining({ llmId: baseLlmConfig.configId })
+          expect.objectContaining({ llmId: baseLlmConfig.configId }),
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content not usable, attempting tool_calls fallback.`
+            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content not usable, attempting tool_calls fallback.`,
           ),
-          expect.objectContaining({ llmId: baseLlmConfig.configId })
+          expect.objectContaining({ llmId: baseLlmConfig.configId }),
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): Extracted JSON string from tool_calls fallback`
+            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): Extracted JSON string from tool_calls fallback`,
           ),
           expect.objectContaining({
             llmId: baseLlmConfig.configId,
             functionName: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name,
-          })
+          }),
         );
       });
 
@@ -407,9 +407,9 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         expect(result).toBe(expectedOutputJsonString);
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining(
-            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content was an empty string. Will check tool_calls fallback.`
+            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content was an empty string. Will check tool_calls fallback.`,
           ),
-          expect.objectContaining({ llmId: baseLlmConfig.configId })
+          expect.objectContaining({ llmId: baseLlmConfig.configId }),
         );
       });
 
@@ -444,13 +444,13 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): Failed to extract JSON content from OpenRouter response. Neither message.content nor a valid tool_call fallback was usable.`,
             baseLlmConfig.configId,
             null,
-            expect.anything()
-          )
+            expect.anything(),
+          ),
         );
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining(
-            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): tool_calls structure for fallback did not match expected schema or arguments were empty. Expected function name '${OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name}'.`
+            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): tool_calls structure for fallback did not match expected schema or arguments were empty. Expected function name '${OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name}'.`,
           ),
           expect.objectContaining({
             llmId: baseLlmConfig.configId,
@@ -458,7 +458,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             toolCallDetails: expect.objectContaining({
               functionName: wrongToolName,
             }),
-          })
+          }),
         );
       });
     });
@@ -484,8 +484,8 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             null,
             expect.objectContaining({
               responsePreview: JSON.stringify(responseData).substring(0, 500),
-            })
-          )
+            }),
+          ),
         );
       });
 
@@ -505,8 +505,8 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             null,
             expect.objectContaining({
               responsePreview: JSON.stringify(responseData).substring(0, 500),
-            })
-          )
+            }),
+          ),
         );
       });
 
@@ -525,8 +525,8 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): Failed to extract JSON content from OpenRouter response. Neither message.content nor a valid tool_call fallback was usable.`,
             baseLlmConfig.configId,
             null,
-            expect.anything()
-          )
+            expect.anything(),
+          ),
         );
       });
 
@@ -558,19 +558,19 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): Failed to extract JSON content from OpenRouter response. Neither message.content nor a valid tool_call fallback was usable.`,
             baseLlmConfig.configId,
             null,
-            expect.anything()
-          )
+            expect.anything(),
+          ),
         );
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining(
-            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content was present but not a non-empty string or object (type: ${typeof contentValue}, value: ${contentValue}). Will check tool_calls fallback.`
+            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): message.content was present but not a non-empty string or object (type: ${typeof contentValue}, value: ${contentValue}). Will check tool_calls fallback.`,
           ),
           expect.objectContaining({
             llmId: baseLlmConfig.configId,
             contentType: typeof contentValue,
             contentValue: contentValue,
-          })
+          }),
         );
       });
     });
@@ -594,7 +594,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
         await expect(strategy.execute(params)).rejects.toThrow(httpError);
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(
-            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): HttpClientError occurred during API call to '${baseLlmConfig.endpointUrl}'. Status: ${httpError.status}. Message: ${httpError.message}`
+            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): HttpClientError occurred during API call to '${baseLlmConfig.endpointUrl}'. Status: ${httpError.status}. Message: ${httpError.message}`,
           ),
           expect.objectContaining({
             llmId: baseLlmConfig.configId,
@@ -602,7 +602,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             status: httpError.status,
             originalErrorName: httpError.name,
             originalErrorMessage: httpError.message,
-          })
+          }),
         );
       });
 
@@ -620,14 +620,14 @@ describe('OpenRouterJsonSchemaStrategy', () => {
             `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): An unexpected error occurred during API call or response processing for endpoint '${baseLlmConfig.endpointUrl}'. Original message: ${genericError.message}`,
             baseLlmConfig.configId,
             genericError,
-            expect.anything()
-          )
+            expect.anything(),
+          ),
         );
       });
 
       it('should correctly handle prompt construction error', async () => {
         const constructionError = new Error(
-          'Failed to construct prompt payload'
+          'Failed to construct prompt payload',
         );
         constructPromptPayloadSpy.mockImplementationOnce(() => {
           throw constructionError;
@@ -639,7 +639,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
           environmentContext: mockEnvironmentContext,
         };
         await expect(strategy.execute(params)).rejects.toThrow(
-          constructionError
+          constructionError,
         );
       });
     });

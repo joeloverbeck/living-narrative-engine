@@ -6,7 +6,7 @@
 
 /** @typedef {import('./ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum */
-/** @typedef {import('../../commands/commandProcessor.js').CommandResult} CommandResult */
+/** @typedef {import('../../types/commandResult.js').CommandResult} CommandResult */
 // Removed: /** @typedef {import('../../../entities/entity.js').default} Entity */
 // as the explicit 'actor' parameter of type Entity is no longer used.
 

@@ -5,7 +5,7 @@
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../entities/entity.js').default} Entity
- * @typedef {import('../../commands/commandProcessor.js').CommandResult} CommandResult
+ * @typedef {import('../../types/commandResult.js').CommandResult} CommandResult
  * @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface

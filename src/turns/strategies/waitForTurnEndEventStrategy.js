@@ -6,7 +6,7 @@
 /** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../entities/entity.js').default}       Entity */
 /** @typedef {import('../constants/turnDirectives.js').default}   TurnDirectiveEnum */
-/** @typedef {import('../../commands/commandProcessor.js').CommandResult}   CommandResult */
+/** @typedef {import('../../types/commandResult.js').CommandResult}   CommandResult */
 
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';

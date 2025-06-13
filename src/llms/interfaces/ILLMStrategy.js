@@ -10,7 +10,6 @@
  * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('../environmentContext.js').EnvironmentContext} EnvironmentContext
  * @typedef {import('../retryHttpClient.js').HttpClientError} HttpClientError
- * @typedef {import('../../turns/adapters/configurableLLMAdapter.js').ConfigurationError} ConfigurationError
  */
 
 /**

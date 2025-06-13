@@ -2,29 +2,8 @@
 // --- FILE START ---
 
 /**
- * @typedef {import('../formatting/perceptionLogFormatter.js').RawPerceptionLogEntry} RawPerceptionLogEntry
- * @description Represents a single entry as it might come from the game state or entity component.
- * This typedef is expected to be defined in PerceptionLogFormatter.js or a central types file.
- * @property {string} [descriptionText] - The main textual content of the log entry.
- * @property {string} [perceptionType] - The category of the perceived event.
- * @property {string} [timestamp] - When the event occurred.
- * @property {string} [eventId] - Unique ID for the event or log entry.
- * @property {string} [actorId] - ID of the entity that caused the event.
- * @property {string} [targetId] - Optional ID of the primary target.
- * // ... any other properties from the original log entry schema
- */
-
-/**
- * @typedef {import('../formatting/perceptionLogFormatter.js').FormattedPerceptionEntry} FormattedPerceptionEntry
- * @description Represents a perception log entry after formatting for prompt data.
- * This typedef is expected to be defined in PerceptionLogFormatter.js or a central types file.
- * @property {string} content - The main textual content of the log entry.
- * @property {string} [timestamp] - When the event occurred.
- * @property {string} [type] - The category of the perceived event.
- * @property {string} [eventId] - Unique ID for the event or log entry.
- * @property {string} [actorId] - ID of the entity that caused the event.
- * @property {string} [targetId] - Optional ID of the primary target.
- * // Add other passthrough properties if they might be used by custom placeholders
+ * @typedef {import('../types/perceptionLogTypes.js').RawPerceptionLogEntry} RawPerceptionLogEntry
+ * @typedef {import('../types/perceptionLogTypes.js').FormattedPerceptionEntry} FormattedPerceptionEntry
  */
 
 /**
@@ -40,7 +19,7 @@ export class IPerceptionLogFormatter {
    * @throws {Error} If the method is not implemented.
    */
   format(rawLogEntries) {
-    throw new Error("Method 'format()' must be implemented.");
+    throw new Error('Method \'format()\' must be implemented.');
   }
 }
 
