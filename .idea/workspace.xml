@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Ensuring the app works.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constants/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/core.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/events/update_available_actions.event.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/events/update_available_actions.event.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,6 +54,7 @@
     "Jest.genericTurnStrategy.test.js.executor": "Run",
     "Jest.humanDecisionProvider.test.js.executor": "Run",
     "Jest.llmDecisionProvider.test.js.executor": "Run",
+    "Jest.playerTurnPrompt.schema.test.js.executor": "Run",
     "Jest.playerTurnSubmitted.schema.test.js.executor": "Run",
     "Jest.promptCoordinator.integration.test.js.executor": "Run",
     "Jest.promptSession.test.js.executor": "Run",
@@ -85,7 +85,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.playerTurnPrompt.schema.test.js">
+  <component name="RunManager" selected="Jest.updateAvailableActions.schema.test.js">
     <configuration name="actionDiscoveryService.locationRetrieval.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -93,15 +93,6 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/actions/actionDiscoveryService.locationRetrieval.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="genericTurnStrategy.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/strategies/genericTurnStrategy.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="playerTurnPrompt.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -131,13 +122,22 @@
       <test-file value="$PROJECT_DIR$/tests/integration/scope.integration.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="updateAvailableActions.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/schemas/updateAvailableActions.schema.test.js" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.updateAvailableActions.schema.test.js" />
         <item itemvalue="Jest.playerTurnPrompt.schema.test.js" />
         <item itemvalue="Jest.scope.integration.test.js" />
         <item itemvalue="Jest.actionDiscoveryService.locationRetrieval.test.js" />
         <item itemvalue="Jest.playerTurnSubmitted.schema.test.js" />
-        <item itemvalue="Jest.genericTurnStrategy.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -156,7 +156,7 @@
       <option name="presentableId" value="Default" />
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
-      <workItem from="1749839406228" duration="14529000" />
+      <workItem from="1749839406228" duration="14957000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -294,7 +294,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749853570399</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Ensuring the app works.">
+      <option name="closed" value="true" />
+      <created>1749854198392</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1749854198392</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

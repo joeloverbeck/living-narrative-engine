@@ -1,47 +1,49 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json",
   "id": "core:update_available_actions",
-  "description": "Signals a UI component (like the action buttons renderer) to update the display of currently available player actions for a specific actor, based on the provided list of action objects.",
+  "description": "Tells the UI to refresh the action-bar for a given actor, using the fully formatted and indexed action list.",
   "payloadSchema": {
     "type": "object",
-    "title": "UIUpdateActionsPayload",
-    "description": "Defines the payload for the 'core:update_available_actions' event, containing the actor ID and the list of available action objects.",
+    "title": "Core: Update Available Actions – Payload",
     "properties": {
       "actorId": {
         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
-        "description": "The unique ID of the actor for whom these actions are available."
+        "description": "ID of the actor whose action list is being updated."
       },
       "actions": {
         "type": "array",
-        "description": "An array of objects, each representing a valid action the player can currently take, including its ID, name, description, and formatted command.",
+        "description": "All legal actions for the actor’s current turn.",
         "items": {
           "type": "object",
-          "description": "Object containing the action ID, name, description, and its formatted command string.",
           "properties": {
-            "id": {
+            "index": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Stable numeric choice presented to the player / LLM."
+            },
+            "actionId": {
               "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
-              "description": "The unique ID of the action definition (e.g., 'core:wait')."
+              "description": "Underlying action definition ID."
             },
-            "name": {
+            "commandString": {
               "type": "string",
-              "description": "The human-readable name of the action (e.g., 'Wait').",
-              "minLength": 1
+              "description": "Fully formatted command (e.g. “go north”)."
             },
-            "command": {
-              "type": "string",
-              "description": "The formatted command string ready for display/parsing (e.g., 'wait', 'go north').",
-              "minLength": 1
+            "params": {
+              "type": "object",
+              "description": "Action-specific parameters (direction, targetId, etc.).",
+              "additionalProperties": true,
+              "default": {}
             },
             "description": {
               "type": "string",
-              "description": "A detailed description of what the action does.",
-              "minLength": 1
+              "description": "Human-readable explanation of the action."
             }
           },
-          "required": ["id", "name", "command", "description"],
+          "required": ["index", "actionId", "commandString", "description"],
           "additionalProperties": false
         },
-        "uniqueItems": false
+        "uniqueItems": true
       }
     },
     "required": ["actorId", "actions"],
