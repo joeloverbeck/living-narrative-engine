@@ -13,9 +13,7 @@
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
 
-// REMOVED: Direct imports of concrete states are no longer needed, breaking the dependency.
-// import { TurnIdleState as ConcreteTurnIdleState } from '../states/turnIdleState.js';
-// import { TurnEndingState as ConcreteTurnEndingState } from '../states/turnEndingState.js';
+import { ITurnStateHost } from '../interfaces/ITurnStateHost.js';
 
 /**
  * @abstract
@@ -35,6 +33,7 @@ export class BaseTurnHandler {
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {ITurnStateFactory} deps.turnStateFactory - Factory for creating turn states.
+   * @implements {ITurnStateHost}
    */
   constructor({ logger, turnStateFactory }) {
     if (!logger) {

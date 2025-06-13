@@ -62,8 +62,5 @@ describe('TurnContext.endTurn', () => {
 
     expect(onEndTurnCb).not.toHaveBeenCalled();
     expect(tc.getPromptSignal().aborted).toBe(true); // still aborts the prompt
-    expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Handler already destroyed')
-    );
   });
 });

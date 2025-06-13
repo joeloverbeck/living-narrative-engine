@@ -2,8 +2,8 @@
 // ****** CORRECTED FILE ******
 
 /**
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState
+ * @typedef {import('./ITurnStateHost.js').ITurnStateHost} ITurnStateHost
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
 
@@ -17,7 +17,7 @@ export class ITurnStateFactory {
   /**
    * Creates an initial turn state instance (typically an Idle state).
    *
-   * @param {BaseTurnHandler} handler - The turn handler instance that will manage this state.
+   * @param {ITurnStateHost} handler
    * @returns {ITurnState} The created initial turn state.
    */
   createInitialState(handler) {
@@ -29,7 +29,7 @@ export class ITurnStateFactory {
   /**
    * Creates an idle turn state instance.
    *
-   * @param {BaseTurnHandler} handler - The turn handler instance that will manage this state.
+   * @param {ITurnStateHost} handler
    * @returns {ITurnState} The created idle turn state.
    */
   createIdleState(handler) {
@@ -41,7 +41,7 @@ export class ITurnStateFactory {
   /**
    * Creates an ending turn state instance.
    *
-   * @param {BaseTurnHandler} handler - The turn handler instance.
+   * @param {ITurnStateHost} handler
    * @param {string} actorId - The ID of the actor whose turn is ending.
    * @param {Error|null} error - Any error that occurred during the turn.
    * @returns {ITurnState} The created ending turn state.
@@ -55,7 +55,7 @@ export class ITurnStateFactory {
   /**
    * Creates an Awaiting Player Input state instance.
    *
-   * @param {BaseTurnHandler} handler - The turn handler instance.
+   * @param {ITurnStateHost} handler
    * @returns {ITurnState} The created awaiting player input state.
    */
   createAwaitingInputState(handler) {
@@ -67,7 +67,7 @@ export class ITurnStateFactory {
   /**
    * Creates a Processing Command state instance.
    *
-   * @param {BaseTurnHandler} handler - The turn handler instance.
+   * @param {ITurnStateHost} handler
    * @param {string} commandString - The command string to be processed.
    * @param {ITurnAction} turnAction - The turn action associated with the command.
    * @returns {ITurnState} The created processing command state.

@@ -1,38 +1,29 @@
 // src/turns/interfaces/ITurnContext.js
-// ****** CORRECTED FILE ******
 
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
- * @description Represents an entity in the game, such as a player or NPC.
- */
-/**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
- * @description Defines the interface for a logging service.
- */
-/**
  * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
- * @description Port for notifying when a turn has ended.
- */
-/**
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
- */
-/**
  * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
- */
-/**
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
+
+/* ------------------------------------------------------------------ */
+/*  🔻  LOCAL TYPE STUBS – break the cycle, still give editors hints  */
+/* ------------------------------------------------------------------ */
+
 /**
- * @typedef {import('./ITurnState.js').ITurnState} ITurnState
+ * @typedef {object} ITurnAction
+ * @property {string} actionDefinitionId
+ * @property {object} [resolvedParameters]
+ * @property {string} [commandString]
+ * @property {string} [speech]
  */
+
 /**
- * @typedef {import('./IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
- */
-/**
- * @typedef {import('./IActorTurnStrategy.js').ITurnAction} ITurnAction
- */
-/**
- * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
+ * @typedef {object} IActorTurnStrategy
+ * @property {(context: ITurnContext) => Promise<ITurnAction|import('./ITurnDecisionResult.js').ITurnDecisionResult>} decideAction
  */
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */

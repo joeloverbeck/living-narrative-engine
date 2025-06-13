@@ -1,123 +1,57 @@
 // src/turns/context/turnContext.js
-// --- FILE START ---
+// ─────────────────────────────────────────────────────────────────────────────
+//  TurnContext – decoupled from concrete state classes
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
- * @description Represents an entity in the game, such as a player or NPC.
- */
-/**
- * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
- * @description Defines the interface for a logging service.
- */
-/**
- * @typedef {function(Error | null): void} OnEndTurnCallback
- * @description Callback function to signal the end of a turn.
- */
-/**
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
- */
-/**
- * @typedef {function(): boolean} IsAwaitingExternalEventProvider
- * @description Function that returns true if the turn is awaiting an external event.
- */
-/**
- * @typedef {function(boolean, string): void} OnSetAwaitingExternalEventCallback
- */
-/**
- * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
- */
-/**
- * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
- */
-/**
- * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
- */
-/**
- * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
- */
-/**
+ * @typedef {import('../../interfaces/coreServices.js').ILogger}            ILogger
+ * @typedef {function(Error|null):void}                                    OnEndTurnCallback
+ * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler}      BaseTurnHandler
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
+ * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction}     ITurnAction
+ * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
+ * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
+ * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort}               ITurnEndPort
+ * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager}   IEntityManager
  */
-/**
- * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
- */
-/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**
  * @typedef {object} TurnContextServices
- * @property {IPromptCoordinator} [promptCoordinator]
- * @property {ICommandProcessor} [commandProcessor]
- * @property {ICommandOutcomeInterpreter} [commandOutcomeInterpreter]
- * @property {ISafeEventDispatcher} [safeEventDispatcher]
- * @property {ITurnEndPort} [turnEndPort]
- * @property {IEntityManager} [entityManager]
- * @property {IActionDiscoveryService}    [actionDiscoverySystem]
- * // Add other services as needed by ITurnContext methods
+ * @property {IPromptCoordinator}             [promptCoordinator]
+ * @property {ICommandProcessor}              [commandProcessor]
+ * @property {ICommandOutcomeInterpreter}     [commandOutcomeInterpreter]
+ * @property {ISafeEventDispatcher}           [safeEventDispatcher]
+ * @property {ITurnEndPort}                   [turnEndPort]
+ * @property {IEntityManager}                 [entityManager]
+ * @property {IActionDiscoveryService}        [actionDiscoverySystem]
+ * // …extend as needed
  */
 
-import { ITurnContext } from '../interfaces/ITurnContext.js';
-import { ProcessingCommandState } from '../states/processingCommandState';
-import { TurnIdleState } from '../states/turnIdleState';
-import { AwaitingPlayerInputState } from '../states/awaitingPlayerInputState';
+import { ITurnContext } from '../interfaces/ITurnContext.js'; // ⬅ only import needed
 
 /**
- * @class TurnContext
- * @implements {ITurnContext}
- * @description
- * Concrete implementation of ITurnContext. Provides a lightweight, per-turn
- * container for essential data (like the current actor) and services (like logging,
- * player prompts, game world access) needed by turn states and strategies.
- * It aims to decouple turn logic from specific turn handler implementations.
- * Includes an AbortController for managing cancellation of turn-specific operations.
+ * Concrete implementation of ITurnContext.
+ * NO LONGER knows about *any* concrete state classes – it delegates
+ * all transitions to its owning BaseTurnHandler instance.
+ * This breaks the dependency-cruiser cycle:
+ *   TurnContext → ProcessingCommandState → … → HumanTurnHandler → TurnContext
  */
 export class TurnContext extends ITurnContext {
-  /** @type {Entity} */
-  #actor;
-  /** @type {ILogger} */
-  #logger;
-  /** @type {TurnContextServices} */
-  #services;
-  /** @type {IActorTurnStrategy} */
-  #strategy;
-  /** @type {OnEndTurnCallback} */
-  #onEndTurnCallback;
-  /** @type {BaseTurnHandler} */
-  #handlerInstance; // To facilitate state transitions
-  /** @type {boolean} */
-  #isAwaitingExternalEvent = false;
+  /** @type {Entity}              */ #actor;
+  /** @type {ILogger}             */ #logger;
+  /** @type {TurnContextServices} */ #services;
+  /** @type {IActorTurnStrategy}  */ #strategy;
+  /** @type {OnEndTurnCallback}   */ #onEndTurnCallback;
+  /** @type {BaseTurnHandler}     */ #handlerInstance;
+  /** @type {boolean}             */ #isAwaitingExternalEvent = false;
 
-  /**
-   * The action chosen by the actor for the current turn.
-   * Initialized to null and set via `setChosenAction`.
-   *
-   * @private
-   * @type {ITurnAction | null}
-   */
-  #chosenAction = null;
-
-  /**
-   * @private
-   * @type {AbortController}
-   * @description Manages cancellation for operations within this turn context.
-   */
-  #promptAbortController;
-
-  /**
-   * @private
-   * @type {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null}
-   */
+  /** @type {ITurnAction|null}    */ #chosenAction = null;
+  /** @type {AbortController}     */ #promptAbortController;
+  /** @type {{speech:string|null, thoughts:string|null, notes:string[]|null}|null} */
   #decisionMeta = null;
 
-  /**
-   * Creates an instance of TurnContext.
-   *
-   * @param {object} params
-   * @param {Entity} params.actor - The current actor whose turn is being processed.
-   * @param {ILogger} params.logger - The logger instance for turn-specific logging.
-   * @param {TurnContextServices} params.services - A bag of services accessible during the turn.
-   * @param {IActorTurnStrategy} params.strategy - The turn strategy for the current actor.
-   * @param {OnEndTurnCallback} params.onEndTurnCallback - Callback to execute when endTurn() is called.
-   * @param {BaseTurnHandler} params.handlerInstance - The turn handler instance for requesting transitions.
-   */
   constructor({
     actor,
     logger,
@@ -128,35 +62,17 @@ export class TurnContext extends ITurnContext {
   }) {
     super();
 
-    if (!actor) {
-      throw new Error('TurnContext: actor is required.');
-    }
-    if (!logger) {
-      throw new Error('TurnContext: logger is required.');
-    }
-    if (!services) {
+    if (!actor) throw new Error('TurnContext: actor is required.');
+    if (!logger) throw new Error('TurnContext: logger is required.');
+    if (!services) throw new Error('TurnContext: services bag required.');
+    if (!strategy || typeof strategy.decideAction !== 'function')
+      throw new Error('TurnContext: valid IActorTurnStrategy required.');
+    if (typeof onEndTurnCallback !== 'function')
+      throw new Error('TurnContext: onEndTurnCallback function required.');
+    if (!handlerInstance)
       throw new Error(
-        'TurnContext: services bag is required (can be an empty object).'
+        'TurnContext: handlerInstance (BaseTurnHandler) required.'
       );
-    }
-    if (!strategy) {
-      throw new Error(
-        'TurnContext: strategy (IActorTurnStrategy) is required.'
-      );
-    }
-    if (typeof strategy.decideAction !== 'function') {
-      throw new Error(
-        'TurnContext: provided strategy does not have a decideAction method.'
-      );
-    }
-    if (typeof onEndTurnCallback !== 'function') {
-      throw new Error('TurnContext: onEndTurnCallback function is required.');
-    }
-    if (!handlerInstance) {
-      throw new Error(
-        'TurnContext: handlerInstance (BaseTurnHandler) is required for transitions.'
-      );
-    }
 
     this.#actor = actor;
     this.#logger = logger;
@@ -164,139 +80,160 @@ export class TurnContext extends ITurnContext {
     this.#strategy = strategy;
     this.#onEndTurnCallback = onEndTurnCallback;
     this.#handlerInstance = handlerInstance;
-    this.#chosenAction = null;
-    this.#isAwaitingExternalEvent = false;
-    this.#decisionMeta = null;
 
-    // --- MODIFICATION: Initialize AbortController ---
     this.#promptAbortController = new AbortController();
-    // --- END MODIFICATION ---
   }
 
-  /** @override */
+  /* ───────────────────────────── BASIC GETTERS ────────────────────────── */
+
   getActor() {
     return this.#actor;
   }
 
-  /** @override */
   getLogger() {
     return this.#logger;
   }
 
-  /** @override */
   getPlayerPromptService() {
-    if (!this.#services.promptCoordinator) {
-      this.#logger.error(
-        'TurnContext: PlayerPromptService not available in services bag.'
-      );
-      throw new Error(
-        'TurnContext: PlayerPromptService not available in services bag.'
-      );
-    }
-    return this.#services.promptCoordinator;
+    return this.#require('promptCoordinator', 'PlayerPromptService');
   }
 
-  /** @override */
   getCommandProcessor() {
-    if (!this.#services.commandProcessor) {
-      this.#logger.error(
-        'TurnContext: CommandProcessor not available in services bag.'
-      );
-      throw new Error(
-        'TurnContext: CommandProcessor not available in services bag.'
-      );
-    }
-    return this.#services.commandProcessor;
+    return this.#require('commandProcessor', 'CommandProcessor');
   }
 
-  /** @override */
   getCommandOutcomeInterpreter() {
-    if (!this.#services.commandOutcomeInterpreter) {
-      this.#logger.error(
-        'TurnContext: CommandOutcomeInterpreter not available in services bag.'
-      );
-      throw new Error(
-        'TurnContext: CommandOutcomeInterpreter not available in services bag.'
-      );
-    }
-    return this.#services.commandOutcomeInterpreter;
+    return this.#require(
+      'commandOutcomeInterpreter',
+      'CommandOutcomeInterpreter'
+    );
   }
 
-  /** @override */
   getSafeEventDispatcher() {
-    if (!this.#services.safeEventDispatcher) {
-      this.#logger.error(
-        'TurnContext: SafeEventDispatcher not available in services bag.'
-      );
-      throw new Error(
-        'TurnContext: SafeEventDispatcher not available in services bag.'
-      );
-    }
-    return this.#services.safeEventDispatcher;
+    return this.#require('safeEventDispatcher', 'SafeEventDispatcher');
   }
 
-  /** @override */
   getTurnEndPort() {
-    if (!this.#services.turnEndPort) {
-      this.#logger.error(
-        'TurnContext: TurnEndPort not available in services bag.'
-      );
-      throw new Error(
-        'TurnContext: TurnEndPort not available in services bag.'
-      );
-    }
-    return this.#services.turnEndPort;
+    return this.#require('turnEndPort', 'TurnEndPort');
   }
 
-  /** @override */
+  /* ───────────────────────────── TURN ENDING ──────────────────────────── */
+
   endTurn(errorOrNull = null) {
-    // Abort the prompt if it’s still running
     if (!this.#promptAbortController.signal.aborted) {
       this.#logger.debug(
-        `TurnContext.endTurn: Aborting prompt for actor ${this.#actor.id}.`
+        `TurnContext.endTurn: aborting prompt for actor ${this.#actor.id}.`
       );
       this.cancelActivePrompt();
     }
 
-    // NEW ➜ do nothing if the handler is already gone
-    // FIX: Check for explicit `true` because a deep mock returns a truthy function by default.
-    if (this.#handlerInstance?._isDestroyed === true) {
-      this.#logger.debug(
-        `TurnContext.endTurn: Handler already destroyed – skipping onEndTurnCallback for actor ${this.#actor.id}.`
-      );
-      return;
-    }
+    // If handler already disposed, silently ignore.
+    if (this.#handlerInstance?._isDestroyed === true) return;
 
-    // Reset decision metadata before notifying the handler.
     this.#decisionMeta = null;
-
-    // Notify the handler
     this.#onEndTurnCallback(errorOrNull);
   }
 
-  /** @override */
+  /* ───────────────────── AWAITING-EVENT FLAG MANAGEMENT ────────────────── */
+
   isAwaitingExternalEvent() {
     return this.#isAwaitingExternalEvent;
   }
 
+  setAwaitingExternalEvent(isAwaiting) {
+    this.#isAwaitingExternalEvent = !!isAwaiting;
+    this.#logger.debug(
+      `TurnContext for ${this.#actor.id} awaitingExternalEvent → ${this.#isAwaitingExternalEvent}`
+    );
+  }
+
+  /* ───────────────────────── ACTION + META STORAGE ────────────────────── */
+
+  getStrategy() {
+    return this.#strategy;
+  }
+
+  setChosenAction(action) {
+    if (!action || !action.actionDefinitionId)
+      throw new Error('TurnContext.setChosenAction: invalid ITurnAction.');
+    this.#chosenAction = action;
+    this.#logger.debug(
+      `TurnContext: action chosen for ${this.#actor.id} – ${action.actionDefinitionId}`
+    );
+  }
+
+  getChosenAction() {
+    return this.#chosenAction;
+  }
+
+  setDecisionMeta(meta) {
+    this.#decisionMeta = meta ?? null;
+  }
+
+  getDecisionMeta() {
+    return this.#decisionMeta;
+  }
+
+  /* ────────────────────────── PROMPT CANCELLATION ─────────────────────── */
+
+  getPromptSignal() {
+    return this.#promptAbortController.signal;
+  }
+
+  cancelActivePrompt() {
+    if (!this.#promptAbortController.signal.aborted)
+      this.#promptAbortController.abort();
+  }
+
+  /* ───────────────────── STATE-TRANSITION CONVENIENCE ────────────────────
+     IMPORTANT: the context **no longer** instantiates concrete states – it
+     just asks its handler to do so.  This removes the direct dependency on
+     ProcessingCommandState / AwaitingPlayerInputState / TurnIdleState.     */
+
+  async requestIdleStateTransition() {
+    await this.#handlerInstance.requestIdleStateTransition();
+  }
+
+  async requestAwaitingInputStateTransition() {
+    await this.#handlerInstance.requestAwaitingInputStateTransition();
+  }
+
+  async requestProcessingCommandStateTransition(commandString, turnAction) {
+    await this.#handlerInstance.requestProcessingCommandStateTransition(
+      commandString,
+      turnAction
+    );
+  }
+
+  /* ─────────────────────────── INTERNAL HELPERS ───────────────────────── */
+
   /**
-   * Creates a new TurnContext instance for a different actor, sharing the same logger,
-   * services, strategy, and lifecycle callbacks as the original context.
-   *
-   * @param {Entity} newActor - The new actor for whom to create the context.
-   * @returns {TurnContext} A new TurnContext instance.
-   * @deprecated This method might lead to state inconsistencies if services, strategy or callbacks are actor-specific.
-   * Prefer creating a new TurnContext with fresh, actor-appropriate dependencies.
+   * Ensures a service exists in the bag, otherwise throws with a helpful log.
+   * @private
    */
+  #require(key, label) {
+    const svc = this.#services[key];
+    if (!svc) {
+      const msg = `TurnContext: ${label} not available in services bag.`;
+      this.#logger.error(msg);
+      throw new Error(msg);
+    }
+    return svc;
+  }
+
+  /* ──────────────── (optional) UTILITY FOR LOGGING ONLY ───────────────── */
+
+  getChosenActionId() {
+    return this.#chosenAction?.actionDefinitionId ?? null;
+  }
+
+  /* ───────────────────────────── CLONE HELPER ─────────────────────────── */
+
+  /** @deprecated Prefer constructing a fresh TurnContext per actor. */
   cloneForActor(newActor) {
     this.#logger.warn(
-      'TurnContext.cloneForActor is deprecated. Prefer creating a new TurnContext with actor-specific dependencies. Also, AbortController is not cloned, a new one is made.'
+      'TurnContext.cloneForActor is deprecated – create a fresh context per actor.'
     );
-    if (!newActor) {
-      throw new Error('TurnContext.cloneForActor: newActor is required.');
-    }
-    // Cloning handlerInstance by reference is correct here as it's the same handler.
-    // IMPORTANT: A new AbortController is created for the cloned context.
     return new TurnContext({
       actor: newActor,
       logger: this.#logger,
@@ -306,140 +243,4 @@ export class TurnContext extends ITurnContext {
       handlerInstance: this.#handlerInstance,
     });
   }
-
-  /** @override */
-  async requestTransition(StateClass, constructorArgs = []) {
-    const NewStateInstance = new StateClass(
-      this.#handlerInstance,
-      ...constructorArgs
-    );
-    await this.#handlerInstance._transitionToState(NewStateInstance);
-  }
-
-  /** @override */
-  setAwaitingExternalEvent(isAwaiting) {
-    this.#isAwaitingExternalEvent = !!isAwaiting;
-    this.getLogger().debug(
-      `TurnContext for actor ${this.getActor()?.id} 'isAwaitingExternalEvent' flag set to: ${this.#isAwaitingExternalEvent}`
-    );
-  }
-
-  /** @override */
-  getStrategy() {
-    if (!this.#strategy) {
-      const errorMsg =
-        'TurnContext: IActorTurnStrategy instance was not provided or is missing.';
-      this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-    return this.#strategy;
-  }
-
-  /** @override */
-  setChosenAction(action) {
-    if (!action) {
-      const errorMsg =
-        'TurnContext.setChosenAction: Provided action cannot be null or undefined.';
-      this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-    if (
-      typeof action.actionDefinitionId !== 'string' ||
-      !action.actionDefinitionId
-    ) {
-      const errorMsg =
-        "TurnContext.setChosenAction: Provided action must have a valid 'actionDefinitionId' string.";
-      this.#logger.error(errorMsg, { receivedAction: action });
-      throw new Error(errorMsg);
-    }
-
-    this.#chosenAction = action;
-    this.#logger.debug(
-      `TurnContext: Chosen action set for actor ${this.#actor.id}: ` +
-        `ID='${action.actionDefinitionId}', Command='${action.commandString || 'N/A'}'`,
-      { actionDetails: action }
-    );
-  }
-
-  /** @override */
-  getChosenAction() {
-    if (this.#chosenAction) {
-      this.#logger.debug(
-        `TurnContext: Retrieving chosen action for actor ${this.#actor.id}: ` +
-          `ID='${this.#chosenAction.actionDefinitionId}', Command='${this.#chosenAction.commandString || 'N/A'}'`,
-        { actionDetails: this.#chosenAction }
-      );
-    } else {
-      this.#logger.debug(
-        `TurnContext: Retrieving chosen action for actor ${this.#actor.id}: No action has been set (is null).`
-      );
-    }
-    return this.#chosenAction;
-  }
-
-  /**
-   * @override
-   * @param {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null} meta
-   */
-  setDecisionMeta(meta) {
-    this.#decisionMeta = meta ?? null;
-  }
-
-  /**
-   * @override
-   */
-  getDecisionMeta() {
-    return this.#decisionMeta;
-  }
-
-  // --- MODIFICATION: Implement new ITurnContext methods ---
-  /** @override */
-  getPromptSignal() {
-    return this.#promptAbortController.signal;
-  }
-
-  /** @override */
-  cancelActivePrompt() {
-    if (!this.#promptAbortController.signal.aborted) {
-      this.#logger.debug(
-        `TurnContext.cancelActivePrompt: Aborting prompt for actor ${this.#actor.id}.`
-      );
-      this.#promptAbortController.abort();
-    } else {
-      this.#logger.debug(
-        `TurnContext.cancelActivePrompt: Prompt for actor ${this.#actor.id} already aborted.`
-      );
-    }
-  }
-
-  /** Convenience for logging & external wait state */
-  getChosenActionId() {
-    return this.#chosenAction?.actionDefinitionId ?? null;
-  }
-
-  async requestAwaitingInputStateTransition() {
-    await this.#handlerInstance._transitionToState(
-      new AwaitingPlayerInputState(this.#handlerInstance)
-    );
-  }
-
-  async requestIdleStateTransition() {
-    await this.#handlerInstance._transitionToState(
-      new TurnIdleState(this.#handlerInstance)
-    );
-  }
-
-  async requestProcessingCommandStateTransition(commandString, turnAction) {
-    await this.#handlerInstance._transitionToState(
-      new ProcessingCommandState(
-        this.#handlerInstance,
-        commandString,
-        turnAction
-      )
-    );
-  }
-
-  // --- END MODIFICATION ---
 }
-
-// --- FILE END ---
