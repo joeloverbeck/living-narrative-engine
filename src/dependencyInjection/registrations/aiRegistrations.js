@@ -104,6 +104,7 @@ import { AIDecisionOrchestrator } from '../../turns/orchestration/aiDecisionOrch
 import { TurnActionFactory } from '../../turns/factories/turnActionFactory';
 import { LLMChooser } from '../../turns/adapters/llmChooser';
 import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter';
+import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -327,6 +328,16 @@ export function registerAI(container) {
   );
   logger.debug(
     `AI Systems Registration: Registered ${tokens.ActionIndexingService}.`
+  );
+
+  r.singletonFactory(
+    tokens.TurnActionChoicePipeline,
+    (c) =>
+      new TurnActionChoicePipeline({
+        discoverySvc: c.resolve(tokens.IActionDiscoveryService),
+        indexer: c.resolve(tokens.IActionIndexer),
+        logger: c.resolve(tokens.ILogger),
+      })
   );
 
   r.singletonFactory(tokens.IAIPromptPipeline, (c) => {

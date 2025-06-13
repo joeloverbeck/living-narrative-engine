@@ -49,7 +49,7 @@ describe('StringAccumulator', () => {
     const directTime = Date.now() - startDirect;
 
     // Log timings for developer awareness; test stays green regardless.
-     
+
     console.log(
       `Benchmark: StringAccumulator=${accTime}ms, direct +==${directTime}ms`
     );

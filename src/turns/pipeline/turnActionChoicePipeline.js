@@ -1,7 +1,5 @@
-// src/turns/pipeline/turnActionChoicePipeline.js
-
 /**
- * @module turns/pipeline/turnActionChoicePipeline
+ * @module src/turns/pipeline/turnActionChoicePipeline.js
  */
 
 import { IActionDiscoveryService } from '../../interfaces/IActionDiscoveryService.js';
@@ -24,6 +22,9 @@ export class TurnActionChoicePipeline {
     this.discoverySvc = discoverySvc;
     this.indexer = indexer;
     this.logger = logger;
+
+    // Log initialization once when the pipeline is first created
+    this.logger.debug('TurnActionChoicePipeline initialised');
   }
 
   /**

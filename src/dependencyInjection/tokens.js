@@ -263,9 +263,9 @@ export const tokens = freeze({
   ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
 
   // --- Actions ---
-  TurnActionChoicePipeline:	'TurnActionChoicePipeline',
-  ITurnDecisionProvider:	'ITurnDecisionProvider',
-  ILLMDecisionProvider:	'ILLMDecisionProvider',
+  TurnActionChoicePipeline: 'TurnActionChoicePipeline',
+  ITurnDecisionProvider: 'ITurnDecisionProvider',
+  ILLMDecisionProvider: 'ILLMDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',
 
   // --- Turn System Factories ---

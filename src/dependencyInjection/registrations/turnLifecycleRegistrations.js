@@ -22,6 +22,7 @@ import {
   PLAYER_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../constants/componentIds.js';
+import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
 
 /**
  * @param {import('../appContainer.js').default} container
@@ -46,6 +47,19 @@ export function registerTurnLifecycle(container) {
     r.singletonFactory(
       tokens.ActionIndexingService,
       (c) => new ActionIndexingService(c.resolve(tokens.ILogger))
+    );
+  }
+
+  // --- Also ensure the TurnActionChoicePipeline is registered if not already ---
+  if (!container.isRegistered(tokens.TurnActionChoicePipeline)) {
+    r.singletonFactory(
+      tokens.TurnActionChoicePipeline,
+      (c) =>
+        new TurnActionChoicePipeline({
+          discoverySvc: c.resolve(tokens.IActionDiscoveryService),
+          indexer: c.resolve(tokens.IActionIndexer),
+          logger: c.resolve(tokens.ILogger),
+        })
     );
   }
 

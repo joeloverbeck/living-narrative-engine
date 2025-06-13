@@ -138,9 +138,7 @@ class OperationRegistry {
     // Last-ditch: console.log with [LEVEL] prefix (used by the “faulty logger” tests)
     try {
       console.log(`[${upper}] ${message}`, ...rest);
-    } catch {
-       
-    }
+    } catch {}
   }
 }
 
