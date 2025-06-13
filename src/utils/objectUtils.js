@@ -61,11 +61,11 @@ export const getObjectPropertyByPath = (obj, propertyPath) => {
       return undefined;
     }
 
-    // Check if the property exists on the current object/array
-    // Using `Object.prototype.hasOwnProperty.call` is safer for objects,
-    // but `part in current` works for both own properties and array indices.
-    // `current[part]` handles both object properties and array indices naturally.
-    if (part in current) {
+    // Check if the property exists directly on the current object/array.
+    // Using `hasOwnProperty` avoids traversing the prototype chain, which could
+    // expose built-in properties like `toString` when they are not explicitly
+    // defined on the object.
+    if (Object.prototype.hasOwnProperty.call(current, part)) {
       current = current[part];
       // If the value found is undefined, and it's not the last part of the path,
       // we cannot continue traversal.
