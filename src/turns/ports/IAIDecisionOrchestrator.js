@@ -38,7 +38,7 @@ export class IAIDecisionOrchestrator {
    * }>}
    */
 
-  /* eslint-disable class-methods-use-this, no-unused-vars */
+  /* eslint-disable no-unused-vars */
   async decide(params) {
     throw new Error('IAIDecisionOrchestrator.decide() must be implemented.');
   }
@@ -65,5 +65,5 @@ export class IAIDecisionOrchestrator {
     );
   }
 
-  /* eslint-enable class-methods-use-this, no-unused-vars */
+  /* eslint-enable no-unused-vars */
 }

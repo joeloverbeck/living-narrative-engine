@@ -10,7 +10,10 @@ import { TurnScopedCache } from '../../utils/turnScopedCache.js';
 import { createActionComposite } from '../dtos/actionComposite.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 
-/** @private */
+/**
+ * @param value
+ * @private
+ */
 function stableStringify(value) {
   if (value === null || typeof value !== 'object') {
     return JSON.stringify(value);
@@ -24,6 +27,7 @@ function stableStringify(value) {
 
 /**
  * Service for indexing and retrieving available actions by actor per turn.
+ *
  * @class
  */
 export class ActionIndexingService {
@@ -45,6 +49,7 @@ export class ActionIndexingService {
    * - **Idempotent** within the same turn.
    * - Suppresses duplicate (actionId, params) pairs (logs INFO with count).
    * - Caps to MAX_AVAILABLE_ACTIONS_PER_TURN (logs WARN if truncated).
+   *
    * @param {string} actorId - The ID of the actor whose turn it is.
    * @param {Array<DiscoveredActionInfo>} rawActions - Array of raw actions to index.
    * @returns {ActionComposite[]} The list of indexed action composites.
@@ -104,6 +109,7 @@ export class ActionIndexingService {
 
   /**
    * Retrieves the previously indexed list for the given actor.
+   *
    * @param {string} actorId - The ID of the actor.
    * @returns {ActionComposite[]} A **new** array of the indexed composites.
    * @throws {Error} If `indexActions` has not been called for this actor.
@@ -118,6 +124,7 @@ export class ActionIndexingService {
 
   /**
    * Resolves a composite by actor ID and 1-based index in O(1).
+   *
    * @param {string} actorId - The ID of the actor.
    * @param {number} index - The 1-based index of the action to retrieve.
    * @returns {ActionComposite}

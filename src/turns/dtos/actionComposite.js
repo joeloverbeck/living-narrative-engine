@@ -7,11 +7,11 @@ import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 import { freeze } from '../../utils/objectUtils';
 
 /**
- * @typedef {Object} ActionComposite
+ * @typedef {object} ActionComposite
  * @property {number} index - 1-based position in the list of available actions (1 ≤ index ≤ MAX_ACTIONS_PER_TURN).
  * @property {string} actionId - Canonical identifier for the action (e.g. "core:attack").
  * @property {string} commandString - Raw command a player or AI would issue (e.g. "go out to town").
- * @property {Object} params - Arguments for the action (at minimum { targetId?: string }, extensible).
+ * @property {object} params - Arguments for the action (at minimum { targetId?: string }, extensible).
  * @property {string} description - Human-readable, localized summary of what the action does.
  */
 
@@ -21,7 +21,7 @@ import { freeze } from '../../utils/objectUtils';
  * @param {number} index - Must be integer between 1 and MAX_ACTIONS_PER_TURN.
  * @param {string} actionId - Non-empty canonical action identifier.
  * @param {string} commandString - Non-empty raw command string.
- * @param {Object} params - Non-null object of action parameters.
+ * @param {object} params - Non-null object of action parameters.
  * @param {string} description - Non-empty human-readable description.
  * @returns {ActionComposite}
  * @throws {Error} When any argument is invalid.

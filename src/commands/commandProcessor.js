@@ -57,6 +57,7 @@ class CommandProcessor extends ICommandProcessor {
    * Dispatches a pre-resolved action, bypassing parsing and target resolution.
    * This is the optimized path for AI-driven actions where the action and
    * its parameters are already known.
+   *
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnAction} turnAction - The pre-resolved action object.
    * @returns {Promise<{success: boolean, errorResult: CommandResult | null}>} A promise that resolves to an object indicating the outcome.

@@ -31,6 +31,7 @@ import { Registrar } from '../registrarHelpers.js';
 
 /**
  * Registers foundational infrastructure services.
+ *
  * @param container
  */
 export function registerInfrastructure(container) {

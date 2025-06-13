@@ -17,6 +17,7 @@ import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/system
 
 /**
  * Creates a mock ILogger.
+ *
  * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
  */
 const makeMockLogger = () => ({
@@ -28,6 +29,7 @@ const makeMockLogger = () => ({
 
 /**
  * Creates a mock EntityManager.
+ *
  * @returns {import('../../../src/entities/entityManager.js').default}
  */
 const makeMockEntityManager = () => ({
@@ -37,6 +39,7 @@ const makeMockEntityManager = () => ({
 
 /**
  * Creates a mock IValidatedEventDispatcher.
+ *
  * @returns {import('../../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher}
  */
 const makeMockDispatcher = () => ({
@@ -45,7 +48,8 @@ const makeMockDispatcher = () => ({
 
 /**
  * Creates a mock ExecutionContext.
- * @param {object} [evalContext={}] - The evaluation context to set.
+ *
+ * @param {object} [evalContext] - The evaluation context to set.
  * @returns {import('../../../src/logic/defs.js').ExecutionContext}
  */
 const makeMockExecCtx = (evalContext = {}) => ({

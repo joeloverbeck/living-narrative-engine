@@ -22,6 +22,12 @@ jest.mock('../../src/domUI/domElementFactory.js');
 /**
  * CORRECTED: Creates a valid ActionComposite object for testing.
  * The original `createValidTestAction` created objects that are now invalid.
+ *
+ * @param index
+ * @param actionId
+ * @param commandString
+ * @param description
+ * @param params
  */
 const createTestComposite = (
   index,

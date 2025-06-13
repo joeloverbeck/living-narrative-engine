@@ -14,19 +14,15 @@ import { FOLLOWING_COMPONENT_ID } from '../constants/componentIds.js';
  * Traverses the "follow graph" to determine if an entity attempting to follow another
  * would create a cycle. It performs a Depth-First Search (DFS) starting from the
  * potential leader, following the `leaderId` references in `core:following` components.
- *
  * @example
  * // Scenario: A -> B. C wants to follow A. No cycle.
  * wouldCreateCycle('C', 'A', entityManager); // returns false
- *
  * @example
  * // Scenario: A -> B. B wants to follow A. Direct cycle.
  * wouldCreateCycle('B', 'A', entityManager); // returns true
- *
  * @example
  * // Scenario: A -> B -> C. C wants to follow A. Long cycle.
  * wouldCreateCycle('C', 'A', entityManager); // returns true
- *
  * @param {string} prospectiveFollowerId - The ID of the entity that wants to start following.
  * @param {string} prospectiveLeaderId - The ID of the entity that would be followed.
  * @param {IEntityManager} entityManager - The entity manager instance to query game state.

@@ -15,6 +15,7 @@ import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modify
 
 /**
  * Creates a mock IEntityManager compliant with the interface.
+ *
  * @returns {import('../../../src/interfaces/IEntityManager.js').IEntityManager}
  */
 const makeMockEntityManager = () => ({
@@ -30,6 +31,7 @@ const makeMockEntityManager = () => ({
 
 /**
  * Creates a mock ILogger compliant with the interface.
+ *
  * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
  */
 const makeMockLogger = () => ({

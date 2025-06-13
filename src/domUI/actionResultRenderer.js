@@ -11,7 +11,6 @@
  * • Injecting a {@link DomElementFactory} for safe, testable element creation.
  * • Rendering success / failure bubbles on the corresponding core events.
  * • Auto-scrolling the output list so the newest bubble is always visible.
- *
  * @module ActionResultRenderer
  */
 
@@ -38,12 +37,10 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js';
  * into the chat log.
  *
  * @class
- * @extends {BoundDomRendererBase}
+ * @augments {BoundDomRendererBase}
  * @since 0.3.0
- *
  * @fires core:display_successful_action_result
  * @fires core:display_failed_action_result
- *
  * @example
  * const renderer = new ActionResultRenderer({
  * logger,
@@ -107,6 +104,7 @@ export class ActionResultRenderer extends BoundDomRendererBase {
   // ────────────────────────────────────────────────────────────────────────────
   /**
    * Subscribes to the necessary core events for displaying action results.
+   *
    * @private
    */
   #subscribeToEvents() {
@@ -134,6 +132,7 @@ export class ActionResultRenderer extends BoundDomRendererBase {
   // ────────────────────────────────────────────────────────────────────────────
   /**
    * Handles the 'core:display_successful_action_result' event.
+   *
    * @private
    * @param {object} event - The full event object from the EventBus.
    * @param {ActionResultPayload} event.payload - The payload of the event.
@@ -147,6 +146,7 @@ export class ActionResultRenderer extends BoundDomRendererBase {
 
   /**
    * Handles the 'core:display_failed_action_result' event.
+   *
    * @private
    * @param {object} event - The full event object from the EventBus.
    * @param {ActionResultPayload} event.payload - The payload of the event.
@@ -200,6 +200,7 @@ export class ActionResultRenderer extends BoundDomRendererBase {
 
   /**
    * Scrolls the message list so the newest bubble is visible.
+   *
    * @private
    */
   #scrollToBottom() {

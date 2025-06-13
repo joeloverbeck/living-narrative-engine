@@ -138,6 +138,7 @@ export class ITurnState {
 
   /**
    * Returns a string identifier for the state.
+   *
    * @returns {string}
    */
   getStateName() {
@@ -148,6 +149,7 @@ export class ITurnState {
 
   /**
    * True if this state represents an idle system with no active turn.
+   *
    * @returns {boolean}
    */
   isIdle() {
@@ -158,6 +160,7 @@ export class ITurnState {
 
   /**
    * True if this state is handling the conclusion of a turn.
+   *
    * @returns {boolean}
    */
   isEnding() {

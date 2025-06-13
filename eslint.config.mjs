@@ -1,4 +1,4 @@
-// eslint.dependencyInjection.mjs
+// eslint.config.mjs
 
 import globals from 'globals';
 import js from '@eslint/js';

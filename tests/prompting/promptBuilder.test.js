@@ -70,7 +70,11 @@ describe('PromptBuilder (orchestrator-only)', () => {
       conditionEvaluator,
     });
 
-  /** Registers three dummy assemblers (A, B, C) in the shared registry. */
+  /**
+   * Registers three dummy assemblers (A, B, C) in the shared registry.
+   *
+   * @param opts
+   */
   const registerAssemblersABC = (opts = {}) => {
     assemblerRegistry.register(
       'elem1',

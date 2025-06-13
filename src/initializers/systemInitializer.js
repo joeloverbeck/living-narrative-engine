@@ -31,6 +31,7 @@ class SystemInitializer {
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
    * @param {string} dependencies.initializationTag - The tag used to identify systems for initialization.
+   * @param dependencies.resolver
    * @throws {Error} If resolver, logger, initializationTag, or validatedEventDispatcher is invalid or missing.
    */
   constructor({

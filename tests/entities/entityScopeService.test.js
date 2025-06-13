@@ -23,6 +23,7 @@ import {
 
 /**
  * Creates a mock entity object for testing purposes.
+ *
  * @param {string} id - The entity's ID.
  * @param {object} components - A map of component IDs to their data.
  * @returns {object} A mock entity.

@@ -94,6 +94,7 @@ const _handleFollowers = _createActorComponentScopeHandler(
 
 /**
  * Retrieves entity IDs from the current location, excluding the player.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>}
  * @private
@@ -130,6 +131,7 @@ function _handleLocation(context) {
 
 /**
  * Retrieves entity IDs from the current location that have an ItemComponent.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>}
  * @private
@@ -155,6 +157,7 @@ function _handleLocationItems(context) {
 
 /**
  * Retrieves entity IDs from the current location that DO NOT have an ItemComponent.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>}
  * @private
@@ -180,6 +183,7 @@ function _handleLocationNonItems(context) {
 
 /**
  * Retrieves entity IDs from both inventory and location.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>}
  * @private
@@ -192,6 +196,7 @@ function _handleNearby(context) {
 
 /**
  * Retrieves entity IDs from nearby scopes including blockers in exits.
+ *
  * @param {ActionContext} context - Current action context.
  * @returns {Set<EntityId>}
  * @private
@@ -214,6 +219,7 @@ function _handleNearbyIncludingBlockers(context) {
 
 /**
  * Retrieves the entity ID of the actor itself.
+ *
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>}
  * @private
@@ -255,6 +261,7 @@ const scopeHandlers = {
 
 /**
  * Aggregates unique entity IDs from one or more specified scopes or target domains.
+ *
  * @param {string | string[] | TargetDomain | TargetDomain[]} scopes - A single scope name or an array of them.
  * @param {ActionContext} context - The action context.
  * @returns {Set<EntityId>} A single set of unique entity IDs.

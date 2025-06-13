@@ -114,6 +114,7 @@ export class ITurnContext {
   /**
    * Signals that the current turn has completed. The handler will create and transition
    * to the Ending state, which handles cleanup.
+   *
    * @param {Error | null} [errorOrNull] - An optional error if the turn ended abnormally.
    * @returns {Promise<void>}
    */
@@ -213,6 +214,7 @@ export class ITurnContext {
    * Requests the turn handler to transition to the Idle state.
    * This is typically called after a turn has fully ended and been cleaned up.
    * The concrete handler implements this by calling its internal method, which uses the factory.
+   *
    * @returns {Promise<void>}
    */
   async requestIdleStateTransition() {
@@ -224,6 +226,7 @@ export class ITurnContext {
   /**
    * Requests the turn handler to transition to the AwaitingInput state.
    * This is typically called at the start of a new turn after context has been established.
+   *
    * @returns {Promise<void>}
    */
   async requestAwaitingInputStateTransition() {
@@ -234,6 +237,7 @@ export class ITurnContext {
 
   /**
    * Requests the turn handler to transition to the ProcessingCommand state.
+   *
    * @param {string} commandString - The command string for logging/processing.
    * @param {ITurnAction} turnAction - The action to be processed.
    * @returns {Promise<void>}

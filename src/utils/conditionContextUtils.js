@@ -20,11 +20,13 @@ import { getObjectPropertyByPath } from './objectUtils.js';
 
 /**
  * @typedef {object} Connection
+ * @property
  * Represents a connection object used as context in some conditions.
  */
 
 /**
  * @typedef {object} Component
+ * @property
  * The base class for all components.
  */
 

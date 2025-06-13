@@ -34,6 +34,7 @@ class TurnHandlerResolver extends ITurnHandlerResolver {
 
   /**
    * Creates an instance of TurnHandlerResolver.
+   *
    * @param {object} dependencies - The dependencies required by the resolver.
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {HandlerRule[]} dependencies.handlerRules - An ordered array of rules for resolving handlers.

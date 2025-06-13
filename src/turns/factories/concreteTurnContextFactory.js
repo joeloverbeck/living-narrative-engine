@@ -50,6 +50,7 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
 
   /**
    * Constructs the factory and caches all necessary dependencies.
+   *
    * @param {object} dependencies - The services to be injected.
    * @param {ILogger} dependencies.logger
    * @param {IWorldContext} dependencies.gameWorldAccess

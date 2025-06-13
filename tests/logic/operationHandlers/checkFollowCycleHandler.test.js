@@ -17,6 +17,7 @@ import { FOLLOWING_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 /**
  * Creates a mock ILogger.
+ *
  * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
  */
 const makeMockLogger = () => ({
@@ -28,7 +29,8 @@ const makeMockLogger = () => ({
 
 /**
  * Creates a simple mock Entity. It only needs a `getComponentData` method for these tests.
- * @param {object} [components={}] - A map of component IDs to their data.
+ *
+ * @param {object} [components] - A map of component IDs to their data.
  * @returns {{ getComponentData: jest.Mock }}
  */
 const makeMockEntity = (components = {}) => ({
@@ -37,6 +39,7 @@ const makeMockEntity = (components = {}) => ({
 
 /**
  * Creates a mock IEntityManager.
+ *
  * @returns {jest.Mocked<import('../../../src/entities/entityManager.js').default>}
  */
 const makeMockEntityManager = () => ({

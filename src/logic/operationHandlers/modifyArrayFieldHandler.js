@@ -74,6 +74,7 @@ class ModifyArrayFieldHandler {
 
   /**
    * Executes the array modification operation.
+   *
    * @param {object} params - The parameters for the operation.
    * @param {string|object} params.entity_ref - Reference to the target entity.
    * @param {string} params.component_type - The namespaced ID of the component.

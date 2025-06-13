@@ -21,6 +21,7 @@ const LEADING_COMPONENT_ID = 'core:leading';
 
 /**
  * Creates a mock ILogger.
+ *
  * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
  */
 const makeMockLogger = () => ({
@@ -32,8 +33,9 @@ const makeMockLogger = () => ({
 
 /**
  * Creates a simple mock Entity.
+ *
  * @param {string} id - The entity ID.
- * @param {object} [components={}] - A map of component IDs to their data.
+ * @param {object} [components] - A map of component IDs to their data.
  * @returns {{ id: string, getComponentData: jest.Mock, hasComponent: jest.Mock }}
  */
 const makeMockEntity = (id, components = {}) => ({
@@ -44,6 +46,7 @@ const makeMockEntity = (id, components = {}) => ({
 
 /**
  * Creates a mock IEntityManager.
+ *
  * @returns {jest.Mocked<import('../../../src/entities/entityManager.js').default>}
  */
 const makeMockEntityManager = () => ({

@@ -8,6 +8,7 @@ export class AssemblerRegistry {
 
   /**
    * Register an assembler under a unique string key.
+   *
    * @param {string} key - Non-empty string identifier for the element.
    * @param {{assemble: Function}} assembler - An object implementing `assemble()`.
    * @throws {Error} If key is missing/invalid or assembler lacks `assemble()`.
@@ -26,6 +27,7 @@ export class AssemblerRegistry {
 
   /**
    * Resolve an assembler by its key.
+   *
    * @param {string} key
    * @returns {{assemble: Function}}
    * @throws {Error} If no assembler is registered for key.

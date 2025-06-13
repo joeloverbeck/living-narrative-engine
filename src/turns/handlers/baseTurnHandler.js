@@ -84,6 +84,7 @@ export class BaseTurnHandler {
   /**
    * Retrieves the port for signaling the end of a turn.
    * Subclasses that manage a turn-end port should override this method.
+   *
    * @abstract
    * @returns {ITurnEndPort}
    */
@@ -526,6 +527,7 @@ export class BaseTurnHandler {
 
   /**
    * Initiates a transition to the ProcessingCommand state using the state factory.
+   *
    * @param {string} commandString
    * @param {ITurnAction} turnAction
    */

@@ -43,9 +43,6 @@
     "whatwg-fetch": "^3.6.20",
     "yargs": "^17.7.2"
   },
-  "overrides": {
-    "ajv": "^8.17.1"
-  },
   "scripts": {
     "format": "prettier --write . --ignore-unknown --log-level error",
     "lint": "eslint . --fix",

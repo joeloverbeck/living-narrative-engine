@@ -20,7 +20,8 @@ import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
  * Provider that discovers actions via ActionDiscoveryService, indexes them via
  * ActionIndexingService, and returns a final list of ActionComposites. It also
  * caches results within the scope of a single turn to prevent re-computation.
- * @extends IAvailableActionsProvider
+ *
+ * @augments IAvailableActionsProvider
  */
 export class AvailableActionsProvider extends IAvailableActionsProvider {
   #actionDiscoveryService;
@@ -51,6 +52,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
   /**
    * Discovers and indexes available actions for the given actor. Results are
    * cached for the duration of the turn.
+   *
    * @override
    * @param {Entity} actor
    * @param {ITurnContext} turnContext

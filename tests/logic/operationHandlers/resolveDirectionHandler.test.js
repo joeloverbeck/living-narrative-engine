@@ -17,6 +17,7 @@ import ResolveDirectionHandler from '../../../src/logic/operationHandlers/resolv
 
 /**
  * Creates a mock ILogger.
+ *
  * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
  */
 const makeMockLogger = () => ({
@@ -28,6 +29,7 @@ const makeMockLogger = () => ({
 
 /**
  * Creates a mock IWorldContext.
+ *
  * @returns {{ getTargetLocationForDirection: jest.Mock }}
  */
 const makeMockWorldContext = () => ({
@@ -36,6 +38,7 @@ const makeMockWorldContext = () => ({
 
 /**
  * Creates a mock ExecutionContext.
+ *
  * @returns {{ evaluationContext: { context: object } }}
  */
 const makeMockExecCtx = () => ({

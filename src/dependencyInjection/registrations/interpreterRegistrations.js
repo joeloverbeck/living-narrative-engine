@@ -35,6 +35,7 @@ import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFi
 
 /**
  * Registers all interpreter-layer services in the DI container.
+ *
  * @param {AppContainer} container
  */
 export function registerInterpreters(container) {

@@ -7,7 +7,7 @@ import { ITurnActionFactory } from '../ports/ITurnActionFactory.js';
 
 /**
  * @class TurnActionFactory
- * @extends {ITurnActionFactory}
+ * @augments {ITurnActionFactory}
  * @description Centralises creation of immutable {@link ITurnAction} objects.
  */
 export class TurnActionFactory extends ITurnActionFactory {

@@ -41,6 +41,7 @@ import {
 
 /**
  * Creates a mock ILogger with jest.fn() for all methods.
+ *
  * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').ILogger>}
  */
 const makeMockLogger = () => ({
@@ -52,6 +53,7 @@ const makeMockLogger = () => ({
 
 /**
  * Creates a mock SafeEventDispatcher.
+ *
  * @returns {jest.Mocked<{subscribe: Function, dispatch: Function}>}
  */
 const makeMockSafeEventDispatcher = () => ({
@@ -61,7 +63,8 @@ const makeMockSafeEventDispatcher = () => ({
 
 /**
  * Creates a mock ITurnContext.
- * @param {string} [actorId='player1'] - The ID of the actor for this context.
+ *
+ * @param {string} [actorId] - The ID of the actor for this context.
  * @returns {jest.Mocked<any>} A fully mocked ITurnContext object.
  */
 const makeMockTurnContext = (actorId = 'player1') => ({
@@ -79,6 +82,7 @@ const makeMockTurnContext = (actorId = 'player1') => ({
 
 /**
  * Creates a mock BaseTurnHandler.
+ *
  * @returns {jest.Mocked<any>} A fully mocked BaseTurnHandler object.
  */
 const makeMockTurnHandler = () => ({

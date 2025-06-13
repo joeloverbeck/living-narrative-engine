@@ -24,6 +24,11 @@ const IS_DEV = (process?.env?.NODE_ENV ?? 'production') !== 'production';
 const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
+/**
+ *
+ * @param actorId
+ * @param actionId
+ */
 function buildTimeoutObjects(actorId, actionId) {
   const msg =
     `No rule ended the turn for actor ${actorId} after action ` +

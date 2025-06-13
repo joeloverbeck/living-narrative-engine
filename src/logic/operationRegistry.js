@@ -27,6 +27,7 @@ class OperationRegistry {
 
   /**
    * Register or overwrite a handler.
+   *
    * @param {string}               operationType
    * @param {OperationHandler}     handler
    */
@@ -67,6 +68,7 @@ class OperationRegistry {
 
   /**
    * Retrieve a handler (if any) for the given type.
+   *
    * @param {string} operationType
    * @returns {OperationHandler|undefined}
    */
@@ -96,7 +98,11 @@ class OperationRegistry {
   //  Internal logging helper – resilient to faulty or missing loggers
   // ---------------------------------------------------------------------------
 
-  /** @param {'info'|'warn'|'error'|'debug'} level */
+  /**
+   * @param {'info'|'warn'|'error'|'debug'} level
+   * @param message
+   * @param {...any} rest
+   */
   #log(level, message, ...rest) {
     const loggerFn =
       this.#logger && typeof this.#logger[level] === 'function'
@@ -133,7 +139,7 @@ class OperationRegistry {
     try {
       console.log(`[${upper}] ${message}`, ...rest);
     } catch {
-      /* eslint-disable-line no-empty */
+       
     }
   }
 }

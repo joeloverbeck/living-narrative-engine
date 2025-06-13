@@ -2,7 +2,6 @@
 // --- FILE START ---
 
 /**
- * @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} AIPromptContentProvider // For JSDoc link if needed, though interface methods are key
  * @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../types/promptData.js').PromptData} PromptData
@@ -57,7 +56,7 @@ export class IAIPromptContentProvider {
    * @throws {Error} If critical information is missing and PromptData cannot be safely constructed.
    */
   async getPromptData(gameStateDto, logger) {
-    throw new Error("Method 'getPromptData()' must be implemented.");
+    throw new Error('Method \'getPromptData()\' must be implemented.');
   }
 
   /**
@@ -70,7 +69,7 @@ export class IAIPromptContentProvider {
    */
   getCharacterPersonaContent(gameStateDto, logger) {
     throw new Error(
-      "Method 'getCharacterPersonaContent()' must be implemented."
+      'Method \'getCharacterPersonaContent()\' must be implemented.',
     );
   }
 
@@ -83,7 +82,7 @@ export class IAIPromptContentProvider {
    * @throws {Error} If the method is not implemented.
    */
   getWorldContextContent(gameStateDto, logger) {
-    throw new Error("Method 'getWorldContextContent()' must be implemented.");
+    throw new Error('Method \'getWorldContextContent()\' must be implemented.');
   }
 
   /**
@@ -96,7 +95,7 @@ export class IAIPromptContentProvider {
    */
   getAvailableActionsInfoContent(gameStateDto, logger) {
     throw new Error(
-      "Method 'getAvailableActionsInfoContent()' must be implemented."
+      'Method \'getAvailableActionsInfoContent()\' must be implemented.',
     );
   }
 
@@ -107,7 +106,7 @@ export class IAIPromptContentProvider {
    * @throws {Error} If the method is not implemented.
    */
   getTaskDefinitionContent() {
-    throw new Error("Method 'getTaskDefinitionContent()' must be implemented.");
+    throw new Error('Method \'getTaskDefinitionContent()\' must be implemented.');
   }
 
   /**
@@ -119,7 +118,7 @@ export class IAIPromptContentProvider {
    */
   getCharacterPortrayalGuidelinesContent(characterName) {
     throw new Error(
-      "Method 'getCharacterPortrayalGuidelinesContent()' must be implemented."
+      'Method \'getCharacterPortrayalGuidelinesContent()\' must be implemented.',
     );
   }
 
@@ -130,7 +129,7 @@ export class IAIPromptContentProvider {
    * @throws {Error} If the method is not implemented.
    */
   getContentPolicyContent() {
-    throw new Error("Method 'getContentPolicyContent()' must be implemented.");
+    throw new Error('Method \'getContentPolicyContent()\' must be implemented.');
   }
 
   /**
@@ -141,7 +140,7 @@ export class IAIPromptContentProvider {
    */
   getFinalInstructionsContent() {
     throw new Error(
-      "Method 'getFinalInstructionsContent()' must be implemented."
+      'Method \'getFinalInstructionsContent()\' must be implemented.',
     );
   }
 
@@ -157,7 +156,7 @@ export class IAIPromptContentProvider {
    */
   validateGameStateForPrompting(gameStateDto, logger) {
     throw new Error(
-      "Method 'validateGameStateForPrompting()' must be implemented."
+      'Method \'validateGameStateForPrompting()\' must be implemented.',
     );
   }
 }

@@ -20,6 +20,7 @@ import { IPlayerTurnEvents } from '../interfaces/IPlayerTurnEvents.js';
 export class ValidatedEventDispatcherAdapter extends IPlayerTurnEvents {
   /**
    * The underlying event dispatcher instance.
+   *
    * @type {IValidatedEventDispatcher}
    * @private
    */
@@ -27,6 +28,7 @@ export class ValidatedEventDispatcherAdapter extends IPlayerTurnEvents {
 
   /**
    * Creates an instance of ValidatedEventDispatcherAdapter.
+   *
    * @param {object} dependencies
    * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The event dispatcher to adapt.
    */

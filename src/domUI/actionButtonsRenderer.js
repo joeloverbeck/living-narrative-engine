@@ -19,6 +19,7 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
 /**
  * Represents a single available action, indexed and ready for rendering.
  * This is the DTO received from the core engine.
+ *
  * @typedef {object} ActionComposite
  * @property {number} index - The 1-based index of the action in the current turn's list.
  * @property {NamespacedId} actionId - The unique ID of the action definition (e.g., 'core:wait').

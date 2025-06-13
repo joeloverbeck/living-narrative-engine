@@ -29,7 +29,8 @@ const DEFAULT_MAX_LOG_ENTRIES = 50;
 
 /**
  * Produce a minimally-valid log entry object.
- * @param {string} [id='1']
+ *
+ * @param {string} [id]
  */
 const makeEntry = (id = '1') => ({
   descriptionText: `Event-${id}`,

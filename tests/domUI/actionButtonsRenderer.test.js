@@ -44,6 +44,12 @@ describe('ActionButtonsRenderer', () => {
   /**
    * CORRECTED: Creates a valid ActionComposite object for testing.
    * The original `createTestAction` created objects that are now invalid.
+   *
+   * @param index
+   * @param actionId
+   * @param commandString
+   * @param description
+   * @param params
    */
   const createTestComposite = (
     index,

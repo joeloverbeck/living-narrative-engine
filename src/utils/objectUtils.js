@@ -89,7 +89,6 @@ export const getObjectPropertyByPath = (obj, propertyPath) => {
  * Immutability ensures that value objects cannot be modified after creation,
  * which helps prevent unintended side-effects and makes state management
  * more predictable.
- *
  * @template T
  * @param {T} o - The object to freeze.
  * @returns {Readonly<T>} The frozen object.

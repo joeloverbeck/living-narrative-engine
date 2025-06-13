@@ -14,6 +14,7 @@
 export class IActorStateProvider {
   /**
    * Builds the AIActorStateDTO for a given actor.
+   *
    * @param {Entity} actor - The AI-controlled entity.
    * @param {ILogger} logger - An instance of the logger.
    * @returns {AIActorStateDTO & {components: Record<string, any>}} The actor's state DTO.

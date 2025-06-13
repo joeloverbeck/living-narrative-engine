@@ -57,7 +57,7 @@ describe('TurnScopedCache (JS)', () => {
     const first = { index: 2, value: 'first' };
     const dup = { index: 2, value: 'second' };
     cache.add(first);
-    expect(() => cache.add(dup)).toThrowError(
+    expect(() => cache.add(dup)).toThrow(
       'Duplicate index 2 in TurnScopedCache'
     );
     expect(logMessages).toContain('Duplicate index 2 in TurnScopedCache');

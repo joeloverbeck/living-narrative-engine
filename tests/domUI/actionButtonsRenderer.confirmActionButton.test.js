@@ -36,6 +36,12 @@ describe('ActionButtonsRenderer', () => {
 
   /**
    * CORRECTED: Use a helper that creates a valid ActionComposite object.
+   *
+   * @param index
+   * @param actionId
+   * @param commandString
+   * @param description
+   * @param params
    */
   const createTestComposite = (
     index,

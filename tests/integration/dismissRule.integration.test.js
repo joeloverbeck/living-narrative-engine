@@ -70,6 +70,9 @@ class FakeLeaderSyncService {
 // 2.  Test Harness Builder
 // ────────────────────────────────────────────────────────────────────────────
 
+/**
+ *
+ */
 function buildTestHarness() {
   const logger = makeLogger();
   const dismissRule = JSON.parse(

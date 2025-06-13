@@ -19,6 +19,7 @@
 export class IEntitySummaryProvider {
   /**
    * Generates a summary DTO for a given entity.
+   *
    * @param {Entity} entity - The entity to summarize.
    * @returns {EntitySummaryDTO} A DTO with the entity's core display info.
    */

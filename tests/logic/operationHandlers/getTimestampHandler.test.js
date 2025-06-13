@@ -15,6 +15,7 @@ import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimesta
 
 /**
  * Creates a mock ILogger.
+ *
  * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
  */
 const makeMockLogger = () => ({

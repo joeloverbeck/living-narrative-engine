@@ -11,6 +11,7 @@ import { validateDependency } from '../../utils/validationUtils.js';
 /** @typedef {import('../../turns/services/actionIndexingService.js').ActionIndexingService} ActionIndexingService */
 /**
  * Simplified view of the event bus – only subscribe is needed.
+ *
  * @typedef {{subscribe: (eventId: string, fn: Function) => () => void}} IPlayerTurnEvents
  */
 
@@ -76,7 +77,12 @@ export class PromptSession {
 
   /* ─────────────── internal helpers ─────────────── */
 
-  /** Fully cleans up listeners and schedules the final promise settlement. */
+  /**
+   * Fully cleans up listeners and schedules the final promise settlement.
+   *
+   * @param kind
+   * @param value
+   */
   #settle(kind, value) {
     if (this.#resolved) return;
     this.#resolved = true;
@@ -109,6 +115,7 @@ export class PromptSession {
    * Handles `core:player_turn_submitted` events.
    * Expects `{ index: number, speech?, thoughts?, notes? }` in payload.
    * Resolves the integer to an action composite via ActionIndexingService.
+   *
    * @private
    * @param {*} event
    */
@@ -189,6 +196,7 @@ export class PromptSession {
   // ─────────────────── Public API ───────────────────
   /**
    * Starts listening for the submitted-turn event.
+   *
    * @returns {Promise<PlayerPromptResolution>}
    */
   run() {
@@ -229,7 +237,11 @@ export class PromptSession {
     return this.#promise;
   }
 
-  /** Imperatively cancels the prompt. */
+  /**
+   * Imperatively cancels the prompt.
+   *
+   * @param reason
+   */
   cancel(reason) {
     if (this.#resolved) return;
     const err =

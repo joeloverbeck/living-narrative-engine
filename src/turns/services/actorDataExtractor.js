@@ -40,6 +40,7 @@ class ActorDataExtractor extends IActorDataExtractor {
   /**
    * Extracts and transforms actor-specific data from the actorState object
    * into a structured ActorPromptDataDTO.
+   *
    * @override
    * @param {object} actorState - The gameState.actorState object, which is a
    * map of component IDs to component data.

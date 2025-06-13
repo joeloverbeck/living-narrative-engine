@@ -14,6 +14,7 @@
 export class ILocationSummaryProvider {
   /**
    * Asynchronously builds a summary of the actor's current location.
+   *
    * @param {Entity} actor - The AI-controlled entity.
    * @param {ILogger} logger - An instance of the logger.
    * @returns {Promise<AILocationSummaryDTO | null>} A promise that resolves to the location summary or null.

@@ -12,6 +12,7 @@
 
 /**
  * Parameters accepted by {@link HasComponentHandler#execute}.
+ *
  * @typedef {object} HasComponentOperationParams
  * @property {'actor'|'target'|string|EntityRefObject} entity_ref - Required. Reference to the entity to check.
  * @property {string} component_type - Required. The namespaced type ID of the component to check for.
@@ -30,6 +31,7 @@ class HasComponentHandler {
 
   /**
    * Creates an instance of HasComponentHandler.
+   *
    * @param {object} dependencies - Dependencies object.
    * @param {IEntityManager} dependencies.entityManager - The entity management service.
    * @param {ILogger} dependencies.logger - The logging service instance.
@@ -51,6 +53,7 @@ class HasComponentHandler {
   /**
    * Resolves an entity reference to an entity ID.
    * (Copied from ModifyComponentHandler as the logic is identical)
+   *
    * @private
    * @param {HasComponentOperationParams['entity_ref']} ref - The entity reference from parameters.
    * @param {ExecutionContext} ctx - The execution context.
@@ -78,6 +81,7 @@ class HasComponentHandler {
 
   /**
    * Executes the HAS_COMPONENT operation.
+   *
    * @param {HasComponentOperationParams | null | undefined} params - The parameters for the operation.
    * @param {ExecutionContext} executionContext - The execution context.
    * @returns {void}

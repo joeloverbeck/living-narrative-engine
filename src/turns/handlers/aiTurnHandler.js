@@ -70,6 +70,7 @@ export class AITurnHandler extends BaseTurnHandler {
   /**
    * Retrieves the port for signaling the end of a turn.
    * This is used by states (e.g., TurnEndingState) to finalize the turn process.
+   *
    * @override
    * @returns {ITurnEndPort}
    */
@@ -80,6 +81,7 @@ export class AITurnHandler extends BaseTurnHandler {
   /**
    * Starts the turn for the given AI actor.
    * It creates a strategy and a turn context, then delegates control to the current state.
+   *
    * @param {Entity} actor - The AI-controlled entity whose turn it is.
    * @override
    */
@@ -129,7 +131,7 @@ export class AITurnHandler extends BaseTurnHandler {
 
   /**
    * @override
-   * @param {string} [logContext='N/A']
+   * @param {string} [logContext]
    */
   _resetTurnStateAndResources(logContext = 'N/A') {
     super._resetTurnStateAndResources(logContext);

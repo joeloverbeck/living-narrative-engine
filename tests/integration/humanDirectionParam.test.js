@@ -32,7 +32,10 @@ import { TurnIdleState } from '../../src/turns/states/turnIdleState.js';
 
 // ─── Minimal test handler ---------------------------------------------------
 class TestTurnHandler extends BaseTurnHandler {
-  /** @param {ILogger} logger @param {TurnStateFactory} factory */
+  /**
+   * @param {ILogger} logger @param {TurnStateFactory} factory
+   * @param factory
+   */
   constructor(logger, factory) {
     super({ logger, turnStateFactory: factory });
     this._setInitialState(new TurnIdleState(this));
@@ -40,6 +43,7 @@ class TestTurnHandler extends BaseTurnHandler {
 
   /**
    * Injects the context and kicks off the turn just like real handlers.
+   *
    * @param {ITurnContext} ctx
    */
   async startTestTurn(ctx) {

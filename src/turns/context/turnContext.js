@@ -209,6 +209,9 @@ export class TurnContext extends ITurnContext {
 
   /**
    * Ensures a service exists in the bag, otherwise throws with a helpful log.
+   *
+   * @param key
+   * @param label
    * @private
    */
   #require(key, label) {
@@ -229,7 +232,10 @@ export class TurnContext extends ITurnContext {
 
   /* ───────────────────────────── CLONE HELPER ─────────────────────────── */
 
-  /** @deprecated Prefer constructing a fresh TurnContext per actor. */
+  /**
+   * @param newActor
+   * @deprecated Prefer constructing a fresh TurnContext per actor.
+   */
   cloneForActor(newActor) {
     this.#logger.warn(
       'TurnContext.cloneForActor is deprecated – create a fresh context per actor.'

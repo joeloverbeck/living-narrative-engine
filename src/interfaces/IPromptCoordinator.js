@@ -9,6 +9,7 @@
 export class IPromptCoordinator {
   /**
    * Prompts the player for an action.
+   *
    * @param {Entity} actor - The actor being prompted.
    * @param {object} [options]
    * @param {AbortSignal} [options.cancellationSignal] - Signal to cancel the prompt.

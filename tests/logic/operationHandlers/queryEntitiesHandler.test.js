@@ -16,6 +16,7 @@ import QueryEntitiesHandler from '../../../src/logic/operationHandlers/queryEnti
 // 1. Test Harness Setup
 /**
  * Creates a mock IEntityManager.
+ *
  * @returns {import('../../../src/interfaces/IEntityManager.js').IEntityManager}
  */
 const makeMockEntityManager = () => ({
@@ -33,6 +34,7 @@ const makeMockEntityManager = () => ({
 
 /**
  * Creates a mock ILogger.
+ *
  * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
  */
 const makeMockLogger = () => ({
@@ -44,6 +46,7 @@ const makeMockLogger = () => ({
 
 /**
  * Creates a mock JsonLogicEvaluationService.
+ *
  * @returns {import('../../../src/logic/jsonLogicEvaluationService.js').default}
  */
 const makeMockJsonLogicService = () => ({

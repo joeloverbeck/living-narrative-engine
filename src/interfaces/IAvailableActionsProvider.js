@@ -16,6 +16,7 @@
 export class IAvailableActionsProvider {
   /**
    * Asynchronously discovers and indexes all valid actions for an actor in a given context.
+   *
    * @param {Entity} actor - The entity performing the action.
    * @param {ITurnContext} turnContext - The context of the current turn.
    * @param {ILogger} logger - An instance of the logger.

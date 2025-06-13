@@ -45,6 +45,7 @@ class ActionContextBuilder {
 
   /**
    * Constructs an instance of ActionContextBuilder.
+   *
    * @param {ActionContextBuilderDependencies} deps - The dependencies required by the builder.
    */
   constructor({ worldContext, entityManager, gameDataRepository, logger }) {
@@ -67,6 +68,7 @@ class ActionContextBuilder {
   /**
    * Builds an ActionContext for a given actor.
    * This involves validating the actor and finding its current location in the world.
+   *
    * @async
    * @param {Entity} actor - The entity for whom to build the context.
    * @returns {Promise<ActionContext>} A promise that resolves to the constructed ActionContext.

@@ -1,7 +1,7 @@
 // src/types/perceptionLogTypes.js
 
 /**
- * @typedef {Object} RawPerceptionLogEntry
+ * @typedef {object} RawPerceptionLogEntry
  * @description Represents a single entry as it might come from the game state or entity component.
  * @property {string} [descriptionText] - The main textual content of the log entry.
  * @property {string} [perceptionType] - The category of the perceived event.
@@ -13,7 +13,7 @@
  */
 
 /**
- * @typedef {Object} FormattedPerceptionEntry
+ * @typedef {object} FormattedPerceptionEntry
  * @description Represents a perception log entry after formatting for prompt data.
  * @property {string} content - The main textual content of the log entry.
  * @property {string} [timestamp] - When the event occurred.
