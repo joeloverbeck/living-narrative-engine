@@ -13,7 +13,7 @@ import { OpenRouterToolCallingStrategy } from './strategies/openRouterToolCallin
 // DefaultPromptEngineeringStrategy import removed
 
 /**
- * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfigType
+ * @typedef {import('./services/llmConfigLoader.js').LLMModelConfig} LLMModelConfigType
  */
 
 const strategyMappings = {

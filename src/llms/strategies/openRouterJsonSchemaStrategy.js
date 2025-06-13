@@ -5,7 +5,7 @@ import { LLMStrategyError } from '../errors/LLMStrategyError.js';
 import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../constants/llmConstants.js'; // Still potentially used for tool_calls fallback logic's expected name
 
 /**
- * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('../interfaces/IHttpClient.js').IHttpClient} IHttpClient
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  */

@@ -12,7 +12,7 @@ import { LLMStrategyError } from '../../errors/LLMStrategyError.js';
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('../../interfaces/ILLMStrategy.js').LLMStrategyExecuteParams} LLMStrategyExecuteParams
- * @typedef {import('../../../environmentContext.js').EnvironmentContext} EnvironmentContext
+ * @typedef {import('../../environmentContext.js').EnvironmentContext} EnvironmentContext
  */
 
 /**

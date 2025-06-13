@@ -14,11 +14,11 @@ import { performSemanticValidations } from '../../validation/llmConfigSemanticVa
  */
 
 /**
- * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  */
 
 /**
- * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
+ * @typedef {import('../../interfaces/coreServices.js').IConfiguration} IConfiguration
  */
 
 // --- NEW JSDoc Type Definitions based on schema ---
