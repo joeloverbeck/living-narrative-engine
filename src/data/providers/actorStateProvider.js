@@ -22,7 +22,7 @@ import {
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../dtos/AIGameStateDTO.js').AIActorStateDTO} AIActorStateDTO */
+/** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AIActorStateDTO} AIActorStateDTO */
 
 export class ActorStateProvider extends IActorStateProvider {
   /**

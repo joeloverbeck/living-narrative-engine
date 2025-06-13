@@ -18,22 +18,15 @@ import {
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
- * @typedef {import('../interfaces/IDataRegistry').IDataRegistry} IDataRegistry
+ * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  */
 
 /**
  * @typedef {object} CoreTurnStartedPayload
  * @property {import('../interfaces/CommonTypes').NamespacedId} entityId - ID of the entity starting the turn.
  * @property {'player'|'ai'} entityType - Whether the actor is player-controlled or AI.
- */
-
-/**
- * @typedef {import('../interfaces/IEvent.js').IEvent<CoreTurnStartedPayload>} CoreTurnStartedEvent
- */
-
 /**
  * Represents a character to be displayed.
- *
  * @typedef {import('../entities/entityDisplayDataProvider.js').CharacterDisplayInfo} CharacterDisplayData
  */
 

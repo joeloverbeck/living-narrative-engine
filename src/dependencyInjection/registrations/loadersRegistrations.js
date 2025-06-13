@@ -13,7 +13,6 @@
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/coreServices.js').IDataFetcher} IDataFetcher */
 /** @typedef {import('../../loaders/schemaLoader.js').default} SchemaLoader */
-/** @typedef {import('../../services/manifestLoader.js').default} ManifestLoader */
 /** @typedef {import('../../loaders/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../loaders/componentLoader.js').default} ComponentDefinitionLoader */
 /** @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED

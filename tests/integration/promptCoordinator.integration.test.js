@@ -117,7 +117,7 @@ describe('PromptCoordinator – Indexing integration', () => {
     const eventHandler = mockPlayerTurnEvents.subscribe.mock.lastCall[1];
 
     // 👉 attach the handler FIRST, then emit
-    const expectation = await expect(promptPromise).resolves.toEqual({
+    const expectation = expect(promptPromise).resolves.toEqual({
       action: {
         id: chosenComposite.actionId,
         name: chosenComposite.description,

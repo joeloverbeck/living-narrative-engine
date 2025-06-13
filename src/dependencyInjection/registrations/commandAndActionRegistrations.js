@@ -11,7 +11,7 @@
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
-/** @typedef {import('../../actions/actionValidationService.js').ActionValidationService} ActionValidationService_Interface */
+/** @typedef {import('../../actions/validation/actionValidationService.js').ActionValidationService} ActionValidationService_Interface */
 /** @typedef {import('../../commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */

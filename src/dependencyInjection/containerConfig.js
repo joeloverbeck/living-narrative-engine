@@ -32,7 +32,7 @@ import { registerRuntime } from './registrations/runtimeRegistrations.js';
 import { registerOrchestration } from './registrations/orchestrationRegistrations.js';
 
 /** @typedef {import('./appContainer.js').default} AppContainer */
-/** @typedef {import('../../bootstrapper/UIBootstrapper.js').EssentialUIElements} EssentialUIElements */
+/** @typedef {import('../bootstrapper/UIBootstrapper.js').EssentialUIElements} EssentialUIElements */
 
 /**
  * @callback ConfigureContainerFunction
