@@ -187,4 +187,15 @@ describe('getObjectPropertyByPath', () => {
     expect(getObjectPropertyByPath(testObj, 'a.length')).toBeUndefined(); // a is 1
     expect(getObjectPropertyByPath(testObj, 'b.c.length')).toBeUndefined(); // b.c is 'hello'
   });
+
+  it('should not access properties from the prototype chain', () => {
+    const obj = {};
+    // 'toString' exists on Object.prototype; should return undefined
+    expect(getObjectPropertyByPath(obj, 'toString')).toBeUndefined();
+    // Nested case: first part exists, second part is prototype property
+    const nested = { inner: {} };
+    expect(
+      getObjectPropertyByPath(nested, 'inner.hasOwnProperty')
+    ).toBeUndefined();
+  });
 });
