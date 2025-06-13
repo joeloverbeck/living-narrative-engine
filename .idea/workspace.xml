@@ -5,31 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to unfuck the turn system.">
-      <change beforePath="$PROJECT_DIR$/.dependency-cruiser.js" beforeDir="false" afterPath="$PROJECT_DIR$/.dependency-cruiser.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/interfaces/ICommandOutcomeInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/interfaces/ICommandOutcomeInterpreter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/interfaces/IPerceptionLogFormatter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IPerceptionLogFormatter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/interfaces/IPromptElementAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IPromptElementAssembler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/llms/LLMStrategyFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/llms/LLMStrategyFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/adapters/configurableLLMAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/configurableLLMAdapter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/factories/concreteTurnStateFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/concreteTurnStateFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnStateFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnStateFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingPlayerInputState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingPlayerInputState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/turnEndingState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/turnEndingState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/turnIdleState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/turnIdleState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/resolvePath.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/resolvePath.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/aiDecisionMetadata.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/aiDecisionMetadata.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/humanDirectionParam.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/humanDirectionParam.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/llms/strategies/openRouterJsonSchemaStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/llms/strategies/openRouterJsonSchemaStrategy.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/adapters/configurableLLMAdapter.getAIDecision.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/adapters/configurableLLMAdapter.getAIDecision.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/awaitingPlayerInputState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/awaitingPlayerInputState.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnIdleState.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/states/turnIdleState.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,6 +51,7 @@
     "Jest.Tests in tests\\.executor": "Run",
     "Jest.promptCoordinator.integration.test.js.executor": "Run",
     "Jest.promptSession.test.js.executor": "Run",
+    "Jest.turnIdleState.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -96,7 +73,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.promptSession.test.js">
+  <component name="RunManager" selected="Jest.turnIdleState.test.js">
     <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -124,8 +101,18 @@
       <test-file value="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="turnIdleState.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/states/turnIdleState.test.js" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.turnIdleState.test.js" />
         <item itemvalue="Jest.promptSession.test.js" />
         <item itemvalue="Jest.Tests in tests\" />
         <item itemvalue="Jest.promptCoordinator.integration.test.js" />
@@ -146,7 +133,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749824452963</updated>
-      <workItem from="1749824454676" duration="12325000" />
+      <workItem from="1749824454676" duration="12652000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -172,7 +159,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749831421073</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Trying to unfuck the turn system.">
+      <option name="closed" value="true" />
+      <created>1749836938518</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1749836938518</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
