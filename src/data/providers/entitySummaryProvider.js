@@ -13,8 +13,8 @@ import {
   DEFAULT_COMPONENT_VALUE_NA,
 } from '../../constants/textDefaults.js';
 
-/** @typedef {import('./entity.js').default} Entity */
-/** @typedef {import('./IEntitySummaryProvider.js').EntitySummaryDTO} EntitySummaryDTO */
+/** @typedef {import('../../entities/entity.js').default} Entity */
+/** @typedef {import('../../interfaces/IEntitySummaryProvider.js').EntitySummaryDTO} EntitySummaryDTO */
 
 export class EntitySummaryProvider extends IEntitySummaryProvider {
   _getComponentText(

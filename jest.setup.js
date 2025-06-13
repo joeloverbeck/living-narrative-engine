@@ -10,6 +10,9 @@ const { TextEncoder, TextDecoder } = require('util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Increase default Jest test timeout to accommodate slower environments
+jest.setTimeout(20000);
+
 // Import the fetch polyfill. This will automatically add fetch, Headers, Request, Response
 // to the global scope (window in jsdom) if they don't exist.
 require('whatwg-fetch');

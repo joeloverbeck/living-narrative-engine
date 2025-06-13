@@ -14,7 +14,6 @@ import { PLAYER_COMPONENT_ID } from '../constants/componentIds.js'; // Added imp
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  * @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
- * @typedef {import('../interfaces/IEvent.js').IEvent} IEvent
  * @typedef {import('../entities/entity.js').default} Entity
  */
 

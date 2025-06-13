@@ -7,7 +7,6 @@
 /** @typedef {import('../interfaces/ILogger').ILogger} ILogger */
 /** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../interfaces/IEventSubscription').IEventSubscription} IEventSubscription */
 
 /**
  * @typedef {object} ManagedDomListener
@@ -109,7 +108,9 @@ export class RendererBase {
    * Adds a VED subscription's unsubscribe function to the managed list for automatic cleanup.
    *
    * @protected
-   * @param {(() => void) | IEventSubscription | undefined} unsubscribeFn - The function returned by `validatedEventDispatcher.subscribe()` or an object with an unsubscribe method.
+   * @param {(() => void) | { unsubscribe: Function } | undefined} unsubscribeFn -
+   *  The function returned by `validatedEventDispatcher.subscribe()` or an object with an
+   *  `unsubscribe` method.
    */
   _addSubscription(unsubscribeFn) {
     if (unsubscribeFn && typeof unsubscribeFn === 'function') {

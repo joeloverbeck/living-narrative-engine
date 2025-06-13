@@ -5,8 +5,8 @@
  */
 
 // --- JSDoc Imports for Type Hinting ---
-/** @typedef {import('../../appContainer.js').default} AppContainer */
-/** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../appContainer.js').default} AppContainer */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 // --- Service Imports ---

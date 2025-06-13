@@ -41,7 +41,7 @@ import { EngineUIManager } from '../../domUI'; // Corrected import path if Engin
 /** @typedef {import('../../interfaces/IInputHandler.js').IInputHandler} IInputHandler */
 /** @typedef {import('../../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
 

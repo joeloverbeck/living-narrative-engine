@@ -14,7 +14,7 @@ import {
 /**
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
  * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
- * @typedef {import('../../domUI/domUiFacade.js').DomUiFacade} DomUiFacade
+ * @typedef {import('./domUiFacade.js').DomUiFacade} DomUiFacade
  */
 
 /**
@@ -43,15 +43,6 @@ import {
 /**
  * @typedef {object} EngineStoppedUIPayload
  * @property {string} inputDisabledMessage - The message to display when disabling input.
- */
-
-/**
- * @typedef {import('../interfaces/IEvent.js').IEvent<EngineInitializingUIPayload>} EngineInitializingUIEvent
- * @typedef {import('../interfaces/IEvent.js').IEvent<EngineReadyUIPayload>} EngineReadyUIEvent
- * @typedef {import('../interfaces/IEvent.js').IEvent<EngineOperationInProgressUIPayload>} EngineOperationInProgressUIEvent
- * @typedef {import('../interfaces/IEvent.js').IEvent<EngineOperationFailedUIPayload>} EngineOperationFailedUIEvent
- * @typedef {import('../interfaces/IEvent.js').IEvent<EngineStoppedUIPayload>} EngineStoppedUIEvent
- * @typedef {import('../interfaces/IEvent.js').IEvent<{}>} EmptyPayloadEvent
  */
 
 /**
