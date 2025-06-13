@@ -3,9 +3,9 @@ import { Workspace_retry } from '../../src/utils/apiUtils.js';
 
 jest.useFakeTimers();
 
-const mockResponse = (status, body, ok = false, headersObj = {}) => {
+const mockResponse = (status, body, ok = false, headersObj = {}, withClone = false) => {
   const headers = { get: (h) => headersObj[h] };
-  return {
+  const resp = {
     ok,
     status,
     statusText: `HTTP ${status}`,
@@ -13,6 +13,11 @@ const mockResponse = (status, body, ok = false, headersObj = {}) => {
     json: jest.fn(),
     text: jest.fn(),
   };
+  if (withClone) {
+    const textValue = typeof body === 'string' ? body : JSON.stringify(body);
+    resp.clone = jest.fn(() => ({ text: jest.fn().mockResolvedValue(textValue) }));
+  }
+  return resp;
 };
 
 beforeEach(() => {
@@ -42,7 +47,7 @@ describe('Workspace_retry', () => {
   });
 
   test('falls back to text body for HTTP errors', async () => {
-    const resp = mockResponse(400, 'bad text', false, {}, false);
+    const resp = mockResponse(400, 'bad text', false, {}, true);
     resp.json.mockRejectedValue(new Error('no json'));
     resp.text.mockResolvedValue('bad text');
     fetch.mockResolvedValueOnce(resp);
@@ -70,5 +75,25 @@ describe('Workspace_retry', () => {
     await promise;
     expect(timeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2000);
     timeoutSpy.mockRestore();
+  });
+
+  test('reads error body using response.clone when JSON parse fails', async () => {
+    const cloneText = jest.fn().mockResolvedValue('detailed error');
+    const resp = {
+      ok: false,
+      status: 500,
+      statusText: 'HTTP 500',
+      headers: { get: () => undefined },
+      json: jest.fn().mockRejectedValue(new Error('bad json')),
+      text: jest.fn().mockRejectedValue(new Error('body used')),
+      clone: jest.fn(() => ({ text: cloneText })),
+    };
+    fetch.mockResolvedValueOnce(resp);
+
+    const err = await Workspace_retry(url, opts, 1, 1, 1).catch((e) => e);
+
+    expect(resp.clone).toHaveBeenCalled();
+    expect(cloneText).toHaveBeenCalled();
+    expect(err.body).toBe('detailed error');
   });
 });
