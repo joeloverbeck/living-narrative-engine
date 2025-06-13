@@ -5,14 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Unifying action decision.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/events/ai_action_decided.event.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/events/action_decided.event.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ai/notesPersistenceListener.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ai/notesPersistenceListener.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ai/thoughtPersistenceListener.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ai/thoughtPersistenceListener.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constants/eventIds.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/eventIds.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/initializers/services/initializationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/initializers/services/initializationService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingActorDecisionState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingActorDecisionState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/actionPayloadEquality.integration.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/humanDirectionParam.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/indexedActionCompositesForAI.integration.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.constructor.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.createFallbackAction.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.decideAction.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.params.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,7 +162,7 @@
       <option name="presentableId" value="Default" />
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
-      <workItem from="1749839406228" duration="10125000" />
+      <workItem from="1749839406228" duration="10616000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -257,7 +260,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749848463992</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Unifying action decision.">
+      <option name="closed" value="true" />
+      <created>1749849715827</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1749849715827</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
