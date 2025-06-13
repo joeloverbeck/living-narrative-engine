@@ -23,6 +23,7 @@ import {
   ACTOR_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
+import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider';
 
 /**
  * @param {import('../appContainer.js').default} container
@@ -113,6 +114,16 @@ export function registerTurnLifecycle(container) {
   );
   logger.debug(
     'Turn Lifecycle Registration: Registered Turn services and factories.'
+  );
+
+  r.transientFactory(
+    tokens.IHumanDecisionProvider,
+    (c) =>
+      new HumanDecisionProvider({
+        promptCoordinator: c.resolve(tokens.IPromptCoordinator),
+        actionIndexingService: c.resolve(tokens.ActionIndexingService),
+        logger: c.resolve(tokens.ILogger),
+      })
   );
 
   // ─────────────────── Player handler ────────────────────

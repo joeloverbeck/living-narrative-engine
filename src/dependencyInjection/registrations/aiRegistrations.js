@@ -105,6 +105,7 @@ import { TurnActionFactory } from '../../turns/factories/turnActionFactory';
 import { LLMChooser } from '../../turns/adapters/llmChooser';
 import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter';
 import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
+import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -369,6 +370,15 @@ export function registerAI(container) {
         responseProcessor: c.resolve(tokens.ILLMResponseProcessor),
         logger: c.resolve(tokens.ILogger),
       })
+  );
+
+  r.singletonFactory(
+    tokens.ILLMDecisionProvider,
+    (c) =>
+      new LLMDecisionProvider({ llmChooser: c.resolve(tokens.ILLMChooser) })
+  );
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`
   );
 
   // 3) Turn-action factory

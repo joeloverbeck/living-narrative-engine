@@ -6,6 +6,7 @@
 import { PromptError } from '../../errors/promptError.js';
 import { PromptSession } from './promptSession.js';
 import { validateDependency } from '../../utils/validationUtils.js';
+import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -32,7 +33,7 @@ import { validateDependency } from '../../utils/validationUtils.js';
  * @description Orchestrates the process of prompting an actor for an action.
  * It now indexes every discovered action and presents choices by **integer index**.
  */
-class PromptCoordinator {
+class PromptCoordinator extends IPromptCoordinator {
   /** @type {ILogger} */ #logger;
   /** @type {IActionDiscoveryService} */ #actionDiscoveryService;
   /** @type {IPromptOutputPort} */ #promptOutputPort;
@@ -54,6 +55,8 @@ class PromptCoordinator {
     actionIndexingService,
     playerTurnEvents,
   }) {
+    super();
+
     validateDependency(logger, 'logger', console, {
       requiredMethods: ['info', 'error', 'debug', 'warn'],
     });
