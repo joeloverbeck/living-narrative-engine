@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 /**
- * @typedef {import('../dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO // Assuming perceptionLogArray might be directly from DTO or processed
+ * @typedef {import('../turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO // Assuming perceptionLogArray might be directly from DTO or processed
  */
 
 /**

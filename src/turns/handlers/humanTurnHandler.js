@@ -17,7 +17,7 @@ import { HumanPlayerStrategy } from '../strategies/humanPlayerStrategy.js'; // A
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy */
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
-/** @typedef {import('../interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
+/** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
 
 class HumanTurnHandler extends BaseTurnHandler {
   /** @type {ICommandProcessor} */

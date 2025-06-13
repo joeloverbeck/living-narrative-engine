@@ -3,7 +3,13 @@ import { Workspace_retry } from '../../src/utils/apiUtils.js';
 
 jest.useFakeTimers();
 
-const mockResponse = (status, body, ok = false, headersObj = {}, withClone = false) => {
+const mockResponse = (
+  status,
+  body,
+  ok = false,
+  headersObj = {},
+  withClone = false
+) => {
   const headers = { get: (h) => headersObj[h] };
   const resp = {
     ok,
@@ -15,7 +21,9 @@ const mockResponse = (status, body, ok = false, headersObj = {}, withClone = fal
   };
   if (withClone) {
     const textValue = typeof body === 'string' ? body : JSON.stringify(body);
-    resp.clone = jest.fn(() => ({ text: jest.fn().mockResolvedValue(textValue) }));
+    resp.clone = jest.fn(() => ({
+      text: jest.fn().mockResolvedValue(textValue),
+    }));
   }
   return resp;
 };
