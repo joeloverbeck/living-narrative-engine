@@ -26,11 +26,11 @@ import { IEntityManager } from '../interfaces/IEntityManager.js';
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
 /* -------------------------------------------------------------------------- */
 
-/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}         IDataRegistry */
-/** @typedef {import('../interfaces/coreServices.js').ISchemaValidator}      ISchemaValidator */
-/** @typedef {import('../interfaces/coreServices.js').ILogger}               ILogger */
-/** @typedef {import('../interfaces/coreServices.js').ISpatialIndexManager}  ISpatialIndexManager */
-/** @typedef {import('../interfaces/coreServices.js').ValidationResult}      ValidationResult */
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}        IDataRegistry */
+/** @typedef {import('../interfaces/coreServices.js').ISchemaValidator}     ISchemaValidator */
+/** @typedef {import('../interfaces/coreServices.js').ILogger}              ILogger */
+/** @typedef {import('../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager */
+/** @typedef {import('../interfaces/coreServices.js').ValidationResult}     ValidationResult */
 
 /* -------------------------------------------------------------------------- */
 /* Internal Utilities                                                         */

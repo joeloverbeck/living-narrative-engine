@@ -262,6 +262,12 @@ export const tokens = freeze({
   HasComponentHandler: 'HasComponentHandler',
   ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
 
+  // --- Actions ---
+  TurnActionChoicePipeline:	'TurnActionChoicePipeline',
+  ITurnDecisionProvider:	'ITurnDecisionProvider',
+  ILLMDecisionProvider:	'ILLMDecisionProvider',
+  IHumanDecisionProvider: 'IHumanDecisionProvider',
+
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',
   IAIPlayerStrategyFactory: 'IAIPlayerStrategyFactory',

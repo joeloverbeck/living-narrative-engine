@@ -132,25 +132,7 @@
  */
 
 // --- Spatial Indexing ---
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-
-/**
- * Interface for managing a spatial index of entities based on their location.
- *
- * @typedef {object} ISpatialIndexManager
- * @property {(entityId: string, locationId: string | null | undefined) => void} addEntity
- * Adds or updates an entity's presence in the index for a given location.
- * @property {(entityId: string, oldLocationId: string | null | undefined) => void} removeEntity
- * Removes an entity from the index.
- * @property {(entityId: string, oldLocationId: string | null | undefined, newLocationId: string | null | undefined) => void} updateEntityLocation
- * Updates an entity's location from an old location to a new one.
- * @property {(locationId: string) => Set<string>} getEntitiesInLocation
- * Retrieves a set of all entity IDs currently registered in the specified location.
- * @property {(entityManager: EntityManager) => void} buildIndex
- * Builds or rebuilds the entire spatial index based on the current state of entities.
- * @property {() => void} clearIndex
- * Clears all entries from the spatial index.
- */
+/** @typedef {import('./ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager */
 
 // --- Boilerplate to make this a module ---
 export {};

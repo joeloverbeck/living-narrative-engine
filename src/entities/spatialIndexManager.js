@@ -1,13 +1,15 @@
 // src/entities/spatialIndexManager.js
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
+import { ISpatialIndexManager } from '../interfaces/ISpatialIndexManager';
 
 /**
  * Manages a spatial index mapping location IDs to the entities present
  * based on their position data. Handles entities whose locationId might be null.
  */
-class SpatialIndexManager {
+class SpatialIndexManager extends ISpatialIndexManager {
   constructor() {
+    super();
     /**
      * The core spatial index.
      * Maps locationId (string) to a Set of entityIds (string) present in that location.

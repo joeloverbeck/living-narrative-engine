@@ -1,0 +1,44 @@
+// src/turns/pipeline/turnActionChoicePipeline.js
+
+/**
+ * @module turns/pipeline/turnActionChoicePipeline
+ */
+
+import { IActionDiscoveryService } from '../../interfaces/IActionDiscoveryService.js';
+import { IActionIndexer } from '../ports/IActionIndexer.js';
+import { ITurnContext } from '../interfaces/ITurnContext.js';
+
+/**
+ * Centralises action discovery and indexing for both AI and human turn flows.
+ *
+ * @class TurnActionChoicePipeline
+ */
+export class TurnActionChoicePipeline {
+  /**
+   * @param {object} deps
+   * @param {IActionDiscoveryService} deps.discoverySvc - Service to discover valid actions.
+   * @param {IActionIndexer}        deps.indexer      - Service to index discovered actions.
+   * @param {{ debug(message: string): void }} deps.logger - Logger instance.
+   */
+  constructor({ discoverySvc, indexer, logger }) {
+    this.discoverySvc = discoverySvc;
+    this.indexer = indexer;
+    this.logger = logger;
+  }
+
+  /**
+   * @param {Entity}    actor   - The entity whose actions we’re building choices for.
+   * @param {ITurnContext} context - The current turn context.
+   * @returns {Promise<ActionComposite[]>} Deduped, capped, 1-based indexed action list.
+   */
+  async buildChoices(actor, context) {
+    this.logger.debug(`[ChoicePipeline] Discovering actions for ${actor.id}`);
+    const discovered = await this.discoverySvc.getValidActions(actor, context);
+
+    const indexed = this.indexer.index(discovered, actor.id);
+    this.logger.debug(
+      `[ChoicePipeline] Actor ${actor.id}: ${indexed.length} choices ready`
+    );
+    return indexed;
+  }
+}
