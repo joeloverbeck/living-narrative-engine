@@ -261,6 +261,7 @@ export const tokens = freeze({
   QueryEntitiesHandler: 'QueryEntitiesHandler',
   HasComponentHandler: 'HasComponentHandler',
   ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
+  MathHandler: 'MathHandler',
 
   // --- Actions ---
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',

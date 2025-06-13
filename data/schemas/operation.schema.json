@@ -31,7 +31,8 @@
             "ADD_PERCEPTION_LOG_ENTRY",
             "HAS_COMPONENT",
             "QUERY_ENTITIES",
-            "MODIFY_ARRAY_FIELD"
+            "MODIFY_ARRAY_FIELD",
+            "MATH"
           ]
         },
         "comment": {
@@ -340,6 +341,12 @@
             "properties": {
               "parameters": { "$ref": "#/$defs/ModifyArrayFieldParameters" }
             }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "MATH" } } },
+          "then": {
+            "properties": { "parameters": { "$ref": "#/$defs/MathParameters" } }
           }
         }
       ]
@@ -741,6 +748,46 @@
           "then": { "required": ["value"] }
         }
       ]
+    },
+    "MathParameters": {
+      "type": "object",
+      "description": "Parameters for the MATH operation. Performs a calculation and stores the result.",
+      "properties": {
+        "result_variable": { "type": "string", "minLength": 1 },
+        "expression": { "$ref": "#/$defs/MathExpression" }
+      },
+      "required": ["result_variable", "expression"]
+    },
+    "MathOperand": {
+      "description": "An operand for a math expression. Can be a number, a variable reference, or a nested expression.",
+      "oneOf": [
+        { "type": "number" },
+        {
+          "type": "object",
+          "properties": { "var": { "type": "string" } },
+          "required": ["var"],
+          "additionalProperties": false
+        },
+        { "$ref": "#/$defs/MathExpression" }
+      ]
+    },
+    "MathExpression": {
+      "type": "object",
+      "description": "A recursive mathematical expression.",
+      "properties": {
+        "operator": {
+          "type": "string",
+          "enum": ["add", "subtract", "multiply", "divide", "modulo"]
+        },
+        "operands": {
+          "type": "array",
+          "description": "An array of two operands for the operation.",
+          "items": { "$ref": "#/$defs/MathOperand" },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": ["operator", "operands"]
     }
   }
 }

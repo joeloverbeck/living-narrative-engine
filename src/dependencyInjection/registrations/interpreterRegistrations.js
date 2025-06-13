@@ -32,6 +32,7 @@ import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerce
 import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
 import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler';
 import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFieldHandler';
+import MathHandler from '../../logic/operationHandlers/mathHandler.js';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -194,6 +195,17 @@ export function registerInterpreters(container) {
           logger: c.resolve(tokens.ILogger),
         }),
     ],
+    [
+      tokens.MathHandler,
+      MathHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          jsonLogicEvaluationService: c.resolve(
+            tokens.JsonLogicEvaluationService
+          ),
+        }),
+    ],
   ];
 
   for (const [token, ctor, factory] of handlerFactories) {
@@ -249,6 +261,7 @@ export function registerInterpreters(container) {
       'MODIFY_ARRAY_FIELD',
       bind(tokens.ModifyArrayFieldHandler)
     );
+    registry.register('MATH', bind(tokens.MathHandler));
 
     return registry;
   });
