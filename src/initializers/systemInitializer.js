@@ -7,7 +7,6 @@
  */
 
 // Type imports for JSDoc
-/** @typedef {import('../interfaces/container.js').IServiceResolver} IServiceResolver */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
 
@@ -17,7 +16,6 @@
  * initialization tag and orchestrates their startup process.
  */
 class SystemInitializer {
-  /** @type {IServiceResolver} */
   #resolver;
   /** @type {ILogger} */
   #logger;
@@ -30,7 +28,6 @@ class SystemInitializer {
    * Creates an instance of SystemInitializer.
    *
    * @param {object} dependencies
-   * @param {IServiceResolver} dependencies.resolver - The service resolver.
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
    * @param {string} dependencies.initializationTag - The tag used to identify systems for initialization.

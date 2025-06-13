@@ -6,6 +6,8 @@
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { Throttler } from '../alerting/throttler.js';
 import { generateKey } from '../alerting/throttleUtils.js';
+// Import the centralized utility function.
+import { getUserFriendlyMessage } from '../alerting/statusCodeMapper.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -63,7 +65,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     domElementFactory,
     alertRouter,
   }) {
-    // **FIX**: Pass the safe dispatcher to the parent under the key it expects.
     super({
       logger,
       documentContext,
@@ -94,7 +95,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     this.#domElementFactory = domElementFactory;
 
     // --- Throttler Instantiation ---
-    // **FIX**: Use the explicitly requested safe dispatcher.
     this.#warningThrottler = new Throttler(
       this.#safeEventDispatcher,
       'warning'
@@ -121,7 +121,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
 
     // --- Event Subscriptions ---
-    // **FIX**: Use the safe dispatcher for subscriptions for consistency.
     this._addSubscription(
       this.#safeEventDispatcher.subscribe(
         'core:display_warning',
@@ -138,7 +137,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     this.logger.debug(`${this._logPrefix} Initialized.`);
   }
 
-  // ... rest of the class methods (createAndAppendBubble, handleWarning, etc.) are unchanged ...
   /**
    * Scrolls the chat panel to the bottom to ensure the latest message is visible.
    *
@@ -237,7 +235,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     const detailsId = `alert-details-${this.#alertIdCounter}`;
 
     const isError = type === 'error';
-    // MODIFIED: Use camelCase class names to match the new centralized CSS module.
     const bubbleClass = isError ? 'chat-errorBubble' : 'chat-warningBubble';
     const icon = isError ? '❌' : '⚠️';
     const title = isError ? 'Error' : 'Warning';
@@ -267,7 +264,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     });
     if (titleElement) contentWrapper.appendChild(titleElement);
 
-    // --- Message Truncation Logic ---
     const messageElement = this.#domElementFactory.p('chat-alert-message');
     if (messageElement) {
       messageElement.id = messageId;
@@ -301,7 +297,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       }
     }
 
-    // --- Developer Details Collapsible Section ---
     if (developerDetails) {
       const detailsContainer =
         this.#domElementFactory.div('chat-alert-details');
@@ -317,10 +312,10 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
         });
 
         const preElement = this.#domElementFactory.create('pre', {
-          cls: 'chat-alert-details-content', // Let CSS handle visibility via [hidden]
+          cls: 'chat-alert-details-content',
           id: detailsId,
         });
-        preElement.hidden = true; // Hidden by default
+        preElement.hidden = true;
 
         const codeElement = this.#domElementFactory.create('code', {
           text: developerDetails,
@@ -339,35 +334,9 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   }
 
   /**
-   * Creates a user-friendly message from raw details when none is provided.
-   *
-   * @private
-   * @param {any} details The raw details object from the event payload.
-   * @returns {string} A user-facing message.
-   */
-  #getUserFriendlyMessage(details) {
-    if (!details || typeof details !== 'object') {
-      return 'An unknown warning/error occurred.';
-    }
-
-    switch (details.statusCode) {
-      case 401:
-      case 403:
-        return 'Authentication failed. Please check your credentials or permissions.';
-      case 404:
-        return 'The requested resource could not be found.';
-      case 500:
-        return 'An unexpected server error occurred. Please try again later.';
-      case 503:
-        return 'Service temporarily unavailable. Please retry in a moment.';
-      default:
-        return details.message || 'An unexpected error occurred.';
-    }
-  }
-
-  /**
    * Extracts a developer-focused details string from a raw details object.
-   * Handles custom error formats, standard Error objects, and other data types.
+   * This is kept because it handles non-HTTP errors (e.g., standard Error objects)
+   * more robustly than the basic `devDetails` from the utility.
    *
    * @private
    * @param {any} details The raw details object from the event payload.
@@ -376,40 +345,40 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   #extractDeveloperDetails(details) {
     if (!details) return null;
 
-    // Case 1: Standard JavaScript Error object with a stack trace
     if (details instanceof Error && typeof details.stack === 'string') {
       return details.stack;
     }
 
-    // Case 2: Custom error object with statusCode
     if (typeof details === 'object' && typeof details.statusCode === 'number') {
       const parts = [];
       if (details.statusCode) parts.push(`Status Code: ${details.statusCode}`);
       if (details.url) parts.push(`URL: ${details.url}`);
-      if (details.raw) parts.push(`Details: ${details.raw}`);
-      // If there's a stack trace on the custom object, include it.
+      // The `raw` property can be an object or a string.
+      if (details.raw) {
+        const rawDetails =
+          typeof details.raw === 'object'
+            ? JSON.stringify(details.raw, null, 2)
+            : details.raw;
+        parts.push(`Details: ${rawDetails}`);
+      }
       if (details.stack) {
         parts.push(`\nStack Trace:\n${details.stack}`);
       }
       return parts.join('\n');
     }
 
-    // Case 3: A simple string or number was passed
     if (typeof details === 'string' || typeof details === 'number') {
       return String(details);
     }
 
-    // Case 4: A generic object, try to serialize it
     if (typeof details === 'object' && Object.keys(details).length > 0) {
       try {
-        // Attempt to pretty-print the object.
         return JSON.stringify(details, null, 2);
       } catch (e) {
         return 'Could not serialize details object.';
       }
     }
 
-    // Fallback if no details can be extracted
     return null;
   }
 
@@ -422,38 +391,41 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   #handleWarning(event) {
     const { message, details } = event.payload;
 
-    const canonicalMessage = message || this.#getUserFriendlyMessage(details);
+    // --- MODIFICATION START ---
+    // Use the utility to get a potential message, but don't use its devDetails.
+    const { displayMessage: messageFromDetails } = getUserFriendlyMessage(
+      details,
+      message
+    );
+
+    // Prioritize the specific message from the event payload if it exists.
+    const displayMessage = message || messageFromDetails;
+
+    // ALWAYS use the local, more detailed extractor for this component's rendering needs.
     const developerDetails = this.#extractDeveloperDetails(details);
+    // --- MODIFICATION END ---
 
     if (!this.#hasPanel) {
-      const consoleMessage = `[UI WARNING] ${canonicalMessage}${
+      const consoleMessage = `[UI WARNING] ${displayMessage}${
         developerDetails ? ` | Details: ${developerDetails}` : ''
       }`;
       this.logger.warn(consoleMessage);
       return;
     }
 
-    // --- Throttling Logic ---
-    // FIX: The key should be generated from the raw, canonical message.
-    // The content is rendered using `.textContent`, so it should not be
-    // HTML-escaped beforehand.
-    const key = generateKey(canonicalMessage, details);
+    const key = generateKey(displayMessage, details);
     const shouldRender = this.#warningThrottler.allow(key, {
-      message: canonicalMessage,
+      message: displayMessage,
       details: details,
     });
 
     if (!shouldRender) {
-      return; // Suppress the alert
+      return;
     }
-    // --- End Throttling Logic ---
 
-    // FIX: Pass the raw, unescaped messages to the bubble creator.
-    // The `.textContent` property used internally will handle displaying
-    // special characters correctly without interpreting them as HTML.
     this.#createAndAppendBubble({
       type: 'warning',
-      displayMessage: canonicalMessage,
+      displayMessage: displayMessage,
       developerDetails: developerDetails,
     });
   }
@@ -467,38 +439,41 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
   #handleError(event) {
     const { message, details } = event.payload;
 
-    const canonicalMessage = message || this.#getUserFriendlyMessage(details);
+    // --- MODIFICATION START ---
+    // Use the utility to get a potential message, but don't use its devDetails.
+    const { displayMessage: messageFromDetails } = getUserFriendlyMessage(
+      details,
+      message
+    );
+
+    // Prioritize the specific message from the event payload if it exists.
+    const displayMessage = message || messageFromDetails;
+
+    // ALWAYS use the local, more detailed extractor for this component's rendering needs.
     const developerDetails = this.#extractDeveloperDetails(details);
+    // --- MODIFICATION END ---
 
     if (!this.#hasPanel) {
-      const consoleMessage = `[UI ERROR] ${canonicalMessage}${
+      const consoleMessage = `[UI ERROR] ${displayMessage}${
         developerDetails ? ` | Details: ${developerDetails}` : ''
       }`;
       this.logger.error(consoleMessage);
       return;
     }
 
-    // --- Throttling Logic ---
-    // FIX: The key should be generated from the raw, canonical message.
-    // The content is rendered using `.textContent`, so it should not be
-    // HTML-escaped beforehand.
-    const key = generateKey(canonicalMessage, details);
+    const key = generateKey(displayMessage, details);
     const shouldRender = this.#errorThrottler.allow(key, {
-      message: canonicalMessage,
+      message: displayMessage,
       details: details,
     });
 
     if (!shouldRender) {
-      return; // Suppress the alert
+      return;
     }
-    // --- End Throttling Logic ---
 
-    // FIX: Pass the raw, unescaped messages to the bubble creator.
-    // The `.textContent` property used internally will handle displaying
-    // special characters correctly without interpreting them as HTML.
     this.#createAndAppendBubble({
       type: 'error',
-      displayMessage: canonicalMessage,
+      displayMessage: displayMessage,
       developerDetails: developerDetails,
     });
   }

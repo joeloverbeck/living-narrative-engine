@@ -20,10 +20,8 @@ const mockLogger = {
 /**
  * Creates a minimal action definition object for testing.
  *
- * @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain
  * @param {string} id - The action identifier.
  * @param {TargetDomain | undefined | null} targetDomain - The domain to test.
- * @returns {import('../types/actionDefinition.js').ActionDefinition} New action definition.
  */
 const createActionDef = (id, targetDomain) => ({
   id: id,

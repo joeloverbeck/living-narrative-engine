@@ -64,7 +64,7 @@ describe('main.js bootstrap extended coverage', () => {
     mockGlobal.mockResolvedValue();
     mockStartGame.mockResolvedValue();
 
-    await import('../../main.js');
+    await import('../../src/main.js');
     await new Promise((r) => setTimeout(r, 0));
 
     expect(mockEnsure).toHaveBeenCalledTimes(1);
@@ -107,7 +107,7 @@ describe('main.js bootstrap extended coverage', () => {
     mockResolveCore.mockResolvedValue({ logger });
     mockInitEngine.mockResolvedValue(null);
 
-    await import('../../main.js');
+    await import('../../src/main.js');
     await new Promise((r) => setTimeout(r, 0));
 
     expect(mockStartGame).not.toHaveBeenCalled();

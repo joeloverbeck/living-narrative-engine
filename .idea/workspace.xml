@@ -4,82 +4,39 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Uploading stuff from the office.">
+      <change beforePath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/actions/targeting/targetResolutionService.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/commandParser.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/commandParser.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/engineVersion.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/engineVersion.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/interfaces/ITargetResolutionService.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/adapters/eventBusPromptAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/eventBusPromptAdapter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/adapters/eventBusTurnEndAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/eventBusTurnEndAdapter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/constants/turnDirectives.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/constants/turnDirectives.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/factories/turnActionFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/turnActionFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/IActorTurnStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/IActorTurnStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/order/turnOrderService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/order/turnOrderService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/ports/ICommandInputPort.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/ports/ICommandInputPort.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/ports/IPromptOutputPort.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/ports/IPromptOutputPort.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingPlayerInputState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingPlayerInputState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/processingCommandState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/processingCommandState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/turnDirectiveStrategyResolver.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/turnDirectiveStrategyResolver.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/resolutionStatus.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/targetResolutionResult.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/messages.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/messages.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/nameMatcher.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/objectUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/objectUtils.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/targetingUtils.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/actions/targeting/targetResolutionService.domain-followers.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.basic.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.basic.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.direction.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.direction.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.originalInput.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.originalInput.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositionEdgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositionEdgeCases.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositional.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbMatching.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbMatching.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbOnlyDirectObject.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbOnlyDirectObject.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/config/containerConfig.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/containerConfig.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.constructor.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-direction.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-environment.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-equipment.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-inventory.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-none.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-self.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.matchingLogic.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/turnHandlerResolver.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/turnHandlerResolver.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/prompting/promptCoordinator.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/prompting/promptCoordinator.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/processingCommandState.coverage.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/processingCommandState.coverage.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/processingCommandState.enterState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/processingCommandState.enterState.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnIdleState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/turnIdleState.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/turnOrder/turnOrderService.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnOrder/turnOrderService.constructor.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/messages.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/messages.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/nameMatcher.test.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/objectUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/objectUtils.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/targetingUtils.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actionFormatter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionFormatter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actionTypes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionTypes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/gameDataRepository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/gameDataRepository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/appConfig.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/appContainer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/appContainer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/__mocks__/boundDomRendererBase.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/chatAlertRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/chatAlertRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/entities/entityScopeService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/entityScopeService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/initializers/systemInitializer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/initializers/systemInitializer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/IGameDataRepository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IGameDataRepository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/IServiceResolver.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/conditionParamUtils.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/geometryUtils.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/rendererUtils.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/validation/domainContextCompatibilityChecker.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/validation/domainContextCompatibilityChecker.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/validation/llmConfigSemanticValidator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/validation/llmConfigSemanticValidator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/actions/actionDiscoverySystem.wait.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/actions/actionDiscoverySystem.wait.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/rendererUtils.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/initializers/systemInitializer.initialization.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/initializers/systemInitializer.initialization.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/initializers/systemInitializer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/initializers/systemInitializer.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/actionValidationService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/actionValidationService.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/main/main.bootstrapFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/main/main.bootstrapFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/main/main.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/main/main.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/conditionParamUtils.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/geometryUtils.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/validation/domainContextCompatibilityChecker.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/validation/domainContextCompatibilityChecker.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,6 +88,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
+    </key>
+  </component>
   <component name="RunManager" selected="Jest.promptSession.test.js">
     <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
@@ -181,11 +143,24 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749824452963</updated>
-      <workItem from="1749824454676" duration="1792000" />
+      <workItem from="1749824454676" duration="3811000" />
     </task>
+    <task id="LOCAL-00001" summary="Uploading stuff from the office.">
+      <option name="closed" value="true" />
+      <created>1749826311910</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1749826311910</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Uploading stuff from the office." />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploading stuff from the office." />
   </component>
 </project>

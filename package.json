@@ -29,6 +29,7 @@
     "babel-jest": "^29.7.0",
     "concurrently": "^9.1.2",
     "cpy-cli": "^5.0.0",
+    "dependency-cruiser": "^16.10.2",
     "esbuild": "^0.25.*",
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^10.1.5",
@@ -51,7 +52,7 @@
     "test": "jest --env=jsdom --updateSnapshot --silent --coverage",
     "test:single": "jest --env=jsdom --updateSnapshot",
     "validate-mods": "node scripts/validateMods.mjs",
-    "build": "esbuild main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html dist && cpy css dist && cpy data dist && cpy config dist && cpy favicon.ico dist",
+    "build": "esbuild src/main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html dist && cpy css dist && cpy data dist && cpy config dist && cpy favicon.ico dist",
     "start": "npm run build && http-server dist -o",
     "start:all": "concurrently \"npm run start\" \"npm run start --prefix llm-proxy-server\"",
     "dev": "concurrently \"npm run start\" \"npm run dev --prefix llm-proxy-server\""

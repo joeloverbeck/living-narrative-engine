@@ -30,7 +30,6 @@
  * A lightweight Dependency Injection (DI) container.
  * Manages instantiation and lifecycle of registered services/systems.
  *
- * @implements {import('../interfaces/container.js').IServiceResolver}
  */
 class AppContainer {
   /** @type {Map<string, { registration: FactoryFunction | ClassConstructor | any, options: RegistrationOptions }>} */

@@ -10,7 +10,6 @@ import { INITIALIZABLE } from '../../src/dependencyInjection/tags.js'; // Correc
 
 // --- Type Imports for Mocks ---
 // Using correct interface types based on SystemInitializer's constructor
-/** @typedef {import('../../../core/interfaces/container.js').IServiceResolver} IServiceResolver */
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Added type import
 // Base interface for systems - adjust if you have a more specific one
@@ -19,7 +18,6 @@ import { INITIALIZABLE } from '../../src/dependencyInjection/tags.js'; // Correc
 // --- Test Suite ---
 describe('SystemInitializer (Tag-Based Refactor)', () => {
   // AC1: Use mocks for IServiceResolver, ILogger, and ValidatedEventDispatcher
-  /** @type {jest.Mocked<IServiceResolver>} */
   let mockResolver;
   /** @type {jest.Mocked<ILogger>} */
   let mockLogger;

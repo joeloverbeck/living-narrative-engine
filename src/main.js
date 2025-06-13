@@ -1,9 +1,8 @@
 // main.js
 
-import { configureContainer } from './src/dependencyInjection/containerConfig.js';
-import { tokens } from './src/dependencyInjection/tokens.js';
-import { AppConfig } from './src/dependencyInjection/appConfig.js';
-import { displayFatalStartupError } from './src/bootstrapper/errorUtils.js';
+import { configureContainer } from './dependencyInjection/containerConfig.js';
+import { tokens } from './dependencyInjection/tokens.js';
+import { displayFatalStartupError } from './bootstrapper/errorUtils.js';
 // Import all necessary stages
 import {
   ensureCriticalDOMElementsStage,
@@ -14,17 +13,19 @@ import {
   setupMenuButtonListenersStage,
   setupGlobalEventListenersStage,
   startGameStage,
-} from './src/bootstrapper/stages.js';
+} from './bootstrapper/stages.js';
+
+const ACTIVE_WORLD = 'demo';
 
 // --- Bootstrap the Application ---
 (async () => {
-  /** @type {import('./src/bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
+  /** @type {import('./bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
   let uiElements;
-  /** @type {import('./src/dependencyInjection/appContainer.js').default | undefined} */
+  /** @type {import('./dependencyInjection/appContainer.js').default | undefined} */
   let container;
-  /** @type {import('./src/interfaces/coreServices.js').ILogger | null} */
+  /** @type {import('./interfaces/coreServices.js').ILogger | null} */
   let logger = null;
-  /** @type {import('./src/engine/gameEngine.js').default | null} */ // Corrected type to import GameEngine directly
+  /** @type {import('./engine/gameEngine.js').default | null} */ // Corrected type to import GameEngine directly
   let gameEngine = null; // Will be populated by initializeGameEngineStage
 
   let currentPhaseForError = 'Initial Setup'; // Generic phase before stages
@@ -88,7 +89,7 @@ import {
       logger.error(`main.js: ${errMsg}`);
       throw new Error(errMsg);
     }
-    await startGameStage(gameEngine, AppConfig.ACTIVE_WORLD, logger);
+    await startGameStage(gameEngine, ACTIVE_WORLD, logger);
     // The startGameStage function logs its own completion or errors.
     logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
 

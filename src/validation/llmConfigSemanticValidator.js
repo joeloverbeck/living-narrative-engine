@@ -2,8 +2,8 @@
 // --- FILE START ---
 
 /**
- * @typedef {import('../../services/llmConfigLoader.js').LLMConfiguration} LLMConfiguration - Represents an individual LLM configuration object.
- * @typedef {import('../../services/llmConfigLoader.js').LLMConfigPromptElement} LLMConfigPromptElement - Represents a prompt element within a configuration.
+ * @typedef {import('../llms/services/llmConfigLoader.js').LLMConfiguration} LLMConfiguration - Represents an individual LLM configuration object.
+ * @typedef {import('../llms/services/llmConfigLoader.js').LLMConfigPromptElement} LLMConfigPromptElement - Represents a prompt element within a configuration.
  */
 
 /**

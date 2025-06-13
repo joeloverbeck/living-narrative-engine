@@ -8,8 +8,6 @@
 /** @typedef {import('./validation/actionValidationService.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../entities/entityScopeService.js').getEntityIdsForScopes} getEntityIdsForScopesFn */
 /** @typedef {import('./actionFormatter.js').formatActionCommand} formatActionCommandFn */
-/** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
-/** @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain */
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
 

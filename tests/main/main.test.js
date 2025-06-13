@@ -71,7 +71,7 @@ describe('main.js bootstrap process', () => {
     mockGlobal.mockResolvedValue();
     mockStartGame.mockResolvedValue();
 
-    await import('../../main.js');
+    await import('../../src/main.js');
     // wait for async error handling
     await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -107,7 +107,7 @@ describe('main.js bootstrap process', () => {
     mockEnsure.mockResolvedValue(uiElements);
     mockSetupDI.mockRejectedValue(stageError);
 
-    await import('../../main.js');
+    await import('../../src/main.js');
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockSetupDI).toHaveBeenCalled();

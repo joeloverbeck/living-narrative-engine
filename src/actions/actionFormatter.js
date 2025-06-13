@@ -1,7 +1,6 @@
 // src/actions/actionFormatter.js
 
 // --- Type Imports ---
-/** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */

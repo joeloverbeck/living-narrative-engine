@@ -7,7 +7,6 @@ import SystemInitializer from '../../src/initializers/systemInitializer.js';
 import { INITIALIZABLE } from '../../src/dependencyInjection/tags.js'; // Corrected import path for tags
 
 // --- Type Imports for Mocks ---
-/** @typedef {import('../../../core/interfaces/container.js').IServiceResolver} IServiceResolver */
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Adjusted type import path
 // Base interface for systems - adjust if you have a more specific one
@@ -15,7 +14,6 @@ import { INITIALIZABLE } from '../../src/dependencyInjection/tags.js'; // Correc
 
 // --- Test Suite ---
 describe('SystemInitializer (Tag-Based)', () => {
-  /** @type {jest.Mocked<IServiceResolver>} */
   let mockResolver;
   /** @type {jest.Mocked<ILogger>} */
   let mockLogger;

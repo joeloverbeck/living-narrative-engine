@@ -12,9 +12,6 @@ import { IGameDataRepository } from '../interfaces/IGameDataRepository.js'; // E
  * current contents of the registry.
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition
- * @typedef {import('../types/eventDefinition.js').EventDefinition} EventDefinition
- * @typedef {import('../types/entityDefinition.js').EntityDefinition} EntityDefinition
  * @typedef {object} ComponentDefinition // Assuming a basic object type for now, or import a more specific typedef if available
  * @property
  */

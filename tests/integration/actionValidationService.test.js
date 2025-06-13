@@ -20,7 +20,6 @@ import { createMockPrerequisiteEvaluationService } from '../testUtils.js'; // Ne
 jest.mock('../../src/actions/validation/prerequisiteEvaluationService.js'); // Mock PES module
 
 // --- Type Imports ---
-/** @typedef {import('../../src/types/actionDefinition.js').ActionDefinition} ActionDefinition */
 // REMOVED: JsonLogicEvaluationContext is no longer directly verified in these tests
 // /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */

@@ -1,5 +1,4 @@
 // src/interfaces/IGameDataRepository.js
-/** @typedef {import('../types/actionDefinition.js').ActionDefinition} ActionDefinition */
 
 /**
  * @interface IGameDataRepository

@@ -9,7 +9,6 @@
 // --- ADDED Import for ActionTargetContext ---
 /** @typedef {import('../models/ActionTargetContext.js').ActionTargetContext} ActionTargetContext */
 // --- ADDED Import for ActionDefinition (used in ActionAttemptPseudoEvent) ---
-/** @typedef {import('../models/ActionDefinition.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */ // Added for ActionContext
 /** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Added for ActionContext
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Added for ActionContext

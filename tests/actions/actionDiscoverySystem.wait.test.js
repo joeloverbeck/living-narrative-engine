@@ -19,8 +19,6 @@ import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../src/enti
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import Entity from '../../src/entities/entity.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-/** @typedef {import('../../src/types/actionDefinition.js').ActionDefinition} ActionDefinition */
-/** @typedef {import('../../src/systems/actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../src/logging/consoleLogger.js').default} ILogger */
 
 // --- Mocking Dependencies ---

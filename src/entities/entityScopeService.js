@@ -14,8 +14,6 @@ import {
 /** @typedef {import('./entity.js').default} Entity */
 /** @typedef {import('./entity.js').EntityId} EntityId */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../components/connectionsComponent.js').ConnectionInfo} ConnectionInfo */
-/** @typedef {import('../types/actionDefinition.js').TargetDomain} TargetDomain */
 
 // --- REFACTOR START: Generic Scope Handler Factory ---
 
