@@ -206,12 +206,12 @@ class EntityManager extends IEntityManager {
       !entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)
     ) {
       const defaultStm = { thoughts: [], maxEntries: 10 };
-      this.#validateAndClone(
+      const validatedStm = this.#validateAndClone(
         SHORT_TERM_MEMORY_COMPONENT_ID,
         defaultStm,
         'Default STM validation failed.'
       );
-      entity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, defaultStm);
+      entity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, validatedStm);
       this.#logger.debug(
         `createEntityInstance: default 'core:short_term_memory' injected into ${instanceId}.`
       );
@@ -223,12 +223,12 @@ class EntityManager extends IEntityManager {
       !entity.hasComponent(NOTES_COMPONENT_ID)
     ) {
       const defaultNotes = { notes: [] };
-      this.#validateAndClone(
+      const validatedNotes = this.#validateAndClone(
         NOTES_COMPONENT_ID,
         defaultNotes,
         'Default core:notes validation failed.'
       );
-      entity.addComponent(NOTES_COMPONENT_ID, defaultNotes);
+      entity.addComponent(NOTES_COMPONENT_ID, validatedNotes);
       this.#logger.debug(
         `createEntityInstance: default 'core:notes' injected into ${instanceId}.`
       );
@@ -241,12 +241,12 @@ class EntityManager extends IEntityManager {
       !entity.hasComponent('core:goals')
     ) {
       const defaultGoals = { goals: [] };
-      this.#validateAndClone(
+      const validatedGoals = this.#validateAndClone(
         'core:goals',
         defaultGoals,
         'Default core:goals validation failed.'
       );
-      entity.addComponent('core:goals', defaultGoals);
+      entity.addComponent('core:goals', validatedGoals);
       this.#logger.debug(
         `createEntityInstance: default 'core:goals' injected into ${instanceId}.`
       );
