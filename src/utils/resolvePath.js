@@ -14,8 +14,13 @@ export default function resolvePath(root, dotPath) {
 
   if (root === null || root === undefined) return undefined; // early null/undefined bail-out
 
+  const segments = dotPath.trim().split('.');
+  if (segments.some((seg) => seg === '')) {
+    return undefined;
+  }
+
   let current = root;
-  for (const segment of dotPath.trim().split('.').filter(Boolean)) {
+  for (const segment of segments) {
     if (current === null || current === undefined) return undefined; // any null/undefined hop → undefined
     current = current[segment];
   }
