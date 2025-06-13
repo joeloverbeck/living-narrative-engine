@@ -17,18 +17,11 @@
         "minimum": 1
       },
       "speech": {
-        "type": [
-          "string",
-          "null"
-        ],
+        "type": ["string", "null"],
         "description": "The text from the speech input field, or null if not provided."
       }
     },
-    "required": [
-      "submittedByActorId",
-      "chosenActionId",
-      "speech"
-    ],
+    "required": ["submittedByActorId", "chosenActionId", "speech"],
     "additionalProperties": false
   }
 }

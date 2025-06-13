@@ -1,31 +1,21 @@
 // src/actions/actionDiscoveryService.js
-
-// --- Type Imports ---
+// ────────────────────────────────────────────────────────────────────────────────
+// Type imports
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./validation/actionValidationService.js').ActionValidationService} ActionValidationService */
-/** @typedef {import('./validation/actionValidationService.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../entities/entityScopeService.js').getEntityIdsForScopes} getEntityIdsForScopesFn */
 /** @typedef {import('./actionFormatter.js').formatActionCommand} formatActionCommandFn */
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
-
-/**
- * @typedef {object} DiscoveredActionInfo
- * @property {string} id - The unique ID of the action definition.
- * @property {string} name - The human-readable name of the action.
- * @property {string} command - The formatted command string.
- * @property {string} [description] - Optional. The detailed description of the action.
- * @property {object} params - Parameters for the action (at minimum { targetId?: string }).
- * @property {string} [params.targetId] - Optional ID of the target entity or location.
- */
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
 
+// ────────────────────────────────────────────────────────────────────────────────
 export class ActionDiscoveryService extends IActionDiscoveryService {
   #gameDataRepository;
   #entityManager;
@@ -35,13 +25,13 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #logger;
 
   /**
-   * @param {object} dependencies
-   * @param {GameDataRepository} dependencies.gameDataRepository
-   * @param {EntityManager} dependencies.entityManager
-   * @param {ActionValidationService} dependencies.actionValidationService
-   * @param {ILogger} dependencies.logger
-   * @param {formatActionCommandFn} dependencies.formatActionCommandFn
-   * @param {getEntityIdsForScopesFn} dependencies.getEntityIdsForScopesFn
+   * @param {object} deps
+   * @param {GameDataRepository} deps.gameDataRepository
+   * @param {EntityManager}      deps.entityManager
+   * @param {ActionValidationService} deps.actionValidationService
+   * @param {ILogger}            deps.logger
+   * @param {formatActionCommandFn} deps.formatActionCommandFn
+   * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
    */
   constructor({
     gameDataRepository,
@@ -52,58 +42,41 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     getEntityIdsForScopesFn,
   }) {
     super();
+    validateDependency(logger, 'ActionDiscoveryService: logger', console, {
+      requiredMethods: ['debug', 'warn', 'error'],
+    });
+    this.#logger = logger;
 
-    // 1. Validate logger: require debug, warn, error (info is optional)
-    try {
-      validateDependency(logger, 'ActionDiscoveryService: logger', console, {
-        requiredMethods: ['debug', 'warn', 'error'],
-      });
-      this.#logger = logger;
-    } catch (e) {
-      const errorMsg = `ActionDiscoveryService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
-      // eslint-disable-next-line no-console
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    // 2. Validate other dependencies
-    try {
-      validateDependency(
-        gameDataRepository,
-        'ActionDiscoveryService: gameDataRepository',
-        this.#logger,
-        { requiredMethods: ['getAllActionDefinitions'] }
-      );
-      validateDependency(
-        entityManager,
-        'ActionDiscoveryService: entityManager',
-        this.#logger,
-        { requiredMethods: ['getComponentData', 'getEntityInstance'] }
-      );
-      validateDependency(
-        actionValidationService,
-        'ActionDiscoveryService: actionValidationService',
-        this.#logger,
-        { requiredMethods: ['isValid'] }
-      );
-      validateDependency(
-        formatActionCommandFn,
-        'ActionDiscoveryService: formatActionCommandFn',
-        this.#logger,
-        { isFunction: true }
-      );
-      validateDependency(
-        getEntityIdsForScopesFn,
-        'ActionDiscoveryService: getEntityIdsForScopesFn',
-        this.#logger,
-        { isFunction: true }
-      );
-    } catch (e) {
-      this.#logger.error(
-        `ActionDiscoveryService Constructor: Dependency validation failed. Error: ${e.message}`
-      );
-      throw e;
-    }
+    validateDependency(
+      gameDataRepository,
+      'ActionDiscoveryService: gameDataRepository',
+      this.#logger,
+      { requiredMethods: ['getAllActionDefinitions'] }
+    );
+    validateDependency(
+      entityManager,
+      'ActionDiscoveryService: entityManager',
+      this.#logger,
+      { requiredMethods: ['getComponentData', 'getEntityInstance'] }
+    );
+    validateDependency(
+      actionValidationService,
+      'ActionDiscoveryService: actionValidationService',
+      this.#logger,
+      { requiredMethods: ['isValid'] }
+    );
+    validateDependency(
+      formatActionCommandFn,
+      'ActionDiscoveryService: formatActionCommandFn',
+      this.#logger,
+      { isFunction: true }
+    );
+    validateDependency(
+      getEntityIdsForScopesFn,
+      'ActionDiscoveryService: getEntityIdsForScopesFn',
+      this.#logger,
+      { isFunction: true }
+    );
 
     this.#gameDataRepository = gameDataRepository;
     this.#entityManager = entityManager;
@@ -111,26 +84,47 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
 
-    this.#logger.debug('ActionDiscoveryService initialized.');
+    this.#logger.debug('ActionDiscoveryService initialised.');
   }
 
   /**
    * @param {Entity} actorEntity
    * @param {ActionContext} context
-   * @returns {Promise<DiscoveredActionInfo[]>}
+   * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]>}
    */
   async getValidActions(actorEntity, context) {
     this.#logger.debug(
       `Starting action discovery for actor: ${actorEntity.id}`
     );
     const allDefs = this.#gameDataRepository.getAllActionDefinitions();
-    /** @type {DiscoveredActionInfo[]} */
+    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const validActions = [];
 
+    /* ── Resolve actor location (entity preferred, id as fallback) ───────── */
+    let currentLocation = null;
+    try {
+      const pos = this.#entityManager.getComponentData(
+        actorEntity.id,
+        'core:position'
+      );
+      if (pos && typeof pos.locationId === 'string' && pos.locationId) {
+        currentLocation =
+          this.#entityManager.getEntityInstance(pos.locationId) ??
+          pos.locationId;
+      }
+    } catch {
+      /* ignore – currentLocation remains null */
+    }
+    const locIdForLog =
+      typeof currentLocation === 'string'
+        ? currentLocation
+        : (currentLocation?.id ?? 'unknown');
+
+    /* ── iterate over action definitions ─────────────────────────────────── */
     for (const actionDef of allDefs) {
       const domain = actionDef.target_domain;
       try {
-        // --- none / self domains ---
+        /* 1) none / self */
         if (domain === 'none' || domain === 'self') {
           const targetCtx =
             domain === 'self'
@@ -144,33 +138,39 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
               targetCtx
             )
           ) {
-            const command = this.#formatActionCommandFn(
+            const cmd = this.#formatActionCommandFn(
               actionDef,
               targetCtx,
               this.#entityManager,
               { logger: this.#logger, debug: true }
             );
-            if (command !== null) {
+            if (cmd !== null) {
               validActions.push({
                 id: actionDef.id,
                 name: actionDef.name || actionDef.commandVerb,
-                command,
+                command: cmd,
                 description: actionDef.description || '',
                 params: {},
               });
             }
           }
 
-          // --- directional actions ---
+          /* 2) direction */
         } else if (domain === 'direction') {
+          if (!currentLocation) {
+            this.#logger.debug(
+              `No location for actor ${actorEntity.id}; skipping direction-based actions.`
+            );
+            continue;
+          }
+
           const exits = getAvailableExits(
-            context.currentLocation,
+            currentLocation,
             this.#entityManager,
             this.#logger
           );
-          // Log number of available exits
           this.#logger.debug(
-            `Found ${exits.length} available exits for location: ${context.currentLocation.id} via getAvailableExits.`
+            `Found ${exits.length} available exits for location: ${locIdForLog} via getAvailableExits.`
           );
 
           for (const exit of exits) {
@@ -183,17 +183,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                 targetCtx
               )
             ) {
-              const command = this.#formatActionCommandFn(
+              const cmd = this.#formatActionCommandFn(
                 actionDef,
                 targetCtx,
                 this.#entityManager,
                 { logger: this.#logger, debug: true }
               );
-              if (command !== null) {
+              if (cmd !== null) {
                 validActions.push({
                   id: actionDef.id,
                   name: actionDef.name || actionDef.commandVerb,
-                  command,
+                  command: cmd,
                   description: actionDef.description || '',
                   params: { targetId: exit.target },
                 });
@@ -201,13 +201,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
             }
           }
 
-          // --- entity‐scope actions (including 'entity') ---
+          /* 3) other scopes / entity */
         } else {
-          const potentialIds = this.#getEntityIdsForScopesFn([domain], context);
-
-          for (const targetId of potentialIds) {
+          const ids =
+            this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
+          for (const targetId of ids) {
             const targetCtx = ActionTargetContext.forEntity(targetId);
-
             if (
               this.#actionValidationService.isValid(
                 actionDef,
@@ -215,17 +214,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                 targetCtx
               )
             ) {
-              const command = this.#formatActionCommandFn(
+              const cmd = this.#formatActionCommandFn(
                 actionDef,
                 targetCtx,
                 this.#entityManager,
                 { logger: this.#logger, debug: true }
               );
-              if (command !== null) {
+              if (cmd !== null) {
                 validActions.push({
                   id: actionDef.id,
                   name: actionDef.name || actionDef.commandVerb,
-                  command,
+                  command: cmd,
                   description: actionDef.description || '',
                   params: { targetId },
                 });
@@ -235,7 +234,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         }
       } catch (err) {
         this.#logger.error(
-          `Error processing action definition ${actionDef.id} for actor ${actorEntity.id}:`,
+          `Error processing action ${actionDef.id} for actor ${actorEntity.id}:`,
           err
         );
       }
