@@ -371,6 +371,12 @@ class EntityManager extends IEntityManager {
   addComponent(instanceId, componentTypeId, componentData) {
     const entity = this.#getEntityOrThrow(instanceId);
 
+    if (typeof componentData !== 'object' || componentData === null) {
+      const msg = `EntityManager.addComponent: Invalid component data for type '${componentTypeId}' on entity '${instanceId}'.`;
+      this.#logger.error(msg);
+      throw new Error(msg);
+    }
+
     const clonedData = this.#validateAndClone(
       componentTypeId,
       componentData,
