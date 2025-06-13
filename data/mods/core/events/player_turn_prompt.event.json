@@ -1,44 +1,50 @@
 {
   "$schema": "http://example.com/schemas/event-definition.schema.json",
   "id": "core:player_turn_prompt",
-  "description": "Fired when the game needs input from a player entity for their turn.",
+  "description": "Fired when the game engine needs input from a player entity for their turn.",
   "payloadSchema": {
-    "title": "Core: Player Turn Prompt Event Payload",
-    "description": "Defines the payload structure for the 'core:player_turn_prompt' event.",
+    "title": "Core: Player Turn Prompt – Payload",
+    "description": "List of actions the player can currently take, already formatted for UI/LLM consumption.",
     "type": "object",
     "properties": {
       "entityId": {
         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
-        "description": "The unique ID of the player entity being prompted for input."
+        "description": "ID of the actor whose turn it is."
       },
       "availableActions": {
         "type": "array",
-        "description": "An array of objects, each representing a valid action the player can currently take, including its ID, name, description, and formatted command.",
+        "description": "Every legal action for this turn, indexed so the UI (or an LLM) can choose by number.",
         "items": {
           "type": "object",
-          "description": "Object containing the action ID, name, description (optional), and its formatted command string.",
           "properties": {
-            "id": {
+            "index": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Stable numeric choice presented to the player / LLM."
+            },
+            "actionId": {
               "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
-              "description": "The unique ID of the action definition (e.g., 'core:wait')."
+              "description": "The underlying action definition ID (e.g. 'core:go')."
             },
-            "name": {
+            "commandString": {
               "type": "string",
-              "description": "The human-readable name of the action (e.g., 'Wait')."
+              "description": "Fully-formatted command, ready for display or parsing."
             },
-            "command": {
-              "type": "string",
-              "description": "The formatted command string ready for display/parsing (e.g., 'wait', 'go north')."
+            "params": {
+              "type": "object",
+              "description": "Action-specific parameters (direction, targetId, etc.).",
+              "additionalProperties": true,
+              "default": {}
             },
             "description": {
               "type": "string",
-              "description": "A detailed description of what the action does."
+              "description": "Human-readable explanation of the action."
             }
           },
-          "required": ["id", "name", "command", "description"],
+          "required": ["index", "actionId", "commandString", "description"],
           "additionalProperties": false
         },
-        "uniqueItems": false
+        "uniqueItems": true
       }
     },
     "required": ["entityId", "availableActions"],
