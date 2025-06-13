@@ -2,6 +2,7 @@
  * @file Integration tests for PromptCoordinator.
  * @description Verifies interaction between PromptCoordinator, PromptSession
  *              and ActionIndexingService (integer-based resolution).
+ * @see tests/integration/promptCoordinator.integration.test.js
  */
 
 /* eslint-env jest */
@@ -85,17 +86,20 @@ describe('PromptCoordinator – Indexing integration', () => {
   });
 
   // ─── Happy-path ─────────────────────────────────────────────────────────
-  it.skip('discovers, indexes and resolves an action via the indexer', async () => {
+  it('discovers, indexes and resolves an action via the indexer', async () => {
     expect.assertions(8);
 
     const chosenIndex = 2;
     const chosenComposite = indexedComposites[1];
     mockActionIndexingService.resolve.mockReturnValue(chosenComposite);
 
+    // Kick off the prompt but don’t wait for it yet
     const promptPromise = promptCoordinator.prompt(actor);
-    await new Promise(process.nextTick); // let async setup finish
 
-    // sanity checks before emitting the fake event
+    // Allow async setup inside PromptCoordinator to finish
+    await new Promise(process.nextTick);
+
+    // Sanity checks before we fake the event
     expect(mockActionContextBuilder.buildContext).toHaveBeenCalledWith(actor);
     expect(mockActionDiscoveryService.getValidActions).toHaveBeenCalledWith(
       actor,
@@ -116,8 +120,8 @@ describe('PromptCoordinator – Indexing integration', () => {
 
     const eventHandler = mockPlayerTurnEvents.subscribe.mock.lastCall[1];
 
-    // 👉 attach the handler FIRST, then emit
-    const expectation = await expect(promptPromise).resolves.toEqual({
+    // Attach the assertion first, then emit the event
+    const resolutionExpectation = expect(promptPromise).resolves.toEqual({
       action: {
         id: chosenComposite.actionId,
         name: chosenComposite.description,
@@ -130,6 +134,7 @@ describe('PromptCoordinator – Indexing integration', () => {
       notes: null,
     });
 
+    // Simulate the player submitting their choice
     eventHandler({
       payload: {
         index: chosenIndex,
@@ -138,7 +143,9 @@ describe('PromptCoordinator – Indexing integration', () => {
       },
     });
 
-    await expectation;
+    // Wait for the prompt to resolve (and the expectation to finish)
+    await resolutionExpectation;
+
     expect(mockActionIndexingService.resolve).toHaveBeenCalledWith(
       actor.id,
       chosenIndex
