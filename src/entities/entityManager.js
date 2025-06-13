@@ -597,7 +597,17 @@ class EntityManager extends IEntityManager {
       this.#definitionToPrimaryInstanceMap.get(entity.definitionId) ===
       instanceId
     ) {
-      this.#definitionToPrimaryInstanceMap.delete(entity.definitionId);
+      const replacement = Array.from(this.activeEntities.values()).find(
+        (e) => e.definitionId === entity.definitionId
+      );
+      if (replacement) {
+        this.#definitionToPrimaryInstanceMap.set(
+          entity.definitionId,
+          replacement.id
+        );
+      } else {
+        this.#definitionToPrimaryInstanceMap.delete(entity.definitionId);
+      }
     }
 
     /* ---------- final audit log ---------- */
