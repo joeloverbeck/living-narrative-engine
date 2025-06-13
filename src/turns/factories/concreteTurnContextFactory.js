@@ -11,7 +11,7 @@ import { TurnContext } from '../context/turnContext.js';
  * @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
- * @typedef {import('../../game/GameWorld.js').GameWorld} IWorldContext
+ * @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext
  * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter

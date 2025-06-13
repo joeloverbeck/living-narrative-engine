@@ -8,7 +8,7 @@
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest
- * @typedef {import('../interfaces/validation.js').ValidationResult} ValidationResult
+ * @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult
  */
 // --- Add LoadItemsResult typedef here for clarity ---
 /**

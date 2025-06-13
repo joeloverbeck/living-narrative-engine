@@ -13,7 +13,7 @@
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest */ // Assuming ModManifest type is defined here or imported
-/** @typedef {import('../interfaces/validation.js').ValidationResult} ValidationResult */
+/** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */
 
 // --- Base Class Import ---
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Correct path assumed based on sibling loaders

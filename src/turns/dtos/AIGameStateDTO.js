@@ -82,9 +82,6 @@
  */
 
 /**
- * @typedef {import('./AIActorPromptDataDTO.js').ActorPromptDataDTO} ActorPromptDataDTO // Assuming path - Note: ActorPromptDataDTO is defined below in this file.
- */
-/**
  * Purpose: The top-level DTO that aggregates all other AI-relevant state information.
  * This is the primary object passed to the prompt formatter.
  *

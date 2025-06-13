@@ -3,7 +3,7 @@
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
-/** @typedef {import('../dtos/actionComposite.js').ActionComposite} ActionComposite */
+/** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 
 export class IAIPromptPipeline {
   /**

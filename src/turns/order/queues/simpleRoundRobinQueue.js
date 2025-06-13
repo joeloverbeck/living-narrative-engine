@@ -8,7 +8,7 @@
 
 import { ITurnOrderQueue } from '../../interfaces/ITurnOrderQueue.js';
 // Use the Entity type defined in the interface file for consistency.
-/** @typedef {import('../ITurnOrderQueue.js').Entity} Entity */
+/** @typedef {import('../../interfaces/ITurnOrderQueue.js').Entity} Entity */
 
 /**
  * @class SimpleRoundRobinQueue

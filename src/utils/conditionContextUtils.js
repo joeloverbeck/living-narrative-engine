@@ -7,10 +7,9 @@ import { getObjectPropertyByPath } from './objectUtils.js';
 // and accessible via these paths in a real project. Adjust paths as needed.
 
 /**
- * @typedef {import('../services/conditionEvaluationService.js').ConditionDataAccess} ConditionDataAccess
- * Interface or class providing methods to access game data during condition evaluation,
- * specifically `getComponentClassByKey`.
- * Should have at least: { getComponentClassByKey: (key: string) => typeof Component | undefined }
+ * @typedef {object} ConditionDataAccess
+ * Interface providing methods to access game data during condition evaluation.
+ * @property {(key: string) => (typeof Component | undefined)} getComponentClassByKey
  */
 
 /**
@@ -20,12 +19,12 @@ import { getObjectPropertyByPath } from './objectUtils.js';
  */
 
 /**
- * @typedef {import('../components/connectionsComponent.js').Connection} Connection
- * Represents a connection object, likely used as context in some conditions.
+ * @typedef {object} Connection
+ * Represents a connection object used as context in some conditions.
  */
 
 /**
- * @typedef {import('../components/component.js').default} Component
+ * @typedef {object} Component
  * The base class for all components.
  */
 
