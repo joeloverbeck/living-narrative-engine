@@ -14,7 +14,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 // --- System Under Test imports ---------------------------------------------
 // ⚠️ PATH‑TO – please fix to real locations in your project
-import { LLMChooser } from '../../src/turns/adapters/LLMChooser.js';
+import { LLMChooser } from '../../src/turns/adapters/llmChooser.js';
 import { AIDecisionOrchestrator } from '../../src/turns/orchestration/aiDecisionOrchestrator.js';
 
 // ---------------------------------------------------------------------------

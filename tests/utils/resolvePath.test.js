@@ -81,6 +81,17 @@ describe('utils/resolvePath', () => {
   });
 
   /* -------------------------------------------------
+   *  Dot path with empty segments
+   * ------------------------------------------------- */
+  describe('invalid path segments', () => {
+    const obj = { a: { b: 1 } };
+
+    it.each(['.a', 'a.', 'a..b', 'a..'])('returns undefined for %p', (path) => {
+      expect(resolvePath(obj, path)).toBeUndefined();
+    });
+  });
+
+  /* -------------------------------------------------
    *  Invalid dotPath parameter
    * ------------------------------------------------- */
   describe('bad path param', () => {
