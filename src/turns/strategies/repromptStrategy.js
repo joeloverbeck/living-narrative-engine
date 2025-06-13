@@ -10,10 +10,10 @@
 
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
-import { AwaitingPlayerInputState } from '../states/awaitingPlayerInputState.js';
+import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState.js';
 
 /**
- * Handles TurnDirective.RE_PROMPT by requesting a transition to AwaitingPlayerInputState.
+ * Handles TurnDirective.RE_PROMPT by requesting a transition to AwaitingActorDecisionState.
  * Relies solely on ITurnContext to obtain the actor and other necessary services.
  */
 export default class RepromptStrategy extends ITurnDirectiveStrategy {
@@ -62,19 +62,19 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
     // The primary concern now is the existence of `contextActor`.
 
     logger.debug(
-      `${className}: Re-prompting actor ${contextActor.id}; requesting transition to AwaitingPlayerInputState.`
+      `${className}: Re-prompting actor ${contextActor.id}; requesting transition to AwaitingActorDecisionState.`
     );
 
-    // Request transition to AwaitingPlayerInputState via ITurnContext
-    // The AwaitingPlayerInputState constructor expects the handler instance,
+    // Request transition to AwaitingActorDecisionState via ITurnContext
+    // The AwaitingActorDecisionState constructor expects the handler instance,
     // which turnContext.requestTransition() will manage internally.
     try {
-      await turnContext.requestTransition(AwaitingPlayerInputState);
+      await turnContext.requestTransition(AwaitingActorDecisionState);
       logger.debug(
-        `${className}: Transition to AwaitingPlayerInputState requested successfully for actor ${contextActor.id}.`
+        `${className}: Transition to AwaitingActorDecisionState requested successfully for actor ${contextActor.id}.`
       );
     } catch (transitionError) {
-      const errorMsg = `${className}: Failed to request transition to AwaitingPlayerInputState for actor ${contextActor.id}. Error: ${transitionError.message}`;
+      const errorMsg = `${className}: Failed to request transition to AwaitingActorDecisionState for actor ${contextActor.id}. Error: ${transitionError.message}`;
       logger.error(errorMsg, transitionError);
       // If the transition fails, end the turn with an error.
       turnContext.endTurn(new Error(errorMsg));

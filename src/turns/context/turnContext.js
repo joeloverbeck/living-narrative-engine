@@ -188,7 +188,7 @@ export class TurnContext extends ITurnContext {
   /* ───────────────────── STATE-TRANSITION CONVENIENCE ────────────────────
      IMPORTANT: the context **no longer** instantiates concrete states – it
      just asks its handler to do so.  This removes the direct dependency on
-     ProcessingCommandState / AwaitingPlayerInputState / TurnIdleState.     */
+     ProcessingCommandState / AwaitingActorDecisionState / TurnIdleState.     */
 
   async requestIdleStateTransition() {
     await this.#handlerInstance.requestIdleStateTransition();

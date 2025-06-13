@@ -1,19 +1,8 @@
 // tests/integration/turnHandlerResolution.integration.test.js
-// ****** MODIFIED FILE ******
 // -----------------------------------------------------------------------------
 //  T-08 | Integration Test – AITurnHandler Resolution and Startup
 // -----------------------------------------------------------------------------
-//  Validates that:
-//   1. TurnHandlerResolver can create a valid AITurnHandler instance via a factory.
-//   2. The AITurnHandler is instantiated with all its required dependencies,
-//      including the complex chain needed for AI decision-making.
-//   3. Calling startTurn() on the handler does NOT throw an error, proving
-//      the dependencies were correctly received and used.
-//   4. The turn logic proceeds to the point of calling the AI's strategy,
-//      confirming the internal wiring is correct.
-// -----------------------------------------------------------------------------
 
-// --- Jest Globals -----------------------------------------------------------
 import {
   describe,
   beforeEach,
@@ -25,8 +14,6 @@ import {
 
 import { AITurnHandler } from '../../src/turns/handlers/aiTurnHandler.js';
 import TurnHandlerResolver from '../../src/turns/services/turnHandlerResolver.js';
-import { ConcreteAIPlayerStrategyFactory } from '../../src/turns/factories/concreteAIPlayerStrategyFactory.js';
-// Import PLAYER_COMPONENT_ID to create a complete set of rules
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
@@ -64,7 +51,6 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
   let logger;
   let mockTurnState;
   let mockAiPromptPipeline;
-  let aiStrategyFactory;
   let mockEntityManager;
   let mockTurnContextFactory;
   let stubs;
@@ -106,10 +92,13 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       commandOutcomeInterpreter: {},
       safeEventDispatcher: {},
       entityManager: mockEntityManager,
-      actionDiscoverySystem: {}, // original stub
+      actionDiscoverySystem: {},
       promptBuilder: {},
       aiFallbackActionFactory: { create: jest.fn() },
-      aiPlayerStrategyFactory: null, // will be set below
+      // stub strategy factory directly:
+      aiPlayerStrategyFactory: {
+        create: jest.fn(() => new StubAIPlayerStrategy(stubs)),
+      },
       turnContextFactory: mockTurnContextFactory,
       gameStateProvider: {},
       promptContentProvider: {},
@@ -117,28 +106,7 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       aiPromptPipeline: mockAiPromptPipeline,
     };
 
-    // Provide a stubbed IAIDecisionOrchestrator and the required logger
-    const stubOrchestrator = {
-      decideOrFallback: jest.fn(() =>
-        Promise.resolve({
-          kind: 'success',
-          action: {},
-          extractedData: { speech: null, thoughts: null, notes: null },
-        })
-      ),
-    };
-
-    aiStrategyFactory = new ConcreteAIPlayerStrategyFactory({
-      orchestrator: stubOrchestrator,
-      logger: stubs.logger,
-    });
-
-    jest
-      .spyOn(aiStrategyFactory, 'create')
-      .mockImplementation(() => new StubAIPlayerStrategy(stubs));
-
-    stubs.aiPlayerStrategyFactory = aiStrategyFactory;
-
+    // Build AITurnHandler factory and resolver rules
     const createAiHandlerFactory = () => new AITurnHandler(stubs);
 
     const handlerRules = [
@@ -165,20 +133,17 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
   });
 
   it('should successfully start a turn for an AI actor without throwing', async () => {
-    // 1. Resolve the handler. The resolver should find the 'AI' rule and use its factory.
+    // 1. Resolve the handler.
     const handler = await resolver.resolveHandler(aiActor);
     expect(handler).toBeInstanceOf(AITurnHandler);
 
-    // 2. Start the turn. This should not throw, proving dependencies were injected correctly.
+    // 2. Start the turn; should not throw.
     await expect(handler.startTurn(aiActor)).resolves.not.toThrow();
 
-    // 3. Verify that key factories and methods inside the handler were called.
+    // 3. Verify key calls.
     expect(mockTurnContextFactory.create).toHaveBeenCalledTimes(1);
     expect(stubs.aiPlayerStrategyFactory.create).toHaveBeenCalledTimes(1);
-
-    // MODIFIED: The create method is now parameterless, so we just check that it was called.
     expect(stubs.aiPlayerStrategyFactory.create).toHaveBeenCalled();
-
     expect(mockTurnState.startTurn).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,8 +1,8 @@
-// src/turns/states/awaitingPlayerInputState.js
+// src/turns/states/awaitingActorDecisionState.js
 // ****** CORRECTED FILE ******
 
 /**
- * @file Defines the AwaitingPlayerInputState class for the turn-based system.
+ * @file Defines the AwaitingActorDecisionState class for the turn-based system.
  * @module core/turns/states/awaitingPlayerInputState
  */
 
@@ -16,14 +16,14 @@ import { AbstractTurnState } from './abstractTurnState.js';
  * ● `AbortError` from the strategy is treated as a graceful cancel.
  * ● All other errors cause the turn to end with an error.
  */
-export class AwaitingPlayerInputState extends AbstractTurnState {
+export class AwaitingActorDecisionState extends AbstractTurnState {
   constructor(handler) {
     super(handler);
   }
 
   /* --------------------------------------------------------------------- */
   getStateName() {
-    return 'AwaitingPlayerInputState';
+    return 'AwaitingActorDecisionState';
   }
 
   /* alias required by some tests */
@@ -61,7 +61,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
     if (!actor) {
       logger.error(`${this.name}: No actor found in TurnContext. Ending turn.`);
       await turnContext.endTurn(
-        new Error('No actor in context during AwaitingPlayerInputState.')
+        new Error('No actor in context during AwaitingActorDecisionState.')
       );
       return;
     }
@@ -184,7 +184,7 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
       this._handler?.getLogger?.() ??
       console;
     l.debug(
-      `${this.name}: ExitState cleanup (if any) specific to AwaitingPlayerInputState complete.`
+      `${this.name}: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.`
     );
   }
 

@@ -1,8 +1,4 @@
-/**
- * @file Test suite for turnLifecycleRegistrations.
- * @see tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js
- */
-
+// tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js
 import {
   describe,
   test,
@@ -46,7 +42,10 @@ describe('registerTurnLifecycle', () => {
     mockTurnEndPort,
     mockCommandOutcome,
     mockCommandInput,
-    mockAiTurnHandler;
+    mockAiTurnHandler,
+    mockActionIndexer,
+    mockTurnActionFactory;
+  mockActionIndexer, mockTurnActionFactory;
 
   beforeEach(() => {
     container = new AppContainer();
@@ -89,7 +88,16 @@ describe('registerTurnLifecycle', () => {
       () => mockCommandOutcome
     );
     // stub out the AI handler so that resolver factory has something to call
+    mockAiTurnHandler = mock();
     container.register(tokens.AITurnHandler, () => mockAiTurnHandler);
+
+    // register action indexing interface for TurnActionChoicePipeline
+    mockActionIndexer = mock();
+    container.register(tokens.IActionIndexer, () => mockActionIndexer);
+
+    // register turn action factory for HumanTurnHandler
+    mockTurnActionFactory = mock();
+    container.register(tokens.ITurnActionFactory, () => mockTurnActionFactory);
   });
 
   afterEach(() => {
@@ -105,17 +113,13 @@ describe('registerTurnLifecycle', () => {
       'Turn Lifecycle Registration: Registered Turn services and factories.'
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered ${tokens.HumanTurnHandler} tagged ${SHUTDOWNABLE.join(
-        ', '
-      )}.`
+      `Turn Lifecycle Registration: Registered ${tokens.HumanTurnHandler} with new strategy deps tagged ${SHUTDOWNABLE.join(', ')}.`
     );
     expect(calls).toContain(
       `Turn Lifecycle Registration: Registered ${tokens.TurnHandlerResolver} with singleton resolution.`
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(
-        ', '
-      )}.`
+      `Turn Lifecycle Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`
     );
     expect(calls).toContain(
       `Turn Lifecycle Registration: Registered transient factory for ${tokens.ITurnContext}.`
@@ -136,15 +140,11 @@ describe('registerTurnLifecycle', () => {
       Class: ConcreteTurnStateFactory,
       lifecycle: 'singleton',
     },
-    // --- MODIFIED TEST DATA ---
-    // The lifecycle for the factory was changed from 'singleton' to 'singletonFactory'
-    // to support constructor dependency injection. This updates the test to match.
     {
       token: tokens.ITurnContextFactory,
       Class: ConcreteTurnContextFactory,
       lifecycle: 'singletonFactory',
     },
-    // --- END MODIFICATION ---
     {
       token: tokens.IPromptCoordinator,
       Class: PromptCoordinator,
@@ -178,12 +178,10 @@ describe('registerTurnLifecycle', () => {
       expect(instance).toBeInstanceOf(Class);
 
       if (lifecycle === 'transient') {
-        // transient: each resolve is a fresh object
         const instance2 = container.resolve(token);
         expect(instance2).toBeInstanceOf(Class);
         expect(instance2).not.toBe(instance);
       } else {
-        // singleton/singletonFactory: same object on each resolve
         expect(container.resolve(token)).toBe(instance);
       }
 

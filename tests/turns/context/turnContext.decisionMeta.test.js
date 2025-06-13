@@ -68,7 +68,7 @@ describe('TKT-011: TurnContext Decision Metadata', () => {
   test('getDecisionMeta should return a frozen object if one was set', () => {
     // ARRANGE
     const meta = { speech: 'Hi', thoughts: null, notes: null };
-    // The caller (AwaitingPlayerInputState) is responsible for freezing.
+    // The caller (AwaitingActorDecisionState) is responsible for freezing.
     const frozenMeta = Object.freeze(meta);
 
     // ACT

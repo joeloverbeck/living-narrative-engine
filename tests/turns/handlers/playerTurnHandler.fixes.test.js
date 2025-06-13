@@ -1,6 +1,4 @@
 // tests/turns/handlers/playerTurnHandler.fixes.test.js
-// ****** MODIFIED FILE ******
-
 import {
   describe,
   expect,
@@ -9,10 +7,8 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-// AssumingHumanTurnHandler and BaseTurnHandler are in 'src/turns/handlers/'
-// as per your test execution paths.
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler';
+import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
 
 describe('HumanTurnHandler Constructor', () => {
   let mockLogger;
@@ -23,6 +19,9 @@ describe('HumanTurnHandler Constructor', () => {
   let mockCommandOutcomeInterpreter;
   let mockSafeEventDispatcher;
   let mockGameWorldAccess;
+  let mockChoicePipeline;
+  let mockHumanDecisionProvider;
+  let mockTurnActionFactory;
   let mockInitialState;
   let setInitialStateSpy;
 
@@ -43,6 +42,9 @@ describe('HumanTurnHandler Constructor', () => {
     mockCommandOutcomeInterpreter = {};
     mockSafeEventDispatcher = {};
     mockGameWorldAccess = {};
+    mockChoicePipeline = {};
+    mockHumanDecisionProvider = {};
+    mockTurnActionFactory = {};
 
     setInitialStateSpy = jest
       .spyOn(BaseTurnHandler.prototype, '_setInitialState')
@@ -65,6 +67,9 @@ describe('HumanTurnHandler Constructor', () => {
     promptCoordinator: mockPlayerPromptService,
     commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
     safeEventDispatcher: mockSafeEventDispatcher,
+    choicePipeline: mockChoicePipeline,
+    humanDecisionProvider: mockHumanDecisionProvider,
+    turnActionFactory: mockTurnActionFactory,
     gameWorldAccess: mockGameWorldAccess,
   });
 

@@ -4,7 +4,7 @@
 /**
  * @file Smoke-test harness for BaseTurnHandler core lifecycle.
  * Ticket: 1.5
- * PTH-REFACTOR-003.2: Adjusted tests to account for AwaitingPlayerInputState's
+ * PTH-REFACTOR-003.2: Adjusted tests to account for AwaitingActorDecisionState's
  * new dependency on IActorTurnStrategy.
  * PTH-REFACTOR-003.4: Updated TurnContext instantiation to include strategy.
  */
@@ -22,7 +22,7 @@ import {
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 import { TurnContext } from '../../../src/turns/context/turnContext.js';
 import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
-import { AwaitingPlayerInputState } from '../../../src/turns/states/awaitingPlayerInputState.js';
+import { AwaitingActorDecisionState } from '../../../src/turns/states/awaitingActorDecisionState.js';
 import { TurnEndingState } from '../../../src/turns/states/turnEndingState.js'; // Needed for some assertions
 import { AbstractTurnState } from '../../../src/turns/states/abstractTurnState.js'; // For calling super methods in mocks
 
@@ -180,7 +180,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
   let mockIsAwaitingExternalEventProvider;
   let mockOnSetAwaitingExternalEventCallback;
   let resetSpy;
-  let stateDestroySpy; // Spy for AwaitingPlayerInputState.prototype.destroy
+  let stateDestroySpy; // Spy for AwaitingActorDecisionState.prototype.destroy
 
   const initializeHandler = () => {
     handler = new MinimalTestHandler({
@@ -221,7 +221,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
     );
     // Add the implementation for the new mock method
     mockTurnStateFactory.createAwaitingInputState.mockImplementation(
-      (h) => new AwaitingPlayerInputState(h)
+      (h) => new AwaitingActorDecisionState(h)
     );
 
     dummyActor = createMockActor('smoke-test-actor-1');
@@ -255,15 +255,18 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
     initializeHandler();
 
-    stateDestroySpy = jest.spyOn(AwaitingPlayerInputState.prototype, 'destroy');
+    stateDestroySpy = jest.spyOn(
+      AwaitingActorDecisionState.prototype,
+      'destroy'
+    );
   });
 
   afterEach(async () => {
     if (
-      AwaitingPlayerInputState.prototype.enterState &&
-      AwaitingPlayerInputState.prototype.enterState.mockRestore
+      AwaitingActorDecisionState.prototype.enterState &&
+      AwaitingActorDecisionState.prototype.enterState.mockRestore
     ) {
-      AwaitingPlayerInputState.prototype.enterState.mockRestore();
+      AwaitingActorDecisionState.prototype.enterState.mockRestore();
     }
     if (stateDestroySpy && stateDestroySpy.mockRestore) {
       stateDestroySpy.mockRestore();
@@ -291,17 +294,17 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
     beforeEach(() => {
       originalAwaitingEnterState =
-        AwaitingPlayerInputState.prototype.enterState;
+        AwaitingActorDecisionState.prototype.enterState;
     });
 
     afterEach(() => {
       if (originalAwaitingEnterState) {
-        AwaitingPlayerInputState.prototype.enterState =
+        AwaitingActorDecisionState.prototype.enterState =
           originalAwaitingEnterState;
       }
     });
 
-    test('should transition from TurnIdleState to AwaitingPlayerInputState successfully (and pause there)', async () => {
+    test('should transition from TurnIdleState to AwaitingActorDecisionState successfully (and pause there)', async () => {
       expect(handler._getInternalState()).toBeInstanceOf(TurnIdleState);
 
       const enterStatePauseMock = jest.fn(async function (h, prevState) {
@@ -314,17 +317,19 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
             `${this.getStateName()}: Mocked entry for transition test. Pausing.`
           );
       });
-      AwaitingPlayerInputState.prototype.enterState = enterStatePauseMock;
+      AwaitingActorDecisionState.prototype.enterState = enterStatePauseMock;
 
       await handler.startTurn(dummyActor);
 
       expect(handler._getInternalState()).toBeInstanceOf(
-        AwaitingPlayerInputState
+        AwaitingActorDecisionState
       );
       expect(handler._getInternalState().getStateName()).toBe(
-        'AwaitingPlayerInputState'
+        'AwaitingActorDecisionState'
       );
-      expect(AwaitingPlayerInputState.prototype.enterState).toHaveBeenCalled();
+      expect(
+        AwaitingActorDecisionState.prototype.enterState
+      ).toHaveBeenCalled();
 
       const turnContextAfterStart = handler._getInternalTurnContext();
       expect(turnContextAfterStart).toBeInstanceOf(TurnContext);
@@ -343,8 +348,8 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       );
     });
 
-    test('should call onExitState (for TurnIdleState) and onEnterState (for AwaitingPlayerInputState) hooks during successful transition (when paused in Awaiting)', async () => {
-      AwaitingPlayerInputState.prototype.enterState = jest.fn(
+    test('should call onExitState (for TurnIdleState) and onEnterState (for AwaitingActorDecisionState) hooks during successful transition (when paused in Awaiting)', async () => {
+      AwaitingActorDecisionState.prototype.enterState = jest.fn(
         async function (h, prevState) {
           this._handler = h;
           await AbstractTurnState.prototype.enterState.call(this, h, prevState);
@@ -362,11 +367,11 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       expect(handler.onExitState).toHaveBeenCalledTimes(1);
       expect(handler.onExitState).toHaveBeenCalledWith(
         expect.any(TurnIdleState),
-        expect.any(AwaitingPlayerInputState)
+        expect.any(AwaitingActorDecisionState)
       );
       expect(handler.onEnterState).toHaveBeenCalledTimes(1);
       expect(handler.onEnterState).toHaveBeenCalledWith(
-        expect.any(AwaitingPlayerInputState),
+        expect.any(AwaitingActorDecisionState),
         expect.any(TurnIdleState)
       );
     });
@@ -469,7 +474,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       expect(localHandler._getInternalState()).toBeInstanceOf(TurnIdleState);
     });
 
-    test('AwaitingPlayerInputState.enterState handles strategy execution failure (BaseTurnHandler recovers)', async () => {
+    test('AwaitingActorDecisionState.enterState handles strategy execution failure (BaseTurnHandler recovers)', async () => {
       const strategyError = new Error('Strategy failed to decide');
       mockDefaultStrategyImplementation.decideAction.mockRejectedValue(
         strategyError
@@ -479,7 +484,7 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       await jest.advanceTimersByTimeAsync(0);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `AwaitingPlayerInputState: Error during action decision, storage, or transition for actor ${dummyActor.id}: ${strategyError.message}`,
+        `AwaitingActorDecisionState: Error during action decision, storage, or transition for actor ${dummyActor.id}: ${strategyError.message}`,
         { originalError: strategyError }
       );
       expect(handler._handleTurnEnd).toHaveBeenCalledTimes(1);
@@ -490,12 +495,12 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `MinimalTestHandler: State Transition: TurnIdleState \u2192 AwaitingPlayerInputState`
+          `MinimalTestHandler: State Transition: TurnIdleState \u2192 AwaitingActorDecisionState`
         )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `MinimalTestHandler: State Transition: AwaitingPlayerInputState \u2192 TurnEndingState`
+          `MinimalTestHandler: State Transition: AwaitingActorDecisionState \u2192 TurnEndingState`
         )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -515,18 +520,18 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
     beforeEach(() => {
       originalAwaitingEnterState =
-        AwaitingPlayerInputState.prototype.enterState;
+        AwaitingActorDecisionState.prototype.enterState;
     });
     afterEach(() => {
       if (originalAwaitingEnterState) {
-        AwaitingPlayerInputState.prototype.enterState =
+        AwaitingActorDecisionState.prototype.enterState =
           originalAwaitingEnterState;
       }
     });
 
-    test('should mark handler as destroyed, reset resources, and transition to TurnIdleState (when destroying from AwaitingPlayerInputState)', async () => {
+    test('should mark handler as destroyed, reset resources, and transition to TurnIdleState (when destroying from AwaitingActorDecisionState)', async () => {
       let enterStatePromiseResolveFn;
-      AwaitingPlayerInputState.prototype.enterState = jest.fn(
+      AwaitingActorDecisionState.prototype.enterState = jest.fn(
         async function (h, prevState) {
           this._handler = h;
           await AbstractTurnState.prototype.enterState.call(this, h, prevState);
@@ -547,9 +552,11 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
       await jest.advanceTimersByTimeAsync(0);
 
       expect(handler._getInternalState()).toBeInstanceOf(
-        AwaitingPlayerInputState
+        AwaitingActorDecisionState
       );
-      expect(AwaitingPlayerInputState.prototype.enterState).toHaveBeenCalled();
+      expect(
+        AwaitingActorDecisionState.prototype.enterState
+      ).toHaveBeenCalled();
 
       mockLogger.info.mockClear();
       mockLogger.debug.mockClear();

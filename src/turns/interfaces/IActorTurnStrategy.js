@@ -9,7 +9,7 @@
  * Represents an instance of an action that an actor has decided to take.
  * This object is crucial for a data-driven action system. It standardizes how an
  * actor's intended action is communicated from an IActorTurnStrategy (which decides
- * the action) to the turn state machine (e.g., AwaitingPlayerInputState which
+ * the action) to the turn state machine (e.g., AwaitingActorDecisionState which
  * receives it and ProcessingCommandState which consumes it).
  *
  * The core of this interface for processing is the `actionDefinitionId` and
@@ -60,7 +60,7 @@
  * tailored to the nature of the actor.
  *
  * This strategy is a cornerstone of the decoupled turn-handling architecture,
- * enabling actor-agnostic turn states (like `AwaitingPlayerInputState` or an automated
+ * enabling actor-agnostic turn states (like `AwaitingActorDecisionState` or an automated
  * `ExecuteChoiceState`) to function consistently regardless of the actor's type.
  * The turn handler (or the current turn state) will invoke `decideAction` on the
  * actor's current strategy to obtain its intended {@link ITurnAction}.

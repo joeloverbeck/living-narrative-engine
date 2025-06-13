@@ -65,7 +65,7 @@ describe('TurnIdleState.startTurn', () => {
     resetLogger();
   });
 
-  it('transitions to AwaitingPlayerInputState when actor & context are valid', async () => {
+  it('transitions to AwaitingActorDecisionState when actor & context are valid', async () => {
     const actor = makeActor();
     const ctx = buildCtx(actor);
     const handler = buildHandler(ctx);
@@ -73,7 +73,7 @@ describe('TurnIdleState.startTurn', () => {
 
     await expect(idle.startTurn(handler, actor)).resolves.not.toThrow();
 
-    // Ensures AwaitingPlayerInputState transition was requested
+    // Ensures AwaitingActorDecisionState transition was requested
     expect(ctx.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(1);
 
     // No error handling paths should fire

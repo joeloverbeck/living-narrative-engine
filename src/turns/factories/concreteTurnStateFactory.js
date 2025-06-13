@@ -7,7 +7,7 @@
 import { ITurnStateFactory } from '../interfaces/ITurnStateFactory.js';
 import { TurnIdleState } from '../states/turnIdleState.js';
 import { TurnEndingState } from '../states/turnEndingState.js';
-import { AwaitingPlayerInputState } from '../states/awaitingPlayerInputState.js';
+import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState.js';
 import { ProcessingCommandState } from '../states/processingCommandState.js'; // <-- Import added
 
 /**
@@ -48,7 +48,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
    * @override
    */
   createAwaitingInputState(handler) {
-    return new AwaitingPlayerInputState(handler);
+    return new AwaitingActorDecisionState(handler);
   }
 
   /**

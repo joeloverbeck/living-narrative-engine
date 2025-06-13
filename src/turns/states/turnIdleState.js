@@ -99,7 +99,7 @@ export class TurnIdleState extends AbstractTurnState {
     }
 
     logger.debug(
-      `${this.getStateName()}: ITurnContext confirmed for actor ${contextActor.id}. Transitioning to AwaitingPlayerInputState.`
+      `${this.getStateName()}: ITurnContext confirmed for actor ${contextActor.id}. Transitioning to AwaitingActorDecisionState.`
     );
 
     try {
@@ -107,11 +107,11 @@ export class TurnIdleState extends AbstractTurnState {
       await turnCtx.requestAwaitingInputStateTransition();
 
       logger.debug(
-        `${this.getStateName()}: Successfully transitioned to AwaitingPlayerInputState for actor ${contextActor.id}.`
+        `${this.getStateName()}: Successfully transitioned to AwaitingActorDecisionState for actor ${contextActor.id}.`
       );
     } catch (error) {
       logger.error(
-        `${this.getStateName()}: Failed to transition to AwaitingPlayerInputState for ${contextActor.id}. Error: ${error.message}`,
+        `${this.getStateName()}: Failed to transition to AwaitingActorDecisionState for ${contextActor.id}. Error: ${error.message}`,
         error
       );
       handler._resetTurnStateAndResources(

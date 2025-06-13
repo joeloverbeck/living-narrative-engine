@@ -14,7 +14,7 @@ import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 import TurnDirectiveStrategyResolver from '../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
-import { AwaitingPlayerInputState } from '../../../src/turns/states/awaitingPlayerInputState.js';
+import { AwaitingActorDecisionState } from '../../../src/turns/states/awaitingActorDecisionState.js';
 import { AwaitingExternalTurnEndState } from '../../../src/turns/states/awaitingExternalTurnEndState.js';
 
 // Mock Actor class (simplified)

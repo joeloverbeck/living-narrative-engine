@@ -2,7 +2,7 @@
 
 import RepromptStrategy from '../../../src/turns/strategies/repromptStrategy.js';
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
-import { AwaitingPlayerInputState } from '../../../src/turns/states/awaitingPlayerInputState.js';
+import { AwaitingActorDecisionState } from '../../../src/turns/states/awaitingActorDecisionState.js';
 import {
   afterEach,
   beforeEach,
@@ -79,7 +79,7 @@ describe('RepromptStrategy', () => {
     jest.clearAllMocks();
   });
 
-  test('should correctly execute RE_PROMPT directive and request transition to AwaitingPlayerInputState', async () => {
+  test('should correctly execute RE_PROMPT directive and request transition to AwaitingActorDecisionState', async () => {
     const directive = TurnDirective.RE_PROMPT;
     const cmdProcResult = {}; // Not directly used by this strategy beyond being a parameter
 
@@ -88,11 +88,11 @@ describe('RepromptStrategy', () => {
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
-      AwaitingPlayerInputState
+      AwaitingActorDecisionState
     );
     expect(mockTurnContext.requestTransition).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `RepromptStrategy: Transition to AwaitingPlayerInputState requested successfully for actor ${mockActor.id}.`
+      `RepromptStrategy: Transition to AwaitingActorDecisionState requested successfully for actor ${mockActor.id}.`
     );
     expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
   });
@@ -152,11 +152,11 @@ describe('RepromptStrategy', () => {
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
-      AwaitingPlayerInputState
+      AwaitingActorDecisionState
     );
     expect(mockTurnContext.requestTransition).toHaveBeenCalledTimes(1);
 
-    const expectedOverallErrorMessage = `RepromptStrategy: Failed to request transition to AwaitingPlayerInputState for actor ${mockActor.id}. Error: ${transitionErrorMessage}`;
+    const expectedOverallErrorMessage = `RepromptStrategy: Failed to request transition to AwaitingActorDecisionState for actor ${mockActor.id}. Error: ${transitionErrorMessage}`;
     expect(mockLogger.error).toHaveBeenCalledWith(
       expectedOverallErrorMessage,
       expect.any(Error) // The original error from requestTransition

@@ -1,9 +1,12 @@
 // src/turns/factories/ConcreteAIPlayerStrategyFactory.js
+
 import { IAIPlayerStrategyFactory } from '../interfaces/IAIPlayerStrategyFactory.js';
-import { AIPlayerStrategy } from '../strategies/aiPlayerStrategy.js';
+import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 
 /**
- * @typedef {import('../ports/IAIDecisionOrchestrator.js').IAIDecisionOrchestrator} IAIDecisionOrchestrator
+ * @typedef {import('../pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} TurnActionChoicePipeline
+ * @typedef {import('../interfaces/ITurnDecisionProvider.js').ITurnDecisionProvider} ITurnDecisionProvider
+ * @typedef {import('../ports/ITurnActionFactory.js').ITurnActionFactory} ITurnActionFactory
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  */
 
@@ -11,24 +14,42 @@ import { AIPlayerStrategy } from '../strategies/aiPlayerStrategy.js';
  * @class ConcreteAIPlayerStrategyFactory
  * @implements {IAIPlayerStrategyFactory}
  * @description
- * Factory for creating AIPlayerStrategy instances.
- * Injects only the IAIDecisionOrchestrator and ILogger that the strategy requires.
+ * Factory for creating GenericTurnStrategy instances.
  */
 export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
-  /** @type {IAIDecisionOrchestrator} */
-  #orchestrator;
+  /** @type {TurnActionChoicePipeline} */
+  #choicePipeline;
+  /** @type {ITurnDecisionProvider} */
+  #llmProvider;
+  /** @type {ITurnActionFactory} */
+  #turnActionFactory;
   /** @type {ILogger} */
   #logger;
 
   /**
-   * @param {{ orchestrator: IAIDecisionOrchestrator, logger: ILogger }} deps
+   * @param {{
+   *   choicePipeline: TurnActionChoicePipeline,
+   *   llmProvider: ITurnDecisionProvider,
+   *   turnActionFactory: ITurnActionFactory,
+   *   logger: ILogger
+   * }} deps
    */
-  constructor({ orchestrator, logger }) {
+  constructor({ choicePipeline, llmProvider, turnActionFactory, logger }) {
     super();
 
-    if (!orchestrator || typeof orchestrator.decideOrFallback !== 'function') {
+    if (!choicePipeline || typeof choicePipeline.buildChoices !== 'function') {
       throw new Error(
-        'ConcreteAIPlayerStrategyFactory: orchestrator is required and must implement decideOrFallback().'
+        'ConcreteAIPlayerStrategyFactory: choicePipeline is required and must implement buildChoices().'
+      );
+    }
+    if (!llmProvider || typeof llmProvider.decide !== 'function') {
+      throw new Error(
+        'ConcreteAIPlayerStrategyFactory: llmProvider is required and must implement decide().'
+      );
+    }
+    if (!turnActionFactory || typeof turnActionFactory.create !== 'function') {
+      throw new Error(
+        'ConcreteAIPlayerStrategyFactory: turnActionFactory is required and must implement create().'
       );
     }
     if (!logger || typeof logger.debug !== 'function') {
@@ -37,7 +58,9 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
       );
     }
 
-    this.#orchestrator = orchestrator;
+    this.#choicePipeline = choicePipeline;
+    this.#llmProvider = llmProvider;
+    this.#turnActionFactory = turnActionFactory;
     this.#logger = logger;
   }
 
@@ -45,8 +68,10 @@ export class ConcreteAIPlayerStrategyFactory extends IAIPlayerStrategyFactory {
    * @returns {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy}
    */
   create() {
-    return new AIPlayerStrategy({
-      orchestrator: this.#orchestrator,
+    return new GenericTurnStrategy({
+      choicePipeline: this.#choicePipeline,
+      decisionProvider: this.#llmProvider,
+      turnActionFactory: this.#turnActionFactory,
       logger: this.#logger,
     });
   }

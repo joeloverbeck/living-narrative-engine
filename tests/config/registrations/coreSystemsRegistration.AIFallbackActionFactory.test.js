@@ -1,4 +1,5 @@
 // tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js
+
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
 // --- DI Container & Configuration ---
@@ -13,7 +14,6 @@ import {
   PLAYER_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { ConcreteAIPlayerStrategyFactory } from '../../../src/turns/factories/concreteAIPlayerStrategyFactory.js';
 
 /**
  * @typedef {import('../../../src/entities/entity.js').default} Entity
@@ -57,12 +57,12 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       lifecycle: 'singletonFactory',
     });
 
-    // ── NEW: Stub out IAIPlayerStrategyFactory so AITurnHandler can be built ──
+    // Stub out IAIPlayerStrategyFactory so resolver can build the handler
     container.register(
       tokens.IAIPlayerStrategyFactory,
       () => ({
         create: () => ({
-          // dummy strategy; resolveHandler doesn’t execute it
+          // dummy strategy; TurnHandlerResolver doesn’t execute it here
         }),
       }),
       { lifecycle: 'singletonFactory' }
@@ -94,7 +94,6 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
 
     // Assert
     expect(handler).toBeDefined();
-    expect(handler).not.toBeNull();
     expect(handler).toBeInstanceOf(AITurnHandler);
   });
 
@@ -112,9 +111,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     brokenContainer.register(
       tokens.IPromptBuilder,
       () => ({ build: () => '' }),
-      {
-        lifecycle: 'singletonFactory',
-      }
+      { lifecycle: 'singletonFactory' }
     );
     brokenContainer.register(tokens.IAIPromptPipeline, () => ({}), {
       lifecycle: 'singletonFactory',
@@ -132,20 +129,14 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       { lifecycle: 'singletonFactory' }
     );
 
-    // Register the new‐signature AIPlayerStrategyFactory
+    // ── Stub IAIPlayerStrategyFactory properly ──
     brokenContainer.register(
       tokens.IAIPlayerStrategyFactory,
-      (c) =>
-        new ConcreteAIPlayerStrategyFactory({
-          orchestrator: {
-            decideOrFallback: () => ({
-              kind: 'fallback',
-              action: {},
-              extractedData: {},
-            }),
-          },
-          logger: c.resolve(tokens.ILogger),
+      () => ({
+        create: () => ({
+          // dummy strategy; not invoked here
         }),
+      }),
       { lifecycle: 'singletonFactory' }
     );
 

@@ -138,10 +138,13 @@ export function registerTurnLifecycle(container) {
         promptCoordinator: c.resolve(tokens.IPromptCoordinator),
         commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        choicePipeline: c.resolve(tokens.TurnActionChoicePipeline), // ← new
+        humanDecisionProvider: c.resolve(tokens.IHumanDecisionProvider), // ← new
+        turnActionFactory: c.resolve(tokens.ITurnActionFactory), // ← new
       })
   );
   logger.debug(
-    `Turn Lifecycle Registration: Registered ${tokens.HumanTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`
+    `Turn Lifecycle Registration: Registered HumanTurnHandler with new strategy deps tagged ${SHUTDOWNABLE.join(', ')}.`
   );
 
   // ────────────────── Resolver & manager ──────────────────

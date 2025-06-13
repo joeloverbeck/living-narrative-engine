@@ -1,12 +1,7 @@
 // src/turns/handlers/humanTurnHandler.js
-// ****** MODIFIED FILE ******
-// ──────────────────────────────────────────────────────────────────────────────
-//  HumanTurnHandler  – MODIFIED TO EXTEND BaseTurnHandler & USE ITurnContext
-// ──────────────────────────────────────────────────────────────────────────────
-
 import { BaseTurnHandler } from './baseTurnHandler.js';
-import { TurnContext } from '../context/turnContext.js'; // Adjusted path relative to src/turns/handlers/
-import { HumanPlayerStrategy } from '../strategies/humanPlayerStrategy.js'; // Adjusted path
+import { TurnContext } from '../context/turnContext.js';
+import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -15,30 +10,27 @@ import { HumanPlayerStrategy } from '../strategies/humanPlayerStrategy.js'; // A
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
-/** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy */
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
+/** @typedef {import('../pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} TurnActionChoicePipeline */
+
+/** @typedef {import('../interfaces/ITurnDecisionProvider.js').ITurnDecisionProvider} IHumanDecisionProvider */
+/** @typedef {import('../ports/ITurnActionFactory.js').ITurnActionFactory} ITurnActionFactory */
 
 class HumanTurnHandler extends BaseTurnHandler {
-  /** @type {ICommandProcessor} */
-  #commandProcessor;
-  /** @type {ITurnEndPort} */
-  #turnEndPort;
-  /** @type {IPromptCoordinator} */
-  #promptCoordinator;
-  /** @type {ICommandOutcomeInterpreter} */
-  #commandOutcomeInterpreter;
-  /** @type {ISafeEventDispatcher} */
-  #safeEventDispatcher;
-  /** @type {object} */
-  #gameWorldAccess;
+  /** @type {ICommandProcessor} */ #commandProcessor;
+  /** @type {ITurnEndPort} */ #turnEndPort;
+  /** @type {IPromptCoordinator} */ #promptCoordinator;
+  /** @type {ICommandOutcomeInterpreter}*/ #commandOutcomeInterpreter;
+  /** @type {ISafeEventDispatcher} */ #safeEventDispatcher;
+  /** @type {TurnActionChoicePipeline} */ #choicePipeline;
+  /** @type {IHumanDecisionProvider} */ #humanDecisionProvider;
+  /** @type {ITurnActionFactory} */ #turnActionFactory;
+  /** @type {object} */ #gameWorldAccess;
 
-  /** @type {boolean} */
-  #isAwaitingTurnEndEvent = false;
-  /** @type {string|null} */
-  #awaitingTurnEndForActorId = null;
-  /** @type {boolean} */
-  #isTerminatingNormally = false;
+  /** @type {boolean} */ #isAwaitingTurnEndEvent = false;
+  /** @type {string|null} */ #awaitingTurnEndForActorId = null;
+  /** @type {boolean} */ #isTerminatingNormally = false;
 
   /**
    * @param {object} deps
@@ -49,6 +41,9 @@ class HumanTurnHandler extends BaseTurnHandler {
    * @param {IPromptCoordinator} deps.promptCoordinator
    * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
+   * @param {TurnActionChoicePipeline} deps.choicePipeline
+   * @param {IHumanDecisionProvider} deps.humanDecisionProvider
+   * @param {ITurnActionFactory} deps.turnActionFactory
    * @param {object} [deps.gameWorldAccess]
    */
   constructor({
@@ -59,6 +54,9 @@ class HumanTurnHandler extends BaseTurnHandler {
     promptCoordinator,
     commandOutcomeInterpreter,
     safeEventDispatcher,
+    choicePipeline,
+    humanDecisionProvider,
+    turnActionFactory,
     gameWorldAccess = {},
   }) {
     super({ logger, turnStateFactory });
@@ -75,12 +73,21 @@ class HumanTurnHandler extends BaseTurnHandler {
       );
     if (!safeEventDispatcher)
       throw new Error('HumanTurnHandler: safeEventDispatcher is required');
+    if (!choicePipeline)
+      throw new Error('HumanTurnHandler: choicePipeline is required');
+    if (!humanDecisionProvider)
+      throw new Error('HumanTurnHandler: humanDecisionProvider is required');
+    if (!turnActionFactory)
+      throw new Error('HumanTurnHandler: turnActionFactory is required');
 
     this.#commandProcessor = commandProcessor;
     this.#turnEndPort = turnEndPort;
     this.#promptCoordinator = promptCoordinator;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#choicePipeline = choicePipeline;
+    this.#humanDecisionProvider = humanDecisionProvider;
+    this.#turnActionFactory = turnActionFactory;
     this.#gameWorldAccess = gameWorldAccess;
 
     const initialState = this._turnStateFactory.createInitialState(this);
@@ -104,9 +111,14 @@ class HumanTurnHandler extends BaseTurnHandler {
     }
     this._setCurrentActorInternal(actor);
 
-    const humanPlayerStrategy = new HumanPlayerStrategy();
+    const humanStrategy = new GenericTurnStrategy({
+      choicePipeline: this.#choicePipeline,
+      decisionProvider: this.#humanDecisionProvider,
+      turnActionFactory: this.#turnActionFactory,
+      logger: this._logger,
+    });
     this._logger.debug(
-      `${this.constructor.name}: Instantiated HumanPlayerStrategy for actor ${actor.id}.`
+      `${this.constructor.name}: Instantiated GenericTurnStrategy for actor ${actor.id}.`
     );
 
     /** @type {TurnContextServices} */
@@ -116,15 +128,14 @@ class HumanTurnHandler extends BaseTurnHandler {
       commandProcessor: this.#commandProcessor,
       commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
       safeEventDispatcher: this.#safeEventDispatcher,
-      // REMOVED: subscriptionManager: this.#subscriptionManager,
       turnEndPort: this.#turnEndPort,
     };
 
     const newTurnContext = new TurnContext({
-      actor: actor,
+      actor,
       logger: this._logger,
       services: servicesForContext,
-      strategy: humanPlayerStrategy,
+      strategy: humanStrategy,
       onEndTurnCallback: (errorOrNull) =>
         this._handleTurnEnd(actor.id, errorOrNull),
       isAwaitingExternalEventProvider:
@@ -136,12 +147,12 @@ class HumanTurnHandler extends BaseTurnHandler {
     this._setCurrentTurnContextInternal(newTurnContext);
 
     this._logger.debug(
-      `HumanTurnHandler.startTurn: TurnContext created for actor ${actor.id} with HumanPlayerStrategy.`
+      `HumanTurnHandler.startTurn: TurnContext created for actor ${actor.id} with GenericTurnStrategy.`
     );
 
     if (!this._currentState) {
       this._logger.error(
-        `${this.constructor.name}.startTurn: _currentState is null for actor ${actor.id}. This should have been set by turnStateFactory.`
+        `${this.constructor.name}.startTurn: _currentState is null for actor ${actor.id}.`
       );
       const fallbackInitialState =
         this._turnStateFactory.createInitialState(this);
@@ -150,16 +161,18 @@ class HumanTurnHandler extends BaseTurnHandler {
           `${this.constructor.name}.startTurn: Attempting to set initial state again.`
         );
         this._setInitialState(fallbackInitialState);
-        if (!this._currentState)
+        if (!this._currentState) {
           throw new Error(
             'HumanTurnHandler: _currentState is null, and recovery failed.'
           );
+        }
       } else {
         throw new Error(
           'HumanTurnHandler: _currentState is null, and turnStateFactory failed to provide a state.'
         );
       }
     }
+
     await this._currentState.startTurn(this, actor);
   }
 
@@ -171,10 +184,6 @@ class HumanTurnHandler extends BaseTurnHandler {
     );
     super._resetTurnStateAndResources(logCtx);
     this._clearTurnEndWaitingMechanismsInternal();
-
-    // REMOVED: The call to subscriptionManager.unsubscribeAll() is no longer needed.
-    // Individual states are responsible for cleaning up their own subscriptions via
-    // their exitState/destroy methods, which is a more robust pattern.
 
     this.#isTerminatingNormally = false;
     this._logger.debug(
@@ -192,7 +201,9 @@ class HumanTurnHandler extends BaseTurnHandler {
     this._logger.debug(
       `${this.constructor.name}.destroy() invoked (Player specific part). Current state: ${this._currentState?.getStateName()}`
     );
+
     await super.destroy();
+
     this._logger.debug(
       `${this.constructor.name}.destroy() player-specific handling complete (delegated most to base).`
     );
@@ -206,7 +217,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       ? (actorId ?? null)
       : null;
     this._logger.debug(
-      `${this.constructor.name}._markAwaitingTurnEnd: ${prevFlag}/${prevActor} \u2192 ${this.#isAwaitingTurnEndEvent}/${this.#awaitingTurnEndForActorId}`
+      `${this.constructor.name}._markAwaitingTurnEnd: ${prevFlag}/${prevActor} → ${this.#isAwaitingTurnEndEvent}/${this.#awaitingTurnEndForActorId}`
     );
   }
 
@@ -259,11 +270,11 @@ class HumanTurnHandler extends BaseTurnHandler {
 
     if (
       !this._currentState ||
-      typeof this._currentState.handleSubmittedCommand !== 'function'
+      typeof this._currentStatehandleSubmittedCommand !== 'function'
     ) {
-      const errMsg = `${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
-      this._logger.error(errMsg);
-      currentContext.endTurn(new Error(errMsg));
+      const err = `${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
+      this._logger.error(err);
+      currentContext.endTurn(new Error(err));
       return;
     }
     await this._currentState.handleSubmittedCommand(
@@ -284,7 +295,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       );
       if (
         this._currentState &&
-        typeof this._currentState.handleTurnEndedEvent === 'function'
+        typeof this._currentStatehandleTurnEndedEvent === 'function'
       ) {
         await this._currentState.handleTurnEndedEvent(this, payload);
       } else {
@@ -309,6 +320,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       );
       return;
     }
+
     await this._currentState.handleTurnEndedEvent(this, payload);
   }
 }

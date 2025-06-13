@@ -1,15 +1,18 @@
 // tests/turns/factories/concreteAIPlayerStrategyFactory.test.js
+
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ConcreteAIPlayerStrategyFactory } from '../../../src/turns/factories/concreteAIPlayerStrategyFactory.js';
-import { AIPlayerStrategy } from '../../../src/turns/strategies/aiPlayerStrategy.js';
+import { GenericTurnStrategy } from '../../../src/turns/strategies/genericTurnStrategy.js';
 
-// Mock AIPlayerStrategy to spy on its constructor and return a dummy instance
-jest.mock('../../../src/turns/strategies/aiPlayerStrategy.js');
+// Mock GenericTurnStrategy to spy on its constructor and return a dummy instance
+jest.mock('../../../src/turns/strategies/genericTurnStrategy.js');
 const dummyInstance = {};
-AIPlayerStrategy.mockReturnValue(dummyInstance);
+GenericTurnStrategy.mockReturnValue(dummyInstance);
 
 // --- Mock Dependencies ---
-const mockOrchestrator = { decideOrFallback: jest.fn() };
+const mockChoicePipeline = { buildChoices: jest.fn() };
+const mockLLMProvider = { decide: jest.fn() };
+const mockTurnActionFactory = { create: jest.fn() };
 const mockLogger = { debug: jest.fn(), error: jest.fn() };
 
 describe('ConcreteAIPlayerStrategyFactory', () => {
@@ -18,23 +21,53 @@ describe('ConcreteAIPlayerStrategyFactory', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     dependencies = {
-      orchestrator: mockOrchestrator,
+      choicePipeline: mockChoicePipeline,
+      llmProvider: mockLLMProvider,
+      turnActionFactory: mockTurnActionFactory,
       logger: mockLogger,
     };
   });
 
   describe('Constructor', () => {
-    it('should throw an error if orchestrator is not provided', () => {
-      delete dependencies.orchestrator;
+    it('should throw an error if choicePipeline is not provided', () => {
+      delete dependencies.choicePipeline;
       expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'orchestrator is required'
+        'choicePipeline is required'
       );
     });
 
-    it('should throw an error if orchestrator.decideOrFallback is not a function', () => {
-      dependencies.orchestrator = {};
+    it('should throw an error if choicePipeline.buildChoices is not a function', () => {
+      dependencies.choicePipeline = {};
       expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
-        'orchestrator is required and must implement decideOrFallback()'
+        'choicePipeline is required and must implement buildChoices()'
+      );
+    });
+
+    it('should throw an error if llmProvider is not provided', () => {
+      delete dependencies.llmProvider;
+      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
+        'llmProvider is required'
+      );
+    });
+
+    it('should throw an error if llmProvider.decide is not a function', () => {
+      dependencies.llmProvider = {};
+      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
+        'llmProvider is required and must implement decide()'
+      );
+    });
+
+    it('should throw an error if turnActionFactory is not provided', () => {
+      delete dependencies.turnActionFactory;
+      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
+        'turnActionFactory is required'
+      );
+    });
+
+    it('should throw an error if turnActionFactory.create is not a function', () => {
+      dependencies.turnActionFactory = {};
+      expect(() => new ConcreteAIPlayerStrategyFactory(dependencies)).toThrow(
+        'turnActionFactory is required and must implement create()'
       );
     });
 
@@ -60,13 +93,15 @@ describe('ConcreteAIPlayerStrategyFactory', () => {
   });
 
   describe('create', () => {
-    it('should create an AIPlayerStrategy with the cached dependencies', () => {
+    it('should create a GenericTurnStrategy with the cached dependencies', () => {
       const factory = new ConcreteAIPlayerStrategyFactory(dependencies);
       const strategyInstance = factory.create();
 
-      expect(AIPlayerStrategy).toHaveBeenCalledTimes(1);
-      expect(AIPlayerStrategy).toHaveBeenCalledWith({
-        orchestrator: mockOrchestrator,
+      expect(GenericTurnStrategy).toHaveBeenCalledTimes(1);
+      expect(GenericTurnStrategy).toHaveBeenCalledWith({
+        choicePipeline: mockChoicePipeline,
+        decisionProvider: mockLLMProvider,
+        turnActionFactory: mockTurnActionFactory,
         logger: mockLogger,
       });
       expect(strategyInstance).toBe(dummyInstance);

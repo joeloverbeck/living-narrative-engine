@@ -403,7 +403,9 @@ export function registerAI(container) {
     tokens.IAIPlayerStrategyFactory,
     (c) =>
       new ConcreteAIPlayerStrategyFactory({
-        orchestrator: c.resolve(tokens.IAIDecisionOrchestrator),
+        choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
+        llmProvider: c.resolve(tokens.ILLMDecisionProvider),
+        turnActionFactory: c.resolve(tokens.ITurnActionFactory),
         logger: c.resolve(tokens.ILogger),
       })
   );
