@@ -3,7 +3,7 @@
 import { persistNotes } from './notesPersistenceHook.js';
 
 /**
- * Consumes 'core:ai_action_decided' and merges generated notes into the
+ * Consumes ACTION_DECIDED_ID and merges generated notes into the
  * actor’s notes component.
  */
 export class NotesPersistenceListener {

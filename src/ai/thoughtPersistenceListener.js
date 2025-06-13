@@ -3,7 +3,7 @@
 import { persistThoughts } from './thoughtPersistenceHook.js';
 
 /**
- * Listens for 'core:ai_action_decided' and persists any thoughts in the
+ * Listens for ACTION_DECIDED_ID and persists any thoughts in the
  * actor’s short-term memory component.
  */
 export class ThoughtPersistenceListener {

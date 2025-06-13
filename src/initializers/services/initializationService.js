@@ -16,6 +16,7 @@ import { tokens } from '../../dependencyInjection/tokens.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
+import { ACTION_DECIDED_ID } from '../../constants/eventIds';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
@@ -225,11 +226,11 @@ class InitializationService extends IInitializationService {
         entityManager,
       });
       dispatcher.subscribe(
-        'core:ai_action_decided',
+        ACTION_DECIDED_ID,
         thoughtListener.handleEvent.bind(thoughtListener)
       );
       dispatcher.subscribe(
-        'core:ai_action_decided',
+        ACTION_DECIDED_ID,
         notesListener.handleEvent.bind(notesListener)
       );
       this.#logger.debug('Registered AI persistence listeners.');

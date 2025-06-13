@@ -7,6 +7,7 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
+import { ACTION_DECIDED_ID } from '../../constants/eventIds';
 
 /**
  * State in which the engine waits for the current actor’s turn-strategy to
@@ -21,21 +22,16 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     super(handler);
   }
 
-  /* --------------------------------------------------------------------- */
   getStateName() {
     return 'AwaitingActorDecisionState';
   }
 
-  /* alias required by some tests */
   get name() {
     return this.getStateName();
   }
 
-  /* --------------------------------------------------------------------- */
   /**
    * @override
-   * @param {import('../handlers/baseTurnHandler.js').BaseTurnHandler} handler - The handler managing states.
-   * @param {AbstractTurnState | null} previousState - The state being exited.
    */
   async enterState(handler, previousState) {
     await super.enterState(handler, previousState);
@@ -70,9 +66,6 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       `${this.name}: Actor ${actor.id}. Attempting to retrieve turn strategy.`
     );
 
-    /* ---------- obtain strategy ------------------------------------------------ */
-    let strategy;
-
     if (typeof turnContext.getStrategy !== 'function') {
       const msg = `${this.name}: turnContext.getStrategy() is not a function for actor ${actor.id}.`;
       logger.error(msg);
@@ -80,8 +73,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       return;
     }
 
-    strategy = turnContext.getStrategy();
-
+    const strategy = turnContext.getStrategy();
     if (!strategy || typeof strategy.decideAction !== 'function') {
       const msg = `${this.name}: No valid IActorTurnStrategy found for actor ${actor.id} or strategy is malformed (missing decideAction).`;
       logger.error(msg, { strategyReceived: strategy });
@@ -94,23 +86,17 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       `${this.name}: Strategy ${strategyName} obtained for actor ${actor.id}. Requesting action decision.`
     );
 
-    /* ---------- decide action -------------------------------------------------- */
+    let decision, action, extractedData;
     try {
-      const decision = await strategy.decideAction(turnContext);
-
-      // --- BUG FIX ---
-      // Defensively handle a null/undefined decision before trying to access properties on it.
-      // If decision is null, `action` becomes null. If decision is an object, it extracts the action correctly.
-      const action = decision ? decision.action || decision : null;
-      const extractedData = decision ? decision.extractedData || null : null;
-      // --- END BUG FIX ---
+      decision = await strategy.decideAction(turnContext);
+      action = decision ? decision.action || decision : null;
+      extractedData = decision?.extractedData ?? null;
 
       if (typeof turnContext.setDecisionMeta === 'function') {
         const metaFrozen = extractedData ? Object.freeze(extractedData) : null;
         turnContext.setDecisionMeta(metaFrozen);
       }
 
-      /* validate ITurnAction */
       if (!action || typeof action.actionDefinitionId !== 'string') {
         const warnMsg = `${this.name}: Strategy for actor ${actor.id} returned an invalid or null ITurnAction (must have actionDefinitionId).`;
         logger.warn(warnMsg, { receivedAction: action });
@@ -118,22 +104,24 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
         return;
       }
 
-      if (extractedData) {
-        try {
-          const eventDispatcher = turnContext.getSafeEventDispatcher();
-          await eventDispatcher.dispatch('core:ai_action_decided', {
-            actorId: actor.id,
-            extractedData,
-          });
-          logger.debug(
-            `Dispatched core:ai_action_decided for actor ${actor.id}`
-          );
-        } catch (e) {
-          logger.error(
-            `Failed to dispatch core:ai_action_decided event for actor ${actor.id}`,
-            e
-          );
-        }
+      // Determine actor type: 'ai' or 'human'
+      const actorType = actor.isAi === true ? 'ai' : 'human';
+
+      // Dispatch the standardized action_decided event
+      const payload = {
+        actorId: actor.id,
+        actorType,
+        ...(extractedData ? { extractedData } : {}),
+      };
+      try {
+        const dispatcher = turnContext.getSafeEventDispatcher();
+        await dispatcher.dispatch(ACTION_DECIDED_ID, payload);
+        logger.debug(`Dispatched ${ACTION_DECIDED_ID} for actor ${actor.id}`);
+      } catch (e) {
+        logger.error(
+          `Failed to dispatch ${ACTION_DECIDED_ID} event for actor ${actor.id}`,
+          e
+        );
       }
 
       logger.debug(
@@ -172,11 +160,6 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   }
 
   /* --------------------------------------------------------------------- */
-  /**
-   * @override
-   * @param {import('../handlers/baseTurnHandler.js').BaseTurnHandler} handler
-   * @param {AbstractTurnState | null} nextState
-   */
   async exitState(handler, nextState) {
     await super.exitState(handler, nextState);
     const l =

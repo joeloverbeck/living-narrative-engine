@@ -9,6 +9,10 @@ export const SYSTEM_ERROR_OCCURRED_ID = 'core:system_error_occurred';
 export const PLAYER_TURN_SUBMITTED_ID = 'core:player_turn_submitted';
 export const DISPLAY_ERROR_ID = 'core:display_error';
 export const DISPLAY_WARNING_ID = 'core:display_warning';
+
+// **New, canonical event** fired for both AI and human turns:
+export const ACTION_DECIDED_ID = 'core:action_decided';
+
 export const ATTEMPT_ACTION_ID = 'core:attempt_action';
 export const ENTITY_SPOKE_ID = 'core:entity_spoke';
 export const DISPLAY_SPEECH_ID = 'core:display_speech';
@@ -96,7 +100,7 @@ export const ENGINE_OPERATION_FAILED_UI = 'core:ui_operation_failed';
 export const ENGINE_STOPPED_UI = 'core:ui_stopped';
 
 /**
-/**
+ /**
  * Signals a request from the engine to show the save game interface.
  * The UI manager should handle the presentation of the save game UI.
  *

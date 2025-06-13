@@ -1,0 +1,39 @@
+{
+  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "id": "core:action_decided",
+  "description": "Dispatched when any actor (human or AI) has chosen its next action.",
+  "payloadSchema": {
+    "title": "Core: Action Decided Event Payload",
+    "description": "Payload for the 'core:action_decided' event.",
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the actor that decided an action."
+      },
+      "actorType": {
+        "type": "string",
+        "enum": ["ai", "human"],
+        "description": "Whether this was an AI turn or a human turn."
+      },
+      "extractedData": {
+        "type": "object",
+        "description": "Optional data extracted during decision.",
+        "properties": {
+          "thoughts": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "required": ["actorId", "actorType"],
+    "additionalProperties": false
+  }
+}
