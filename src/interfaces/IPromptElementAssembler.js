@@ -54,13 +54,13 @@ export class IPromptElementAssembler {
     elementConfig,
     promptData,
     placeholderResolver,
-    allPromptElementsMap,
+    allPromptElementsMap
   ) {
     // This method serves as an interface definition and should be implemented by concrete classes.
     // If a class inherits from IPromptElementAssembler and does not override this method,
     // calling it will result in this error, signaling an incomplete implementation.
     throw new Error(
-      'Method \'assemble(elementConfig, promptData, placeholderResolver, allPromptElementsMap)\' must be implemented by concrete classes.',
+      "Method 'assemble(elementConfig, promptData, placeholderResolver, allPromptElementsMap)' must be implemented by concrete classes."
     );
   }
 }

@@ -19,7 +19,7 @@ export class IPerceptionLogFormatter {
    * @throws {Error} If the method is not implemented.
    */
   format(rawLogEntries) {
-    throw new Error('Method \'format()\' must be implemented.');
+    throw new Error("Method 'format()' must be implemented.");
   }
 }
 

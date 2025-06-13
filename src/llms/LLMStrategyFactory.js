@@ -75,7 +75,7 @@ export class LLMStrategyFactory {
     this.#httpClient = httpClient;
 
     this.#logger.debug(
-      'LLMStrategyFactory: Instance created and dependencies stored.',
+      'LLMStrategyFactory: Instance created and dependencies stored.'
     );
   }
 
@@ -116,7 +116,7 @@ export class LLMStrategyFactory {
       {
         configuredJsonMethod: configuredMethod || 'NOT SET',
         fullConfigJsonStrategy: llmConfig.jsonOutputStrategy,
-      },
+      }
     );
 
     if (!configuredMethod) {
@@ -169,7 +169,7 @@ export class LLMStrategyFactory {
         const availableMethodsForLog = KNOWN_API_TYPES_FOR_FACTORY.map(
           (type) => {
             return `${type}: [${Object.keys(strategyMappings[type] || {}).join(', ') || 'none'}]`;
-          },
+          }
         ).join('; ');
         errorMessage = `Unrecognized jsonOutputStrategy.method: '${configuredMethod}' for apiType '${apiType}' (LLM ID: '${llmId}'). Supported methods for this apiType are: [${knownMethodsForCurrentApi}]. Full list of supported API types and methods: ${availableMethodsForLog || 'None configured'}.`;
         // For more detailed internal logging, we can add more to the context here if desired,
@@ -184,7 +184,7 @@ export class LLMStrategyFactory {
 
       this.#logger.error(
         `LLMStrategyFactory: ${errorMessage}`,
-        errorLogContext,
+        errorLogContext
       );
       throw new LLMStrategyFactoryError(errorMessage, {
         apiType: apiType,
@@ -194,7 +194,7 @@ export class LLMStrategyFactory {
 
     // Adjusted log message to include 'effectiveMethod' (same as configuredMethod here) to match test expectations.
     this.#logger.debug(
-      `LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod='${configuredMethod}', configuredMethod='${configuredMethod}'.`,
+      `LLMStrategyFactory: Selected strategy '${StrategyClass.name}' for LLM ID '${llmId}'. Details: apiType='${apiType}', effectiveMethod='${configuredMethod}', configuredMethod='${configuredMethod}'.`
     );
 
     return new StrategyClass({

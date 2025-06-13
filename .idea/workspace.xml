@@ -4,34 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixing dependencies.">
-      <change afterPath="$PROJECT_DIR$/src/errors/configurationError.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/types/commandResult.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/types/perceptionLogTypes.js" afterDir="false" />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to unfuck the turn system.">
+      <change beforePath="$PROJECT_DIR$/.dependency-cruiser.js" beforeDir="false" afterPath="$PROJECT_DIR$/.dependency-cruiser.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/commandProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/commandProcessor.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/commands/interfaces/ICommandOutcomeInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/interfaces/ICommandOutcomeInterpreter.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/interfaces/IPerceptionLogFormatter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IPerceptionLogFormatter.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/interfaces/IPromptElementAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IPromptElementAssembler.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/llms/LLMStrategyFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/llms/LLMStrategyFactory.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/llms/interfaces/ILLMStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/llms/interfaces/ILLMStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/llms/strategies/base/baseOpenRouterStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/llms/strategies/base/baseOpenRouterStrategy.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/turns/adapters/configurableLLMAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/configurableLLMAdapter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnDirectiveStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnDirectiveStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/factories/concreteTurnStateFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/concreteTurnStateFactory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/abstractTurnState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/abstractTurnState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/processingCommandState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/processingCommandState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnStateFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnStateFactory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingPlayerInputState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingPlayerInputState.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/turns/states/turnEndingState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/turnEndingState.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/turns/states/turnIdleState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/turnIdleState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/endTurnFailureStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/endTurnFailureStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/endTurnSuccessStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/endTurnSuccessStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/repromptStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/repromptStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/llms/LLMStrategyFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/llms/LLMStrategyFactory.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/resolvePath.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/resolvePath.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/aiDecisionMetadata.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/aiDecisionMetadata.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/humanDirectionParam.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/humanDirectionParam.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/llms/strategies/openRouterJsonSchemaStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/llms/strategies/openRouterJsonSchemaStrategy.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/turns/adapters/configurableLLMAdapter.getAIDecision.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/adapters/configurableLLMAdapter.getAIDecision.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/aiTurnHandler.awaitingExternalEvent.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/aiTurnHandler.awaitingExternalEvent.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/awaitingPlayerInputState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/awaitingPlayerInputState.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnIdleState.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,7 +146,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749824452963</updated>
-      <workItem from="1749824454676" duration="6878000" />
+      <workItem from="1749824454676" duration="12325000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -166,7 +164,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749828601429</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Trying to unfuck the turn system.">
+      <option name="closed" value="true" />
+      <created>1749831421073</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1749831421073</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -175,6 +181,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Uploading stuff from the office." />
     <MESSAGE value="Fixing dependencies." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixing dependencies." />
+    <MESSAGE value="Trying to unfuck the turn system." />
+    <option name="LAST_COMMIT_MESSAGE" value="Trying to unfuck the turn system." />
   </component>
 </project>

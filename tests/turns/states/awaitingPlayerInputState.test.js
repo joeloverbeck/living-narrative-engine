@@ -1,12 +1,10 @@
 // tests/turns/states/awaitingPlayerInputState.test.js
-// --- FILE START ---
+// ****** CORRECTED FILE ******
 
 /**
  * @file Unit tests for AwaitingPlayerInputState.
  * Verifies its interaction with ITurnContext, IActorTurnStrategy, and state transitions.
  * Ticket: PTH-REFACTOR-003.5.7 (Unit Tests for AwaitingPlayerInputState - Responsibility Shift)
- * Parent Ticket: PTH-REFACTOR-003.5 (Define ITurnAction; Refactor Command Processing into ProcessingCommandState)
- * Depends On: PTH-REFACTOR-003.5.4 (Refactor AwaitingPlayerInputState for New Workflow)
  */
 
 import {
@@ -22,11 +20,7 @@ import {
 import { AwaitingPlayerInputState } from '../../../src/turns/states/awaitingPlayerInputState.js';
 
 // Dependencies to be mocked or spied upon
-import { ProcessingCommandState } from '../../../src/turns/states/processingCommandState.js';
-import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 import { AbstractTurnState } from '../../../src/turns/states/abstractTurnState.js';
-// TurnDirectiveStrategyResolver is not directly used by AwaitingPlayerInputState,
-// so no need to import/mock it here unless testing that it's *not* resolved by this state.
 
 // --- Mocks & Test Utilities ---
 
@@ -36,18 +30,16 @@ const mockLogger = {
   warn: jest.fn(),
   error: jest.fn(),
   debug: jest.fn(),
-  createChild: jest.fn(() => mockLogger), // Ensure child logger also returns mockLogger
-  createChildLogger: jest.fn(() => mockLogger), // Adding createChildLogger as it's used in HumanPlayerStrategy
+  createChild: jest.fn(() => mockLogger),
+  createChildLogger: jest.fn(() => mockLogger),
 };
 
 const createMockActor = (id = 'test-actor-awaiting') => ({
   id: id,
   name: `MockAwaitingActor-${id}`,
-  hasComponent: jest.fn(), // Add hasComponent mock
+  hasComponent: jest.fn(),
 });
 
-// Mock for ITurnAction
-// Ensure it has actionDefinitionId as per PTH-REFACTOR-003.5.3
 const createMockTurnAction = (
   commandString = 'mock action',
   actionDefinitionId = 'mock:action_id_123',
@@ -58,13 +50,11 @@ const createMockTurnAction = (
   resolvedParameters: resolvedParameters,
 });
 
-// Mock for IActorTurnStrategy - instance with a jest.fn() for decideAction
 const createMockActorTurnStrategy = () => ({
   decideAction: jest.fn(),
-  // constructor.name will be 'Object' for object literals. If a specific name is needed for logging tests:
-  // constructor: { name: 'MockActorTurnStrategy' }
 });
 
+// MODIFIED: Updated the mock context to use the new transition methods.
 const createMockTurnContext = (
   actor,
   loggerInstance = mockLogger,
@@ -75,18 +65,17 @@ const createMockTurnContext = (
     getLogger: jest.fn().mockReturnValue(loggerInstance),
     getStrategy: jest.fn().mockReturnValue(strategy),
     setChosenAction: jest.fn(),
-    requestTransition: jest.fn().mockResolvedValue(undefined), // Default successful transition
+    // NEW: Mock the new intent-based transition method.
+    requestProcessingCommandStateTransition: jest
+      .fn()
+      .mockResolvedValue(undefined),
     endTurn: jest.fn(),
-    getChosenAction: jest.fn(), // Added as per ProcessingCommandState
-    isValid: jest.fn().mockReturnValue(true), // Added for ProcessingCommandState robustness
-
-    // Services that should NOT be called by AwaitingPlayerInputState
+    getChosenAction: jest.fn(),
+    isValid: jest.fn().mockReturnValue(true),
     getCommandProcessor: jest.fn(),
     getCommandOutcomeInterpreter: jest.fn(),
-
-    // Other services that might be on a real ITurnContext but not directly used by this state
-    getPlayerPromptService: jest.fn(), // Not called directly by AwaitingPlayerInputState
-    getSubscriptionManager: jest.fn(), // Not called directly by AwaitingPlayerInputState
+    getPlayerPromptService: jest.fn(),
+    getSubscriptionManager: jest.fn(),
     getGame: jest.fn(),
     getSafeEventDispatcher: jest.fn(),
     getTurnEndPort: jest.fn(),
@@ -96,17 +85,17 @@ const createMockTurnContext = (
   return mockContext;
 };
 
+// MODIFIED: Updated the mock handler to include the new transition method.
 const createMockBaseTurnHandler = (loggerInstance = mockLogger) => {
   const handlerMock = {
     getLogger: jest.fn().mockReturnValue(loggerInstance),
-    getTurnContext: jest.fn().mockReturnValue(null), // Will be overridden in tests
+    getTurnContext: jest.fn().mockReturnValue(null),
     _transitionToState: jest.fn().mockResolvedValue(undefined),
     _resetTurnStateAndResources: jest.fn(),
-    getCurrentActor: jest.fn().mockReturnValue(null), // Will be overridden
+    getCurrentActor: jest.fn().mockReturnValue(null),
+    // NEW: Add the new transition method used for recovery.
+    requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
     _currentState: null,
-    // Mock any other properties accessed on handler if necessary, for example:
-    // _isDestroying: false,
-    // _isDestroyed: false,
   };
   return handlerMock;
 };
@@ -118,13 +107,13 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
   let testActor;
   let mockTestTurnContext;
   let mockTestStrategy;
-  let mockPreviousState; // Used as a stand-in for previous/next state arguments
+  let mockPreviousState;
 
   let superEnterSpy;
   let superExitSpy;
   let superDestroySpy;
   let superHandleTurnEndedEventSpy;
-  let consoleErrorSpy; // For critical error logging
+  let consoleErrorSpy;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -137,7 +126,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
       mockLogger,
       mockTestStrategy
     );
-    mockPreviousState = null; // Or a mock state object if needed for more detailed tests
+    mockPreviousState = null;
 
     mockHandler.getTurnContext.mockReturnValue(mockTestTurnContext);
     mockHandler.getCurrentActor.mockReturnValue(testActor);
@@ -157,7 +146,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
     superHandleTurnEndedEventSpy = jest
       .spyOn(AbstractTurnState.prototype, 'handleTurnEndedEvent')
       .mockResolvedValue(undefined);
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console.error during tests
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -178,7 +167,8 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
   describe('enterState', () => {
     test('should call strategy.decideAction, setChosenAction, and transition to ProcessingCommandState on success', async () => {
       const mockAction = createMockTurnAction('look around', 'core:observe');
-      mockTestStrategy.decideAction.mockResolvedValue(mockAction);
+      // The strategy can now return a decision object with `action` and `extractedData`
+      mockTestStrategy.decideAction.mockResolvedValue({ action: mockAction });
 
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
 
@@ -195,22 +185,27 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
       expect(mockTestTurnContext.setChosenAction).toHaveBeenCalledWith(
         mockAction
       );
-      expect(mockTestTurnContext.requestTransition).toHaveBeenCalledWith(
-        ProcessingCommandState,
-        [mockAction.commandString, mockAction]
-      );
+      // MODIFIED: Check that the new, specific transition method was called.
+      expect(
+        mockTestTurnContext.requestProcessingCommandStateTransition
+      ).toHaveBeenCalledWith(mockAction.commandString, mockAction);
     });
 
-    test('should use actionDefinitionId for transition if commandString is null/empty on ITurnAction', async () => {
+    test('should use actionDefinitionId for transition if commandString is null on ITurnAction', async () => {
       const mockActionNoCmdString = createMockTurnAction(
         null,
         'core:special_ability'
       );
-      mockTestStrategy.decideAction.mockResolvedValue(mockActionNoCmdString);
+      mockTestStrategy.decideAction.mockResolvedValue({
+        action: mockActionNoCmdString,
+      });
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
-      expect(mockTestTurnContext.requestTransition).toHaveBeenCalledWith(
-        ProcessingCommandState,
-        [mockActionNoCmdString.actionDefinitionId, mockActionNoCmdString]
+      // MODIFIED: Check the new method.
+      expect(
+        mockTestTurnContext.requestProcessingCommandStateTransition
+      ).toHaveBeenCalledWith(
+        mockActionNoCmdString.actionDefinitionId,
+        mockActionNoCmdString
       );
     });
 
@@ -219,11 +214,16 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
         '',
         'core:another_ability'
       );
-      mockTestStrategy.decideAction.mockResolvedValue(mockActionEmptyCmdString);
+      mockTestStrategy.decideAction.mockResolvedValue({
+        action: mockActionEmptyCmdString,
+      });
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
-      expect(mockTestTurnContext.requestTransition).toHaveBeenCalledWith(
-        ProcessingCommandState,
-        [mockActionEmptyCmdString.actionDefinitionId, mockActionEmptyCmdString]
+      // MODIFIED: Check the new method.
+      expect(
+        mockTestTurnContext.requestProcessingCommandStateTransition
+      ).toHaveBeenCalledWith(
+        mockActionEmptyCmdString.actionDefinitionId,
+        mockActionEmptyCmdString
       );
     });
 
@@ -232,7 +232,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
         'do something',
         'core:do_something'
       );
-      mockTestStrategy.decideAction.mockResolvedValue(mockAction);
+      mockTestStrategy.decideAction.mockResolvedValue({ action: mockAction });
 
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
 
@@ -253,16 +253,15 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
       expect(superEnterSpy).toHaveBeenCalledWith(
         mockHandler,
         mockPreviousState
-      ); // super.enterState is called before the context check
+      );
       expect(specificHandlerLogger.error).toHaveBeenCalledWith(
         'AwaitingPlayerInputState: Critical error - TurnContext is not available. Attempting to reset and idle.'
       );
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
         'critical-no-context-AwaitingPlayerInputState'
       );
-      expect(mockHandler._transitionToState).toHaveBeenCalledWith(
-        expect.any(TurnIdleState)
-      );
+      // MODIFIED: Assert that the new abstract transition method on the handler was called.
+      expect(mockHandler.requestIdleStateTransition).toHaveBeenCalled();
       expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
     });
 
@@ -282,11 +281,13 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
       expect(mockTestTurnContext.endTurn.mock.calls[0][0].message).toBe(
         'No actor in context during AwaitingPlayerInputState.'
       );
-      expect(mockTestTurnContext.requestTransition).not.toHaveBeenCalled();
+      expect(
+        mockTestTurnContext.requestProcessingCommandStateTransition
+      ).not.toHaveBeenCalled();
     });
 
     test('should end turn if turnContext.getStrategy is not a function', async () => {
-      mockTestTurnContext.getStrategy = undefined; // Or null, if that's how it's represented
+      mockTestTurnContext.getStrategy = undefined;
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
       expect(superEnterSpy).toHaveBeenCalledWith(
         mockHandler,
@@ -322,7 +323,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
     });
 
     test('should end turn if strategy from getStrategy() is malformed (missing decideAction)', async () => {
-      const malformedStrategy = { name: 'MalformedStrategy' }; // no decideAction
+      const malformedStrategy = { name: 'MalformedStrategy' };
       mockTestTurnContext.getStrategy.mockReturnValue(malformedStrategy);
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
       expect(superEnterSpy).toHaveBeenCalledWith(
@@ -368,7 +369,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
         mockHandler,
         mockPreviousState
       );
-      expect(mockLogger.error).toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalled(); // The code now warns for invalid actions
       expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(
         expect.any(Error)
       );
@@ -379,7 +380,9 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
         commandString: 'invalid',
         resolvedParameters: {},
       };
-      mockTestStrategy.decideAction.mockResolvedValue(invalidAction);
+      mockTestStrategy.decideAction.mockResolvedValue({
+        action: invalidAction,
+      });
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
       expect(superEnterSpy).toHaveBeenCalledWith(
         mockHandler,
@@ -402,10 +405,15 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
         'test_action',
         'core:test_action'
       );
-      mockTestStrategy.decideAction.mockResolvedValue(mockAction);
+      mockTestStrategy.decideAction.mockResolvedValue({ action: mockAction });
       const transitionError = new Error('Transition failed miserably');
-      mockTestTurnContext.requestTransition.mockRejectedValue(transitionError);
+      // MODIFIED: Mock the new method to reject.
+      mockTestTurnContext.requestProcessingCommandStateTransition.mockRejectedValue(
+        transitionError
+      );
+
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
+
       expect(superEnterSpy).toHaveBeenCalledWith(
         mockHandler,
         mockPreviousState
@@ -427,12 +435,16 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
 
     test('should log warning but still transition if turnContext.setChosenAction is missing', async () => {
       const mockAction = createMockTurnAction('action', 'core:action');
-      mockTestStrategy.decideAction.mockResolvedValue(mockAction);
+      mockTestStrategy.decideAction.mockResolvedValue({ action: mockAction });
+
+      // MODIFIED: The new transition method must exist on the custom context.
       const contextWithoutSetChosenAction = {
         ...mockTestTurnContext,
         setChosenAction: undefined,
+        requestProcessingCommandStateTransition: jest
+          .fn()
+          .mockResolvedValue(undefined),
       };
-      // This specific test manipulates the context returned by the handler's getTurnContext
       mockHandler.getTurnContext.mockReturnValue(contextWithoutSetChosenAction);
 
       await awaitingPlayerInputState.enterState(mockHandler, mockPreviousState);
@@ -444,12 +456,10 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `AwaitingPlayerInputState: ITurnContext.setChosenAction() not found. Cannot store action in context.`
       );
+      // MODIFIED: Check the new method on the custom context object.
       expect(
-        contextWithoutSetChosenAction.requestTransition
-      ).toHaveBeenCalledWith(ProcessingCommandState, [
-        mockAction.commandString,
-        mockAction,
-      ]);
+        contextWithoutSetChosenAction.requestProcessingCommandStateTransition
+      ).toHaveBeenCalledWith(mockAction.commandString, mockAction);
       expect(contextWithoutSetChosenAction.endTurn).not.toHaveBeenCalled();
     });
   });
@@ -496,22 +506,21 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
         'no-context-submission-AwaitingPlayerInputState'
       );
-      expect(mockHandler._transitionToState).toHaveBeenCalledWith(
-        expect.any(TurnIdleState)
-      );
-      expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled(); // Ensure original context's endTurn isn't called
+      // MODIFIED: Check that the new handler method was called for recovery.
+      expect(mockHandler.requestIdleStateTransition).toHaveBeenCalled();
+      expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
     });
 
     test('should log critical error to console if handler is null/invalid when context is missing', async () => {
-      const originalHandlerRef = awaitingPlayerInputState._handler; // Store original
-      awaitingPlayerInputState._handler = null; // Simulate handler being null for this test path
+      const originalHandlerRef = awaitingPlayerInputState._handler;
+      awaitingPlayerInputState._handler = null;
 
       const command = 'cmd_no_handler';
       await awaitingPlayerInputState.handleSubmittedCommand(
         null,
         command,
         testActor
-      ); // Pass null as handlerInstance
+      );
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -524,22 +533,21 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
         )
       );
 
-      awaitingPlayerInputState._handler = originalHandlerRef; // Restore original handler
+      awaitingPlayerInputState._handler = originalHandlerRef;
     });
   });
 
   describe('exitState', () => {
-    let mockNextState; // Can be null or a mock object
+    let mockNextState;
 
     beforeEach(() => {
-      mockNextState = null; // Or a mock state object: { getStateName: jest.fn(() => 'MockNextState') };
+      mockNextState = null;
     });
 
     test('should call super.exitState and log debug message', async () => {
       await awaitingPlayerInputState.exitState(mockHandler, mockNextState);
 
       expect(superExitSpy).toHaveBeenCalledWith(mockHandler, mockNextState);
-      // The specific debug log from AwaitingPlayerInputState is now checked
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'AwaitingPlayerInputState: ExitState cleanup (if any) specific to AwaitingPlayerInputState complete.'
       );
@@ -620,7 +628,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
     });
 
     test('should call super.handleTurnEndedEvent if no actor in context', async () => {
-      mockTestTurnContext.getActor.mockReturnValue(null); // Simulate no actor in context
+      mockTestTurnContext.getActor.mockReturnValue(null);
       await awaitingPlayerInputState.handleTurnEndedEvent(
         mockHandler,
         eventPayloadForCurrentActor
@@ -638,7 +646,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
     });
 
     test('should call super.handleTurnEndedEvent and use handler logger if no context', async () => {
-      mockHandler.getTurnContext.mockReturnValue(null); // Simulate no context
+      mockHandler.getTurnContext.mockReturnValue(null);
       const specificHandlerLogger = {
         ...mockLogger,
         warn: jest.fn(),
@@ -657,7 +665,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
           `AwaitingPlayerInputState: handleTurnEndedEvent received but no turn context. Payload: ${expectedPayloadString}. Deferring to superclass.`
         )
       );
-      expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled(); // Original context's endTurn shouldn't be called
+      expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
       expect(superHandleTurnEndedEventSpy).toHaveBeenCalledWith(
         mockHandler,
         eventPayloadForCurrentActor
@@ -667,7 +675,6 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
 
   describe('destroy', () => {
     test('should end turn via context and call super.destroy if context and actor exist', async () => {
-      // Ensure handler's destroying flags are not set, to allow endTurn path
       mockHandler._isDestroying = false;
       mockHandler._isDestroyed = false;
 
@@ -684,7 +691,7 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
     });
 
     test('should log warning and call super.destroy if context exists but no actor in context', async () => {
-      mockTestTurnContext.getActor.mockReturnValue(null); // Simulate no actor
+      mockTestTurnContext.getActor.mockReturnValue(null);
       await awaitingPlayerInputState.destroy(mockHandler);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -695,12 +702,12 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
     });
 
     test('should log warning and call super.destroy if context is missing', async () => {
-      mockHandler.getTurnContext.mockReturnValue(null); // Simulate no context
+      mockHandler.getTurnContext.mockReturnValue(null);
       const specificHandlerLogger = {
         ...mockLogger,
         warn: jest.fn(),
         info: jest.fn(),
-      }; // Fresh mock for this test
+      };
       mockHandler.getLogger.mockReturnValue(specificHandlerLogger);
 
       await awaitingPlayerInputState.destroy(mockHandler);
@@ -708,23 +715,22 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
       expect(specificHandlerLogger.warn).toHaveBeenCalledWith(
         `AwaitingPlayerInputState: Handler destroyed. Actor ID from context: N/A_no_context. No specific turn to end via context if actor is missing.`
       );
-      expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled(); // Original context's endTurn
+      expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
       expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);
     });
 
     test('should skip endTurn via context if handler is already destroying', async () => {
-      mockHandler._isDestroying = true; // Simulate handler already in destroy process
+      mockHandler._isDestroying = true;
 
       await awaitingPlayerInputState.destroy(mockHandler);
 
       expect(mockTestTurnContext.endTurn).not.toHaveBeenCalled();
       expect(superDestroySpy).toHaveBeenCalledWith(mockHandler);
-      mockHandler._isDestroying = false; // Reset for other tests
+      mockHandler._isDestroying = false;
     });
   });
 
   describe('Inapplicable AbstractTurnState Methods', () => {
-    // Define args carefully for each. Ensure mockHandler is passed as the first argument where expected by the method signature.
     const inapplicableMethods = [
       { name: 'startTurn', args: [mockHandler, testActor] },
       {
@@ -739,17 +745,12 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
 
     inapplicableMethods.forEach((methodInfo) => {
       test(`${methodInfo.name} should call super (which logs/throws by default)`, async () => {
-        // Ensure the spy is fresh for each method if AbstractTurnState's method is not a simple pass-through.
-        // If it is, one spy is fine. Here, we assume AbstractTurnState provides a default implementation.
         const superMethodImplSpy = jest
           .spyOn(AbstractTurnState.prototype, methodInfo.name)
           .mockImplementationOnce(async function (...args) {
-            // Use 'function' for 'this' context
             const stateName = this.getStateName
               ? this.getStateName()
               : 'AbstractState';
-            // Use the handler passed to the method, or this._handler as fallback for logger.
-            // The method signature in AbstractTurnState uses the passed 'handler'.
             const logger =
               args[0]?.getLogger?.() ?? this._handler?.getLogger?.() ?? console;
             logger.warn(
@@ -760,7 +761,6 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
             );
           });
 
-        // Call the method on the instance of AwaitingPlayerInputState
         await expect(
           awaitingPlayerInputState[methodInfo.name](...methodInfo.args)
         ).rejects.toThrow(
@@ -768,16 +768,11 @@ describe('AwaitingPlayerInputState (PTH-REFACTOR-003.5.7)', () => {
         );
 
         expect(superMethodImplSpy).toHaveBeenCalledWith(...methodInfo.args);
-        // Logger access depends on how AbstractTurnState's default methods get their logger.
-        // If they use args[0].getLogger(), then this should work.
-        // This assumes mockHandler.getLogger() is the one ultimately called by the super method's default.
         expect(mockLogger.warn).toHaveBeenCalledWith(
           `MockedAbstract.${methodInfo.name} called on AwaitingPlayerInputState`
         );
-        superMethodImplSpy.mockRestore(); // Restore original implementation
+        superMethodImplSpy.mockRestore();
       });
     });
   });
 });
-
-// --- FILE END ---

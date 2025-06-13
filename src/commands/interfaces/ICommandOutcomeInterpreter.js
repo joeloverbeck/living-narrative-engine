@@ -20,7 +20,7 @@ export class ICommandOutcomeInterpreter {
    */
   async interpret(result, actorId) {
     throw new Error(
-      'ICommandOutcomeInterpreter.interpret method not implemented.',
+      'ICommandOutcomeInterpreter.interpret method not implemented.'
     );
   }
 }

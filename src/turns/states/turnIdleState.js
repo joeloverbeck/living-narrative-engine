@@ -10,24 +10,14 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-// The AwaitingPlayerInputState is required for the transition in startTurn.
-import { AwaitingPlayerInputState } from './awaitingPlayerInputState.js';
 
 /**
  * @class TurnIdleState
  * @augments AbstractTurnState_Base
- * @implements {ITurnState_Interface}
- * @description
- * Represents the state of the BaseTurnHandler when no turn is currently active.
- * This is the initial state of the handler and the state to which it returns
- * after a turn has fully completed or the handler is reset.
- * It interacts exclusively through ITurnContext for operational needs and
- * BaseTurnHandler for state transitions.
  */
 export class TurnIdleState extends AbstractTurnState {
   /**
    * Creates an instance of TurnIdleState.
-   *
    * @param {BaseTurnHandler} handler - The BaseTurnHandler instance that manages this state.
    */
   constructor(handler) {
@@ -39,54 +29,28 @@ export class TurnIdleState extends AbstractTurnState {
     return 'TurnIdleState';
   }
 
-  /**
-   * @override
-   * @param {BaseTurnHandler} handler - The BaseTurnHandler managing this state.
-   * @param {ITurnState_Interface} [previousState] - The state from which the transition occurred.
-   */
+  /** @override */
   async enterState(handler, previousState) {
-    // AbstractTurnState.enterState logs entry. ITurnContext is likely null here.
-    await super.enterState(handler, previousState); // Uses this._handler internally
+    await super.enterState(handler, previousState);
 
-    // Use handler's logger as ITurnContext is typically null or being cleared when entering Idle.
     const logger = handler.getLogger();
-
     logger.debug(
       `${this.getStateName()}: Ensuring clean state by calling handler._resetTurnStateAndResources().`
     );
-    // The handler is responsible for resetting its own per-turn state and resources.
-    // This call ensures that any previous turn's context, actor, or flags are cleared.
     handler._resetTurnStateAndResources(`enterState-${this.getStateName()}`);
-
     logger.debug(
       `${this.getStateName()}: Entry complete. Handler is now idle.`
     );
   }
 
-  /**
-   * @override
-   * @param {BaseTurnHandler} handler - The BaseTurnHandler managing this state.
-   * @param {ITurnState_Interface} [nextState] - The state to which the handler is transitioning.
-   */
+  /** @override */
   async exitState(handler, nextState) {
-    // When exiting Idle to start a new turn, ITurnContext should have been created by the concrete handler's startTurn().
-    // AbstractTurnState.exitState will use this._getTurnContext() to log with actor ID if context is available.
-    await super.exitState(handler, nextState); // Uses this._handler internally
+    await super.exitState(handler, nextState);
   }
 
-  /**
-   * @override
-   * @param {BaseTurnHandler} handler - The BaseTurnHandler instance.
-   * @param {Entity} actorEntity - The entity whose turn is to be started.
-   */
+  /** @override */
   async startTurn(handler, actorEntity) {
-    // The concrete handler (e.g., one derived from BaseTurnHandler) is responsible for creating and setting
-    // the ITurnContext before calling this state's startTurn method.
-    // This state must then verify the context via this._getTurnContext().
-
-    // Retrieve ITurnContext via the method provided by AbstractTurnState.
     const turnCtx = this._getTurnContext();
-    // Use ITurnContext's logger if available; otherwise, fallback to handler's logger.
     const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
 
     const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ENTITY';
@@ -94,27 +58,26 @@ export class TurnIdleState extends AbstractTurnState {
       `${this.getStateName()}: Received startTurn for actor ${actorIdForLog}.`
     );
 
+    // Validate actorEntity
     if (!actorEntity || typeof actorEntity.id === 'undefined') {
       const errorMsg = `${this.getStateName()}: startTurn called with invalid actorEntity.`;
       logger.error(errorMsg);
       handler._resetTurnStateAndResources(
         `invalid-actor-${this.getStateName()}`
       );
-      // MODIFIED: Use factory for recovery
       await handler._transitionToState(
         handler._turnStateFactory.createIdleState(handler)
       );
-      throw new Error(errorMsg); // Propagate error after attempting recovery
+      throw new Error(errorMsg);
     }
 
-    // Validate the presence and correctness of ITurnContext.
+    // Validate ITurnContext
     if (!turnCtx) {
       const errorMsg = `${this.getStateName()}: ITurnContext is missing or invalid. Expected concrete handler to set it up. Actor: ${actorIdForLog}.`;
       logger.error(errorMsg);
       handler._resetTurnStateAndResources(
         `missing-context-${this.getStateName()}`
       );
-      // MODIFIED: Use factory for recovery
       await handler._transitionToState(
         handler._turnStateFactory.createIdleState(handler)
       );
@@ -128,7 +91,6 @@ export class TurnIdleState extends AbstractTurnState {
       handler._resetTurnStateAndResources(
         `actor-mismatch-${this.getStateName()}`
       );
-      // MODIFIED: Use factory for recovery
       await handler._transitionToState(
         handler._turnStateFactory.createIdleState(handler)
       );
@@ -138,12 +100,11 @@ export class TurnIdleState extends AbstractTurnState {
     logger.debug(
       `${this.getStateName()}: ITurnContext confirmed for actor ${contextActor.id}. Transitioning to AwaitingPlayerInputState.`
     );
+
     try {
-      // Transition to AwaitingPlayerInputState via handler._transitionToState().
-      // AwaitingPlayerInputState constructor takes the handler instance.
-      // This part correctly uses direct instantiation as it's a prescribed next state,
-      // not a generic recovery to idle.
-      await handler._transitionToState(new AwaitingPlayerInputState(handler));
+      // Use ITurnContext to request the transition
+      await turnCtx.requestAwaitingInputStateTransition();
+
       logger.debug(
         `${this.getStateName()}: Successfully transitioned to AwaitingPlayerInputState for actor ${contextActor.id}.`
       );
@@ -152,15 +113,13 @@ export class TurnIdleState extends AbstractTurnState {
         `${this.getStateName()}: Failed to transition to AwaitingPlayerInputState for ${contextActor.id}. Error: ${error.message}`,
         error
       );
-      // Attempt to recover by resetting and re-entering Idle.
       handler._resetTurnStateAndResources(
         `transition-fail-${this.getStateName()}`
       );
-      // MODIFIED: Use factory for recovery
       await handler._transitionToState(
         handler._turnStateFactory.createIdleState(handler)
       );
-      throw error; // Re-throw after attempting recovery
+      throw error;
     }
   }
 

@@ -1,109 +1,92 @@
 /**
- * @file This test suite fulfills TKT-005. It verifies that when a human player
+ * @file This test suite fulfills TKT‑005. It verifies that when a human player
  * selects an action with a direction (e.g., "go north"), the `direction`
- * parameter is correctly passed through the state machine and included in the
- * `resolvedParameters` of the `ITurnAction` supplied to the CommandProcessor.
- * @see tests/integration/humanDirectionParam.test.js
+ * parameter is correctly propagated and ends up in the `resolvedParameters`
+ * object passed to `CommandProcessor.dispatchAction`.
+ *
+ * NOTE (2025‑06 refactor): the generic `context.requestTransition()` helper was
+ * removed in favor of *specific* helpers (`requestAwaitingInputStateTransition`,
+ * `requestProcessingCommandStateTransition`, etc.).  The harness below now
+ * mocks those new helpers directly.
  */
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
-import { mock, mockDeep } from 'jest-mock-extended';
+import { mockDeep } from 'jest-mock-extended';
 
-// Core classes to be tested or involved
+// ─── Core modules ───────────────────────────────────────────────────────────
 import { HumanPlayerStrategy } from '../../src/turns/strategies/humanPlayerStrategy.js';
-import { AwaitingPlayerInputState } from '../../src/turns/states/awaitingPlayerInputState.js';
-import { TurnIdleState } from '../../src/turns/states/turnIdleState.js';
 import CommandProcessor from '../../src/commands/commandProcessor.js';
 import Entity from '../../src/entities/entity.js';
 
-// Base TurnHandler for extension
+// Base handler & seed state --------------------------------------------------
 import { BaseTurnHandler } from '../../src/turns/handlers/baseTurnHandler.js';
+import { TurnIdleState } from '../../src/turns/states/turnIdleState.js';
 
-// Type Imports
-/** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../src/interfaces/IPromptCoordinator.js').IPromptCoordinator} IPromptCoordinator */
-/** @typedef {import('../../src/turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
-/** @typedef {import('../../src/turns/interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
-/** @typedef {import('../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../src/turns/factories/turnStateFactory.js').default} TurnStateFactory */
+/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../src/interfaces/IPromptCoordinator.js').IPromptCoordinator} IPromptCoordinator */
+/** @typedef {import('../../../src/turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
+/** @typedef {import('../../../src/turns/interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 
-// Helper to create a basic turn handler for testing states. This avoids the
-// complexity of the full HumanTurnHandler and gives us direct control.
+/** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../../src/turns/factories/turnStateFactory.js').default} TurnStateFactory */
+
+// ─── Minimal test handler ---------------------------------------------------
 class TestTurnHandler extends BaseTurnHandler {
-  /**
-   * @param {ILogger} logger
-   * @param {TurnStateFactory} turnStateFactory
-   */
-  constructor(logger, turnStateFactory) {
-    super({ logger, turnStateFactory });
+  /** @param {ILogger} logger @param {TurnStateFactory} factory */
+  constructor(logger, factory) {
+    super({ logger, turnStateFactory: factory });
     this._setInitialState(new TurnIdleState(this));
   }
 
   /**
-   * A proper entry point for starting a turn in the test. This mimics
-   * how a real handler would work: by establishing the context and then delegating
-   * the start action to the current state (which should be TurnIdleState).
-   * @param {ITurnContext} turnContext - The pre-configured context for the test turn.
+   * Injects the context and kicks off the turn just like real handlers.
+   * @param {ITurnContext} ctx
    */
-  async startTestTurn(turnContext) {
-    this._setCurrentTurnContextInternal(turnContext);
-    await this._currentState.startTurn(this, turnContext.getActor());
-  }
-
-  /**
-   * Expose transition for testing, allowing us to manually drive the state machine
-   * @param {Function} state - The state class to transition to.
-   * @param {...any} args - Arguments for the state's constructor.
-   */
-  async transitionTo(state, ...args) {
-    await this._transitionToState(new state(this, ...args));
+  async startTestTurn(ctx) {
+    this._setCurrentTurnContextInternal(ctx);
+    await this._currentState.startTurn(this, ctx.getActor());
   }
 }
 
-describe('TKT-005: Human "go north" supplies direction parameter', () => {
-  /** @type {ILogger} */
-  let mockLogger;
-  /** @type {IPromptCoordinator} */
-  let mockPlayerPromptService;
-  /** @type {ITurnContext} */
-  let mockTurnContext;
-  /** @type {ISafeEventDispatcher} */
-  let mockEventDispatcher;
-  /** @type {CommandProcessor} */
-  let commandProcessor;
-  /** @type {jest.SpiedFunction<(actor: Entity, turnAction: ITurnAction) => Promise<{success: boolean, errorResult: any | null}>>} */
-  let dispatchActionSpy;
-  /** @type {Entity} */
-  let player;
-  /** @type {TestTurnHandler} */
-  let turnHandler;
-  /** @type {TurnStateFactory} */
-  let mockTurnStateFactory;
+// ─────────────────────────────────────────────────────────────────────────────
+describe('TKT‑005 – Human "go north" supplies direction parameter', () => {
+  /** @type {ILogger}                */ let log;
+  /** @type {IPromptCoordinator}     */ let promptSvc;
+  /** @type {ISafeEventDispatcher}   */ let dispatcher;
+  /** @type {CommandProcessor}       */ let cp;
+  /** @type {ReturnType<jest.spyOn>} */ let dispatchSpy;
+  /** @type {ITurnContext}           */ let ctx;
+  /** @type {Entity}                 */ let actor;
+  /** @type {TestTurnHandler}        */ let handler;
 
   beforeEach(() => {
-    // 1. ARRANGE
-    mockLogger = mockDeep();
-    mockEventDispatcher = mockDeep();
-    mockPlayerPromptService = mockDeep();
+    // Base mocks ----------------------------------------------------------------
+    log = mockDeep();
+    promptSvc = mockDeep();
+    dispatcher = mockDeep();
 
-    commandProcessor = new CommandProcessor({
-      logger: mockLogger,
-      safeEventDispatcher: mockEventDispatcher,
-    });
-    dispatchActionSpy = jest.spyOn(commandProcessor, 'dispatchAction');
-    player = new Entity('player1', 'player');
+    cp = new CommandProcessor({ logger: log, safeEventDispatcher: dispatcher });
+    dispatchSpy = jest
+      .spyOn(cp, 'dispatchAction')
+      .mockResolvedValue({ success: true, errorResult: null });
 
-    mockTurnContext = mockDeep();
-    mockTurnContext.getActor.mockReturnValue(player);
-    mockTurnContext.getLogger.mockReturnValue(mockLogger);
-    mockTurnContext.getSafeEventDispatcher.mockReturnValue(mockEventDispatcher);
-    mockTurnContext.getStrategy.mockReturnValue(new HumanPlayerStrategy());
-    mockTurnContext.getPlayerPromptService.mockReturnValue(
-      mockPlayerPromptService
+    actor = new Entity('player1', 'player');
+
+    // Context mock --------------------------------------------------------------
+    ctx = mockDeep();
+    ctx.getActor.mockReturnValue(actor);
+    ctx.getLogger.mockReturnValue(log);
+    ctx.getSafeEventDispatcher.mockReturnValue(dispatcher);
+    ctx.getStrategy.mockReturnValue(new HumanPlayerStrategy());
+    ctx.getPlayerPromptService.mockReturnValue(promptSvc);
+    ctx.getCommandProcessor.mockReturnValue(cp);
+
+    ctx.setChosenAction.mockImplementation((a) =>
+      ctx.getChosenAction.mockReturnValue(a)
     );
-    mockTurnContext.getCommandProcessor.mockReturnValue(commandProcessor);
 
-    const mockPlayerDecision = {
+    // Default prompt (can be overridden in specific tests) ----------------------
+    promptSvc.prompt.mockResolvedValue({
       action: {
         id: 'core:move',
         command: 'go north',
@@ -112,64 +95,54 @@ describe('TKT-005: Human "go north" supplies direction parameter', () => {
       speech: null,
       thoughts: null,
       notes: null,
-    };
-    mockPlayerPromptService.prompt.mockResolvedValue(mockPlayerDecision);
+    });
 
-    mockTurnStateFactory = {
-      createIdleState: (handler) => new TurnIdleState(handler),
-      // Provide a mock for the ending state to satisfy the factory's contract
-      createEndingState: (handler) => new TurnIdleState(handler),
-    };
+    // Fake factory – only Idle needed.
+    const fakeFactory = { createIdleState: (h) => new TurnIdleState(h) };
+    handler = new TestTurnHandler(log, fakeFactory);
 
-    turnHandler = new TestTurnHandler(mockLogger, mockTurnStateFactory);
+    // Transition helpers reflecting 2025 API -----------------------------------
+    ctx.requestAwaitingInputStateTransition.mockImplementation(async () => {
+      const decision = await ctx.getStrategy().decideAction(ctx);
+      const turnAction = decision.action ?? decision;
+      ctx.setChosenAction(turnAction);
+      await cp.dispatchAction(actor, turnAction);
+    });
 
-    mockTurnContext.requestTransition.mockImplementation(
-      async (StateClass, args) => {
-        const turnAction = args[1];
-        mockTurnContext.getChosenAction.mockReturnValue(turnAction);
-        await turnHandler.transitionTo(StateClass, ...args);
+    ctx.requestProcessingCommandStateTransition.mockImplementation(
+      async (_cmd, action) => {
+        ctx.setChosenAction(action);
+        await cp.dispatchAction(actor, action);
       }
     );
 
-    dispatchActionSpy.mockResolvedValue({ success: true, errorResult: null });
+    ctx.requestIdleStateTransition.mockResolvedValue(undefined); // not used here
   });
 
-  test('should pass the direction parameter to CommandProcessor.dispatchAction', async () => {
-    // 2. ACT
-    await turnHandler.startTestTurn(mockTurnContext);
+  // ─── Tests ──────────────────────────────────────────────────────────────────
+  test('direction parameter reaches CommandProcessor.dispatchAction', async () => {
+    await handler.startTestTurn(ctx);
 
-    // 3. ASSERT
-    expect(dispatchActionSpy).toHaveBeenCalledTimes(1);
-    const [actorArg, turnActionArg] = dispatchActionSpy.mock.calls[0];
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+    const [actArg, actionArg] = dispatchSpy.mock.calls[0];
 
-    expect(actorArg.id).toBe('player1');
-    expect(turnActionArg).toBeDefined();
-    expect(turnActionArg.actionDefinitionId).toBe('core:move');
-    expect(turnActionArg.resolvedParameters).toBeDefined();
-    expect(turnActionArg.resolvedParameters).toEqual({ direction: 'north' });
+    expect(actArg.id).toBe('player1');
+    expect(actionArg.actionDefinitionId).toBe('core:move');
+    expect(actionArg.resolvedParameters).toEqual({ direction: 'north' });
   });
 
-  test('should have empty resolvedParameters if params are omitted (pre-patch failure check)', async () => {
-    // ARRANGE (override)
-    const mockPlayerDecision = {
-      action: {
-        id: 'core:move',
-        command: 'go north',
-        // `params` property is missing
-      },
+  test('resolvedParameters is empty when prompt returns none', async () => {
+    promptSvc.prompt.mockResolvedValue({
+      action: { id: 'core:move', command: 'go north' },
       speech: null,
-    };
-    mockPlayerPromptService.prompt.mockResolvedValue(mockPlayerDecision);
+    });
 
-    // 2. ACT
-    await turnHandler.startTestTurn(mockTurnContext);
+    await handler.startTestTurn(ctx);
 
-    // 3. ASSERT
-    expect(dispatchActionSpy).toHaveBeenCalledTimes(1);
-    const [, turnActionArg] = dispatchActionSpy.mock.calls[0];
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+    const [, actionArg] = dispatchSpy.mock.calls[0];
 
-    expect(turnActionArg.resolvedParameters).toBeDefined();
-    expect(turnActionArg.resolvedParameters).toEqual({});
-    expect(turnActionArg.resolvedParameters.direction).toBeUndefined();
+    expect(actionArg.resolvedParameters).toEqual({});
+    expect(actionArg.resolvedParameters.direction).toBeUndefined();
   });
 });

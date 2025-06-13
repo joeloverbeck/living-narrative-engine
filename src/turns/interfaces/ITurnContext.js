@@ -1,8 +1,5 @@
 // src/turns/interfaces/ITurnContext.js
-// ****** MODIFIED FILE ******
-// ──────────────────────────────────────────────────────────────────────────────
-//  ITurnContext Interface Definition
-// ──────────────────────────────────────────────────────────────────────────────
+// ****** CORRECTED FILE ******
 
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
@@ -11,14 +8,6 @@
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @description Defines the interface for a logging service.
- */
-/**
- * @typedef {import('../../game/GameWorld.js').GameWorld} GameWorld
- * @description Represents the game world or a minimal interface to it.
- */
-/**
- * @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
- * @description Manages subscriptions to events, like command input.
  */
 /**
  * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
@@ -36,18 +25,16 @@
 /**
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState
  */
-
 /**
  * @typedef {import('./IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
  */
-
 /**
  * @typedef {import('./IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
-
 /**
  * @typedef {import('../../interfaces/./IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  */
+
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**
@@ -124,39 +111,6 @@ export class ITurnContext {
   }
 
   /**
-   * Retrieves the SubscriptionLifecycleManager for managing event subscriptions scoped to the turn.
-   *
-   * @returns {SubscriptionLifecycleManager} The subscription manager instance.
-   * @throws {Error} If the service is not available in the current context.
-   */
-  getSubscriptionManager() {
-    throw new Error("Method 'getSubscriptionManager()' must be implemented.");
-  }
-
-  /**
-   * Retrieves the EntityManager service.
-   *
-   * @returns {IEntityManager} The entity manager instance.
-   * @throws {Error} If the service is not available in the current context.
-   */
-  getEntityManager() {
-    throw new Error("Method 'getEntityManager()' must be implemented.");
-  }
-
-  /**
-   * Retrieves the global Action-Discovery System so callers can ask
-   * "what can this actor do **right now**".
-   *
-   * @returns {IActionDiscoveryService}
-   * @throws {Error} if it is missing from the context.
-   */
-  getActionDiscoveryService() {
-    throw new Error(
-      "Method 'getActionDiscoveryService()' must be implemented."
-    );
-  }
-
-  /**
    * Retrieves the ITurnEndPort for signaling the end of a turn to external listeners.
    *
    * @returns {ITurnEndPort} The turn end port instance.
@@ -167,11 +121,12 @@ export class ITurnContext {
   }
 
   /**
-   * Signals that the current turn has completed.
+   * Signals that the current turn has completed. The handler will create and transition
+   * to the Ending state, which handles cleanup.
    * @param {Error | null} [errorOrNull] - An optional error if the turn ended abnormally.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  endTurn(errorOrNull) {
+  async endTurn(errorOrNull) {
     throw new Error("Method 'endTurn()' must be implemented.");
   }
 
@@ -182,21 +137,6 @@ export class ITurnContext {
    */
   isAwaitingExternalEvent() {
     throw new Error("Method 'isAwaitingExternalEvent()' must be implemented.");
-  }
-
-  /**
-   * Requests the turn handler to transition to a new state.
-   * This is how strategies or other components using ITurnContext can initiate state changes
-   * without directly holding a reference to the concrete handler's transition method.
-   * The actual transition logic resides in the BaseTurnHandler.
-   *
-   * @param {new (handler: import('../handlers/baseTurnHandler.js').BaseTurnHandler, ...args: any[]) => ITurnState} StateClass - The class of the state to transition to.
-   * @param {any[]} [constructorArgs] - Optional arguments to pass to the state constructor (after the handler).
-   * @returns {Promise<void>}
-   * @throws {Error} If the transition cannot be performed.
-   */
-  async requestTransition(StateClass, constructorArgs = []) {
-    throw new Error("Method 'requestTransition()' must be implemented.");
   }
 
   /**
@@ -222,13 +162,9 @@ export class ITurnContext {
 
   /**
    * Sets the chosen action for the current turn.
-   * This is typically called by `AwaitingPlayerInputState` (or a similar state) after the
-   * actor's {@link IActorTurnStrategy#decideAction} method resolves with an {@link ITurnAction}.
-   * The stored action can then be retrieved by states like `ProcessingCommandState`.
    *
    * @param {ITurnAction} action - The action chosen by the actor.
    * @returns {void}
-   * @throws {Error} If the provided action is invalid or if it's called at an inappropriate time.
    */
   setChosenAction(action) {
     throw new Error("Method 'setChosenAction(action)' must be implemented.");
@@ -236,11 +172,8 @@ export class ITurnContext {
 
   /**
    * Retrieves the action that was chosen for the current turn.
-   * This is typically called by `ProcessingCommandState` (or a similar state) to get the
-   * {@link ITurnAction} that was previously set by `setChosenAction`.
    *
-   * @returns {ITurnAction | null} The chosen action object, or `null` if no action
-   * has been set for the current turn yet.
+   * @returns {ITurnAction | null} The chosen action object, or `null`.
    */
   getChosenAction() {
     throw new Error("Method 'getChosenAction()' must be implemented.");
@@ -248,10 +181,8 @@ export class ITurnContext {
 
   /**
    * Stores metadata extracted from a turn decision, such as speech, thoughts, or notes.
-   * This data is intended for analytics or UI display after the turn completes.
-   * The context should not modify the provided object; the caller is responsible for its structure.
    *
-   * @param {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null} meta - The metadata object to store. Can be null.
+   * @param {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null} meta - The metadata object to store.
    * @returns {void}
    */
   setDecisionMeta(meta) {
@@ -261,16 +192,14 @@ export class ITurnContext {
   /**
    * Retrieves the decision metadata that was stored for the current turn.
    *
-   * @returns {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null} The stored metadata object, or `null` if none was set.
+   * @returns {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null} The stored metadata object.
    */
   getDecisionMeta() {
     throw new Error("Method 'getDecisionMeta()' must be implemented.");
   }
 
-  // --- NEW METHODS FOR CANCELLATION ---
   /**
-   * Retrieves an AbortSignal that can be used to cancel long-running operations
-   * associated with this turn context, such as player prompts.
+   * Retrieves an AbortSignal that can be used to cancel long-running operations.
    *
    * @returns {AbortSignal} The AbortSignal.
    */
@@ -279,9 +208,7 @@ export class ITurnContext {
   }
 
   /**
-   * Signals that any active long-running operation (like a player prompt)
-   * associated with this turn context should be cancelled.
-   * This will trigger the 'abort' event on the signal obtained via `getPromptSignal()`.
+   * Signals that any active long-running operation should be cancelled.
    *
    * @returns {void}
    */
@@ -289,5 +216,40 @@ export class ITurnContext {
     throw new Error("Method 'cancelActivePrompt()' must be implemented.");
   }
 
-  // --- END NEW METHODS ---
+  // --- REFACTORED STATE TRANSITION METHODS ---
+
+  /**
+   * Requests the turn handler to transition to the Idle state.
+   * This is typically called after a turn has fully ended and been cleaned up.
+   * The concrete handler implements this by calling its internal method, which uses the factory.
+   * @returns {Promise<void>}
+   */
+  async requestIdleStateTransition() {
+    throw new Error(
+      "Method 'requestIdleStateTransition()' must be implemented."
+    );
+  }
+
+  /**
+   * Requests the turn handler to transition to the AwaitingInput state.
+   * This is typically called at the start of a new turn after context has been established.
+   * @returns {Promise<void>}
+   */
+  async requestAwaitingInputStateTransition() {
+    throw new Error(
+      "Method 'requestAwaitingInputStateTransition()' must be implemented."
+    );
+  }
+
+  /**
+   * Requests the turn handler to transition to the ProcessingCommand state.
+   * @param {string} commandString - The command string for logging/processing.
+   * @param {ITurnAction} turnAction - The action to be processed.
+   * @returns {Promise<void>}
+   */
+  async requestProcessingCommandStateTransition(commandString, turnAction) {
+    throw new Error(
+      "Method 'requestProcessingCommandStateTransition()' must be implemented."
+    );
+  }
 }

@@ -1,9 +1,10 @@
 // src/turns/interfaces/ITurnStateFactory.js
-// ──────────────────────────────────────────────────────────────────────────────
+// ****** CORRECTED FILE ******
 
 /**
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState
+ * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
 
 /**
@@ -18,7 +19,6 @@ export class ITurnStateFactory {
    *
    * @param {BaseTurnHandler} handler - The turn handler instance that will manage this state.
    * @returns {ITurnState} The created initial turn state.
-   * @throws {Error} If the method is not implemented by a concrete class.
    */
   createInitialState(handler) {
     throw new Error(
@@ -31,7 +31,6 @@ export class ITurnStateFactory {
    *
    * @param {BaseTurnHandler} handler - The turn handler instance that will manage this state.
    * @returns {ITurnState} The created idle turn state.
-   * @throws {Error} If the method is not implemented by a concrete class.
    */
   createIdleState(handler) {
     throw new Error(
@@ -46,7 +45,6 @@ export class ITurnStateFactory {
    * @param {string} actorId - The ID of the actor whose turn is ending.
    * @param {Error|null} error - Any error that occurred during the turn.
    * @returns {ITurnState} The created ending turn state.
-   * @throws {Error} If the method is not implemented by a concrete class.
    */
   createEndingState(handler, actorId, error) {
     throw new Error(
@@ -56,17 +54,27 @@ export class ITurnStateFactory {
 
   /**
    * Creates an Awaiting Player Input state instance.
-   * (This method would be used if states themselves use the factory for transitions)
    *
    * @param {BaseTurnHandler} handler - The turn handler instance.
    * @returns {ITurnState} The created awaiting player input state.
-   * @throws {Error} If the method is not implemented by a concrete class.
    */
   createAwaitingInputState(handler) {
     throw new Error(
       'ITurnStateFactory.createAwaitingInputState must be implemented by concrete classes.'
     );
   }
-}
 
-// --- FILE END ---
+  /**
+   * Creates a Processing Command state instance.
+   *
+   * @param {BaseTurnHandler} handler - The turn handler instance.
+   * @param {string} commandString - The command string to be processed.
+   * @param {ITurnAction} turnAction - The turn action associated with the command.
+   * @returns {ITurnState} The created processing command state.
+   */
+  createProcessingCommandState(handler, commandString, turnAction) {
+    throw new Error(
+      'ITurnStateFactory.createProcessingCommandState must be implemented by concrete classes.'
+    );
+  }
+}

@@ -9,11 +9,6 @@
  * @description Defines the interface for a logging service.
  */
 /**
- * @typedef {import('../../game/GameWorld.js').GameWorld} GameWorld
- * // Or a more specific/minimal interface if GameWorld is too broad
- * @description Represents the game world or a minimal interface to it.
- */
-/**
  * @typedef {function(Error | null): void} OnEndTurnCallback
  * @description Callback function to signal the end of a turn.
  */
@@ -50,11 +45,9 @@
 /**
  * @typedef {object} TurnContextServices
  * @property {IPromptCoordinator} [promptCoordinator]
- * @property {GameWorld | object} [game] // Replace 'object' with a specific minimal game interface if applicable
  * @property {ICommandProcessor} [commandProcessor]
  * @property {ICommandOutcomeInterpreter} [commandOutcomeInterpreter]
  * @property {ISafeEventDispatcher} [safeEventDispatcher]
- * @property {SubscriptionLifecycleManager} [subscriptionManager]
  * @property {ITurnEndPort} [turnEndPort]
  * @property {IEntityManager} [entityManager]
  * @property {IActionDiscoveryService}    [actionDiscoverySystem]
@@ -62,6 +55,9 @@
  */
 
 import { ITurnContext } from '../interfaces/ITurnContext.js';
+import { ProcessingCommandState } from '../states/processingCommandState';
+import { TurnIdleState } from '../states/turnIdleState';
+import { AwaitingPlayerInputState } from '../states/awaitingPlayerInputState';
 
 /**
  * @class TurnContext
@@ -237,46 +233,6 @@ export class TurnContext extends ITurnContext {
       );
     }
     return this.#services.safeEventDispatcher;
-  }
-
-  /** @override */
-  getSubscriptionManager() {
-    if (!this.#services.subscriptionManager) {
-      this.#logger.error(
-        'TurnContext: SubscriptionManager not available in services bag.'
-      );
-      throw new Error(
-        'TurnContext: SubscriptionManager not available in services bag.'
-      );
-    }
-    return this.#services.subscriptionManager;
-  }
-
-  /** @override */
-  getEntityManager() {
-    // <<< ADD THIS METHOD
-    if (!this.#services.entityManager) {
-      this.#logger.error(
-        'TurnContext: EntityManager not available in services bag.'
-      );
-      throw new Error(
-        'TurnContext: EntityManager not available in services bag.'
-      );
-    }
-    return this.#services.entityManager;
-  }
-
-  /** @override */
-  getActionDiscoveryService() {
-    if (!this.#services.actionDiscoverySystem) {
-      this.#logger.error(
-        'TurnContext: ActionDiscoveryService not available in services bag.'
-      );
-      throw new Error(
-        'TurnContext: ActionDiscoveryService not available in services bag.'
-      );
-    }
-    return this.#services.actionDiscoverySystem;
   }
 
   /** @override */
@@ -461,6 +417,29 @@ export class TurnContext extends ITurnContext {
     return this.#chosenAction?.actionDefinitionId ?? null;
   }
 
+  async requestAwaitingInputStateTransition() {
+    await this.#handlerInstance._transitionToState(
+      new AwaitingPlayerInputState(this.#handlerInstance)
+    );
+  }
+
+  async requestIdleStateTransition() {
+    await this.#handlerInstance._transitionToState(
+      new TurnIdleState(this.#handlerInstance)
+    );
+  }
+
+  async requestProcessingCommandStateTransition(commandString, turnAction) {
+    await this.#handlerInstance._transitionToState(
+      new ProcessingCommandState(
+        this.#handlerInstance,
+        commandString,
+        turnAction
+      )
+    );
+  }
+
   // --- END MODIFICATION ---
 }
+
 // --- FILE END ---

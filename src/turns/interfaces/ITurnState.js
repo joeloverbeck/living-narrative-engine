@@ -34,7 +34,7 @@ export class ITurnState {
    */
   async enterState(handler, previousState) {
     throw new Error(
-      'ITurnState.enterState must be implemented by concrete states.',
+      'ITurnState.enterState must be implemented by concrete states.'
     );
   }
 
@@ -49,7 +49,7 @@ export class ITurnState {
    */
   async exitState(handler, nextState) {
     throw new Error(
-      'ITurnState.exitState must be implemented by concrete states.',
+      'ITurnState.exitState must be implemented by concrete states.'
     );
   }
 
@@ -66,7 +66,7 @@ export class ITurnState {
    */
   async startTurn(handler, actorEntity) {
     throw new Error(
-      'ITurnState.startTurn must be implemented or is not applicable for this state.',
+      'ITurnState.startTurn must be implemented or is not applicable for this state.'
     );
   }
 
@@ -83,7 +83,7 @@ export class ITurnState {
    */
   async handleSubmittedCommand(handler, commandString, actorEntity) {
     throw new Error(
-      'ITurnState.handleSubmittedCommand must be implemented or is not applicable.',
+      'ITurnState.handleSubmittedCommand must be implemented or is not applicable.'
     );
   }
 
@@ -99,7 +99,7 @@ export class ITurnState {
    */
   async handleTurnEndedEvent(handler, payload) {
     throw new Error(
-      'ITurnState.handleTurnEndedEvent must be implemented or is not applicable.',
+      'ITurnState.handleTurnEndedEvent must be implemented or is not applicable.'
     );
   }
 
@@ -117,7 +117,7 @@ export class ITurnState {
    */
   async processCommandResult(handler, actor, cmdProcResult, commandString) {
     throw new Error(
-      'ITurnState.processCommandResult must be implemented or is not applicable.',
+      'ITurnState.processCommandResult must be implemented or is not applicable.'
     );
   }
 
@@ -135,7 +135,7 @@ export class ITurnState {
    */
   async handleDirective(handler, actor, directive, cmdProcResult) {
     throw new Error(
-      'ITurnState.handleDirective must be implemented or is not applicable.',
+      'ITurnState.handleDirective must be implemented or is not applicable.'
     );
   }
 
@@ -148,7 +148,7 @@ export class ITurnState {
    */
   async destroy(handler) {
     throw new Error(
-      'ITurnState.destroy must be implemented by concrete states.',
+      'ITurnState.destroy must be implemented by concrete states.'
     );
   }
 
@@ -159,7 +159,7 @@ export class ITurnState {
    */
   getStateName() {
     throw new Error(
-      'ITurnState.getStateName must be implemented by concrete states.',
+      'ITurnState.getStateName must be implemented by concrete states.'
     );
   }
 
@@ -169,7 +169,9 @@ export class ITurnState {
    * @returns {boolean}
    */
   isIdle() {
-    throw new Error('ITurnState.isIdle must be implemented by concrete states.');
+    throw new Error(
+      'ITurnState.isIdle must be implemented by concrete states.'
+    );
   }
 
   /**
@@ -178,7 +180,9 @@ export class ITurnState {
    * @returns {boolean}
    */
   isEnding() {
-    throw new Error('ITurnState.isEnding must be implemented by concrete states.');
+    throw new Error(
+      'ITurnState.isEnding must be implemented by concrete states.'
+    );
   }
 }
 

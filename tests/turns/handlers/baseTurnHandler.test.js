@@ -40,8 +40,8 @@ const mockLogger = {
 const mockTurnStateFactory = {
   createIdleState: jest.fn(),
   createEndingState: jest.fn(),
-  // Add other state creation methods if BaseTurnHandler uses them from the factory
-  // For example, if there was a createAwaitingInputState: jest.fn(),
+  // Add the missing mock method
+  createAwaitingInputState: jest.fn(),
 };
 
 const createMockActor = (id = 'test-actor') => ({
@@ -182,42 +182,6 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
   let resetSpy;
   let stateDestroySpy; // Spy for AwaitingPlayerInputState.prototype.destroy
 
-  const createDummyInitialState = (name = 'DummyInitState') => ({
-    _handler: null,
-    getStateName: jest.fn().mockReturnValue(name),
-    enterState: jest.fn().mockResolvedValue(undefined),
-    exitState: jest.fn().mockResolvedValue(undefined),
-    startTurn: jest.fn().mockImplementation(function () {
-      throw new Error(
-        `${this.getStateName()}.startTurn should not be called unless it's TurnIdleState`
-      );
-    }),
-    handleSubmittedCommand: jest.fn().mockImplementation(function () {
-      throw new Error(
-        `${this.getStateName()}.handleSubmittedCommand should not be called`
-      );
-    }),
-    handleTurnEndedEvent: jest.fn().mockImplementation(function () {
-      throw new Error(
-        `${this.getStateName()}.handleTurnEndedEvent should not be called`
-      );
-    }),
-    processCommandResult: jest.fn().mockImplementation(function () {
-      throw new Error(
-        `${this.getStateName()}.processCommandResult should not be called`
-      );
-    }),
-    handleDirective: jest.fn().mockImplementation(function () {
-      throw new Error(
-        `${this.getStateName()}.handleDirective should not be called`
-      );
-    }),
-    destroy: jest.fn().mockResolvedValue(undefined),
-    _getTurnContext: jest.fn(function () {
-      return this._handler?.getTurnContext();
-    }),
-  });
-
   const initializeHandler = () => {
     handler = new MinimalTestHandler({
       logger: mockLogger,
@@ -247,13 +211,17 @@ describe('BaseTurnHandler Smoke Test Harness (Ticket 1.5)', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    jest.clearAllMocks(); // Clears all mocks, including those on mockTurnStateFactory
+    jest.clearAllMocks();
 
     mockTurnStateFactory.createIdleState.mockImplementation(
       (h) => new TurnIdleState(h)
     );
     mockTurnStateFactory.createEndingState.mockImplementation(
       (h, actorId, error) => new TurnEndingState(h, actorId, error)
+    );
+    // Add the implementation for the new mock method
+    mockTurnStateFactory.createAwaitingInputState.mockImplementation(
+      (h) => new AwaitingPlayerInputState(h)
     );
 
     dummyActor = createMockActor('smoke-test-actor-1');
