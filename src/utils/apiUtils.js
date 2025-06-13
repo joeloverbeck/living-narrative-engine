@@ -76,14 +76,15 @@ export async function Workspace_retry(
         let errorBodyText = `Status: ${response.status}, StatusText: ${response.statusText}`;
         let parsedErrorBody = null;
         try {
-          parsedErrorBody = await response.json();
-          errorBodyText = JSON.stringify(parsedErrorBody); // [cite: 1]
-        } catch (e) {
+          const bodyText = await response.clone().text();
           try {
-            errorBodyText = await response.text(); // [cite: 1]
-          } catch (e_text) {
-            // If reading as text also fails, stick with the status text [cite: 1]
+            parsedErrorBody = JSON.parse(bodyText);
+            errorBodyText = JSON.stringify(parsedErrorBody); // [cite: 1]
+          } catch (parseErr) {
+            errorBodyText = bodyText;
           }
+        } catch (readErr) {
+          // If reading fails, keep the default status text
         }
 
         const isRetryableStatusCode = RETRYABLE_HTTP_STATUS_CODES.includes(
