@@ -1,6 +1,3 @@
-// src/turns/interfaces/IActorTurnStrategy.js
-// --- FILE START ---
-
 /**
  * @typedef {import('./ITurnContext.js').ITurnContext} ITurnContext
  * // ITurnContext provides the strategy with necessary game state, actor info, and services.
@@ -51,6 +48,7 @@
  * @typedef {object} AIStrategyDecision
  * @property {ITurnAction} action - The decided action.
  * @property {object | null} extractedData - Additional data from the LLM response.
+ * @see {@link import('./ITurnDecisionResult.js').ITurnDecisionResult} This type is being superseded by the more formal ITurnDecisionResult envelope.
  */
 
 /**
@@ -136,11 +134,11 @@ export class IActorTurnStrategy {
    * `context.getPlayerPromptService()`, `context.getGame()`,
    * a service to query available/valid actions)
    * that the strategy might need to make an informed decision.
-   * @returns {Promise<ITurnAction | AIStrategyDecision>} A Promise that resolves to
-   * either an {@link ITurnAction} or an {@link AIStrategyDecision}. When an
-   * AIStrategyDecision is returned, the `action` property contains the chosen
+   * @returns {Promise<import('./ITurnDecisionResult.js').ITurnDecisionResult|ITurnAction>} A Promise that resolves to
+   * either an {@link ITurnAction} or a structured result envelope. When an
+   * {@link import('./ITurnDecisionResult.js').ITurnDecisionResult} is returned, the `action` property contains the chosen
    * {@link ITurnAction} and `extractedData` contains any additional data
-   * extracted from the LLM response.
+   * (e.g. from an LLM response).
    * If the actor decides to take no overt action (e.g., a "pass turn"
    * scenario, often represented by a "core:wait" or "core:pass" action),
    * the strategy should still resolve with an appropriate
@@ -161,5 +159,3 @@ export class IActorTurnStrategy {
     throw new Error(errorMessage);
   }
 }
-
-// --- FILE END ---

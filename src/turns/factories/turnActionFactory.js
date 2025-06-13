@@ -2,7 +2,7 @@
  * @module turnActionFactory
  */
 
-import { freeze } from '../../../tests/utils/objectUtils.js';
+import { freeze } from '../../utils/objectUtils.js';
 import { ITurnActionFactory } from '../ports/ITurnActionFactory.js';
 
 /**

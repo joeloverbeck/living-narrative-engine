@@ -18,25 +18,26 @@ import { validateDependency } from '../../utils/validationUtils.js';
  * @typedef {object} PlayerPromptResolution
  * @property {import('../services/humanPlayerPromptService.js').DiscoveredActionInfo} action
  * @property {string|null} speech
+ * @property {string|null} thoughts - Optional thoughts from the player.
+ * @property {string[]|null} notes - Optional notes from the player.
  */
 
 /**
- * @description Owns a single, live player prompt.
- * **Updated:** now resolves by integer `index` via ActionIndexingService.
+ * Owns a single, live player prompt.
+ * Resolves by integer index via ActionIndexingService.
  */
 export class PromptSession {
-  /** @type {string} */ #actorId;
-  /** @type {IPlayerTurnEvents} */ #eventBus;
-  /** @type {AbortSignal|undefined} */ #abortSignal;
-  /** @type {ILogger} */ #logger;
-  /** @type {ActionIndexingService} */ #actionIndexingService;
-
-  /** @type {boolean} */ #resolved = false;
-  /** @type {Promise<PlayerPromptResolution>|null} */ #promise = null;
-  /** @type {Function|null} */ #resolveCallback = null;
-  /** @type {Function|null} */ #rejectCallback = null;
-  /** @type {Function|null} */ #unsubscribe = null;
-  /** @type {Function|null} */ #onAbort = null;
+  #actorId;
+  #eventBus;
+  #abortSignal;
+  #logger;
+  #actionIndexingService;
+  #resolved = false;
+  #promise = null;
+  #resolveCb = null;
+  #rejectCb = null;
+  #unsubscribe = null;
+  #onAbort = null;
 
   /**
    * @param {object} params
@@ -54,7 +55,7 @@ export class PromptSession {
     abortSignal,
   }) {
     validateDependency(logger, 'logger', logger, {
-      requiredMethods: ['error', 'debug'],
+      requiredMethods: ['debug', 'error'],
     });
     validateDependency(eventBus, 'eventBus', logger, {
       requiredMethods: ['subscribe'],
@@ -66,7 +67,6 @@ export class PromptSession {
     if (!actorId || typeof actorId !== 'string') {
       throw new Error('PromptSession: actorId must be a non-empty string.');
     }
-
     this.#actorId = actorId;
     this.#eventBus = eventBus;
     this.#logger = logger;
@@ -74,29 +74,40 @@ export class PromptSession {
     this.#abortSignal = abortSignal;
   }
 
-  // ─────────────────── Internal helpers ───────────────────
-  #cleanup() {
+  /* ─────────────── internal helpers ─────────────── */
+
+  /** Fully cleans up listeners and schedules the final promise settlement. */
+  #settle(kind, value) {
     if (this.#resolved) return;
     this.#resolved = true;
 
-    if (this.#unsubscribe) {
-      try {
-        this.#unsubscribe();
-      } catch (e) {
-        this.#logger.error('PromptSession: Error during event unsubscribe.', e);
-      }
-      this.#unsubscribe = null;
+    try {
+      this.#unsubscribe?.();
+    } catch (e) {
+      this.#logger.error('PromptSession: unsubscribe failed', e);
     }
+    this.#unsubscribe = null;
 
     if (this.#abortSignal && this.#onAbort) {
       this.#abortSignal.removeEventListener('abort', this.#onAbort);
       this.#onAbort = null;
     }
+
+    // macrotask – gives callers one full turn to add handlers
+    const defer =
+      typeof setImmediate === 'function'
+        ? setImmediate // Node
+        : (fn) => setTimeout(fn); // browser / JSDOM fallback
+
+    defer(() => {
+      if (kind === 'resolve') this.#resolveCb?.(value);
+      else this.#rejectCb?.(value);
+    });
   }
 
   /**
    * Handles `core:player_turn_submitted` events.
-   * Expects `{ index: number, speech? }` in payload.
+   * Expects `{ index: number, speech?, thoughts?, notes? }` in payload.
    * Resolves the integer to an action composite via ActionIndexingService.
    * @private
    * @param {*} event
@@ -104,13 +115,17 @@ export class PromptSession {
   #handleEvent(event) {
     if (this.#resolved) return;
 
-    const payload = event?.payload;
-    const index = payload?.index;
-    const speech = payload?.speech ?? null;
+    const {
+      index,
+      speech = null,
+      thoughts = null,
+      notes = null,
+      submittedByActorId = null,
+    } = event?.payload ?? {};
 
     if (!Number.isInteger(index)) {
-      this.#cleanup();
-      this.#rejectCallback?.(
+      this.#settle(
+        'reject',
         new PromptError(
           'Malformed or missing index in player turn event.',
           { receivedEvent: event },
@@ -120,10 +135,9 @@ export class PromptSession {
       return;
     }
 
-    const submittedByActorId = payload?.submittedByActorId ?? null;
     if (submittedByActorId && submittedByActorId !== this.#actorId) {
-      this.#cleanup();
-      this.#rejectCallback?.(
+      this.#settle(
+        'reject',
         new PromptError(
           `Mismatched actor ID. Expected ${this.#actorId} but event was for ${submittedByActorId}.`,
           { submittedByActorId },
@@ -137,8 +151,8 @@ export class PromptSession {
     try {
       composite = this.#actionIndexingService.resolve(this.#actorId, index);
     } catch (err) {
-      this.#cleanup();
-      this.#rejectCallback?.(
+      this.#settle(
+        'reject',
         new PromptError(
           `Submitted index ${index} is not valid for actor ${this.#actorId}.`,
           err,
@@ -148,7 +162,6 @@ export class PromptSession {
       return;
     }
 
-    // Adapt composite back to the legacy DiscoveredActionInfo shape.
     const selectedAction = {
       id: composite.actionId,
       name: composite.description || composite.actionId,
@@ -157,17 +170,21 @@ export class PromptSession {
       params: composite.params,
     };
 
-    this.#cleanup();
-    this.#resolveCallback?.({ action: selectedAction, speech });
+    this.#settle('resolve', {
+      action: selectedAction,
+      speech,
+      thoughts,
+      notes,
+    });
   }
 
-  #handleAbort() {
+  #handleAbort = () => {
     if (this.#resolved) return;
-    this.#cleanup();
-    this.#rejectCallback?.(
+    this.#settle(
+      'reject',
       new PromptError('Prompt aborted by signal', null, 'ABORT_ERROR')
     );
-  }
+  };
 
   // ─────────────────── Public API ───────────────────
   /**
@@ -178,16 +195,15 @@ export class PromptSession {
     if (this.#promise) return this.#promise;
 
     this.#promise = new Promise((resolve, reject) => {
-      this.#resolveCallback = resolve;
-      this.#rejectCallback = reject;
+      this.#resolveCb = resolve;
+      this.#rejectCb = reject;
 
       if (this.#abortSignal?.aborted) {
         this.#handleAbort();
         return;
       }
-
       if (this.#abortSignal) {
-        this.#onAbort = this.#handleAbort.bind(this);
+        this.#onAbort = this.#handleAbort;
         this.#abortSignal.addEventListener('abort', this.#onAbort, {
           once: true,
         });
@@ -199,13 +215,14 @@ export class PromptSession {
           (e) => this.#handleEvent(e)
         );
       } catch (e) {
-        const error = new PromptError(
-          'Failed to subscribe to player input events.',
-          e,
-          'SUBSCRIPTION_ERROR'
+        this.#settle(
+          'reject',
+          new PromptError(
+            'Failed to subscribe to player input events.',
+            e,
+            'SUBSCRIPTION_ERROR'
+          )
         );
-        this.#cleanup();
-        this.#rejectCallback?.(error);
       }
     });
 
@@ -215,18 +232,13 @@ export class PromptSession {
   /** Imperatively cancels the prompt. */
   cancel(reason) {
     if (this.#resolved) return;
-
-    const cancellationError =
+    const err =
       reason ??
       new PromptError(
         'Prompt cancelled externally',
         { actorId: this.#actorId },
         'PROMPT_CANCELLED'
       );
-
-    this.#cleanup();
-    Promise.resolve().then(() => {
-      this.#rejectCallback?.(cancellationError);
-    });
+    this.#settle('reject', err);
   }
 }

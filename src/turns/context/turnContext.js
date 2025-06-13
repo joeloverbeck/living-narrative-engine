@@ -28,9 +28,6 @@
  * @typedef {function(boolean, string): void} OnSetAwaitingExternalEventCallback
  */
 /**
- * @typedef {import('../../events/subscriptionLifecycleManager.js').default} SubscriptionLifecycleManager
- */
-/**
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  */
 /**
@@ -109,6 +106,12 @@ export class TurnContext extends ITurnContext {
   #promptAbortController;
 
   /**
+   * @private
+   * @type {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null}
+   */
+  #decisionMeta = null;
+
+  /**
    * Creates an instance of TurnContext.
    *
    * @param {object} params
@@ -167,6 +170,7 @@ export class TurnContext extends ITurnContext {
     this.#handlerInstance = handlerInstance;
     this.#chosenAction = null;
     this.#isAwaitingExternalEvent = false;
+    this.#decisionMeta = null;
 
     // --- MODIFICATION: Initialize AbortController ---
     this.#promptAbortController = new AbortController();
@@ -299,12 +303,16 @@ export class TurnContext extends ITurnContext {
     }
 
     // NEW ➜ do nothing if the handler is already gone
-    if (this.#handlerInstance?._isDestroyed) {
+    // FIX: Check for explicit `true` because a deep mock returns a truthy function by default.
+    if (this.#handlerInstance?._isDestroyed === true) {
       this.#logger.debug(
         `TurnContext.endTurn: Handler already destroyed – skipping onEndTurnCallback for actor ${this.#actor.id}.`
       );
       return;
     }
+
+    // Reset decision metadata before notifying the handler.
+    this.#decisionMeta = null;
 
     // Notify the handler
     this.#onEndTurnCallback(errorOrNull);
@@ -413,6 +421,21 @@ export class TurnContext extends ITurnContext {
     return this.#chosenAction;
   }
 
+  /**
+   * @override
+   * @param {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null} meta
+   */
+  setDecisionMeta(meta) {
+    this.#decisionMeta = meta ?? null;
+  }
+
+  /**
+   * @override
+   */
+  getDecisionMeta() {
+    return this.#decisionMeta;
+  }
+
   // --- MODIFICATION: Implement new ITurnContext methods ---
   /** @override */
   getPromptSignal() {
@@ -440,5 +463,4 @@ export class TurnContext extends ITurnContext {
 
   // --- END MODIFICATION ---
 }
-
 // --- FILE END ---

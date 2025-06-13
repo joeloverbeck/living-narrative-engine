@@ -4,128 +4,166 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="Implemented basic human route for indexed actions.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/targeting/targetResolutionService.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/commandParser.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/commandParser.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/engineVersion.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/engineVersion.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/ITargetResolutionService.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/adapters/eventBusPromptAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/eventBusPromptAdapter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/adapters/eventBusTurnEndAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/eventBusTurnEndAdapter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/constants/turnDirectives.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/constants/turnDirectives.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/dtos/actionComposite.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/factories/turnActionFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/factories/turnActionFactory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/playerTurnHandler.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/IActorTurnStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/IActorTurnStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/orchestration/aiDecisionOrchestrator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/order/turnOrderService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/order/turnOrderService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/ports/ICommandInputPort.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/ports/ICommandInputPort.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/ports/IPromptOutputPort.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/ports/IPromptOutputPort.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingPlayerInputState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingPlayerInputState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/processingCommandState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/processingCommandState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/aiPlayerStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/humanPlayerStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/turnDirectiveStrategyResolver.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/turnDirectiveStrategyResolver.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/resolutionStatus.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/targetResolutionResult.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/messages.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/messages.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/nameMatcher.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/objectUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/objectUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/targetingUtils.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/actions/targeting/targetResolutionService.domain-followers.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.basic.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.basic.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.direction.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.direction.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.originalInput.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.originalInput.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositionEdgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositionEdgeCases.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.prepositional.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbMatching.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbMatching.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbOnlyDirectObject.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbOnlyDirectObject.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/containerConfig.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/containerConfig.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/commandAndActionRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.constructor.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-direction.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-environment.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-equipment.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-inventory.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-none.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.domain-self.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/targetResolutionService.matchingLogic.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/turnHandlerResolver.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/turnHandlerResolver.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/baseTurnHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/prompting/promptCoordinator.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/prompting/promptCoordinator.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/processingCommandState.coverage.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/processingCommandState.coverage.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/processingCommandState.enterState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/processingCommandState.enterState.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnIdleState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/turnIdleState.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/humanPlayerStrategy.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/turnOrder/turnOrderService.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnOrder/turnOrderService.constructor.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/messages.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/messages.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/nameMatcher.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/objectUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/objectUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/resolvePath.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/targetingUtils.test.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="JavaScript File" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;joeloverbeck&quot;
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "joeloverbeck"
   }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/joeloverbeck/living-narrative-engine.git&quot;,
-    &quot;accountId&quot;: &quot;e87db63c-2fda-4154-8e23-63c0c53d7f35&quot;
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/joeloverbeck/living-narrative-engine.git",
+    "accountId": "e87db63c-2fda-4154-8e23-63c0c53d7f35"
   }
-}</component>
-  <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 0
-}</component>
-  <component name="ProjectId" id="2yPZmW5MCpvTkCEsrhnhMvTZxcR" />
-  <component name="ProjectLevelVcsManager">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="2ySOLZsW8IlwYEr51W14KWZicLV" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Jest.actionIndexerAdapter.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.aiDecisionMetadata.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.aiDecisionOrchestrator.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.aiPlayerStrategy.constructor.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.aiStrategyErrors.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.indexedActionCompositesForAI.integration.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.llmChooser.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.turnActionFactory.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs.jest.jest_package&quot;: &quot;G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;web-ide.project.structure&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Jest.Tests in tests\\.executor": "Run",
+    "Jest.promptCoordinator.integration.test.js.executor": "Run",
+    "Jest.promptSession.test.js.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "junie.onboarding.icon.badge.shown": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
+    "nodejs_package_manager_path": "npm",
+    "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
+    "settings.editor.selected.configurable": "web-ide.project.structure",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
-  <component name="RunManager" selected="Jest.aiDecisionMetadata.test.js">
-    <configuration name="actionIndexerAdapter.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+}]]></component>
+  <component name="RunManager" selected="Jest.promptSession.test.js">
+    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/adapters/actionIndexerAdapter.test.js" />
+      <scope-kind value="DIRECTORY" />
+      <test-directory value="$PROJECT_DIR$/tests" />
       <method v="2" />
     </configuration>
-    <configuration name="aiDecisionMetadata.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+    <configuration name="promptCoordinator.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
       <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/integration/aiDecisionMetadata.test.js" />
+      <test-file value="$PROJECT_DIR$/tests/integration/promptCoordinator.integration.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="aiDecisionOrchestrator.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+    <configuration name="promptSession.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
       <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/orchestration/aiDecisionOrchestrator.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="aiPlayerStrategy.constructor.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/strategies/aiPlayerStrategy.constructor.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="llmChooser.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/adapters/llmChooser.test.js" />
+      <test-file value="$PROJECT_DIR$/tests/turns/prompting/promptSession.test.js" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Jest.aiDecisionMetadata.test.js" />
-        <item itemvalue="Jest.aiPlayerStrategy.constructor.test.js" />
-        <item itemvalue="Jest.aiDecisionOrchestrator.test.js" />
-        <item itemvalue="Jest.llmChooser.test.js" />
-        <item itemvalue="Jest.actionIndexerAdapter.test.js" />
+        <item itemvalue="Jest.promptSession.test.js" />
+        <item itemvalue="Jest.Tests in tests\" />
+        <item itemvalue="Jest.promptCoordinator.integration.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -138,150 +176,16 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="34ff541e-0efa-4a54-ad60-aed014c34aba" name="Changes" comment="" />
-      <created>1749738328809</created>
+      <changelist id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="" />
+      <created>1749824452963</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1749738328809</updated>
-      <workItem from="1749738330206" duration="16856000" />
-      <workItem from="1749758342420" duration="1833000" />
+      <updated>1749824452963</updated>
+      <workItem from="1749824454676" duration="1792000" />
     </task>
-    <task id="LOCAL-00001" summary="Uploaded from the office.">
-      <option name="closed" value="true" />
-      <created>1749738665250</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1749738665250</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Ensured the prompt includes reference to the action indexes.">
-      <option name="closed" value="true" />
-      <created>1749739397499</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1749739397499</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Fixed test errors.">
-      <option name="closed" value="true" />
-      <created>1749742092436</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1749742092436</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Created integration test to prove use of indexed actions for AI.">
-      <option name="closed" value="true" />
-      <created>1749742727568</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1749742727568</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Uploading test errors for Codex to fix.">
-      <option name="closed" value="true" />
-      <created>1749744431357</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1749744431357</updated>
-    </task>
-    <task id="LOCAL-00006" summary="Implemented freezing utility.">
-      <option name="closed" value="true" />
-      <created>1749744894572</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1749744894572</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Implemented ActionIndexerAdapter.">
-      <option name="closed" value="true" />
-      <created>1749745668473</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1749745668473</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Reverted insane changes that o4 intended to do to ConfigurableLLMAdapter.">
-      <option name="closed" value="true" />
-      <created>1749746772453</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1749746772453</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Made changes to configurableLLMAdapter.js">
-      <option name="closed" value="true" />
-      <created>1749747889118</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1749747889118</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Fixed tests.">
-      <option name="closed" value="true" />
-      <created>1749750284420</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1749750284420</updated>
-    </task>
-    <task id="LOCAL-00011" summary="Uploaded with failures for Codex.">
-      <option name="closed" value="true" />
-      <created>1749751647220</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1749751647220</updated>
-    </task>
-    <task id="LOCAL-00012" summary="Fixed AI route.">
-      <option name="closed" value="true" />
-      <created>1749753709144</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1749753709144</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Implemented basic human route for indexed actions.">
-      <option name="closed" value="true" />
-      <created>1749759407633</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1749759407633</updated>
-    </task>
-    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="Uploaded from the office." />
-    <MESSAGE value="Ensured the prompt includes reference to the action indexes." />
-    <MESSAGE value="Fixed test errors." />
-    <MESSAGE value="Created integration test to prove use of indexed actions for AI." />
-    <MESSAGE value="Formatting." />
-    <MESSAGE value="Uploading test errors for Codex to fix." />
-    <MESSAGE value="Implemented freezing utility." />
-    <MESSAGE value="Implemented ActionIndexerAdapter." />
-    <MESSAGE value="Reverted insane changes that o4 intended to do to ConfigurableLLMAdapter." />
-    <MESSAGE value="Made changes to configurableLLMAdapter.js" />
-    <MESSAGE value="Fixed tests." />
-    <MESSAGE value="Uploaded with failures for Codex." />
-    <MESSAGE value="Fixed AI route." />
-    <MESSAGE value="Implemented basic human route for indexed actions." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented basic human route for indexed actions." />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/src/turns/interfaces/ILLMResponseProcessor.js</url>
-          <line>19</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

@@ -1,5 +1,7 @@
-// src/turns/strategies/humanPlayerStrategy.js
-// --- FILE START ---
+/**
+ * @file The strategy for handling a human player's turn.
+ * @see src/turns/strategies/humanPlayerStrategy.js
+ */
 
 /** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy_Interface */
@@ -12,6 +14,8 @@
  * @description The structure of the object resolved by PlayerPromptService.prompt().
  * @property {AvailableAction} action - The selected available action.
  * @property {string | null} speech - The speech input from the player, or null.
+ * @property {string | null} [thoughts] - Optional thoughts from the player.
+ * @property {string[]| null} [notes] - Optional notes from the player.
  */
 
 /**
@@ -19,12 +23,14 @@
  * @description Represents an action available to the player.
  * @property {string} id - The unique identifier for the action definition (e.g., "core:wait", "ability:fireball").
  * @property {string} command - A representative command string or label for the action (e.g., "Wait", "Cast Fireball").
+ * @property {object} [params] - Optional parameters resolved during the prompt.
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 // Import PromptError if it's used for instanceof checks beyond AbortError
 // import { PromptError } from '../../errors/promptError.js';
 
+import { freeze } from '../../utils/objectUtils.js';
 import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
 
 /**
@@ -50,7 +56,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
    *
    * @async
    * @param {ITurnContext} context - The turn context for the current turn.
-   * @returns {Promise<ITurnAction>} A Promise that resolves to an ITurnAction object.
+   * @returns {Promise<import('../interfaces/ITurnDecisionResult.js').ITurnDecisionResult>} A Promise that resolves to an ITurnDecisionResult, which contains the frozen ITurnAction and any extracted metadata.
    * @throws {Error|DOMException} If essential services are missing, playerData is malformed,
    * or if the prompt operation fails or is aborted. `DOMException` with `name === 'AbortError'`
    * is thrown if the prompt is cancelled.
@@ -129,28 +135,34 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
         `HumanPlayerStrategy: playerData for actor ${actor.id} validated successfully. Action ID: "${playerData.action.id}".`
       );
 
-      // --- MODIFIED ITurnAction CONSTRUCTION ---
-      /** @type {ITurnAction} */
-      const turnAction = {
+      // --- NEW ITurnAction and Envelope CONSTRUCTION ---
+      const turnAction = freeze({
         actionDefinitionId: playerData.action.id,
+        resolvedParameters: playerData.action.params ?? {},
         commandString: playerData.action.command,
-        // Speech is now a top-level property.
-        // Default to empty string if playerData.speech is null or undefined,
-        // as the schema expects a string.
-        speech: playerData.speech || '',
-        // resolvedParameters field is removed
+        ...(playerData.speech ? { speech: playerData.speech.trim() } : {}),
+      });
+
+      const decisionResult = {
+        kind: 'success',
+        action: turnAction,
+        extractedData: {
+          speech: playerData.speech ?? null,
+          thoughts: playerData.thoughts ?? null,
+          notes: playerData.notes ?? null,
+        },
       };
-      // --- END MODIFIED ITurnAction CONSTRUCTION ---
+      // --- END NEW CONSTRUCTION ---
 
       logger.debug(
-        `HumanPlayerStrategy: Constructed ITurnAction for actor ${actor.id} with actionDefinitionId "${turnAction.actionDefinitionId}".`
+        `HumanPlayerStrategy: Constructed ITurnDecisionResult for actor ${actor.id} with actionDefinitionId "${turnAction.actionDefinitionId}".`
       );
       logger.debug(
-        `HumanPlayerStrategy: ITurnAction details for actor ${actor.id}:`,
-        { turnActionDetails: turnAction }
+        `HumanPlayerStrategy: Result details for actor ${actor.id}:`,
+        { decisionResult }
       );
 
-      return turnAction;
+      return decisionResult;
     } catch (error) {
       let actorIdForLog = 'unknown_actor';
       if (actor && typeof actor.id === 'string' && actor.id.trim() !== '') {
@@ -289,7 +301,7 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
    *
    * @param {ITurnContext} context - The ITurnContext instance.
    * @param {ILogger} logger - A valid logger instance for reporting issues.
-   * @returns {IPromptCoordinator} A valid player prompt service instance.
+   * @returns {import('../../interfaces/IPromptCoordinator.js').IPromptCoordinator} A valid player prompt service instance.
    * @throws {Error} If the service cannot be retrieved from context or is invalid.
    * @private
    */
@@ -326,5 +338,3 @@ export class HumanPlayerStrategy extends IActorTurnStrategy {
     return serviceInstance;
   }
 }
-
-// --- FILE END ---

@@ -25,12 +25,12 @@ import { NoActionsDiscoveredError, InvalidIndexError } from '../errors';
 export class AIDecisionOrchestrator extends IAIDecisionOrchestrator {
   /**
    * @param {{
-   *   discoverySvc: IActionDiscoveryService,
-   *   indexer: IActionIndexer,
-   *   llmChooser: ILLMChooser,
-   *   turnActionFactory: ITurnActionFactory,
-   *   fallbackFactory: IAIFallbackActionFactory,
-   *   logger: ILogger
+   * discoverySvc: IActionDiscoveryService,
+   * indexer: IActionIndexer,
+   * llmChooser: ILLMChooser,
+   * turnActionFactory: ITurnActionFactory,
+   * fallbackFactory: IAIFallbackActionFactory,
+   * logger: ILogger
    * }} deps
    */
   constructor({
@@ -56,9 +56,9 @@ export class AIDecisionOrchestrator extends IAIDecisionOrchestrator {
    *
    * @param {{ actor: Entity, context: ITurnContext }} params
    * @returns {Promise<{
-   *   kind: 'success',
-   *   action: import('../interfaces/IActorTurnStrategy.js').ITurnAction,
-   *   extractedData: { speech: string|null, thoughts: string|null, notes: string[]|null }
+   * kind: 'success',
+   * action: import('../interfaces/IActorTurnStrategy.js').ITurnAction,
+   * extractedData: { speech: string|null, thoughts: string|null, notes: string[]|null }
    * }>}
    * @throws {NoActionsDiscoveredError|InvalidIndexError}
    */
@@ -106,15 +106,13 @@ export class AIDecisionOrchestrator extends IAIDecisionOrchestrator {
     /* ---------------------------------------------------------------------- */
     /* 6. Return the full result incl. metadata                               */
     /* ---------------------------------------------------------------------- */
-    return {
-      kind: 'success',
-      action,
-      extractedData: {
-        speech,
-        thoughts: thoughts ?? null,
-        notes: notes ?? null,
-      },
+    // TKT-012: Normalize the extracted data to guarantee key presence.
+    const meta = {
+      speech: speech ?? null,
+      thoughts: thoughts ?? null,
+      notes: notes ?? null,
     };
+    return { kind: 'success', action, extractedData: meta };
   }
 
   /**
@@ -123,9 +121,9 @@ export class AIDecisionOrchestrator extends IAIDecisionOrchestrator {
    *
    * @param {{ actor: Entity, context: ITurnContext }} args
    * @returns {Promise<{
-   *   kind: 'success'|'fallback',
-   *   action: import('../interfaces/IActorTurnStrategy.js').ITurnAction,
-   *   extractedData: { speech: string|null, thoughts: string|null, notes: string[]|null }
+   * kind: 'success'|'fallback',
+   * action: import('../interfaces/IActorTurnStrategy.js').ITurnAction,
+   * extractedData: { speech: string|null, thoughts: string|null, notes: string[]|null }
    * }>}
    */
   async decideOrFallback(args) {
@@ -133,15 +131,18 @@ export class AIDecisionOrchestrator extends IAIDecisionOrchestrator {
       return await this.decide(args);
     } catch (err) {
       const fb = this.fallbackFactory.create(err.name, err, args.actor.id);
-      // `AIFallbackActionFactory` already embeds a user-friendly speech string
+
+      // TKT-012: Normalize the extracted data to guarantee key presence.
+      // `AIFallbackActionFactory` may provide speech, but not other metadata.
+      const meta = {
+        speech: fb.speech ?? null,
+        thoughts: null,
+        notes: null,
+      };
       return {
         kind: 'fallback',
         action: fb,
-        extractedData: {
-          speech: fb.speech ?? null,
-          thoughts: null,
-          notes: null,
-        },
+        extractedData: meta,
       };
     }
   }

@@ -32,7 +32,7 @@ export class AIPlayerStrategy extends IActorTurnStrategy {
   /**
    * @async
    * @param {ITurnContext} context - Current game turn context.
-   * @returns {Promise<ITurnAction|AIStrategyDecision>} AI decision or fallback.
+   * @returns {Promise<import('../interfaces/ITurnDecisionResult.js').ITurnDecisionResult|import('../interfaces/IActorTurnStrategy.js').ITurnAction>} AI decision or fallback.
    */
   async decideAction(context) {
     if (!context) {

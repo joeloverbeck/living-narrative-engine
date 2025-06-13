@@ -5,7 +5,7 @@
  * Using tokens instead of raw strings prevents typos and aids refactoring.
  */
 
-import { freeze } from '../../tests/utils/objectUtils';
+import { freeze } from '../utils/objectUtils';
 
 /**
  * A frozen object containing all unique keys used for registering and resolving
@@ -73,7 +73,7 @@ import { freeze } from '../../tests/utils/objectUtils';
  * @property {DiToken} ActionValidationService - Token for validating actions.
  * @property {DiToken} PayloadValueResolverService - Token for resolving payload values.
  * @property {DiToken} TurnHandlerResolver - Token for the service that resolves the correct turn handler.
- * @property {DiToken} PlayerTurnHandler - Token for the player-specific turn handler implementation.
+ * @property {DiToken} HumanTurnHandler - Token for the player-specific turn handler implementation.
  * @property {DiToken} AITurnHandler - Token for the AI-specific turn handler implementation.
  * @property {DiToken} SystemServiceRegistry - Token for the registry mapping system IDs to services.
  * @property {DiToken} PlayerPromptService - Token for the service managing player action prompting (implementation).
@@ -189,14 +189,13 @@ export const tokens = freeze({
   GameDataRepository: 'GameDataRepository',
   EntityManager: 'EntityManager',
   ReferenceResolver: 'ReferenceResolver',
-  TargetResolutionService: 'TargetResolutionService',
   JsonLogicEvaluationService: 'JsonLogicEvaluationService',
   ActionValidationContextBuilder: 'ActionValidationContextBuilder',
   PrerequisiteEvaluationService: 'PrerequisiteEvaluationService',
   DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
   ActionValidationService: 'ActionValidationService',
   TurnHandlerResolver: 'TurnHandlerResolver',
-  PlayerTurnHandler: 'PlayerTurnHandler',
+  HumanTurnHandler: 'HumanTurnHandler',
   AITurnHandler: 'AITurnHandler',
   PlayerPromptService: 'PlayerPromptService',
   CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',

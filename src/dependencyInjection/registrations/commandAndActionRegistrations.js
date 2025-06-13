@@ -13,7 +13,6 @@
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
 /** @typedef {import('../../actions/actionValidationService.js').ActionValidationService} ActionValidationService_Interface */
 /** @typedef {import('../../commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
-/** @typedef {import('../../actions/targeting/targetResolutionService.js').ITargetResolutionService} ITargetResolutionService */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 
@@ -24,7 +23,6 @@ import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
-import { TargetResolutionService } from '../../actions/targeting/targetResolutionService.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
 import { DomainContextCompatibilityChecker } from '../../validation/domainContextCompatibilityChecker.js';
@@ -92,21 +90,6 @@ export function registerCommandAndAction(container) {
   ]);
   logger.debug(
     `Command and Action Registration: Registered Action Validation services.`
-  );
-
-  // --- Action-Related Services ---
-
-  r.singletonFactory(tokens.TargetResolutionService, (c) => {
-    return new TargetResolutionService({
-      entityManager: c.resolve(tokens.IEntityManager),
-      worldContext: c.resolve(tokens.IWorldContext),
-      gameDataRepository: c.resolve(tokens.IGameDataRepository),
-      logger: c.resolve(tokens.ILogger),
-      getEntityIdsForScopes: getEntityIdsForScopes,
-    });
-  });
-  logger.debug(
-    `Command and Action Registration: Registered ${String(tokens.TargetResolutionService)}.`
   );
 
   // --- Command Parsing and Processing ---

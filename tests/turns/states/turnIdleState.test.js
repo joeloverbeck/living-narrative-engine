@@ -472,9 +472,9 @@ describe('TurnIdleState', () => {
     });
   });
 
-  test('should not have direct PlayerTurnHandler code dependencies', () => {
+  test('should not have directHumanTurnHandler code dependencies', () => {
     const sourceCode = TurnIdleState.toString(); // This gets the source code of the class
-    const dependencyRegex = /(?<!\/\/\s*|\*\s*)\bPlayerTurnHandler\b/;
+    const dependencyRegex = /(?<!\/\/\s*|\*\s*)\bHumanTurnHandler\b/;
     expect(sourceCode).not.toMatch(dependencyRegex);
   });
 });

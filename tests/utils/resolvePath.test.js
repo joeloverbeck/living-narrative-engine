@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from '@jest/globals';
 import resolvePath from '../../src/utils/resolvePath.js';
-import { freeze } from './objectUtils'; // <— adjust only if you move files
+import { freeze } from '../../src/utils/objectUtils.js'; // <— adjust only if you move files
 
 describe('utils/resolvePath', () => {
   /* -------------------------------------------------

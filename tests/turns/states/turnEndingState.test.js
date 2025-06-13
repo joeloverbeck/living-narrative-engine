@@ -6,7 +6,7 @@
  * Verifies its use of ITurnContext for accessing services like ILogger and ITurnEndPort,
  * and its interaction with BaseTurnHandler for resource resetting and state transitions.
  * Ticket: Refactor TurnEndingState to Use ITurnContext
- * Parent Epic: PTH-REFACTOR-001 (Decouple PlayerTurnHandler)
+ * Parent Epic: PTH-REFACTOR-001 (DecoupleHumanTurnHandler)
  * Related Ticket: PTH-REFACTOR-002 (Refactor Core Turn States to Utilize ITurnContext Exclusively)
  */
 
@@ -496,9 +496,9 @@ describe('TurnEndingState', () => {
     });
   });
 
-  test('No direct PlayerTurnHandler private member access in source code', () => {
+  test('No directHumanTurnHandler private member access in source code', () => {
     const sourceCode = TurnEndingState.toString();
-    const pthClassNameRegex = /(?<!\/\/\s*|\*\s*)\bPlayerTurnHandler\b/;
+    const pthClassNameRegex = /(?<!\/\/\s*|\*\s*)\bHumanTurnHandler\b/;
     expect(sourceCode).not.toMatch(pthClassNameRegex);
   });
 });

@@ -25,9 +25,6 @@ import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 import { AwaitingPlayerInputState } from '../../../src/turns/states/awaitingPlayerInputState.js';
 import { TurnEndingState } from '../../../src/turns/states/turnEndingState.js'; // Needed for some assertions
 import { AbstractTurnState } from '../../../src/turns/states/abstractTurnState.js'; // For calling super methods in mocks
-// ITurnStateFactory is not directly used in this test file for type checks, but its mock is crucial.
-// import {ITurnStateFactory} from '../../../src/turns/interfaces/ITurnStateFactory.js';
-import { IActorTurnStrategy } from '../../../src/turns/interfaces/IActorTurnStrategy.js'; // Import for type check if needed
 
 // --- Mocks & Test Utilities ---
 

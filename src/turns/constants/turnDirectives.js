@@ -4,13 +4,13 @@
  * @file Defines constants for turn directives used by CommandOutcomeInterpreter.
  */
 
-import { freeze } from '../../../tests/utils/objectUtils';
+import { freeze } from '../../utils/objectUtils';
 
 /**
  * @enum {string}
  * @readonly
  * @description Directives indicating the result of interpreting a command outcome.
- * Used to guide the PlayerTurnHandler on whether to end the turn, re-prompt,
+ * Used to guide the HumanTurnHandler on whether to end the turn, re-prompt,
  * or wait for an external event.
  */
 const TurnDirective = {

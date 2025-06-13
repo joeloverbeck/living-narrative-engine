@@ -1,5 +1,3 @@
-// src/services/gamePersistenceService.js
-
 import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.js';
 
 // --- JSDoc Type Imports ---
@@ -13,15 +11,19 @@ import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.j
 /** @typedef {import('../engine/playtimeTracker.js').default} PlaytimeTracker */
 /** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-// WorldLoader import is no longer strictly needed here if activeWorldName is passed in
 /** @typedef {import('../loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 
 // --- Import Tokens ---
 import { tokens } from '../dependencyInjection/tokens.js';
-// --- MODIFICATION START: Import the component ID constant ---
-import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
-import { CORE_MOD_ID } from '../constants/core'; // Assuming path is correct relative to this file
+// --- MODIFICATION START: Import component IDs for cleaning logic ---
+import {
+  CURRENT_ACTOR_COMPONENT_ID,
+  NOTES_COMPONENT_ID,
+  PERCEPTION_LOG_COMPONENT_ID,
+  SHORT_TERM_MEMORY_COMPONENT_ID,
+} from '../constants/componentIds.js';
+import { CORE_MOD_ID } from '../constants/core';
 // --- MODIFICATION END ---
 
 class GamePersistenceService extends IGamePersistenceService {
@@ -103,21 +105,85 @@ class GamePersistenceService extends IGamePersistenceService {
       throw new Error(
         'PlaytimeTracker not available for capturing game state.'
       );
-    // AppContainer might still be needed if other parts of gameState.engineInternals are resolved.
 
     const entitiesData = [];
     for (const entity of this.#entityManager.activeEntities.values()) {
       const components = {};
       for (const [componentTypeId, componentData] of entity.componentEntries) {
-        // --- MODIFICATION START: Filter out core:current_actor component ---
         if (componentTypeId === CURRENT_ACTOR_COMPONENT_ID) {
           this.#logger.debug(
             `GamePersistenceService.captureCurrentGameState: Skipping component '${CURRENT_ACTOR_COMPONENT_ID}' for entity '${entity.id}' during save.`
           );
-          continue; // Skip this component, do not add to save data
+          continue;
         }
-        // --- MODIFICATION END ---
-        components[componentTypeId] = this.#deepClone(componentData);
+
+        // --- TKT-008 MODIFICATION START: Clean component data before saving ---
+        const dataToSave = this.#deepClone(componentData);
+
+        // This switch handles cleaning for specific, known component structures.
+        // This is more robust than checking for properties on every single component.
+        switch (componentTypeId) {
+          case NOTES_COMPONENT_ID:
+            // Assumes component data is an object like { notes: [...] }
+            // If the 'notes' array is empty, remove the key.
+            if (
+              dataToSave.notes &&
+              Array.isArray(dataToSave.notes) &&
+              dataToSave.notes.length === 0
+            ) {
+              this.#logger.debug(
+                `Omitting empty 'notes' array from component '${componentTypeId}' for entity '${entity.id}'.`
+              );
+              delete dataToSave.notes;
+            }
+            break;
+
+          case SHORT_TERM_MEMORY_COMPONENT_ID:
+            // Assumes component data is an object like { thoughts: "..." }
+            // If 'thoughts' is a blank string, remove the key.
+            if (
+              dataToSave.thoughts &&
+              typeof dataToSave.thoughts === 'string' &&
+              !dataToSave.thoughts.trim()
+            ) {
+              this.#logger.debug(
+                `Omitting blank 'thoughts' from component '${componentTypeId}' for entity '${entity.id}'.`
+              );
+              delete dataToSave.thoughts;
+            }
+            break;
+
+          case PERCEPTION_LOG_COMPONENT_ID:
+            // Assumes component data is like { log: [{ action: { speech: "..." } }] }
+            // Clean blank 'speech' properties from any action payloads within the log.
+            if (dataToSave.log && Array.isArray(dataToSave.log)) {
+              dataToSave.log.forEach((entry) => {
+                if (
+                  entry?.action?.speech &&
+                  typeof entry.action.speech === 'string' &&
+                  !entry.action.speech.trim()
+                ) {
+                  this.#logger.debug(
+                    `Omitting blank 'speech' from a perception log entry for entity '${entity.id}'.`
+                  );
+                  delete entry.action.speech;
+                }
+              });
+            }
+            break;
+        }
+        // --- TKT-008 MODIFICATION END ---
+
+        // Only add the component to the save file if it still has data.
+        // For example, if a notes component only had an empty `notes` array
+        // and that key was deleted, the component object might now be empty.
+        if (Object.keys(dataToSave).length > 0) {
+          components[componentTypeId] = dataToSave;
+        } else {
+          this.#logger.debug(
+            `Skipping component '${componentTypeId}' for entity '${entity.id}' as it is empty after cleaning.`
+          );
+        }
       }
       entitiesData.push({
         instanceId: entity.id,
@@ -162,9 +228,6 @@ class GamePersistenceService extends IGamePersistenceService {
       );
     }
 
-    // REMOVED: Attempt to get currentTurn from TurnManager as it's not restored.
-    // let currentTurn = 0; // Default if not saving turn state related to TurnManager
-
     const currentWorldNameForMeta = activeWorldName || 'Unknown Game';
     if (!activeWorldName) {
       this.#logger.warn(
@@ -193,11 +256,7 @@ class GamePersistenceService extends IGamePersistenceService {
         entities: entitiesData,
         playerState: {},
         worldState: {},
-        engineInternals: {
-          // currentTurn: currentTurn, // Property removed
-          // Other engine internals that *should* be persisted can go here.
-          // If currentTurn was the only property, engineInternals can be an empty object.
-        },
+        engineInternals: {},
       },
       integrityChecks: {
         gameStateChecksum: 'PENDING_CALCULATION',
@@ -338,6 +397,8 @@ class GamePersistenceService extends IGamePersistenceService {
           continue;
         }
         try {
+          // When restoring, we explicitly tolerate missing keys (like 'thoughts' or 'notes')
+          // because reconstructEntity should not fail if a property is missing from the data.
           const restoredEntity =
             this.#entityManager.reconstructEntity(savedEntityData);
           if (!restoredEntity) {
@@ -382,17 +443,9 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#playtimeTracker.setAccumulatedPlaytime(0);
     }
 
-    // --- MODIFICATION START ---
-    // Removed the entire block that attempted to resolve ITurnManager
-    // and call setCurrentTurn. This is because:
-    // 1. The user does not want to persist or restore turn count.
-    // 2. The GameEngine already stops and restarts the TurnManager during load,
-    //    effectively resetting its state.
-    // 3. The TurnManager did not have a setCurrentTurn method, causing the warning.
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.'
     );
-    // --- MODIFICATION END ---
 
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Placeholder for PlayerState/WorldState restoration.'

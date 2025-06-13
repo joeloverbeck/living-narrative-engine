@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import CommandParser from '../../src/commands/commandParser.js'; // Adjusted path to CommandParser
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';
-import { freeze } from '../utils/objectUtils'; // Adjusted path for GameDataRepository
+import { freeze } from '../../src/utils/objectUtils'; // Adjusted path for GameDataRepository
 
 // --- Type Imports ---
 // Adjust paths assuming this test file is in src/tests/commands/

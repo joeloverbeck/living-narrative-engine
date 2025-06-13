@@ -55,7 +55,7 @@
  * @description
  * Defines the contract for turn-specific data and services. This interface's
  * primary role is to decouple turn logic (like states and strategies) from
- * concrete handler implementations (e.g. PlayerTurnHandler, AITurnHandler).
+ * concrete handler implementations (e.g. HumanTurnHandler, AITurnHandler).
  *
  * By interacting with ITurnContext, turn states and actor strategies can
  * access essential information (current actor, game state) and functionalities
@@ -244,6 +244,27 @@ export class ITurnContext {
    */
   getChosenAction() {
     throw new Error("Method 'getChosenAction()' must be implemented.");
+  }
+
+  /**
+   * Stores metadata extracted from a turn decision, such as speech, thoughts, or notes.
+   * This data is intended for analytics or UI display after the turn completes.
+   * The context should not modify the provided object; the caller is responsible for its structure.
+   *
+   * @param {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null} meta - The metadata object to store. Can be null.
+   * @returns {void}
+   */
+  setDecisionMeta(meta) {
+    throw new Error("Method 'setDecisionMeta(meta)' must be implemented.");
+  }
+
+  /**
+   * Retrieves the decision metadata that was stored for the current turn.
+   *
+   * @returns {{ speech:string|null, thoughts:string|null, notes:string[]|null }|null} The stored metadata object, or `null` if none was set.
+   */
+  getDecisionMeta() {
+    throw new Error("Method 'getDecisionMeta()' must be implemented.");
   }
 
   // --- NEW METHODS FOR CANCELLATION ---

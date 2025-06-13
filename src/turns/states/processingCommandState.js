@@ -174,16 +174,16 @@ export class ProcessingCommandState extends AbstractTurnState {
 
     this.#turnActionToProcess = turnAction;
 
-    // --- CORRECTED SECTION: Dispatch ENTITY_SPOKE_ID event ---
-    // Check for speech directly on the turnAction object
-    if (
-      turnAction.speech &&
-      typeof turnAction.speech === 'string' &&
-      turnAction.speech.trim() !== ''
-    ) {
-      const speechContent = turnAction.speech.trim();
+    // --- TKT-013: Get speech from persisted decision metadata and tighten check. ---
+    const speechRaw = turnCtx.getDecisionMeta()?.speech ?? null;
+    const speech =
+      typeof speechRaw === 'string' && speechRaw.trim()
+        ? speechRaw.trim()
+        : null;
+
+    if (speech) {
       logger.debug(
-        `${this.getStateName()}: Actor ${actorId} spoke: "${speechContent}". Dispatching ${ENTITY_SPOKE_ID}.`
+        `${this.getStateName()}: Actor ${actorId} spoke: "${speech}". Dispatching ${ENTITY_SPOKE_ID}.`
       );
 
       try {
@@ -192,10 +192,7 @@ export class ProcessingCommandState extends AbstractTurnState {
         if (eventDispatcher) {
           await eventDispatcher.dispatch(ENTITY_SPOKE_ID, {
             entityId: actorId,
-            speechContent: speechContent,
-            // Consider adding these if the ENTITY_SPOKE_ID event schema/handlers expect them:
-            // originalActionId: turnAction.actionDefinitionId,
-            // originalCommandString: turnAction.commandString
+            speechContent: speech,
           });
           logger.debug(
             `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`
@@ -212,28 +209,18 @@ export class ProcessingCommandState extends AbstractTurnState {
           eventDispatchError
         );
       }
+    } else if (speechRaw !== null) {
+      // This covers cases where speechRaw was a non-string or an empty/whitespace string.
+      logger.debug(
+        `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`
+      );
     } else {
-      // Optional: More detailed logging for why speech event wasn't dispatched
-      if (
-        turnAction &&
-        Object.prototype.hasOwnProperty.call(turnAction, 'speech')
-      ) {
-        if (typeof turnAction.speech !== 'string') {
-          logger.debug(
-            `${this.getStateName()}: Actor ${actorId} speech field present but not a string (Type: ${typeof turnAction.speech}, Value: "${String(turnAction.speech)}"). No ${ENTITY_SPOKE_ID} event dispatched.`
-          );
-        } else if (turnAction.speech.trim() === '') {
-          logger.debug(
-            `${this.getStateName()}: Actor ${actorId} speech field present but empty after trimming. No ${ENTITY_SPOKE_ID} event dispatched.`
-          );
-        }
-      } else if (turnAction) {
-        logger.debug(
-          `${this.getStateName()}: Actor ${actorId} has no 'speech' field in turnAction. No ${ENTITY_SPOKE_ID} event dispatched.`
-        );
-      }
+      // This covers speechRaw being null (i.e., not present in meta).
+      logger.debug(
+        `${this.getStateName()}: Actor ${actorId} has no 'speech' field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched.`
+      );
     }
-    // --- END CORRECTED SECTION ---
+    // --- END TKT-013 SECTION ---
 
     await (async () => {
       try {
@@ -645,4 +632,3 @@ export class ProcessingCommandState extends AbstractTurnState {
     );
   }
 }
-// --- FILE END ---

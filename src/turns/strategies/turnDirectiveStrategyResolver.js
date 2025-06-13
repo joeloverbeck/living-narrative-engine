@@ -19,7 +19,7 @@
 //  NOTE: This project is plain JavaScript – we rely on JSDoc for intellisense.
 // ────────────────────────────────────────────────────────────────────────────
 
-/** @typedef {import('../handlers/playerTurnHandler.js').default} PlayerTurnHandler */
+/** @typedef {import('../handlers/humanTurnHandler.js').default} HumanTurnHandler */
 /** @typedef {import('../../entities/entity.js').default}        Entity */
 /** @typedef {import('../constants/turnDirectives.js').default}    TurnDirective */
 /** @typedef {import('../interfaces/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy */
@@ -80,7 +80,7 @@ export default class TurnDirectiveStrategyResolver {
       default: {
         // Unknown, null, or undefined directive – choose a safe default.
         // Design choice: We treat it as WAIT_FOR_EVENT because that mirrors
-        // the legacy behaviour inside PlayerTurnHandler.
+        // the legacy behaviour inside HumanTurnHandler.
 
         /* istanbul ignore next */
         if (

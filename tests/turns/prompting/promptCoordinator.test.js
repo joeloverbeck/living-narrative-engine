@@ -168,9 +168,12 @@ describe('PromptCoordinator Integration Test', () => {
       params: chosenComposite.params,
     };
 
+    // FIX: Updated expectation to include the new fields, which default to null.
     await expect(promptPromise).resolves.toEqual({
       action: expectedAction,
       speech: chosenSpeech,
+      thoughts: null,
+      notes: null,
     });
     expect(mockUnsubscribeFn).toHaveBeenCalledTimes(1);
   });

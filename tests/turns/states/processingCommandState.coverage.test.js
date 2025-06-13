@@ -78,6 +78,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       getActor: () => new MockActor('actor1'),
       getChosenAction: () => ({ actionDefinitionId: 'dummyAction' }),
       getSafeEventDispatcher: () => undefined,
+      getDecisionMeta: () => null, // Provide mock to prevent crash
     });
 
     await processingState.enterState(mockHandler, null);
@@ -123,6 +124,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
       endTurn: jest.fn().mockResolvedValue(undefined),
       getChosenAction: () => ({ actionDefinitionId: 'action1' }), // to skip “no turnAction” branch
+      getDecisionMeta: () => null, // Provide mock to prevent crash
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
@@ -165,6 +167,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       }),
       getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
       endTurn: jest.fn().mockResolvedValue(undefined),
+      getDecisionMeta: () => null, // Provide mock to prevent crash
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
@@ -206,6 +209,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       getChosenAction: () => null,
       getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
       endTurn: jest.fn().mockResolvedValue(undefined),
+      getDecisionMeta: () => null, // Provide mock to prevent crash
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
@@ -243,6 +247,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       getChosenAction: () => badAction,
       getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
       endTurn: jest.fn().mockResolvedValue(undefined),
+      getDecisionMeta: () => null, // Provide mock to prevent crash
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
@@ -271,7 +276,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const turnActionWithSpeech = {
       actionDefinitionId: 'actionSpeak',
       commandString: 'speakCmd',
-      speech: 'Hello, world!',
+      speech: 'This speech is now ignored by the dispatch logic!',
     };
     // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
@@ -284,9 +289,15 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       getChosenAction: () => turnActionWithSpeech,
       getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
       endTurn: jest.fn().mockResolvedValue(undefined),
+      // FIX: Add the missing mock for getDecisionMeta. This is the source of the error.
+      getDecisionMeta: jest.fn().mockReturnValue({
+        speech: 'Hello, world!', // This is the speech that will be checked
+        thoughts: null,
+        notes: [],
+      }),
       // Provide valid commandProcessor and interpreter so we get past that logic
       getCommandProcessor: () => ({
-        processCommand: jest.fn().mockResolvedValue({ success: true }),
+        dispatchAction: jest.fn().mockResolvedValue({ success: true }),
       }),
       getCommandOutcomeInterpreter: () => ({
         interpret: jest.fn().mockReturnValue(TurnDirective.WAIT_FOR_EVENT),
@@ -294,21 +305,26 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    // Override resolver so it returns a no-op strategy
-    TurnDirectiveStrategyResolver.resolveStrategy = () => ({
-      execute: async () => {
-        /* no-op */
-      },
-    });
+    // Mock the resolver so it returns a no-op strategy, preventing further execution
+    jest
+      .spyOn(TurnDirectiveStrategyResolver, 'resolveStrategy')
+      .mockReturnValue({
+        execute: jest.fn().mockResolvedValue(undefined),
+      });
 
     // Re-create state so it picks up the overridden resolver
     const stateWithSpeech = new ProcessingCommandState(mockHandler, null, null);
     stateWithSpeech['_isProcessing'] = false;
     mockHandler._currentState = stateWithSpeech;
 
+    const processInternalSpy = jest.spyOn(
+      stateWithSpeech,
+      '_processCommandInternal'
+    );
+
     await stateWithSpeech.enterState(mockHandler, null);
 
-    // ENTITY_SPOKE_ID should have been dispatched with actorId and speechContent
+    // ENTITY_SPOKE_ID should have been dispatched with actorId and speechContent from getDecisionMeta
     expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
       ENTITY_SPOKE_ID,
       expect.objectContaining({
@@ -316,6 +332,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
         speechContent: 'Hello, world!',
       })
     );
+
+    // Verify the internal processing was still called
+    expect(processInternalSpy).toHaveBeenCalled();
   });
 });
 

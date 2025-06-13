@@ -51,7 +51,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
   }
 
   /**
-   * Canonical method used by PlayerTurnHandler / TurnManager.
+   * Canonical method used by HumanTurnHandler / TurnManager.
    * The 'success' parameter is part of the ITurnEndPort interface contract
    * and IS included in the core:turn_ended event payload.
    *

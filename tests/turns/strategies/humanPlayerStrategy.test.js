@@ -1,5 +1,7 @@
-// tests/turns/strategies/humanPlayerStrategy.test.js
-// --- FILE START ---
+/**
+ * @file Test suite to prove the behavior of HumanPlayerStrategy.
+ * @see tests/turns/strategies/humanPlayerStrategy.test.js
+ */
 
 import { HumanPlayerStrategy } from '../../../src/turns/strategies/humanPlayerStrategy.js';
 import {
@@ -69,7 +71,8 @@ describe('HumanPlayerStrategy', () => {
   });
 
   describe('decideAction', () => {
-    it('should call promptCoordinator.prompt and return a correctly structured ITurnAction', async () => {
+    it('should call promptCoordinator.prompt and return a correctly structured result envelope', async () => {
+      // Arrange
       const playerData = {
         action: {
           ...mockAvailableAction,
@@ -77,11 +80,15 @@ describe('HumanPlayerStrategy', () => {
           command: 'Look Around',
         },
         speech: 'quickly',
+        thoughts: 'I should see what is here.',
+        notes: null,
       };
       mockPlayerPromptService.prompt.mockResolvedValueOnce(playerData);
 
-      const turnAction = await strategy.decideAction(mockTurnContext);
+      // Act
+      const decisionResult = await strategy.decideAction(mockTurnContext);
 
+      // Assert
       expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
       expect(mockTurnContext.getPlayerPromptService).toHaveBeenCalledTimes(1);
       expect(mockPlayerPromptService.prompt).toHaveBeenCalledTimes(1);
@@ -89,43 +96,64 @@ describe('HumanPlayerStrategy', () => {
         cancellationSignal: undefined,
       });
 
-      expect(turnAction).toEqual({
-        actionDefinitionId: playerData.action.id,
-        commandString: playerData.action.command,
-        speech: playerData.speech,
+      expect(decisionResult).toEqual({
+        kind: 'success',
+        action: {
+          actionDefinitionId: playerData.action.id,
+          commandString: playerData.action.command,
+          speech: playerData.speech,
+          resolvedParameters: {}, // Should be an empty object when no params are provided
+        },
+        extractedData: {
+          speech: playerData.speech,
+          thoughts: playerData.thoughts,
+          notes: null,
+        },
       });
 
       expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
       expect(mockMainLogger.debug).toHaveBeenCalledWith(
         `HumanPlayerStrategy: Calling promptCoordinator.prompt() for actor ${mockActor.id}.`
       );
+      // Check for the new log messages reflecting the envelope structure
       expect(mockMainLogger.debug).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Received playerData for actor ${mockActor.id}. Details:`,
-        playerData
+        `HumanPlayerStrategy: Constructed ITurnDecisionResult for actor ${mockActor.id} with actionDefinitionId "${playerData.action.id}".`
       );
       expect(mockMainLogger.debug).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: playerData for actor ${mockActor.id} validated successfully. Action ID: "${playerData.action.id}".`
-      );
-      expect(mockMainLogger.debug).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: ITurnAction details for actor ${mockActor.id}:`,
-        { turnActionDetails: turnAction }
+        `HumanPlayerStrategy: Result details for actor ${mockActor.id}:`,
+        { decisionResult }
       );
     });
 
     it('should handle null speech from playerData correctly', async () => {
+      // Arrange
       const playerData = {
         action: { ...mockAvailableAction, id: 'action:wait', command: 'Wait' },
-        speech: null,
+        speech: null, // Test case with null speech
       };
       mockPlayerPromptService.prompt.mockResolvedValueOnce(playerData);
 
-      const turnAction = await strategy.decideAction(mockTurnContext);
+      // Act
+      const decisionResult = await strategy.decideAction(mockTurnContext);
 
-      expect(turnAction).toEqual({
-        actionDefinitionId: playerData.action.id,
-        commandString: playerData.action.command,
-        speech: '',
+      // Assert
+      expect(decisionResult).toEqual({
+        kind: 'success',
+        action: {
+          actionDefinitionId: playerData.action.id,
+          commandString: playerData.action.command,
+          resolvedParameters: {},
+          // The 'speech' property should be absent from the action object
+        },
+        extractedData: {
+          speech: null,
+          thoughts: null,
+          notes: null,
+        },
       });
+      // Explicitly check that the speech property does not exist on the action
+      expect(decisionResult.action).not.toHaveProperty('speech');
+
       expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor, {
         cancellationSignal: undefined,
       });
@@ -375,13 +403,20 @@ describe('HumanPlayerStrategy', () => {
       );
     });
 
-    it('should log info and re-throw AbortError if promptCoordinator.prompt is aborted', async () => {
+    it('should log debug and re-throw AbortError if promptCoordinator.prompt is aborted', async () => {
+      // Arrange
       const abortError = new DOMException('Test Abort', 'AbortError');
       mockPlayerPromptService.prompt.mockRejectedValueOnce(abortError);
+      mockTurnContext.getPromptSignal.mockReturnValueOnce(
+        new AbortController().signal
+      );
 
-      const mockSignal = new AbortController().signal;
-      mockTurnContext.getPromptSignal.mockReturnValueOnce(mockSignal);
+      // Act & Assert
+      await expect(strategy.decideAction(mockTurnContext)).rejects.toThrow(
+        abortError
+      );
 
+      // Assert that the general error log was NOT called for an AbortError
       expect(mockMainLogger.error).not.toHaveBeenCalledWith(
         `HumanPlayerStrategy: Error during promptCoordinator.prompt() for actor ${mockActor.id}.`,
         expect.anything()
@@ -389,4 +424,3 @@ describe('HumanPlayerStrategy', () => {
     });
   });
 });
-// --- FILE END ---

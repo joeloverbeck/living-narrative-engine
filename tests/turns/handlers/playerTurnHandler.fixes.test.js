@@ -9,12 +9,12 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-// Assuming PlayerTurnHandler and BaseTurnHandler are in 'src/turns/handlers/'
+// AssumingHumanTurnHandler and BaseTurnHandler are in 'src/turns/handlers/'
 // as per your test execution paths.
-import PlayerTurnHandler from '../../../src/turns/handlers/playerTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
+import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler';
 
-describe('PlayerTurnHandler Constructor', () => {
+describe('HumanTurnHandler Constructor', () => {
   let mockLogger;
   let mockTurnStateFactory;
   let mockCommandProcessor;
@@ -73,13 +73,13 @@ describe('PlayerTurnHandler Constructor', () => {
     let handler;
 
     expect(() => {
-      handler = new PlayerTurnHandler(deps);
+      handler = new HumanTurnHandler(deps);
     }).not.toThrow();
 
-    expect(handler).toBeInstanceOf(PlayerTurnHandler);
+    expect(handler).toBeInstanceOf(HumanTurnHandler);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        'PlayerTurnHandler initialised. Dependencies assigned. Initial state set.'
+        'HumanTurnHandler initialised. Dependencies assigned. Initial state set.'
       )
     );
     expect(mockTurnStateFactory.createInitialState).toHaveBeenCalledWith(
@@ -92,7 +92,7 @@ describe('PlayerTurnHandler Constructor', () => {
   it('should throw an error if logger is not provided', () => {
     const deps = getValidDependencies();
     delete deps.logger;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
+    expect(() => new HumanTurnHandler(deps)).toThrow(
       'BaseTurnHandler: logger is required.'
     );
   });
@@ -100,7 +100,7 @@ describe('PlayerTurnHandler Constructor', () => {
   it('should throw an error if turnStateFactory is not provided', () => {
     const deps = getValidDependencies();
     delete deps.turnStateFactory;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
+    expect(() => new HumanTurnHandler(deps)).toThrow(
       'BaseTurnHandler: turnStateFactory is required.'
     );
   });
@@ -108,40 +108,40 @@ describe('PlayerTurnHandler Constructor', () => {
   it('should throw an error if commandProcessor is not provided', () => {
     const deps = getValidDependencies();
     delete deps.commandProcessor;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: commandProcessor is required'
+    expect(() => new HumanTurnHandler(deps)).toThrow(
+      'HumanTurnHandler: commandProcessor is required'
     );
   });
 
   it('should throw an error if turnEndPort is not provided', () => {
     const deps = getValidDependencies();
     delete deps.turnEndPort;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: turnEndPort is required'
+    expect(() => new HumanTurnHandler(deps)).toThrow(
+      'HumanTurnHandler: turnEndPort is required'
     );
   });
 
   it('should throw an error if promptCoordinator is not provided', () => {
     const deps = getValidDependencies();
     delete deps.promptCoordinator;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: promptCoordinator is required'
+    expect(() => new HumanTurnHandler(deps)).toThrow(
+      'HumanTurnHandler: promptCoordinator is required'
     );
   });
 
   it('should throw an error if commandOutcomeInterpreter is not provided', () => {
     const deps = getValidDependencies();
     delete deps.commandOutcomeInterpreter;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: commandOutcomeInterpreter is required'
+    expect(() => new HumanTurnHandler(deps)).toThrow(
+      'HumanTurnHandler: commandOutcomeInterpreter is required'
     );
   });
 
   it('should throw an error if safeEventDispatcher is not provided', () => {
     const deps = getValidDependencies();
     delete deps.safeEventDispatcher;
-    expect(() => new PlayerTurnHandler(deps)).toThrow(
-      'PlayerTurnHandler: safeEventDispatcher is required'
+    expect(() => new HumanTurnHandler(deps)).toThrow(
+      'HumanTurnHandler: safeEventDispatcher is required'
     );
   });
 
@@ -151,15 +151,15 @@ describe('PlayerTurnHandler Constructor', () => {
 
     let handler;
     expect(() => {
-      handler = new PlayerTurnHandler(deps);
+      handler = new HumanTurnHandler(deps);
     }).not.toThrow();
-    expect(handler).toBeInstanceOf(PlayerTurnHandler);
+    expect(handler).toBeInstanceOf(HumanTurnHandler);
   });
 
   it('should call _setInitialState with the state from the factory', () => {
     const deps = getValidDependencies();
 
-    const handler = new PlayerTurnHandler(deps);
+    const handler = new HumanTurnHandler(deps);
 
     expect(mockTurnStateFactory.createInitialState).toHaveBeenCalledTimes(1);
     expect(mockTurnStateFactory.createInitialState).toHaveBeenCalledWith(

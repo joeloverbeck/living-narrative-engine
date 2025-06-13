@@ -2,7 +2,7 @@
 
 import pkg from '../../package.json';
 import semver from 'semver';
-import { freeze } from '../../tests/utils/objectUtils';
+import { freeze } from '../utils/objectUtils';
 
 const versionFromPackage = pkg.version;
 

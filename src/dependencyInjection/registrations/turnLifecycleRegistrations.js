@@ -5,7 +5,7 @@
  */
 
 import TurnManager from '../../turns/turnManager.js';
-import PlayerTurnHandler from '../../turns/handlers/playerTurnHandler.js';
+import HumanTurnHandler from '../../turns/handlers/humanTurnHandler.js';
 import TurnHandlerResolver from '../../turns/services/turnHandlerResolver.js';
 import { TurnOrderService } from '../../turns/order/turnOrderService.js';
 import PromptCoordinator from '../../turns/prompting/promptCoordinator.js';
@@ -103,9 +103,9 @@ export function registerTurnLifecycle(container) {
 
   // ─────────────────── Player handler ────────────────────
   r.tagged(SHUTDOWNABLE).transientFactory(
-    tokens.PlayerTurnHandler,
+    tokens.HumanTurnHandler,
     (c) =>
-      new PlayerTurnHandler({
+      new HumanTurnHandler({
         logger: c.resolve(tokens.ILogger),
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         commandProcessor: c.resolve(tokens.ICommandProcessor),
@@ -116,7 +116,7 @@ export function registerTurnLifecycle(container) {
       })
   );
   logger.debug(
-    `Turn Lifecycle Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`
+    `Turn Lifecycle Registration: Registered ${tokens.HumanTurnHandler} tagged ${SHUTDOWNABLE.join(', ')}.`
   );
 
   // ────────────────── Resolver & manager ──────────────────
@@ -129,7 +129,7 @@ export function registerTurnLifecycle(container) {
           {
             name: 'Player',
             predicate: (actor) => actor.hasComponent(PLAYER_COMPONENT_ID),
-            factory: () => c.resolve(tokens.PlayerTurnHandler),
+            factory: () => c.resolve(tokens.HumanTurnHandler),
           },
           {
             name: 'AI',

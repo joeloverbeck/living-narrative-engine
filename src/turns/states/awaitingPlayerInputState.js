@@ -61,7 +61,9 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
         this._handler._resetTurnStateAndResources(
           `critical-no-context-${this.name}`
         );
-        this._handler._transitionToState(new TurnIdleState(this._handler));
+        await this._handler._transitionToState(
+          new TurnIdleState(this._handler)
+        );
       }
       return;
     }
@@ -115,6 +117,13 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
       const decision = await strategy.decideAction(turnContext);
       const action = decision.action || decision;
       const extractedData = decision.extractedData || null;
+
+      // TKT-011: Persist decision metadata (speech, thoughts, etc.)
+      if (typeof turnContext.setDecisionMeta === 'function') {
+        // Freeze the object to ensure it's not mutated later.
+        const metaFrozen = extractedData ? Object.freeze(extractedData) : null;
+        turnContext.setDecisionMeta(metaFrozen);
+      }
 
       /* validate ITurnAction */
       if (!action || typeof action.actionDefinitionId !== 'string') {
@@ -228,7 +237,9 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
         this._handler._resetTurnStateAndResources(
           `no-context-submission-${this.name}`
         );
-        this._handler._transitionToState(new TurnIdleState(this._handler));
+        await this._handler._transitionToState(
+          new TurnIdleState(this._handler)
+        );
       } else {
         logger.error(
           `${this.name}: CRITICAL - No ITurnContext or handler methods to process unexpected command submission or to reset.`
@@ -318,5 +329,4 @@ export class AwaitingPlayerInputState extends AbstractTurnState {
     await super.destroy(handler); // Pass the handler
   }
 }
-
 // ──────────────────────────────────────────────────────────────────────────────

@@ -23,7 +23,6 @@ import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js';
 
 // --- Concrete Class Imports for `instanceof` checks ---
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
-import { TargetResolutionService } from '../../../src/actions/targeting/targetResolutionService.js';
 import { ActionValidationContextBuilder } from '../../../src/actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { DomainContextCompatibilityChecker } from '../../../src/validation/domainContextCompatibilityChecker.js';
@@ -93,11 +92,6 @@ describe('registerCommandAndAction', () => {
       'Command and Action Registration: Registered Action Validation services.'
     );
     expect(logCalls).toContain(
-      `Command and Action Registration: Registered ${String(
-        tokens.TargetResolutionService
-      )}.`
-    );
-    expect(logCalls).toContain(
       `Command and Action Registration: Registered ${String(tokens.ICommandParser)}.`
     );
     expect(logCalls).toContain(
@@ -145,12 +139,6 @@ describe('registerCommandAndAction', () => {
         token: tokens.ActionValidationService,
         Class: ActionValidationService,
         lifecycle: 'singleton',
-        tags: undefined,
-      },
-      {
-        token: tokens.TargetResolutionService,
-        Class: TargetResolutionService,
-        lifecycle: 'singletonFactory',
         tags: undefined,
       },
       {

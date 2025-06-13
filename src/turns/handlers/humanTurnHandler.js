@@ -1,7 +1,7 @@
-// src/turns/handlers/playerTurnHandler.js
+// src/turns/handlers/humanTurnHandler.js
 // ****** MODIFIED FILE ******
 // ──────────────────────────────────────────────────────────────────────────────
-//  PlayerTurnHandler  – MODIFIED TO EXTEND BaseTurnHandler & USE ITurnContext
+//  HumanTurnHandler  – MODIFIED TO EXTEND BaseTurnHandler & USE ITurnContext
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { BaseTurnHandler } from './baseTurnHandler.js';
@@ -19,7 +19,7 @@ import { HumanPlayerStrategy } from '../strategies/humanPlayerStrategy.js'; // A
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../interfaces/factories/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
 
-class PlayerTurnHandler extends BaseTurnHandler {
+class HumanTurnHandler extends BaseTurnHandler {
   /** @type {ICommandProcessor} */
   #commandProcessor;
   /** @type {ITurnEndPort} */
@@ -64,17 +64,17 @@ class PlayerTurnHandler extends BaseTurnHandler {
     super({ logger, turnStateFactory });
 
     if (!commandProcessor)
-      throw new Error('PlayerTurnHandler: commandProcessor is required');
+      throw new Error('HumanTurnHandler: commandProcessor is required');
     if (!turnEndPort)
-      throw new Error('PlayerTurnHandler: turnEndPort is required');
+      throw new Error('HumanTurnHandler: turnEndPort is required');
     if (!promptCoordinator)
-      throw new Error('PlayerTurnHandler: promptCoordinator is required');
+      throw new Error('HumanTurnHandler: promptCoordinator is required');
     if (!commandOutcomeInterpreter)
       throw new Error(
-        'PlayerTurnHandler: commandOutcomeInterpreter is required'
+        'HumanTurnHandler: commandOutcomeInterpreter is required'
       );
     if (!safeEventDispatcher)
-      throw new Error('PlayerTurnHandler: safeEventDispatcher is required');
+      throw new Error('HumanTurnHandler: safeEventDispatcher is required');
 
     this.#commandProcessor = commandProcessor;
     this.#turnEndPort = turnEndPort;
@@ -99,8 +99,8 @@ class PlayerTurnHandler extends BaseTurnHandler {
     super._assertHandlerActive();
 
     if (!actor) {
-      this._logger.error('PlayerTurnHandler.startTurn: actor is required.');
-      throw new Error('PlayerTurnHandler.startTurn: actor is required.');
+      this._logger.error('HumanTurnHandler.startTurn: actor is required.');
+      throw new Error('HumanTurnHandler.startTurn: actor is required.');
     }
     this._setCurrentActorInternal(actor);
 
@@ -136,7 +136,7 @@ class PlayerTurnHandler extends BaseTurnHandler {
     this._setCurrentTurnContextInternal(newTurnContext);
 
     this._logger.debug(
-      `PlayerTurnHandler.startTurn: TurnContext created for actor ${actor.id} with HumanPlayerStrategy.`
+      `HumanTurnHandler.startTurn: TurnContext created for actor ${actor.id} with HumanPlayerStrategy.`
     );
 
     if (!this._currentState) {
@@ -152,11 +152,11 @@ class PlayerTurnHandler extends BaseTurnHandler {
         this._setInitialState(fallbackInitialState);
         if (!this._currentState)
           throw new Error(
-            'PlayerTurnHandler: _currentState is null, and recovery failed.'
+            'HumanTurnHandler: _currentState is null, and recovery failed.'
           );
       } else {
         throw new Error(
-          'PlayerTurnHandler: _currentState is null, and turnStateFactory failed to provide a state.'
+          'HumanTurnHandler: _currentState is null, and turnStateFactory failed to provide a state.'
         );
       }
     }
@@ -313,4 +313,4 @@ class PlayerTurnHandler extends BaseTurnHandler {
   }
 }
 
-export default PlayerTurnHandler;
+export default HumanTurnHandler;

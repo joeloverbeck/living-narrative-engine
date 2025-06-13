@@ -1,5 +1,7 @@
-// tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js
-// --- FILE START ---
+/**
+ * @file Test suite to prove the behavior of HumanPlayerStrategy.
+ * @see tests/turns/strategies/humanPlayerStrategy.noChildLogger.test.js
+ */
 
 import { HumanPlayerStrategy } from '../../../src/turns/strategies/humanPlayerStrategy.js'; // Adjust path as needed
 import {
@@ -40,12 +42,6 @@ const createMockTurnContext = (actor, logger, promptCoordinator) => ({
   getPromptSignal: jest.fn(() => undefined),
 });
 
-// Mock for AvailableAction structure
-const mockAvailableActionData = {
-  id: 'default:action',
-  command: 'Default Command',
-};
-
 describe('HumanPlayerStrategy', () => {
   let humanPlayerStrategy;
   let mockActor;
@@ -73,29 +69,44 @@ describe('HumanPlayerStrategy', () => {
   });
 
   describe('decideAction', () => {
-    it('should successfully get player data and return ITurnAction', async () => {
+    it('should successfully get player data and return the correct result envelope', async () => {
+      // Arrange
       const playerData = {
         action: { id: 'test:attack', command: 'Attack Foe' },
         speech: 'with haste',
       };
       mockPlayerPromptService.prompt.mockResolvedValueOnce(playerData);
 
-      const turnAction =
+      // Act
+      const decisionResult =
         await humanPlayerStrategy.decideAction(mockTurnContext);
 
+      // Assert
       expect(mockPlayerPromptService.prompt).toHaveBeenCalledWith(mockActor, {
         cancellationSignal: undefined,
       });
+
+      // Assert the new, correct log message is present
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `HumanPlayerStrategy: Constructed ITurnAction for actor ${mockActor.id} with actionDefinitionId "${playerData.action.id}".`
+        `HumanPlayerStrategy: Constructed ITurnDecisionResult for actor ${mockActor.id} with actionDefinitionId "${playerData.action.id}".`
       );
 
-      // MODIFIED ASSERTION
-      expect(turnAction).toEqual({
-        actionDefinitionId: playerData.action.id,
-        commandString: playerData.action.command,
-        speech: playerData.speech, // Expect speech at top level
+      // Assert the structure of the returned envelope
+      expect(decisionResult).toEqual({
+        kind: 'success',
+        action: {
+          actionDefinitionId: playerData.action.id,
+          commandString: playerData.action.command,
+          speech: playerData.speech.trim(),
+          resolvedParameters: {},
+        },
+        extractedData: {
+          speech: playerData.speech,
+          thoughts: null,
+          notes: null,
+        },
       });
+
       // Ensure getPromptSignal from mockTurnContext was called
       expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
     });
@@ -120,7 +131,7 @@ describe('HumanPlayerStrategy', () => {
       expect(mockTurnContext.getPromptSignal).toHaveBeenCalled();
     });
 
-    it('should log info and re-throw AbortError if PlayerPromptService.prompt is aborted', async () => {
+    it('should log debug and re-throw AbortError if PlayerPromptService.prompt is aborted', async () => {
       const abortError = new DOMException('Prompt aborted', 'AbortError');
       mockPlayerPromptService.prompt.mockRejectedValueOnce(abortError);
 
@@ -130,6 +141,10 @@ describe('HumanPlayerStrategy', () => {
       await expect(
         humanPlayerStrategy.decideAction(mockTurnContext)
       ).rejects.toThrow(abortError);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `HumanPlayerStrategy: Prompt for actor ${mockActor.id} was cancelled (aborted).`
+      );
 
       expect(mockLogger.error).not.toHaveBeenCalledWith(
         `HumanPlayerStrategy: Error during promptCoordinator.prompt() for actor ${mockActor.id}.`,
@@ -275,4 +290,3 @@ describe('HumanPlayerStrategy', () => {
     });
   });
 });
-// --- FILE END ---

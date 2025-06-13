@@ -25,10 +25,9 @@ import {
 // Concrete Classes
 import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
 import TurnManager from '../../../src/turns/turnManager.js';
-import PlayerTurnHandler from '../../../src/turns/handlers/playerTurnHandler.js';
+import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
 import TurnHandlerResolver from '../../../src/turns/services/turnHandlerResolver.js';
 import { ConcreteTurnStateFactory } from '../../../src/turns/factories/concreteTurnStateFactory.js';
-import { ConcreteAIPlayerStrategyFactory } from '../../../src/turns/factories/concreteAIPlayerStrategyFactory.js';
 import { ConcreteTurnContextFactory } from '../../../src/turns/factories/concreteTurnContextFactory.js';
 import PromptCoordinator from '../../../src/turns/prompting/promptCoordinator';
 
@@ -106,7 +105,7 @@ describe('registerTurnLifecycle', () => {
       'Turn Lifecycle Registration: Registered Turn services and factories.'
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered ${tokens.PlayerTurnHandler} tagged ${SHUTDOWNABLE.join(
+      `Turn Lifecycle Registration: Registered ${tokens.HumanTurnHandler} tagged ${SHUTDOWNABLE.join(
         ', '
       )}.`
     );
@@ -152,8 +151,8 @@ describe('registerTurnLifecycle', () => {
       lifecycle: 'singletonFactory',
     },
     {
-      token: tokens.PlayerTurnHandler,
-      Class: PlayerTurnHandler,
+      token: tokens.HumanTurnHandler,
+      Class: HumanTurnHandler,
       lifecycle: 'transient',
       tags: SHUTDOWNABLE,
     },

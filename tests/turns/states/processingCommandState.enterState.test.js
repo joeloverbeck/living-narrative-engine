@@ -43,6 +43,7 @@ const mockLogger = {
 
 const mockCommandProcessor = {
   processCommand: jest.fn(),
+  dispatchAction: jest.fn(),
 };
 
 const mockCommandOutcomeInterpreter = {
@@ -88,6 +89,7 @@ describe('ProcessingCommandState', () => {
       actionDefinitionId: defaultActionDefinitionId,
       commandString: commandString,
       resolvedParameters: { param1: 'value1' },
+      speech: 'This is the speech from the turn action.',
     };
 
     mockTurnContext = {
@@ -199,6 +201,12 @@ describe('ProcessingCommandState', () => {
           return Promise.resolve();
         }),
       getChosenAction: jest.fn().mockReturnValue(mockTurnAction),
+      // FIX: Add the missing mock for getDecisionMeta
+      getDecisionMeta: jest.fn().mockReturnValue({
+        speech: 'Mocked speech content from decision meta.',
+        thoughts: 'Mocked thoughts.',
+        notes: [],
+      }),
       getTurnEndPort: jest.fn().mockReturnValue({ notifyTurnEnded: jest.fn() }),
       getSubscriptionManager: jest.fn().mockReturnValue({
         subscribeToTurnEnded: jest.fn(),
@@ -256,9 +264,9 @@ describe('ProcessingCommandState', () => {
       mockTurnContext.getChosenAction.mockReturnValueOnce(
         specificActionForThisTest
       );
-      mockCommandProcessor.processCommand.mockResolvedValue({
+      mockCommandProcessor.dispatchAction.mockResolvedValue({
         success: true,
-        turnEnded: false,
+        errorResult: null,
       });
       mockCommandOutcomeInterpreter.interpret.mockReturnValue(
         TurnDirective.END_TURN_SUCCESS

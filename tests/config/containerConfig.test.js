@@ -6,7 +6,6 @@ import { tokens } from '../../src/dependencyInjection/tokens.js'; // Adjust path
 
 // --- Import the classes we want to check ---
 import CommandOutcomeInterpreter from '../../src/commands/interpreters/commandOutcomeInterpreter.js'; // Adjust path
-import PlayerTurnHandler from '../../src/turns/handlers/playerTurnHandler.js'; // Adjust path
 import TurnManager from '../../src/turns/turnManager.js';
 import {
   afterEach,
@@ -15,7 +14,8 @@ import {
   expect,
   it,
   jest,
-} from '@jest/globals'; // Adjust path
+} from '@jest/globals';
+import HumanTurnHandler from '../../src/turns/handlers/humanTurnHandler'; // Adjust path
 
 // Mock external dependencies (DOM elements, document)
 const mockOutputDiv = document.createElement('div');
@@ -70,14 +70,14 @@ describe('Dependency Injection Container Configuration', () => {
     expect(typeof instance.interpret).toBe('function'); // public API check
   });
 
-  // Test 2: Verify PlayerTurnHandler (which depends on CommandOutcomeInterpreter) can be resolved
-  it('should resolve PlayerTurnHandler successfully', () => {
-    const instance = container.resolve(tokens.PlayerTurnHandler);
-    expect(instance).toBeInstanceOf(PlayerTurnHandler);
+  // Test 2: VerifyHumanTurnHandler (which depends on CommandOutcomeInterpreter) can be resolved
+  it('should resolveHumanTurnHandler successfully', () => {
+    const instance = container.resolve(tokens.HumanTurnHandler);
+    expect(instance).toBeInstanceOf(HumanTurnHandler);
     expect(typeof instance.startTurn).toBe('function'); // public API check
   });
 
-  // Test 3: Verify ITurnManager (which depends on PlayerTurnHandler via Resolver) can be resolved
+  // Test 3: Verify ITurnManager (which depends onHumanTurnHandler via Resolver) can be resolved
   it('should resolve ITurnManager successfully', () => {
     const instance = container.resolve(tokens.ITurnManager);
     expect(instance).toBeInstanceOf(TurnManager);

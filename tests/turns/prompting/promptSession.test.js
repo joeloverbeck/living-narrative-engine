@@ -5,24 +5,18 @@
 
 /* eslint-env jest */
 
-import { jest, describe, beforeEach, expect } from '@jest/globals';
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { PromptSession } from '../../../src/turns/prompting/promptSession.js';
 import { PromptError } from '../../../src/errors/promptError.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../../src/constants/eventIds.js';
 
-// Use fake timers for microtask-based cancellation assertions
-jest.useFakeTimers();
+jest.useRealTimers(); // ← restore real timers
 
 describe('PromptSession', () => {
-  // ─────────────────────────── fixtures ───────────────────────────
-  let mockLogger;
-  let mockEventBus;
-  let mockUnsubscribe;
-  let mockIndexer;
-  let abortController;
+  /* ─────────── fixtures ─────────── */
+  let mockLogger, mockEventBus, mockUnsubscribe, mockIndexer, abortController;
   const actorId = 'player-1';
 
-  // A canonical composite returned by the indexer
   const composite = Object.freeze({
     index: 1,
     actionId: 'core:attack',
@@ -46,9 +40,7 @@ describe('PromptSession', () => {
       warn: jest.fn(),
       error: jest.fn(),
     };
-    mockEventBus = {
-      subscribe: jest.fn().mockReturnValue(mockUnsubscribe),
-    };
+    mockEventBus = { subscribe: jest.fn().mockReturnValue(mockUnsubscribe) };
     mockIndexer = {
       resolve: jest.fn().mockImplementation((_actor, idx) => {
         if (idx === 1) return composite;
@@ -58,7 +50,7 @@ describe('PromptSession', () => {
     abortController = new AbortController();
   });
 
-  // ───────────────────── constructor guards ─────────────────────
+  /* ───── constructor guards ───── */
   describe('Constructor', () => {
     it('throws if logger is missing', () => {
       expect(
@@ -97,7 +89,7 @@ describe('PromptSession', () => {
     });
   });
 
-  // ───────────────────────── run() happy-path ─────────────────────────
+  /* ───── run() happy-path ───── */
   describe('run', () => {
     it('resolves with the chosen action (index 1)', async () => {
       const session = new PromptSession({
@@ -106,10 +98,10 @@ describe('PromptSession', () => {
         logger: mockLogger,
         actionIndexingService: mockIndexer,
       });
-      const promise = session.run();
 
-      // Capture handler passed to subscribe
+      const promise = session.run();
       const handler = mockEventBus.subscribe.mock.calls[0][1];
+
       handler({
         type: PLAYER_TURN_SUBMITTED_ID,
         payload: {
@@ -122,6 +114,8 @@ describe('PromptSession', () => {
       await expect(promise).resolves.toEqual({
         action: expectedActionShape,
         speech: 'For glory!',
+        notes: null,
+        thoughts: null,
       });
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
     });
@@ -137,59 +131,64 @@ describe('PromptSession', () => {
     });
   });
 
-  // ─────────────────────── rejection scenarios ───────────────────────
+  /* ───── rejection scenarios ───── */
   describe('Rejection Scenarios', () => {
-    it('rejects on mismatched submittedByActorId', async () => {
-      expect.assertions(3);
-      const s = new PromptSession({
+    const makeSession = () =>
+      new PromptSession({
         actorId,
         eventBus: mockEventBus,
         logger: mockLogger,
         actionIndexingService: mockIndexer,
       });
+
+    it('rejects on mismatched submittedByActorId', async () => {
+      expect.assertions(3);
+      const s = makeSession();
       const p = s.run();
+      const done = p.catch((e) => e); // attach early!
+
       mockEventBus.subscribe.mock.calls[0][1]({
         type: PLAYER_TURN_SUBMITTED_ID,
         payload: { submittedByActorId: 'other', index: 1 },
       });
-      await expect(p).rejects.toHaveProperty('code', 'MISMATCHED_ACTOR');
-      await expect(p).rejects.toBeInstanceOf(PromptError);
+
+      const err = await done;
+      expect(err).toBeInstanceOf(PromptError);
+      expect(err.code).toBe('MISMATCHED_ACTOR');
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
     });
 
     it('rejects on unknown index', async () => {
       expect.assertions(3);
-      const s = new PromptSession({
-        actorId,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-        actionIndexingService: mockIndexer,
-      });
+      const s = makeSession();
       const p = s.run();
+      const done = p.catch((e) => e); // attach early!
+
       mockEventBus.subscribe.mock.calls[0][1]({
         type: PLAYER_TURN_SUBMITTED_ID,
         payload: { submittedByActorId: actorId, index: 99 },
       });
-      await expect(p).rejects.toHaveProperty('code', 'INVALID_INDEX');
-      await expect(p).rejects.toBeInstanceOf(PromptError);
+
+      const err = await done;
+      expect(err).toBeInstanceOf(PromptError);
+      expect(err.code).toBe('INVALID_INDEX');
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
     });
 
     it('rejects on malformed payload', async () => {
       expect.assertions(3);
-      const s = new PromptSession({
-        actorId,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-        actionIndexingService: mockIndexer,
-      });
+      const s = makeSession();
       const p = s.run();
+      const done = p.catch((e) => e); // attach early!
+
       mockEventBus.subscribe.mock.calls[0][1]({
         type: PLAYER_TURN_SUBMITTED_ID,
         payload: null,
       });
-      await expect(p).rejects.toHaveProperty('code', 'INVALID_EVENT');
-      await expect(p).rejects.toBeInstanceOf(PromptError);
+
+      const err = await done;
+      expect(err).toBeInstanceOf(PromptError);
+      expect(err.code).toBe('INVALID_EVENT');
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
     });
 
@@ -203,8 +202,12 @@ describe('PromptSession', () => {
         abortSignal: abortController.signal,
       });
       const p = s.run();
+      const done = p.catch((e) => e); // attach early!
+
       abortController.abort();
-      await expect(p).rejects.toThrow('Prompt aborted by signal');
+
+      const err = await done;
+      expect(err.message).toBe('Prompt aborted by signal');
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
       expect(abortController.signal.aborted).toBe(true);
     });
@@ -219,86 +222,98 @@ describe('PromptSession', () => {
         actionIndexingService: mockIndexer,
         abortSignal: abortController.signal,
       });
-      const p = s.run();
-      await expect(p).rejects.toThrow('Prompt aborted by signal');
+      await expect(s.run()).rejects.toThrow('Prompt aborted by signal');
       expect(mockUnsubscribe).not.toHaveBeenCalled();
     });
 
     it('rejects if subscribe throws', async () => {
       expect.assertions(2);
-      const err = new Error('boop');
+      const boom = new Error('boop');
       mockEventBus.subscribe.mockImplementation(() => {
-        throw err;
+        throw boom;
       });
-      const p = new PromptSession({
-        actorId,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-        actionIndexingService: mockIndexer,
-      }).run();
-      await expect(p).rejects.toHaveProperty('code', 'SUBSCRIPTION_ERROR');
-      await expect(p).rejects.toBeInstanceOf(PromptError);
+
+      await expect(
+        new PromptSession({
+          actorId,
+          eventBus: mockEventBus,
+          logger: mockLogger,
+          actionIndexingService: mockIndexer,
+        }).run()
+      ).rejects.toHaveProperty('code', 'SUBSCRIPTION_ERROR');
+
+      await expect(
+        new PromptSession({
+          actorId,
+          eventBus: mockEventBus,
+          logger: mockLogger,
+          actionIndexingService: mockIndexer,
+        }).run()
+      ).rejects.toBeInstanceOf(PromptError);
     });
   });
 
-  // ─────────────────────────── cancel() ───────────────────────────
+  /* ───── cancel() ───── */
   describe('cancel', () => {
-    it('rejects when cancel() called', async () => {
-      expect.assertions(3);
-      const s = new PromptSession({
+    const makeSession = () =>
+      new PromptSession({
         actorId,
         eventBus: mockEventBus,
         logger: mockLogger,
         actionIndexingService: mockIndexer,
       });
+
+    it('rejects when cancel() called', async () => {
+      expect.assertions(3);
+      const s = makeSession();
       const p = s.run();
+      const done = p.catch((e) => e); // attach early!
+
       s.cancel();
-      await expect(p).rejects.toHaveProperty('code', 'PROMPT_CANCELLED');
-      await expect(p).rejects.toBeInstanceOf(PromptError);
+
+      const err = await done;
+      expect(err.code).toBe('PROMPT_CANCELLED');
+      expect(err).toBeInstanceOf(PromptError);
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
     });
 
     it('passes through custom cancellation error', async () => {
       expect.assertions(1);
-      const s = new PromptSession({
-        actorId,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-        actionIndexingService: mockIndexer,
-      });
+      const s = makeSession();
       const p = s.run();
       const custom = new Error('stop');
+
+      const done = p.catch((e) => e);
       s.cancel(custom);
-      await expect(p).rejects.toBe(custom);
+
+      expect(await done).toBe(custom);
     });
 
     it('is a no-op after resolution', async () => {
-      const s = new PromptSession({
-        actorId,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-        actionIndexingService: mockIndexer,
-      });
+      const s = makeSession();
       const p = s.run();
+
       mockEventBus.subscribe.mock.calls[0][1]({
         type: PLAYER_TURN_SUBMITTED_ID,
         payload: { submittedByActorId: actorId, index: 1 },
       });
+
       await p; // resolved
       s.cancel();
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
-      s.cancel(); // second call still no throw
+      s.cancel(); // still no throw
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
     });
   });
 
-  // ───────────────────────── cleanup ─────────────────────────
+  /* ───── cleanup path ───── */
   describe('Cleanup', () => {
     it('logs if unsubscribe throws but swallows error', async () => {
       const boom = new Error('fail');
       mockUnsubscribe.mockImplementation(() => {
         throw boom;
       });
+
       const s = new PromptSession({
         actorId,
         eventBus: mockEventBus,
@@ -306,10 +321,13 @@ describe('PromptSession', () => {
         actionIndexingService: mockIndexer,
       });
       const p = s.run();
-      s.cancel(); // triggers cleanup path
-      await expect(p).rejects.toBeTruthy();
+      const done = p.catch((e) => e);
+
+      s.cancel(); // triggers cleanup
+      await done;
+
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'PromptSession: Error during event unsubscribe.',
+        'PromptSession: unsubscribe failed',
         boom
       );
     });

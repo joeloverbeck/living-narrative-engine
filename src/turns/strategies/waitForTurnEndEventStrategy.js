@@ -64,7 +64,7 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
     );
 
     // Core logic: request transition to AwaitingExternalTurnEndState
-    // The responsibility for setting any underlying handler flags (like PlayerTurnHandler.#isAwaitingTurnEndEvent)
+    // The responsibility for setting any underlying handler flags (like HumanTurnHandler.#isAwaitingTurnEndEvent)
     // is managed by AwaitingExternalTurnEndState itself through turnContext.setAwaitingExternalEvent(true, actorId).
     try {
       await turnContext.requestTransition(AwaitingExternalTurnEndState);
