@@ -310,7 +310,7 @@ class EntityManager extends IEntityManager {
       return null;
     }
 
-    entityDefinition.components =
+    const definitionComponents =
       entityDefinition.components &&
       typeof entityDefinition.components === 'object'
         ? entityDefinition.components
@@ -322,7 +322,7 @@ class EntityManager extends IEntityManager {
 
       /* --- copy + validate each component from definition --- */
       for (const [componentTypeId, componentData] of Object.entries(
-        entityDefinition.components
+        definitionComponents
       )) {
         const dataClone = this.#validateAndClone(
           componentTypeId,
