@@ -361,12 +361,6 @@ export function registerAI(container) {
     `AI Systems Registration: Registered AI Turn Pipeline services, including ${tokens.IAIPromptPipeline}.`
   );
 
-  // 1) Indexer adapter
-  r.singletonFactory(
-    tokens.IActionIndexer,
-    (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
-  );
-
   // 2) LLM chooser
   r.singletonFactory(
     tokens.ILLMChooser,
