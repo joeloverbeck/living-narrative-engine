@@ -24,6 +24,7 @@ import {
 } from '../../constants/componentIds.js';
 import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
 import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider';
+import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter';
 
 /**
  * @param {import('../appContainer.js').default} container
@@ -48,6 +49,14 @@ export function registerTurnLifecycle(container) {
     r.singletonFactory(
       tokens.ActionIndexingService,
       (c) => new ActionIndexingService(c.resolve(tokens.ILogger))
+    );
+  }
+
+  /*  NEW – expose an IActionIndexer for the player path                */
+  if (!container.isRegistered(tokens.IActionIndexer)) {
+    r.singletonFactory(
+      tokens.IActionIndexer,
+      (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
     );
   }
 
@@ -141,6 +150,7 @@ export function registerTurnLifecycle(container) {
         choicePipeline: c.resolve(tokens.TurnActionChoicePipeline), // ← new
         humanDecisionProvider: c.resolve(tokens.IHumanDecisionProvider), // ← new
         turnActionFactory: c.resolve(tokens.ITurnActionFactory), // ← new
+        entityManager: c.resolve(tokens.IEntityManager),
       })
   );
   logger.debug(

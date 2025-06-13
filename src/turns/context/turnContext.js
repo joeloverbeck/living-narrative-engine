@@ -29,7 +29,8 @@
  * // …extend as needed
  */
 
-import { ITurnContext } from '../interfaces/ITurnContext.js'; // ⬅ only import needed
+import { ITurnContext } from '../interfaces/ITurnContext.js';
+import { POSITION_COMPONENT_ID } from '../../constants/componentIds'; // ⬅ only import needed
 
 /**
  * Concrete implementation of ITurnContext.
@@ -82,6 +83,28 @@ export class TurnContext extends ITurnContext {
     this.#handlerInstance = handlerInstance;
 
     this.#promptAbortController = new AbortController();
+
+    // expose the EM so low-level helpers can touch it directly
+    this.entityManager = services.entityManager ?? null;
+
+    // expose aliases expected by low-level helpers -----------------
+    this.actingEntity = actor;
+
+    if (
+      !this.currentLocation &&
+      this.entityManager &&
+      typeof this.entityManager.getComponentData === 'function'
+    ) {
+      const pos = this.entityManager.getComponentData(
+        actor.id,
+        POSITION_COMPONENT_ID
+      );
+      if (pos?.locationId) {
+        this.currentLocation = this.entityManager.getEntityInstance(
+          pos.locationId
+        ) ?? { id: pos.locationId };
+      }
+    }
   }
 
   /* ───────────────────────────── BASIC GETTERS ────────────────────────── */

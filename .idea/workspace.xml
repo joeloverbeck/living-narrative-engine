@@ -4,13 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Ensured playerTurnSubmitted doesn't break.">
-      <change afterPath="$PROJECT_DIR$/tests/actions/actionDiscoveryService.locationRetrieval.test.js" afterDir="false" />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Unified action decision across existing actors.">
+      <change afterPath="$PROJECT_DIR$/tests/integration/scope.integration.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/events/player_turn_submitted.event.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/events/player_turn_submitted.event.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/aiDecisionFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/aiDecisionFlow.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/humanDecisionFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/humanDecisionFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constants/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/core.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,6 +63,7 @@
     "Jest.playerTurnSubmitted.schema.test.js.executor": "Run",
     "Jest.promptCoordinator.integration.test.js.executor": "Run",
     "Jest.promptSession.test.js.executor": "Run",
+    "Jest.scope.integration.test.js.executor": "Run",
     "Jest.turnActionChoicePipeline.test.js.executor": "Run",
     "Jest.turnIdleState.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -88,7 +90,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.actionDiscoveryService.locationRetrieval.test.js">
+  <component name="RunManager" selected="Jest.scope.integration.test.js">
     <configuration name="actionDiscoveryService.locationRetrieval.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -116,15 +118,6 @@
       <test-file value="$PROJECT_DIR$/tests/turns/providers/humanDecisionProvider.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="llmDecisionProvider.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/providers/llmDecisionProvider.test.js" />
-      <method v="2" />
-    </configuration>
     <configuration name="playerTurnSubmitted.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -134,13 +127,22 @@
       <test-file value="$PROJECT_DIR$/tests/schemas/playerTurnSubmitted.schema.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="scope.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/integration/scope.integration.test.js" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.scope.integration.test.js" />
         <item itemvalue="Jest.actionDiscoveryService.locationRetrieval.test.js" />
         <item itemvalue="Jest.playerTurnSubmitted.schema.test.js" />
         <item itemvalue="Jest.genericTurnStrategy.test.js" />
         <item itemvalue="Jest.humanDecisionProvider.test.js" />
-        <item itemvalue="Jest.llmDecisionProvider.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -159,7 +161,7 @@
       <option name="presentableId" value="Default" />
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
-      <workItem from="1749839406228" duration="12131000" />
+      <workItem from="1749839406228" duration="13792000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -281,7 +283,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749850485333</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Unified action decision across existing actors.">
+      <option name="closed" value="true" />
+      <created>1749851726490</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1749851726490</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -295,6 +305,7 @@
     <MESSAGE value="Fixing dependency cycles." />
     <MESSAGE value="Unifying action decision." />
     <MESSAGE value="Ensured playerTurnSubmitted doesn't break." />
-    <option name="LAST_COMMIT_MESSAGE" value="Ensured playerTurnSubmitted doesn't break." />
+    <MESSAGE value="Unified action decision across existing actors." />
+    <option name="LAST_COMMIT_MESSAGE" value="Unified action decision across existing actors." />
   </component>
 </project>

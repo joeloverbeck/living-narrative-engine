@@ -331,6 +331,13 @@ export function registerAI(container) {
     `AI Systems Registration: Registered ${tokens.ActionIndexingService}.`
   );
 
+  if (!container.isRegistered(tokens.IActionIndexer)) {
+    r.singletonFactory(
+      tokens.IActionIndexer,
+      (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
+    );
+  }
+
   r.singletonFactory(
     tokens.TurnActionChoicePipeline,
     (c) =>

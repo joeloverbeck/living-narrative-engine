@@ -27,6 +27,7 @@ class HumanTurnHandler extends BaseTurnHandler {
   /** @type {IHumanDecisionProvider} */ #humanDecisionProvider;
   /** @type {ITurnActionFactory} */ #turnActionFactory;
   /** @type {object} */ #gameWorldAccess;
+  #entityManager;
 
   /** @type {boolean} */ #isAwaitingTurnEndEvent = false;
   /** @type {string|null} */ #awaitingTurnEndForActorId = null;
@@ -44,6 +45,7 @@ class HumanTurnHandler extends BaseTurnHandler {
    * @param {TurnActionChoicePipeline} deps.choicePipeline
    * @param {IHumanDecisionProvider} deps.humanDecisionProvider
    * @param {ITurnActionFactory} deps.turnActionFactory
+   * @param {import('../../interfaces/IEntityManager.js').IEntityManager} [deps.entityManager]  Optional – improves scope helpers
    * @param {object} [deps.gameWorldAccess]
    */
   constructor({
@@ -57,6 +59,7 @@ class HumanTurnHandler extends BaseTurnHandler {
     choicePipeline,
     humanDecisionProvider,
     turnActionFactory,
+    entityManager,
     gameWorldAccess = {},
   }) {
     super({ logger, turnStateFactory });
@@ -89,6 +92,7 @@ class HumanTurnHandler extends BaseTurnHandler {
     this.#humanDecisionProvider = humanDecisionProvider;
     this.#turnActionFactory = turnActionFactory;
     this.#gameWorldAccess = gameWorldAccess;
+    this.#entityManager = entityManager ?? null; // store reference (may be null)
 
     const initialState = this._turnStateFactory.createInitialState(this);
     this._setInitialState(initialState);
@@ -129,6 +133,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
       safeEventDispatcher: this.#safeEventDispatcher,
       turnEndPort: this.#turnEndPort,
+      ...(this.#entityManager && { entityManager: this.#entityManager }),
     };
 
     const newTurnContext = new TurnContext({
