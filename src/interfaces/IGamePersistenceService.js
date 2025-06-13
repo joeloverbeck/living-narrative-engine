@@ -6,8 +6,8 @@
  */
 
 // --- JSDoc Type Imports ---
-/** @typedef {import('../../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
-/** @typedef {import('../../interfaces/ISaveLoadService.js').SaveResult} SaveResult */ // For return type clarity
+/** @typedef {import('./ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
+/** @typedef {import('./ISaveLoadService.js').SaveResult} SaveResult */ // For return type clarity
 
 // --- Interface Specific Types ---
 

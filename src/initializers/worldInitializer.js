@@ -4,7 +4,7 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../interfaces/IWorldContext.js').default} IWorldContext */
 /** @typedef {import('../data/gameDataRepository.js').default} GameDataRepository */
-/** @typedef {import('../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../data/schemas/entity.schema.json').EntityDefinition} EntityDefinition */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */

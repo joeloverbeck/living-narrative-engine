@@ -9,8 +9,8 @@ import {
 
 /**
  * @typedef {import('../interfaces/IHttpClient.js').IHttpClient} IHttpClient
- * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
+ * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  */
 
 /**

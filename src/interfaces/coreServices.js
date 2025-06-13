@@ -132,7 +132,7 @@
  */
 
 // --- Spatial Indexing ---
-/** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Adjusted path assuming coreServices.js is in src/interfaces/
+/** @typedef {import('../entities/entityManager.js').default} EntityManager */
 
 /**
  * Interface for managing a spatial index of entities based on their location.
