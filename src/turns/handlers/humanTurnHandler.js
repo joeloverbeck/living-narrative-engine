@@ -275,7 +275,7 @@ class HumanTurnHandler extends BaseTurnHandler {
 
     if (
       !this._currentState ||
-      typeof this._currentStatehandleSubmittedCommand !== 'function'
+      typeof this._currentState.handleSubmittedCommand !== 'function'
     ) {
       const err = `${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
       this._logger.error(err);
@@ -300,7 +300,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       );
       if (
         this._currentState &&
-        typeof this._currentStatehandleTurnEndedEvent === 'function'
+        typeof this._currentState.handleTurnEndedEvent === 'function'
       ) {
         await this._currentState.handleTurnEndedEvent(this, payload);
       } else {
