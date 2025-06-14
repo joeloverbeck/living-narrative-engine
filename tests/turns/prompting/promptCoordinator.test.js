@@ -110,8 +110,13 @@ describe('PromptCoordinator Integration Test', () => {
     const actor = { id: 'player-1', name: 'Hero' };
     const mockLocation = { id: 'loc-1', name: 'Tavern' };
     const discoveredActions = [
-      { id: 'core:wait', command: 'Wait' },
-      { id: 'core:speak', command: 'Speak' },
+      { id: 'core:wait', command: 'Wait', name: 'Wait', description: 'Wait' },
+      {
+        id: 'core:speak',
+        command: 'Speak',
+        name: 'Speak',
+        description: 'Speak',
+      },
     ];
     const chosenIndex = 1;
     const chosenSpeech = 'I shall wait.';
@@ -136,11 +141,26 @@ describe('PromptCoordinator Integration Test', () => {
       actor.id,
       discoveredActions
     );
+
+    // ************************** FIXED TEST LOGIC **************************
+    // The test now correctly reflects that PromptCoordinator transforms the
+    // indexed composites back into a UI-friendly format before prompting.
     const indexedComposites = indexerStub.indexActions.mock.results[0].value;
+    const expectedActionsForPrompt = indexedComposites.map((comp) => ({
+      index: comp.index,
+      id: comp.actionId,
+      name: comp.description,
+      command: comp.commandString,
+      description: comp.description,
+      params: comp.params,
+    }));
+
     expect(promptOutputPort.prompt).toHaveBeenCalledWith(
       actor.id,
-      indexedComposites
+      expectedActionsForPrompt
     );
+    // ********************************************************************
+
     expect(playerTurnEvents.subscribe).toHaveBeenCalledWith(
       PLAYER_TURN_SUBMITTED_ID,
       expect.any(Function)

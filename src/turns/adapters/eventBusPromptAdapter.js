@@ -2,17 +2,19 @@
 // --- FILE START ---
 
 import { IPromptOutputPort } from '../ports/IPromptOutputPort.js';
+import { PLAYER_TURN_PROMPT_ID } from '../../constants/eventIds';
 /* eslint-disable no-console */
 
 // --- Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+
 /** @typedef {import('../ports/commonTypes.js').DiscoveredActionInfo} DiscoveredActionInfo */
 
 /**
  * @class EventBusPromptAdapter
  * @implements {IPromptOutputPort}
- * @description Implements the IPromptOutputPort by dispatching a 'core:player_turn_prompt'
+ * @description Implements the IPromptOutputPort by dispatching a PLAYER_TURN_PROMPT_ID
  * event via a Safe Event Dispatcher (preferred) or a Validated Event Dispatcher.
  */
 export class EventBusPromptAdapter extends IPromptOutputPort {
@@ -63,7 +65,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
   }
 
   /**
-   * Sends a prompt by dispatching the 'core:player_turn_prompt' event.
+   * Sends a prompt by dispatching the PLAYER_TURN_PROMPT_ID event.
    *
    * @async
    * @param {string} entityId - The unique ID of the player entity being prompted.
@@ -106,7 +108,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
       // We don't need to await the boolean result unless downstream specifically needs it.
       // Returning Promise<void> after the *attempt* is usually sufficient.
       await /** @type {ISafeEventDispatcher} */ (this.#dispatcher).dispatch(
-        'core:player_turn_prompt',
+        PLAYER_TURN_PROMPT_ID,
         payload
       );
       return Promise.resolve(); // Resolve void after attempt
@@ -115,7 +117,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
       try {
         await /** @type {IValidatedEventDispatcher} */ (
           this.#dispatcher
-        ).dispatch('core:player_turn_prompt', payload);
+        ).dispatch(PLAYER_TURN_PROMPT_ID, payload);
         return Promise.resolve(); // Resolve void after successful dispatch
       } catch (dispatchError) {
         // If VED throws, log it and re-throw? Or just log?
@@ -123,7 +125,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
         // meaning we might just log and resolve here. However, re-throwing indicates
         // a potentially critical failure in the event system. Let's log and re-throw.
         console.error(
-          `EventBusPromptAdapter: Error dispatching 'core:player_turn_prompt' via VED: ${dispatchError.message}`,
+          `EventBusPromptAdapter: Error dispatching PLAYER_TURN_PROMPT_ID via VED: ${dispatchError.message}`,
           dispatchError
         );
         throw dispatchError; // Propagate critical VED errors

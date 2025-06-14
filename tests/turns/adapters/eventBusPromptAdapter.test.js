@@ -3,6 +3,7 @@
 
 import { EventBusPromptAdapter } from '../../../src/turns/adapters/eventBusPromptAdapter.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { PLAYER_TURN_PROMPT_ID } from '../../../src/constants/eventIds';
 
 // --- Mocks ---
 const mockSafeDispatcher = {
@@ -116,7 +117,7 @@ describe('EventBusPromptAdapter', () => {
 
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
-      'core:player_turn_prompt',
+      PLAYER_TURN_PROMPT_ID,
       {
         entityId: entityId,
         availableActions: actions,
@@ -135,7 +136,7 @@ describe('EventBusPromptAdapter', () => {
     await adapter.prompt(entityId, actions, null);
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
-      'core:player_turn_prompt',
+      PLAYER_TURN_PROMPT_ID,
       {
         entityId: entityId,
         availableActions: actions,
@@ -147,7 +148,7 @@ describe('EventBusPromptAdapter', () => {
     await adapter.prompt(entityId, actions, ''); // Empty string error
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
-      'core:player_turn_prompt',
+      PLAYER_TURN_PROMPT_ID,
       {
         entityId: entityId,
         availableActions: actions,
@@ -159,7 +160,7 @@ describe('EventBusPromptAdapter', () => {
     await adapter.prompt(entityId, actions, '   '); // Whitespace only error
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
-      'core:player_turn_prompt',
+      PLAYER_TURN_PROMPT_ID,
       {
         entityId: entityId,
         availableActions: actions,
@@ -179,7 +180,7 @@ describe('EventBusPromptAdapter', () => {
     await adapter.prompt(entityId, actions, errorMsg);
 
     expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockVed.dispatch).toHaveBeenCalledWith('core:player_turn_prompt', {
+    expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_PROMPT_ID, {
       entityId: entityId,
       availableActions: actions,
       error: errorMsg,
@@ -228,7 +229,7 @@ describe('EventBusPromptAdapter', () => {
     expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        "Error dispatching 'core:player_turn_prompt' via VED"
+        'Error dispatching PLAYER_TURN_PROMPT_ID via VED'
       ),
       expect.any(Error)
     );

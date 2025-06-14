@@ -134,7 +134,20 @@ class PromptCoordinator extends IPromptCoordinator {
         `Displaying ${indexedComposites.length} indexed choices to actor ${actor.id}.`
       );
 
-      await this.#promptOutputPort.prompt(actor.id, indexedComposites);
+      // ************************** FIXED LINE **************************
+      // The bug was passing `indexedComposites` (ActionComposite[]) directly
+      // to a port expecting `DiscoveredActionInfo[]`. We now map it back
+      // to the expected format to respect the interface contract.
+      const actionsForPrompt = indexedComposites.map((comp) => ({
+        index: comp.index,
+        id: comp.actionId,
+        name: comp.description, // Use description as the primary name for UI
+        command: comp.commandString,
+        description: comp.description,
+        params: comp.params,
+      }));
+
+      await this.#promptOutputPort.prompt(actor.id, actionsForPrompt);
     } catch (err) {
       if (
         err instanceof PromptError &&

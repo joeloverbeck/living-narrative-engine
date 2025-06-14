@@ -1,6 +1,6 @@
 // tests/schemas/playerTurnPrompt.schema.test.js
 // -----------------------------------------------------------------------------
-// Contract tests for the core:player_turn_prompt payload schema
+// Contract tests for the PLAYER_TURN_PROMPT_ID payload schema
 // -----------------------------------------------------------------------------
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
@@ -11,7 +11,7 @@ import addFormats from 'ajv-formats';
 import eventDef from '../../data/mods/core/events/player_turn_prompt.event.json';
 import commonSchema from '../../data/schemas/common.schema.json';
 
-describe('Schema – core:player_turn_prompt payload', () => {
+describe('Schema – PLAYER_TURN_PROMPT_ID payload', () => {
   /** @type {import('ajv').ValidateFunction} */
   let validate;
 
