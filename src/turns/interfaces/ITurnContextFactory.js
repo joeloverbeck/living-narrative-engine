@@ -1,5 +1,7 @@
 // src/turns/interfaces/ITurnContextFactory.js
-// ****** MODIFIED FILE ******
+/**
+ * @file Defines the interface for a factory that creates turn contexts.
+ */
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -8,6 +10,7 @@
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('./ITurnContext.js').ITurnContext} ITurnContext
  */
+
 /**
  * @typedef {function(Error | null): void} OnEndTurnCallback
  * @description Callback function to signal the end of a turn.
@@ -28,10 +31,19 @@ export class ITurnContextFactory {
    * @param {IActorTurnStrategy} params.strategy - The turn strategy for the current actor.
    * @param {OnEndTurnCallback} params.onEndTurnCallback - Callback to execute when endTurn() is called.
    * @param {BaseTurnHandler} params.handlerInstance - The turn handler instance for requesting transitions.
+   * @param {function():boolean} [params.isAwaitingExternalEventProvider] - Optional provider for external waiting flag.
+   * @param {function(boolean,string|null):void} [params.onSetAwaitingExternalEventCallback] - Optional callback when awaiting flag changes.
    * @returns {ITurnContext} The created turn context.
    * @throws {Error} If the method is not implemented by a concrete class.
    */
-  create({ actor, strategy, onEndTurnCallback, handlerInstance }) {
+  create({
+    actor,
+    strategy,
+    onEndTurnCallback,
+    handlerInstance,
+    isAwaitingExternalEventProvider,
+    onSetAwaitingExternalEventCallback,
+  }) {
     throw new Error(
       'ITurnContextFactory.create must be implemented by concrete classes.'
     );

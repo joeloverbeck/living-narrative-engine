@@ -1,10 +1,10 @@
+// src/turns/handlers/humanTurnHandler.js
 /**
  * @file This module is the main handler of a turn for a human character.
  * @see src/turns/handlers/humanTurnHandler.js
  */
 
 import { BaseTurnHandler } from './baseTurnHandler.js';
-import { TurnContext } from '../context/turnContext.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -15,9 +15,10 @@ import { TurnContext } from '../context/turnContext.js';
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
-
 /** @typedef {import('../../interfaces/IPromptCoordinator.js').IPromptCoordinator} IPromptCoordinator */
+
 /** @typedef {import('../interfaces/ITurnStrategyFactory.js').ITurnStrategyFactory} ITurnStrategyFactory */
+/** @typedef {import('../builders/turnContextBuilder.js').TurnContextBuilder} TurnContextBuilder */
 
 class HumanTurnHandler extends BaseTurnHandler {
   /** @type {ICommandProcessor} */
@@ -32,6 +33,8 @@ class HumanTurnHandler extends BaseTurnHandler {
   #safeEventDispatcher;
   /** @type {ITurnStrategyFactory} */
   #turnStrategyFactory;
+  /** @type {TurnContextBuilder} */
+  #turnContextBuilder;
   /** @type {object} */
   #gameWorldAccess;
   #entityManager;
@@ -53,6 +56,7 @@ class HumanTurnHandler extends BaseTurnHandler {
    * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {ITurnStrategyFactory} deps.turnStrategyFactory
+   * @param {TurnContextBuilder} deps.turnContextBuilder
    * @param {import('../../interfaces/IEntityManager.js').IEntityManager} [deps.entityManager]  Optional – improves scope helpers
    * @param {object} [deps.gameWorldAccess]
    */
@@ -65,6 +69,7 @@ class HumanTurnHandler extends BaseTurnHandler {
     commandOutcomeInterpreter,
     safeEventDispatcher,
     turnStrategyFactory,
+    turnContextBuilder,
     entityManager,
     gameWorldAccess = {},
   }) {
@@ -84,6 +89,8 @@ class HumanTurnHandler extends BaseTurnHandler {
       throw new Error('HumanTurnHandler: safeEventDispatcher is required');
     if (!turnStrategyFactory)
       throw new Error('HumanTurnHandler: turnStrategyFactory is required');
+    if (!turnContextBuilder)
+      throw new Error('HumanTurnHandler: turnContextBuilder is required');
 
     this.#commandProcessor = commandProcessor;
     this.#turnEndPort = turnEndPort;
@@ -91,6 +98,7 @@ class HumanTurnHandler extends BaseTurnHandler {
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#turnStrategyFactory = turnStrategyFactory;
+    this.#turnContextBuilder = turnContextBuilder;
     this.#gameWorldAccess = gameWorldAccess;
     this.#entityManager = entityManager ?? null; // store reference (may be null)
 
@@ -116,12 +124,6 @@ class HumanTurnHandler extends BaseTurnHandler {
    */
   async startTurn(actor) {
     super._assertHandlerActive();
-
-    if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
-      const errMsg = `${this.constructor.name}.startTurn: actor is required and must have a valid id.`;
-      this._logger.error(errMsg);
-      throw new Error(errMsg);
-    }
     this._setCurrentActorInternal(actor);
 
     const humanStrategy = this.#turnStrategyFactory.createForHuman(actor.id);
@@ -129,34 +131,21 @@ class HumanTurnHandler extends BaseTurnHandler {
       `${this.constructor.name}: Instantiated turn strategy for actor ${actor.id} via factory.`
     );
 
-    /** @type {TurnContextServices} */
-    const servicesForContext = {
-      promptCoordinator: this.#promptCoordinator,
-      game: this.#gameWorldAccess,
-      commandProcessor: this.#commandProcessor,
-      commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
-      safeEventDispatcher: this.#safeEventDispatcher,
-      turnEndPort: this.#turnEndPort,
-      ...(this.#entityManager && { entityManager: this.#entityManager }),
-    };
-
-    const newTurnContext = new TurnContext({
+    // The large block of `new TurnContext()` has been replaced by the builder.
+    const newTurnContext = this.#turnContextBuilder.build({
       actor,
-      logger: this._logger,
-      services: servicesForContext,
       strategy: humanStrategy,
-      onEndTurnCallback: (errorOrNull) =>
-        this._handleTurnEnd(actor.id, errorOrNull),
-      isAwaitingExternalEventProvider:
-        this._getIsAwaitingExternalTurnEndFlag.bind(this),
-      onSetAwaitingExternalEventCallback: (isAwaiting, anActorId) =>
-        this._markAwaitingTurnEnd(isAwaiting, anActorId),
+      onEndTurn: (errorOrNull) => this._handleTurnEnd(actor.id, errorOrNull),
       handlerInstance: this,
+      awaitFlagProvider: this._getIsAwaitingExternalTurnEndFlag.bind(this),
+      setAwaitFlag: (isAwaiting, anActorId) =>
+        this._markAwaitingTurnEnd(isAwaiting, anActorId),
     });
+
     this._setCurrentTurnContextInternal(newTurnContext);
 
     this._logger.debug(
-      `HumanTurnHandler.startTurn: TurnContext created for actor ${actor.id} with strategy from factory.`
+      `HumanTurnHandler.startTurn: TurnContext created for actor ${actor.id} via builder.`
     );
 
     if (!this._currentState) {

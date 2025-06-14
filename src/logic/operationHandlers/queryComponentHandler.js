@@ -19,6 +19,8 @@ import resolveEntityId from '../../utils/entityRefUtils.js';
  * @property {string} result_variable - Variable name in `executionContext.evaluationContext.context`.
  */
 
+import storeResult from '../../utils/contextVariableUtils.js';
+
 class QueryComponentHandler {
   #entityManager;
   #logger;
@@ -168,9 +170,13 @@ class QueryComponentHandler {
         trimmedComponentType
       );
 
-      // Store result in the nested context, aligning with test structure and the check above.
-      executionContext.evaluationContext.context[trimmedResultVariable] =
-        result;
+      storeResult(
+        trimmedResultVariable,
+        result,
+        executionContext,
+        undefined,
+        logger
+      );
 
       if (result !== undefined) {
         const resultString =
@@ -197,16 +203,16 @@ class QueryComponentHandler {
           resolvedEntityId: entityId,
         }
       );
-      try {
-        executionContext.evaluationContext.context[trimmedResultVariable] =
-          undefined;
+      const stored = storeResult(
+        trimmedResultVariable,
+        undefined,
+        executionContext,
+        undefined,
+        logger
+      );
+      if (stored) {
         logger.warn(
           `QueryComponentHandler: Stored 'undefined' in "${trimmedResultVariable}" due to EntityManager error.`
-        );
-      } catch (contextError) {
-        logger.error(
-          "QueryComponentHandler: Failed to store 'undefined' in context after EntityManager error.",
-          { contextError: contextError.message }
         );
       }
     }

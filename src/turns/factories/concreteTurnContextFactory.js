@@ -1,5 +1,7 @@
 // src/turns/factories/ConcreteTurnContextFactory.js
-// ****** MODIFIED FILE ******
+/**
+ * @file Defines a concrete factory for creating TurnContext instances.
+ */
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { ITurnContextFactory } from '../interfaces/ITurnContextFactory.js';
@@ -19,6 +21,7 @@ import { TurnContext } from '../context/turnContext.js';
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  */
+
 /** @typedef {function(Error | null): void} OnEndTurnCallback */
 
 /**
@@ -118,9 +121,18 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
    * @param {IActorTurnStrategy} params.strategy
    * @param {OnEndTurnCallback} params.onEndTurnCallback
    * @param {BaseTurnHandler} params.handlerInstance
+   * @param {function():boolean} [params.isAwaitingExternalEventProvider]
+   * @param {function(boolean,string|null):void} [params.onSetAwaitingExternalEventCallback]
    * @returns {ITurnContext} The created TurnContext.
    */
-  create({ actor, strategy, onEndTurnCallback, handlerInstance }) {
+  create({
+    actor,
+    strategy,
+    onEndTurnCallback,
+    handlerInstance,
+    isAwaitingExternalEventProvider,
+    onSetAwaitingExternalEventCallback,
+  }) {
     // The `services` object is now created internally from cached dependencies.
     const servicesForContext = {
       game: this.#gameWorldAccess,
@@ -139,6 +151,8 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
       strategy,
       onEndTurnCallback,
       handlerInstance,
+      isAwaitingExternalEventProvider,
+      onSetAwaitingExternalEventCallback,
     });
   }
 }

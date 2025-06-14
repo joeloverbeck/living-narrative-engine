@@ -4,6 +4,7 @@
 
 import jsonLogic from 'json-logic-js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import storeResult from '../../utils/contextVariableUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -76,25 +77,15 @@ class MathHandler {
     if (finalNumber === null) {
       log.warn('MATH: expression did not resolve to a numeric result.');
     }
-    try {
-      if (executionContext?.evaluationContext?.context) {
-        executionContext.evaluationContext.context[result_variable.trim()] =
-          finalNumber;
-      } else {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-          message:
-            'MATH: evaluationContext.context not available to store result.',
-          details: {
-            result_variable: result_variable.trim(),
-            value: finalNumber,
-          },
-        });
-      }
-    } catch (e) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'MATH: Failed to store result_variable.',
-        details: { error: e.message, stack: e.stack },
-      });
+    const stored = storeResult(
+      result_variable.trim(),
+      finalNumber,
+      executionContext,
+      this.#dispatcher,
+      log
+    );
+    if (!stored) {
+      // storeResult already handled logging/dispatching
     }
   }
 

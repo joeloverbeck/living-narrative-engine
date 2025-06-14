@@ -13,6 +13,7 @@
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import resolveEntityId from '../../utils/entityRefUtils.js';
+import storeResult from '../../utils/contextVariableUtils.js';
 
 /**
  * Parameters accepted by {@link HasComponentHandler#execute}.
@@ -152,25 +153,13 @@ class HasComponentHandler {
     }
 
     // 4. Store the final boolean result in the context
-    try {
-      if (executionContext?.evaluationContext?.context) {
-        executionContext.evaluationContext.context[trimmedResultVar] = result;
-      } else {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-          message: `HAS_COMPONENT: evaluationContext.context is not available. Cannot store result in "${trimmedResultVar}".`,
-          details: { resultVariable: trimmedResultVar },
-        });
-      }
-    } catch (e) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: `HAS_COMPONENT: Failed to write result to context variable "${trimmedResultVar}".`,
-        details: {
-          error: e.message,
-          stack: e.stack,
-          resultVariable: trimmedResultVar,
-        },
-      });
-    }
+    storeResult(
+      trimmedResultVar,
+      result,
+      executionContext,
+      this.#dispatcher,
+      log
+    );
   }
 }
 

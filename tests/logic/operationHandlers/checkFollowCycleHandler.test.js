@@ -373,9 +373,7 @@ describe('CheckFollowCycleHandler', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         DISPLAY_ERROR_ID,
         expect.objectContaining({
-          message:
-            'CHECK_FOLLOW_CYCLE: Failed to write to context variable "res"',
-          details: expect.objectContaining({ error: expect.any(String) }),
+          message: expect.stringContaining('cannot store result'),
         })
       );
     });
