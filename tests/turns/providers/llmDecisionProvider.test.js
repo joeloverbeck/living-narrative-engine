@@ -1,5 +1,6 @@
 import { jest, describe, expect } from '@jest/globals';
 import { LLMDecisionProvider } from '../../../src/turns/providers/llmDecisionProvider.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 const mockLogger = {
   error: jest.fn(),
@@ -7,6 +8,8 @@ const mockLogger = {
   info: jest.fn(),
   debug: jest.fn(),
 };
+
+const mockDispatcher = { dispatch: jest.fn() };
 
 describe('LLMDecisionProvider', () => {
   it('should delegate to llmChooser.choose and map result correctly', async () => {
@@ -17,6 +20,7 @@ describe('LLMDecisionProvider', () => {
     const provider = new LLMDecisionProvider({
       llmChooser: mockChooser,
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
 
     // Act
@@ -47,12 +51,16 @@ describe('LLMDecisionProvider', () => {
     const provider = new LLMDecisionProvider({
       llmChooser: mockChooser,
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
 
     await expect(
       provider.decide('actor', 'context', ['a'], null)
     ).rejects.toThrow('Could not resolve the chosen action to a valid index.');
-    expect(mockLogger.error).toHaveBeenCalled();
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.any(Object)
+    );
   });
 
   it('should throw if index is out of range', async () => {
@@ -60,6 +68,7 @@ describe('LLMDecisionProvider', () => {
     const provider = new LLMDecisionProvider({
       llmChooser: mockChooser,
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
 
     await expect(

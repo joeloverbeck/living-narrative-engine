@@ -57,13 +57,19 @@ describe('Integration – Human and AI turn parity', () => {
     const promptCoordinator = {
       prompt: jest.fn().mockResolvedValue({ chosenIndex: 1 }),
     };
+    const dispatcher = { dispatch: jest.fn() };
     const humanProvider = new HumanDecisionProvider({
       promptCoordinator,
       logger,
+      safeEventDispatcher: dispatcher,
     });
 
     const llmChooser = { choose: jest.fn().mockResolvedValue({ index: 1 }) };
-    const aiProvider = new LLMDecisionProvider({ llmChooser, logger });
+    const aiProvider = new LLMDecisionProvider({
+      llmChooser,
+      logger,
+      safeEventDispatcher: dispatcher,
+    });
 
     const humanStrategy = new GenericTurnStrategy({
       choicePipeline: pipeline,
