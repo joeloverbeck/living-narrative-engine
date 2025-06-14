@@ -143,7 +143,7 @@ export function registerUI(
     return new LocationRenderer({
       logger: resolvedLogger,
       documentContext: docContext,
-      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       domElementFactory: c.resolve(tokens.DomElementFactory),
       entityManager: c.resolve(tokens.IEntityManager),
       entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
