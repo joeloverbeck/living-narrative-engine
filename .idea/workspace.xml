@@ -4,15 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixed HumanTurnHandler's dependencies.">
-      <change afterPath="$PROJECT_DIR$/src/errors/actorError.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/errors/actorMismatchError.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Refactoring HumanTurnHandler.">
       <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/abstractTurnState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/abstractTurnState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.actorMismatchAwait.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.actorMismatchAwait.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.awaitTurnEndPromise.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.awaitTurnEndPromise.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.invalidActor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.invalidActor.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -180,15 +173,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="3102000" />
-    </task>
-    <task id="LOCAL-00011" summary="Unifying action decision.">
-      <option name="closed" value="true" />
-      <created>1749846594299</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1749846594299</updated>
+      <workItem from="1749913762946" duration="3491000" />
     </task>
     <task id="LOCAL-00012" summary="Unifying action decision.">
       <option name="closed" value="true" />
@@ -574,7 +559,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749915957065</updated>
     </task>
-    <option name="localTasksCounter" value="60" />
+    <task id="LOCAL-00060" summary="Refactoring HumanTurnHandler.">
+      <option name="closed" value="true" />
+      <created>1749917398892</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1749917398892</updated>
+    </task>
+    <option name="localTasksCounter" value="61" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -597,6 +590,7 @@
     <MESSAGE value="Uploading with errors for Codex to fix." />
     <MESSAGE value="Implemented awaitTurnEndState.js." />
     <MESSAGE value="Fixed HumanTurnHandler's dependencies." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed HumanTurnHandler's dependencies." />
+    <MESSAGE value="Refactoring HumanTurnHandler." />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactoring HumanTurnHandler." />
   </component>
 </project>

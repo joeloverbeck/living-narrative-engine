@@ -1,4 +1,3 @@
-// src/turns/handlers/humanTurnHandler.js
 /**
  * @file This module is the main handler of a turn for a human character.
  * @see src/turns/handlers/humanTurnHandler.js
@@ -129,56 +128,34 @@ class HumanTurnHandler extends BaseTurnHandler {
     this._logger.debug(
       `${this.constructor.name}.startTurn called for actor ${actor?.id}.`
     );
-    super._assertHandlerActive();
-    if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
-      const errorMsg = `${this.constructor.name}.startTurn: actor is required and must have a valid id.`;
-      this._logger.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-    this._setCurrentActorInternal(actor);
+    this._assertHandlerActive();
+    this._assertValidActor(actor, 'startTurn');
 
-    const humanStrategy = this.#turnStrategyFactory.createForHuman(actor.id);
+    const strategy = this.#turnStrategyFactory.createForHuman(actor.id);
     this._logger.debug(
       `${this.constructor.name}: Instantiated turn strategy for actor ${actor.id} via factory.`
     );
 
-    const newTurnContext = this.#turnContextBuilder.build({
+    const context = this.#turnContextBuilder.build({
       actor,
-      strategy: humanStrategy,
-      onEndTurn: (errorOrNull) => this._handleTurnEnd(actor.id, errorOrNull),
-      handlerInstance: this,
+      strategy,
+      onEndTurn: (err) => this._handleTurnEnd(actor.id, err),
       awaitFlagProvider: this._getIsAwaitingExternalTurnEndFlag.bind(this),
-      setAwaitFlag: (isAwaiting, anActorId) =>
-        this._markAwaitingTurnEnd(isAwaiting, anActorId),
+      setAwaitFlag: (awaiting, id) => this._markAwaitingTurnEnd(awaiting, id),
     });
 
-    this._setCurrentTurnContextInternal(newTurnContext);
-
+    // This single call activates the context and sets the current actor
+    this._setCurrentTurnContextInternal(context);
     this._logger.debug(
       `HumanTurnHandler.startTurn: TurnContext created for actor ${actor.id} via builder.`
     );
 
     if (!this._currentState) {
-      this._logger.error(
-        `${this.constructor.name}.startTurn: _currentState is null for actor ${actor.id}.`
+      // This case should not be hit if constructor logic is sound.
+      // The complex recovery logic is removed as per T-007.
+      throw new Error(
+        'HumanTurnHandler.startTurn: _currentState is unexpectedly null.'
       );
-      const fallbackInitialState =
-        this._turnStateFactory.createInitialState(this);
-      if (fallbackInitialState) {
-        this._logger.warn(
-          `${this.constructor.name}.startTurn: Attempting to set initial state again.`
-        );
-        this._setInitialState(fallbackInitialState);
-        if (!this._currentState) {
-          throw new Error(
-            'HumanTurnHandler: _currentState is null, and recovery failed.'
-          );
-        }
-      } else {
-        throw new Error(
-          'HumanTurnHandler: _currentState is null, and turnStateFactory failed to provide a state.'
-        );
-      }
     }
 
     await this._currentState.startTurn(this, actor);
@@ -215,6 +192,20 @@ class HumanTurnHandler extends BaseTurnHandler {
     this._logger.debug(
       `${this.constructor.name}.destroy() player-specific handling complete (delegated most to base).`
     );
+  }
+
+  /**
+   * @private
+   * @param {Entity} actor The actor entity to validate.
+   * @param {string} operationName The name of the operation performing the check.
+   * @throws {Error} If the actor is invalid.
+   */
+  _assertValidActor(actor, operationName) {
+    if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
+      const errorMsg = `${this.constructor.name}.${operationName}: actor is required and must have a valid id.`;
+      this._logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
   }
 
   /** @private */
