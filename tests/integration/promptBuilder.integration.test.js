@@ -46,6 +46,7 @@ describe('PromptBuilder Integration Test', () => {
     placeholderResolver = new PlaceholderResolver(mockLogger);
     const standardAssembler = new StandardElementAssembler({
       logger: mockLogger,
+      safeEventDispatcher: { dispatch: jest.fn() },
     });
     const indexedChoicesAssembler = new IndexedChoicesAssembler({
       logger: mockLogger,

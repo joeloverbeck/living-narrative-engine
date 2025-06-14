@@ -2,6 +2,7 @@
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { snakeToCamel } from '../../utils/textUtils.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 /**
  * @class StandardElementAssembler
@@ -10,10 +11,20 @@ import { resolveWrapper } from '../../utils/wrapperUtils.js';
  */
 export class StandardElementAssembler extends IPromptElementAssembler {
   #logger;
+  #safeEventDispatcher;
 
-  constructor({ logger = console } = {}) {
+  constructor({ logger = console, safeEventDispatcher } = {}) {
     super();
     this.#logger = logger;
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error(
+        'StandardElementAssembler requires a valid SafeEventDispatcher.'
+      );
+    }
+    this.#safeEventDispatcher = safeEventDispatcher;
   }
 
   /** @inheritdoc */
@@ -25,7 +36,8 @@ export class StandardElementAssembler extends IPromptElementAssembler {
       placeholderResolverProvided: !!placeholderResolver,
     };
     if (!elementConfig || !promptData || !placeholderResolver) {
-      this.#logger.error(
+      safeDispatchError(
+        this.#safeEventDispatcher,
         'StandardElementAssembler.assemble: Missing required parameters (elementConfig, promptData, or placeholderResolver).',
         paramsProvided
       );
