@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Unifying paths.">
-      <change afterPath="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/stateTypes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/stateTypes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/turnManager.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnManager.constructor.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -175,15 +177,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="10764000" />
-    </task>
-    <task id="LOCAL-00024" summary="Ensuring that chosenActionId doesn't get used anymore.">
-      <option name="closed" value="true" />
-      <created>1749880932434</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1749880932434</updated>
+      <workItem from="1749913762946" duration="11634000" />
     </task>
     <task id="LOCAL-00025" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -569,7 +563,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749924765153</updated>
     </task>
-    <option name="localTasksCounter" value="73" />
+    <task id="LOCAL-00073" summary="Unifying paths.">
+      <option name="closed" value="true" />
+      <created>1749925369713</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1749925369713</updated>
+    </task>
+    <option name="localTasksCounter" value="74" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
