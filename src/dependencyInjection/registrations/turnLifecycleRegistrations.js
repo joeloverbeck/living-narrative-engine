@@ -45,12 +45,15 @@ export function registerTurnLifecycle(container) {
 
   // --- Also ensure the TurnActionChoicePipeline is registered if not already ---
   if (!container.isRegistered(tokens.TurnActionChoicePipeline)) {
-    r.singletonFactory(tokens.TurnActionChoicePipeline, (c) => {
-      return new TurnActionChoicePipeline({
-        availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
-        logger: c.resolve(tokens.ILogger),
-      });
-    });
+    r.singletonFactory(
+      tokens.TurnActionChoicePipeline,
+      (c) =>
+        new TurnActionChoicePipeline({
+          discoverySvc: c.resolve(tokens.IActionDiscoveryService),
+          indexer: c.resolve(tokens.IActionIndexer),
+          logger: c.resolve(tokens.ILogger),
+        })
+    );
   }
 
   // ─────────────────── Turn-context factory ──────────────────

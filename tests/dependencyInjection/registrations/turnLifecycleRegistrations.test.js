@@ -112,10 +112,6 @@ describe('registerTurnLifecycle', () => {
     // register turn action factory for HumanTurnHandler
     mockTurnActionFactory = mock();
     container.register(tokens.ITurnActionFactory, () => mockTurnActionFactory);
-
-    container.register(tokens.IAvailableActionsProvider, () => ({
-      get: jest.fn().mockResolvedValue([]),
-    }));
   });
 
   afterEach(() => {
