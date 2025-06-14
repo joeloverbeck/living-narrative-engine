@@ -1,7 +1,7 @@
 // src/utils/locationUtils.js
 
 import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { safeDispatchError } from './safeDispatchError.js';
 import { isNonEmptyString } from './textUtils.js';
 import { getPrefixedLogger } from './loggerUtils.js';
 import {
@@ -46,19 +46,22 @@ function _getExitsComponentData(
 
   if (typeof locationEntityOrId === 'string') {
     if (!isValidEntityManager(entityManager)) {
-      dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message:
-          "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.",
-        details: {
-          locationId:
-            typeof locationEntityOrId === 'string'
-              ? locationEntityOrId
-              : locationEntityOrId?.id,
-          entityManagerValid:
-            !!entityManager &&
-            typeof entityManager.getEntityInstance === 'function',
-        },
-      });
+      const message =
+        "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.";
+      const details = {
+        locationId:
+          typeof locationEntityOrId === 'string'
+            ? locationEntityOrId
+            : locationEntityOrId?.id,
+        entityManagerValid:
+          !!entityManager &&
+          typeof entityManager.getEntityInstance === 'function',
+      };
+      if (dispatcher) {
+        safeDispatchError(dispatcher, message, details);
+      } else {
+        log.error(message, details);
+      }
 
       return null;
     }
