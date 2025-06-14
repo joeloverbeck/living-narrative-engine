@@ -68,31 +68,11 @@
           },
           {
             "type": "QUERY_COMPONENT",
-            "comment": "Get actor's position for co-location check.",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:position",
-              "result_variable": "actorPosition"
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
             "comment": "Get actor's name for the event description.",
             "parameters": {
               "entity_ref": "actor",
               "component_type": "core:name",
               "result_variable": "actorName"
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get old leader's position for co-location check.",
-            "parameters": {
-              "entity_ref": {
-                "entityId": "{context.oldFollowingData.leaderId}"
-              },
-              "component_type": "core:position",
-              "result_variable": "oldLeaderPosition"
             }
           },
           {
@@ -107,18 +87,12 @@
             }
           },
           {
-            "type": "IF",
+            "type": "IF_CO_LOCATED",
             "comment": "Only dispatch a perceptible event if the actor and old leader are in the same location.",
             "parameters": {
-              "condition": {
-                "==": [
-                  {
-                    "var": "context.actorPosition.locationId"
-                  },
-                  {
-                    "var": "context.oldLeaderPosition.locationId"
-                  }
-                ]
+              "entity_ref_a": "actor",
+              "entity_ref_b": {
+                "entityId": "{context.oldFollowingData.leaderId}"
               },
               "then_actions": [
                 {
@@ -129,7 +103,7 @@
                     "payload": {
                       "eventName": "core:perceptible_event",
                       "timestamp": "{context.currentTimestamp}",
-                      "locationId": "{context.actorPosition.locationId}",
+                      "locationId": "{actor.components.core:position.locationId}",
                       "descriptionText": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
                       "perceptionType": "state_change_observable",
                       "actorId": "{event.payload.actorId}",

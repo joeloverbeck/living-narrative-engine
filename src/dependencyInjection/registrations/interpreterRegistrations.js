@@ -33,6 +33,7 @@ import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHan
 import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler';
 import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFieldHandler';
 import MathHandler from '../../logic/operationHandlers/mathHandler.js';
+import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler.js';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -215,6 +216,16 @@ export function registerInterpreters(container) {
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
+    [
+      tokens.IfCoLocatedHandler,
+      IfCoLocatedHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          operationInterpreter: c.resolve(tokens.OperationInterpreter),
+          logger: c.resolve(tokens.ILogger),
+        }),
+    ],
   ];
 
   for (const [token, ctor, factory] of handlerFactories) {
@@ -271,6 +282,7 @@ export function registerInterpreters(container) {
       bind(tokens.ModifyArrayFieldHandler)
     );
     registry.register('MATH', bind(tokens.MathHandler));
+    registry.register('IF_CO_LOCATED', bind(tokens.IfCoLocatedHandler));
 
     return registry;
   });

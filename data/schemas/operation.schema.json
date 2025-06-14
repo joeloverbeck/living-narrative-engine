@@ -32,7 +32,8 @@
             "HAS_COMPONENT",
             "QUERY_ENTITIES",
             "MODIFY_ARRAY_FIELD",
-            "MATH"
+            "MATH",
+            "IF_CO_LOCATED"
           ]
         },
         "comment": {
@@ -379,6 +380,20 @@
             "properties": {
               "parameters": {
                 "$ref": "#/$defs/MathParameters"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "IF_CO_LOCATED" }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/IfCoLocatedParameters"
               }
             }
           }
@@ -795,6 +810,30 @@
         }
       },
       "required": ["result_variable", "expression"]
+    },
+    "IfCoLocatedParameters": {
+      "type": "object",
+      "description": "Parameters for IF_CO_LOCATED. Executes actions based on co-location of two entities.",
+      "properties": {
+        "entity_ref_a": {
+          "$ref": "./common.schema.json#/definitions/entityReference"
+        },
+        "entity_ref_b": {
+          "$ref": "./common.schema.json#/definitions/entityReference"
+        },
+        "then_actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Operation" },
+          "minItems": 1
+        },
+        "else_actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Operation" },
+          "default": []
+        }
+      },
+      "required": ["entity_ref_a", "entity_ref_b", "then_actions"],
+      "additionalProperties": false
     },
     "MathOperand": {
       "description": "An operand for a math expression. Can be a number, a variable reference, or a nested expression.",

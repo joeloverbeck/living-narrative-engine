@@ -259,6 +259,7 @@ export const tokens = freeze({
   HasComponentHandler: 'HasComponentHandler',
   ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
   MathHandler: 'MathHandler',
+  IfCoLocatedHandler: 'IfCoLocatedHandler',
 
   // --- Actions ---
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',

@@ -65,37 +65,11 @@
         },
         "then_actions": [
           {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get actor's (leader's) position for co-location check.",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:position",
-              "result_variable": "actorPosition"
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get target's (follower's) position for co-location check.",
-            "parameters": {
-              "entity_ref": "target",
-              "component_type": "core:position",
-              "result_variable": "targetPosition"
-            }
-          },
-          {
-            "type": "IF",
+            "type": "IF_CO_LOCATED",
             "comment": "Only dispatch a perceptible event if the leader and follower are in the same location.",
             "parameters": {
-              "condition": {
-                "==": [
-                  {
-                    "var": "context.actorPosition.locationId"
-                  },
-                  {
-                    "var": "context.targetPosition.locationId"
-                  }
-                ]
-              },
+              "entity_ref_a": "actor",
+              "entity_ref_b": "target",
               "then_actions": [
                 {
                   "type": "QUERY_COMPONENT",
@@ -129,7 +103,7 @@
                     "eventType": "core:perceptible_event",
                     "payload": {
                       "eventName": "core:perceptible_event",
-                      "locationId": "{context.actorPosition.locationId}",
+                      "locationId": "{actor.components.core:position.locationId}",
                       "descriptionText": "{context.actorName.text} has dismissed {context.targetName.text} from their service.",
                       "timestamp": "{context.nowIso}",
                       "perceptionType": "state_change_observable",

@@ -20,6 +20,7 @@ import HasComponentHandler from '../../../src/logic/operationHandlers/hasCompone
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
+import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -158,6 +159,16 @@ function init(entities) {
     logger,
     operationRegistry,
   });
+
+  const ifCoLocatedHandler = new IfCoLocatedHandler({
+    entityManager,
+    operationInterpreter,
+    logger,
+  });
+  operationRegistry.register(
+    'IF_CO_LOCATED',
+    ifCoLocatedHandler.execute.bind(ifCoLocatedHandler)
+  );
 
   jsonLogic = new JsonLogicEvaluationService({ logger });
 
