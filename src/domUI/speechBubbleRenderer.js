@@ -254,10 +254,14 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       speechBubbleDiv.appendChild(quotedSpeechSpan);
     }
 
-    const speechMetaFragment = buildSpeechMeta(this.#domElementFactory, {
-      thoughts,
-      notes,
-    });
+    const speechMetaFragment = buildSpeechMeta(
+      this.documentContext.document,
+      this.#domElementFactory,
+      {
+        thoughts,
+        notes,
+      }
+    );
     if (speechMetaFragment) {
       speechBubbleDiv.appendChild(speechMetaFragment);
     }

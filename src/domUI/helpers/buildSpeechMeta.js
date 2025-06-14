@@ -6,6 +6,7 @@ import { THOUGHT_SVG, NOTES_SVG } from '../icons.js';
 
 /**
  * @typedef {import('../domElementFactory.js').default} DomElementFactory
+ * @typedef {import('../../../interfaces/IDocumentContext.js').IDocumentContext['document']} Document
  */
 
 /**
@@ -17,22 +18,23 @@ import { THOUGHT_SVG, NOTES_SVG } from '../icons.js';
 /**
  * Builds a document fragment containing metadata buttons (for thoughts, notes) for a speech bubble.
  *
- * @param {DomElementFactory} domFactory - An instance of the DOM element factory.
+ * @param {Document} document - The DOM document object, used for creating fragments.
+ * @param {DomElementFactory} domFactory - An instance of the DOM element factory for creating elements.
  * @param {SpeechMetaInput} meta - An object containing the speech metadata.
  * @returns {DocumentFragment|null} A document fragment with the speech-meta div, or null if no metadata is provided.
  */
-export function buildSpeechMeta(domFactory, { thoughts, notes }) {
+export function buildSpeechMeta(document, domFactory, { thoughts, notes }) {
   if (!thoughts && !notes) {
     return null;
   }
 
-  const fragment = domFactory.document.createDocumentFragment();
+  const fragment = document.createDocumentFragment();
   const metaContainer = domFactory.create('div', { cls: 'speech-meta' });
 
   if (thoughts) {
     const btn = domFactory.create('button', {
       cls: 'meta-btn thoughts',
-      'aria-label': 'View inner thoughts',
+      attrs: { 'aria-label': 'View inner thoughts' },
     });
     btn.style.setProperty('--clr', 'var(--thoughts-icon-color)');
     btn.innerHTML = THOUGHT_SVG;
@@ -47,7 +49,7 @@ export function buildSpeechMeta(domFactory, { thoughts, notes }) {
   if (notes) {
     const btn = domFactory.create('button', {
       cls: 'meta-btn notes',
-      'aria-label': 'View private notes',
+      attrs: { 'aria-label': 'View private notes' },
     });
     btn.style.setProperty('--clr', 'var(--notes-icon-color)');
     btn.innerHTML = NOTES_SVG;

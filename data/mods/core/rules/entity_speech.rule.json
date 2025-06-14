@@ -84,17 +84,26 @@
           },
           {
             "type": "IF",
-            "comment": "Check if hidden metadata is present and dispatch core:display_speech accordingly.",
+            "comment": "Check if hidden metadata (thoughts OR notes) is present and dispatch core:display_speech accordingly.",
             "parameters": {
               "condition": {
-                "!!": {
-                  "var": "event.payload.thoughts"
-                }
+                "or": [
+                  {
+                    "!!": {
+                      "var": "event.payload.thoughts"
+                    }
+                  },
+                  {
+                    "!!": {
+                      "var": "event.payload.notes"
+                    }
+                  }
+                ]
               },
               "then_actions": [
                 {
                   "type": "DISPATCH_EVENT",
-                  "comment": "Dispatch speech WITH thoughts and notes.",
+                  "comment": "Dispatch speech WITH thoughts and/or notes. The JS handler is robust enough to handle if one is undefined.",
                   "parameters": {
                     "eventType": "core:display_speech",
                     "payload": {
