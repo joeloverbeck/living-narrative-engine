@@ -1,5 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
-import { getComponent } from '../../src/utils/componentAccessUtils.js';
+import {
+  getComponent,
+  getComponentFromManager,
+} from '../../src/utils/componentAccessUtils.js';
 
 class MockEntity {
   constructor(data = {}) {
@@ -44,5 +47,45 @@ describe('getComponent', () => {
       },
     };
     expect(getComponent(ent, 'foo')).toBeNull();
+  });
+});
+
+class MockManager {
+  constructor(data = new Map()) {
+    this._data = data;
+  }
+
+  getComponentData(entityId, componentId) {
+    const comps = this._data.get(entityId);
+    return comps ? comps[componentId] : undefined;
+  }
+}
+
+describe('getComponentFromManager', () => {
+  it('returns component data when present', () => {
+    const map = new Map([['e1', { foo: { a: 1 } }]]);
+    const mgr = new MockManager(map);
+    expect(getComponentFromManager('e1', 'foo', mgr)).toEqual({ a: 1 });
+  });
+
+  it('returns null when component missing', () => {
+    const mgr = new MockManager();
+    expect(getComponentFromManager('e1', 'foo', mgr)).toBeNull();
+  });
+
+  it('returns null for invalid parameters', () => {
+    const mgr = new MockManager();
+    expect(getComponentFromManager('', 'foo', mgr)).toBeNull();
+    expect(getComponentFromManager('e1', '', mgr)).toBeNull();
+    expect(getComponentFromManager('e1', 'foo', null)).toBeNull();
+  });
+
+  it('returns null when getComponentData throws', () => {
+    const mgr = {
+      getComponentData() {
+        throw new Error('boom');
+      },
+    };
+    expect(getComponentFromManager('e1', 'foo', mgr)).toBeNull();
   });
 });

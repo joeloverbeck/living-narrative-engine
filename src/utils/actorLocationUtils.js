@@ -8,7 +8,7 @@
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { isNonEmptyString } from './textUtils.js';
-import { isValidEntityManager } from './entityValidationUtils.js';
+import { getComponentFromManager } from './componentAccessUtils.js';
 
 /**
  * Retrieves the current location for the given actor entity.
@@ -22,22 +22,17 @@ import { isValidEntityManager } from './entityValidationUtils.js';
  * locationId string, or `null` when unavailable.
  */
 export function getActorLocation(entityId, entityManager) {
-  if (!isNonEmptyString(entityId)) return null;
-  if (!isValidEntityManager(entityManager)) {
-    return null;
-  }
-
-  try {
-    const pos = entityManager.getComponentData(entityId, POSITION_COMPONENT_ID);
-    if (pos && isNonEmptyString(pos.locationId)) {
-      const locationEntity =
-        typeof entityManager.getEntityInstance === 'function'
-          ? entityManager.getEntityInstance(pos.locationId)
-          : null;
-      return locationEntity ?? pos.locationId;
-    }
-  } catch {
-    /* ignored */
+  const pos = getComponentFromManager(
+    entityId,
+    POSITION_COMPONENT_ID,
+    entityManager
+  );
+  if (pos && isNonEmptyString(pos.locationId)) {
+    const locationEntity =
+      typeof entityManager?.getEntityInstance === 'function'
+        ? entityManager.getEntityInstance(pos.locationId)
+        : null;
+    return locationEntity ?? pos.locationId;
   }
   return null;
 }
