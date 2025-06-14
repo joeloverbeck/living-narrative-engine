@@ -115,10 +115,6 @@ const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
   return entity;
 };
 
-// --- Mock createActionValidationContext Function ---
-// (Keep existing mock function)
-const mockCreateActionValidationContext = jest.fn();
-
 // --- Mock PrerequisiteEvaluationService (NEW - Replaces JLES mock here) ---
 // This service is now the direct dependency for prerequisite evaluation
 /** @type {jest.Mocked<PrerequisiteEvaluationService>} */
@@ -162,8 +158,6 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     mockEntityManager.getEntityInstance.mockImplementation((id) =>
       mockEntityManager.activeEntities.get(id)
     );
-    // Clear mock function history
-    mockCreateActionValidationContext.mockClear();
     // ** Clear the NEW PrerequisiteEvaluationService mock history **
     mockPrerequisiteEvaluationService.evaluate.mockClear();
 
@@ -180,7 +174,6 @@ describe('ActionValidationService - Input Validation and Errors', () => {
       domainContextCompatibilityChecker: domainContextCompatibilityChecker,
       // ** Pass the PrerequisiteEvaluationService mock **
       prerequisiteEvaluationService: mockPrerequisiteEvaluationService,
-      createActionValidationContextFunction: mockCreateActionValidationContext,
     });
     // ------------------------------------------------------
 
@@ -190,17 +183,6 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     // --- Default Mock Behaviors ---
     // Default prerequisite evaluation to pass if needed by other tests (not crucial for these input tests)
     mockPrerequisiteEvaluationService.evaluate.mockReturnValue(true);
-    // Default context creation mock
-    mockCreateActionValidationContext.mockReturnValue({
-      actor: { id: mockActor.id, components: jest.fn() },
-      target: null,
-      event: {
-        /* ... */
-      },
-      context: {},
-      globals: {},
-      entities: {},
-    });
   });
 
   test('isValid throws Error if missing or invalid actionDefinition', () => {
@@ -236,7 +218,6 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     // Verify downstream logic (context creation, prerequisite evaluation) was NOT reached
     // ** Check the CORRECT service mock **
     expect(mockPrerequisiteEvaluationService.evaluate).not.toHaveBeenCalled();
-    expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
     // Optional: Verify logger was called (kept commented as 'toThrow' is the main check)
     // expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(expectedErrorMsg), expect.any(Object));
   });
@@ -284,7 +265,6 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     // Verify downstream logic (context creation, prerequisite evaluation) was NOT reached
     // ** Check the CORRECT service mock **
     expect(mockPrerequisiteEvaluationService.evaluate).not.toHaveBeenCalled();
-    expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
     // Optional: Check logger call
     // expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(expectedErrorMsg), expect.any(Object));
   });
@@ -325,7 +305,6 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     // Verify downstream logic (context creation, prerequisite evaluation) was NOT reached
     // ** Check the CORRECT service mock **
     expect(mockPrerequisiteEvaluationService.evaluate).not.toHaveBeenCalled();
-    expect(mockCreateActionValidationContext).not.toHaveBeenCalled();
     // Optional: Check logger call
     // expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(expectedErrorMsg), expect.any(Object));
   });
