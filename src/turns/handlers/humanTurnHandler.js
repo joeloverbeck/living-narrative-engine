@@ -13,6 +13,7 @@ import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
 /** @typedef {import('../pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} TurnActionChoicePipeline */
+/** @typedef {import('../../interfaces/IPromptCoordinator.js').IPromptCoordinator} IPromptCoordinator */
 
 /** @typedef {import('../interfaces/ITurnDecisionProvider.js').ITurnDecisionProvider} IHumanDecisionProvider */
 /** @typedef {import('../ports/ITurnActionFactory.js').ITurnActionFactory} ITurnActionFactory */
