@@ -5,82 +5,53 @@
  */
 
 /**
- * Safely retrieves a potentially nested property value from an object using a dot-notation path string.
- * This function is purely generic and has no knowledge of specific application structures like Entities or Components.
+ * Resolves a dotted path inside a plain object or array without traversing the
+ * prototype chain. Combines behaviour of the previous `resolvePath` and
+ * `getObjectPropertyByPath` helpers.
  *
- * @param {Record<string, any> | any[] | null | undefined} obj - The object or array to retrieve the property from.
- * @param {string | null | undefined} propertyPath - The dot-separated path string (e.g., "a.b.c", "a.list.0.name").
- * @returns {any | undefined} The value found at the specified path, or undefined if:
- * - The input object `obj` is null or undefined.
- * - The `propertyPath` is not a non-empty string.
- * - Any intermediate property in the path does not exist.
- * - Any intermediate value in the path is null, undefined, or not an object/array (and thus cannot be further traversed).
- * - The path contains empty segments (e.g., "a..b").
- * @example
- * const myObj = { a: { b: [ { name: 'first' }, { name: 'second' } ], c: 5 }, d: null };
- * getObjectPropertyByPath(myObj, 'a.b.1.name'); // Returns 'second'
- * getObjectPropertyByPath(myObj, 'a.c');       // Returns 5
- * getObjectPropertyByPath(myObj, 'a.b.0');      // Returns { name: 'first' }
- * getObjectPropertyByPath(myObj, 'd');          // Returns null
- * getObjectPropertyByPath(myObj, 'a.x.y');      // Returns undefined (x does not exist)
- * getObjectPropertyByPath(myObj, 'a.c.d');      // Returns undefined (cannot access 'd' on number 5)
- * getObjectPropertyByPath(myObj, 'd.e');        // Returns undefined (cannot access 'e' on null)
- * getObjectPropertyByPath(myObj, 'a..c');       // Returns undefined (empty segment)
- * getObjectPropertyByPath(null, 'a.b');       // Returns undefined
- * getObjectPropertyByPath(myObj, '');           // Returns undefined
- * getObjectPropertyByPath(myObj, null);         // Returns undefined
+ * @param {Record<string, any> | any[] | null | undefined} obj - The root object
+ *   or array to retrieve the property from.
+ * @param {string} propertyPath - Dot-separated path (e.g. "a.b.c" or
+ *   "list.0.name"). Whitespace is trimmed.
+ * @returns {any | undefined} The value at the given path, or `undefined` if any
+ *   segment is missing or not traversable.
+ * @throws {TypeError} If `propertyPath` is not a non-empty string.
  */
-export const getObjectPropertyByPath = (obj, propertyPath) => {
-  // Validate inputs: object must exist and path must be a non-empty string
-  if (
-    obj === null ||
-    typeof obj === 'undefined' ||
-    typeof propertyPath !== 'string' ||
-    propertyPath === ''
-  ) {
+export function resolvePath(obj, propertyPath) {
+  if (typeof propertyPath !== 'string' || propertyPath.trim() === '') {
+    throw new TypeError('resolvePath: propertyPath must be a non-empty string');
+  }
+
+  if (obj === null || typeof obj === 'undefined') {
     return undefined;
   }
 
-  const pathParts = propertyPath.split('.');
-  let current = obj;
+  const pathParts = propertyPath.trim().split('.');
+  if (pathParts.some((part) => part === '')) {
+    return undefined;
+  }
 
+  let current = obj;
   for (let i = 0; i < pathParts.length; i++) {
     const part = pathParts[i];
 
-    // Check for empty segments caused by double dots (e.g., "a..b") or leading/trailing dots
-    if (part === '') {
-      return undefined;
-    }
-
-    // Before attempting access, ensure 'current' is an object or array
-    // Allow traversal into arrays using numeric indices
-    const isObject = current !== null && typeof current === 'object'; // Includes arrays
-
+    const isObject = current !== null && typeof current === 'object';
     if (!isObject) {
-      // Cannot traverse further into a primitive, null, or undefined value
       return undefined;
     }
 
-    // Check if the property exists directly on the current object/array.
-    // Using `hasOwnProperty` avoids traversing the prototype chain, which could
-    // expose built-in properties like `toString` when they are not explicitly
-    // defined on the object.
     if (Object.prototype.hasOwnProperty.call(current, part)) {
       current = current[part];
-      // If the value found is undefined, and it's not the last part of the path,
-      // we cannot continue traversal.
       if (current === undefined && i < pathParts.length - 1) {
         return undefined;
       }
     } else {
-      // Property/index does not exist at this level
       return undefined;
     }
   }
 
-  // If the loop completes, 'current' holds the final value
   return current;
-};
+}
 
 /**
  * Freezes an object to make it immutable.
