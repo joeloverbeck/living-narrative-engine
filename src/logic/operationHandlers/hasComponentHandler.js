@@ -12,7 +12,7 @@
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
-import resolveEntityId from '../../utils/entityRefUtils.js';
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
 
 /**

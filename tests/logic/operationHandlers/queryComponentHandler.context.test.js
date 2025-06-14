@@ -64,7 +64,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
 
     handler.execute(params, executionContext);
 
-    // #resolveEntityId now uses executionContext.evaluationContext.actor.id
+    // resolveEntityId utility uses executionContext.evaluationContext.actor.id
     expect(entityManagerMock.getComponentData).toHaveBeenCalledWith(
       mockActorId,
       'core:name'
@@ -280,7 +280,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     };
     handler.execute(params, executionContext);
     expect(loggerMock.error).toHaveBeenCalledWith(
-      "QueryComponentHandler: Cannot resolve 'actor' entity ID. Actor missing or has no ID in evaluationContext.actor.",
+      'QueryComponentHandler: Could not resolve entity id from entity_ref.',
       expect.anything()
     );
     expect(entityManagerMock.getComponentData).not.toHaveBeenCalled();

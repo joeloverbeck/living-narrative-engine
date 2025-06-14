@@ -16,6 +16,7 @@ import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.j
 import { validateDependency } from '../utils/validationUtils.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
+import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 export class ActionDiscoveryService extends IActionDiscoveryService {
@@ -114,6 +115,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
     /* ── Resolve actor location via utility ───────── */
     let currentLocation = getActorLocation(actorEntity.id, this.#entityManager);
+
     const locIdForLog =
       typeof currentLocation === 'string'
         ? currentLocation

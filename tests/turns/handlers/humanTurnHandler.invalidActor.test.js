@@ -45,7 +45,16 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
     mockTurnStrategyFactory = {
       createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
     };
-    mockTurnContextBuilder = { build: jest.fn() };
+
+    mockTurnContextBuilder = {
+      build: jest.fn(({ actor }) => ({
+        getActor: () => actor,
+        setAwaitingExternalEvent: jest.fn(),
+        isAwaitingExternalEvent: jest.fn(() => false),
+        endTurn: jest.fn(),
+      })),
+    };
+
 
     deps = {
       logger: mockLogger,
