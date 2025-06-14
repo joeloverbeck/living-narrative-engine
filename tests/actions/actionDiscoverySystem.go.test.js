@@ -246,11 +246,16 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(mockGetAvailableExits).toHaveBeenCalledWith(
       mockAdventurersGuildLocation,
       mockEntityManager,
-      mockLogger
+      expect.objectContaining({
+        debug: expect.any(Function),
+        info: expect.any(Function),
+        warn: expect.any(Function),
+        error: expect.any(Function),
+      })
     );
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `Found ${availableExits.length} available exits for location: ${GUILD_INSTANCE_ID} via getAvailableExits.`
+      `ActionDiscoveryService: Found ${availableExits.length} available exits for location: ${GUILD_INSTANCE_ID} via getAvailableExits.`
     );
 
     expect(mockGameDataRepo.getAllActionDefinitions).toHaveBeenCalledTimes(1);

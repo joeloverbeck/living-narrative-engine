@@ -16,7 +16,7 @@ jest.mock('../../src/utils/locationUtils.js', () => ({
 }));
 
 jest.mock('../../src/logic/contextAssembler.js', () => ({
-  createComponentAccessor: jest.fn((entityId, entityManager, logger) => {
+  createComponentAccessor: jest.fn((entityId, entityManager) => {
     // Return a simple mock proxy for testing purposes
     return new Proxy(
       {},
@@ -159,12 +159,22 @@ describe('ActionValidationContextBuilder', () => {
         expect(createComponentAccessor).toHaveBeenCalledWith(
           actorId,
           mockEntityManager,
-          mockLogger
+          expect.objectContaining({
+            debug: expect.any(Function),
+            info: expect.any(Function),
+            warn: expect.any(Function),
+            error: expect.any(Function),
+          })
         );
         expect(createComponentAccessor).toHaveBeenCalledWith(
           targetId,
           mockEntityManager,
-          mockLogger
+          expect.objectContaining({
+            debug: expect.any(Function),
+            info: expect.any(Function),
+            warn: expect.any(Function),
+            error: expect.any(Function),
+          })
         );
       });
 

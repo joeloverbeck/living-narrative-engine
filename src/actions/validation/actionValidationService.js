@@ -12,6 +12,7 @@
 import { ActionTargetContext } from '../../models/actionTargetContext.js';
 import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
 import { validateDependency } from '../../utils/validationUtils.js';
+import { createPrefixedLogger } from '../../utils/loggerUtils.js';
 // --- Refactor-AVS-3.4: Remove dependency ---
 // REMOVED: import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
 // --- End Refactor-AVS-3.4 ---
@@ -55,7 +56,7 @@ export class ActionValidationService {
       validateDependency(logger, 'ActionValidationService: logger', console, {
         requiredMethods: ['debug', 'error', 'info'],
       });
-      this.#logger = logger;
+      this.#logger = createPrefixedLogger(logger, 'ActionValidationService: ');
     } catch (e) {
       const errorMsg = `ActionValidationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       // eslint-disable-next-line no-console

@@ -48,4 +48,23 @@ export function ensureValidLogger(
   return fallback;
 }
 
+/**
+ * Creates a logger that prepends a prefix to all messages before delegating
+ * to the provided base logger. Useful for tagging log output with a service
+ * identifier while keeping the original logger implementation.
+ *
+ * @param {ILogger} baseLogger - The logger to wrap.
+ * @param {string} prefix - Prefix to prepend to each logged message.
+ * @returns {ILogger} Logger wrapper with prefixed output methods.
+ */
+export function createPrefixedLogger(baseLogger, prefix) {
+  const safePrefix = prefix || '';
+  return {
+    debug: (msg, ...args) => baseLogger.debug(`${safePrefix}${msg}`, ...args),
+    info: (msg, ...args) => baseLogger.info(`${safePrefix}${msg}`, ...args),
+    warn: (msg, ...args) => baseLogger.warn(`${safePrefix}${msg}`, ...args),
+    error: (msg, ...args) => baseLogger.error(`${safePrefix}${msg}`, ...args),
+  };
+}
+
 // --- FILE END ---

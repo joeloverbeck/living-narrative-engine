@@ -14,6 +14,7 @@ import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 import { getExitByDirection } from '../../utils/locationUtils.js';
 import { createComponentAccessor } from '../../logic/contextAssembler.js';
+import { createPrefixedLogger } from '../../utils/loggerUtils.js';
 
 /**
  * @class ActionValidationContextBuilder
@@ -41,7 +42,10 @@ export class ActionValidationContextBuilder {
           requiredMethods: ['debug', 'error', 'warn'],
         }
       );
-      this.#logger = logger;
+      this.#logger = createPrefixedLogger(
+        logger,
+        'ActionValidationContextBuilder: '
+      );
     } catch (e) {
       const errorMsg = `ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       console.error(errorMsg);

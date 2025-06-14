@@ -15,6 +15,7 @@ import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
+import { createPrefixedLogger } from '../utils/loggerUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 export class ActionDiscoveryService extends IActionDiscoveryService {
@@ -49,7 +50,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     validateDependency(logger, 'ActionDiscoveryService: logger', console, {
       requiredMethods: ['debug', 'warn', 'error'],
     });
-    this.#logger = logger;
+    this.#logger = createPrefixedLogger(logger, 'ActionDiscoveryService: ');
 
     validateDependency(
       gameDataRepository,
