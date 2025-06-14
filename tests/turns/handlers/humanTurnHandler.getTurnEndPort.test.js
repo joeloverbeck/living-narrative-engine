@@ -39,7 +39,9 @@ beforeEach(() => {
     choicePipeline: {},
     humanDecisionProvider: {},
     turnActionFactory: {},
-    turnStrategyFactory: mockTurnStrategyFactory,
+    turnStrategyFactory: {
+      createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
+    },
   };
   jest
     .spyOn(BaseTurnHandler.prototype, '_setInitialState')
