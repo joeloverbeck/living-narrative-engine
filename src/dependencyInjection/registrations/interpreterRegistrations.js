@@ -155,6 +155,7 @@ export function registerInterpreters(container) {
         new Handler({
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [
