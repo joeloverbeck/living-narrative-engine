@@ -193,7 +193,11 @@ export function registerAI(container) {
   );
   r.singletonFactory(
     tokens.StandardElementAssembler,
-    (c) => new StandardElementAssembler({ logger: c.resolve(tokens.ILogger) })
+    (c) =>
+      new StandardElementAssembler({
+        logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      })
   );
   r.singletonFactory(
     tokens.PerceptionLogAssembler,

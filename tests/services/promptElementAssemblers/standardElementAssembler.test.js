@@ -12,6 +12,7 @@ import { StandardElementAssembler } from '../../../src/prompting/assembling/stan
 import { createMockLogger } from '../../testUtils.js'; // Adjust path for your test utils
 // We will use the actual snakeToCamel from textUtils since it's a utility function
 import { snakeToCamel } from '../../../src/utils/textUtils.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // Mock PlaceholderResolver
 const mockPlaceholderResolverInstance = {
@@ -28,14 +29,18 @@ describe('StandardElementAssembler', () => {
   let assembler;
   // This is the mock instance we control for PlaceholderResolver's methods
   let activeMockPlaceholderResolver;
+  let mockDispatcher;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
     // Reset and reassign the mock for placeholderResolver.resolve for each test
     mockPlaceholderResolverInstance.resolve.mockReset();
     activeMockPlaceholderResolver = mockPlaceholderResolverInstance; // Use the module-level mock instance
-
-    assembler = new StandardElementAssembler({ logger: mockLogger });
+    mockDispatcher = { dispatch: jest.fn() };
+    assembler = new StandardElementAssembler({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
   });
 
   afterEach(() => {
@@ -45,9 +50,12 @@ describe('StandardElementAssembler', () => {
   describe('Constructor', () => {
     it('should initialize with a logger', () => {
       expect(assembler).toBeInstanceOf(StandardElementAssembler);
-      // Indirectly check logger by causing an error/warning in assemble
+      // Indirectly check dispatcher by causing an error in assemble
       assembler.assemble(null, {}, activeMockPlaceholderResolver);
-      expect(mockLogger.error).toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.any(Object)
+      );
     });
   });
 
@@ -59,7 +67,7 @@ describe('StandardElementAssembler', () => {
     };
     const sampleAllPromptElementsMap = new Map(); // Not used by this assembler
 
-    it('should return an empty string and log error if elementConfig is missing', () => {
+    it('should return an empty string and dispatch error if elementConfig is missing', () => {
       const result = assembler.assemble(
         null,
         samplePromptData,
@@ -67,13 +75,16 @@ describe('StandardElementAssembler', () => {
         sampleAllPromptElementsMap
       );
       expect(result).toBe('');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'StandardElementAssembler.assemble: Missing required parameters (elementConfig, promptData, or placeholderResolver).',
-        expect.objectContaining({ elementConfigProvided: false })
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.any(String),
+          details: expect.objectContaining({ elementConfigProvided: false }),
+        })
       );
     });
 
-    it('should return an empty string and log error if promptData is missing', () => {
+    it('should return an empty string and dispatch error if promptData is missing', () => {
       const elementConfig = { key: 'test_key' };
       const result = assembler.assemble(
         elementConfig,
@@ -82,13 +93,16 @@ describe('StandardElementAssembler', () => {
         sampleAllPromptElementsMap
       );
       expect(result).toBe('');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'StandardElementAssembler.assemble: Missing required parameters (elementConfig, promptData, or placeholderResolver).',
-        expect.objectContaining({ promptDataProvider: false })
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.any(String),
+          details: expect.objectContaining({ promptDataProvider: false }),
+        })
       );
     });
 
-    it('should return an empty string and log error if placeholderResolver is missing', () => {
+    it('should return an empty string and dispatch error if placeholderResolver is missing', () => {
       const elementConfig = { key: 'test_key' };
       const result = assembler.assemble(
         elementConfig,
@@ -97,9 +111,14 @@ describe('StandardElementAssembler', () => {
         sampleAllPromptElementsMap
       );
       expect(result).toBe('');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'StandardElementAssembler.assemble: Missing required parameters (elementConfig, promptData, or placeholderResolver).',
-        expect.objectContaining({ placeholderResolverProvided: false })
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.any(String),
+          details: expect.objectContaining({
+            placeholderResolverProvided: false,
+          }),
+        })
       );
     });
 
