@@ -1,5 +1,3 @@
-// src/turns/adapters/actionIndexerAdapter.js
-
 /**
  * @file Adapter exposing the existing ActionIndexingService
  * through the IActionIndexer port.
@@ -12,10 +10,13 @@ import { IActionIndexer } from '../ports/IActionIndexer.js';
  * @implements {IActionIndexer}
  * @description
  * Adapts an instance of ActionIndexingService to the IActionIndexer interface,
- * delegating calls to index() through to ActionIndexingService.indexActions().
+ * delegating calls through to the service.
  * This version includes defensive guards to ensure correct usage.
  */
 export class ActionIndexerAdapter extends IActionIndexer {
+  /** @private */
+  _svc;
+
   /**
    * @param {import('../services/actionIndexingService.js').ActionIndexingService} actionIndexingService
    * The core service responsible for indexing actions per actor turn.
@@ -24,19 +25,31 @@ export class ActionIndexerAdapter extends IActionIndexer {
     super();
 
     // --- Constructor Guard ---
-    // This guard ensures the adapter cannot be created without a valid dependency.
-    // It checks that the provided service is an object and has the method we need.
     if (
       !actionIndexingService ||
-      typeof actionIndexingService.indexActions !== 'function'
+      typeof actionIndexingService.indexActions !== 'function' ||
+      typeof actionIndexingService.beginTurn !== 'function'
     ) {
       throw new TypeError(
-        'ActionIndexerAdapter: constructor requires a valid actionIndexingService instance with an indexActions method.'
+        'ActionIndexerAdapter: constructor requires a valid actionIndexingService instance with indexActions and beginTurn methods.'
       );
     }
 
-    /** @private */
     this._svc = actionIndexingService;
+  }
+
+  /**
+   * Signals the beginning of an actor's turn, delegating to the underlying service
+   * to clear its cache for that actor.
+   * @param {string} actorId - The ID of the actor starting their turn.
+   */
+  beginTurn(actorId) {
+    if (typeof actorId !== 'string' || actorId.trim() === '') {
+      throw new TypeError(
+        `ActionIndexerAdapter.beginTurn: "actorId" parameter must be a non-empty string. Received: ${typeof actorId}`
+      );
+    }
+    this._svc.beginTurn(actorId);
   }
 
   /**
@@ -50,8 +63,6 @@ export class ActionIndexerAdapter extends IActionIndexer {
    */
   index(actions, actorId) {
     // --- Method Argument Guards ---
-    // These guards check the types of the arguments at runtime, preventing bad
-    // data from being passed deeper into the application logic.
     if (!Array.isArray(actions)) {
       throw new TypeError(
         `ActionIndexerAdapter.index: "actions" parameter must be an array. Received: ${typeof actions}`
@@ -63,7 +74,6 @@ export class ActionIndexerAdapter extends IActionIndexer {
       );
     }
 
-    // If all guards pass, proceed with the actual logic.
     return this._svc.indexActions(actorId, actions);
   }
 }

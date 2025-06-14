@@ -28,11 +28,15 @@ export class TurnActionChoicePipeline {
   }
 
   /**
-   * @param {Entity}    actor   - The entity whose actions we’re building choices for.
+   * Discovers, indexes, and returns a list of action choices for an actor's turn.
+   * @param {import('../../models/entity.js').Entity} actor - The entity whose actions we’re building choices for.
    * @param {ITurnContext} context - The current turn context.
-   * @returns {Promise<ActionComposite[]>} Deduped, capped, 1-based indexed action list.
+   * @returns {Promise<import('../dtos/actionComposite.js').ActionComposite[]>} Deduped, capped, 1-based indexed action list.
    */
   async buildChoices(actor, context) {
+    // Signal the beginning of the turn to clear any prior-turn state.
+    this.indexer.beginTurn?.(actor.id); // no-op if not implemented
+
     this.logger.debug(`[ChoicePipeline] Discovering actions for ${actor.id}`);
     const discovered = await this.discoverySvc.getValidActions(actor, context);
 

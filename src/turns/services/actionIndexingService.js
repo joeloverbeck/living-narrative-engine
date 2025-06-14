@@ -1,10 +1,8 @@
-// src/turns/services/actionIndexingService.js
-
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 
 export class ActionIndexingService {
   /**
-   * @param {{ logger: ILogger }} deps
+   * @param {{ logger: import('../../interfaces/ILogger.js').ILogger }} deps
    */
   constructor({ logger }) {
     if (!logger || typeof logger.debug !== 'function') {
@@ -20,10 +18,28 @@ export class ActionIndexingService {
     };
   }
 
-  /** @type {ILogger} */ #log;
-  /** @type {Map<string, ActionComposite[]>} */ #actorCache = new Map();
+  /** @type {import('../../interfaces/ILogger.js').ILogger} */
+  #log;
+  /** @type {Map<string, import('../dtos/actionComposite.js').ActionComposite[]>} */
+  #actorCache = new Map();
 
   /* ─────────────────────────────────────────────────────────────────────── */
+
+  /**
+   * Signals the beginning of an actor's turn, clearing any cached action
+   * list for them from the previous turn. This ensures choices are not
+   * accidentally carried over.
+   *
+   * @param {string} actorId The ID of the actor starting their turn.
+   */
+  beginTurn(actorId) {
+    this.#actorCache.delete(actorId);
+  }
+
+  /**
+   * @deprecated In favor of beginTurn(), which better describes the lifecycle event.
+   * @param {string} actorId
+   */
   clearActorCache(actorId) {
     this.#actorCache.delete(actorId);
     this.#log.debug(`ActionIndexingService: cache cleared for ${actorId}`);
@@ -34,8 +50,8 @@ export class ActionIndexingService {
    * (Re)build the indexed list for an actor.
    *
    * @param {string} actorId
-   * @param {DiscoveredActionInfo[]} discovered
-   * @returns {ActionComposite[]}
+   * @param {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} discovered
+   * @returns {import('../dtos/actionComposite.js').ActionComposite[]}
    */
   indexActions(actorId, discovered) {
     if (typeof actorId !== 'string' || !actorId.trim()) {
@@ -51,7 +67,8 @@ export class ActionIndexingService {
 
     // Idempotent shortcut (same turn)
     if (discovered.length === 0 && this.#actorCache.has(actorId)) {
-      return this.#actorCache.get(actorId);
+      const cachedList = this.#actorCache.get(actorId);
+      if (cachedList) return cachedList; // Type guard
     }
 
     /* ── deduplicate by (id + params) ─────────────────────────────────── */
@@ -104,6 +121,10 @@ export class ActionIndexingService {
   }
 
   /* ─────────────────────────────────────────────────────────────────────── */
+  /**
+   * @param {string} actorId
+   * @returns {import('../dtos/actionComposite.js').ActionComposite[]}
+   */
   getIndexedList(actorId) {
     const list = this.#actorCache.get(actorId);
     if (!list) throw new Error(`No indexed action list for actor "${actorId}"`);
@@ -111,6 +132,11 @@ export class ActionIndexingService {
   }
 
   /* ─────────────────────────────────────────────────────────────────────── */
+  /**
+   * @param {string} actorId
+   * @param {number} chosenIndex
+   * @returns {import('../dtos/actionComposite.js').ActionComposite}
+   */
   resolve(actorId, chosenIndex) {
     const list = this.#actorCache.get(actorId);
     if (!list) throw new Error(`No actions indexed for actor "${actorId}"`);

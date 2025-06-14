@@ -1,19 +1,30 @@
-// src/turns/ports/IActionIndexer.js
 /**
  * @interface IActionIndexer
- * @description Indexes a list of discovered actions for a given actor.
+ * @description Defines the contract for a service that indexes a list of
+ * discovered actions for a given actor's turn.
  * @function index
- * @param {DiscoveredActionInfo[]} actions - List of discovered actions.
+ * @param {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} actions - List of discovered actions.
  * @param {string} actorId - The ID of the actor.
- * @returns {ActionComposite[]} Ordered list of action composites.
+ * @returns {import('../dtos/actionComposite.js').ActionComposite[]} Ordered list of action composites.
  */
 export class IActionIndexer {
   /**
+   * Signals the beginning of an actor's turn, allowing the indexer to clear
+   * any prior-turn state for that actor.
+   * This method is optional; calling code should use optional chaining: `indexer.beginTurn?.(actorId)`.
+   * @param {string} actorId The ID of the actor whose turn is beginning.
+   * @returns {void}
+   */
+  beginTurn(actorId) {
+    // Interface method, not meant for direct execution.
+  }
+
+  /**
    * Indexes a list of discovered actions for the actor.
    *
-   * @param {DiscoveredActionInfo[]} actions
+   * @param {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} actions
    * @param {string} actorId
-   * @returns {ActionComposite[]}
+   * @returns {import('../dtos/actionComposite.js').ActionComposite[]}
    */
   index(actions, actorId) {
     throw new Error('Interface method');
