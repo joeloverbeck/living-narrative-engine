@@ -13,6 +13,7 @@ import resolvePath from '../../utils/resolvePath.js';
 import { cloneDeep } from 'lodash';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import storeResult from '../../utils/contextVariableUtils.js';
 
 /**
  * @class ModifyArrayFieldHandler
@@ -57,16 +58,6 @@ class ModifyArrayFieldHandler {
     this.#logger = logger;
     this.#dispatcher = safeEventDispatcher;
   }
-
-  /**
-   * Resolves entity_ref -> entityId or null.
-   * (Copied from other handlers as this is the established pattern).
-   *
-   * @private
-   * @param {string|'actor'|'target'|EntityRefObject} ref - The entity reference from parameters.
-   * @param {ExecutionContext} ctx - The execution context.
-   * @returns {string | null} The resolved entity ID or null.
-   */
 
   /**
    * Executes the array modification operation.
@@ -213,11 +204,19 @@ class ModifyArrayFieldHandler {
     }
 
     // 7. Store Result if requested
-    if (result_variable && executionContext?.evaluationContext?.context) {
-      executionContext.evaluationContext.context[result_variable] = result;
-      log.debug(
-        `MODIFY_ARRAY_FIELD: Stored result in context variable '${result_variable}'.`
+    if (result_variable) {
+      const stored = storeResult(
+        result_variable,
+        result,
+        executionContext,
+        this.#dispatcher,
+        log
       );
+      if (stored) {
+        log.debug(
+          `MODIFY_ARRAY_FIELD: Stored result in context variable '${result_variable}'.`
+        );
+      }
     }
   }
 }

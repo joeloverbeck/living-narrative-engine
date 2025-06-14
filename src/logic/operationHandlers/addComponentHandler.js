@@ -13,7 +13,6 @@
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
-import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 /**
  * Parameters accepted by {@link AddComponentHandler#execute}.

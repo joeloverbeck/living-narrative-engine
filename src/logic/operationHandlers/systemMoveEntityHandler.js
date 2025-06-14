@@ -9,6 +9,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../defs.js').EntityRefObject} EntityRefObject */
+
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 class SystemMoveEntityHandler {

@@ -47,6 +47,7 @@ describe('HumanTurnHandler method delegation', () => {
     mockTurnStrategyFactory = {
       createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
     };
+
     mockTurnContextBuilder = {
       build: jest.fn(({ actor }) => ({
         getActor: () => actor,
@@ -55,6 +56,7 @@ describe('HumanTurnHandler method delegation', () => {
         endTurn: jest.fn(),
       })),
     };
+
 
     deps = {
       logger: mockLogger,

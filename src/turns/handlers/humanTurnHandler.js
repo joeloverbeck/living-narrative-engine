@@ -124,7 +124,11 @@ class HumanTurnHandler extends BaseTurnHandler {
    * @param {Entity} actor
    */
   async startTurn(actor) {
+    this._logger.debug(
+      `${this.constructor.name}.startTurn called for actor ${actor?.id}.`
+    );
     super._assertHandlerActive();
+    
     assertValidActor(actor, this._logger, `${this.constructor.name}.startTurn`);
     this._setCurrentActorInternal(actor);
 
