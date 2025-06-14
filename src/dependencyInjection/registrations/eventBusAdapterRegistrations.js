@@ -11,7 +11,7 @@
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
-import { SHUTDOWNABLE } from '../tags.js';
+import { SHUTDOWNABLE as _SHUTDOWNABLE } from '../tags.js';
 
 // --- Adapter Imports ---
 import { EventBusPromptAdapter } from '../../turns/adapters/eventBusPromptAdapter.js';
@@ -62,21 +62,15 @@ export function registerEventBusAdapters(container) {
 
   // --- Register EventBusTurnEndAdapter ---
   registrar.singletonFactory(tokens.ITurnEndPort, (c) => {
-    // --- FIX: Check for registration before resolving optional dependencies. ---
     const safeDispatcher = c.isRegistered(tokens.ISafeEventDispatcher)
-      ? /** @type {ISafeEventDispatcher | null} */ (
+      ? /** @type {ISafeEventDispatcher} */ (
           c.resolve(tokens.ISafeEventDispatcher)
         )
       : null;
-    const validatedDispatcher = c.isRegistered(tokens.IValidatedEventDispatcher)
-      ? /** @type {IValidatedEventDispatcher | null} */ (
-          c.resolve(tokens.IValidatedEventDispatcher)
-        )
-      : null;
 
-    if (!safeDispatcher && !validatedDispatcher) {
+    if (!safeDispatcher) {
       logger.error(
-        `Adapter Registration: Failed to resolve either ${tokens.ISafeEventDispatcher} or ${tokens.IValidatedEventDispatcher} for ${tokens.ITurnEndPort}.`
+        `Adapter Registration: Failed to resolve ${tokens.ISafeEventDispatcher} for ${tokens.ITurnEndPort}.`
       );
       throw new Error(
         `Missing dispatcher dependency for EventBusTurnEndAdapter`
@@ -84,8 +78,7 @@ export function registerEventBusAdapters(container) {
     }
     return new EventBusTurnEndAdapter({
       safeEventDispatcher: safeDispatcher,
-      validatedEventDispatcher: validatedDispatcher,
-      logger: logger,
+      logger,
     });
   });
   logger.debug(

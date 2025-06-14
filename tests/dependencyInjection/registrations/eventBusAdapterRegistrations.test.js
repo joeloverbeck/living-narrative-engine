@@ -19,7 +19,6 @@ import { mock } from 'jest-mock-extended';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { registerEventBusAdapters } from '../../../src/dependencyInjection/registrations/eventBusAdapterRegistrations.js';
-import { SHUTDOWNABLE } from '../../../src/dependencyInjection/tags.js';
 
 // --- Concrete Class Imports for `instanceof` checks ---
 import { EventBusPromptAdapter } from '../../../src/turns/adapters/eventBusPromptAdapter.js';
@@ -28,7 +27,6 @@ import EventBusTurnEndAdapter from '../../../src/turns/adapters/eventBusTurnEndA
 describe('registerEventBusAdapters', () => {
   /** @type {AppContainer} */
   let container;
-  let registerSpy;
 
   // --- Mock External Dependencies ---
   const mockLogger = mock();
@@ -38,8 +36,6 @@ describe('registerEventBusAdapters', () => {
   beforeEach(() => {
     container = new AppContainer();
 
-    // Spy on the container's register method to check options later
-    registerSpy = jest.spyOn(container, 'register');
 
     // Register the logger, which is a common dependency for the registration module itself
     container.register(tokens.ILogger, () => mockLogger);
@@ -135,8 +131,8 @@ describe('registerEventBusAdapters', () => {
       expect(freshContainer.resolve(tokens.IPromptOutputPort)).toBe(instance);
     });
 
-    test('should throw during resolution if both dispatcher dependencies are missing', () => {
-      // Arrange: No dispatchers are registered
+    test('should throw during resolution if dispatcher dependency is missing', () => {
+      // Arrange: No dispatcher is registered
       registerEventBusAdapters(container);
 
       // Act & Assert
@@ -151,35 +147,11 @@ describe('registerEventBusAdapters', () => {
     const successCases = [
       {
         description:
-          'should resolve correctly when both dispatchers are present',
+          'should resolve correctly when ISafeEventDispatcher is present',
         setup: (c) => {
           c.register(
             tokens.ISafeEventDispatcher,
             () => mockSafeEventDispatcher
-          );
-          c.register(
-            tokens.IValidatedEventDispatcher,
-            () => mockValidatedEventDispatcher
-          );
-        },
-      },
-      {
-        description:
-          'should resolve correctly when only ISafeEventDispatcher is present',
-        setup: (c) => {
-          c.register(
-            tokens.ISafeEventDispatcher,
-            () => mockSafeEventDispatcher
-          );
-        },
-      },
-      {
-        description:
-          'should resolve correctly when only IValidatedEventDispatcher is present',
-        setup: (c) => {
-          c.register(
-            tokens.IValidatedEventDispatcher,
-            () => mockValidatedEventDispatcher
           );
         },
       },
