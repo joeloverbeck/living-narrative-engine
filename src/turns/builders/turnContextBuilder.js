@@ -24,26 +24,26 @@ export class TurnContextBuilder {
   /** @type {ITurnContextFactory} */
   #turnContextFactory;
   /** @type {function(Entity, ILogger, string): void} */
-  #assertValidActor;
+  #assertValidEntity;
 
   /**
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {ITurnContextFactory} deps.turnContextFactory
-   * @param {function(Entity, ILogger, string): void} deps.assertValidActor - Injected validation utility.
+   * @param {function(Entity, ILogger, string): void} deps.assertValidEntity - Injected validation utility.
    */
-  constructor({ logger, turnContextFactory, assertValidActor }) {
+  constructor({ logger, turnContextFactory, assertValidEntity }) {
     if (!logger) throw new Error('TurnContextBuilder: logger is required.');
     if (!turnContextFactory)
       throw new Error('TurnContextBuilder: turnContextFactory is required.');
-    if (typeof assertValidActor !== 'function')
+    if (typeof assertValidEntity !== 'function')
       throw new Error(
-        'TurnContextBuilder: assertValidActor function is required.'
+        'TurnContextBuilder: assertValidEntity function is required.'
       );
 
     this.#logger = logger;
     this.#turnContextFactory = turnContextFactory;
-    this.#assertValidActor = assertValidActor;
+    this.#assertValidEntity = assertValidEntity;
   }
 
   /**
@@ -66,7 +66,7 @@ export class TurnContextBuilder {
     awaitFlagProvider,
     setAwaitFlag,
   }) {
-    this.#assertValidActor(actor, this.#logger, this.constructor.name);
+    this.#assertValidEntity(actor, this.#logger, this.constructor.name);
 
     this.#logger.debug(
       `${this.constructor.name}: Building context for actor ${actor.id}.`

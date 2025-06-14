@@ -8,6 +8,7 @@ import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
 
 /**
  * Creates a mock object with specified methods, which are all Jest mock functions.
+ *
  * @param {string[]} methods - An array of method names to mock.
  * @returns {object} An object with mocked methods.
  */
@@ -71,6 +72,7 @@ describe('HumanTurnHandler', () => {
 
   /**
    * Helper to create a HumanTurnHandler instance with all mocks.
+   *
    * @returns {HumanTurnHandler}
    */
   const createInstance = () => {
@@ -121,13 +123,13 @@ describe('HumanTurnHandler', () => {
       const handler = createInstance();
 
       await expect(handler.startTurn(null)).rejects.toThrow(
-        'actor is required and must have a valid id'
+        'entity is required and must have a valid id'
       );
       await expect(handler.startTurn({})).rejects.toThrow(
-        'actor is required and must have a valid id'
+        'entity is required and must have a valid id'
       );
       await expect(handler.startTurn({ id: ' ' })).rejects.toThrow(
-        'actor is required and must have a valid id'
+        'entity is required and must have a valid id'
       );
     });
   });

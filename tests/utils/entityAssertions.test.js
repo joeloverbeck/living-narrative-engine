@@ -1,8 +1,8 @@
 import { describe, test, expect, jest } from '@jest/globals';
-import { assertValidActor } from '../../src/utils/actorValidation.js';
+import { assertValidEntity } from '../../src/utils/entityAssertions.js';
 import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
-describe('assertValidActor', () => {
+describe('assertValidEntity', () => {
   test('dispatches error and throws when actor invalid', () => {
     const dispatcher = { dispatch: jest.fn() };
     const logger = {
@@ -13,8 +13,8 @@ describe('assertValidActor', () => {
     };
     const badActor = { id: '' };
     expect(() =>
-      assertValidActor(badActor, logger, 'TestCtx', dispatcher)
-    ).toThrow('TestCtx: actor is required and must have a valid id.');
+      assertValidEntity(badActor, logger, 'TestCtx', dispatcher)
+    ).toThrow('TestCtx: entity is required and must have a valid id.');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       DISPLAY_ERROR_ID,
       expect.objectContaining({
@@ -31,7 +31,7 @@ describe('assertValidActor', () => {
       info: jest.fn(),
       debug: jest.fn(),
     };
-    expect(() => assertValidActor(null, logger, 'Ctx')).toThrow();
+    expect(() => assertValidEntity(null, logger, 'Ctx')).toThrow();
     expect(logger.warn).toHaveBeenCalled();
   });
 
@@ -45,7 +45,7 @@ describe('assertValidActor', () => {
     };
     const actor = { id: 'a1' };
     expect(() =>
-      assertValidActor(actor, logger, 'Ctx', dispatcher)
+      assertValidEntity(actor, logger, 'Ctx', dispatcher)
     ).not.toThrow();
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(logger.warn).not.toHaveBeenCalled();

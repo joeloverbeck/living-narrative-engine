@@ -84,7 +84,7 @@ describe('HumanTurnHandler.startTurn validation', () => {
   it('throws when actor is null or lacks a valid id', async () => {
     const handler = new HumanTurnHandler(deps);
     const errorMsg =
-      'HumanTurnHandler.startTurn: actor is required and must have a valid id.';
+      'HumanTurnHandler.startTurn: entity is required and must have a valid id.';
     await expect(handler.startTurn(null)).rejects.toThrow(errorMsg);
     await expect(handler.startTurn({})).rejects.toThrow(errorMsg);
     await expect(handler.startTurn({ id: ' ' })).rejects.toThrow(errorMsg);

@@ -7,7 +7,7 @@
  * remove, and presence-check operations. Provides static ID validation
  * and allows subclasses to customise how invalid IDs are handled.
  */
-import { isNonEmptyString } from './textUtils.js';
+import { isNonBlankString } from './textUtils.js';
 
 class MapManager {
   /**
@@ -33,7 +33,7 @@ class MapManager {
    * @returns {boolean}
    */
   static isValidId(id) {
-    return isNonEmptyString(id);
+    return isNonBlankString(id);
   }
 
   /**

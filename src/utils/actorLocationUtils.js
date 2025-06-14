@@ -7,7 +7,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
-import { isNonEmptyString } from './textUtils.js';
+import { isNonBlankString } from './textUtils.js';
 import { getComponentFromManager } from './componentAccessUtils.js';
 
 /**
@@ -27,7 +27,7 @@ export function getActorLocation(entityId, entityManager) {
     POSITION_COMPONENT_ID,
     entityManager
   );
-  if (pos && isNonEmptyString(pos.locationId)) {
+  if (pos && isNonBlankString(pos.locationId)) {
     const locationEntity =
       typeof entityManager?.getEntityInstance === 'function'
         ? entityManager.getEntityInstance(pos.locationId)
