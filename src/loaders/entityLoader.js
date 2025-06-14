@@ -7,6 +7,7 @@
 
 // --- Base Class Import ---
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { extractBaseId } from '../utils/idUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -197,19 +198,13 @@ class EntityLoader extends BaseManifestItemLoader {
       );
     }
     const trimmedId = idFromFile.trim();
-    let baseEntityId = '';
-    const colonIndex = trimmedId.indexOf(':');
-
-    if (
-      colonIndex !== -1 &&
-      colonIndex > 0 &&
-      colonIndex < trimmedId.length - 1
-    ) {
-      baseEntityId = trimmedId.substring(colonIndex + 1);
+    const extracted = extractBaseId(trimmedId);
+    let baseEntityId;
+    if (extracted) {
+      baseEntityId = extracted;
     } else {
-      baseEntityId = trimmedId; // Includes no-colon case and potentially invalid formats
-      if (colonIndex !== -1) {
-        // Warn only if format is weird (colon at start/end)
+      baseEntityId = trimmedId;
+      if (trimmedId.includes(':')) {
         this._logger.warn(
           `EntityLoader [${modId}]: ID '${trimmedId}' in ${filename} has an unusual format. Using full ID as base ID.`
         );
@@ -246,21 +241,13 @@ class EntityLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `EntityLoader [${modId}]: Delegating storage for original type '${typeName}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entities' category.`
     );
-    let didOverride = false; // <<< Initialize override flag
-    try {
-      // IMPORTANT: The category is hardcoded to 'entities' as per requirements.
-      // Capture the boolean return value from the helper
-      didOverride = this._storeItemInRegistry(
-        'entities',
-        modId,
-        baseEntityId,
-        data,
-        filename
-      ); // <<< CAPTURE result
-    } catch (storageError) {
-      // Error logging happens in helper, re-throw
-      throw storageError;
-    }
+    const didOverride = this._storeItemInRegistry(
+      'entities',
+      modId,
+      baseEntityId,
+      data,
+      filename
+    );
 
     // Construct the final fully qualified ID that was used as the registry key.
     const finalRegistryKey = `${modId}:${baseEntityId}`;
