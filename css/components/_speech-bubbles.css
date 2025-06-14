@@ -231,6 +231,8 @@
 .meta-btn:hover,
 .meta-btn:focus-visible {
     transform: scale(1.15);
+    background-color: transparent; /* ADDED: Prevents boxy background on hover */
+    box-shadow: none; /* ADDED: Prevents shadow on hover */
 }
 
 .meta-tooltip {
@@ -238,8 +240,8 @@
     bottom: 120%;
     right: 0;
     /* MODIFIED: Adjust width to be more rectangular and accommodate long text */
-    max-width: 450px; /* Increased from 260px */
-    min-width: 180px; /* Added to prevent it being too narrow */
+    max-width: 550px; /* Increased from 260px */
+    min-width: 500px; /* Added to prevent it being too narrow */
     background: #fff;
     color: #333;
     font-size: 0.875rem;
