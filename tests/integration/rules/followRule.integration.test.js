@@ -113,6 +113,7 @@ describe('core_handle_follow rule integration', () => {
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
         entityManager,
         logger,
+        safeEventDispatcher: safeDispatcher,
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,
