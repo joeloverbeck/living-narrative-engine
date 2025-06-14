@@ -9,7 +9,11 @@
 /** @typedef {import('../actions/actionTypes.js').ActionAttemptPseudoEvent} ActionAttemptPseudoEvent */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
-import { createComponentAccessor } from './contextAssembler.js';
+import {
+  buildActorContext,
+  buildDirectionContext,
+  buildEntityTargetContext,
+} from '../actions/validation/contextBuilders.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 
 /**
@@ -67,13 +71,9 @@ export function createActionValidationContext(
   /*──────────────────────
    * 2. Actor accessor
    *──────────────────────*/
-  let actorAccessor;
+  let actorContext;
   try {
-    actorAccessor = createComponentAccessor(
-      actorEntity.id,
-      entityManager,
-      logger
-    );
+    actorContext = buildActorContext(actorEntity.id, entityManager, logger);
   } catch (err) {
     error(
       `Error creating component accessor for actor ID [${actorEntity.id}]`,
@@ -95,7 +95,7 @@ export function createActionValidationContext(
 
   /** @type {JsonLogicEvaluationContext} */
   const ctx = {
-    actor: { id: actorEntity.id, components: actorAccessor },
+    actor: actorContext,
     target: null, // Will be populated below if applicable
     // +++ TICKET 6: Assign the pseudo-event to the context +++
     event: actionAttemptEvent,
@@ -125,13 +125,11 @@ export function createActionValidationContext(
 
     if (targetEntity) {
       try {
-        const targetAccessor = createComponentAccessor(
+        ctx.target = buildEntityTargetContext(
           targetEntity.id,
           entityManager,
           logger
         );
-        // Assign to the main context's target property
-        ctx.target = { id: targetEntity.id, components: targetAccessor };
       } catch (err) {
         error(
           `Error creating component accessor for target ID [${targetId}]`,
@@ -147,12 +145,12 @@ export function createActionValidationContext(
       );
     }
   } else if (targetContext.type === 'direction') {
-    // Represent direction target if needed by JsonLogic rules
-    ctx.target = {
-      id: null,
-      direction: targetContext.direction,
-      components: null,
-    };
+    ctx.target = buildDirectionContext(
+      actorEntity.id,
+      targetContext.direction,
+      entityManager,
+      logger
+    );
     debug(
       `Target is a direction: '${targetContext.direction}'. ctx.target set accordingly.`
     );

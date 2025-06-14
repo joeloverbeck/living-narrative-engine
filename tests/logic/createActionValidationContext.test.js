@@ -325,9 +325,12 @@ describe('Unit Test: createActionValidationContext', () => {
       expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
       // Updated expectation based on revised logic
       expect(context.target).toEqual({
+        type: 'direction',
         id: null,
-        direction: direction,
+        direction,
         components: null,
+        blocker: undefined,
+        exitDetails: null,
       });
       expect(createComponentAccessor).toHaveBeenCalledTimes(1); // Only actor
       expect(createComponentAccessor).toHaveBeenCalledWith(
