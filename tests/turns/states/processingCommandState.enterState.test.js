@@ -227,6 +227,7 @@ describe('ProcessingCommandState', () => {
         }
       }),
       _resetTurnStateAndResources: jest.fn(),
+      requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
       getLogger: jest.fn().mockReturnValue(mockLogger),
       _currentState: null,
     };
@@ -327,9 +328,7 @@ describe('ProcessingCommandState', () => {
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
         `critical-no-context-${processingState.getStateName()}`
       );
-      expect(mockHandler._transitionToState).toHaveBeenCalledWith(
-        expect.any(TurnIdleState)
-      );
+      expect(mockHandler.requestIdleStateTransition).toHaveBeenCalled();
       expect(processCommandInternalSpy).not.toHaveBeenCalled();
       expect(processingState['_isProcessing']).toBe(false);
     });

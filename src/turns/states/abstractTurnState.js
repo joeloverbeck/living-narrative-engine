@@ -82,6 +82,23 @@ export class AbstractTurnState extends ITurnState {
     return turnCtx;
   }
 
+  /**
+   * Resets turn-specific resources and requests a transition to the idle state.
+   *
+   * @protected
+   * @async
+   * @param {string} reason - Contextual reason for the reset.
+   * @returns {Promise<void>}
+   */
+  async _resetToIdle(reason) {
+    if (typeof this._handler?._resetTurnStateAndResources === 'function') {
+      this._handler._resetTurnStateAndResources(reason);
+    }
+    if (typeof this._handler?.requestIdleStateTransition === 'function') {
+      await this._handler.requestIdleStateTransition();
+    }
+  }
+
   // --- Interface Methods with Default Implementations ---
 
   /** @override */

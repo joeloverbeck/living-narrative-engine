@@ -47,6 +47,7 @@ beforeEach(() => {
     getTurnContext: jest.fn(),
     _resetTurnStateAndResources: jest.fn(),
     _transitionToState: jest.fn().mockResolvedValue(undefined),
+    requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
     getLogger: jest.fn().mockReturnValue(mockLogger),
     _currentState: null,
     // Provide a fallback safeEventDispatcher on handler
@@ -104,10 +105,8 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
       expect.stringMatching(/^critical-no-context-ProcessingCommandState$/)
     );
-    // Handler._transitionToState called with an instance of TurnIdleState
-    expect(mockHandler._transitionToState).toHaveBeenCalledWith(
-      expect.any(TurnIdleState)
-    );
+    // Handler.requestIdleStateTransition should be invoked
+    expect(mockHandler.requestIdleStateTransition).toHaveBeenCalled();
   });
 
   test('should handle missing actor via handleProcessingException and dispatch SYSTEM_ERROR_OCCURRED_ID then endTurn', async () => {

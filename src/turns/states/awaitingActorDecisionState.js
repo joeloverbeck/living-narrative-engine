@@ -41,12 +41,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       logger.error(
         `${this.name}: Critical error - TurnContext is not available. Attempting to reset and idle.`
       );
-      if (this._handler?.requestIdleStateTransition) {
-        this._handler._resetTurnStateAndResources(
-          `critical-no-context-${this.name}`
-        );
-        await this._handler.requestIdleStateTransition();
-      }
+      await this._resetToIdle(`critical-no-context-${this.name}`);
       return;
     }
 
@@ -190,16 +185,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       logger.error(
         `${this.name}: handleSubmittedCommand (for actor ${actorIdForLog}, cmd: "${commandString}") called, but no ITurnContext. Forcing handler reset.`
       );
-      if (this._handler?.requestIdleStateTransition) {
-        this._handler._resetTurnStateAndResources(
-          `no-context-submission-${this.name}`
-        );
-        await this._handler.requestIdleStateTransition();
-      } else {
-        logger.error(
-          `${this.name}: CRITICAL - No ITurnContext or handler methods to process unexpected command submission or to reset.`
-        );
-      }
+      await this._resetToIdle(`no-context-submission-${this.name}`);
       return;
     }
 
