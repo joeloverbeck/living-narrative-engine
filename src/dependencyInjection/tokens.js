@@ -269,9 +269,9 @@ export const tokens = freeze({
 
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',
-  IAIPlayerStrategyFactory: 'IAIPlayerStrategyFactory',
+  AIStrategyFactory: 'AIStrategyFactory',
   ITurnContextFactory: 'ITurnContextFactory',
-  ITurnStrategyFactory: 'ITurnStrategyFactory',
+  HumanStrategyFactory: 'HumanStrategyFactory',
 
   // --- Service Interfaces for AITurnHandler dependencies (if not already defined) ---
   IPromptBuilder: 'IPromptBuilder',

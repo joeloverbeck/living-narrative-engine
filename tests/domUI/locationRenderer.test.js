@@ -898,12 +898,10 @@ describe('LocationRenderer', () => {
           );
         }
       }
-      expect(specificMockVed.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
-        {
-          message: "[LocationRenderer] Cannot render, required DOM element 'charactersDisplay' is missing.",
-        }
-      );
+      expect(specificMockVed.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
+        message:
+          "[LocationRenderer] Cannot render, required DOM element 'charactersDisplay' is missing.",
+      });
       mockDocumentContext.query = originalQuery; // Restore original mock
     });
   });

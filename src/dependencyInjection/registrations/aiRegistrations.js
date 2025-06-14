@@ -391,7 +391,7 @@ export function registerAI(container) {
 
   // 5) AI-player‐strategy factory
   r.singletonFactory(
-    tokens.IAIPlayerStrategyFactory,
+    tokens.AIStrategyFactory,
     (c) =>
       new GenericStrategyFactory({
         choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
@@ -402,7 +402,7 @@ export function registerAI(container) {
   );
 
   logger.debug(
-    `AI Systems Registration: Registered ${tokens.IAIPlayerStrategyFactory} factory.`
+    `AI Systems Registration: Registered ${tokens.AIStrategyFactory} factory.`
   );
 
   // --- AI TURN HANDLER (MODIFIED) ---
@@ -414,7 +414,7 @@ export function registerAI(container) {
         logger: c.resolve(tokens.ILogger),
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
-        strategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory), // <-- Updated
+        strategyFactory: c.resolve(tokens.AIStrategyFactory), // <-- Updated
         turnContextBuilder: c.resolve(tokens.TurnContextBuilder), // <-- Added
       })
   );

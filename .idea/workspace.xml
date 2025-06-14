@@ -8,8 +8,9 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/factories/genericTurnStrategyFactory.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/factories/genericTurnStrategyFactory.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -178,15 +179,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="9311000" />
-    </task>
-    <task id="LOCAL-00021" summary="Ensuring the app works.">
-      <option name="closed" value="true" />
-      <created>1749856709022</created>
-      <option name="number" value="00021" />
-      <option name="presentableId" value="LOCAL-00021" />
-      <option name="project" value="LOCAL" />
-      <updated>1749856709022</updated>
+      <workItem from="1749913762946" duration="9914000" />
     </task>
     <task id="LOCAL-00022" summary="Ensuring the app works.">
       <option name="closed" value="true" />
@@ -572,7 +565,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749923376977</updated>
     </task>
-    <option name="localTasksCounter" value="70" />
+    <task id="LOCAL-00070" summary="Unifying paths.">
+      <option name="closed" value="true" />
+      <created>1749923884930</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1749923884930</updated>
+    </task>
+    <option name="localTasksCounter" value="71" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

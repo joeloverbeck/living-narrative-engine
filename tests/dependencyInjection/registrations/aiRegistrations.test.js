@@ -104,7 +104,7 @@ describe('registerAI', () => {
     container.register(tokens.ITurnEndPort, {});
     container.register(tokens.ICommandProcessor, {});
     container.register(tokens.ICommandOutcomeInterpreter, {});
-    container.register(tokens.IAIPlayerStrategyFactory, {});
+    container.register(tokens.AIStrategyFactory, {});
     container.register(tokens.ITurnContextFactory, {});
   });
 

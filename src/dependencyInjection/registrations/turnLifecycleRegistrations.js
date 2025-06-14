@@ -120,7 +120,7 @@ export function registerTurnLifecycle(container) {
 
   // ────────────────── Turn Strategy Factory ──────────────────
   r.singletonFactory(
-    tokens.ITurnStrategyFactory,
+    tokens.HumanStrategyFactory,
     (c) =>
       new GenericStrategyFactory({
         logger: c.resolve(tokens.ILogger),
@@ -130,7 +130,7 @@ export function registerTurnLifecycle(container) {
       })
   );
   logger.debug(
-    `Turn Lifecycle Registration: Registered ${tokens.ITurnStrategyFactory} with singleton resolution.`
+    `Turn Lifecycle Registration: Registered ${tokens.HumanStrategyFactory} with singleton resolution.`
   );
 
   // ──────────────────── Validation Utils ─────────────────────
@@ -159,7 +159,7 @@ export function registerTurnLifecycle(container) {
         promptCoordinator: c.resolve(tokens.IPromptCoordinator),
         commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        turnStrategyFactory: c.resolve(tokens.ITurnStrategyFactory), // <-- Injected factory
+        turnStrategyFactory: c.resolve(tokens.HumanStrategyFactory), // <-- Injected factory
         entityManager: c.resolve(tokens.IEntityManager),
         turnContextBuilder: c.resolve(tokens.TurnContextBuilder), // <-- Injected builder
       })
