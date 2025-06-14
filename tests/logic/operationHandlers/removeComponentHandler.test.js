@@ -5,6 +5,7 @@
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js'; // Adjust path if needed
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // --- Type-hints (for editors only) ------------------------------------------
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -24,6 +25,8 @@ const mockLogger = {
   error: jest.fn(),
   debug: jest.fn(),
 };
+
+const mockDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
 // --- Helper – ExecutionContext factory -------------------------------------
 const actorId = 'actor-id-123';
@@ -70,22 +73,42 @@ describe('RemoveComponentHandler', () => {
     handler = new RemoveComponentHandler({
       entityManager: mockEntityManager,
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
   });
 
   // --- Constructor validation ----------------------------------------------
   test('constructor throws without valid dependencies', () => {
-    expect(() => new RemoveComponentHandler({ logger: mockLogger })).toThrow(
-      /EntityManager/
-    );
+    expect(
+      () =>
+        new RemoveComponentHandler({
+          logger: mockLogger,
+          safeEventDispatcher: mockDispatcher,
+        })
+    ).toThrow(/EntityManager/);
     // Check for specific method required by this handler
     expect(
       () =>
-        new RemoveComponentHandler({ entityManager: {}, logger: mockLogger })
+        new RemoveComponentHandler({
+          entityManager: {},
+          logger: mockLogger,
+          safeEventDispatcher: mockDispatcher,
+        })
     ).toThrow(/removeComponent method/);
     expect(
-      () => new RemoveComponentHandler({ entityManager: mockEntityManager })
+      () =>
+        new RemoveComponentHandler({
+          entityManager: mockEntityManager,
+          safeEventDispatcher: mockDispatcher,
+        })
     ).toThrow(/ILogger/);
+    expect(
+      () =>
+        new RemoveComponentHandler({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+        })
+    ).toThrow(/ISafeEventDispatcher/);
   });
 
   test('constructor initializes successfully with valid dependencies', () => {
@@ -94,6 +117,7 @@ describe('RemoveComponentHandler', () => {
         new RemoveComponentHandler({
           entityManager: mockEntityManager,
           logger: mockLogger,
+          safeEventDispatcher: mockDispatcher,
         })
     ).not.toThrow();
   });
@@ -319,7 +343,7 @@ describe('RemoveComponentHandler', () => {
   });
 
   // --- Error Handling during removeComponent Call ------------------------
-  test('logs error if EntityManager.removeComponent throws', () => {
+  test('dispatches error event if EntityManager.removeComponent throws', () => {
     const error = new Error('EntityManager failed during removal!');
     mockEntityManager.removeComponent.mockImplementation(() => {
       throw error;
@@ -331,13 +355,13 @@ describe('RemoveComponentHandler', () => {
       actorId,
       'problem:comp'
     );
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Failed to remove component "problem:comp" from entity "${actorId}". Error: EntityManager failed during removal!`
-      ),
-      { error: error }
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Failed to remove component'),
+      })
     );
+    expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.debug).not.toHaveBeenCalled(); // Should not log success debug if error occurred
   });

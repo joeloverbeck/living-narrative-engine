@@ -11,8 +11,10 @@
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.
@@ -28,6 +30,7 @@ import { resolveEntityId } from '../../utils/entityRefUtils.js';
 class RemoveComponentHandler {
   /** @type {ILogger}        */ #logger;
   /** @type {EntityManager} */ #entityManager;
+  /** @type {ISafeEventDispatcher} */ #dispatcher;
 
   /**
    * Creates an instance of RemoveComponentHandler.
@@ -35,9 +38,10 @@ class RemoveComponentHandler {
    * @param {object} dependencies - Dependencies object.
    * @param {EntityManager} dependencies.entityManager - The entity management service.
    * @param {ILogger} dependencies.logger - The logging service instance.
+   * @param dependencies.safeEventDispatcher
    * @throws {Error} If entityManager or logger are missing or invalid.
    */
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     // Validate logger FIRST
     if (
       !logger ||
@@ -55,6 +59,12 @@ class RemoveComponentHandler {
         'RemoveComponentHandler requires a valid EntityManager instance with a removeComponent method.'
       );
     }
+    if (!safeEventDispatcher?.dispatch) {
+      throw new Error(
+        'RemoveComponentHandler requires a valid ISafeEventDispatcher instance.'
+      );
+    }
+    this.#dispatcher = safeEventDispatcher;
     this.#logger = logger;
     this.#entityManager = entityManager;
   }
@@ -139,11 +149,15 @@ class RemoveComponentHandler {
       }
     } catch (e) {
       // Catch potential errors from removeComponent (e.g., entity not found by EntityManager)
-      log.error(
-        `REMOVE_COMPONENT: Failed to remove component "${trimmedComponentType}" from entity "${entityId}". Error: ${e.message}`,
-        { error: e }
-      );
-      // Optionally include stack trace in debug/verbose mode: e.stack
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `REMOVE_COMPONENT: Failed to remove component "${trimmedComponentType}" from entity "${entityId}". Error: ${e.message}`,
+        details: {
+          error: e.message,
+          stack: e.stack,
+          entityId,
+          componentType: trimmedComponentType,
+        },
+      });
     }
   }
 }

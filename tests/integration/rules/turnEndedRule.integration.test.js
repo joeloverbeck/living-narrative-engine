@@ -98,6 +98,7 @@ function init(entities) {
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,
       logger,
+      safeEventDispatcher: safeDispatcher,
     }),
   };
 
@@ -135,6 +136,7 @@ let jsonLogic;
 let interpreter;
 let events;
 let listener;
+let safeDispatcher;
 
 describe('turn_ended rule integration', () => {
   beforeEach(() => {
@@ -146,6 +148,7 @@ describe('turn_ended rule integration', () => {
     };
 
     events = [];
+    safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     eventBus = {
       subscribe: jest.fn((ev, l) => {
         if (ev === '*') listener = l;

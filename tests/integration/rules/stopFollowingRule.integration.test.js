@@ -125,6 +125,7 @@ function init(entities) {
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,
       logger,
+      safeEventDispatcher: safeDispatcher,
     }),
     MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
       entityManager,
