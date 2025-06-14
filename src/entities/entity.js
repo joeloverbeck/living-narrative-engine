@@ -1,5 +1,7 @@
 // src/entities/entity.js
 
+import MapManager from '../utils/mapManager.js';
+
 /**
  * Represents a game entity (player, NPC, item, etc.).
  * An entity is primarily an identifier associated with a collection of
@@ -8,7 +10,7 @@
  *
  * @module core/entities/entity
  */
-class Entity {
+class Entity extends MapManager {
   /**
    * The unique runtime identifier (typically a UUID) for this entity instance.
    *
@@ -27,16 +29,6 @@ class Entity {
   definitionId;
 
   /**
-   * Stores the raw data for each component associated with this entity.
-   * The key is the component's unique type ID string (e.g., "core:health"),
-   * and the value is the plain JavaScript object holding the component's data.
-   *
-   * @private
-   * @type {Map<string, object>}
-   */
-  #components;
-
-  /**
    * Creates a new Entity instance.
    *
    * @param {string} instanceId - The unique runtime identifier (UUID) for this entity instance.
@@ -45,18 +37,27 @@ class Entity {
    * @throws {Error} If no definitionId is provided or is not a string.
    */
   constructor(instanceId, definitionId) {
-    if (!instanceId || typeof instanceId !== 'string') {
+    if (!MapManager.isValidId(instanceId)) {
       throw new Error('Entity must have a valid string instanceId.');
     }
-    if (!definitionId || typeof definitionId !== 'string') {
+    if (!MapManager.isValidId(definitionId)) {
       // Depending on design, definitionId could be optional if entities can be created purely procedurally.
       // For now, making it mandatory for clarity based on current usage.
       throw new Error('Entity must have a valid string definitionId.');
     }
+    super();
     this.id = instanceId;
     this.definitionId = definitionId;
-    this.#components = new Map();
     // console.log(`Entity created: ${this.id} (from definition: ${this.definitionId})`);
+  }
+
+  /**
+   * @override
+   * Silently ignore invalid IDs so methods return undefined/false
+   * rather than throwing.
+   */
+  onInvalidId() {
+    // no-op
   }
 
   /**
@@ -69,7 +70,7 @@ class Entity {
    * @throws {Error} If componentData is not an object.
    */
   addComponent(componentTypeId, componentData) {
-    if (!componentTypeId || typeof componentTypeId !== 'string') {
+    if (!MapManager.isValidId(componentTypeId)) {
       throw new Error(
         `Invalid componentTypeId provided to addComponent for entity ${this.id}. Expected non-empty string.`
       );
@@ -80,11 +81,11 @@ class Entity {
       );
     }
 
-    if (this.#components.has(componentTypeId)) {
+    if (this.has(componentTypeId)) {
       // Optional: Log overwrite, can be commented out for performance
       // console.warn(`Entity ${this.id}: Overwriting component data for type ID "${componentTypeId}".`);
     }
-    this.#components.set(componentTypeId, componentData);
+    this.add(componentTypeId, componentData);
     // console.log(`Entity ${this.id}: Added/Updated component "${componentTypeId}"`); // Keep or remove logging
   }
 
@@ -95,7 +96,7 @@ class Entity {
    * @returns {object | undefined} The component data object if found, otherwise undefined.
    */
   getComponentData(componentTypeId) {
-    return this.#components.get(componentTypeId);
+    return this.get(componentTypeId);
   }
 
   /**
@@ -105,7 +106,7 @@ class Entity {
    * @returns {boolean} True if the entity has data for this component type, false otherwise.
    */
   hasComponent(componentTypeId) {
-    return this.#components.has(componentTypeId);
+    return this.has(componentTypeId);
   }
 
   /**
@@ -115,7 +116,7 @@ class Entity {
    * @returns {boolean} True if component data was found and removed, false otherwise.
    */
   removeComponent(componentTypeId) {
-    const deleted = this.#components.delete(componentTypeId);
+    const deleted = this.remove(componentTypeId);
     // if (deleted) {
     //     console.log(`Entity ${this.id}: Removed component "${componentTypeId}"`); // Keep or remove logging
     // }
@@ -128,7 +129,7 @@ class Entity {
    * @returns {string}
    */
   toString() {
-    const componentTypeIds = Array.from(this.#components.keys()).join(', ');
+    const componentTypeIds = Array.from(this.keys()).join(', ');
     return `Entity[${this.id} (Def: ${this.definitionId})] Components: ${componentTypeIds || 'None'}`;
   }
 
@@ -138,7 +139,7 @@ class Entity {
    * @returns {IterableIterator<string>} An iterator over the component type IDs.
    */
   get componentTypeIds() {
-    return this.#components.keys();
+    return this.keys();
   }
 
   /**
@@ -147,7 +148,7 @@ class Entity {
    * @returns {IterableIterator<object>} An iterator over the component data objects.
    */
   get allComponentData() {
-    return this.#components.values();
+    return this.values();
   }
 
   /**
@@ -156,7 +157,7 @@ class Entity {
    * @returns {IterableIterator<[string, object]>} An iterator over the [ID, data] pairs.
    */
   get componentEntries() {
-    return this.#components.entries();
+    return this.entries();
   }
 }
 

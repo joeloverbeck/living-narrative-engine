@@ -14,6 +14,8 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import Entity from './entity.js';
+import MapManager from '../utils/mapManager.js';
+import SilentMapManager from '../utils/silentMapManager.js';
 import {
   ACTOR_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -117,8 +119,10 @@ class EntityManager extends IEntityManager {
   /** @type {ILogger} @private */ #logger;
   /** @type {ISpatialIndexManager} @private */ #spatialIndexManager;
 
+  /** @type {MapManager} @private */ #mapManager;
+
   /** @type {Map<string, Entity>} */
-  activeEntities = new Map();
+  activeEntities;
 
   /** @type {Map<string, string>}  @private */
   #definitionToPrimaryInstanceMap;
@@ -150,6 +154,8 @@ class EntityManager extends IEntityManager {
     this.#logger = logger;
     this.#spatialIndexManager = spatialIndexManager;
     this.#definitionToPrimaryInstanceMap = new Map();
+    this.#mapManager = new SilentMapManager();
+    this.activeEntities = this.#mapManager.items;
 
     this.#logger.debug('EntityManager initialised.');
   }
@@ -162,7 +168,7 @@ class EntityManager extends IEntityManager {
    * @returns {Entity}
    */
   #getEntityOrThrow(instanceId) {
-    const entity = this.activeEntities.get(instanceId);
+    const entity = this.#mapManager.get(instanceId);
     if (!entity) {
       const msg = `EntityManager.addComponent: Entity not found with ID: ${instanceId}`;
       this.#logger.error(msg);
@@ -262,7 +268,7 @@ class EntityManager extends IEntityManager {
    * @param {string} instanceId
    */
   #commitEntity(entity, definitionId, instanceId) {
-    this.activeEntities.set(instanceId, entity);
+    this.#mapManager.add(instanceId, entity);
     if (!this.#definitionToPrimaryInstanceMap.has(definitionId)) {
       this.#definitionToPrimaryInstanceMap.set(definitionId, instanceId);
     }
@@ -295,11 +301,11 @@ class EntityManager extends IEntityManager {
       return null;
     }
 
-    if (!forceNew && this.activeEntities.has(actualInstanceId)) {
+    if (!forceNew && this.#mapManager.has(actualInstanceId)) {
       this.#logger.debug(
         `EntityManager.createEntityInstance: Returning existing instance for ID: ${actualInstanceId}`
       );
-      return this.activeEntities.get(actualInstanceId);
+      return this.#mapManager.get(actualInstanceId);
     }
 
     const entityDefinition = this.#registry.getEntityDefinition(definitionId);
@@ -347,8 +353,8 @@ class EntityManager extends IEntityManager {
       return entity;
     } catch (err) {
       this.#logger.error('createEntityInstance: aborting due to error.', err);
-      if (entity && this.activeEntities.get(actualInstanceId) === entity) {
-        this.activeEntities.delete(actualInstanceId);
+      if (entity && this.#mapManager.get(actualInstanceId) === entity) {
+        this.#mapManager.remove(actualInstanceId);
       }
       return null;
     }
@@ -418,7 +424,7 @@ class EntityManager extends IEntityManager {
 
       if (
         newLocationId &&
-        !this.activeEntities.has(newLocationId) &&
+        !this.#mapManager.has(newLocationId) &&
         newLocationId.includes(':')
       ) {
         this.#logger.warn(
@@ -443,7 +449,7 @@ class EntityManager extends IEntityManager {
 
   getPrimaryInstanceByDefinitionId(definitionId) {
     const instanceId = this.#definitionToPrimaryInstanceMap.get(definitionId);
-    if (instanceId) return this.activeEntities.get(instanceId);
+    if (instanceId) return this.#mapManager.get(instanceId);
     this.#logger.debug(
       `getPrimaryInstanceByDefinitionId: no primary for '${definitionId}'.`
     );
@@ -451,7 +457,7 @@ class EntityManager extends IEntityManager {
   }
 
   getEntityInstance(instanceId) {
-    return this.activeEntities.get(instanceId);
+    return this.#mapManager.get(instanceId);
   }
 
   /**
@@ -462,7 +468,7 @@ class EntityManager extends IEntityManager {
    * @returns {boolean}                  – `true` if the component was removed.
    */
   removeComponent(instanceId, componentTypeId) {
-    const entity = this.activeEntities.get(instanceId);
+    const entity = this.#mapManager.get(instanceId);
 
     /* ---------- entity guard ---------- */
     if (!entity) {
@@ -513,13 +519,11 @@ class EntityManager extends IEntityManager {
   }
 
   getComponentData(instanceId, componentTypeId) {
-    return this.activeEntities
-      .get(instanceId)
-      ?.getComponentData(componentTypeId);
+    return this.#mapManager.get(instanceId)?.getComponentData(componentTypeId);
   }
 
   hasComponent(instanceId, componentTypeId) {
-    return !!this.activeEntities.get(instanceId)?.hasComponent(componentTypeId);
+    return !!this.#mapManager.get(instanceId)?.hasComponent(componentTypeId);
   }
 
   /**
@@ -540,7 +544,7 @@ class EntityManager extends IEntityManager {
 
     /* Gather matches ------------------------------------------------------- */
     const matching = [];
-    for (const entity of this.activeEntities.values()) {
+    for (const entity of this.#mapManager.values()) {
       if (entity.hasComponent(componentTypeId)) matching.push(entity);
     }
 
@@ -569,7 +573,7 @@ class EntityManager extends IEntityManager {
    * @returns {boolean}         – `true` if the entity was removed.
    */
   removeEntityInstance(instanceId) {
-    const entity = this.activeEntities.get(instanceId);
+    const entity = this.#mapManager.get(instanceId);
 
     /* ---------- guard: missing entity ---------- */
     if (!entity) {
@@ -591,13 +595,13 @@ class EntityManager extends IEntityManager {
     }
 
     /* ---------- maps & primary-instance bookkeeping ---------- */
-    this.activeEntities.delete(instanceId);
+    this.#mapManager.remove(instanceId);
 
     if (
       this.#definitionToPrimaryInstanceMap.get(entity.definitionId) ===
       instanceId
     ) {
-      const replacement = Array.from(this.activeEntities.values()).find(
+      const replacement = Array.from(this.#mapManager.values()).find(
         (e) => e.definitionId === entity.definitionId
       );
       if (replacement) {
@@ -622,7 +626,7 @@ class EntityManager extends IEntityManager {
    * Clear **all** runtime state — primarily for use in test harnesses.
    */
   clearAll() {
-    this.activeEntities.clear();
+    this.#mapManager.clear();
     this.#definitionToPrimaryInstanceMap.clear();
     this.#spatialIndexManager.clearIndex();
     this.#logger.debug(
