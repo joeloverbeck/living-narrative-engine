@@ -95,33 +95,37 @@ describe('EntityManager', () => {
     delete invalidSpatialMissingMethod.addEntity; // Example of a missing essential method
 
     it.each([
+      ['IDataRegistry', null, /Missing required dependency: IDataRegistry/],
       [
-        'IDataRegistry',
+        'ISchemaValidator',
         null,
-        /IDataRegistry instance with getEntityDefinition/,
+        /Missing required dependency: ISchemaValidator/,
       ],
-      ['ISchemaValidator', null, /ISchemaValidator instance with validate/],
-      ['ILogger', null, /ILogger instance/],
-      ['ISpatialIndexManager', null, /ISpatialIndexManager instance/],
+      ['ILogger', null, /Missing required dependency: ILogger/],
+      [
+        'ISpatialIndexManager',
+        null,
+        /Missing required dependency: ISpatialIndexManager/,
+      ],
       [
         'IDataRegistry (missing method)',
         invalidRegistryMissingMethod,
-        /IDataRegistry instance with getEntityDefinition/,
+        /Invalid or missing method 'getEntityDefinition' on dependency 'IDataRegistry'/,
       ],
       [
         'ISchemaValidator (missing method)',
         invalidValidatorMissingMethod,
-        /ISchemaValidator instance with validate/,
+        /Invalid or missing method 'validate' on dependency 'ISchemaValidator'/,
       ],
       [
         'ILogger (missing method)',
         invalidLoggerMissingMethod,
-        /ILogger instance/,
+        /Invalid or missing method 'error' on dependency 'ILogger'/,
       ],
       [
         'ISpatialIndexManager (missing method)',
         invalidSpatialMissingMethod,
-        /ISpatialIndexManager instance/,
+        /Invalid or missing method 'addEntity' on dependency 'ISpatialIndexManager'/,
       ],
     ])(
       'should throw an Error if %s is missing or invalid (%p)',

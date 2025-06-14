@@ -7,6 +7,8 @@ import {
   POSITION_COMPONENT_ID,
   EXITS_COMPONENT_ID,
 } from '../constants/componentIds.js';
+import { validateDependency } from '../utils/validationUtils.js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
 
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
@@ -61,22 +63,20 @@ export class EntityDisplayDataProvider {
    * @param {ILogger} dependencies.logger - The logger instance.
    */
   constructor({ entityManager, logger }) {
-    if (
-      !entityManager ||
-      typeof entityManager.getEntityInstance !== 'function'
-    ) {
-      const errMsg = `${this._logPrefix} 'entityManager' dependency is missing or invalid.`;
-      (logger || console).error(errMsg);
-      throw new Error(errMsg);
-    }
-    if (!logger || typeof logger.debug !== 'function') {
-      const errMsg = `${this._logPrefix} 'logger' dependency is missing or invalid.`;
-      console.error(errMsg);
-      throw new Error(errMsg);
-    }
+    validateDependency(logger, 'logger', console, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+    const effectiveLogger = ensureValidLogger(
+      logger,
+      'EntityDisplayDataProvider'
+    );
+
+    validateDependency(entityManager, 'entityManager', effectiveLogger, {
+      requiredMethods: ['getEntityInstance'],
+    });
 
     this.#entityManager = entityManager;
-    this.#logger = logger;
+    this.#logger = effectiveLogger;
     this.#logger.debug(`${this._logPrefix} Service instantiated.`);
   }
 
