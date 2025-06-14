@@ -130,7 +130,11 @@ function init(entities) {
   entityManager = new SimpleEntityManager(entities);
 
   const handlers = {
-    REMOVE_COMPONENT: new RemoveComponentHandler({ entityManager, logger }),
+    REMOVE_COMPONENT: new RemoveComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
     MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
       entityManager,
       logger,
