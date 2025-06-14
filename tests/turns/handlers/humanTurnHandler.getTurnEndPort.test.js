@@ -13,6 +13,7 @@ import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js'
 let deps;
 let mockLogger;
 let mockTurnStateFactory;
+let mockTurnStrategyFactory;
 
 beforeEach(() => {
   mockLogger = {
@@ -23,6 +24,9 @@ beforeEach(() => {
   };
   mockTurnStateFactory = {
     createInitialState: jest.fn().mockReturnValue({ stateName: 'init' }),
+  };
+  mockTurnStrategyFactory = {
+    createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
   };
   deps = {
     logger: mockLogger,
@@ -35,6 +39,7 @@ beforeEach(() => {
     choicePipeline: {},
     humanDecisionProvider: {},
     turnActionFactory: {},
+    turnStrategyFactory: mockTurnStrategyFactory,
   };
   jest
     .spyOn(BaseTurnHandler.prototype, '_setInitialState')
