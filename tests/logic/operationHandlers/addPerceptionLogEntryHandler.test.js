@@ -19,6 +19,7 @@ import {
 // ─── Function Under Test ──────────────────────────────────────────────────────
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // ─── JSDoc Types (optional) ───────────────────────────────────────────────────
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger}  ILogger */
@@ -45,6 +46,7 @@ const makeEntry = (id = '1') => ({
 // ─── Test Doubles ─────────────────────────────────────────────────────────────
 /** @type {jest.Mocked<ILogger>}         */ let log;
 /** @type {jest.Mocked<IEntityManager>}  */ let em;
+/** @type {{ dispatch: jest.Mock }}      */ let dispatcher;
 
 beforeEach(() => {
   log = {
@@ -66,6 +68,7 @@ beforeEach(() => {
     getEntitiesWithComponent: jest.fn(),
     removeComponent: jest.fn(),
   };
+  dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 });
 
 afterEach(() => jest.clearAllMocks());
@@ -78,6 +81,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       const h = new AddPerceptionLogEntryHandler({
         logger: log,
         entityManager: em,
+        safeEventDispatcher: dispatcher,
       });
       expect(h).toBeInstanceOf(AddPerceptionLogEntryHandler);
     });
@@ -101,44 +105,74 @@ describe('AddPerceptionLogEntryHandler', () => {
           new AddPerceptionLogEntryHandler({ logger: log, entityManager: {} })
       ).toThrow(/IEntityManager/);
     });
+
+    test('throws if safeEventDispatcher is missing or invalid', () => {
+      expect(
+        () =>
+          new AddPerceptionLogEntryHandler({
+            logger: log,
+            entityManager: em,
+          })
+      ).toThrow(/ISafeEventDispatcher/);
+      expect(
+        () =>
+          new AddPerceptionLogEntryHandler({
+            logger: log,
+            entityManager: em,
+            safeEventDispatcher: {},
+          })
+      ).toThrow(/ISafeEventDispatcher/);
+    });
   });
 
   // ── Parameter-validation ───────────────────────────────────────────────────
   describe('execute – parameter validation', () => {
     /** @type {AddPerceptionLogEntryHandler} */ let h;
     beforeEach(() => {
-      h = new AddPerceptionLogEntryHandler({ logger: log, entityManager: em });
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+      });
     });
 
-    test('logs error & bails when params object is missing/invalid', () => {
+    test('dispatches error and bails when params object is missing/invalid', () => {
       [null, undefined, 42, 'str'].forEach((bad) => {
         h.execute(/** @type {any} */ (bad));
-        expect(log.error).toHaveBeenLastCalledWith(
-          'ADD_PERCEPTION_LOG_ENTRY: params missing/invalid',
-          { params: bad }
+        expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.objectContaining({
+            message: 'ADD_PERCEPTION_LOG_ENTRY: params missing/invalid',
+          })
         );
       });
       expect(em.addComponent).not.toHaveBeenCalled();
     });
 
-    test('logs error when location_id is missing/blank', () => {
+    test('dispatches error when location_id is missing/blank', () => {
       [null, undefined, '', '   ', 123].forEach((loc) => {
         h.execute({
           location_id: /** @type {any} */ (loc),
           entry: makeEntry(),
         });
-        expect(log.error).toHaveBeenLastCalledWith(
-          'ADD_PERCEPTION_LOG_ENTRY: location_id is required'
+        expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.objectContaining({
+            message: 'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
+          })
         );
       });
       expect(em.addComponent).not.toHaveBeenCalled();
     });
 
-    test('logs error when entry is missing/invalid', () => {
+    test('dispatches error when entry is missing/invalid', () => {
       [null, undefined, 999, 'bad'].forEach((ent) => {
         h.execute({ location_id: 'loc:test', entry: /** @type {any} */ (ent) });
-        expect(log.error).toHaveBeenLastCalledWith(
-          'ADD_PERCEPTION_LOG_ENTRY: entry object is required'
+        expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.objectContaining({
+            message: 'ADD_PERCEPTION_LOG_ENTRY: entry object is required',
+          })
         );
       });
       expect(em.addComponent).not.toHaveBeenCalled();
@@ -154,7 +188,11 @@ describe('AddPerceptionLogEntryHandler', () => {
 
     /** @type {AddPerceptionLogEntryHandler} */ let h;
     beforeEach(() => {
-      h = new AddPerceptionLogEntryHandler({ logger: log, entityManager: em });
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+      });
     });
 
     test('does nothing when location has no entities', () => {
@@ -253,7 +291,11 @@ describe('AddPerceptionLogEntryHandler', () => {
     /** @type {AddPerceptionLogEntryHandler} */ let h;
 
     beforeEach(() => {
-      h = new AddPerceptionLogEntryHandler({ logger: log, entityManager: em });
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+      });
       em.getEntitiesInLocation.mockReturnValue(new Set([NPC]));
       em.hasComponent.mockReturnValue(true);
     });
