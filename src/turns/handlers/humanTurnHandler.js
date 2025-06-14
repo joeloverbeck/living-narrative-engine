@@ -271,7 +271,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       const errMsg = `${this.constructor.name}: handleSubmittedCommand called without valid actorEntity.`;
       this._logger.error(errMsg);
       if (currentContext && typeof currentContext.endTurn === 'function') {
-        currentContext.endTurn(
+        await currentContext.endTurn(
           new Error('Actor missing in handleSubmittedCommand')
         );
       } else {
