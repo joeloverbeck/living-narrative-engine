@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { persistNotes } from '../../src/ai/notesPersistenceHook.js';
 import { NOTES_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
   error: jest.fn(),
@@ -14,6 +15,7 @@ const makeLogger = () => ({
 describe('persistNotes', () => {
   let actor;
   let logger;
+  let dispatcher;
 
   beforeEach(() => {
     actor = {
@@ -28,13 +30,14 @@ describe('persistNotes', () => {
       }),
     };
     logger = makeLogger();
+    dispatcher = { dispatch: jest.fn() };
   });
 
   test('should do nothing if action.notes is missing or not an array', () => {
     // Note: The 'null' case is now handled by the updated guard in persistNotes,
     // which logs an error. We'll rely on the 'invalid notes' test for that.
-    persistNotes({ thoughts: '...' }, actor, logger);
-    persistNotes({ notes: [] }, actor, logger);
+    persistNotes({ thoughts: '...' }, actor, logger, dispatcher);
+    persistNotes({ notes: [] }, actor, logger, dispatcher);
 
     expect(actor.addComponent).not.toHaveBeenCalled();
     expect(logger.info).not.toHaveBeenCalled();
@@ -42,7 +45,7 @@ describe('persistNotes', () => {
 
   test('should create a new notes component if one does not exist', () => {
     const action = { notes: ['A new note'] };
-    persistNotes(action, actor, logger);
+    persistNotes(action, actor, logger, dispatcher);
 
     expect(actor.addComponent).toHaveBeenCalledTimes(1);
     expect(actor.addComponent).toHaveBeenCalledWith(
@@ -58,7 +61,7 @@ describe('persistNotes', () => {
   test('should add a note to an existing component', () => {
     actor.components[NOTES_COMPONENT_ID] = { notes: [] };
     const action = { notes: ['Another note'] };
-    persistNotes(action, actor, logger);
+    persistNotes(action, actor, logger, dispatcher);
 
     expect(actor.addComponent).toHaveBeenCalledTimes(1);
     const updatedComp = actor.components[NOTES_COMPONENT_ID];
@@ -68,7 +71,7 @@ describe('persistNotes', () => {
 
   test('should log an info message when notes are successfully added', () => {
     const action = { notes: ['A valid note'] };
-    persistNotes(action, actor, logger);
+    persistNotes(action, actor, logger, dispatcher);
 
     // --- FIX: Updated the assertion to match the new, specific log message ---
     expect(logger.debug).toHaveBeenCalledWith(
@@ -81,7 +84,7 @@ describe('persistNotes', () => {
       notes: [{ text: 'Existing Note', timestamp: 'TS' }],
     };
     const action = { notes: ['Existing Note'] };
-    persistNotes(action, actor, logger);
+    persistNotes(action, actor, logger, dispatcher);
 
     expect(actor.addComponent).not.toHaveBeenCalled();
     expect(logger.info).not.toHaveBeenCalled();
@@ -98,12 +101,30 @@ describe('persistNotes', () => {
       ],
     };
 
-    persistNotes(action, actor, logger);
+    persistNotes(action, actor, logger, dispatcher);
 
-    expect(logger.error).toHaveBeenCalledTimes(3);
-    expect(logger.error).toHaveBeenCalledWith('Invalid note skipped: ""');
-    expect(logger.error).toHaveBeenCalledWith('Invalid note skipped: 123');
-    expect(logger.error).toHaveBeenCalledWith('Invalid note skipped: null');
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(3);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: 'NotesPersistenceHook: Invalid note skipped',
+        details: { note: '' },
+      })
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: 'NotesPersistenceHook: Invalid note skipped',
+        details: { note: 123 },
+      })
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: 'NotesPersistenceHook: Invalid note skipped',
+        details: { note: null },
+      })
+    );
 
     const finalComp = actor.components[NOTES_COMPONENT_ID];
     expect(finalComp.notes).toHaveLength(2);

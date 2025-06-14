@@ -11,6 +11,7 @@ jest.mock('../../src/ai/notesPersistenceHook.js', () => ({
 describe('NotesPersistenceListener', () => {
   let logger;
   let entityManager;
+  let dispatcher;
   let listener;
 
   beforeEach(() => {
@@ -20,8 +21,13 @@ describe('NotesPersistenceListener', () => {
       error: jest.fn(),
       debug: jest.fn(),
     };
+    dispatcher = { dispatch: jest.fn() };
     entityManager = { getEntityInstance: jest.fn() };
-    listener = new NotesPersistenceListener({ logger, entityManager });
+    listener = new NotesPersistenceListener({
+      logger,
+      entityManager,
+      dispatcher,
+    });
     persistNotes.mockClear();
   });
 
@@ -40,7 +46,8 @@ describe('NotesPersistenceListener', () => {
     expect(persistNotes).toHaveBeenCalledWith(
       { notes: ['note'] },
       actorEntity,
-      logger
+      logger,
+      dispatcher
     );
   });
 

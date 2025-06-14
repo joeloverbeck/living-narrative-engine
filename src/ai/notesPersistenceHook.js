@@ -5,6 +5,7 @@
 
 import NotesService from './notesService.js';
 import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 
 /**
  * Persists the "notes" produced during an LLM turn into the actor's
@@ -12,9 +13,10 @@ import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
  *
  * @param {object} action - The structured action returned by the LLM.
  * @param {object} actorEntity - Entity instance (or test double) that generated the action.
- * @param {object} logger - Application-wide logger (expects .info() and .error()).
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Application-wide logger.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher - Safe dispatcher for error events.
  */
-export function persistNotes(action, actorEntity, logger) {
+export function persistNotes(action, actorEntity, logger, dispatcher) {
   // Gracefully do nothing if the 'notes' key is entirely absent.
   if (!action || !Object.prototype.hasOwnProperty.call(action, 'notes')) {
     return;
@@ -22,9 +24,13 @@ export function persistNotes(action, actorEntity, logger) {
 
   const notesArray = action.notes;
 
-  // If the 'notes' key exists but is not an array, log an error and stop.
+  // If the 'notes' key exists but is not an array, dispatch an error and stop.
   if (!Array.isArray(notesArray)) {
-    logger.error("'notes' field is not an array; skipping merge");
+    dispatcher?.dispatch(DISPLAY_ERROR_ID, {
+      message:
+        "NotesPersistenceHook: 'notes' field is not an array; skipping merge",
+      details: { actorId: actorEntity?.id ?? 'UNKNOWN_ACTOR' },
+    });
     return;
   }
 
@@ -33,13 +39,16 @@ export function persistNotes(action, actorEntity, logger) {
     return;
   }
 
-  // Filter out invalid notes before processing, logging errors for them.
+  // Filter out invalid notes before processing, dispatching errors for them.
   const validNotes = [];
   for (const noteText of notesArray) {
     if (typeof noteText === 'string' && noteText.trim() !== '') {
       validNotes.push(noteText);
     } else {
-      logger.error(`Invalid note skipped: ${JSON.stringify(noteText)}`);
+      dispatcher?.dispatch(DISPLAY_ERROR_ID, {
+        message: 'NotesPersistenceHook: Invalid note skipped',
+        details: { note: noteText },
+      });
     }
   }
 
