@@ -47,7 +47,7 @@ describe('HumanTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () =
     mockTurnStrategyFactory = {
       createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
     };
-    
+
     mockTurnContextBuilder = {
       build: jest.fn(({ actor }) => ({
         getActor: () => actor,
@@ -56,7 +56,6 @@ describe('HumanTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () =
         endTurn: jest.fn(),
       })),
     };
-    
 
     deps = {
       logger: mockLogger,

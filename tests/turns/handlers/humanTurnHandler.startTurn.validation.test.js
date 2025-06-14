@@ -54,7 +54,6 @@ beforeEach(() => {
     })),
   };
 
-
   deps = {
     logger: mockLogger,
     turnStateFactory: mockTurnStateFactory,

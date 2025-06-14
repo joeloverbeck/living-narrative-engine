@@ -55,7 +55,6 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
       })),
     };
 
-
     deps = {
       logger: mockLogger,
       turnStateFactory: mockTurnStateFactory,

@@ -57,7 +57,6 @@ describe('HumanTurnHandler method delegation', () => {
       })),
     };
 
-
     deps = {
       logger: mockLogger,
       turnStateFactory: mockTurnStateFactory,

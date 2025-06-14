@@ -100,12 +100,11 @@ class QueryComponentHandler {
 
     const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
-      
       logger.error(
         'QueryComponentHandler: Could not resolve entity id from entity_ref.',
         { entityRef: entity_ref }
       );
-      
+
       return;
     }
 

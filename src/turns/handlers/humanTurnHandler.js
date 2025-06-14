@@ -128,7 +128,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       `${this.constructor.name}.startTurn called for actor ${actor?.id}.`
     );
     super._assertHandlerActive();
-    
+
     assertValidActor(actor, this._logger, `${this.constructor.name}.startTurn`);
     this._setCurrentActorInternal(actor);
 

@@ -1,4 +1,3 @@
-
 // src/utils/entityRefUtils.js
 /**
  * @module entityRefUtils
