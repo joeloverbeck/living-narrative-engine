@@ -8,6 +8,7 @@ import MathHandler from '../../../src/logic/operationHandlers/mathHandler.js';
 describe('MathHandler', () => {
   let handler;
   let logger;
+  let safeEventDispatcher;
   let execCtx;
 
   beforeEach(() => {
@@ -16,7 +17,11 @@ describe('MathHandler', () => {
       error: jest.fn(),
       debug: jest.fn(),
     };
-    handler = new MathHandler({ logger, jsonLogicEvaluationService: {} });
+    safeEventDispatcher = { dispatch: jest.fn() };
+    handler = new MathHandler({
+      logger,
+      safeEventDispatcher,
+    });
     execCtx = {
       evaluationContext: {
         context: { a: 10, b: 2, c: 'foo' },

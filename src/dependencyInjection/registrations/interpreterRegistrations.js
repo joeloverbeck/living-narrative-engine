@@ -209,9 +209,7 @@ export function registerInterpreters(container) {
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),
-          jsonLogicEvaluationService: c.resolve(
-            tokens.JsonLogicEvaluationService
-          ),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
   ];
