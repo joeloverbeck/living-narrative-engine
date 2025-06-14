@@ -4,8 +4,8 @@
 
 /**
  * @typedef {import('../processingCommandState.js').ProcessingCommandState} ProcessingCommandState
- * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
- * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
+ * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
+ * @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../constants/eventIds.js';
