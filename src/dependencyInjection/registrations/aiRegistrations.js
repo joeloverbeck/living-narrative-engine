@@ -358,7 +358,8 @@ export function registerAI(container) {
     tokens.TurnActionChoicePipeline,
     (c) =>
       new TurnActionChoicePipeline({
-        availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
+        discoverySvc: c.resolve(tokens.IActionDiscoveryService),
+        indexer: c.resolve(tokens.IActionIndexer),
         logger: c.resolve(tokens.ILogger),
       })
   );

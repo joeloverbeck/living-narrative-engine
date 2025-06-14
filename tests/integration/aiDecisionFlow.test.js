@@ -22,6 +22,11 @@ describe('Integration – AI decision flow', () => {
       warn: jest.fn(),
       error: jest.fn(),
     };
+    const discoverySvc = {
+      getValidActions: jest
+        .fn()
+        .mockResolvedValue([{ id: 'core:wait', command: 'Wait', params: {} }]),
+    };
     const composite = {
       index: 1,
       actionId: 'core:wait',
@@ -29,17 +34,19 @@ describe('Integration – AI decision flow', () => {
       params: {},
       description: 'Wait',
     };
-    const provider = { get: jest.fn().mockResolvedValue([composite]) };
+    const indexer = { index: jest.fn().mockReturnValue([composite]) };
     const llmChooser = { choose: jest.fn().mockResolvedValue({ index: 1 }) };
 
     r.instance(tokens.ILogger, logger);
-    r.instance(tokens.IAvailableActionsProvider, provider);
+    r.instance(tokens.IActionDiscoveryService, discoverySvc);
+    r.instance(tokens.IActionIndexer, indexer);
     r.instance(tokens.ILLMChooser, llmChooser);
     r.singletonFactory(
       tokens.TurnActionChoicePipeline,
       (c) =>
         new TurnActionChoicePipeline({
-          availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
+          discoverySvc: c.resolve(tokens.IActionDiscoveryService),
+          indexer: c.resolve(tokens.IActionIndexer),
           logger: c.resolve(tokens.ILogger),
         })
     );
@@ -68,7 +75,11 @@ describe('Integration – AI decision flow', () => {
 
     const result = await strategy.decideAction(context);
 
-    expect(provider.get).toHaveBeenCalledWith(actor, context, logger);
+    expect(discoverySvc.getValidActions).toHaveBeenCalledWith(actor, context);
+    expect(indexer.index).toHaveBeenCalledWith(
+      [{ id: 'core:wait', command: 'Wait', params: {} }],
+      actor.id
+    );
     expect(llmChooser.choose).toHaveBeenCalledWith({
       actor,
       context,
