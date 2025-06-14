@@ -22,7 +22,6 @@ describe('HumanTurnHandler Constructor', () => {
   let mockGameWorldAccess;
   let mockTurnContextBuilder;
   let mockTurnStrategyFactory; // <-- Changed
-  let mockTurnContextBuilder;
   let mockInitialState;
   let setInitialStateSpy;
 

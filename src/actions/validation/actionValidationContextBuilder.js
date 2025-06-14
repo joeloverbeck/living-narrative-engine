@@ -18,8 +18,6 @@ import {
   buildDirectionContext,
   buildEntityTargetContext,
 } from './contextBuilders.js';
-
-import { validateDependency } from '../../utils/validationUtils.js';
 /**
  * @class ActionValidationContextBuilder
  * @description Service dedicated to constructing the data context object used
@@ -143,7 +141,7 @@ export class ActionValidationContextBuilder {
           `ActionValidationContextBuilder: Target entity '${targetContext.entityId}' not found for action '${actionDefinition.id}'. Context will have null target entity data.`
         );
       }
-
+    } else if (targetContext.type === 'direction') {
       targetContextForEval = buildDirectionContext(
         actor.id,
         targetContext.direction,
