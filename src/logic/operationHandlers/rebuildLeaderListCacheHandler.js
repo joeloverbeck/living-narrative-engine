@@ -3,6 +3,7 @@
  * Rebuilds the 'core:leading' component for one or more leaders.
  * @see src/logic/operationHandlers/rebuildLeaderListCacheHandler.js
  */
+import { isNonBlankString } from '../../utils/textUtils.js';
 class RebuildLeaderListCacheHandler {
   #logger;
   #entityManager;
@@ -45,9 +46,7 @@ class RebuildLeaderListCacheHandler {
       );
       return;
     }
-    const ids = [
-      ...new Set(leaderIds.filter((id) => typeof id === 'string' && id.trim())),
-    ];
+    const ids = [...new Set(leaderIds.filter((id) => isNonBlankString(id)))];
     if (ids.length === 0) {
       this.#logger.debug(
         '[RebuildLeaderListCacheHandler] leaderIds empty after filtering; skipping.'

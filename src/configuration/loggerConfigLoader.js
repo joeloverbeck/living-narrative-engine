@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { Workspace_retry } from '../utils/apiUtils.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -91,10 +92,9 @@ export class LoggerConfigLoader {
    * JavaScript object representing the logger configuration, or an error object if loading/parsing fails.
    */
   async loadConfig(filePath) {
-    const path =
-      typeof filePath === 'string' && filePath.trim() !== ''
-        ? filePath.trim()
-        : this.#defaultConfigPath;
+    const path = isNonBlankString(filePath)
+      ? filePath.trim()
+      : this.#defaultConfigPath;
 
     // Use a safe way to log, as this.#logger could be console or a full ILogger
     const logInfo = (msg, ...args) =>

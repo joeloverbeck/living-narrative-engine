@@ -52,13 +52,24 @@ export function snakeToCamel(str) {
 }
 
 /**
- * Checks if the provided value is a non-empty string after trimming.
+ * Checks if the provided value is a non-blank string.
+ * A non-blank string is a string containing characters other than whitespace.
  *
+ * @param {*} value - Value to validate.
+ * @returns {boolean} True if value is a non-blank string, otherwise false.
+ */
+export function isNonBlankString(value) {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
+/**
+ * @deprecated Use `isNonBlankString` instead.
+ * Checks if the provided value is a non-empty string after trimming.
  * @param {*} value - Value to validate.
  * @returns {boolean} True if value is a non-empty string, otherwise false.
  */
 export function isNonEmptyString(value) {
-  return typeof value === 'string' && value.trim() !== '';
+  return isNonBlankString(value);
 }
 
 /**
