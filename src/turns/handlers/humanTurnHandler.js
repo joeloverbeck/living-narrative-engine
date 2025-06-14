@@ -334,6 +334,8 @@ class HumanTurnHandler extends BaseTurnHandler {
           `${this.constructor.name}: No current state or state cannot handle turn ended event during no-context scenario.`
         );
       }
+      // Ensure any lingering awaiting flags are cleared when no context exists
+      this._clearTurnEndWaitingMechanismsInternal();
       return;
     }
 
