@@ -83,17 +83,44 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
-            "comment": "Send the speech content and speaking entity's ID to the UI for display.",
+            "type": "IF",
+            "comment": "Check if hidden metadata is present and dispatch core:display_speech accordingly.",
             "parameters": {
-              "eventType": "core:display_speech",
-              "payload": {
-                "entityId": "{event.payload.entityId}",
-                "speechContent": "{event.payload.speechContent}",
-                "thoughts": "{event.payload.thoughts}",
-                "notes": "{event.payload.notes}",
-                "allowHtml": false
-              }
+              "condition": {
+                "!!": {
+                  "var": "event.payload.thoughts"
+                }
+              },
+              "then_actions": [
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch speech WITH thoughts and notes.",
+                  "parameters": {
+                    "eventType": "core:display_speech",
+                    "payload": {
+                      "entityId": "{event.payload.entityId}",
+                      "speechContent": "{event.payload.speechContent}",
+                      "thoughts": "{event.payload.thoughts}",
+                      "notes": "{event.payload.notes}",
+                      "allowHtml": false
+                    }
+                  }
+                }
+              ],
+              "else_actions": [
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch speech WITHOUT thoughts and notes.",
+                  "parameters": {
+                    "eventType": "core:display_speech",
+                    "payload": {
+                      "entityId": "{event.payload.entityId}",
+                      "speechContent": "{event.payload.speechContent}",
+                      "allowHtml": false
+                    }
+                  }
+                }
+              ]
             }
           }
         ]

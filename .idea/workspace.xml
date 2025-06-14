@@ -4,19 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="The Return of the King.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/events/display_speech.event.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/events/display_speech.event.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constants/eventIds.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/eventIds.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingExternalTurnEndState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingExternalTurnEndState.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/domUI/speechBubbleRenderer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/speechBubbleRenderer.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/rules/followAutoMoveRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/followAutoMoveRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/operationHandlers/rebuildLeaderListCacheHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationHandlers/rebuildLeaderListCacheHandler.test.js" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing thoughts and notes tooltips." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -188,15 +176,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="19359000" />
-    </task>
-    <task id="LOCAL-00031" summary="Trying to return the app to normality.">
-      <option name="closed" value="true" />
-      <created>1749886638409</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1749886638409</updated>
+      <workItem from="1749913762946" duration="19673000" />
     </task>
     <task id="LOCAL-00032" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -582,7 +562,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749932287746</updated>
     </task>
-    <option name="localTasksCounter" value="80" />
+    <task id="LOCAL-00080" summary="Implementing thoughts and notes tooltips.">
+      <option name="closed" value="true" />
+      <created>1749934040162</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1749934040162</updated>
+    </task>
+    <option name="localTasksCounter" value="81" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -611,6 +599,7 @@
     <MESSAGE value="Unified human and AI paths regarding decision-making." />
     <MESSAGE value="Ensuring that the king returns." />
     <MESSAGE value="The Return of the King." />
-    <option name="LAST_COMMIT_MESSAGE" value="The Return of the King." />
+    <MESSAGE value="Implementing thoughts and notes tooltips." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implementing thoughts and notes tooltips." />
   </component>
 </project>
