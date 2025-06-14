@@ -118,9 +118,10 @@ class HumanTurnHandler extends BaseTurnHandler {
   async startTurn(actor) {
     super._assertHandlerActive();
 
-    if (!actor) {
-      this._logger.error('HumanTurnHandler.startTurn: actor is required.');
-      throw new Error('HumanTurnHandler.startTurn: actor is required.');
+    if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
+      const errMsg = `${this.constructor.name}.startTurn: actor is required and must have a valid id.`;
+      this._logger.error(errMsg);
+      throw new Error(errMsg);
     }
     this._setCurrentActorInternal(actor);
 
