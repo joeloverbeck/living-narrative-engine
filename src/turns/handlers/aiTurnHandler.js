@@ -3,63 +3,24 @@
  * @see src/turns/handlers/aiTurnHandler.js
  */
 
-import { GenericTurnHandler } from './genericTurnHandler.js';
-
-/** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
-/** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
-/** @typedef {import('../interfaces/ITurnStrategyFactory.js').ITurnStrategyFactory} ITurnStrategyFactory */
-
-/** @typedef {import('../builders/turnContextBuilder.js').TurnContextBuilder} TurnContextBuilder */
+import ActorTurnHandler from './actorTurnHandler.js';
 
 /**
  * @class AITurnHandler
- * @augments GenericTurnHandler
- * @description Handles turns for AI-controlled actors.
+ * @augments ActorTurnHandler
+ * @description Thin wrapper that configures ActorTurnHandler for AI actors.
  */
-export class AITurnHandler extends GenericTurnHandler {
+export class AITurnHandler extends ActorTurnHandler {
   /**
-   * Creates an instance of AITurnHandler.
-   *
-   * @param {object} dependencies - The dependencies required by the handler.
-   * @param {ILogger} dependencies.logger - The logging service.
-   * @param {ITurnStateFactory} dependencies.turnStateFactory - Factory for creating turn states.
-   * @param {ITurnEndPort} dependencies.turnEndPort - Port for signaling the end of a turn.
-   * @param {ITurnStrategyFactory} dependencies.strategyFactory - Factory for creating AI strategies.
-   * @param {TurnContextBuilder} dependencies.turnContextBuilder - Builder for creating turn contexts.
+   * @param {object} deps
+   * @param {import('../../interfaces/coreServices.js').ILogger} deps.logger
+   * @param {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} deps.turnStateFactory
+   * @param {import('../ports/ITurnEndPort.js').ITurnEndPort} deps.turnEndPort
+   * @param {import('../interfaces/ITurnStrategyFactory.js').ITurnStrategyFactory} deps.strategyFactory
+   * @param {import('../builders/turnContextBuilder.js').TurnContextBuilder} deps.turnContextBuilder
    */
-  constructor({
-    logger,
-    turnStateFactory,
-    turnEndPort,
-    strategyFactory,
-    turnContextBuilder,
-  }) {
-    super({
-      logger,
-      turnStateFactory,
-      turnEndPort,
-      strategyFactory,
-      turnContextBuilder,
-    });
-
-    const initialState = this._turnStateFactory.createInitialState(this);
-    this._setInitialState(initialState);
-    this._logger.debug(
-      `${this.constructor.name} initialized with simplified dependencies.`
-    );
-  }
-
-  /**
-   * Starts the turn for the given AI actor.
-   * The core logic now resides in the GenericTurnHandler.
-   *
-   * @param {Entity} actor - The AI-controlled entity whose turn it is.
-   * @override
-   */
-  async startTurn(actor) {
-    await super.startTurn(actor);
+  constructor({ strategyFactory, ...rest }) {
+    super({ ...rest, strategyFactory });
   }
 }
 

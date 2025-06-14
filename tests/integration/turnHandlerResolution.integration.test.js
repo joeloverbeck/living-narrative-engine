@@ -13,6 +13,7 @@ import {
 } from '@jest/globals';
 
 import { AITurnHandler } from '../../src/turns/handlers/aiTurnHandler.js';
+import ActorTurnHandler from '../../src/turns/handlers/actorTurnHandler.js';
 import TurnHandlerResolver from '../../src/turns/services/turnHandlerResolver.js';
 import {
   ACTOR_COMPONENT_ID,
@@ -136,6 +137,7 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
     // 1. Resolve the handler.
     const handler = await resolver.resolveHandler(aiActor);
     expect(handler).toBeInstanceOf(AITurnHandler);
+    expect(handler).toBeInstanceOf(ActorTurnHandler);
 
     // 2. Start the turn; should not throw.
     await expect(handler.startTurn(aiActor)).resolves.not.toThrow();
