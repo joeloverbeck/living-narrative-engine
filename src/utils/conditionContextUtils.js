@@ -1,6 +1,6 @@
 // src/utils/conditionContextUtils.js
 
-import { getObjectPropertyByPath } from './objectUtils.js';
+import { resolvePath } from './objectUtils.js';
 
 // --- JSDoc Typedefs ---
 // Using JSDoc typedefs for clarity, assuming these types are defined elsewhere
@@ -140,7 +140,7 @@ export const getContextValue = (target, propertyPath, dataAccess) => {
             // Create the remaining path to access within the component.
             const remainingPath = pathParts.slice(1).join('.');
             // Use the generic getter on the component instance.
-            return getObjectPropertyByPath(componentInstance, remainingPath);
+            return resolvePath(componentInstance, remainingPath);
           }
         } else {
           // Component class exists, but the entity doesn't have an instance of it.
@@ -160,5 +160,5 @@ export const getContextValue = (target, propertyPath, dataAccess) => {
   // - Target is an Entity, but dataAccess was not provided.
   // - Target is an Entity, dataAccess was provided, but the first path part
   //   did not resolve to a known ComponentClass via dataAccess.getComponentClassByKey.
-  return getObjectPropertyByPath(target, propertyPath);
+  return resolvePath(target, propertyPath);
 };

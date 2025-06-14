@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import { createJsonLogicContext } from './contextAssembler.js';
-import resolvePath from '../utils/resolvePath.js';
+import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 
 /* ---------------------------------------------------------------------------

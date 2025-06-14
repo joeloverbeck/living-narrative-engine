@@ -1,5 +1,5 @@
 // src/logic/contextUtils.js
-import resolvePath from '../utils/resolvePath.js';
+import { resolvePath } from '../utils/objectUtils.js';
 import { NAME_COMPONENT_ID } from '../constants/componentIds'; // Adjust path as needed
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -15,6 +15,7 @@ const FULL_STRING_PLACEHOLDER_REGEX = /^{\s*([^}\s]+)\s*}$/; // Only matches {..
 /**
  * Provides a fallback to resolve common, convenient entity properties like 'actor.name' or 'target.name'
  * by looking for the NAME_COMPONENT_ID component on the respective entity.
+ *
  * @param {string} placeholderPath - The original path, e.g., 'target.name'.
  * @param {object} resolutionRoot - The root context object to resolve from (e.g., nestedExecutionContext).
  * @param {ILogger} [logger] - Optional logger for debug messages.

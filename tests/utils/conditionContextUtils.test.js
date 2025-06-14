@@ -2,8 +2,8 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { getContextValue } from '../../src/utils/conditionContextUtils.js'; // Adjust path if needed
-// We rely on the actual getObjectPropertyByPath, assuming it's tested separately.
-// import { getObjectPropertyByPath } from '../../utils/objectUtils.js'; // Not mocking this dependency
+// We rely on the actual resolvePath implementation, assuming it's tested separately.
+// import { resolvePath } from '../../utils/objectUtils.js'; // Not mocking this dependency
 
 // ==================================
 // Mocks based on Ticket Requirements
