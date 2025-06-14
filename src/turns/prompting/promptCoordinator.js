@@ -134,17 +134,20 @@ class PromptCoordinator extends IPromptCoordinator {
         `Displaying ${indexedComposites.length} indexed choices to actor ${actor.id}.`
       );
 
-      // ************************** FIXED LINE **************************
-      // The bug was passing `indexedComposites` (ActionComposite[]) directly
-      // to a port expecting `DiscoveredActionInfo[]`. We now map it back
-      // to the expected format to respect the interface contract.
+      // ───── Transform composites back to the prompt schema ─────
+      // The prompt output port expects objects shaped according to the
+      // PLAYER_TURN_PROMPT event schema ({ index, actionId, commandString,
+      // params, description }). Previously this code forwarded the
+      // ActionComposite objects directly, which use different property names
+      // (actionId → id, commandString → command). That mismatch meant prompts
+      // failed schema validation. We now map the composites back to the
+      // expected property names.
       const actionsForPrompt = indexedComposites.map((comp) => ({
         index: comp.index,
-        id: comp.actionId,
-        name: comp.description, // Use description as the primary name for UI
-        command: comp.commandString,
-        description: comp.description,
+        actionId: comp.actionId,
+        commandString: comp.commandString,
         params: comp.params,
+        description: comp.description,
       }));
 
       await this.#promptOutputPort.prompt(actor.id, actionsForPrompt);
