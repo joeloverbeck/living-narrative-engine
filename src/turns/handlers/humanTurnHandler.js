@@ -328,7 +328,7 @@ class HumanTurnHandler extends BaseTurnHandler {
         this._currentState &&
         typeof this._currentState.handleTurnEndedEvent === 'function'
       ) {
-        await this._currentState.handleTurnEndedEvent(this, payload);
+        await this._currentState.handleTurnEndedEvent(this, eventPayload);
       } else {
         this._logger.error(
           `${this.constructor.name}: No current state or state cannot handle turn ended event during no-context scenario.`
@@ -352,7 +352,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       return;
     }
 
-    await this._currentState.handleTurnEndedEvent(this, payload);
+    await this._currentState.handleTurnEndedEvent(this, eventPayload);
   }
 }
 

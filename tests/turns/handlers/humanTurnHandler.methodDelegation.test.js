@@ -101,12 +101,12 @@ describe('HumanTurnHandler method delegation', () => {
       endTurn: jest.fn(),
     });
 
-    const payload = { payload: { entityId: actor.id } };
-    await handler.handleTurnEndedEvent(payload);
+    const event = { payload: { entityId: actor.id } };
+    await handler.handleTurnEndedEvent(event);
 
     expect(mockState.handleTurnEndedEvent).toHaveBeenCalledWith(
       handler,
-      payload
+      event.payload
     );
   });
 });
