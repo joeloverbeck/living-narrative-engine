@@ -79,7 +79,7 @@ describe('ModifyComponentHandler', () => {
   });
 
   // ---------------------------------------------------------------------------
-  //  Constructor validation ( √ - these should still pass )
+  //  Constructor validation
   // ---------------------------------------------------------------------------
   test('throws without valid dependencies', () => {
     expect(() => new ModifyComponentHandler({ logger: mockLogger })).toThrow(
@@ -100,23 +100,8 @@ describe('ModifyComponentHandler', () => {
   });
 
   // ---------------------------------------------------------------------------
-  //  Validation: Field is now required ( √ - these should still pass )
+  //  Validation: Field is required
   // ---------------------------------------------------------------------------
-  test('inc mode without field warns and skips', () => {
-    const params = {
-      entity_ref: 'actor',
-      component_type: 'ns:c',
-      mode: 'inc',
-      value: 1,
-    };
-    handler.execute(params, buildCtx());
-    expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
-    expect(mockEntityManager.addComponent).not.toHaveBeenCalled(); // Should not call addComponent
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('field" parameter (non-empty string) is required')
-    );
-  });
-
   test('set mode without field warns and skips', () => {
     const params = {
       entity_ref: 'actor',
@@ -128,7 +113,7 @@ describe('ModifyComponentHandler', () => {
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
     expect(mockEntityManager.addComponent).not.toHaveBeenCalled(); // Should not call addComponent
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('field" parameter (non-empty string) is required')
+      'MODIFY_COMPONENT: "field" must be a non-empty string.'
     );
   });
 
@@ -169,91 +154,7 @@ describe('ModifyComponentHandler', () => {
   });
 
   // ---------------------------------------------------------------------------
-  //  Field-level INC – happy path
-  // ---------------------------------------------------------------------------
-  test('inc numeric leaf works and passes modified data to addComponent', () => {
-    const initialCompObj = { stats: { hp: 10 } };
-    mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
-
-    const params = {
-      entity_ref: 'actor',
-      component_type: 'core:stats',
-      field: 'stats.hp',
-      mode: 'inc',
-      value: 15,
-    };
-    handler.execute(params, buildCtx());
-
-    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
-      actorId,
-      'core:stats'
-    );
-    const expectedModifiedData = { stats: { hp: 25 } };
-    expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
-      actorId,
-      'core:stats',
-      expectedModifiedData
-    );
-    expect(mockLogger.warn).not.toHaveBeenCalled();
-  });
-
-  test('inc with non-numeric leaf logs correct warning and does not call addComponent', () => {
-    const initialCompObj = { foo: { bar: 'not-num' } };
-    mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
-
-    handler.execute(
-      {
-        entity_ref: 'actor',
-        component_type: 'c:t',
-        field: 'foo.bar',
-        mode: 'inc',
-        value: 2,
-      },
-      buildCtx()
-    );
-
-    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
-      actorId,
-      'c:t'
-    );
-    // addComponent should NOT be called because local mutation failed
-    expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-    // Check the new warning message
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      `MODIFY_COMPONENT: Local mutation (mode "inc") failed for field "foo.bar" on component "c:t" for entity "${actorId}". Check path or if 'inc' target is a number.`
-    );
-  });
-
-  test('inc along missing chain logs correct warning and does not call addComponent', () => {
-    const initialCompObj = { a: {} }; // 'b' is missing
-    mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
-
-    handler.execute(
-      {
-        entity_ref: 'actor',
-        component_type: 'x:y',
-        field: 'a.b.c',
-        mode: 'inc',
-        value: 1,
-      },
-      buildCtx()
-    );
-
-    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
-      actorId,
-      'x:y'
-    );
-    // addComponent should NOT be called
-    expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-    // Check the new warning message
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      `MODIFY_COMPONENT: Local mutation (mode "inc") failed for field "a.b.c" on component "x:y" for entity "${actorId}". Check path or if 'inc' target is a number.`
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  //  Entity reference resolution paths ( √ - this should largely remain the same,
-  //  just ensuring getComponentData is called, and addComponent for successful cases)
+  //  Entity reference resolution paths
   // ---------------------------------------------------------------------------
   test('resolves "actor", "target", direct id for getComponentData and addComponent', () => {
     const initialData = { f: 0 };
@@ -344,29 +245,7 @@ describe('ModifyComponentHandler', () => {
   });
 
   // ---------------------------------------------------------------------------
-  //  Validation: inc requires numeric value ( √ - should still pass )
-  // ---------------------------------------------------------------------------
-  test('inc non-number value is rejected', () => {
-    handler.execute(
-      {
-        entity_ref: 'actor',
-        component_type: 'c',
-        field: 'x',
-        mode: 'inc',
-        value: 'nope',
-      },
-      buildCtx()
-    );
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('inc mode requires a numeric value')
-    );
-    expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
-    expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-  });
-
-  // ---------------------------------------------------------------------------
-  // Validation: Component existence and type checks ( √ - should still pass,
-  // and addComponent should not be called if these fail )
+  // Validation: Component existence and type checks
   // ---------------------------------------------------------------------------
   test('warns if component does not exist on entity', () => {
     mockEntityManager.getComponentData.mockReturnValue(undefined);
@@ -417,7 +296,7 @@ describe('ModifyComponentHandler', () => {
   });
 
   // ---------------------------------------------------------------------------
-  //  Context logger precedence ( √ - should still pass )
+  //  Context logger precedence
   // ---------------------------------------------------------------------------
   test('uses logger from execution context when provided', () => {
     const ctxLogger = {
@@ -427,23 +306,26 @@ describe('ModifyComponentHandler', () => {
       debug: jest.fn(),
     };
     const ctx = buildCtx({ logger: ctxLogger });
+    // Use an invalid mode to trigger a warning
     handler.execute(
       {
         entity_ref: 'actor',
         component_type: 'c',
         field: 'f',
-        mode: 'inc',
+        mode: 'inc', // Invalid mode on purpose
         value: 'bad',
       },
       ctx
     );
     expect(ctxLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('inc mode requires a numeric value')
+      expect.stringContaining('Unsupported mode "inc"')
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
-  // New test: Check addComponent failure logging
+  // ---------------------------------------------------------------------------
+  // EntityManager interaction
+  // ---------------------------------------------------------------------------
   test('logs warning if entityManager.addComponent returns false', () => {
     const initialCompObj = { stats: { hp: 10 } };
     mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
@@ -453,8 +335,8 @@ describe('ModifyComponentHandler', () => {
       entity_ref: 'actor',
       component_type: 'core:stats',
       field: 'stats.hp',
-      mode: 'inc',
-      value: 15,
+      mode: 'set',
+      value: 25,
     };
     handler.execute(params, buildCtx());
 
@@ -482,8 +364,8 @@ describe('ModifyComponentHandler', () => {
       entity_ref: 'actor',
       component_type: 'core:stats',
       field: 'stats.hp',
-      mode: 'inc',
-      value: 15,
+      mode: 'set',
+      value: 25,
     };
     handler.execute(params, buildCtx());
 

@@ -1,48 +1,30 @@
 // src/logic/operationHandlers/modifyComponentHandler.js
 
 // -----------------------------------------------------------------------------
-//  MODIFY_COMPONENT Handler — Ticket T-02 / Refactored T-XX
-//  Applies modifications ('set' or 'inc') to specific fields within an existing component.
-//  NOTE: Adding/replacing whole components is now handled by AddComponentHandler.
-// -----------------------------------------------------------------------------
+//  MODIFY_COMPONENT Handler — simplified to support ONLY “set” field updates.
+//  Adds no arithmetic; for numeric adjustments use a preceding MATH+SET_VARIABLE
+//  pair, then call MODIFY_COMPONENT with mode "set".
+// ---------------------------------------------------------
 
-// --- Imports -----------------------------------------------------------------
-import resolvePath from '../../utils/resolvePath.js';
-
-// --- Type-hints --------------------------------------------------------------
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 
 /**
  * @typedef {object} EntityRefObject
- * @property {string} entityId - The referenced entity ID.
+ * @property {string} entityId
  */
 
 /**
- * Parameters accepted by {@link ModifyComponentHandler#execute}.
- *
  * @typedef {object} ModifyComponentOperationParams
- * @property {'actor'|'target'|string|EntityRefObject} entity_ref     - Required. Reference to the entity whose component field will be modified.
- * @property {string}  component_type - Required. The namespaced type ID of the component to modify.
- * @property {string}  field          - Required. Dot-separated path to the field within the component's data object.
- * @property {'set'|'inc'} mode       - Required. 'set' replaces the field's value; 'inc' numerically increments it.
- * @property {*} value              - Required. The value to set or the numeric amount to increment by. Type depends on 'mode'.
+ * @property {'actor'|'target'|string|EntityRefObject} entity_ref
+ * @property {string}  component_type
+ * @property {string}  field                       Dot-separated path
+ * @property {'set'}   mode                        Must be "set" (the only mode)
+ * @property {*}       value                       New value to assign
  */
 
-// -----------------------------------------------------------------------------
-//  Helper utilities (Unchanged)
-// -----------------------------------------------------------------------------
-
-/**
- * Create missing chain and set value at leaf.
- *
- * @param {object} root - Object to modify.
- * @param {string} path - Dot-separated path to set.
- * @param {*} value - Value to place at the path.
- * @returns {boolean} True if the value was set successfully.
- */
+// ── helper ────────────────────────────────────────────────────────────────────
 function setByPath(root, path, value) {
   const parts = path.split('.').filter(Boolean);
   let cur = root;
@@ -53,80 +35,39 @@ function setByPath(root, path, value) {
       return true;
     }
     if (cur[key] === null || cur[key] === undefined) cur[key] = {};
-    if (typeof cur[key] !== 'object') return false; // Cannot traverse non-object
+    if (typeof cur[key] !== 'object') return false;
     cur = cur[key];
   }
-  return false; // Should not happen if path is valid
+  return false;
 }
 
-/**
- * Increment numeric leaf value.
- *
- * @param {object} root - Object to modify.
- * @param {string} path - Dot-separated path to the numeric value.
- * @param {number} delta - Amount to increment.
- * @returns {boolean} True if increment succeeded.
- */
-function incByPath(root, path, delta) {
-  const parentPath = path.split('.').slice(0, -1).join('.');
-  const leaf = path.split('.').slice(-1)[0];
-  const parentObj = parentPath ? resolvePath(root, parentPath) : root;
-  if (!parentObj || typeof parentObj !== 'object') return false; // Parent path invalid or not an object
-  // Check if the leaf property exists and is a number
-  if (typeof parentObj[leaf] !== 'number') return false; // Target field is not a number
-  parentObj[leaf] += delta;
-  return true;
-}
-
-// -----------------------------------------------------------------------------
-//  Handler implementation
-// -----------------------------------------------------------------------------
+// ── handler ───────────────────────────────────────────────────────────────────
 class ModifyComponentHandler {
   /** @type {ILogger}        */ #logger;
   /** @type {EntityManager} */ #entityManager;
 
-  /**
-   * Creates an instance of ModifyComponentHandler.
-   *
-   * @param {object} dependencies - Dependencies object.
-   * @param {EntityManager} dependencies.entityManager - The entity management service. Needs `getComponentData`.
-   * @param {ILogger} dependencies.logger - The logging service instance.
-   * @throws {Error} If dependencies are invalid.
-   */
   constructor({ entityManager, logger }) {
-    // Validate logger FIRST so tests expecting logger–error path pass.
     if (
       !logger ||
       ['info', 'warn', 'error', 'debug'].some(
         (m) => typeof logger[m] !== 'function'
       )
     ) {
-      throw new Error(
-        'ModifyComponentHandler requires a valid ILogger instance.'
-      );
+      throw new Error('ModifyComponentHandler needs a valid ILogger.');
     }
-    // Now requires getComponentData, addComponent is no longer needed here.
     if (
       !entityManager ||
-      typeof entityManager.getComponentData !== 'function'
+      typeof entityManager.getComponentData !== 'function' ||
+      typeof entityManager.addComponent !== 'function'
     ) {
       throw new Error(
-        'ModifyComponentHandler requires a valid EntityManager instance with getComponentData method.'
+        'ModifyComponentHandler needs EntityManager#getComponentData & #addComponent.'
       );
     }
     this.#logger = logger;
     this.#entityManager = entityManager;
   }
 
-  /**
-   * Resolve entity_ref → entityId or null.
-   * (Unchanged - Copied to AddComponentHandler as well)
-   *
-   * @param {string|EntityRefObject} ref - Reference to resolve.
-   * @param {ExecutionContext} ctx - The execution context.
-   * @returns {string|null} The resolved entity ID or null.
-   * @private
-   */
   #resolveEntityId(ref, ctx) {
     const ec = ctx?.evaluationContext ?? {};
     if (typeof ref === 'string') {
@@ -148,34 +89,32 @@ class ModifyComponentHandler {
   }
 
   /**
-   * Executes the MODIFY_COMPONENT operation for field-level mutations.
-   * It now prepares the modified component data and uses EntityManager.addComponent
-   * to apply the changes, ensuring side effects like spatial index updates are triggered.
-   *
-   * @param {ModifyComponentOperationParams|null|undefined} params - The parameters for the operation.
-   * @param {ExecutionContext} execCtx - The execution context.
-   * @returns {void}
+   * Executes a MODIFY_COMPONENT operation (mode = "set" only).
+   * @param {ModifyComponentOperationParams|null|undefined} params
+   * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
     const log = execCtx?.logger ?? this.#logger;
 
-    // 1. Validate Base Parameters (as before)
+    // ── validate base params ───────────────────────────────────────
     if (!params || typeof params !== 'object') {
       log.warn('MODIFY_COMPONENT: params missing or invalid.', { params });
       return;
     }
-    const { entity_ref, component_type, field, mode, value } = params;
-    // ... (all previous parameter validations for entity_ref, component_type, field, mode, value) ...
+    const { entity_ref, component_type, field, mode = 'set', value } = params;
+
     if (!entity_ref) {
       log.warn('MODIFY_COMPONENT: "entity_ref" required.');
       return;
     }
     if (typeof component_type !== 'string' || !component_type.trim()) {
-      log.warn('MODIFY_COMPONENT: invalid "component_type"');
+      log.warn('MODIFY_COMPONENT: invalid "component_type".');
       return;
     }
-    if (!['set', 'inc'].includes(mode)) {
-      log.warn('MODIFY_COMPONENT: mode must be "set" or "inc".');
+    if (mode !== 'set') {
+      log.warn(
+        `MODIFY_COMPONENT: Unsupported mode "${mode}". Only "set" is allowed now.`
+      );
       return;
     }
     if (
@@ -184,17 +123,11 @@ class ModifyComponentHandler {
       typeof field !== 'string' ||
       !field.trim()
     ) {
-      log.warn(
-        'MODIFY_COMPONENT: "field" parameter (non-empty string) is required for modification.'
-      );
-      return;
-    }
-    if (mode === 'inc' && typeof value !== 'number') {
-      log.warn('MODIFY_COMPONENT: inc mode requires a numeric value.');
+      log.warn('MODIFY_COMPONENT: "field" must be a non-empty string.');
       return;
     }
 
-    // 2. Resolve Entity ID (as before)
+    // ── resolve entity ─────────────────────────────────────────────
     const entityId = this.#resolveEntityId(entity_ref, execCtx);
     if (!entityId) {
       log.warn('MODIFY_COMPONENT: could not resolve entity id.', {
@@ -203,88 +136,55 @@ class ModifyComponentHandler {
       return;
     }
 
-    const trimmedComponentType = component_type.trim();
-    const path = field.trim();
+    // ── fetch & clone component data ───────────────────────────────
+    const compType = component_type.trim();
+    const current = this.#entityManager.getComponentData(entityId, compType);
 
-    // 3. Get current component data
-    const currentCompData = this.#entityManager.getComponentData(
-      entityId,
-      trimmedComponentType
-    );
-
-    if (currentCompData === undefined) {
+    if (current === undefined) {
       log.warn(
-        `MODIFY_COMPONENT: Component "${trimmedComponentType}" not found on entity "${entityId}". Cannot modify field "${path}".`
+        `MODIFY_COMPONENT: Component "${compType}" not found on entity "${entityId}".`
       );
       return;
     }
-    if (typeof currentCompData !== 'object' || currentCompData === null) {
+    if (typeof current !== 'object' || current === null) {
       log.warn(
-        `MODIFY_COMPONENT: Component "${trimmedComponentType}" on entity "${entityId}" is not an object. Cannot modify field "${path}".`
+        `MODIFY_COMPONENT: Component "${compType}" on entity "${entityId}" is not an object.`
       );
       return;
     }
 
-    // 4. Clone the current data and perform field-level mutation on the clone
-    // This ensures we are passing a complete, modified component state to addComponent
-    const modifiedCompData = JSON.parse(JSON.stringify(currentCompData)); // Deep clone
+    const next = JSON.parse(JSON.stringify(current)); // deep clone
 
-    log.debug(
-      `MODIFY_COMPONENT: Attempting mode "${mode}" on field "${path}" of component "${trimmedComponentType}" for entity "${entityId}".`
-    );
-
-    let mutationSuccess = false;
-    if (mode === 'set') {
-      mutationSuccess = setByPath(modifiedCompData, path, value);
-    } else {
-      // mode === 'inc'
-      mutationSuccess = incByPath(
-        modifiedCompData,
-        path,
-        /** @type {number} */ (value)
-      );
-    }
-
-    if (!mutationSuccess) {
+    // ── apply “set” mutation ───────────────────────────────────────
+    const ok = setByPath(next, field.trim(), value);
+    if (!ok) {
       log.warn(
-        `MODIFY_COMPONENT: Local mutation (mode "${mode}") failed for field "${path}" on component "${trimmedComponentType}" for entity "${entityId}". Check path or if 'inc' target is a number.`
+        `MODIFY_COMPONENT: Failed to set path "${field}" on component "${compType}".`
       );
-      return; // Abort if the local mutation on the clone failed
+      return;
     }
 
-    // 5. "Commit" the entire modified component data back through EntityManager.addComponent
-    // This allows EntityManager to handle its full update logic, including validation and side effects.
+    // ── commit via EntityManager ───────────────────────────────────
     try {
-      // EntityManager.addComponent will:
-      // - Validate the 'modifiedCompData' against the schema.
-      // - Retrieve the *actual* oldLocationId from the entity *before* replacing the component.
-      // - Replace the component data on the entity.
-      // - Retrieve the newLocationId from the *newly set* component data.
-      // - Call spatialIndexManager.updateEntityLocation(entityId, actualOldLocationId, newLocationId).
-      const updatePersisted = this.#entityManager.addComponent(
+      const success = this.#entityManager.addComponent(
         entityId,
-        trimmedComponentType,
-        modifiedCompData
+        compType,
+        next
       );
-
-      if (updatePersisted) {
-        // addComponent should return true on success or throw
+      if (success) {
         log.debug(
-          `MODIFY_COMPONENT: Successfully updated component "${trimmedComponentType}" on entity "${entityId}" via EntityManager, triggering side effects.`
+          `MODIFY_COMPONENT: Updated "${compType}" on "${entityId}" (field "${field}" set).`
         );
       } else {
-        // This path might not be hit if addComponent throws on failure per its contract.
         log.warn(
-          `MODIFY_COMPONENT: EntityManager.addComponent reported an unexpected failure (returned false without throwing) for component "${trimmedComponentType}" on entity "${entityId}".`
+          `MODIFY_COMPONENT: EntityManager.addComponent reported an unexpected failure for component "${compType}" on entity "${entityId}".`
         );
       }
-    } catch (error) {
+    } catch (e) {
       log.error(
-        `MODIFY_COMPONENT: Error during EntityManager.addComponent for component "${trimmedComponentType}" on entity "${entityId}" after field modification: ${error.message}`,
-        { error }
+        `MODIFY_COMPONENT: Error during EntityManager.addComponent for component "${compType}" on entity "${entityId}".`,
+        { error: e }
       );
-      // Depending on desired behavior, you might want to re-throw or just log.
-      // If addComponent throws, the operation has failed.
     }
   }
 }

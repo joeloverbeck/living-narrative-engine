@@ -320,33 +320,67 @@
           }
         },
         {
-          "if": { "properties": { "type": { "const": "QUERY_ENTITIES" } } },
+          "if": {
+            "properties": {
+              "type": {
+                "const": "QUERY_ENTITIES"
+              }
+            }
+          },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/QueryEntitiesParameters" }
+              "parameters": {
+                "$ref": "#/$defs/QueryEntitiesParameters"
+              }
             }
           }
         },
         {
-          "if": { "properties": { "type": { "const": "HAS_COMPONENT" } } },
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HAS_COMPONENT"
+              }
+            }
+          },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/HasComponentParameters" }
+              "parameters": {
+                "$ref": "#/$defs/HasComponentParameters"
+              }
             }
           }
         },
         {
-          "if": { "properties": { "type": { "const": "MODIFY_ARRAY_FIELD" } } },
+          "if": {
+            "properties": {
+              "type": {
+                "const": "MODIFY_ARRAY_FIELD"
+              }
+            }
+          },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/ModifyArrayFieldParameters" }
+              "parameters": {
+                "$ref": "#/$defs/ModifyArrayFieldParameters"
+              }
             }
           }
         },
         {
-          "if": { "properties": { "type": { "const": "MATH" } } },
+          "if": {
+            "properties": {
+              "type": {
+                "const": "MATH"
+              }
+            }
+          },
           "then": {
-            "properties": { "parameters": { "$ref": "#/$defs/MathParameters" } }
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/MathParameters"
+              }
+            }
           }
         }
       ]
@@ -388,7 +422,7 @@
     },
     "ModifyComponentParameters": {
       "type": "object",
-      "description": "Parameters for the MODIFY_COMPONENT operation. Modifies a specific field within an existing component.",
+      "description": "Parameters for the MODIFY_COMPONENT operation. Modifies a specific field within an existing component (mode \"set\" only—use a MATH + SET_VARIABLE combo for arithmetic).",
       "properties": {
         "entity_ref": {
           "$ref": "./common.schema.json#/definitions/entityReference"
@@ -402,32 +436,13 @@
         },
         "mode": {
           "type": "string",
-          "enum": ["set", "inc"]
+          "enum": ["set"],
+          "default": "set"
         },
         "value": {}
       },
       "required": ["entity_ref", "component_type", "field", "mode", "value"],
-      "additionalProperties": false,
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "mode": {
-                "const": "inc"
-              }
-            },
-            "required": ["mode"]
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "number"
-              }
-            },
-            "required": ["value"]
-          }
-        }
-      ]
+      "additionalProperties": false
     },
     "AddComponentParameters": {
       "type": "object",
@@ -677,7 +692,9 @@
                   "component_type": {
                     "$ref": "./common.schema.json#/definitions/namespacedId"
                   },
-                  "condition": { "$ref": "./json-logic.schema.json#" }
+                  "condition": {
+                    "$ref": "./json-logic.schema.json#"
+                  }
                 },
                 "required": ["component_type", "condition"]
               }
@@ -740,12 +757,28 @@
       "additionalProperties": false,
       "allOf": [
         {
-          "if": { "properties": { "mode": { "const": "push" } } },
-          "then": { "required": ["value"] }
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "push"
+              }
+            }
+          },
+          "then": {
+            "required": ["value"]
+          }
         },
         {
-          "if": { "properties": { "mode": { "const": "remove_by_value" } } },
-          "then": { "required": ["value"] }
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "remove_by_value"
+              }
+            }
+          },
+          "then": {
+            "required": ["value"]
+          }
         }
       ]
     },
@@ -753,22 +786,35 @@
       "type": "object",
       "description": "Parameters for the MATH operation. Performs a calculation and stores the result.",
       "properties": {
-        "result_variable": { "type": "string", "minLength": 1 },
-        "expression": { "$ref": "#/$defs/MathExpression" }
+        "result_variable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expression": {
+          "$ref": "#/$defs/MathExpression"
+        }
       },
       "required": ["result_variable", "expression"]
     },
     "MathOperand": {
       "description": "An operand for a math expression. Can be a number, a variable reference, or a nested expression.",
       "oneOf": [
-        { "type": "number" },
+        {
+          "type": "number"
+        },
         {
           "type": "object",
-          "properties": { "var": { "type": "string" } },
+          "properties": {
+            "var": {
+              "type": "string"
+            }
+          },
           "required": ["var"],
           "additionalProperties": false
         },
-        { "$ref": "#/$defs/MathExpression" }
+        {
+          "$ref": "#/$defs/MathExpression"
+        }
       ]
     },
     "MathExpression": {
@@ -782,7 +828,9 @@
         "operands": {
           "type": "array",
           "description": "An array of two operands for the operation.",
-          "items": { "$ref": "#/$defs/MathOperand" },
+          "items": {
+            "$ref": "#/$defs/MathOperand"
+          },
           "minItems": 2,
           "maxItems": 2
         }
