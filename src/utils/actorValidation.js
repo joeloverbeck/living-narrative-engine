@@ -10,7 +10,7 @@
  */
 
 import { isNonEmptyString } from './textUtils.js';
-import { ensureValidLogger } from './loggerUtils.js';
+import { getPrefixedLogger } from './loggerUtils.js';
 
 /**
  * Throws an error if the provided actor is invalid.
@@ -26,7 +26,7 @@ export function assertValidActor(
   logger,
   contextName = 'UnknownContext'
 ) {
-  const log = ensureValidLogger(logger, 'ActorValidation');
+  const log = getPrefixedLogger(logger, '[ActorValidation] ');
   if (!actor || !isNonEmptyString(actor.id)) {
     const errMsg = `${contextName}: actor is required and must have a valid id.`;
     log.error(errMsg, { actor });
