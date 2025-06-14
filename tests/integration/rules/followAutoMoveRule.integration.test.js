@@ -174,7 +174,7 @@ function init(entities) {
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     SYSTEM_MOVE_ENTITY: new SystemMoveEntityHandler({
       entityManager,
-      dispatcher: eventBus,
+      safeEventDispatcher: eventBus,
       logger,
     }),
   };

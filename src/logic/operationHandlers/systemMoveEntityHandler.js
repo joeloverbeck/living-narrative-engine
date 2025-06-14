@@ -7,20 +7,31 @@
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
-/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../defs.js').EntityRefObject} EntityRefObject */
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 class SystemMoveEntityHandler {
-  #logger;
-  #entityManager;
-  #dispatcher;
+  /** @type {ILogger} */ #logger;
+  /** @type {EntityManager} */ #entityManager;
+  /** @type {ISafeEventDispatcher} */ #dispatcher;
 
-  constructor({ entityManager, dispatcher, logger }) {
-    // Constructor with dependency injection and validation...
+  constructor({ entityManager, safeEventDispatcher, logger }) {
+    if (!logger?.debug)
+      throw new Error('SystemMoveEntityHandler requires ILogger');
+    if (
+      !entityManager ||
+      typeof entityManager.getComponentData !== 'function' ||
+      typeof entityManager.addComponent !== 'function'
+    ) {
+      throw new Error('SystemMoveEntityHandler requires EntityManager');
+    }
+    if (!safeEventDispatcher?.dispatch)
+      throw new Error('SystemMoveEntityHandler needs ISafeEventDispatcher');
     this.#entityManager = entityManager;
-    this.#dispatcher = dispatcher;
+    this.#dispatcher = safeEventDispatcher;
     this.#logger = logger;
   }
 
@@ -64,6 +75,8 @@ class SystemMoveEntityHandler {
     }
 
     // 3. Perform the move using EntityManager
+    let fromLocationId = null;
+
     try {
       const positionComponent = this.#entityManager.getComponentData(
         entityId,
@@ -76,7 +89,7 @@ class SystemMoveEntityHandler {
         return;
       }
 
-      const fromLocationId = positionComponent.locationId;
+      fromLocationId = positionComponent.locationId;
 
       // Prevent moving if already there
       if (fromLocationId === target_location_id) {
@@ -115,10 +128,16 @@ class SystemMoveEntityHandler {
         originalCommand: 'system:follow', // A sensible default for system-initiated actions
       });
     } catch (e) {
-      log.error(
-        `${opName}: Failed to move entity "${entityId}". Error: ${e.message}`,
-        { error: e }
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `${opName}: Failed to move entity "${entityId}". Error: ${e.message}`,
+        details: {
+          error: e.message,
+          stack: e.stack,
+          entityId,
+          fromLocationId,
+          targetLocationId: target_location_id,
+        },
+      });
     }
   }
 }
