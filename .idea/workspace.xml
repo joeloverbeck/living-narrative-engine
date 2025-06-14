@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Refactoring HumanTurnHandler.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Chores.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,15 +173,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="5670000" />
-    </task>
-    <task id="LOCAL-00016" summary="Unified action decision across existing actors.">
-      <option name="closed" value="true" />
-      <created>1749851726490</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1749851726490</updated>
+      <workItem from="1749913762946" duration="6313000" />
     </task>
     <task id="LOCAL-00017" summary="Ensuring the app works.">
       <option name="closed" value="true" />
@@ -568,7 +559,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749919199537</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <task id="LOCAL-00065" summary="Chores.">
+      <option name="closed" value="true" />
+      <created>1749920171325</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1749920171325</updated>
+    </task>
+    <option name="localTasksCounter" value="66" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -592,6 +591,7 @@
     <MESSAGE value="Implemented awaitTurnEndState.js." />
     <MESSAGE value="Fixed HumanTurnHandler's dependencies." />
     <MESSAGE value="Refactoring HumanTurnHandler." />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactoring HumanTurnHandler." />
+    <MESSAGE value="Chores." />
+    <option name="LAST_COMMIT_MESSAGE" value="Chores." />
   </component>
 </project>
