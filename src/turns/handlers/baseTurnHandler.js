@@ -222,15 +222,15 @@ export class BaseTurnHandler {
   /* ───────────────────────────── LIVENESS CHECKS ──────────────────────── */
 
   _assertHandlerActive() {
-    if (this._isDestroyed && !this._isDestroying) {
+    if (this._isDestroyed || this._isDestroying) {
       throw new Error(
-        `${this.constructor.name}: Operation invoked after handler was destroyed.`
+        `${this.constructor.name}: Operation invoked while handler is destroying or has been destroyed.`
       );
     }
   }
 
   _assertHandlerActiveUnlessDestroying(fromDestroy) {
-    if (!fromDestroy && !this._isDestroying) {
+    if (!fromDestroy) {
       this._assertHandlerActive();
     }
   }
