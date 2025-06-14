@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Refactoring HumanTurnHandler.">
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -173,23 +174,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="4736000" />
-    </task>
-    <task id="LOCAL-00014" summary="Unifying action decision.">
-      <option name="closed" value="true" />
-      <created>1749850152538</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1749850152538</updated>
-    </task>
-    <task id="LOCAL-00015" summary="Ensured playerTurnSubmitted doesn't break.">
-      <option name="closed" value="true" />
-      <created>1749850485333</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1749850485333</updated>
+      <workItem from="1749913762946" duration="5670000" />
     </task>
     <task id="LOCAL-00016" summary="Unified action decision across existing actors.">
       <option name="closed" value="true" />
@@ -567,7 +552,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749918647268</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <task id="LOCAL-00063" summary="Refactoring HumanTurnHandler.">
+      <option name="closed" value="true" />
+      <created>1749919038712</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1749919038713</updated>
+    </task>
+    <task id="LOCAL-00064" summary="Refactoring HumanTurnHandler.">
+      <option name="closed" value="true" />
+      <created>1749919199537</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1749919199537</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
