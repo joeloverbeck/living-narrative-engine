@@ -31,8 +31,15 @@
         "description": "The ID of the location the entity is now in after the move."
       },
       "direction": {
-        "type": "string",
-        "description": "The direction of the movement (e.g., 'north', 'west')."
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The direction of the movement (e.g., 'north', 'west'), or null if the move was to a specific target location."
       },
       "originalCommand": {
         "type": "string",
