@@ -4,15 +4,27 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing thoughts and notes tooltips.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented thoughts and notes tooltips.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/persistenceRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/persistenceRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/helpers/buildSpeechMeta.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/helpers/buildSpeechMeta.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/playtimeTracker.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/playtimeTracker.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/persistenceRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/persistenceRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/domUI/helpers/buildSpeechMeta.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/helpers/buildSpeechMeta.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/engine/playtimeTracker.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/engine/playtimeTracker.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/builders/turnContextBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/builders/turnContextBuilder.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/genericTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/genericTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/actorLocationUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/actorLocationUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/entityAssertions.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/entityAssertions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/locationUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/locationUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/mapManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/mapManager.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/textUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/textUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/promptBuilder.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/promptBuilder.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/promptElementAssemblers/standardElementAssembler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/promptElementAssemblers/standardElementAssembler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/aiTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/aiTurnHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.validation.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.validation.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/entityAssertions.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/entityAssertions.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -186,15 +198,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="23502000" />
-    </task>
-    <task id="LOCAL-00038" summary="Trying to return the app to normality.">
-      <option name="closed" value="true" />
-      <created>1749890627323</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1749890627323</updated>
+      <workItem from="1749913762946" duration="24524000" />
     </task>
     <task id="LOCAL-00039" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -580,7 +584,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749937747400</updated>
     </task>
-    <option name="localTasksCounter" value="87" />
+    <task id="LOCAL-00087" summary="Implemented thoughts and notes tooltips.">
+      <option name="closed" value="true" />
+      <created>1749938095089</created>
+      <option name="number" value="00087" />
+      <option name="presentableId" value="LOCAL-00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1749938095089</updated>
+    </task>
+    <option name="localTasksCounter" value="88" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -610,6 +622,7 @@
     <MESSAGE value="Ensuring that the king returns." />
     <MESSAGE value="The Return of the King." />
     <MESSAGE value="Implementing thoughts and notes tooltips." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implementing thoughts and notes tooltips." />
+    <MESSAGE value="Implemented thoughts and notes tooltips." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented thoughts and notes tooltips." />
   </component>
 </project>

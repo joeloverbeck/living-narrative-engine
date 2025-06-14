@@ -263,6 +263,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       }
     );
     if (speechMetaFragment) {
+      speechBubbleDiv.classList.add('has-meta');
       speechBubbleDiv.appendChild(speechMetaFragment);
     }
 
