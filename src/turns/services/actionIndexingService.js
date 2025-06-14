@@ -1,22 +1,4 @@
 // src/turns/services/actionIndexingService.js
-// ────────────────────────────────────────────────────────────────────────────────
-//  A "per‑turn" action index with backward‑compatibility for the test‑suite.
-//  -----------------------------------------------------------------------------
-//  * A *fresh* list is built every time you pass a **non‑empty** `discovered`
-//    array – even if the actor is the same as last turn. (That is the feature
-//    we introduced.)
-//  * The second (or later) call **in the same turn** may pass an empty array –
-//    you get back the exact same array instance that was built earlier.
-//  * Duplicate actions (same id + identical params) are suppressed with an
-//    `info()` log; the overall list is capped at
-//    `MAX_AVAILABLE_ACTIONS_PER_TURN`, logging a `warn()` when truncated.
-//
-//  The public surface expected by existing unit‑tests is preserved: constructor
-//  is tolerant to being called either with a bare logger or with `{ logger }`.
-//
-//  @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
-//  @typedef {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo} DiscoveredActionInfo
-//  @typedef {import('../dtos/actionComposite.js').ActionComposite} ActionComposite
 
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 
