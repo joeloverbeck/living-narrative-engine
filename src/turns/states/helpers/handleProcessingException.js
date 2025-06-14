@@ -3,7 +3,7 @@
  */
 
 /**
- * @typedef {import('../../types/stateTypes.js').ProcessingCommandStateLike} ProcessingCommandStateLike
+ * @typedef {import('../../../types/stateTypes.js').ProcessingCommandStateLike} ProcessingCommandStateLike
  * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
