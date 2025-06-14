@@ -38,7 +38,7 @@ const mockAiStrategy = {
 };
 
 const mockStrategyFactory = {
-  createForHuman: jest.fn(() => mockAiStrategy),
+  create: jest.fn(() => mockAiStrategy),
 };
 
 const mockTurnContext = {
@@ -129,12 +129,12 @@ describe('AITurnHandler', () => {
       await expect(handler.startTurn({})).rejects.toThrow(expectedError);
     });
 
-    it('should call strategyFactory.createForHuman to get a strategy', async () => {
+    it('should call strategyFactory.create to get a strategy', async () => {
       // Act
       await handler.startTurn(mockActor);
 
       // Assert
-      expect(mockStrategyFactory.createForHuman).toHaveBeenCalledTimes(1);
+      expect(mockStrategyFactory.create).toHaveBeenCalledTimes(1);
     });
 
     it('should call turnContextBuilder.build with the correct parameters', async () => {

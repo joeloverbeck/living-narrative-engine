@@ -97,7 +97,7 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       aiFallbackActionFactory: { create: jest.fn() },
       // stub strategy factory directly:
       strategyFactory: {
-        createForHuman: jest.fn(() => new StubAIPlayerStrategy(stubs)),
+        create: jest.fn(() => new StubAIPlayerStrategy(stubs)),
       },
       turnContextBuilder: mockTurnContextBuilder,
       gameStateProvider: {},
@@ -142,8 +142,8 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
 
     // 3. Verify key calls.
     expect(mockTurnContextBuilder.build).toHaveBeenCalledTimes(1);
-    expect(stubs.strategyFactory.createForHuman).toHaveBeenCalledTimes(1);
-    expect(stubs.strategyFactory.createForHuman).toHaveBeenCalled();
+    expect(stubs.strategyFactory.create).toHaveBeenCalledTimes(1);
+    expect(stubs.strategyFactory.create).toHaveBeenCalled();
     expect(mockTurnState.startTurn).toHaveBeenCalledTimes(1);
   });
 });
