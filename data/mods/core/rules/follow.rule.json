@@ -40,14 +40,11 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "END_TURN",
             "comment": "Signal to the Turn Manager that the actor's turn is over (and was unsuccessful).",
             "parameters": {
-              "eventType": "core:turn_ended",
-              "payload": {
-                "entityId": "{event.payload.actorId}",
-                "success": false
-              }
+              "entityId": "{event.payload.actorId}",
+              "success": false
             }
           }
         ]
@@ -223,14 +220,11 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "END_TURN",
             "comment": "Dispatch an event to indicate the actor's turn has ended after successful follow attempt.",
             "parameters": {
-              "eventType": "core:turn_ended",
-              "payload": {
-                "entityId": "{event.payload.actorId}",
-                "success": true
-              }
+              "entityId": "{event.payload.actorId}",
+              "success": true
             }
           }
         ]

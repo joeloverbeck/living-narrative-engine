@@ -20,6 +20,7 @@ import HasComponentHandler from '../../../src/logic/operationHandlers/hasCompone
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
+import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -147,6 +148,7 @@ function init(entities) {
     }),
     QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
   };
 

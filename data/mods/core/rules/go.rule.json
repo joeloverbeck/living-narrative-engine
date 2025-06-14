@@ -209,14 +209,11 @@
                   }
                 },
                 {
-                  "type": "DISPATCH_EVENT",
+                  "type": "END_TURN",
                   "comment": "End the turn successfully.",
                   "parameters": {
-                    "eventType": "core:turn_ended",
-                    "payload": {
-                      "entityId": "{event.payload.actorId}",
-                      "success": true
-                    }
+                    "entityId": "{event.payload.actorId}",
+                    "success": true
                   }
                 }
               ],
@@ -232,16 +229,13 @@
                   }
                 },
                 {
-                  "type": "DISPATCH_EVENT",
+                  "type": "END_TURN",
                   "comment": "End the turn after a failed move.",
                   "parameters": {
-                    "eventType": "core:turn_ended",
-                    "payload": {
-                      "entityId": "{event.payload.actorId}",
-                      "success": false,
-                      "error": {
-                        "message": "Failed to move: No valid target location could be determined."
-                      }
+                    "entityId": "{event.payload.actorId}",
+                    "success": false,
+                    "error": {
+                      "message": "Failed to move: No valid target location could be determined."
                     }
                   }
                 }
@@ -251,16 +245,13 @@
         ],
         "else_actions": [
           {
-            "type": "DISPATCH_EVENT",
+            "type": "END_TURN",
             "comment": "Action failed because actor is missing required components.",
             "parameters": {
-              "eventType": "core:turn_ended",
-              "payload": {
-                "entityId": "{event.payload.actorId}",
-                "success": false,
-                "error": {
-                  "message": "Actor is missing required components for movement."
-                }
+              "entityId": "{event.payload.actorId}",
+              "success": false,
+              "error": {
+                "message": "Actor is missing required components for movement."
               }
             }
           }
