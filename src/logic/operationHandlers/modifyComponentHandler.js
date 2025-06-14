@@ -11,6 +11,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import resolveEntityId from '../../utils/entityRefUtils.js';
 
 /**
  * @typedef {object} EntityRefObject
@@ -81,26 +82,6 @@ class ModifyComponentHandler {
     this.#dispatcher = safeEventDispatcher;
   }
 
-  #resolveEntityId(ref, ctx) {
-    const ec = ctx?.evaluationContext ?? {};
-    if (typeof ref === 'string') {
-      const t = ref.trim();
-      if (!t) return null;
-      if (t === 'actor') return ec.actor?.id ?? null;
-      if (t === 'target') return ec.target?.id ?? null;
-      return t;
-    }
-    if (
-      ref &&
-      typeof ref === 'object' &&
-      typeof ref.entityId === 'string' &&
-      ref.entityId.trim()
-    ) {
-      return ref.entityId.trim();
-    }
-    return null;
-  }
-
   /**
    * Executes a MODIFY_COMPONENT operation (mode = "set" only).
    *
@@ -142,7 +123,7 @@ class ModifyComponentHandler {
     }
 
     // ── resolve entity ─────────────────────────────────────────────
-    const entityId = this.#resolveEntityId(entity_ref, execCtx);
+    const entityId = resolveEntityId(entity_ref, execCtx);
     if (!entityId) {
       log.warn('MODIFY_COMPONENT: could not resolve entity id.', {
         entity_ref,
