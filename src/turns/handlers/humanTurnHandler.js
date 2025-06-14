@@ -1,5 +1,6 @@
 /**
- * @file This module is the main handler of a turn for a human character.
+ * @file Alias module exposing ActorTurnHandler as `HumanTurnHandler` for
+ * backward compatibility.
  * @see src/turns/handlers/humanTurnHandler.js
  */
 
@@ -10,21 +11,10 @@ import ActorTurnHandler from './actorTurnHandler.js';
 /**
  * @class HumanTurnHandler
  * @augments ActorTurnHandler
- * @description Thin wrapper that configures ActorTurnHandler for human players.
+ * @description Empty subclass preserving the original class name so that
+ * logs and instanceof checks remain consistent while delegating all
+ * behavior to {@link ActorTurnHandler}.
  */
-class HumanTurnHandler extends ActorTurnHandler {
-  /**
-   * @param {object} deps
-   * @param {import('../../interfaces/coreServices.js').ILogger} deps.logger
-   * @param {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} deps.turnStateFactory
-   * @param {import('../ports/ITurnEndPort.js').ITurnEndPort} deps.turnEndPort
-   * @param {import('../interfaces/ITurnStrategyFactory.js').ITurnStrategyFactory} deps.turnStrategyFactory
-   * @param {import('../builders/turnContextBuilder.js').TurnContextBuilder} deps.turnContextBuilder
-   */
-  constructor({ turnStrategyFactory, ...rest }) {
-    super({ ...rest, turnStrategyFactory });
-  }
-}
+export class HumanTurnHandler extends ActorTurnHandler {}
 
 export default HumanTurnHandler;
-export { HumanTurnHandler };

@@ -1,8 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { ACTION_DECIDED_ID } from '../../src/constants/eventIds.js';
 import { TurnActionChoicePipeline } from '../../src/turns/pipeline/turnActionChoicePipeline.js';
-import { ActionIndexingService } from '../../src/turns/services/actionIndexingService.js';
-import { ActionIndexerAdapter } from '../../src/turns/adapters/actionIndexerAdapter.js';
 import { GenericTurnStrategy } from '../../src/turns/strategies/genericTurnStrategy.js';
 import { HumanDecisionProvider } from '../../src/turns/providers/humanDecisionProvider.js';
 import { LLMDecisionProvider } from '../../src/turns/providers/llmDecisionProvider.js';
@@ -41,14 +39,18 @@ describe('Integration – Human and AI turn parity', () => {
         .mockResolvedValue([{ id: 'core:wait', command: 'Wait', params: {} }]),
     };
 
-    const indexingService = new ActionIndexingService({ logger });
-    const indexSpy = jest.spyOn(indexingService, 'indexActions');
+    const composite = {
+      index: 1,
+      actionId: 'core:wait',
+      commandString: 'Wait',
+      params: {},
+      description: 'Wait',
+    };
 
-    const indexer = new ActionIndexerAdapter(indexingService);
+    const provider = { get: jest.fn().mockResolvedValue([composite]) };
 
     const pipeline = new TurnActionChoicePipeline({
-      discoverySvc,
-      indexer,
+      availableActionsProvider: provider,
       logger,
     });
 
@@ -141,13 +143,14 @@ describe('Integration – Human and AI turn parity', () => {
       expect.objectContaining({ actorId: aiActor.id, actorType: 'ai' })
     );
 
-    expect(indexSpy).toHaveBeenCalledTimes(2);
-    expect(indexSpy).toHaveBeenNthCalledWith(
+    expect(provider.get).toHaveBeenCalledTimes(2);
+    expect(provider.get).toHaveBeenNthCalledWith(
       1,
-      humanActor.id,
-      expect.any(Array)
+      humanActor,
+      humanContext,
+      logger
     );
-    expect(indexSpy).toHaveBeenNthCalledWith(2, aiActor.id, expect.any(Array));
+    expect(provider.get).toHaveBeenNthCalledWith(2, aiActor, aiContext, logger);
 
     const humanEndState = {
       action: humanContext.getChosenAction(),
