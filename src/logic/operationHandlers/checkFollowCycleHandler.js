@@ -7,6 +7,9 @@
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 import { wouldCreateCycle } from '../../utils/followUtils.js';
 
@@ -22,17 +25,24 @@ class CheckFollowCycleHandler {
   #logger;
   /** @type {EntityManager} */
   #entityManager;
+  /** @type {ISafeEventDispatcher} */
+  #dispatcher;
 
   /**
    * @param {{ logger: ILogger; entityManager: EntityManager }} deps
    */
-  constructor({ logger, entityManager }) {
+  constructor({ logger, entityManager, safeEventDispatcher }) {
     if (!logger?.debug)
       throw new Error('CheckFollowCycleHandler requires a valid ILogger');
     if (!entityManager?.getEntityInstance)
       throw new Error('CheckFollowCycleHandler requires a valid EntityManager');
+    if (!safeEventDispatcher?.dispatch)
+      throw new Error(
+        'CheckFollowCycleHandler requires a valid ISafeEventDispatcher'
+      );
     this.#logger = logger;
     this.#entityManager = entityManager;
+    this.#dispatcher = safeEventDispatcher;
     this.#logger.debug('[CheckFollowCycleHandler] Initialized');
   }
 
@@ -45,20 +55,23 @@ class CheckFollowCycleHandler {
     const { follower_id, leader_id, result_variable } = params || {};
 
     if (typeof follower_id !== 'string' || !follower_id.trim()) {
-      log.error('CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter', {
-        params,
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter',
+        details: { params },
       });
       return;
     }
     if (typeof leader_id !== 'string' || !leader_id.trim()) {
-      log.error('CHECK_FOLLOW_CYCLE: Invalid "leader_id" parameter', {
-        params,
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'CHECK_FOLLOW_CYCLE: Invalid "leader_id" parameter',
+        details: { params },
       });
       return;
     }
     if (typeof result_variable !== 'string' || !result_variable.trim()) {
-      log.error('CHECK_FOLLOW_CYCLE: Invalid "result_variable" parameter', {
-        params,
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'CHECK_FOLLOW_CYCLE: Invalid "result_variable" parameter',
+        details: { params },
       });
       return;
     }
@@ -78,10 +91,10 @@ class CheckFollowCycleHandler {
         `CHECK_FOLLOW_CYCLE: Stored result in "${result_variable}": ${JSON.stringify(result)}`
       );
     } catch (e) {
-      log.error(
-        `CHECK_FOLLOW_CYCLE: Failed to write to context variable "${result_variable}"`,
-        { error: e }
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `CHECK_FOLLOW_CYCLE: Failed to write to context variable "${result_variable}"`,
+        details: { error: e.message, stack: e.stack },
+      });
     }
   }
 }

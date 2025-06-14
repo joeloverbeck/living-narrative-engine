@@ -14,6 +14,7 @@ import {
 import CheckFollowCycleHandler from '../../../src/logic/operationHandlers/checkFollowCycleHandler.js';
 // Assuming the constant is exported from a known path
 import { FOLLOWING_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 /**
  * Creates a mock ILogger.
@@ -54,13 +55,16 @@ describe('CheckFollowCycleHandler', () => {
   let mockLogger;
   let handler;
   let mockExecutionContext;
+  let mockDispatcher;
 
   beforeEach(() => {
     mockLogger = makeMockLogger();
     mockEntityManager = makeMockEntityManager();
+    mockDispatcher = { dispatch: jest.fn() };
     handler = new CheckFollowCycleHandler({
       logger: mockLogger,
       entityManager: mockEntityManager,
+      safeEventDispatcher: mockDispatcher,
     });
     mockExecutionContext = {
       evaluationContext: {
@@ -79,25 +83,52 @@ describe('CheckFollowCycleHandler', () => {
   describe('Constructor', () => {
     test('should throw an error if the logger dependency is missing or invalid', () => {
       expect(
-        () => new CheckFollowCycleHandler({ entityManager: mockEntityManager })
+        () =>
+          new CheckFollowCycleHandler({
+            entityManager: mockEntityManager,
+            safeEventDispatcher: mockDispatcher,
+          })
       ).toThrow('CheckFollowCycleHandler requires a valid ILogger');
       expect(
         () =>
           new CheckFollowCycleHandler({
             logger: {},
             entityManager: mockEntityManager,
+            safeEventDispatcher: mockDispatcher,
           })
       ).toThrow('CheckFollowCycleHandler requires a valid ILogger');
     });
 
     test('should throw an error if the entity manager dependency is missing or invalid', () => {
-      expect(() => new CheckFollowCycleHandler({ logger: mockLogger })).toThrow(
-        'CheckFollowCycleHandler requires a valid EntityManager'
-      );
+      expect(
+        () =>
+          new CheckFollowCycleHandler({
+            logger: mockLogger,
+            safeEventDispatcher: mockDispatcher,
+          })
+      ).toThrow('CheckFollowCycleHandler requires a valid EntityManager');
       expect(
         () =>
           new CheckFollowCycleHandler({ logger: mockLogger, entityManager: {} })
       ).toThrow('CheckFollowCycleHandler requires a valid EntityManager');
+    });
+
+    test('should throw an error if safeEventDispatcher dependency is missing or invalid', () => {
+      expect(
+        () =>
+          new CheckFollowCycleHandler({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+          })
+      ).toThrow(/ISafeEventDispatcher/);
+      expect(
+        () =>
+          new CheckFollowCycleHandler({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            safeEventDispatcher: {},
+          })
+      ).toThrow(/ISafeEventDispatcher/);
     });
 
     test('should initialize successfully with valid dependencies', () => {
@@ -106,6 +137,7 @@ describe('CheckFollowCycleHandler', () => {
           new CheckFollowCycleHandler({
             logger: mockLogger,
             entityManager: mockEntityManager,
+            safeEventDispatcher: mockDispatcher,
           })
       ).not.toThrow();
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -136,22 +168,26 @@ describe('CheckFollowCycleHandler', () => {
     ];
 
     test.each(invalidParams)(
-      'should log an error and return if "%s" parameter is invalid',
+      'should dispatch an error and return if "%s" parameter is invalid',
       (paramName, params) => {
         handler.execute(params, mockExecutionContext);
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          `CHECK_FOLLOW_CYCLE: Invalid "${paramName}" parameter`,
-          expect.any(Object)
+        expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.objectContaining({
+            message: `CHECK_FOLLOW_CYCLE: Invalid "${paramName}" parameter`,
+          })
         );
         expect(mockExecutionContext.evaluationContext.context).toEqual({});
       }
     );
 
-    test('should log an error and return if params object itself is missing', () => {
+    test('should dispatch an error and return if params object itself is missing', () => {
       handler.execute(null, mockExecutionContext);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter',
-        { params: null }
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: 'CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter',
+        })
       );
     });
   });
@@ -318,7 +354,7 @@ describe('CheckFollowCycleHandler', () => {
       );
     });
 
-    test('should log an error if writing to the execution context fails', () => {
+    test('should dispatch an error if writing to the execution context fails', () => {
       // Arrange: create an invalid execution context
       const invalidExecCtx = {
         evaluationContext: null, // This will cause a TypeError
@@ -334,10 +370,12 @@ describe('CheckFollowCycleHandler', () => {
       handler.execute(params, invalidExecCtx);
 
       // Assert
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'CHECK_FOLLOW_CYCLE: Failed to write to context variable "res"',
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
         expect.objectContaining({
-          error: expect.any(TypeError),
+          message:
+            'CHECK_FOLLOW_CYCLE: Failed to write to context variable "res"',
+          details: expect.objectContaining({ error: expect.any(String) }),
         })
       );
     });
