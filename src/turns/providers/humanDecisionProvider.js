@@ -1,6 +1,8 @@
+// src/turns/services/humanDecisionProvider.js
+
 /**
  * @file Provides a human decision provider mapping prompt outputs to the
- *       ITurnDecisionProvider interface.
+ * ITurnDecisionProvider interface.
  */
 
 import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
@@ -9,8 +11,8 @@ import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
  * @class HumanDecisionProvider
  * @extends ITurnDecisionProvider
  * @description
- *   Orchestrates a human prompt to select an action, resolving either by
- *   integer index or by action ID lookup.
+ * Orchestrates a human prompt to select an action, resolving either by
+ * integer index or by action ID lookup.
  */
 export class HumanDecisionProvider extends ITurnDecisionProvider {
   /**
@@ -22,7 +24,7 @@ export class HumanDecisionProvider extends ITurnDecisionProvider {
   constructor({ promptCoordinator, actionIndexingService, logger }) {
     super();
     this.promptCoordinator = promptCoordinator;
-    this.actionIndexingService = actionIndexingService;
+    this.actionIndexingService = actionIndexingService; // Kept for potential future use, though not used in the corrected 'decide' method.
     this.logger = logger;
   }
 
@@ -41,14 +43,39 @@ export class HumanDecisionProvider extends ITurnDecisionProvider {
       cancellationSignal: abortSignal,
     });
 
-    // 2) resolve an integer index if needed
-    let chosenIndex = promptRes.index;
+    // 2) Resolve the integer index from the prompt result.
+    // The prompt may return the index directly (e.g., from a button click `chosenIndex`)
+    // or an action object/ID (as we've seen from PromptSession).
+    let chosenIndex = promptRes.chosenIndex;
+
+    // Fallback if index isn't a number, but we have an action ID.
     if (!Number.isInteger(chosenIndex)) {
-      const composite = this.actionIndexingService.resolve(
-        actor.id,
-        promptRes.action.id
+      const actionId = promptRes.action?.id;
+      if (typeof actionId === 'string') {
+        // We have an ID. Find its corresponding composite in the `actions` array
+        // that was passed into this method.
+        const matchingComposite = actions.find((comp) => comp.id === actionId);
+
+        if (matchingComposite) {
+          chosenIndex = matchingComposite.index;
+        } else {
+          this.logger.error(
+            `HumanDecisionProvider: Could not find action with ID "${actionId}" in the list of available actions for actor ${actor.id}.`,
+            { availableActions: actions.map((a) => a.id) }
+          );
+          // Throw an error to prevent proceeding with an invalid choice.
+          throw new Error(`Action "${actionId}" is not a valid choice.`);
+        }
+      }
+    }
+
+    // Final validation before returning.
+    if (!Number.isInteger(chosenIndex)) {
+      this.logger.error(
+        `HumanDecisionProvider: Failed to determine a valid integer index for actor ${actor.id}'s action.`,
+        { promptResult: promptRes }
       );
-      chosenIndex = composite.index;
+      throw new Error('Could not resolve the chosen action to a valid index.');
     }
 
     // 3) return standardized result

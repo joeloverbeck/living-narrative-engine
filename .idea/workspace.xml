@@ -5,9 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normality.">
+      <change afterPath="$PROJECT_DIR$/tests/turns/providers/humanDecisionProvider.indexUse.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CONTRIBUTING.md" beforeDir="false" afterPath="$PROJECT_DIR$/CONTRIBUTING.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/providers/humanDecisionProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/providers/humanDecisionProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/humanDecisionFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/humanDecisionFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.actorMismatchAwait.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.actorMismatchAwait.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.invalidActor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.invalidActor.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/providers/humanDecisionProvider.test.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,9 +60,11 @@
     "Jest.actionDiscoveryService.locationRetrieval.test.js.executor": "Run",
     "Jest.decisionResult.test.js.executor": "Run",
     "Jest.genericTurnStrategy.test.js.executor": "Run",
+    "Jest.humanDecisionProvider.indexUse.test.js.executor": "Run",
     "Jest.humanDecisionProvider.test.js.executor": "Run",
     "Jest.humanTurnHandler.awaitTurnEndPromise.test.js.executor": "Run",
     "Jest.humanTurnHandler.getTurnEndPort.test.js.executor": "Run",
+    "Jest.humanTurnHandler.invalidActor.test.js.executor": "Run",
     "Jest.llmDecisionProvider.test.js.executor": "Run",
     "Jest.playerTurnPrompt.schema.test.js.executor": "Run",
     "Jest.playerTurnSubmitted.schema.test.js.executor": "Run",
@@ -91,7 +99,25 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.humanTurnHandler.invalidActor.test.js">
+  <component name="RunManager" selected="Jest.humanDecisionProvider.indexUse.test.js">
+    <configuration name="humanDecisionProvider.indexUse.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/providers/humanDecisionProvider.indexUse.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="humanDecisionProvider.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/providers/humanDecisionProvider.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="humanTurnHandler.awaitTurnEndPromise.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -119,31 +145,13 @@
       <test-file value="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.invalidActor.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="promptSession.indexOnly.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/prompting/promptSession.indexOnly.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="updateAvailableActions.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/updateAvailableActions.schema.test.js" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.humanDecisionProvider.indexUse.test.js" />
+        <item itemvalue="Jest.humanDecisionProvider.test.js" />
         <item itemvalue="Jest.humanTurnHandler.invalidActor.test.js" />
         <item itemvalue="Jest.humanTurnHandler.awaitTurnEndPromise.test.js" />
         <item itemvalue="Jest.humanTurnHandler.getTurnEndPort.test.js" />
-        <item itemvalue="Jest.promptSession.indexOnly.test.js" />
-        <item itemvalue="Jest.updateAvailableActions.schema.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -163,7 +171,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="5649000" />
+      <workItem from="1749876741387" duration="6668000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -365,7 +373,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749881829753</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Trying to return the app to normality.">
+      <option name="closed" value="true" />
+      <created>1749882592145</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1749882592145</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
