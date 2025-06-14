@@ -132,7 +132,7 @@ describe('HumanTurnHandler Constructor', () => {
     const deps = getValidDependencies();
     delete deps.turnEndPort;
     expect(() => new HumanTurnHandler(deps)).toThrow(
-      'HumanTurnHandler: turnEndPort is required'
+      'GenericTurnHandler: turnEndPort is required'
     );
   });
 
@@ -165,7 +165,7 @@ describe('HumanTurnHandler Constructor', () => {
     const deps = getValidDependencies();
     delete deps.turnStrategyFactory;
     expect(() => new HumanTurnHandler(deps)).toThrow(
-      'HumanTurnHandler: turnStrategyFactory is required'
+      'GenericTurnHandler: strategyFactory is required'
     );
   });
 
