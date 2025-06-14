@@ -34,9 +34,7 @@ import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
  */
 class PromptCoordinator extends IPromptCoordinator {
   /** @type {ILogger} */ #logger;
-  /** @type {IActionDiscoveryService} */ #actionDiscoveryService;
   /** @type {IPromptOutputPort} */ #promptOutputPort;
-  /** @type {ActionContextBuilder} */ #actionContextBuilder;
   /** @type {ActionIndexingService} */ #actionIndexingService;
   /** @type {IPlayerTurnEvents} */ #playerTurnEvents;
 
@@ -48,9 +46,7 @@ class PromptCoordinator extends IPromptCoordinator {
    */
   constructor({
     logger,
-    actionDiscoveryService,
     promptOutputPort,
-    actionContextBuilder,
     actionIndexingService,
     playerTurnEvents,
   }) {
@@ -59,17 +55,8 @@ class PromptCoordinator extends IPromptCoordinator {
     validateDependency(logger, 'logger', console, {
       requiredMethods: ['info', 'error', 'debug', 'warn'],
     });
-    validateDependency(
-      actionDiscoveryService,
-      'actionDiscoveryService',
-      logger,
-      { requiredMethods: ['getValidActions'] }
-    );
     validateDependency(promptOutputPort, 'promptOutputPort', logger, {
       requiredMethods: ['prompt'],
-    });
-    validateDependency(actionContextBuilder, 'actionContextBuilder', logger, {
-      requiredMethods: ['buildContext'],
     });
     validateDependency(actionIndexingService, 'actionIndexingService', logger, {
       requiredMethods: ['indexActions', 'resolve'],
@@ -77,9 +64,7 @@ class PromptCoordinator extends IPromptCoordinator {
     validateDependency(playerTurnEvents, 'playerTurnEvents', logger);
 
     this.#logger = logger;
-    this.#actionDiscoveryService = actionDiscoveryService;
     this.#promptOutputPort = promptOutputPort;
-    this.#actionContextBuilder = actionContextBuilder;
     this.#actionIndexingService = actionIndexingService;
     this.#playerTurnEvents = playerTurnEvents;
 
