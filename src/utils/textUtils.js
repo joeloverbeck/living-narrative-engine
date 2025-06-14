@@ -63,16 +63,6 @@ export function isNonBlankString(value) {
 }
 
 /**
- * @deprecated Use `isNonBlankString` instead.
- * Checks if the provided value is a non-empty string after trimming.
- * @param {*} value - Value to validate.
- * @returns {boolean} True if value is a non-empty string, otherwise false.
- */
-export function isNonEmptyString(value) {
-  return isNonBlankString(value);
-}
-
-/**
  * Formats a total number of seconds into a HH:MM:SS string.
  *
  * @param {number} totalSeconds - Seconds to format.

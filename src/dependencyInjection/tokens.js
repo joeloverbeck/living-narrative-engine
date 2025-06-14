@@ -312,7 +312,7 @@ export const tokens = freeze({
   IActorDataExtractor: 'IActorDataExtractor',
 
   // --- Utils ---
-  assertValidActor: 'assertValidActor',
+  assertValidEntity: 'assertValidEntity',
 
   // Core Builders
   ActionContextBuilder: 'ActionContextBuilder',

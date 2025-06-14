@@ -124,13 +124,13 @@ describe('GenericTurnHandler', () => {
   describe('startTurn and Context Creation', () => {
     it('should throw an error if the actor is invalid', async () => {
       await expect(handler.startTurn(null)).rejects.toThrow(
-        'actor is required and must have a valid id'
+        'entity is required and must have a valid id'
       );
       await expect(handler.startTurn({})).rejects.toThrow(
-        'actor is required and must have a valid id'
+        'entity is required and must have a valid id'
       );
       await expect(handler.startTurn({ id: '   ' })).rejects.toThrow(
-        'actor is required and must have a valid id'
+        'entity is required and must have a valid id'
       );
     });
 

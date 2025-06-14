@@ -2,7 +2,7 @@
 
 import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from './safeDispatchError.js';
-import { isNonEmptyString } from './textUtils.js';
+import { isNonBlankString } from './textUtils.js';
 import { getPrefixedLogger } from './loggerUtils.js';
 import {
   isValidEntityManager,
@@ -108,7 +108,7 @@ export function getExitByDirection(
   dispatcher
 ) {
   const log = getPrefixedLogger(logger, '[locationUtils] ');
-  if (!isNonEmptyString(directionName)) {
+  if (!isNonBlankString(directionName)) {
     log.debug('getExitByDirection: Invalid or empty directionName provided.');
     return null;
   }
@@ -127,10 +127,10 @@ export function getExitByDirection(
   for (const exit of exitsData) {
     if (
       exit &&
-      isNonEmptyString(exit.direction) &&
+      isNonBlankString(exit.direction) &&
       exit.direction.toLowerCase().trim() === normalizedDirName
     ) {
-      if (isNonEmptyString(exit.target)) {
+      if (isNonBlankString(exit.target)) {
         return exit;
       }
       const locId =
@@ -193,8 +193,8 @@ export function getAvailableExits(
     if (
       exit &&
       typeof exit === 'object' &&
-      isNonEmptyString(exit.direction) &&
-      isNonEmptyString(exit.target)
+      isNonBlankString(exit.direction) &&
+      isNonBlankString(exit.target)
     ) {
       validExits.push(exit);
     } else {

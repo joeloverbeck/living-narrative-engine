@@ -6,6 +6,7 @@
 
 import { BaseTurnHandler } from './baseTurnHandler.js';
 import { AwaitTurnEndState } from '../valueObjects/awaitTurnEndState.js';
+import { assertValidEntity } from '../../utils/entityAssertions.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -18,7 +19,7 @@ import { AwaitTurnEndState } from '../valueObjects/awaitTurnEndState.js';
 /**
  * @abstract
  * @class GenericTurnHandler
- * @extends BaseTurnHandler
+ * @augments BaseTurnHandler
  */
 class GenericTurnHandler extends BaseTurnHandler {
   /** @type {ITurnEndPort} */
@@ -119,19 +120,26 @@ class GenericTurnHandler extends BaseTurnHandler {
    * @throws {Error} If the actor is invalid.
    */
   _assertValidActor(actor, operationName) {
-    if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
-      const errorMsg = `${this.constructor.name}.${operationName}: actor is required and must have a valid id.`;
-      this._logger.error(errorMsg);
-      throw new Error(errorMsg);
-    }
+    assertValidEntity(
+      actor,
+      this._logger,
+      `${this.constructor.name}.${operationName}`
+    );
   }
 
-  /** @private */
+  /**
+   * @param newState
+   * @private
+   */
   _setAwaitState(newState) {
     this.#awaitState = newState;
   }
 
-  /** @private */
+  /**
+   * @param isAwaiting
+   * @param actorId
+   * @private
+   */
   _markAwaitingTurnEnd(isAwaiting, actorId = null) {
     const prevState = this.#awaitState;
     const newState = isAwaiting

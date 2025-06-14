@@ -121,7 +121,7 @@ describe('AITurnHandler', () => {
   describe('startTurn', () => {
     it('should throw an error if the actor is null or invalid', async () => {
       const expectedError =
-        'AITurnHandler.startTurn: actor is required and must have a valid id.';
+        'AITurnHandler.startTurn: entity is required and must have a valid id.';
       await expect(handler.startTurn(null)).rejects.toThrow(expectedError);
       await expect(handler.startTurn({ id: ' ' })).rejects.toThrow(
         expectedError
