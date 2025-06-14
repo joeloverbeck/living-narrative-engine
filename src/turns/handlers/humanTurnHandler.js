@@ -123,7 +123,15 @@ class HumanTurnHandler extends BaseTurnHandler {
    * @param {Entity} actor
    */
   async startTurn(actor) {
+    this._logger.debug(
+      `${this.constructor.name}.startTurn called for actor ${actor?.id}.`
+    );
     super._assertHandlerActive();
+    if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
+      const errorMsg = `${this.constructor.name}.startTurn: actor is required and must have a valid id.`;
+      this._logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
     this._setCurrentActorInternal(actor);
 
     const humanStrategy = this.#turnStrategyFactory.createForHuman(actor.id);

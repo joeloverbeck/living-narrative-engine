@@ -24,6 +24,7 @@ describe('HumanTurnHandler method delegation', () => {
   let mockHumanDecisionProvider;
   let mockTurnActionFactory;
   let mockTurnStrategyFactory;
+  let mockTurnContextBuilder;
 
   beforeEach(() => {
     mockLogger = {
@@ -46,6 +47,7 @@ describe('HumanTurnHandler method delegation', () => {
     mockTurnStrategyFactory = {
       createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
     };
+    mockTurnContextBuilder = { build: jest.fn() };
 
     deps = {
       logger: mockLogger,
@@ -59,6 +61,7 @@ describe('HumanTurnHandler method delegation', () => {
       humanDecisionProvider: mockHumanDecisionProvider,
       turnActionFactory: mockTurnActionFactory,
       turnStrategyFactory: mockTurnStrategyFactory,
+      turnContextBuilder: mockTurnContextBuilder,
     };
     jest
       .spyOn(BaseTurnHandler.prototype, '_setInitialState')

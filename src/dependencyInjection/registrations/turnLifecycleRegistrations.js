@@ -26,7 +26,7 @@ import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoiceP
 import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider';
 import { GenericTurnStrategyFactory } from '../../turns/factories/genericTurnStrategyFactory.js';
 import { TurnContextBuilder } from '../../turns/builders/turnContextBuilder.js';
-import { assertValidActor } from '../../utils/validation/actorValidation.js';
+import { assertValidActor } from '../../utils/actorValidation.js';
 
 /**
  * @param {import('../appContainer.js').default} container
@@ -134,7 +134,7 @@ export function registerTurnLifecycle(container) {
   );
 
   // ──────────────────── Validation Utils ─────────────────────
-  r.value(tokens.assertValidActor, assertValidActor);
+  r.singletonFactory(tokens.assertValidActor, () => assertValidActor);
 
   // ───────────────── Turn Context Builder ────────────────────
   r.transientFactory(

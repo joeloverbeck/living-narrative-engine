@@ -24,6 +24,7 @@ describe('HumanTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () =
   let mockHumanDecisionProvider;
   let mockTurnActionFactory;
   let mockTurnStrategyFactory;
+  let mockTurnContextBuilder;
 
   beforeEach(() => {
     mockLogger = {
@@ -46,6 +47,7 @@ describe('HumanTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () =
     mockTurnStrategyFactory = {
       createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
     };
+    mockTurnContextBuilder = { build: jest.fn() };
 
     deps = {
       logger: mockLogger,
@@ -59,6 +61,7 @@ describe('HumanTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () =
       humanDecisionProvider: mockHumanDecisionProvider,
       turnActionFactory: mockTurnActionFactory,
       turnStrategyFactory: mockTurnStrategyFactory,
+      turnContextBuilder: mockTurnContextBuilder,
     };
 
     jest
