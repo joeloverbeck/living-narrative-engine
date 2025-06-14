@@ -12,6 +12,9 @@
 /** @typedef {import('../../data/schemas/game.schema.json')} GameConfig */ // Assuming this type exists
 
 import { CORE_MOD_ID } from '../constants/core';
+import { validateDependency } from '../utils/validationUtils.js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { formatAjvErrors } from '../utils/ajvUtils.js';
 
 /**
  * Service responsible for locating, fetching, validating, and parsing the game configuration file (e.g., game.json).
@@ -42,70 +45,27 @@ class GameConfigLoader {
     schemaValidator,
     logger,
   }) {
-    // <<< UPDATED dependencies
-    // AC: Dependency Validation
-    if (
-      !configuration ||
-      typeof configuration.getGameConfigFilename !== 'function' ||
-      typeof configuration.getContentTypeSchemaId !== 'function'
-    ) {
-      // <<< Added getContentTypeSchemaId check
-      throw new Error(
-        'GameConfigLoader requires a valid IConfiguration instance with getGameConfigFilename and getContentTypeSchemaId.'
-      );
-    }
-    if (
-      !pathResolver ||
-      typeof pathResolver.resolveGameConfigPath !== 'function'
-    ) {
-      throw new Error(
-        'GameConfigLoader requires a valid IPathResolver instance with resolveGameConfigPath.'
-      );
-    }
-    if (!dataFetcher || typeof dataFetcher.fetch !== 'function') {
-      throw new Error(
-        'GameConfigLoader requires a valid IDataFetcher instance with fetch.'
-      );
-    }
-    if (
-      !schemaValidator ||
-      typeof schemaValidator.isSchemaLoaded !== 'function' ||
-      typeof schemaValidator.getValidator !== 'function'
-    ) {
-      throw new Error(
-        'GameConfigLoader requires a valid ISchemaValidator instance with isSchemaLoaded and getValidator.'
-      );
-    }
-    if (
-      !logger ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      throw new Error('GameConfigLoader requires a valid ILogger instance.');
-    }
+    this.#logger = ensureValidLogger(logger, 'GameConfigLoader');
+
+    validateDependency(configuration, 'IConfiguration', this.#logger, {
+      requiredMethods: ['getGameConfigFilename', 'getContentTypeSchemaId'],
+    });
+    validateDependency(pathResolver, 'IPathResolver', this.#logger, {
+      requiredMethods: ['resolveGameConfigPath'],
+    });
+    validateDependency(dataFetcher, 'IDataFetcher', this.#logger, {
+      requiredMethods: ['fetch'],
+    });
+    validateDependency(schemaValidator, 'ISchemaValidator', this.#logger, {
+      requiredMethods: ['isSchemaLoaded', 'getValidator'],
+    });
 
     this.#configuration = configuration;
     this.#pathResolver = pathResolver;
     this.#dataFetcher = dataFetcher;
     this.#schemaValidator = schemaValidator;
-    this.#logger = logger;
 
     this.#logger.debug('GameConfigLoader: Instance created.');
-  }
-
-  /**
-   * Helper to format Ajv validation errors into a readable string.
-   *
-   * @private
-   * @param {AjvErrorObject[] | null | undefined} errors - The array of error objects from Ajv.
-   * @returns {string} A formatted string representation of the errors.
-   */
-  #formatValidationErrors(errors) {
-    if (!errors || errors.length === 0) {
-      return 'No specific error details provided.';
-    }
-    // Simple JSON stringify for now, can be made more elaborate if needed
-    return JSON.stringify(errors, null, 2);
   }
 
   /**
@@ -196,9 +156,7 @@ class GameConfigLoader {
 
       // AC: Schema Validation Error Handling
       if (!validationResult.isValid) {
-        const formattedErrors = this.#formatValidationErrors(
-          validationResult.errors
-        );
+        const formattedErrors = formatAjvErrors(validationResult.errors);
         this.#logger.error(
           `FATAL: Game configuration file '${configFilename}' failed schema validation. Path: ${configPath}. Schema ID: '${schemaId}'. Errors: ${formattedErrors}`
         );

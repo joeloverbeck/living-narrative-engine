@@ -20,7 +20,7 @@ export class TurnEndingState extends AbstractTurnState {
   constructor(handler, actorToEndId, turnError = null) {
     super(handler);
 
-    const log = handler.getLogger();
+    const log = this._resolveLogger(null, handler);
 
     if (!actorToEndId) {
       log.error('TurnEndingState Constructor: actorToEndId must be provided.');
@@ -40,15 +40,11 @@ export class TurnEndingState extends AbstractTurnState {
     );
   }
 
-  getStateName() {
-    return 'TurnEndingState';
-  }
-
   /* ────────────────────────────────────────────────────────────────── */
   /** @override */
   async enterState(handler, previousState) {
     const ctx = this._getTurnContext();
-    const logger = ctx ? ctx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(ctx, handler);
     const sameActor = ctx?.getActor()?.id === this.#actorToEndId;
     const success = this.#turnError === null;
 
@@ -107,19 +103,17 @@ export class TurnEndingState extends AbstractTurnState {
   /* ────────────────────────────────────────────────────────────────── */
   /** @override */
   async exitState(handler, nextState) {
-    handler
-      .getLogger()
-      .debug(
-        `TurnEndingState: Exiting for (intended) actor ${this.#actorToEndId}. ` +
-          `Transitioning to ${nextState?.getStateName() ?? 'None'}. ITurnContext should be null.`
-      );
+    this._resolveLogger(null, handler).debug(
+      `TurnEndingState: Exiting for (intended) actor ${this.#actorToEndId}. ` +
+        `Transitioning to ${nextState?.getStateName() ?? 'None'}. ITurnContext should be null.`
+    );
     await super.exitState(handler, nextState);
   }
 
   /* ────────────────────────────────────────────────────────────────── */
   /** @override */
   async destroy(handler) {
-    const logger = handler.getLogger();
+    const logger = this._resolveLogger(this._getTurnContext(), handler);
 
     logger.warn(
       `TurnEndingState: Handler destroyed while in TurnEndingState for actor ${this.#actorToEndId}.`
