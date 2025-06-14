@@ -1,3 +1,4 @@
+// src/di/registrations/registerAI.js
 /* eslint-env node */
 /**
  * @file Registers all AI-related services, including the LLM adapter, prompting pipeline, and the AITurnHandler.
@@ -97,13 +98,13 @@ import {
 import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
 import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
 // --- ADDED IMPORT ---
-import { ConcreteAIPlayerStrategyFactory } from '../../turns/factories/concreteAIPlayerStrategyFactory.js';
-import { AIDecisionOrchestrator } from '../../turns/orchestration/aiDecisionOrchestrator';
-import { TurnActionFactory } from '../../turns/factories/turnActionFactory';
-import { LLMChooser } from '../../turns/adapters/llmChooser';
-import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter';
-import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
-import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider';
+import { GenericStrategyFactory } from '../../turns/factories/genericStrategyFactory.js';
+import { AIDecisionOrchestrator } from '../../turns/orchestration/aiDecisionOrchestrator.js';
+import { TurnActionFactory } from '../../turns/factories/turnActionFactory.js';
+import { LLMChooser } from '../../turns/adapters/llmChooser.js';
+import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.js';
+import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline.js';
+import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider.js';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -372,7 +373,7 @@ export function registerAI(container) {
   );
 
   // 3) Turn-action factory
-  r.singletonFactory(tokens.ITurnActionFactory, (c) => new TurnActionFactory());
+  r.singletonFactory(tokens.ITurnActionFactory, () => new TurnActionFactory());
 
   // 4) AI decision orchestrator
   r.singletonFactory(
@@ -392,9 +393,9 @@ export function registerAI(container) {
   r.singletonFactory(
     tokens.IAIPlayerStrategyFactory,
     (c) =>
-      new ConcreteAIPlayerStrategyFactory({
+      new GenericStrategyFactory({
         choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
-        llmProvider: c.resolve(tokens.ILLMDecisionProvider),
+        decisionProvider: c.resolve(tokens.ILLMDecisionProvider),
         turnActionFactory: c.resolve(tokens.ITurnActionFactory),
         logger: c.resolve(tokens.ILogger),
       })

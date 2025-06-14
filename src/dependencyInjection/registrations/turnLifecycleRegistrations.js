@@ -22,9 +22,9 @@ import {
   PLAYER_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../constants/componentIds.js';
-import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
-import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider';
-import { GenericTurnStrategyFactory } from '../../turns/factories/genericTurnStrategyFactory.js';
+import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline.js';
+import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider.js';
+import { GenericStrategyFactory } from '../../turns/factories/genericStrategyFactory.js';
 import { TurnContextBuilder } from '../../turns/builders/turnContextBuilder.js';
 import { assertValidActor } from '../../utils/actorValidation.js';
 
@@ -122,10 +122,10 @@ export function registerTurnLifecycle(container) {
   r.singletonFactory(
     tokens.ITurnStrategyFactory,
     (c) =>
-      new GenericTurnStrategyFactory({
+      new GenericStrategyFactory({
         logger: c.resolve(tokens.ILogger),
         choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
-        humanDecisionProvider: c.resolve(tokens.IHumanDecisionProvider),
+        decisionProvider: c.resolve(tokens.IHumanDecisionProvider),
         turnActionFactory: c.resolve(tokens.ITurnActionFactory),
       })
   );

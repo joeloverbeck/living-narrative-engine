@@ -4,6 +4,7 @@
  * @module turns/factories/GenericStrategyFactory
  */
 
+import { ITurnStrategyFactory } from '../interfaces/ITurnStrategyFactory';
 import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -39,6 +40,8 @@ export class GenericStrategyFactory extends ITurnStrategyFactory {
    * @param {ILogger} deps.logger
    */
   constructor({ choicePipeline, decisionProvider, turnActionFactory, logger }) {
+    super();
+
     if (!choicePipeline) {
       throw new Error('GenericStrategyFactory: choicePipeline is required');
     }
