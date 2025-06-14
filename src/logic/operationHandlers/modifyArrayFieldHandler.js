@@ -7,9 +7,11 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import resolvePath from '../../utils/resolvePath.js';
 import { cloneDeep } from 'lodash';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /**
  * @class ModifyArrayFieldHandler
@@ -21,12 +23,15 @@ class ModifyArrayFieldHandler {
   #entityManager;
   /** @type {ILogger} */
   #logger;
+  /** @type {ISafeEventDispatcher} */
+  #dispatcher;
   /**
    * @param {object} deps
    * @param {IEntityManager} deps.entityManager - The entity management service.
    * @param {ILogger} deps.logger - The logging service.
+   * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for error events.
    */
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     if (
       !entityManager ||
       typeof entityManager.getComponentData !== 'function' ||
@@ -39,8 +44,17 @@ class ModifyArrayFieldHandler {
     if (!logger || typeof logger.warn !== 'function') {
       throw new Error("Dependency 'ILogger' with a 'warn' method is required.");
     }
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error(
+        "Dependency 'ISafeEventDispatcher' with dispatch method is required."
+      );
+    }
     this.#entityManager = entityManager;
     this.#logger = logger;
+    this.#dispatcher = safeEventDispatcher;
   }
 
   /**
@@ -204,9 +218,15 @@ class ModifyArrayFieldHandler {
         `MODIFY_ARRAY_FIELD: Successfully committed changes to component '${component_type}' on entity '${entityId}'.`
       );
     } catch (error) {
-      log.error(
-        `MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent for entity '${entityId}'. Error: ${error.message}`
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message:
+          'MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent.',
+        details: {
+          error: error.message,
+          entityId,
+          componentType: component_type,
+        },
+      });
       return; // Abort if the update fails
     }
 

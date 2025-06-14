@@ -131,7 +131,11 @@ function init(entities) {
 
   const handlers = {
     REMOVE_COMPONENT: new RemoveComponentHandler({ entityManager, logger }),
-    MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({ entityManager, logger }),
+    MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
     HAS_COMPONENT: new HasComponentHandler({ entityManager, logger }),
     QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
@@ -172,6 +176,7 @@ let jsonLogic;
 let interpreter;
 let events;
 let listener;
+let safeDispatcher;
 
 describe('core_handle_dismiss rule integration', () => {
   beforeEach(() => {
@@ -194,6 +199,8 @@ describe('core_handle_dismiss rule integration', () => {
       }),
       listenerCount: jest.fn().mockReturnValue(1),
     };
+
+    safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([dismissRule]),

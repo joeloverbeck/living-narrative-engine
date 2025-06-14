@@ -46,6 +46,7 @@ describe('ModifyArrayFieldHandler', () => {
   let mockLogger;
   let handler;
   let mockExecutionContext;
+  let mockDispatcher;
 
   const ENTITY_ID = 'ent_player';
   const COMPONENT_TYPE = 'core:inventory';
@@ -53,9 +54,11 @@ describe('ModifyArrayFieldHandler', () => {
   beforeEach(() => {
     mockEntityManager = makeMockEntityManager();
     mockLogger = makeMockLogger();
+    mockDispatcher = { dispatch: jest.fn() };
     handler = new ModifyArrayFieldHandler({
       entityManager: mockEntityManager,
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
     mockExecutionContext = {
       evaluationContext: {
@@ -73,14 +76,24 @@ describe('ModifyArrayFieldHandler', () => {
 
   describe('Setup & Validation', () => {
     test("constructor should throw an error if 'entityManager' dependency is missing", () => {
-      expect(() => new ModifyArrayFieldHandler({ logger: mockLogger })).toThrow(
+      expect(
+        () =>
+          new ModifyArrayFieldHandler({
+            logger: mockLogger,
+            safeEventDispatcher: mockDispatcher,
+          })
+      ).toThrow(
         "Dependency 'IEntityManager' with getComponentData and addComponent methods is required."
       );
     });
 
     test("constructor should throw an error if 'logger' dependency is missing", () => {
       expect(
-        () => new ModifyArrayFieldHandler({ entityManager: mockEntityManager })
+        () =>
+          new ModifyArrayFieldHandler({
+            entityManager: mockEntityManager,
+            safeEventDispatcher: mockDispatcher,
+          })
       ).toThrow("Dependency 'ILogger' with a 'warn' method is required.");
     });
 
@@ -92,6 +105,7 @@ describe('ModifyArrayFieldHandler', () => {
           new ModifyArrayFieldHandler({
             entityManager: malformedEntityManager,
             logger: mockLogger,
+            safeEventDispatcher: mockDispatcher,
           })
       ).toThrow();
       expect(
@@ -99,6 +113,7 @@ describe('ModifyArrayFieldHandler', () => {
           new ModifyArrayFieldHandler({
             entityManager: mockEntityManager,
             logger: malformedLogger,
+            safeEventDispatcher: mockDispatcher,
           })
       ).toThrow();
     });
