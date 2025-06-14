@@ -1,206 +1,257 @@
 /* css/components/_speech-bubbles.css */
 
 .speech-entry {
-  display: flex;
-  align-items: flex-start; /* Aligns portrait top with bubble top */
-  margin-bottom: var(--spacing-sm);
-  width: 100%;
-  animation: fadeInUpBubble 0.3s ease-out forwards; /* ADDED for entry animation */
+    display: flex;
+    align-items: flex-start; /* Aligns portrait top with bubble top */
+    margin-bottom: var(--spacing-sm);
+    width: 100%;
+    animation: fadeInUpBubble 0.3s ease-out forwards; /* ADDED for entry animation */
 }
 
 .speech-entry .speech-portrait {
-  width: var(
-    --portrait-size-large,
-    100px
-  ); /* Fixed width for the portrait area */
-  height: auto; /* Height will adjust to maintain aspect ratio based on width */
-  /* max-height: var(--portrait-size-large, 100px); */ /* <<< REMOVED THIS LINE to allow more vertical length */
-  border-radius: var(--border-radius-lg, 12px);
-  margin-right: var(--spacing-md);
-  object-fit: contain; /* Ensures the entire image is visible and scaled correctly within the element's bounds. */
-  /* Since height is auto, this primarily helps if the image's natural width is less than var(--portrait-size-large) */
-  border: 1px solid var(--border-color-subtle);
-  flex-shrink: 0; /* Prevents the portrait from shrinking if the bubble content is too wide */
-  background-color: var(
-    --secondary-bg-color
-  ); /* Shows if image is transparent or during loading */
-  display: block; /* Good practice for images to avoid extra space below */
+    width: var(
+            --portrait-size-large,
+            100px
+    ); /* Fixed width for the portrait area */
+    height: auto; /* Height will adjust to maintain aspect ratio based on width */
+    /* max-height: var(--portrait-size-large, 100px); */ /* <<< REMOVED THIS LINE to allow more vertical length */
+    border-radius: var(--border-radius-lg, 12px);
+    margin-right: var(--spacing-md);
+    object-fit: contain; /* Ensures the entire image is visible and scaled correctly within the element's bounds. */
+    /* Since height is auto, this primarily helps if the image's natural width is less than var(--portrait-size-large) */
+    border: 1px solid var(--border-color-subtle);
+    flex-shrink: 0; /* Prevents the portrait from shrinking if the bubble content is too wide */
+    background-color: var(
+            --secondary-bg-color
+    ); /* Shows if image is transparent or during loading */
+    display: block; /* Good practice for images to avoid extra space below */
 }
 
 .speech-entry .speech-bubble {
-  background-color: var(--speech-bg-color);
-  color: var(
-    --speech-text-color
-  ); /* This will now use the updated darker purple */
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(
-    --border-radius-lg
-  ); /* MODIFIED: Was var(--border-radius-standard, var(--border-radius-md)) */
-  border-width: var(
-    --border-width
-  ); /* ADDED: Uses theme's standard border width */
-  border-style: solid; /* ADDED: Explicitly set border style */
-  border-color: var(
-    --speech-border-color
-  ); /* ADDED: Uses existing variable for NPC bubbles */
-  flex-grow: 1;
-  /* This max-width calculation should still be fine as it's based on the portrait's width */
-  max-width: calc(
-    100% - var(--portrait-size-large, 100px) - var(--spacing-md) - 2px
-  );
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  line-height: var(--line-height-base, 1.5);
-  position: relative; /* Added for tail positioning */
-  box-shadow: var(--shadow-speech-bubble); /* ADDED shadow */
-  /* ADDED transition, including box-shadow for potential future hover effects */
-  transition:
-    transform 0.15s ease-out,
+    background-color: var(--speech-bg-color);
+    color: var(
+            --speech-text-color
+    ); /* This will now use the updated darker purple */
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(
+            --border-radius-lg
+    ); /* MODIFIED: Was var(--border-radius-standard, var(--border-radius-md)) */
+    border-width: var(
+            --border-width
+    ); /* ADDED: Uses theme's standard border width */
+    border-style: solid; /* ADDED: Explicitly set border style */
+    border-color: var(
+            --speech-border-color
+    ); /* ADDED: Uses existing variable for NPC bubbles */
+    flex-grow: 1;
+    /* This max-width calculation should still be fine as it's based on the portrait's width */
+    max-width: calc(
+            100% - var(--portrait-size-large, 100px) - var(--spacing-md) - 2px
+    );
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: var(--line-height-base, 1.5);
+    position: relative; /* Added for tail positioning */
+    box-shadow: var(--shadow-speech-bubble); /* ADDED shadow */
+    /* ADDED transition, including box-shadow for potential future hover effects */
+    transition: transform 0.15s ease-out,
     box-shadow 0.15s ease-out,
     background-color 0.15s ease-out;
 }
 
 /* --- ADDED: Subtle Hover Effect --- */
 .speech-bubble:hover {
-  /* Using a slightly deeper shadow. You can adjust these values or use a theme variable. */
-  box-shadow:
-    0 5px 10px rgba(0, 0, 0, 0.15),
+    /* Using a slightly deeper shadow. You can adjust these values or use a theme variable. */
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15),
     0 2px 4px rgba(0, 0, 0, 0.1);
-  /* If you had a --shadow-md variable that fits, you could use: */
-  /* box-shadow: var(--shadow-md); */
+    /* If you had a --shadow-md variable that fits, you could use: */
+    /* box-shadow: var(--shadow-md); */
 }
 
 /* --- END: Subtle Hover Effect --- */
 
 /* New styles for structured speech text */
 .speech-bubble .speech-speaker-intro {
-  font-weight: bold;
-  color: var(--primary-text-color);
-  margin-right: var(--spacing-xs);
+    font-weight: bold;
+    color: var(--primary-text-color);
+    margin-right: var(--spacing-xs);
 }
 
 .speech-bubble .speech-quoted-text {
-  font-style: italic;
+    font-style: italic;
 }
 
 /* --- Style for action text within speech bubbles --- */
 .speech-bubble .speech-action-text {
-  color: var(
-    --speech-action-text-color
-  ); /* Uses the variable from _default-theme.css */
-  font-style: normal; /* Override italic style from .speech-quoted-text */
-  font-weight: bold; /* Make action text bold for emphasis */
+    color: var(
+            --speech-action-text-color
+    ); /* Uses the variable from _default-theme.css */
+    font-style: normal; /* Override italic style from .speech-quoted-text */
+    font-weight: bold; /* Make action text bold for emphasis */
 }
 
 .speech-entry.no-portrait .speech-bubble {
-  max-width: 100%;
+    max-width: 100%;
 }
 
 /* --- Speech Bubble Tail Implementation --- */
 /* Tail Border (::before) - Points Left for NPC/Default */
 .speech-entry.has-portrait .speech-bubble::before {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  /* Tail pointing left */
-  border-width: 10px 15px 10px 0; /* top, right, bottom, left values for a left-pointing triangle */
-  border-color: transparent var(--speech-border-color) transparent transparent; /* Uses NPC speech border color */
-  top: 15px; /* Adjust for vertical alignment. E.g., 15px from the top of the bubble. */
-  left: -15px; /* (equal to border-width-right of the tail) Positions it just outside the bubble's left edge. */
-  z-index: 0; /* Ensures it's behind the bubble's main border if they touch. */
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    /* Tail pointing left */
+    border-width: 10px 15px 10px 0; /* top, right, bottom, left values for a left-pointing triangle */
+    border-color: transparent var(--speech-border-color) transparent transparent; /* Uses NPC speech border color */
+    top: 15px; /* Adjust for vertical alignment. E.g., 15px from the top of the bubble. */
+    left: -15px; /* (equal to border-width-right of the tail) Positions it just outside the bubble's left edge. */
+    z-index: 0; /* Ensures it's behind the bubble's main border if they touch. */
 }
 
 /* Tail Fill (::after) - Points Left for NPC/Default */
 .speech-entry.has-portrait .speech-bubble::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  /* Tail pointing left, slightly smaller than ::before to create the border effect */
-  border-width: 8px 13px 8px 0; /* Adjust top/right/bottom/left based on desired border thickness */
-  border-color: transparent var(--speech-bg-color) transparent transparent; /* Uses NPC speech background color */
-  top: 17px; /* (top of ::before + (border-width-top of ::before - border-width-top of ::after)) */
-  left: -13px; /* Position to align with the ::before border. (left of ::before + approx. border thickness difference) */
-  z-index: 1; /* Above the ::before pseudo-element but below bubble content. */
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    /* Tail pointing left, slightly smaller than ::before to create the border effect */
+    border-width: 8px 13px 8px 0; /* Adjust top/right/bottom/left based on desired border thickness */
+    border-color: transparent var(--speech-bg-color) transparent transparent; /* Uses NPC speech background color */
+    top: 17px; /* (top of ::before + (border-width-top of ::before - border-width-top of ::after)) */
+    left: -13px; /* Position to align with the ::before border. (left of ::before + approx. border thickness difference) */
+    z-index: 1; /* Above the ::before pseudo-element but below bubble content. */
 }
 
 /* --- End Speech Bubble Tail --- */
 
 /* --- Player Speech Specific Styles --- */
 .speech-entry.player-speech {
-  flex-direction: row-reverse; /* Moves portrait to the right, bubble to the left */
+    flex-direction: row-reverse; /* Moves portrait to the right, bubble to the left */
 }
 
 .speech-entry.player-speech .speech-portrait {
-  margin-right: 0; /* Remove default right margin */
-  margin-left: var(
-    --spacing-md
-  ); /* Add space between bubble (now on left) and portrait (on right) */
+    margin-right: 0; /* Remove default right margin */
+    margin-left: var(
+            --spacing-md
+    ); /* Add space between bubble (now on left) and portrait (on right) */
 }
 
 .speech-entry.player-speech .speech-bubble {
-  background-color: var(--player-speech-bg-color);
-  color: var(--player-speech-text-color);
-  border-color: var(--player-speech-border-color);
-  /* Inherits border-width, border-radius, box-shadow, etc. from .speech-bubble base styles */
+    background-color: var(--player-speech-bg-color);
+    color: var(--player-speech-text-color);
+    border-color: var(--player-speech-border-color);
+    /* Inherits border-width, border-radius, box-shadow, etc. from .speech-bubble base styles */
 }
 
 /* Tail pointing right (for player speech bubble with portrait on the right) */
 .speech-entry.player-speech.has-portrait .speech-bubble::before {
-  /* Overrides the default left-pointing tail */
-  border-width: 10px 0 10px 15px; /* top, right, bottom, left values for a right-pointing triangle */
-  border-color: transparent transparent transparent
-    var(--player-speech-border-color); /* Uses player speech border color */
-  left: auto; /* Reset left positioning */
-  right: -15px; /* Positions it just outside the bubble's right edge */
-  /* top and z-index can remain the same as the default tail */
+    /* Overrides the default left-pointing tail */
+    border-width: 10px 0 10px 15px; /* top, right, bottom, left values for a right-pointing triangle */
+    border-color: transparent transparent transparent var(--player-speech-border-color); /* Uses player speech border color */
+    left: auto; /* Reset left positioning */
+    right: -15px; /* Positions it just outside the bubble's right edge */
+    /* top and z-index can remain the same as the default tail */
 }
 
 .speech-entry.player-speech.has-portrait .speech-bubble::after {
-  /* Overrides the default left-pointing tail fill */
-  border-width: 8px 0 8px 13px; /* top, right, bottom, left */
-  border-color: transparent transparent transparent
-    var(--player-speech-bg-color); /* Uses player speech background color */
-  left: auto; /* Reset left positioning */
-  right: -13px; /* Position to align with the ::before border */
-  /* top and z-index can remain the same as the default tail */
+    /* Overrides the default left-pointing tail fill */
+    border-width: 8px 0 8px 13px; /* top, right, bottom, left */
+    border-color: transparent transparent transparent var(--player-speech-bg-color); /* Uses player speech background color */
+    left: auto; /* Reset left positioning */
+    right: -13px; /* Position to align with the ::before border */
+    /* top and z-index can remain the same as the default tail */
 }
 
 /* Ensure Text Contrast within Player Bubble */
 .speech-entry.player-speech .speech-bubble .speech-speaker-intro,
 .speech-entry.player-speech .speech-bubble .speech-quoted-text {
-  color: var(--player-speech-text-color);
+    color: var(--player-speech-text-color);
 }
 
 .speech-entry.player-speech .speech-bubble .speech-action-text {
-  color: var(--player-speech-action-text-color);
-  /* font-style: normal; and font-weight: bold; are inherited from the base .speech-action-text rule */
+    color: var(--player-speech-action-text-color);
+    /* font-style: normal; and font-weight: bold; are inherited from the base .speech-action-text rule */
 }
 
 /* --- End Player Speech Specific Styles --- */
 
 /* --- ADDED: Keyframes for animations --- */
 @keyframes fadeInUpBubble {
-  from {
-    opacity: 0;
-    transform: translateY(15px); /* Start bubble slightly lower */
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(15px); /* Start bubble slightly lower */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes fadeInBubble {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 /* --- End Keyframes for animations --- */
+
+/* --- ADDED: Meta Icons & Tooltip --- */
+.speech-meta {
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    display: flex;
+    gap: 6px;
+}
+
+.meta-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    background: 0;
+    cursor: pointer;
+    color: var(--clr, currentColor);
+    transition: transform 0.15s;
+}
+
+.meta-btn:hover,
+.meta-btn:focus-visible {
+    transform: scale(1.15);
+}
+
+.meta-tooltip {
+    position: absolute;
+    bottom: 120%;
+    right: 0;
+    max-width: 260px;
+    background: #fff;
+    color: #333;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+
+.meta-btn:hover > .meta-tooltip,
+.meta-btn:focus-visible > .meta-tooltip {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .meta-btn,
+    .meta-tooltip {
+        transition: none;
+    }
+}
