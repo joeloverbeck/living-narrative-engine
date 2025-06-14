@@ -23,7 +23,7 @@ describe('Guardrail – index overflow', () => {
     };
     discoverySvc = { getValidActions: jest.fn() };
     entityManager = { getEntityInstance: jest.fn().mockResolvedValue(null) };
-    const indexingService = new ActionIndexingService(logger);
+    const indexingService = new ActionIndexingService({ logger });
     provider = new AvailableActionsProvider({
       actionDiscoveryService: discoverySvc,
       actionIndexingService: indexingService,

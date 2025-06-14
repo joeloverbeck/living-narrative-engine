@@ -7,8 +7,13 @@ describe('ActionIndexingService', () => {
   let service;
 
   beforeEach(() => {
-    logger = { warn: jest.fn(), info: jest.fn() };
-    service = new ActionIndexingService(logger);
+    logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    service = new ActionIndexingService({ logger });
   });
 
   it('enumerates actions with correct indices (happy path)', () => {

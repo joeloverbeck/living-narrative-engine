@@ -45,7 +45,11 @@ export function registerInfrastructure(container) {
   // ─── Shared ActionIndexingService ─────────────────────────────
   r.singletonFactory(
     tokens.ActionIndexingService,
-    (c) => new ActionIndexingService(c.resolve(tokens.ILogger))
+    // ActionIndexingService needs { logger }
+    (c) =>
+      new ActionIndexingService({
+        logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      })
   );
   log.debug(
     `Infrastructure Registration: Registered ${tokens.ActionIndexingService}.`

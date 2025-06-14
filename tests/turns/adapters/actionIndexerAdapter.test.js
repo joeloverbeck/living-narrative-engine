@@ -34,7 +34,13 @@ describe('ActionIndexerAdapter', () => {
   describe('smoke test against the real ActionIndexingService', () => {
     it('returns the same output as calling indexActions directly', () => {
       // Arrange: real service and adapter
-      const service = new ActionIndexingService();
+      let logger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+      const service = new ActionIndexingService({ logger });
       const adapter = new ActionIndexerAdapter(service);
 
       // Prepare some raw actions (now including required description)
@@ -61,8 +67,9 @@ describe('ActionIndexerAdapter', () => {
       // Assert: deep equality
       expect(viaAdapter).toEqual(direct);
 
-      // And ensure idempotence in this turn: second call returns same array instance
-      const secondViaAdapter = adapter.index(rawActions, actorId);
+      // And ensure idempotence: subsequent calls in the same turn with an
+      // empty array should return the *same* cached array instance.
+      const secondViaAdapter = adapter.index([], actorId);
       expect(secondViaAdapter).toBe(viaAdapter);
     });
   });
