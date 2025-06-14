@@ -142,14 +142,11 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "END_TURN",
             "comment": "Signal to the Turn Manager that the actor's turn is over.",
             "parameters": {
-              "eventType": "core:turn_ended",
-              "payload": {
-                "entityId": "{event.payload.actorId}",
-                "success": true
-              }
+              "entityId": "{event.payload.actorId}",
+              "success": true
             }
           }
         ],
@@ -165,14 +162,11 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "END_TURN",
             "comment": "End the turn unsuccessfully.",
             "parameters": {
-              "eventType": "core:turn_ended",
-              "payload": {
-                "entityId": "{event.payload.actorId}",
-                "success": false
-              }
+              "entityId": "{event.payload.actorId}",
+              "success": false
             }
           }
         ]

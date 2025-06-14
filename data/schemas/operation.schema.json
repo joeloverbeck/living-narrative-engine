@@ -19,6 +19,7 @@
             "ADD_COMPONENT",
             "REMOVE_COMPONENT",
             "DISPATCH_EVENT",
+            "END_TURN",
             "IF",
             "FOR_EACH",
             "LOG",
@@ -138,6 +139,20 @@
               "parameters": {
                 "$ref": "#/$defs/DispatchEventParameters"
               }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "END_TURN" }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": { "$ref": "#/$defs/EndTurnParameters" }
             },
             "required": ["parameters"]
           }
@@ -503,6 +518,24 @@
         }
       },
       "required": ["eventType"],
+      "additionalProperties": false
+    },
+    "EndTurnParameters": {
+      "type": "object",
+      "description": "Parameters for the END_TURN operation, dispatching core:turn_ended.",
+      "properties": {
+        "entityId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "object"
+        }
+      },
+      "required": ["entityId", "success"],
       "additionalProperties": false
     },
     "IfParameters": {

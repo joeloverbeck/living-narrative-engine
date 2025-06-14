@@ -106,24 +106,11 @@
       }
     },
     {
-      "type": "DISPATCH_EVENT",
-      "comment": "Dispatch a decoupled event to the UI indicating the successful dismiss action.",
-      "parameters": {
-        "eventType": "core:display_successful_action_result",
-        "payload": {
-          "message": "{context.actorName} dismisses {context.targetName} from their service."
-        }
-      }
-    },
-    {
-      "type": "DISPATCH_EVENT",
+      "type": "END_TURN",
       "comment": "Step 4: Signal to the Turn Manager that the actor's turn is over.",
       "parameters": {
-        "eventType": "core:turn_ended",
-        "payload": {
-          "entityId": "{event.payload.actorId}",
-          "success": true
-        }
+        "entityId": "{event.payload.actorId}",
+        "success": true
       }
     }
   ]

@@ -23,6 +23,7 @@ import AddComponentHandler from '../../logic/operationHandlers/addComponentHandl
 import QueryComponentHandler from '../../logic/operationHandlers/queryComponentHandler.js';
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
+import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
 import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
 import GetNameHandler from '../../logic/operationHandlers/getNameHandler.js';
@@ -116,6 +117,15 @@ export function registerInterpreters(container) {
       tokens.SetVariableHandler,
       SetVariableHandler,
       (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
+    ],
+    [
+      tokens.EndTurnHandler,
+      EndTurnHandler,
+      (c, Handler) =>
+        new Handler({
+          dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+          logger: c.resolve(tokens.ILogger),
+        }),
     ],
     [
       tokens.SystemMoveEntityHandler,
@@ -254,6 +264,7 @@ export function registerInterpreters(container) {
     registry.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));
     registry.register('QUERY_ENTITIES', bind(tokens.QueryEntitiesHandler));
     registry.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
+    registry.register('END_TURN', bind(tokens.EndTurnHandler));
     registry.register(
       'SYSTEM_MOVE_ENTITY',
       bind(tokens.SystemMoveEntityHandler)

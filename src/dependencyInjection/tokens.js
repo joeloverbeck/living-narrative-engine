@@ -124,6 +124,7 @@ import { freeze } from '../utils/objectUtils';
  * @property {DiToken} RemoveComponentHandler - Token for the 'REMOVE_COMPONENT' operation handler.
  * @property {DiToken} QueryComponentHandler - Token for the 'QUERY_COMPONENT' operation handler.
  * @property {DiToken} SetVariableHandler - Token for the 'SET_VARIABLE' operation handler.
+ * @property {DiToken} EndTurnHandler - Token for the 'END_TURN' operation handler.
  *
  * // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING START *****
  * @property {DiToken} IConfigurationProvider - Token for the LLM configuration provider interface.
@@ -249,6 +250,7 @@ export const tokens = freeze({
   RemoveComponentHandler: 'RemoveComponentHandler',
   QueryComponentHandler: 'QueryComponentHandler',
   SetVariableHandler: 'SetVariableHandler',
+  EndTurnHandler: 'EndTurnHandler',
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',
   GetTimestampHandler: 'GetTimestampHandler',
   GetNameHandler: 'GetNameHandler',

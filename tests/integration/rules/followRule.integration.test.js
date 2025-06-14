@@ -21,6 +21,7 @@ import AddComponentHandler from '../../../src/logic/operationHandlers/addCompone
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
+import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -124,6 +125,7 @@ describe('core_handle_follow rule integration', () => {
         dispatcher: eventBus,
         logger,
       }),
+      END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     };
 
