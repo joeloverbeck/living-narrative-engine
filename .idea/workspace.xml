@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Unifying paths.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Unified human and AI paths regarding decision-making.">
+      <change afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/stateTypes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/stateTypes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/turnManager.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnManager.constructor.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/genericTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/genericTurnHandler.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,6 +65,7 @@
     "Jest.humanTurnHandler.awaitTurnEndPromise.test.js.executor": "Run",
     "Jest.humanTurnHandler.getTurnEndPort.test.js.executor": "Run",
     "Jest.humanTurnHandler.invalidActor.test.js.executor": "Run",
+    "Jest.humanTurnHandler.startTurn.test.js.executor": "Run",
     "Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor": "Run",
     "Jest.interpreterRegistrations.handlers.test.js.executor": "Run",
     "Jest.llmDecisionProvider.test.js.executor": "Run",
@@ -104,16 +105,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.genericTurnHandler.test.js">
-    <configuration name="actionIndexerAdapter.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/adapters/actionIndexerAdapter.test.js" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Jest.humanTurnHandler.startTurn.test.js">
     <configuration name="awaitTurnEndState.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -141,6 +133,15 @@
       <test-file value="$PROJECT_DIR$/tests/turns/factories/genericTurnStrategyFactory.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="humanTurnHandler.startTurn.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="playerTurnHandler.fixes.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -152,11 +153,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.humanTurnHandler.startTurn.test.js" />
         <item itemvalue="Jest.genericTurnHandler.test.js" />
         <item itemvalue="Jest.playerTurnHandler.fixes.test.js" />
         <item itemvalue="Jest.awaitTurnEndState.test.js" />
         <item itemvalue="Jest.genericTurnStrategyFactory.test.js" />
-        <item itemvalue="Jest.actionIndexerAdapter.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -177,15 +178,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="11634000" />
-    </task>
-    <task id="LOCAL-00025" summary="Trying to return the app to normality.">
-      <option name="closed" value="true" />
-      <created>1749881829753</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1749881829753</updated>
+      <workItem from="1749913762946" duration="12259000" />
     </task>
     <task id="LOCAL-00026" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -571,7 +564,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749925369713</updated>
     </task>
-    <option name="localTasksCounter" value="74" />
+    <task id="LOCAL-00074" summary="Unified human and AI paths regarding decision-making.">
+      <option name="closed" value="true" />
+      <created>1749926174946</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1749926174946</updated>
+    </task>
+    <option name="localTasksCounter" value="75" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -597,6 +598,7 @@
     <MESSAGE value="Refactoring HumanTurnHandler." />
     <MESSAGE value="Chores." />
     <MESSAGE value="Unifying paths." />
-    <option name="LAST_COMMIT_MESSAGE" value="Unifying paths." />
+    <MESSAGE value="Unified human and AI paths regarding decision-making." />
+    <option name="LAST_COMMIT_MESSAGE" value="Unified human and AI paths regarding decision-making." />
   </component>
 </project>

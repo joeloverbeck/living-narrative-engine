@@ -82,8 +82,8 @@ class GenericTurnHandler extends BaseTurnHandler {
     this._assertHandlerActive();
     this._assertValidActor(actor, 'startTurn');
 
-    // Consolidated logic block
-    const strategy = this.#strategyFactory.createForHuman(actor.id);
+    // FIX: Changed call from 'createForHuman' to the correct 'create' method.
+    const strategy = this.#strategyFactory.create(actor.id);
     this._logger.debug(
       `${this.constructor.name}: Instantiated turn strategy for actor ${actor.id} via factory.`
     );
