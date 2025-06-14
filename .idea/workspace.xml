@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Uploading with errors for Codex to fix.">
-      <change afterPath="$PROJECT_DIR$/src/turns/valueObjects/awaitTurnEndState.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/turns/valueObjects/awaitTurnEndState.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented awaitTurnEndState.js." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -176,15 +171,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="1088000" />
-    </task>
-    <task id="LOCAL-00009" summary="Unifying action decision.">
-      <option name="closed" value="true" />
-      <created>1749844229472</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1749844229472</updated>
+      <workItem from="1749913762946" duration="1409000" />
     </task>
     <task id="LOCAL-00010" summary="Unifying action decision.">
       <option name="closed" value="true" />
@@ -570,7 +557,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749914886768</updated>
     </task>
-    <option name="localTasksCounter" value="58" />
+    <task id="LOCAL-00058" summary="Implemented awaitTurnEndState.js.">
+      <option name="closed" value="true" />
+      <created>1749915451056</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1749915451056</updated>
+    </task>
+    <option name="localTasksCounter" value="59" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -591,6 +586,7 @@
     <MESSAGE value="Fixed nasty bug in PromptCoordinator." />
     <MESSAGE value="Trying to return the app to normal." />
     <MESSAGE value="Uploading with errors for Codex to fix." />
-    <option name="LAST_COMMIT_MESSAGE" value="Uploading with errors for Codex to fix." />
+    <MESSAGE value="Implemented awaitTurnEndState.js." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented awaitTurnEndState.js." />
   </component>
 </project>
