@@ -100,9 +100,6 @@ export function registerTurnLifecycle(container) {
         promptOutputPort: c.resolve(tokens.IPromptOutputPort),
         actionIndexingService: c.resolve(tokens.ActionIndexingService),
         playerTurnEvents: c.resolve(tokens.IPlayerTurnEvents),
-        // FIX: Provide the missing dependencies.
-        actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
-        actionContextBuilder: c.resolve(tokens.ActionContextBuilder),
       })
   );
   logger.debug(

@@ -4,10 +4,11 @@
  */
 
 import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
+import { assertValidActionIndex } from '../../utils/validationUtils.js';
 
 /**
  * @class HumanDecisionProvider
- * @extends ITurnDecisionProvider
+ * @augments ITurnDecisionProvider
  * @description
  * Orchestrates a human prompt to select an action and returns the chosen
  * index and any associated metadata (speech, thoughts).
@@ -53,27 +54,14 @@ export class HumanDecisionProvider extends ITurnDecisionProvider {
 
     const { chosenIndex, speech, thoughts, notes } = promptRes;
 
-    // FIX: Split validation into two separate checks to provide more accurate error messages.
-
-    // 1. First, validate that we received a proper integer index.
-    if (!Number.isInteger(chosenIndex)) {
-      this.logger.error(
-        `HumanDecisionProvider: Did not receive a valid integer 'chosenIndex' for actor ${actor.id}.`,
-        { promptResult: promptRes }
-      );
-      throw new Error('Could not resolve the chosen action to a valid index.');
-    }
-
-    // 2. Second, validate that the integer is within the bounds of the available actions.
-    if (chosenIndex < 1 || chosenIndex > actions.length) {
-      this.logger.error(
-        `HumanDecisionProvider: invalid chosenIndex (${chosenIndex}) for actor ${actor.id}.`,
-        { promptRes, actionsCount: actions.length }
-      );
-      throw new Error(
-        'Player chose an index that does not exist for this turn.'
-      );
-    }
+    assertValidActionIndex(
+      chosenIndex,
+      actions.length,
+      'HumanDecisionProvider',
+      actor.id,
+      this.logger,
+      { promptResult: promptRes }
+    );
 
     return {
       chosenIndex,

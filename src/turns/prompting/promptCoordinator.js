@@ -9,9 +9,7 @@ import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  * @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort
- * @typedef {import('./actionContextBuilder.js').default} ActionContextBuilder
  * @typedef {import('../interfaces/IPlayerTurnEvents.js').IPlayerTurnEvents} IPlayerTurnEvents
  * @typedef {import('../services/actionIndexingService.js').ActionIndexingService} ActionIndexingService
  * @typedef {import('../../entities/entity.js').default} Entity
@@ -20,9 +18,7 @@ import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
 /**
  * @typedef {object} PromptCoordinatorDependencies
  * @property {ILogger} logger
- * @property {IActionDiscoveryService} actionDiscoveryService
  * @property {IPromptOutputPort} promptOutputPort
- * @property {ActionContextBuilder} actionContextBuilder
  * @property {ActionIndexingService} actionIndexingService
  * @property {IPlayerTurnEvents} playerTurnEvents
  */

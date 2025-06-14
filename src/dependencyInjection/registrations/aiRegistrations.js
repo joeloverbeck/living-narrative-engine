@@ -388,7 +388,10 @@ export function registerAI(container) {
   r.singletonFactory(
     tokens.ILLMDecisionProvider,
     (c) =>
-      new LLMDecisionProvider({ llmChooser: c.resolve(tokens.ILLMChooser) })
+      new LLMDecisionProvider({
+        llmChooser: c.resolve(tokens.ILLMChooser),
+        logger: c.resolve(tokens.ILogger),
+      })
   );
   logger.debug(
     `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`

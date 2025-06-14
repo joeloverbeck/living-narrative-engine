@@ -3,21 +3,27 @@
  */
 
 import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
+import { assertValidActionIndex } from '../../utils/validationUtils.js';
 
 /**
  * @class LLMDecisionProvider
- * @extends ITurnDecisionProvider
+ * @augments ITurnDecisionProvider
  * @description
  *  Decision provider that delegates to an LLM chooser implementation.
  */
 export class LLMDecisionProvider extends ITurnDecisionProvider {
   /**
-   * @param {{ llmChooser: import('../../turns/ports/ILLMChooser').ILLMChooser }} deps
+   * @param {{
+   *  llmChooser: import('../../turns/ports/ILLMChooser').ILLMChooser,
+   *  logger: import('../../interfaces/coreServices').ILogger
+   * }} deps
    */
-  constructor({ llmChooser }) {
+  constructor({ llmChooser, logger }) {
     super();
     /** @protected @type {import('../../turns/ports/ILLMChooser').ILLMChooser} */
     this.llmChooser = llmChooser;
+    /** @protected @type {import('../../interfaces/coreServices').ILogger} */
+    this.logger = logger;
   }
 
   /**
@@ -36,6 +42,15 @@ export class LLMDecisionProvider extends ITurnDecisionProvider {
       actions,
       abortSignal,
     });
+
+    assertValidActionIndex(
+      index,
+      actions.length,
+      'LLMDecisionProvider',
+      actor.id,
+      this.logger,
+      { llmResult: { index, speech, thoughts, notes } }
+    );
 
     return {
       chosenIndex: index,
