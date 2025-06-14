@@ -1,5 +1,6 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { formatActionCommand } from '../../src/actions/actionFormatter.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 jest.mock('../../src/utils/entityUtils.js', () => ({
   getEntityDisplayName: jest.fn(),
@@ -15,10 +16,12 @@ const createMockLogger = () => ({
 describe('formatActionCommand additional cases', () => {
   let entityManager;
   let logger;
+  let dispatcher;
 
   beforeEach(() => {
     entityManager = { getEntityInstance: jest.fn() };
     logger = createMockLogger();
+    dispatcher = { dispatch: jest.fn() };
     jest.clearAllMocks();
   });
 
@@ -28,6 +31,7 @@ describe('formatActionCommand additional cases', () => {
 
     const result = formatActionCommand(actionDef, context, entityManager, {
       logger,
+      safeEventDispatcher: dispatcher,
     });
 
     expect(result).toBeNull();
@@ -42,6 +46,7 @@ describe('formatActionCommand additional cases', () => {
 
     const result = formatActionCommand(actionDef, context, entityManager, {
       logger,
+      safeEventDispatcher: dispatcher,
     });
 
     expect(result).toBeNull();
@@ -59,6 +64,7 @@ describe('formatActionCommand additional cases', () => {
 
     const result = formatActionCommand(actionDef, context, entityManager, {
       logger,
+      safeEventDispatcher: dispatcher,
     });
 
     expect(result).toBe('wait {target} {direction}');
@@ -76,12 +82,15 @@ describe('formatActionCommand additional cases', () => {
 
     const result = formatActionCommand(actionDef, context, entityManager, {
       logger,
+      safeEventDispatcher: dispatcher,
     });
 
     expect(result).toBeNull();
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('placeholder substitution'),
-      expect.any(Error)
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('placeholder substitution'),
+      })
     );
   });
 });

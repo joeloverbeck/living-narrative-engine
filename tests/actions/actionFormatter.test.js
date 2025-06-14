@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { formatActionCommand } from '../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 jest.mock('../../src/utils/entityUtils.js', () => ({
   getEntityDisplayName: jest.fn(),
@@ -17,10 +18,12 @@ const createMockLogger = () => ({
 describe('formatActionCommand', () => {
   let entityManager;
   let logger;
+  let dispatcher;
 
   beforeEach(() => {
     entityManager = { getEntityInstance: jest.fn() };
     logger = createMockLogger();
+    dispatcher = { dispatch: jest.fn() };
     jest.clearAllMocks();
   });
 
@@ -34,6 +37,7 @@ describe('formatActionCommand', () => {
     const result = formatActionCommand(actionDef, context, entityManager, {
       logger,
       debug: true,
+      safeEventDispatcher: dispatcher,
     });
 
     expect(result).toBe('inspect The Entity');
@@ -48,6 +52,7 @@ describe('formatActionCommand', () => {
 
     const result = formatActionCommand(actionDef, context, entityManager, {
       logger,
+      safeEventDispatcher: dispatcher,
     });
 
     expect(result).toBe('inspect e1');
@@ -62,6 +67,7 @@ describe('formatActionCommand', () => {
 
     const result = formatActionCommand(actionDef, context, entityManager, {
       logger,
+      safeEventDispatcher: dispatcher,
     });
 
     expect(result).toBe('move north');
@@ -72,12 +78,15 @@ describe('formatActionCommand', () => {
       { id: 'bad' },
       { type: 'none' },
       entityManager,
-      { logger }
+      { logger, safeEventDispatcher: dispatcher }
     );
     expect(result).toBeNull();
-    expect(logger.error).toHaveBeenCalledWith(
-      'formatActionCommand: Invalid or missing actionDefinition or template.',
-      expect.any(Object)
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message:
+          'formatActionCommand: Invalid or missing actionDefinition or template.',
+      })
     );
   });
 
@@ -87,7 +96,7 @@ describe('formatActionCommand', () => {
         { id: 'core:use', template: 'use {target}' },
         { type: 'entity', entityId: 'e1' },
         {},
-        { logger }
+        { logger, safeEventDispatcher: dispatcher }
       )
     ).toThrow('formatActionCommand requires a valid EntityManager instance.');
   });
@@ -97,6 +106,7 @@ describe('formatActionCommand', () => {
     const context = { type: 'mystery' };
     const result = formatActionCommand(actionDef, context, entityManager, {
       logger,
+      safeEventDispatcher: dispatcher,
     });
     expect(result).toBe('do it');
     expect(logger.warn).toHaveBeenCalledWith(

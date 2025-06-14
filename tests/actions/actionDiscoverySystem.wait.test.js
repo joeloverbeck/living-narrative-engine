@@ -56,6 +56,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   let mockLocationEntity;
   /** @type {ActionContext} */
   let mockActionContext;
+  let mockSafeEventDispatcher;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -71,6 +72,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
 
     mockFormatActionCommandFn = formatActionCommandFn;
     mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
+    mockSafeEventDispatcher = { dispatch: jest.fn() };
 
     mockActorEntity = new Entity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
     mockLocationEntity = new Entity(LOCATION_INSTANCE_ID, DUMMY_DEFINITION_ID);
@@ -116,6 +118,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
+      safeEventDispatcher: mockSafeEventDispatcher,
     });
   });
 
