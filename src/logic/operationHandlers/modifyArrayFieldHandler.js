@@ -12,6 +12,7 @@
 import resolvePath from '../../utils/resolvePath.js';
 import { cloneDeep } from 'lodash';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import resolveEntityId from '../../utils/entityRefUtils.js';
 
 /**
  * @class ModifyArrayFieldHandler
@@ -58,35 +59,6 @@ class ModifyArrayFieldHandler {
   }
 
   /**
-   * Resolves entity_ref -> entityId or null.
-   * (Copied from other handlers as this is the established pattern).
-   *
-   * @private
-   * @param {string|'actor'|'target'|EntityRefObject} ref - The entity reference from parameters.
-   * @param {ExecutionContext} ctx - The execution context.
-   * @returns {string | null} The resolved entity ID or null.
-   */
-  #resolveEntityId(ref, ctx) {
-    const ec = ctx?.evaluationContext ?? {};
-    if (typeof ref === 'string') {
-      const t = ref.trim();
-      if (!t) return null;
-      if (t === 'actor') return ec.actor?.id ?? null;
-      if (t === 'target') return ec.target?.id ?? null;
-      return t; // Assume direct ID
-    }
-    if (
-      ref &&
-      typeof ref === 'object' &&
-      typeof ref.entityId === 'string' &&
-      ref.entityId.trim()
-    ) {
-      return ref.entityId.trim();
-    }
-    return null;
-  }
-
-  /**
    * Executes the array modification operation.
    *
    * @param {object} params - The parameters for the operation.
@@ -101,7 +73,7 @@ class ModifyArrayFieldHandler {
   execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
     // 1. Resolve Entity ID
-    const entityId = this.#resolveEntityId(params.entity_ref, executionContext);
+    const entityId = resolveEntityId(params.entity_ref, executionContext);
     if (!entityId) {
       log.warn(
         `MODIFY_ARRAY_FIELD: Could not resolve entity_ref: ${JSON.stringify(
