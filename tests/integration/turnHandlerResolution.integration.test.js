@@ -52,7 +52,7 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
   let mockTurnState;
   let mockAiPromptPipeline;
   let mockEntityManager;
-  let mockTurnContextFactory;
+  let mockTurnContextBuilder;
   let stubs;
   const AI_ACTOR_ID = 'ai-npc-1';
   let aiActor;
@@ -75,7 +75,7 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
     };
 
     mockEntityManager = { getEntityInstance: (id) => ({ id }) };
-    mockTurnContextFactory = { create: jest.fn() };
+    mockTurnContextBuilder = { build: jest.fn() };
 
     stubs = {
       logger,
@@ -96,10 +96,10 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       promptBuilder: {},
       aiFallbackActionFactory: { create: jest.fn() },
       // stub strategy factory directly:
-      aiPlayerStrategyFactory: {
-        create: jest.fn(() => new StubAIPlayerStrategy(stubs)),
+      strategyFactory: {
+        createForHuman: jest.fn(() => new StubAIPlayerStrategy(stubs)),
       },
-      turnContextFactory: mockTurnContextFactory,
+      turnContextBuilder: mockTurnContextBuilder,
       gameStateProvider: {},
       promptContentProvider: {},
       llmResponseProcessor: { processResponse: jest.fn() },
@@ -141,9 +141,9 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
     await expect(handler.startTurn(aiActor)).resolves.not.toThrow();
 
     // 3. Verify key calls.
-    expect(mockTurnContextFactory.create).toHaveBeenCalledTimes(1);
-    expect(stubs.aiPlayerStrategyFactory.create).toHaveBeenCalledTimes(1);
-    expect(stubs.aiPlayerStrategyFactory.create).toHaveBeenCalled();
+    expect(mockTurnContextBuilder.build).toHaveBeenCalledTimes(1);
+    expect(stubs.strategyFactory.createForHuman).toHaveBeenCalledTimes(1);
+    expect(stubs.strategyFactory.createForHuman).toHaveBeenCalled();
     expect(mockTurnState.startTurn).toHaveBeenCalledTimes(1);
   });
 });

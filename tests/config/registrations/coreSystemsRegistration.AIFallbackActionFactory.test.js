@@ -52,8 +52,8 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       lifecycle: 'singletonFactory',
     });
 
-    // Stub out ITurnContextFactory so AITurnHandler constructor passes
-    container.register(tokens.ITurnContextFactory, () => ({}), {
+    // Stub out TurnContextBuilder so AITurnHandler constructor passes
+    container.register(tokens.TurnContextBuilder, () => ({}), {
       lifecycle: 'singletonFactory',
     });
 
@@ -148,15 +148,15 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           logger: c.resolve(tokens.ILogger),
           turnStateFactory: c.resolve(tokens.ITurnStateFactory),
           turnEndPort: c.resolve(tokens.ITurnEndPort),
-          aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
-          // turnContextFactory intentionally omitted
+          strategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
+          // turnContextBuilder intentionally omitted
         }),
       { lifecycle: 'transient' }
     );
 
     // Act & Assert
     expect(() => brokenContainer.resolve(tokens.AITurnHandler)).toThrow(
-      'AITurnHandler: Invalid ITurnContextFactory'
+      'GenericTurnHandler: turnContextBuilder is required'
     );
   });
 });

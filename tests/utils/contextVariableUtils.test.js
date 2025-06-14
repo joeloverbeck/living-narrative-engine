@@ -32,7 +32,12 @@ describe('storeResult', () => {
 
   test('logs error when dispatcher not provided', () => {
     const ctx = {};
-    const logger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
     const success = storeResult('baz', 7, ctx, undefined, logger);
     expect(success).toBe(false);
     expect(logger.error).toHaveBeenCalled();

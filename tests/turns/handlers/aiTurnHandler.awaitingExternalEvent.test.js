@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { TurnContext } from '../../../src/turns/context/turnContext.js';
+
 import AITurnHandler from '../../../src/turns/handlers/aiTurnHandler.js';
 
 /**
@@ -15,12 +15,11 @@ import AITurnHandler from '../../../src/turns/handlers/aiTurnHandler.js';
  */
 
 describe('TurnContext State Isolation', () => {
-  let mockTurnContextFactory;
+  let mockTurnContextBuilder;
   let mockTurnStateFactory;
-  let mockAiPlayerStrategyFactory;
+  let mockStrategyFactory;
   let mockLogger;
   let mockTurnEndPort;
-  let mockServices;
 
   beforeEach(() => {
     // Mock primary dependencies required by AITurnHandler and its factories
@@ -61,45 +60,25 @@ describe('TurnContext State Isolation', () => {
       turnEnded: jest.fn(),
     };
 
-    // This mock object is to simulate the services that the *real* TurnContextFactory
-    // would inject into a new TurnContext. It is NOT a direct dependency of AITurnHandler anymore.
-    mockServices = {
-      gameWorldAccess: {},
-      commandProcessor: {},
-      commandOutcomeInterpreter: {},
-      safeEventDispatcher: {},
-      entityManager: {},
-      actionDiscoverySystem: {},
-    };
-
     // This is the key mock to spy on TurnContext creation.
     // The factory's `create` method is responsible for internally providing the logger and services.
     // We must simulate this behavior for the test to work.
-    mockTurnContextFactory = {
-      create: jest.fn((createArgs) => {
-        // The real factory supplies the logger and services. We simulate this by combining
-        // the arguments from the `create` call with the mocks in the test's scope.
-        const fullArgsForConstructor = {
-          ...createArgs, // Contains actor, strategy, onEndTurnCallback, etc.
-          logger: mockLogger,
-          services: {
-            // These are the services a real TurnContext needs.
-            game: mockServices.gameWorldAccess,
-            turnEndPort: mockTurnEndPort,
-            commandProcessor: mockServices.commandProcessor,
-            commandOutcomeInterpreter: mockServices.commandOutcomeInterpreter,
-            safeEventDispatcher: mockServices.safeEventDispatcher,
-            entityManager: mockServices.entityManager,
-            actionDiscoverySystem: mockServices.actionDiscoverySystem,
+    mockTurnContextBuilder = {
+      build: jest.fn(({ actor }) => {
+        let awaiting = false;
+        return {
+          getActor: () => actor,
+          setAwaitingExternalEvent: (flag) => {
+            awaiting = flag;
           },
+          isAwaitingExternalEvent: () => awaiting,
+          endTurn: jest.fn(),
         };
-        // We return a REAL TurnContext instance so we can test its behavior.
-        return new TurnContext(fullArgsForConstructor);
       }),
     };
 
-    mockAiPlayerStrategyFactory = {
-      create: jest.fn().mockReturnValue({ decideAction: jest.fn() }),
+    mockStrategyFactory = {
+      createForHuman: jest.fn().mockReturnValue({ decideAction: jest.fn() }),
     };
   });
 
@@ -112,8 +91,8 @@ describe('TurnContext State Isolation', () => {
       logger: mockLogger,
       turnStateFactory: mockTurnStateFactory,
       turnEndPort: mockTurnEndPort,
-      turnContextFactory: mockTurnContextFactory,
-      aiPlayerStrategyFactory: mockAiPlayerStrategyFactory,
+      turnContextBuilder: mockTurnContextBuilder,
+      strategyFactory: mockStrategyFactory,
     });
 
     const aiActor1 = { id: 'ai-actor-1', hasComponent: () => true };
@@ -125,12 +104,12 @@ describe('TurnContext State Isolation', () => {
     await handler.startTurn(aiActor1);
 
     // Assert: A TurnContext was created for actor 1.
-    expect(mockTurnContextFactory.create).toHaveBeenCalledTimes(1);
-    const context1CreateArgs = mockTurnContextFactory.create.mock.calls[0][0];
+    expect(mockTurnContextBuilder.build).toHaveBeenCalledTimes(1);
+    const context1CreateArgs = mockTurnContextBuilder.build.mock.calls[0][0];
     expect(context1CreateArgs.actor.id).toBe('ai-actor-1');
 
     // Retrieve the actual TurnContext instance that was created.
-    const context1 = mockTurnContextFactory.create.mock.results[0].value;
+    const context1 = mockTurnContextBuilder.build.mock.results[0].value;
 
     // Act: Set the "awaiting event" state ON THE CONTEXT ITSELF.
     context1.setAwaitingExternalEvent(true, aiActor1.id);
@@ -140,7 +119,7 @@ describe('TurnContext State Isolation', () => {
 
     // Act: End the first turn by invoking the `onEndTurnCallback` passed to the context.
     // This simulates the turn lifecycle completing and cleans up the first context.
-    const onEndTurnCallback1 = context1CreateArgs.onEndTurnCallback;
+    const onEndTurnCallback1 = context1CreateArgs.onEndTurn;
     expect(onEndTurnCallback1).toBeInstanceOf(Function);
     await onEndTurnCallback1(); // This transitions the handler to idle.
 
@@ -150,10 +129,10 @@ describe('TurnContext State Isolation', () => {
     await handler.startTurn(aiActor2);
 
     // Assert: A *new* TurnContext was created for actor 2.
-    expect(mockTurnContextFactory.create).toHaveBeenCalledTimes(2);
-    const context2CreateArgs = mockTurnContextFactory.create.mock.calls[1][0];
+    expect(mockTurnContextBuilder.build).toHaveBeenCalledTimes(2);
+    const context2CreateArgs = mockTurnContextBuilder.build.mock.calls[1][0];
     expect(context2CreateArgs.actor.id).toBe('ai-actor-2');
-    const context2 = mockTurnContextFactory.create.mock.results[1].value;
+    const context2 = mockTurnContextBuilder.build.mock.results[1].value;
 
     // --- Final Assertion ---
     // Assert that the new context has the default state (false), proving
