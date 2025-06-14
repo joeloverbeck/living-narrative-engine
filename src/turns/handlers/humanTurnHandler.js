@@ -47,7 +47,7 @@ class HumanTurnHandler extends BaseTurnHandler {
    */
   #awaitState = AwaitTurnEndState.idle();
   /** @type {boolean} */
-  #isTerminatingNormally = false;
+  #hasSignalledNormalEnd = false;
 
   /**
    * @param {object} deps
@@ -169,9 +169,9 @@ class HumanTurnHandler extends BaseTurnHandler {
       `${this.constructor.name}._resetTurnStateAndResources specific cleanup for '${logCtx}'.`
     );
     super._resetTurnStateAndResources(logCtx);
-    this._clearTurnEndWaitingMechanismsInternal();
+    this._resetAwaitTurnEndFlags();
 
-    this.#isTerminatingNormally = false;
+    this.#hasSignalledNormalEnd = false;
     this._logger.debug(
       `${this.constructor.name}: Player-specific state reset complete for '${logCtx}'.`
     );
@@ -232,7 +232,7 @@ class HumanTurnHandler extends BaseTurnHandler {
   }
 
   /** @private */
-  _clearTurnEndWaitingMechanismsInternal() {
+  _resetAwaitTurnEndFlags() {
     const prevState = this.#awaitState;
     if (prevState.isWaiting()) {
       this._logger.debug(
@@ -243,7 +243,7 @@ class HumanTurnHandler extends BaseTurnHandler {
   }
 
   signalNormalApparentTermination() {
-    this.#isTerminatingNormally = true;
+    this.#hasSignalledNormalEnd = true;
     this._logger.debug(
       `${this.constructor.name}: Normal apparent termination signaled.`
     );
@@ -374,7 +374,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       );
       // The await flag must be reset. This event might be what we were waiting for,
       // even if the turn ended via another mechanism in the meantime.
-      this._clearTurnEndWaitingMechanismsInternal();
+      this._resetAwaitTurnEndFlags();
 
       // Even without a context, the current state (e.g., Idle) might need to react.
       if (

@@ -243,11 +243,11 @@ export class BaseTurnHandler {
 
   /* ─────────────────────────── TURN-END HANDLING ─────────────────────── */
 
-  async _handleTurnEnd(actorIdToEnd, turnError = null, fromDestroy = false) {
+  async _handleTurnEnd(endedActorId, turnError = null, fromDestroy = false) {
     if (this._isDestroyed && !fromDestroy) {
       this.getLogger().warn(
         `${this.constructor.name}._handleTurnEnd ignored for actor ${
-          actorIdToEnd ?? 'UNKNOWN'
+          endedActorId ?? 'UNKNOWN'
         } – handler already destroyed.`
       );
       return;
@@ -258,23 +258,23 @@ export class BaseTurnHandler {
     const contextActorId = this._currentTurnContext?.getActor()?.id;
     const handlerActorId = this._currentActor?.id;
     const effectiveActor =
-      actorIdToEnd ||
+      endedActorId ||
       contextActorId ||
       handlerActorId ||
       'UNKNOWN_ACTOR_AT_END';
 
-    if (actorIdToEnd && contextActorId && actorIdToEnd !== contextActorId) {
+    if (endedActorId && contextActorId && endedActorId !== contextActorId) {
       logger.warn(
-        `${this.constructor.name}._handleTurnEnd called for actor '${actorIdToEnd}', but TurnContext is for '${contextActorId}'. Effective actor: '${effectiveActor}'.`
+        `${this.constructor.name}._handleTurnEnd called for actor '${endedActorId}', but TurnContext is for '${contextActorId}'. Effective actor: '${effectiveActor}'.`
       );
     } else if (
-      actorIdToEnd &&
+      endedActorId &&
       !contextActorId &&
       handlerActorId &&
-      actorIdToEnd !== handlerActorId
+      endedActorId !== handlerActorId
     ) {
       logger.warn(
-        `${this.constructor.name}._handleTurnEnd called for actor '${actorIdToEnd}', no active TurnContext, but handler's _currentActor is '${handlerActorId}'. Effective actor: '${effectiveActor}'.`
+        `${this.constructor.name}._handleTurnEnd called for actor '${endedActorId}', no active TurnContext, but handler's _currentActor is '${handlerActorId}'. Effective actor: '${effectiveActor}'.`
       );
     }
 
@@ -314,7 +314,7 @@ export class BaseTurnHandler {
     );
 
     const actorIdForState =
-      actorIdToEnd || contextActorId || this._currentActor?.id;
+      endedActorId || contextActorId || this._currentActor?.id;
     if (!actorIdForState) {
       logger.warn(
         `${this.constructor.name}._handleTurnEnd: Could not determine actor ID for TurnEndingState. Using 'UNKNOWN_ACTOR_FOR_STATE'.`

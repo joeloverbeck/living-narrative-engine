@@ -92,10 +92,7 @@ describe('HumanTurnHandler.handleTurnEndedEvent with no context', () => {
     handler._currentState = state;
     jest.spyOn(handler, 'getTurnContext').mockReturnValue(null);
 
-    const clearSpy = jest.spyOn(
-      handler,
-      '_clearTurnEndWaitingMechanismsInternal'
-    );
+    const clearSpy = jest.spyOn(handler, '_resetAwaitTurnEndFlags');
 
     await handler.handleTurnEndedEvent({ payload: { entityId: 'actor1' } });
 
