@@ -1,6 +1,7 @@
 // src/utils/entityUtils.js
 
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
+import { isValidEntity } from './entityValidationUtils.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
@@ -23,7 +24,7 @@ export function getEntityDisplayName(
   fallbackString = 'unknown entity',
   logger
 ) {
-  if (!entity || typeof entity.getComponentData !== 'function') {
+  if (!isValidEntity(entity)) {
     const entityId = entity && typeof entity.id === 'string' ? entity.id : null;
     logger?.debug(
       `getEntityDisplayName: Received invalid or non-entity object (ID: ${

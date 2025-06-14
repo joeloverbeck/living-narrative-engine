@@ -3,6 +3,10 @@
 import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
 import { isNonEmptyString } from './textUtils.js';
 import { ensureValidLogger } from './loggerUtils.js';
+import {
+  isValidEntityManager,
+  isValidEntity,
+} from './entityValidationUtils.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -33,10 +37,7 @@ function _getExitsComponentData(locationEntityOrId, entityManager, logger) {
   let locationEntity = locationEntityOrId;
 
   if (typeof locationEntityOrId === 'string') {
-    if (
-      !entityManager ||
-      typeof entityManager.getEntityInstance !== 'function'
-    ) {
+    if (!isValidEntityManager(entityManager)) {
       log.error(
         "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid."
       );
@@ -45,10 +46,7 @@ function _getExitsComponentData(locationEntityOrId, entityManager, logger) {
     locationEntity = entityManager.getEntityInstance(locationEntityOrId);
   }
 
-  if (
-    !locationEntity ||
-    typeof locationEntity.getComponentData !== 'function'
-  ) {
+  if (!isValidEntity(locationEntity)) {
     const id =
       typeof locationEntityOrId === 'string'
         ? locationEntityOrId

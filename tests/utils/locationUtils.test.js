@@ -47,6 +47,7 @@ describe('locationUtils', () => {
 
     mockEntityManager = {
       getEntityInstance: jest.fn(),
+      getComponentData: jest.fn(),
     };
   });
 
