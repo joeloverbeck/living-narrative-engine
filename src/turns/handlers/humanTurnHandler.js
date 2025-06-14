@@ -14,6 +14,7 @@ import { ActorMismatchError } from '../../errors/actorMismatchError.js';
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
+/** @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
 /** @typedef {import('../../interfaces/IPromptCoordinator.js').IPromptCoordinator} IPromptCoordinator */
@@ -256,68 +257,86 @@ class HumanTurnHandler extends BaseTurnHandler {
     await super.onExitState(currentState, nextState);
   }
 
-  async handleSubmittedCommand(commandString, actorEntity) {
-    this._assertHandlerActive();
-    const currentContext = this.getTurnContext();
-
-    if (
-      !actorEntity ||
-      typeof actorEntity.id !== 'string' ||
-      actorEntity.id.trim() === ''
-    ) {
-      const errMsg = `${this.constructor.name}: handleSubmittedCommand called without valid actorEntity.`;
-      this._logger.error(errMsg);
-      const error = new ActorMismatchError(
+  /**
+   * @private
+   * @param {Entity} actorEntity The actor entity attempting to execute the command.
+   * @returns {ITurnContext} The current turn context if validation passes.
+   * @throws {ActorMismatchError} If the actor is invalid or doesn't match the active turn context.
+   */
+  _ensureActorAndContextMatch(actorEntity) {
+    try {
+      this._assertValidActor(actorEntity, 'handleSubmittedCommand');
+    } catch (err) {
+      throw new ActorMismatchError(
         'A valid actor must be provided to handle a command.',
         {
-          expectedActorId: currentContext?.getActor()?.id ?? 'Unknown',
+          expectedActorId: this.getTurnContext()?.getActor()?.id ?? 'Unknown',
           actualActorId: null,
           operation: 'handleSubmittedCommand',
         }
       );
-      if (currentContext && typeof currentContext.endTurn === 'function') {
-        await currentContext.endTurn(error);
-      } else {
-        await this._handleTurnEnd(null, error);
-      }
-      return;
     }
 
-    if (!currentContext || currentContext.getActor()?.id !== actorEntity.id) {
-      const expectedId = currentContext?.getActor()?.id ?? 'None (no context)';
-      const actualId = actorEntity.id;
-      const message = !currentContext
-        ? `Cannot handle command for actor '${actualId}'; no active turn context.`
-        : `Actor mismatch: command for '${actualId}' but current context is for '${expectedId}'.`;
+    const currentContext = this.getTurnContext();
+    const actualId = actorEntity.id;
+    const expectedId = currentContext?.getActor()?.id;
 
-      const error = new ActorMismatchError(message, {
-        expectedActorId: expectedId,
-        actualActorId: actualId,
-        operation: 'handleSubmittedCommand',
-      });
+    if (!currentContext) {
+      throw new ActorMismatchError(
+        `Cannot handle command for actor '${actualId}'; no active turn context.`,
+        {
+          expectedActorId: 'Unknown (no context)',
+          actualActorId: actualId,
+          operation: 'handleSubmittedCommand',
+        }
+      );
+    }
 
+    if (expectedId !== actualId) {
+      throw new ActorMismatchError(
+        `Actor mismatch: command for '${actualId}' but current context is for '${expectedId}'.`,
+        {
+          expectedActorId: expectedId,
+          actualActorId: actualId,
+          operation: 'handleSubmittedCommand',
+        }
+      );
+    }
+
+    return currentContext;
+  }
+
+  async handleSubmittedCommand(commandString, actorEntity) {
+    this._assertHandlerActive();
+    let currentContext;
+
+    try {
+      currentContext = this._ensureActorAndContextMatch(actorEntity);
+    } catch (error) {
       this._logger.error(`${this.constructor.name}: ${error.message}`, {
-        expectedId,
-        actualId,
+        expectedId: error.expectedActorId,
+        actualId: error.actualActorId,
+        name: error.name,
       });
 
-      if (currentContext && typeof currentContext.endTurn === 'function') {
-        await currentContext.endTurn(error);
+      const contextToEnd = this.getTurnContext();
+      if (contextToEnd) {
+        await contextToEnd.endTurn(error);
       } else {
-        await this._handleTurnEnd(actorEntity.id, error);
+        await this._handleTurnEnd(actorEntity?.id, error);
       }
       return;
     }
 
-    if (
-      !this._currentState ||
-      typeof this._currentState.handleSubmittedCommand !== 'function'
-    ) {
-      const err = `${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
+    if (typeof this._currentState?.handleSubmittedCommand !== 'function') {
+      const err = `${
+        this.constructor.name
+      }: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
       this._logger.error(err);
       await currentContext.endTurn(new Error(err));
       return;
     }
+
     await this._currentState.handleSubmittedCommand(
       this,
       commandString,
