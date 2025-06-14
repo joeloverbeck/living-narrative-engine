@@ -38,6 +38,7 @@ function createMockLocation(id, exitsData) {
 describe('locationUtils', () => {
   /** @type {IEntityManager} */
   let mockEntityManager;
+  let mockDispatcher;
 
   beforeEach(() => {
     mockLogger.info.mockReset();
@@ -48,6 +49,7 @@ describe('locationUtils', () => {
     mockEntityManager = {
       getEntityInstance: jest.fn(),
     };
+    mockDispatcher = { dispatch: jest.fn() };
   });
 
   describe('getExitByDirection', () => {
@@ -63,7 +65,8 @@ describe('locationUtils', () => {
         'loc1',
         'north',
         mockEntityManager,
-        mockLogger
+        mockLogger,
+        mockDispatcher
       );
 
       expect(result).toEqual({ direction: 'North', target: 'loc2' }); // CHANGED targetLocationId to target
@@ -79,7 +82,8 @@ describe('locationUtils', () => {
         'loc1',
         'west',
         mockEntityManager,
-        mockLogger
+        mockLogger,
+        mockDispatcher
       );
 
       expect(result).toBeNull();
@@ -93,7 +97,8 @@ describe('locationUtils', () => {
         'loc1',
         'north',
         mockEntityManager,
-        mockLogger
+        mockLogger,
+        mockDispatcher
       );
 
       expect(result).toBeNull();
@@ -106,7 +111,8 @@ describe('locationUtils', () => {
         'missing',
         'north',
         mockEntityManager,
-        mockLogger
+        mockLogger,
+        mockDispatcher
       );
 
       expect(result).toBeNull();
@@ -123,7 +129,8 @@ describe('locationUtils', () => {
         'loc1',
         'north',
         mockEntityManager,
-        mockLogger
+        mockLogger,
+        mockDispatcher
       );
 
       expect(result).toBeNull();
@@ -142,7 +149,12 @@ describe('locationUtils', () => {
       const location = createMockLocation('loc1', exits);
       mockEntityManager.getEntityInstance.mockReturnValue(location);
 
-      const result = getAvailableExits('loc1', mockEntityManager, mockLogger);
+      const result = getAvailableExits(
+        'loc1',
+        mockEntityManager,
+        mockDispatcher,
+        mockLogger
+      );
 
       expect(result).toEqual([
         { direction: 'north', target: 'loc2' }, // CHANGED targetLocationId to target
@@ -155,7 +167,12 @@ describe('locationUtils', () => {
       const location = createMockLocation('loc1', null);
       mockEntityManager.getEntityInstance.mockReturnValue(location);
 
-      const result = getAvailableExits('loc1', mockEntityManager, mockLogger);
+      const result = getAvailableExits(
+        'loc1',
+        mockEntityManager,
+        mockDispatcher,
+        mockLogger
+      );
 
       expect(result).toEqual([]);
     });
@@ -163,7 +180,12 @@ describe('locationUtils', () => {
     it('should return empty array when location not found', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(undefined);
 
-      const result = getAvailableExits('loc1', mockEntityManager, mockLogger);
+      const result = getAvailableExits(
+        'loc1',
+        mockEntityManager,
+        mockDispatcher,
+        mockLogger
+      );
 
       expect(result).toEqual([]);
     });
