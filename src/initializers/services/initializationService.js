@@ -224,6 +224,7 @@ class InitializationService extends IInitializationService {
       const notesListener = new NotesPersistenceListener({
         logger: this.#logger,
         entityManager,
+        dispatcher,
       });
       dispatcher.subscribe(
         ACTION_DECIDED_ID,

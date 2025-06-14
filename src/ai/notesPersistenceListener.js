@@ -2,6 +2,8 @@
 
 import { persistNotes } from './notesPersistenceHook.js';
 
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+
 /**
  * Consumes ACTION_DECIDED_ID and merges generated notes into the
  * actor’s notes component.
@@ -10,12 +12,15 @@ export class NotesPersistenceListener {
   /**
    * @param {{
    *   logger: import('../interfaces/coreServices.js').ILogger,
-   *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager
+   *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager,
+   *   dispatcher: ISafeEventDispatcher
    * }} deps
    */
-  constructor({ logger, entityManager }) {
+  constructor({ logger, entityManager, dispatcher }) {
     this.logger = logger;
     this.entityManager = entityManager;
+    /** @type {ISafeEventDispatcher} */
+    this.dispatcher = dispatcher;
   }
 
   /**
@@ -42,7 +47,12 @@ export class NotesPersistenceListener {
           extractedData.notes
         )}`
       );
-      persistNotes({ notes: extractedData.notes }, actorEntity, this.logger);
+      persistNotes(
+        { notes: extractedData.notes },
+        actorEntity,
+        this.logger,
+        this.dispatcher
+      );
     } else {
       this.logger.warn(
         `NotesPersistenceListener: entity not found for actor ${actorId}`
