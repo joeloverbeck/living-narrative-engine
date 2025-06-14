@@ -1,3 +1,4 @@
+// src/di/registrations/registerTurnLifecycle.js
 /**
  * Registers core turn-lifecycle systems (player-agnostic).
  * Ensures ActionIndexingService is always present so PromptCoordinator
@@ -24,6 +25,8 @@ import {
 import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
 import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider';
 import { GenericTurnStrategyFactory } from '../../turns/factories/genericTurnStrategyFactory.js';
+import { TurnContextBuilder } from '../../turns/builders/turnContextBuilder.js';
+import { assertValidActor } from '../../utils/validation/actorValidation.js';
 
 /**
  * @param {import('../appContainer.js').default} container
@@ -130,6 +133,20 @@ export function registerTurnLifecycle(container) {
     `Turn Lifecycle Registration: Registered ${tokens.ITurnStrategyFactory} with singleton resolution.`
   );
 
+  // ──────────────────── Validation Utils ─────────────────────
+  r.value(tokens.assertValidActor, assertValidActor);
+
+  // ───────────────── Turn Context Builder ────────────────────
+  r.transientFactory(
+    tokens.TurnContextBuilder,
+    (c) =>
+      new TurnContextBuilder({
+        logger: c.resolve(tokens.ILogger),
+        turnContextFactory: c.resolve(tokens.ITurnContextFactory),
+        assertValidActor: c.resolve(tokens.assertValidActor),
+      })
+  );
+
   // ─────────────────── Player handler ────────────────────
   r.tagged(SHUTDOWNABLE).transientFactory(
     tokens.HumanTurnHandler,
@@ -144,6 +161,7 @@ export function registerTurnLifecycle(container) {
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         turnStrategyFactory: c.resolve(tokens.ITurnStrategyFactory), // <-- Injected factory
         entityManager: c.resolve(tokens.IEntityManager),
+        turnContextBuilder: c.resolve(tokens.TurnContextBuilder), // <-- Injected builder
       })
   );
   logger.debug(

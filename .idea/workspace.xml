@@ -4,14 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normal.">
-      <change afterPath="$PROJECT_DIR$/src/turns/factories/genericTurnStrategyFactory.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnStrategyFactory.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/turns/factories/genericTurnStrategyFactory.test.js" afterDir="false" />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Uploading with errors for Codex to fix.">
+      <change afterPath="$PROJECT_DIR$/src/utils/actorValidation.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -177,15 +172,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="29617000" />
-    </task>
-    <task id="LOCAL-00004" summary="Trying to unfuck the turn system.">
-      <option name="closed" value="true" />
-      <created>1749836938518</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1749836938518</updated>
+      <workItem from="1749876741387" duration="30729000" />
     </task>
     <task id="LOCAL-00005" summary="Added test suite for TurnIdleState.">
       <option name="closed" value="true" />
@@ -571,7 +558,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749905862961</updated>
     </task>
-    <option name="localTasksCounter" value="53" />
+    <task id="LOCAL-00053" summary="Uploading with errors for Codex to fix.">
+      <option name="closed" value="true" />
+      <created>1749907562823</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1749907562823</updated>
+    </task>
+    <option name="localTasksCounter" value="54" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -591,6 +586,7 @@
     <MESSAGE value="Trying to return the app to normality." />
     <MESSAGE value="Fixed nasty bug in PromptCoordinator." />
     <MESSAGE value="Trying to return the app to normal." />
-    <option name="LAST_COMMIT_MESSAGE" value="Trying to return the app to normal." />
+    <MESSAGE value="Uploading with errors for Codex to fix." />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploading with errors for Codex to fix." />
   </component>
 </project>
