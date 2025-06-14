@@ -1,5 +1,3 @@
-// src/dependencyInjection/registrations/aiRegistrations.js
-
 /* eslint-env node */
 /**
  * @file Registers all AI-related services, including the LLM adapter, prompting pipeline, and the AITurnHandler.
@@ -324,8 +322,6 @@ export function registerAI(container) {
   );
 
   // ─── Indexer (shared singleton) ──────────────────────────────
-  // FIX: Use a proper factory function for lazy instantiation.
-  // The service is resolved via `c.resolve` when the factory is executed, not during registration.
   r.singletonFactory(
     tokens.IActionIndexer,
     (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
@@ -417,8 +413,8 @@ export function registerAI(container) {
         logger: c.resolve(tokens.ILogger),
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
-        aiPlayerStrategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory),
-        turnContextFactory: c.resolve(tokens.ITurnContextFactory),
+        strategyFactory: c.resolve(tokens.IAIPlayerStrategyFactory), // <-- Updated
+        turnContextBuilder: c.resolve(tokens.TurnContextBuilder), // <-- Added
       })
   );
   logger.debug(
