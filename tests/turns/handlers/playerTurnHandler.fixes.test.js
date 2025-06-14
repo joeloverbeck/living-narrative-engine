@@ -21,6 +21,7 @@ describe('HumanTurnHandler Constructor', () => {
   let mockSafeEventDispatcher;
   let mockGameWorldAccess;
   let mockTurnStrategyFactory; // <-- Changed
+  let mockTurnContextBuilder;
   let mockInitialState;
   let setInitialStateSpy;
 
@@ -45,6 +46,7 @@ describe('HumanTurnHandler Constructor', () => {
     mockTurnStrategyFactory = {
       createForHuman: jest.fn(),
     };
+    mockTurnContextBuilder = { build: jest.fn() };
 
     setInitialStateSpy = jest
       .spyOn(BaseTurnHandler.prototype, '_setInitialState')
@@ -67,6 +69,7 @@ describe('HumanTurnHandler Constructor', () => {
     promptCoordinator: mockPlayerPromptService,
     commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
     safeEventDispatcher: mockSafeEventDispatcher,
+    turnContextBuilder: mockTurnContextBuilder,
     turnStrategyFactory: mockTurnStrategyFactory, // <-- Changed
     gameWorldAccess: mockGameWorldAccess,
   });
