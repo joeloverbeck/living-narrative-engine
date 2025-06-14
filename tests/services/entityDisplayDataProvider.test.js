@@ -37,28 +37,30 @@ describe('EntityDisplayDataProvider', () => {
     it('should throw an error if entityManager is missing or invalid', () => {
       expect(
         () => new EntityDisplayDataProvider({ logger: mockLogger })
-      ).toThrow("'entityManager' dependency is missing or invalid.");
+      ).toThrow('Missing required dependency: entityManager.');
       expect(
         () =>
           new EntityDisplayDataProvider({
             entityManager: {},
             logger: mockLogger,
           })
-      ).toThrow("'entityManager' dependency is missing or invalid.");
+      ).toThrow(
+        "Invalid or missing method 'getEntityInstance' on dependency 'entityManager'."
+      );
     });
 
     it('should throw an error if logger is missing or invalid', () => {
       expect(
         () =>
           new EntityDisplayDataProvider({ entityManager: mockEntityManager })
-      ).toThrow("'logger' dependency is missing or invalid.");
+      ).toThrow('Missing required dependency: logger.');
       expect(
         () =>
           new EntityDisplayDataProvider({
             entityManager: mockEntityManager,
             logger: {},
           })
-      ).toThrow("'logger' dependency is missing or invalid.");
+      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
     });
 
     it('should instantiate successfully with valid dependencies', () => {

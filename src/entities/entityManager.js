@@ -22,6 +22,8 @@ import {
   NOTES_COMPONENT_ID,
 } from '../constants/componentIds.js';
 import { IEntityManager } from '../interfaces/IEntityManager.js';
+import { validateDependency } from '../utils/validationUtils.js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -68,22 +70,7 @@ function formatValidationErrors(rawResult) {
   return '(validator returned false)';
 }
 
-/**
- * Assert that an injected dependency exposes required methods.
- *
- * @private
- * @param {string} name
- * @param {object} instance
- * @param {string[]} methods
- */
-function assertInterface(name, instance, methods) {
-  const missing = methods.some((m) => typeof instance?.[m] !== 'function');
-  if (!instance || missing) {
-    throw new Error(
-      `EntityManager requires an ${name} instance with ${methods.join(', ')}.`
-    );
-  }
-}
+// assertInterface removed; using validateDependency instead
 
 /* -------------------------------------------------------------------------- */
 /* EntityManager Implementation                                               */
@@ -125,19 +112,33 @@ class EntityManager extends IEntityManager {
     super();
 
     /* ---------- dependency checks ---------- */
-    assertInterface('IDataRegistry', registry, ['getEntityDefinition']);
-    assertInterface('ISchemaValidator', validator, ['validate']);
-    assertInterface('ILogger', logger, ['info', 'error', 'warn', 'debug']);
-    assertInterface('ISpatialIndexManager', spatialIndexManager, [
-      'addEntity',
-      'removeEntity',
-      'updateEntityLocation',
-      'clearIndex',
-    ]);
+    validateDependency(logger, 'ILogger', console, {
+      requiredMethods: ['info', 'error', 'warn', 'debug'],
+    });
+    this.#logger = ensureValidLogger(logger, 'EntityManager');
+
+    validateDependency(registry, 'IDataRegistry', this.#logger, {
+      requiredMethods: ['getEntityDefinition'],
+    });
+    validateDependency(validator, 'ISchemaValidator', this.#logger, {
+      requiredMethods: ['validate'],
+    });
+    validateDependency(
+      spatialIndexManager,
+      'ISpatialIndexManager',
+      this.#logger,
+      {
+        requiredMethods: [
+          'addEntity',
+          'removeEntity',
+          'updateEntityLocation',
+          'clearIndex',
+        ],
+      }
+    );
 
     this.#registry = registry;
     this.#validator = validator;
-    this.#logger = logger;
     this.#spatialIndexManager = spatialIndexManager;
     this.#definitionToPrimaryInstanceMap = new Map();
 
