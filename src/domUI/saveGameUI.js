@@ -2,7 +2,7 @@
 
 import { BaseModalRenderer } from './baseModalRenderer.js';
 import { DomUtils } from '../utils/domUtils.js';
-import { FormatUtils } from '../utils/formatUtils.js';
+import { formatPlaytime } from '../utils/textUtils.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -353,7 +353,7 @@ export class SaveGameUI extends BaseModalRenderer {
     slotDiv.appendChild(slotInfoDiv);
 
     if (!slotData.isEmpty && !slotData.isCorrupted) {
-      const playtimeText = `Playtime: ${FormatUtils.formatPlaytime(slotData.playtimeSeconds || 0)}`;
+      const playtimeText = `Playtime: ${formatPlaytime(slotData.playtimeSeconds || 0)}`;
       const slotPlaytimeEl = this.domElementFactory.span(
         'slot-playtime',
         playtimeText

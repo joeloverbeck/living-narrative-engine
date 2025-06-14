@@ -7,16 +7,23 @@
  * remove, and presence-check operations. Provides static ID validation
  * and allows subclasses to customise how invalid IDs are handled.
  */
+import { isNonEmptyString } from './textUtils.js';
+
 class MapManager {
   /**
    * Initializes the internal Map storage.
+   *
+   * @param {object} [options]
+   * @param {boolean} [options.throwOnInvalidId] - If false, invalid IDs are ignored.
    */
-  constructor() {
+  constructor({ throwOnInvalidId = true } = {}) {
     /**
      * Internal storage map.
+     *
      * @type {Map<string, any>}
      */
     this.items = new Map();
+    this.throwOnInvalidId = throwOnInvalidId;
   }
 
   /**
@@ -26,7 +33,7 @@ class MapManager {
    * @returns {boolean}
    */
   static isValidId(id) {
-    return typeof id === 'string' && id.trim() !== '';
+    return isNonEmptyString(id);
   }
 
   /**
@@ -38,9 +45,11 @@ class MapManager {
    * @param {string} operation
    */
   onInvalidId(id, operation) {
-    throw new Error(
-      `${this.constructor.name}.${operation}: Invalid id '${id}'.`
-    );
+    if (this.throwOnInvalidId) {
+      throw new Error(
+        `${this.constructor.name}.${operation}: Invalid id '${id}'.`
+      );
+    }
   }
 
   /**

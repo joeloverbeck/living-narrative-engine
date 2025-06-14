@@ -9,13 +9,16 @@
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  */
 
+import { isNonEmptyString } from './textUtils.js';
+import { ensureValidLogger } from './loggerUtils.js';
+
 /**
  * Throws an error if the provided actor is invalid.
  * An actor is considered invalid if it is null, or has no ID.
  *
  * @param {Entity} actor - The actor entity to validate.
  * @param {ILogger} [logger] - An optional logger instance for logging errors.
- * @param {string} [contextName='UnknownContext'] - The name of the calling context for improved error messages.
+ * @param {string} [contextName] - The name of the calling context for improved error messages.
  * @throws {Error} If the actor is invalid.
  */
 export function assertValidActor(
@@ -23,11 +26,10 @@ export function assertValidActor(
   logger,
   contextName = 'UnknownContext'
 ) {
-  if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
+  const log = ensureValidLogger(logger, 'ActorValidation');
+  if (!actor || !isNonEmptyString(actor.id)) {
     const errMsg = `${contextName}: actor is required and must have a valid id.`;
-    if (logger) {
-      logger.error(errMsg, { actor });
-    }
+    log.error(errMsg, { actor });
     throw new Error(errMsg);
   }
 }

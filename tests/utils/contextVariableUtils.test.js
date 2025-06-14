@@ -6,7 +6,12 @@ describe('storeResult', () => {
   test('stores value when context exists', () => {
     const ctx = { evaluationContext: { context: {} } };
     const dispatcher = { dispatch: jest.fn() };
-    const logger = { error: jest.fn() };
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
     const success = storeResult('foo', 123, ctx, dispatcher, logger);
     expect(success).toBe(true);
     expect(ctx.evaluationContext.context.foo).toBe(123);
@@ -27,7 +32,7 @@ describe('storeResult', () => {
 
   test('logs error when dispatcher not provided', () => {
     const ctx = {};
-    const logger = { error: jest.fn() };
+    const logger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
     const success = storeResult('baz', 7, ctx, undefined, logger);
     expect(success).toBe(false);
     expect(logger.error).toHaveBeenCalled();
