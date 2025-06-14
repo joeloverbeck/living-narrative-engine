@@ -98,18 +98,6 @@ class PromptCoordinator extends IPromptCoordinator {
       throw new DOMException('Prompt operation was aborted.', 'AbortError');
     }
 
-    // ─── Register the list with the shared ActionIndexingService ───
-    // If another part of the system already registered it, this is a no-op.
-    this.#actionIndexingService.indexActions(
-      actor.id,
-      indexedComposites.map((c) => ({
-        id: c.actionId,
-        command: c.commandString,
-        params: c.params,
-        description: c.description,
-      }))
-    );
-
     // ─── Send the choices to the UI ───
     const actionsForPrompt = indexedComposites.map((c) => ({
       index: c.index,
