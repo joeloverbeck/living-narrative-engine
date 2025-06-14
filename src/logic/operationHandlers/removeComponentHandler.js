@@ -11,6 +11,7 @@
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.
@@ -66,25 +67,6 @@ class RemoveComponentHandler {
    * @param {ExecutionContext} ctx - The execution context.
    * @returns {string | null} The resolved entity ID or null.
    */
-  #resolveEntityId(ref, ctx) {
-    const ec = ctx?.evaluationContext ?? {};
-    if (typeof ref === 'string') {
-      const t = ref.trim();
-      if (!t) return null;
-      if (t === 'actor') return ec.actor?.id ?? null;
-      if (t === 'target') return ec.target?.id ?? null;
-      return t; // Assume direct ID
-    }
-    if (
-      ref &&
-      typeof ref === 'object' &&
-      typeof ref.entityId === 'string' &&
-      ref.entityId.trim()
-    ) {
-      return ref.entityId.trim();
-    }
-    return null;
-  }
 
   /**
    * Executes the REMOVE_COMPONENT operation.
@@ -121,7 +103,7 @@ class RemoveComponentHandler {
     const trimmedComponentType = component_type.trim();
 
     // 2. Resolve Entity ID
-    const entityId = this.#resolveEntityId(entity_ref, executionContext);
+    const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
       log.warn(
         `REMOVE_COMPONENT: Could not resolve entity id from entity_ref.`,

@@ -22,6 +22,7 @@ let mockChoicePipeline;
 let mockHumanDecisionProvider;
 let mockTurnActionFactory;
 let mockTurnStrategyFactory;
+let mockTurnContextBuilder;
 
 beforeEach(() => {
   mockLogger = {
@@ -46,6 +47,20 @@ beforeEach(() => {
   mockTurnStrategyFactory = {
     createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
   };
+  mockTurnContextBuilder = {
+    build: jest.fn(({ actor, setAwaitFlag }) => {
+      let awaiting = false;
+      return {
+        getActor: () => actor,
+        setAwaitingExternalEvent: (flag, id) => {
+          awaiting = flag;
+          if (setAwaitFlag) setAwaitFlag(flag, id);
+        },
+        isAwaitingExternalEvent: () => awaiting,
+        endTurn: jest.fn(),
+      };
+    }),
+  };
 
   deps = {
     logger: mockLogger,
@@ -59,6 +74,7 @@ beforeEach(() => {
     humanDecisionProvider: mockHumanDecisionProvider,
     turnActionFactory: mockTurnActionFactory,
     turnStrategyFactory: mockTurnStrategyFactory,
+    turnContextBuilder: mockTurnContextBuilder,
   };
 
   jest

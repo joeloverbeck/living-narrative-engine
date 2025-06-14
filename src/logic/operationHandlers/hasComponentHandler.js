@@ -12,6 +12,7 @@
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 /**
  * Parameters accepted by {@link HasComponentHandler#execute}.
@@ -72,25 +73,6 @@ class HasComponentHandler {
    * @param {ExecutionContext} ctx - The execution context.
    * @returns {string | null} The resolved entity ID or null.
    */
-  #resolveEntityId(ref, ctx) {
-    const ec = ctx?.evaluationContext ?? {};
-    if (typeof ref === 'string') {
-      const t = ref.trim();
-      if (!t) return null;
-      if (t === 'actor') return ec.actor?.id ?? null;
-      if (t === 'target') return ec.target?.id ?? null;
-      return t; // Assume direct ID
-    }
-    if (
-      ref &&
-      typeof ref === 'object' &&
-      typeof ref.entityId === 'string' &&
-      ref.entityId.trim()
-    ) {
-      return ref.entityId.trim();
-    }
-    return null;
-  }
 
   /**
    * Executes the HAS_COMPONENT operation.
@@ -131,7 +113,7 @@ class HasComponentHandler {
     const trimmedComponentType = component_type.trim();
 
     // 2. Resolve Entity ID
-    const entityId = this.#resolveEntityId(entity_ref, executionContext);
+    const entityId = resolveEntityId(entity_ref, executionContext);
 
     // 3. Perform check and store result
     let result = false; // Default to false

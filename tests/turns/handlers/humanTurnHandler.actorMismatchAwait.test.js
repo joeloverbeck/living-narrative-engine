@@ -24,6 +24,7 @@ describe('HumanTurnHandler handleSubmittedCommand actor mismatch', () => {
   let mockHumanDecisionProvider;
   let mockTurnActionFactory;
   let mockTurnStrategyFactory;
+  let mockTurnContextBuilder;
 
   beforeEach(() => {
     mockLogger = {
@@ -46,6 +47,14 @@ describe('HumanTurnHandler handleSubmittedCommand actor mismatch', () => {
     mockTurnStrategyFactory = {
       createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
     };
+    mockTurnContextBuilder = {
+      build: jest.fn(({ actor }) => ({
+        getActor: () => actor,
+        setAwaitingExternalEvent: jest.fn(),
+        isAwaitingExternalEvent: jest.fn(() => false),
+        endTurn: jest.fn(),
+      })),
+    };
 
     deps = {
       logger: mockLogger,
@@ -59,6 +68,7 @@ describe('HumanTurnHandler handleSubmittedCommand actor mismatch', () => {
       humanDecisionProvider: mockHumanDecisionProvider,
       turnActionFactory: mockTurnActionFactory,
       turnStrategyFactory: mockTurnStrategyFactory,
+      turnContextBuilder: mockTurnContextBuilder,
     };
 
     jest

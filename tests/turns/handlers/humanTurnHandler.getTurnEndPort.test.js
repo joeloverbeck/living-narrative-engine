@@ -14,6 +14,7 @@ let deps;
 let mockLogger;
 let mockTurnStateFactory;
 let mockTurnStrategyFactory;
+let mockTurnContextBuilder;
 
 beforeEach(() => {
   mockLogger = {
@@ -28,6 +29,14 @@ beforeEach(() => {
   mockTurnStrategyFactory = {
     createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
   };
+  mockTurnContextBuilder = {
+    build: jest.fn(({ actor }) => ({
+      getActor: () => actor,
+      setAwaitingExternalEvent: jest.fn(),
+      isAwaitingExternalEvent: jest.fn(() => false),
+      endTurn: jest.fn(),
+    })),
+  };
   deps = {
     logger: mockLogger,
     turnStateFactory: mockTurnStateFactory,
@@ -40,6 +49,7 @@ beforeEach(() => {
     humanDecisionProvider: {},
     turnActionFactory: {},
     turnStrategyFactory: mockTurnStrategyFactory,
+    turnContextBuilder: mockTurnContextBuilder,
   };
   jest
     .spyOn(BaseTurnHandler.prototype, '_setInitialState')

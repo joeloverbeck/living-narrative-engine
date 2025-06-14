@@ -6,6 +6,7 @@
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 /**
  * @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject
@@ -43,67 +44,6 @@ class QueryComponentHandler {
     }
     this.#entityManager = entityManager;
     this.#logger = logger;
-  }
-
-  #resolveEntityId(entityRef, executionContext, logger) {
-    const actorId = executionContext?.evaluationContext?.actor?.id;
-    const targetId = executionContext?.evaluationContext?.target?.id;
-
-    if (typeof entityRef === 'string') {
-      const trimmedRef = entityRef.trim();
-      if (!trimmedRef) {
-        logger.error(
-          'QueryComponentHandler: Invalid empty string provided for entity_ref.',
-          { entityRef }
-        );
-        return null;
-      }
-
-      if (trimmedRef === 'actor') {
-        if (!actorId) {
-          logger.error(
-            "QueryComponentHandler: Cannot resolve 'actor' entity ID. Actor missing or has no ID in evaluationContext.actor.",
-            { evalContextActor: executionContext?.evaluationContext?.actor }
-          );
-          return null;
-        }
-        return actorId;
-      } else if (trimmedRef === 'target') {
-        if (!targetId) {
-          logger.error(
-            "QueryComponentHandler: Cannot resolve 'target' entity ID. Target missing or has no ID in evaluationContext.target.",
-            { evalContextTarget: executionContext?.evaluationContext?.target }
-          );
-          return null;
-        }
-        return targetId;
-      } else {
-        logger.debug(
-          `QueryComponentHandler: Interpreting entity_ref string "${trimmedRef}" as a direct entity ID.`
-        );
-        return trimmedRef;
-      }
-    } else if (
-      typeof entityRef === 'object' &&
-      entityRef !== null &&
-      typeof entityRef.entityId === 'string'
-    ) {
-      const trimmedId = entityRef.entityId.trim();
-      if (!trimmedId) {
-        logger.error(
-          'QueryComponentHandler: Invalid entity_ref object: entityId property is empty or whitespace.',
-          { entityRef }
-        );
-        return null;
-      }
-      return trimmedId;
-    } else {
-      logger.error(
-        'QueryComponentHandler: Invalid entity_ref parameter. Must be "actor", "target", a non-empty entity ID string, or an object like { entityId: "..." }.',
-        { entityRef }
-      );
-      return null;
-    }
   }
 
   execute(params, executionContext) {
@@ -156,13 +96,12 @@ class QueryComponentHandler {
     }
     const trimmedResultVariable = result_variable.trim();
 
-    const entityId = this.#resolveEntityId(
-      entity_ref,
-      executionContext,
-      logger
-    );
+    const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
-      // Error already logged by #resolveEntityId
+      logger.error(
+        'QueryComponentHandler: Could not resolve entity id from entity_ref.',
+        { entityRef: entity_ref }
+      );
       return;
     }
 

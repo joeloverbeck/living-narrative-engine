@@ -5,6 +5,7 @@
  */
 
 import { BaseTurnHandler } from './baseTurnHandler.js';
+import { assertValidActor } from '../../utils/actorValidation.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -124,6 +125,7 @@ class HumanTurnHandler extends BaseTurnHandler {
    */
   async startTurn(actor) {
     super._assertHandlerActive();
+    assertValidActor(actor, this._logger, `${this.constructor.name}.startTurn`);
     this._setCurrentActorInternal(actor);
 
     const humanStrategy = this.#turnStrategyFactory.createForHuman(actor.id);

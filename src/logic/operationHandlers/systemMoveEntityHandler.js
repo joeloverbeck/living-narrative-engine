@@ -9,6 +9,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../defs.js').EntityRefObject} EntityRefObject */
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 class SystemMoveEntityHandler {
   #logger;
@@ -30,25 +31,6 @@ class SystemMoveEntityHandler {
    * @param {ExecutionContext} ctx - The execution context.
    * @returns {string | null} The resolved entity ID or null.
    */
-  #resolveEntityId(ref, ctx) {
-    const ec = ctx?.evaluationContext ?? {};
-    if (typeof ref === 'string') {
-      const t = ref.trim();
-      if (!t) return null;
-      if (t === 'actor') return ec.actor?.id ?? null;
-      if (t === 'target') return ec.target?.id ?? null;
-      return t; // Assume direct ID
-    }
-    if (
-      ref &&
-      typeof ref === 'object' &&
-      typeof ref.entityId === 'string' &&
-      ref.entityId.trim()
-    ) {
-      return ref.entityId.trim();
-    }
-    return null;
-  }
 
   /**
    * Executes the SYSTEM_MOVE_ENTITY operation.
@@ -74,7 +56,7 @@ class SystemMoveEntityHandler {
     }
 
     // 2. Resolve the entity ID
-    const entityId = this.#resolveEntityId(entity_ref, executionContext);
+    const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
       log.warn(`${opName}: Could not resolve entity_ref.`, { entity_ref });
       return;

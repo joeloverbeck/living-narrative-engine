@@ -287,7 +287,7 @@ describe('RemoveComponentHandler', () => {
     (desc, invalidRef) => {
       const params = { entity_ref: invalidRef, component_type: 'c:t' };
       handler.execute(params, buildCtx());
-      // These cases should pass the initial '!entity_ref' check but fail in #resolveEntityId
+      // These cases should pass the initial '!entity_ref' check but fail in resolveEntityId
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Could not resolve entity id from entity_ref.'),
         { entity_ref: invalidRef }

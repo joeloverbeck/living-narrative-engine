@@ -256,7 +256,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext({ evaluationContext: { actor: null } }); // Actor missing
     handler.execute(params, context);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining("Cannot resolve 'actor'"),
+      expect.stringContaining('Could not resolve entity id'),
       expect.anything()
     );
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -274,7 +274,7 @@ describe('QueryComponentHandler', () => {
     }); // Target ID missing
     handler.execute(params, context);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining("Cannot resolve 'target'"),
+      expect.stringContaining('Could not resolve entity id'),
       expect.anything()
     );
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -290,7 +290,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext();
     handler.execute(params, context);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid entity_ref parameter'),
+      expect.stringContaining('Could not resolve entity id'),
       expect.anything()
     );
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -306,7 +306,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext();
     handler.execute(params, context);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('entityId property is empty or whitespace'),
+      expect.stringContaining('Could not resolve entity id'),
       expect.anything()
     );
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -322,7 +322,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext();
     handler.execute(params, context);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid empty string provided for entity_ref'),
+      expect.stringContaining('Could not resolve entity id'),
       expect.anything()
     );
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
