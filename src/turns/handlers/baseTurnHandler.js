@@ -148,7 +148,9 @@ export class BaseTurnHandler {
     const prevState = this._currentState;
 
     // MODIFIED: Use the new identity method, which depends only on the abstraction.
-    if (prevState === newState && !newState.isIdle()) {
+    const nextIsIdle =
+      typeof newState.isIdle === 'function' ? newState.isIdle() : false;
+    if (prevState === newState && !nextIsIdle) {
       logger.debug(
         `${this.constructor.name}: Attempted to transition to the same state ${
           prevState?.getStateName() ?? 'N/A'
@@ -187,7 +189,11 @@ export class BaseTurnHandler {
         enterErr
       );
       // MODIFIED: Use the new identity method for the recovery check.
-      if (!this._currentState.isIdle()) {
+      const currentIsIdle =
+        typeof this._currentState.isIdle === 'function'
+          ? this._currentState.isIdle()
+          : false;
+      if (!currentIsIdle) {
         logger.warn(
           `${this.constructor.name}: Forcing transition to TurnIdleState due to error entering ${newState.getStateName()}.`
         );
@@ -280,11 +286,15 @@ export class BaseTurnHandler {
     }
 
     // MODIFIED: Use the new identity methods. Add a null check for safety.
-    if (
-      !fromDestroy &&
-      this._currentState &&
-      (this._currentState.isEnding() || this._currentState.isIdle())
-    ) {
+    const stateIsEnding =
+      typeof this._currentState?.isEnding === 'function'
+        ? this._currentState.isEnding()
+        : false;
+    const stateIsIdle =
+      typeof this._currentState?.isIdle === 'function'
+        ? this._currentState.isIdle()
+        : false;
+    if (!fromDestroy && this._currentState && (stateIsEnding || stateIsIdle)) {
       if (turnError) {
         logger.warn(
           `${this.constructor.name}._handleTurnEnd called for ${effectiveActor} with error '${turnError.message}', but already in ${this._currentState.getStateName()}. Error will be logged but no new transition initiated.`
