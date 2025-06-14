@@ -1,7 +1,7 @@
 // src/utils/contextVariableUtils.js
 
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import { getPrefixedLogger } from './loggerUtils.js';
+import { safeDispatchError } from './safeDispatchError.js';
 
 /**
  * Safely stores a value into `execCtx.evaluationContext.context`. If the context
@@ -26,11 +26,8 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
   if (!hasContext) {
     const message =
       'storeResult: evaluationContext.context is missing; cannot store result';
-    if (dispatcher?.dispatch) {
-      dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message,
-        details: { variableName },
-      });
+    if (dispatcher) {
+      safeDispatchError(dispatcher, message, { variableName });
     } else {
       log.error(message, { variableName });
     }
@@ -41,11 +38,16 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
     execCtx.evaluationContext.context[variableName] = value;
     return true;
   } catch (e) {
-    if (dispatcher?.dispatch) {
-      dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: `storeResult: Failed to write variable "${variableName}"`,
-        details: { variableName, error: e.message, stack: e.stack },
-      });
+    if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
+        `storeResult: Failed to write variable "${variableName}"`,
+        {
+          variableName,
+          error: e.message,
+          stack: e.stack,
+        }
+      );
     } else {
       log.error(`storeResult: Failed to write variable "${variableName}"`, {
         variableName,
