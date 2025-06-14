@@ -12,6 +12,7 @@
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 import { wouldCreateCycle } from '../../utils/followUtils.js';
+import storeResult from '../../utils/contextVariableUtils.js';
 
 /**
  * @typedef {object} CheckFollowCycleParams
@@ -85,16 +86,17 @@ class CheckFollowCycleHandler {
     const cycleDetected = wouldCreateCycle(fid, lid, this.#entityManager);
     const result = { success: true, cycleDetected };
 
-    try {
-      execCtx.evaluationContext.context[result_variable.trim()] = result;
+    const stored = storeResult(
+      result_variable.trim(),
+      result,
+      execCtx,
+      this.#dispatcher,
+      log
+    );
+    if (stored) {
       log.debug(
         `CHECK_FOLLOW_CYCLE: Stored result in "${result_variable}": ${JSON.stringify(result)}`
       );
-    } catch (e) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: `CHECK_FOLLOW_CYCLE: Failed to write to context variable "${result_variable}"`,
-        details: { error: e.message, stack: e.stack },
-      });
     }
   }
 }

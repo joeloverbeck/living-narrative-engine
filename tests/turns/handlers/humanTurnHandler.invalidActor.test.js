@@ -21,6 +21,7 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
   let mockChoicePipeline;
   let mockHumanDecisionProvider;
   let mockTurnActionFactory;
+  let mockTurnStrategyFactory;
 
   beforeEach(() => {
     mockLogger = {
@@ -40,6 +41,9 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
     mockChoicePipeline = {};
     mockHumanDecisionProvider = {};
     mockTurnActionFactory = {};
+    mockTurnStrategyFactory = {
+      createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
+    };
 
     deps = {
       logger: mockLogger,
@@ -52,6 +56,7 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
       choicePipeline: mockChoicePipeline,
       humanDecisionProvider: mockHumanDecisionProvider,
       turnActionFactory: mockTurnActionFactory,
+      turnStrategyFactory: mockTurnStrategyFactory,
     };
 
     jest

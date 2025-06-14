@@ -21,6 +21,7 @@ let mockSafeEventDispatcher;
 let mockChoicePipeline;
 let mockHumanDecisionProvider;
 let mockTurnActionFactory;
+let mockTurnStrategyFactory;
 
 beforeEach(() => {
   mockLogger = {
@@ -42,6 +43,9 @@ beforeEach(() => {
   mockChoicePipeline = {};
   mockHumanDecisionProvider = {};
   mockTurnActionFactory = {};
+  mockTurnStrategyFactory = {
+    createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
+  };
 
   deps = {
     logger: mockLogger,
@@ -54,6 +58,7 @@ beforeEach(() => {
     choicePipeline: mockChoicePipeline,
     humanDecisionProvider: mockHumanDecisionProvider,
     turnActionFactory: mockTurnActionFactory,
+    turnStrategyFactory: mockTurnStrategyFactory,
   };
 
   jest
