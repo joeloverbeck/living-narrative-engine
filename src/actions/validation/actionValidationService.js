@@ -11,8 +11,10 @@
 
 import { ActionTargetContext } from '../../models/actionTargetContext.js';
 import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
-import { validateDependency } from '../../utils/validationUtils.js';
-import { createPrefixedLogger } from '../../utils/loggerUtils.js';
+import {
+  initLogger,
+  validateServiceDeps,
+} from '../../utils/serviceInitializer.js';
 // --- Refactor-AVS-3.4: Remove dependency ---
 // REMOVED: import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
 // --- End Refactor-AVS-3.4 ---
@@ -53,10 +55,11 @@ export class ActionValidationService {
   }) {
     // 1. Validate logger dependency first
     try {
-      validateDependency(logger, 'ActionValidationService: logger', console, {
-        requiredMethods: ['debug', 'error', 'info'],
-      });
-      this.#logger = createPrefixedLogger(logger, 'ActionValidationService: ');
+      this.#logger = initLogger('ActionValidationService', logger, [
+        'debug',
+        'error',
+        'info',
+      ]);
     } catch (e) {
       const errorMsg = `ActionValidationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       // eslint-disable-next-line no-console
@@ -66,30 +69,20 @@ export class ActionValidationService {
 
     // 2. Validate other dependencies using the validated logger
     try {
-      validateDependency(
-        entityManager,
-        'ActionValidationService: entityManager',
-        this.#logger,
-        {
+      validateServiceDeps('ActionValidationService', this.#logger, {
+        entityManager: {
+          value: entityManager,
           requiredMethods: ['getEntityInstance'],
-        }
-      );
-      validateDependency(
-        domainContextCompatibilityChecker,
-        'ActionValidationService: domainContextCompatibilityChecker',
-        this.#logger,
-        {
+        },
+        domainContextCompatibilityChecker: {
+          value: domainContextCompatibilityChecker,
           requiredMethods: ['check'],
-        }
-      );
-      validateDependency(
-        prerequisiteEvaluationService,
-        'ActionValidationService: prerequisiteEvaluationService',
-        this.#logger,
-        {
+        },
+        prerequisiteEvaluationService: {
+          value: prerequisiteEvaluationService,
           requiredMethods: ['evaluate'],
-        }
-      );
+        },
+      });
 
       if (
         prerequisiteEvaluationService &&

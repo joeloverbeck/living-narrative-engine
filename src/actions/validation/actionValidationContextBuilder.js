@@ -11,8 +11,10 @@
 
 // --- FIX: Import necessary functions and constants ---
 
-import { validateDependency } from '../../utils/validationUtils.js';
-import { createPrefixedLogger } from '../../utils/loggerUtils.js';
+import {
+  initLogger,
+  validateServiceDeps,
+} from '../../utils/serviceInitializer.js';
 import {
   buildActorContext,
   buildDirectionContext,
@@ -36,18 +38,11 @@ export class ActionValidationContextBuilder {
   constructor({ entityManager, logger }) {
     // (Constructor remains the same)
     try {
-      validateDependency(
-        logger,
-        'ActionValidationContextBuilder: logger',
-        console,
-        {
-          requiredMethods: ['debug', 'error', 'warn'],
-        }
-      );
-      this.#logger = createPrefixedLogger(
-        logger,
-        'ActionValidationContextBuilder: '
-      );
+      this.#logger = initLogger('ActionValidationContextBuilder', logger, [
+        'debug',
+        'error',
+        'warn',
+      ]);
     } catch (e) {
       const errorMsg = `ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       console.error(errorMsg);
@@ -55,12 +50,12 @@ export class ActionValidationContextBuilder {
     }
 
     try {
-      validateDependency(
-        entityManager,
-        'ActionValidationContextBuilder: entityManager',
-        this.#logger,
-        { requiredMethods: ['getEntityInstance', 'getComponentData'] }
-      );
+      validateServiceDeps('ActionValidationContextBuilder', this.#logger, {
+        entityManager: {
+          value: entityManager,
+          requiredMethods: ['getEntityInstance', 'getComponentData'],
+        },
+      });
       this.#entityManager = entityManager;
     } catch (e) {
       this.#logger.error(

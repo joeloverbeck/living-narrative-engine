@@ -13,9 +13,11 @@
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
-import { validateDependency } from '../utils/validationUtils.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
-import { createPrefixedLogger } from '../utils/loggerUtils.js';
+import {
+  initLogger,
+  validateServiceDeps,
+} from '../utils/serviceInitializer.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchError.js';
@@ -50,47 +52,34 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     safeEventDispatcher,
   }) {
     super();
-    validateDependency(logger, 'ActionDiscoveryService: logger', console, {
-      requiredMethods: ['debug', 'warn', 'error'],
+    this.#logger = initLogger('ActionDiscoveryService', logger, [
+      'debug',
+      'warn',
+      'error',
+    ]);
+    validateServiceDeps('ActionDiscoveryService', this.#logger, {
+      gameDataRepository: {
+        value: gameDataRepository,
+        requiredMethods: ['getAllActionDefinitions'],
+      },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData', 'getEntityInstance'],
+      },
+      actionValidationService: {
+        value: actionValidationService,
+        requiredMethods: ['isValid'],
+      },
+      formatActionCommandFn: { value: formatActionCommandFn, isFunction: true },
+      getEntityIdsForScopesFn: {
+        value: getEntityIdsForScopesFn,
+        isFunction: true,
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
     });
-    this.#logger = createPrefixedLogger(logger, 'ActionDiscoveryService: ');
-
-    validateDependency(
-      gameDataRepository,
-      'ActionDiscoveryService: gameDataRepository',
-      this.#logger,
-      { requiredMethods: ['getAllActionDefinitions'] }
-    );
-    validateDependency(
-      entityManager,
-      'ActionDiscoveryService: entityManager',
-      this.#logger,
-      { requiredMethods: ['getComponentData', 'getEntityInstance'] }
-    );
-    validateDependency(
-      actionValidationService,
-      'ActionDiscoveryService: actionValidationService',
-      this.#logger,
-      { requiredMethods: ['isValid'] }
-    );
-    validateDependency(
-      formatActionCommandFn,
-      'ActionDiscoveryService: formatActionCommandFn',
-      this.#logger,
-      { isFunction: true }
-    );
-    validateDependency(
-      getEntityIdsForScopesFn,
-      'ActionDiscoveryService: getEntityIdsForScopesFn',
-      this.#logger,
-      { isFunction: true }
-    );
-    validateDependency(
-      safeEventDispatcher,
-      'ActionDiscoveryService: safeEventDispatcher',
-      this.#logger,
-      { requiredMethods: ['dispatch'] }
-    );
 
     this.#gameDataRepository = gameDataRepository;
     this.#entityManager = entityManager;
