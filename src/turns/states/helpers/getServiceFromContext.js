@@ -3,7 +3,7 @@
  */
 
 /**
- * @typedef {import('../processingCommandState.js').ProcessingCommandState} ProcessingCommandState
+ * @typedef {import('../../types/stateTypes.js').ProcessingCommandStateLike} ProcessingCommandStateLike
  * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  */
 
@@ -12,7 +12,7 @@ import { handleProcessingException } from './handleProcessingException.js';
 /**
  * Safely obtains a service from the turn context.
  *
- * @param {ProcessingCommandState} state - Owning state instance.
+ * @param {ProcessingCommandStateLike} state - Owning state instance.
  * @param {ITurnContext} turnCtx - Current turn context.
  * @param {string} methodName - Method name on ITurnContext used to retrieve the service.
  * @param {string} serviceNameForLog - Label for logging when retrieval fails.
