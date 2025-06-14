@@ -4,7 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing thoughts and notes tooltips." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing thoughts and notes tooltips.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/css/components/_speech-bubbles.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/components/_speech-bubbles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/css/themes/_default-theme.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/themes/_default-theme.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/validation/actionValidationContextBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/validation/actionValidationContextBuilder.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/validation/actionValidationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/validation/actionValidationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/validation/prerequisiteEvaluationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/validation/prerequisiteEvaluationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/contextVariableUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/contextVariableUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/locationUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/locationUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/serviceInitializer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/serviceInitializer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/actionValidationContextBuilder.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/actionValidationContextBuilder.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/serviceInitializer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/serviceInitializer.test.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -177,15 +190,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="22266000" />
-    </task>
-    <task id="LOCAL-00036" summary="Trying to return the app to normality.">
-      <option name="closed" value="true" />
-      <created>1749889466218</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1749889466218</updated>
+      <workItem from="1749913762946" duration="23182000" />
     </task>
     <task id="LOCAL-00037" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -571,7 +576,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749936730756</updated>
     </task>
-    <option name="localTasksCounter" value="85" />
+    <task id="LOCAL-00085" summary="Implementing thoughts and notes tooltips.">
+      <option name="closed" value="true" />
+      <created>1749937000509</created>
+      <option name="number" value="00085" />
+      <option name="presentableId" value="LOCAL-00085" />
+      <option name="project" value="LOCAL" />
+      <updated>1749937000509</updated>
+    </task>
+    <option name="localTasksCounter" value="86" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
