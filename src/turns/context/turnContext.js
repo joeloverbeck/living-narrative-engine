@@ -37,7 +37,7 @@ import { POSITION_COMPONENT_ID } from '../../constants/componentIds'; // ⬅ onl
  * NO LONGER knows about *any* concrete state classes – it delegates
  * all transitions to its owning BaseTurnHandler instance.
  * This breaks the dependency-cruiser cycle:
- *   TurnContext → ProcessingCommandState → … → HumanTurnHandler → TurnContext
+ * TurnContext → ProcessingCommandState → … → HumanTurnHandler → TurnContext
  */
 export class TurnContext extends ITurnContext {
   /** @type {Entity}              */ #actor;
@@ -268,6 +268,10 @@ export class TurnContext extends ITurnContext {
       commandString,
       turnAction
     );
+  }
+
+  async requestAwaitingExternalTurnEndStateTransition() {
+    await this.#handlerInstance.requestAwaitingExternalTurnEndStateTransition();
   }
 
   /* ─────────────────────────── INTERNAL HELPERS ───────────────────────── */

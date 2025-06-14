@@ -1,5 +1,3 @@
-// src/turns/interfaces/ITurnContext.js
-
 /**
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -10,7 +8,7 @@
  */
 
 /* ------------------------------------------------------------------ */
-/*  🔻  LOCAL TYPE STUBS – break the cycle, still give editors hints  */
+/* 🔻  LOCAL TYPE STUBS – break the cycle, still give editors hints  */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -246,6 +244,19 @@ export class ITurnContext {
   async requestProcessingCommandStateTransition(commandString, turnAction) {
     throw new Error(
       "Method 'requestProcessingCommandStateTransition()' must be implemented."
+    );
+  }
+
+  /**
+   * Requests the turn handler to transition to the AwaitingExternalTurnEnd state.
+   * This is used when the turn progression pauses to wait for an external event,
+   * such as a player confirming their turn is over through a UI button.
+   *
+   * @returns {Promise<void>}
+   */
+  async requestAwaitingExternalTurnEndStateTransition() {
+    throw new Error(
+      "Method 'requestAwaitingExternalTurnEndStateTransition()' must be implemented."
     );
   }
 }

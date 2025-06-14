@@ -5,9 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normality.">
-      <change afterPath="$PROJECT_DIR$/tests/schemas/actionDecided.schema.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingActorDecisionState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingActorDecisionState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnStateFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnStateFactory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -166,7 +169,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="8603000" />
+      <workItem from="1749876741387" duration="9551000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -400,7 +403,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749884723130</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="Trying to return the app to normality.">
+      <option name="closed" value="true" />
+      <created>1749885504987</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1749885504987</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

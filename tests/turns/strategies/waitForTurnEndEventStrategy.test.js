@@ -1,9 +1,5 @@
 // src/turns/strategies/waitForTurnEndEventStrategy.test.js
 
-import WaitForTurnEndEventStrategy from '../../../src/turns/strategies/waitForTurnEndEventStrategy.js';
-import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
-import { AwaitingExternalTurnEndState } from '../../../src/turns/states/awaitingExternalTurnEndState.js';
-import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js'; // Mocked or actual, depending on test needs
 import {
   afterEach,
   beforeEach,
@@ -12,6 +8,8 @@ import {
   jest,
   test,
 } from '@jest/globals';
+import WaitForTurnEndEventStrategy from '../../../src/turns/strategies/waitForTurnEndEventStrategy.js';
+import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
 
 // --- Mocks ---
 
@@ -36,19 +34,17 @@ class MockTurnContext {
     this.endTurn = jest.fn();
     this.getActor = jest.fn(() => this._actor);
     this.getLogger = jest.fn(() => this._logger);
-    this.requestTransition = jest.fn(
-      async (StateClass, constructorArgs = []) => {
-        // Simulate transition success
-      }
-    );
-    // Add other methods if they become necessary for this strategy's tests
+    // MODIFIED: Replaced requestTransition with the new abstract method
+    this.requestAwaitingExternalTurnEndStateTransition = jest.fn();
   }
 
   resetAllMocks() {
     this.endTurn.mockClear();
     this.getActor.mockClear();
     this.getLogger.mockClear();
-    this.requestTransition.mockClear();
+    // MODIFIED: Clear the new mock function
+    this.requestAwaitingExternalTurnEndStateTransition.mockClear();
+
     if (
       this._logger &&
       typeof this._logger.info === 'function' &&
@@ -89,10 +85,10 @@ describe('WaitForTurnEndEventStrategy', () => {
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
-    expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
-      AwaitingExternalTurnEndState
-    );
-    expect(mockTurnContext.requestTransition).toHaveBeenCalledTimes(1);
+    // MODIFIED: Check if the new abstract method was called, without arguments.
+    expect(
+      mockTurnContext.requestAwaitingExternalTurnEndStateTransition
+    ).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `WaitForTurnEndEventStrategy: Transition to AwaitingExternalTurnEndState requested successfully for actor ${mockActor.id}.`
     );
@@ -113,7 +109,10 @@ describe('WaitForTurnEndEventStrategy', () => {
     expect(mockLogger.error).toHaveBeenCalledWith(
       'WaitForTurnEndEventStrategy: Received wrong directive (RE_PROMPT). Expected WAIT_FOR_EVENT.'
     );
-    expect(mockTurnContext.requestTransition).not.toHaveBeenCalled();
+    // MODIFIED: Ensure the new transition method was not called.
+    expect(
+      mockTurnContext.requestAwaitingExternalTurnEndStateTransition
+    ).not.toHaveBeenCalled();
     expect(mockTurnContext.endTurn).not.toHaveBeenCalled(); // Strategy throws, calling state handles endTurn
   });
 
@@ -130,16 +129,20 @@ describe('WaitForTurnEndEventStrategy', () => {
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
-    expect(mockTurnContext.requestTransition).not.toHaveBeenCalled();
+    // MODIFIED: Ensure the new transition method was not called.
+    expect(
+      mockTurnContext.requestAwaitingExternalTurnEndStateTransition
+    ).not.toHaveBeenCalled();
     expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.endTurn).toHaveBeenCalledWith(expect.any(Error));
     const errorArg = mockTurnContext.endTurn.mock.calls[0][0];
     expect(errorArg.message).toBe(expectedErrorMsg);
   });
 
-  test('should call turnContext.endTurn if requestTransition fails', async () => {
+  test('should call turnContext.endTurn if requestAwaitingExternalTurnEndStateTransition fails', async () => {
     const transitionErrorMessage = 'Simulated transition failure';
-    mockTurnContext.requestTransition.mockRejectedValueOnce(
+    // MODIFIED: Mock the rejection on the new transition method.
+    mockTurnContext.requestAwaitingExternalTurnEndStateTransition.mockRejectedValueOnce(
       new Error(transitionErrorMessage)
     );
 
@@ -149,11 +152,12 @@ describe('WaitForTurnEndEventStrategy', () => {
 
     await strategy.execute(mockTurnContext, directive, cmdProcResult);
 
-    expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1); // For initial, info, and error logs
+    expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
-    expect(mockTurnContext.requestTransition).toHaveBeenCalledWith(
-      AwaitingExternalTurnEndState
-    );
+    // MODIFIED: Check that the new transition method was called.
+    expect(
+      mockTurnContext.requestAwaitingExternalTurnEndStateTransition
+    ).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expectedOverallErrorMsg,
       expect.any(Error)

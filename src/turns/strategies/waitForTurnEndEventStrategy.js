@@ -10,7 +10,6 @@
 
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
-import { AwaitingExternalTurnEndState } from '../states/awaitingExternalTurnEndState.js';
 import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 
 export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy {
@@ -51,7 +50,7 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
       const criticalErrorMsg = `${className}: No actor found in ITurnContext. Cannot transition to AwaitingExternalTurnEndState without an actor.`;
       logger.error(criticalErrorMsg);
       // As per ticket: log this critical error and end the turn via turnContext.endTurn(new Error(...))
-      turnContext.endTurn(new Error(criticalErrorMsg));
+      await turnContext.endTurn(new Error(criticalErrorMsg));
       return;
     }
 
@@ -67,7 +66,8 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
     // The responsibility for setting any underlying handler flags (like HumanTurnHandler.#isAwaitingTurnEndEvent)
     // is managed by AwaitingExternalTurnEndState itself through turnContext.setAwaitingExternalEvent(true, actorId).
     try {
-      await turnContext.requestTransition(AwaitingExternalTurnEndState);
+      // MODIFIED: Call the new, abstract method on the turn context.
+      await turnContext.requestAwaitingExternalTurnEndStateTransition();
       logger.debug(
         `${className}: Transition to AwaitingExternalTurnEndState requested successfully for actor ${contextActor.id}.`
       );
@@ -75,7 +75,7 @@ export default class WaitForTurnEndEventStrategy extends ITurnDirectiveStrategy 
       const errorMsg = `${className}: Failed to request transition to AwaitingExternalTurnEndState for actor ${contextActor.id}. Error: ${transitionError.message}`;
       logger.error(errorMsg, transitionError);
       // If the transition fails, end the turn with an error.
-      turnContext.endTurn(new Error(errorMsg));
+      await turnContext.endTurn(new Error(errorMsg));
     }
   }
 }

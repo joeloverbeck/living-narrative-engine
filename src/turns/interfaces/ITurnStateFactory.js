@@ -1,5 +1,4 @@
 // src/turns/interfaces/ITurnStateFactory.js
-// ****** CORRECTED FILE ******
 
 /**
  * @typedef {import('./ITurnState.js').ITurnState} ITurnState
@@ -75,6 +74,19 @@ export class ITurnStateFactory {
   createProcessingCommandState(handler, commandString, turnAction) {
     throw new Error(
       'ITurnStateFactory.createProcessingCommandState must be implemented by concrete classes.'
+    );
+  }
+
+  /**
+   * Creates an Awaiting External Turn End state instance.
+   * This state pauses execution and waits for a specific event to signal the turn has concluded.
+   *
+   * @param {ITurnStateHost} handler - The handler that owns the state machine.
+   * @returns {ITurnState} The created awaiting external turn end state.
+   */
+  createAwaitingExternalTurnEndState(handler) {
+    throw new Error(
+      'ITurnStateFactory.createAwaitingExternalTurnEndState must be implemented by concrete classes.'
     );
   }
 }

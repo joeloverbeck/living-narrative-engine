@@ -543,4 +543,17 @@ export class BaseTurnHandler {
       )
     );
   }
+
+  /**
+   * Initiates a transition to the AwaitingExternalTurnEnd state using the state factory.
+   */
+  async requestAwaitingExternalTurnEndStateTransition() {
+    this.getLogger().debug(
+      `${this.constructor.name}: Received request to transition to AwaitingExternalTurnEnd state.`
+    );
+    // Assumes the factory has this method, following the established pattern.
+    await this._transitionToState(
+      this._turnStateFactory.createAwaitingExternalTurnEndState(this)
+    );
+  }
 }

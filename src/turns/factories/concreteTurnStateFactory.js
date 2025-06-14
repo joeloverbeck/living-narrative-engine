@@ -1,19 +1,17 @@
 // src/turns/factories/ConcreteTurnStateFactory.js
 // ──────────────────────────────────────────────────────────────────────────────
 
-// src/turns/factories/ConcreteTurnStateFactory.js
-// ****** CORRECTED FILE ******
-
 import { ITurnStateFactory } from '../interfaces/ITurnStateFactory.js';
-import { TurnIdleState } from '../states/turnIdleState.js';
-import { TurnEndingState } from '../states/turnEndingState.js';
 import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState.js';
-import { ProcessingCommandState } from '../states/processingCommandState.js'; // <-- Import added
+import { AwaitingExternalTurnEndState } from '../states/awaitingExternalTurnEndState.js';
+import { ProcessingCommandState } from '../states/processingCommandState.js';
+import { TurnEndingState } from '../states/turnEndingState.js';
+import { TurnIdleState } from '../states/turnIdleState.js';
 
 /**
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
- * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
+ * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
  */
 
 /**
@@ -60,6 +58,12 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
   createProcessingCommandState(handler, commandString, turnAction) {
     return new ProcessingCommandState(handler, commandString, turnAction);
   }
-}
 
-// --- FILE END ---
+  /**
+   * @override
+   * @param {BaseTurnHandler} handler
+   */
+  createAwaitingExternalTurnEndState(handler) {
+    return new AwaitingExternalTurnEndState(handler);
+  }
+}
