@@ -5,7 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normal.">
+      <change afterPath="$PROJECT_DIR$/src/turns/factories/genericTurnStrategyFactory.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnStrategyFactory.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/factories/genericTurnStrategyFactory.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,6 +61,7 @@
     "Jest.decisionResult.test.js.executor": "Run",
     "Jest.entityMoved.schema.test.js.executor": "Run",
     "Jest.genericTurnStrategy.test.js.executor": "Run",
+    "Jest.genericTurnStrategyFactory.test.js.executor": "Run",
     "Jest.humanDecisionProvider.indexUse.test.js.executor": "Run",
     "Jest.humanDecisionProvider.test.js.executor": "Run",
     "Jest.humanTurnHandler.awaitTurnEndPromise.test.js.executor": "Run",
@@ -98,16 +105,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.actionIndexerAdapter.test.js">
-    <configuration name="actionDecided.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/actionDecided.schema.test.js" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Jest.genericTurnStrategyFactory.test.js">
     <configuration name="actionIndexerAdapter.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -124,6 +122,15 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/schemas/entityMoved.schema.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="genericTurnStrategyFactory.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/factories/genericTurnStrategyFactory.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="interpreterRegistrations.addPerceptionLogEntryHandler.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -146,11 +153,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.genericTurnStrategyFactory.test.js" />
         <item itemvalue="Jest.actionIndexerAdapter.test.js" />
         <item itemvalue="Jest.interpreterRegistrations.handlers.test.js" />
         <item itemvalue="Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js" />
         <item itemvalue="Jest.entityMoved.schema.test.js" />
-        <item itemvalue="Jest.actionDecided.schema.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -170,15 +177,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="28140000" />
-    </task>
-    <task id="LOCAL-00003" summary="Trying to unfuck the turn system.">
-      <option name="closed" value="true" />
-      <created>1749831421073</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1749831421073</updated>
+      <workItem from="1749876741387" duration="29617000" />
     </task>
     <task id="LOCAL-00004" summary="Trying to unfuck the turn system.">
       <option name="closed" value="true" />
@@ -564,7 +563,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749904861336</updated>
     </task>
-    <option name="localTasksCounter" value="52" />
+    <task id="LOCAL-00052" summary="Trying to return the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749905862961</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1749905862961</updated>
+    </task>
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

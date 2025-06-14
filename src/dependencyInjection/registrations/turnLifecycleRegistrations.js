@@ -23,7 +23,7 @@ import {
 } from '../../constants/componentIds.js';
 import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline';
 import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider';
-import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter';
+import { GenericTurnStrategyFactory } from '../../turns/factories/genericTurnStrategyFactory.js';
 
 /**
  * @param {import('../appContainer.js').default} container
@@ -115,6 +115,21 @@ export function registerTurnLifecycle(container) {
       })
   );
 
+  // ────────────────── Turn Strategy Factory ──────────────────
+  r.singletonFactory(
+    tokens.ITurnStrategyFactory,
+    (c) =>
+      new GenericTurnStrategyFactory({
+        logger: c.resolve(tokens.ILogger),
+        choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
+        humanDecisionProvider: c.resolve(tokens.IHumanDecisionProvider),
+        turnActionFactory: c.resolve(tokens.ITurnActionFactory),
+      })
+  );
+  logger.debug(
+    `Turn Lifecycle Registration: Registered ${tokens.ITurnStrategyFactory} with singleton resolution.`
+  );
+
   // ─────────────────── Player handler ────────────────────
   r.tagged(SHUTDOWNABLE).transientFactory(
     tokens.HumanTurnHandler,
@@ -127,9 +142,7 @@ export function registerTurnLifecycle(container) {
         promptCoordinator: c.resolve(tokens.IPromptCoordinator),
         commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        choicePipeline: c.resolve(tokens.TurnActionChoicePipeline), // ← new
-        humanDecisionProvider: c.resolve(tokens.IHumanDecisionProvider), // ← new
-        turnActionFactory: c.resolve(tokens.ITurnActionFactory), // ← new
+        turnStrategyFactory: c.resolve(tokens.ITurnStrategyFactory), // <-- Injected factory
         entityManager: c.resolve(tokens.IEntityManager),
       })
   );

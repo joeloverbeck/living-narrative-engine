@@ -1,4 +1,5 @@
 // tests/turns/handlers/playerTurnHandler.fixes.test.js
+
 import {
   describe,
   expect,
@@ -19,9 +20,7 @@ describe('HumanTurnHandler Constructor', () => {
   let mockCommandOutcomeInterpreter;
   let mockSafeEventDispatcher;
   let mockGameWorldAccess;
-  let mockChoicePipeline;
-  let mockHumanDecisionProvider;
-  let mockTurnActionFactory;
+  let mockTurnStrategyFactory; // <-- Changed
   let mockInitialState;
   let setInitialStateSpy;
 
@@ -42,9 +41,10 @@ describe('HumanTurnHandler Constructor', () => {
     mockCommandOutcomeInterpreter = {};
     mockSafeEventDispatcher = {};
     mockGameWorldAccess = {};
-    mockChoicePipeline = {};
-    mockHumanDecisionProvider = {};
-    mockTurnActionFactory = {};
+    // New mock for the required factory
+    mockTurnStrategyFactory = {
+      createForHuman: jest.fn(),
+    };
 
     setInitialStateSpy = jest
       .spyOn(BaseTurnHandler.prototype, '_setInitialState')
@@ -67,9 +67,7 @@ describe('HumanTurnHandler Constructor', () => {
     promptCoordinator: mockPlayerPromptService,
     commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
     safeEventDispatcher: mockSafeEventDispatcher,
-    choicePipeline: mockChoicePipeline,
-    humanDecisionProvider: mockHumanDecisionProvider,
-    turnActionFactory: mockTurnActionFactory,
+    turnStrategyFactory: mockTurnStrategyFactory, // <-- Changed
     gameWorldAccess: mockGameWorldAccess,
   });
 
@@ -147,6 +145,15 @@ describe('HumanTurnHandler Constructor', () => {
     delete deps.safeEventDispatcher;
     expect(() => new HumanTurnHandler(deps)).toThrow(
       'HumanTurnHandler: safeEventDispatcher is required'
+    );
+  });
+
+  // New test case for the new required dependency
+  it('should throw an error if turnStrategyFactory is not provided', () => {
+    const deps = getValidDependencies();
+    delete deps.turnStrategyFactory;
+    expect(() => new HumanTurnHandler(deps)).toThrow(
+      'HumanTurnHandler: turnStrategyFactory is required'
     );
   });
 

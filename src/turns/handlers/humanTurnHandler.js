@@ -1,7 +1,10 @@
-// src/turns/handlers/humanTurnHandler.js
+/**
+ * @file This module is the main handler of a turn for a human character.
+ * @see src/turns/handlers/humanTurnHandler.js
+ */
+
 import { BaseTurnHandler } from './baseTurnHandler.js';
 import { TurnContext } from '../context/turnContext.js';
-import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -12,28 +15,33 @@ import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 /** @typedef {import('../context/turnContext.js').TurnContextServices} TurnContextServices */
 /** @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState */
 /** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
-/** @typedef {import('../pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} TurnActionChoicePipeline */
-/** @typedef {import('../../interfaces/IPromptCoordinator.js').IPromptCoordinator} IPromptCoordinator */
 
-/** @typedef {import('../interfaces/ITurnDecisionProvider.js').ITurnDecisionProvider} IHumanDecisionProvider */
-/** @typedef {import('../ports/ITurnActionFactory.js').ITurnActionFactory} ITurnActionFactory */
+/** @typedef {import('../../interfaces/IPromptCoordinator.js').IPromptCoordinator} IPromptCoordinator */
+/** @typedef {import('../interfaces/ITurnStrategyFactory.js').ITurnStrategyFactory} ITurnStrategyFactory */
 
 class HumanTurnHandler extends BaseTurnHandler {
-  /** @type {ICommandProcessor} */ #commandProcessor;
-  /** @type {ITurnEndPort} */ #turnEndPort;
-  /** @type {IPromptCoordinator} */ #promptCoordinator;
-  /** @type {ICommandOutcomeInterpreter}*/ #commandOutcomeInterpreter;
-  /** @type {ISafeEventDispatcher} */ #safeEventDispatcher;
-  /** @type {TurnActionChoicePipeline} */ #choicePipeline;
-  /** @type {IHumanDecisionProvider} */ #humanDecisionProvider;
-  /** @type {ITurnActionFactory} */ #turnActionFactory;
-  /** @type {object} */ #gameWorldAccess;
+  /** @type {ICommandProcessor} */
+  #commandProcessor;
+  /** @type {ITurnEndPort} */
+  #turnEndPort;
+  /** @type {IPromptCoordinator} */
+  #promptCoordinator;
+  /** @type {ICommandOutcomeInterpreter}*/
+  #commandOutcomeInterpreter;
+  /** @type {ISafeEventDispatcher} */
+  #safeEventDispatcher;
+  /** @type {ITurnStrategyFactory} */
+  #turnStrategyFactory;
+  /** @type {object} */
+  #gameWorldAccess;
   #entityManager;
 
-  /** @type {boolean} */ #isAwaitingTurnEndEvent = false;
-  /** @type {string|null} */ #awaitingTurnEndForActorId = null;
-  // eslint-disable-next-line no-unused-private-class-members
-  /** @type {boolean} */ #isTerminatingNormally = false;
+  /** @type {boolean} */
+  #isAwaitingTurnEndEvent = false;
+  /** @type {string|null} */
+  #awaitingTurnEndForActorId = null;
+  /** @type {boolean} */
+  #isTerminatingNormally = false;
 
   /**
    * @param {object} deps
@@ -44,9 +52,7 @@ class HumanTurnHandler extends BaseTurnHandler {
    * @param {IPromptCoordinator} deps.promptCoordinator
    * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-   * @param {TurnActionChoicePipeline} deps.choicePipeline
-   * @param {IHumanDecisionProvider} deps.humanDecisionProvider
-   * @param {ITurnActionFactory} deps.turnActionFactory
+   * @param {ITurnStrategyFactory} deps.turnStrategyFactory
    * @param {import('../../interfaces/IEntityManager.js').IEntityManager} [deps.entityManager]  Optional – improves scope helpers
    * @param {object} [deps.gameWorldAccess]
    */
@@ -58,9 +64,7 @@ class HumanTurnHandler extends BaseTurnHandler {
     promptCoordinator,
     commandOutcomeInterpreter,
     safeEventDispatcher,
-    choicePipeline,
-    humanDecisionProvider,
-    turnActionFactory,
+    turnStrategyFactory,
     entityManager,
     gameWorldAccess = {},
   }) {
@@ -78,21 +82,15 @@ class HumanTurnHandler extends BaseTurnHandler {
       );
     if (!safeEventDispatcher)
       throw new Error('HumanTurnHandler: safeEventDispatcher is required');
-    if (!choicePipeline)
-      throw new Error('HumanTurnHandler: choicePipeline is required');
-    if (!humanDecisionProvider)
-      throw new Error('HumanTurnHandler: humanDecisionProvider is required');
-    if (!turnActionFactory)
-      throw new Error('HumanTurnHandler: turnActionFactory is required');
+    if (!turnStrategyFactory)
+      throw new Error('HumanTurnHandler: turnStrategyFactory is required');
 
     this.#commandProcessor = commandProcessor;
     this.#turnEndPort = turnEndPort;
     this.#promptCoordinator = promptCoordinator;
     this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
-    this.#choicePipeline = choicePipeline;
-    this.#humanDecisionProvider = humanDecisionProvider;
-    this.#turnActionFactory = turnActionFactory;
+    this.#turnStrategyFactory = turnStrategyFactory;
     this.#gameWorldAccess = gameWorldAccess;
     this.#entityManager = entityManager ?? null; // store reference (may be null)
 
@@ -126,14 +124,9 @@ class HumanTurnHandler extends BaseTurnHandler {
     }
     this._setCurrentActorInternal(actor);
 
-    const humanStrategy = new GenericTurnStrategy({
-      choicePipeline: this.#choicePipeline,
-      decisionProvider: this.#humanDecisionProvider,
-      turnActionFactory: this.#turnActionFactory,
-      logger: this._logger,
-    });
+    const humanStrategy = this.#turnStrategyFactory.createForHuman(actor.id);
     this._logger.debug(
-      `${this.constructor.name}: Instantiated GenericTurnStrategy for actor ${actor.id}.`
+      `${this.constructor.name}: Instantiated turn strategy for actor ${actor.id} via factory.`
     );
 
     /** @type {TurnContextServices} */
@@ -163,7 +156,7 @@ class HumanTurnHandler extends BaseTurnHandler {
     this._setCurrentTurnContextInternal(newTurnContext);
 
     this._logger.debug(
-      `HumanTurnHandler.startTurn: TurnContext created for actor ${actor.id} with GenericTurnStrategy.`
+      `HumanTurnHandler.startTurn: TurnContext created for actor ${actor.id} with strategy from factory.`
     );
 
     if (!this._currentState) {

@@ -1,4 +1,3 @@
-// src/dependencyInjection/tokens.js
 // --- FILE START ---
 /**
  * @file Centralized repository for Dependency Injection (DI) keys/tokens.
@@ -273,6 +272,7 @@ export const tokens = freeze({
   ITurnStateFactory: 'ITurnStateFactory',
   IAIPlayerStrategyFactory: 'IAIPlayerStrategyFactory',
   ITurnContextFactory: 'ITurnContextFactory',
+  ITurnStrategyFactory: 'ITurnStrategyFactory',
 
   // --- Service Interfaces for AITurnHandler dependencies (if not already defined) ---
   IPromptBuilder: 'IPromptBuilder',
