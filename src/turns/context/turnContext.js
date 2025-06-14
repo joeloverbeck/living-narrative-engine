@@ -161,7 +161,7 @@ export class TurnContext extends ITurnContext {
 
   /* ───────────────────────────── TURN ENDING ──────────────────────────── */
 
-  endTurn(errorOrNull = null) {
+  async endTurn(errorOrNull = null) {
     if (!this.#promptAbortController.signal.aborted) {
       this.#logger.debug(
         `TurnContext.endTurn: aborting prompt for actor ${this.#actor.id}.`
@@ -173,7 +173,7 @@ export class TurnContext extends ITurnContext {
     if (this.#handlerInstance?._isDestroyed === true) return;
 
     this.#decisionMeta = null;
-    this.#onEndTurnCallback(errorOrNull);
+    return this.#onEndTurnCallback(errorOrNull);
   }
 
   /* ───────────────────── AWAITING-EVENT FLAG MANAGEMENT ────────────────── */

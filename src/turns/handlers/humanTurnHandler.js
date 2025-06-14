@@ -270,7 +270,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       const errMsg = `${this.constructor.name}: handleSubmittedCommand actor mismatch or no context. Command for ${actorEntity.id}, context actor: ${currentContext?.getActor()?.id}.`;
       this._logger.error(errMsg);
       if (currentContext && typeof currentContext.endTurn === 'function') {
-        currentContext.endTurn(
+        await currentContext.endTurn(
           new Error('Actor mismatch in handleSubmittedCommand')
         );
       } else {
@@ -288,7 +288,7 @@ class HumanTurnHandler extends BaseTurnHandler {
     ) {
       const err = `${this.constructor.name}: handleSubmittedCommand called, but current state ${this._currentState?.getStateName()} cannot handle it.`;
       this._logger.error(err);
-      currentContext.endTurn(new Error(err));
+      await currentContext.endTurn(new Error(err));
       return;
     }
     await this._currentState.handleSubmittedCommand(
@@ -327,7 +327,7 @@ class HumanTurnHandler extends BaseTurnHandler {
       this._logger.error(
         `${this.constructor.name}: handleTurnEndedEvent called, but current state ${this._currentState?.getStateName()} cannot handle it.`
       );
-      currentContext.endTurn(
+      await currentContext.endTurn(
         new Error(
           `Current state ${this._currentState?.getStateName()} cannot handle turn ended event.`
         )
