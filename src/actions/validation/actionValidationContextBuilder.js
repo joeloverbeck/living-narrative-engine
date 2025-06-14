@@ -10,11 +10,11 @@
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 // --- FIX: Import necessary functions and constants ---
-import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
-import { validateDependency } from '../../utils/validationUtils.js';
 import { getExitByDirection } from '../../utils/locationUtils.js';
+import { getActorLocation } from '../../utils/actorLocationUtils.js';
 import { createComponentAccessor } from '../../logic/contextAssembler.js';
 
+import { validateDependency } from '../../utils/validationUtils.js';
 /**
  * @class ActionValidationContextBuilder
  * @description Service dedicated to constructing the data context object used
@@ -146,17 +146,13 @@ export class ActionValidationContextBuilder {
         );
       }
     } else if (targetContext.type === 'direction' && targetContext.direction) {
-      const actorPositionData = this.#entityManager.getComponentData(
-        actor.id,
-        POSITION_COMPONENT_ID
-      );
-      const actorLocationId = actorPositionData?.locationId;
+      const actorLocation = getActorLocation(actor.id, this.#entityManager);
       let targetBlockerValue = undefined;
       let targetExitDetailsValue = null;
 
-      if (actorLocationId) {
+      if (actorLocation) {
         const matchedExit = getExitByDirection(
-          actorLocationId,
+          actorLocation,
           targetContext.direction,
           this.#entityManager,
           this.#logger
