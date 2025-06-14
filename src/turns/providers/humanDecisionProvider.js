@@ -11,79 +11,69 @@ import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
  * @class HumanDecisionProvider
  * @extends ITurnDecisionProvider
  * @description
- * Orchestrates a human prompt to select an action, resolving either by
- * integer index or by action ID lookup.
+ * Orchestrates a human prompt to select an action and returns the chosen
+ * index and any associated metadata (speech, thoughts).
  */
 export class HumanDecisionProvider extends ITurnDecisionProvider {
   /**
    * @param {object} deps
    * @param {import('../../interfaces/IPromptCoordinator').IPromptCoordinator} deps.promptCoordinator
-   * @param {import('../services/actionIndexingService').ActionIndexingService} deps.actionIndexingService
    * @param {import('../../interfaces/coreServices').ILogger} deps.logger
    */
-  constructor({ promptCoordinator, actionIndexingService, logger }) {
+  constructor({ promptCoordinator, logger }) {
     super();
     this.promptCoordinator = promptCoordinator;
-    this.actionIndexingService = actionIndexingService; // Kept for potential future use, though not used in the corrected 'decide' method.
     this.logger = logger;
   }
 
   /**
+   * Prompts the human player for a turn decision.
+   *
+   * The core responsibility of this method is to invoke the prompt system
+   * and then reliably return the `chosenIndex` and other metadata it receives.
+   * The `PromptCoordinator` and `PromptSession` are responsible for the complex
+   * logic of discovering actions, indexing them, and resolving the player's
+   * input (e.g., a button click) back to a valid index. This provider trusts
+   * that the index returned by the prompt system is valid for the `actions`
+   * list that was originally generated and passed to the `decideAction` method
+   * in the turn strategy.
+   *
    * @async
    * @override
-   * @param {import('../../entities/entity.js').default} actor
-   * @param {import('../interfaces/ITurnContext.js').ITurnContext} context
-   * @param {import('../dtos/actionComposite.js').ActionComposite[]} actions
-   * @param {AbortSignal} [abortSignal]
+   * @param {import('../../entities/entity.js').default} actor - The actor making the decision.
+   * @param {import('../interfaces/ITurnContext.js').ITurnContext} context - The current turn's context.
+   * @param {import('../dtos/actionComposite.js').ActionComposite[]} actions - The list of available actions. This is passed by the caller but not used directly here, as the prompt system has its own reference.
+   * @param {AbortSignal} [abortSignal] - A signal to cancel the operation.
    * @returns {Promise<import('../interfaces/ITurnDecisionProvider').ITurnDecisionResult>}
    */
   async decide(actor, context, actions, abortSignal) {
-    // 1) prompt the user
+    // 1. Prompt the user for their decision. The prompt system handles showing
+    //    the available actions and resolving input to a specific choice.
     const promptRes = await this.promptCoordinator.prompt(actor, {
       cancellationSignal: abortSignal,
     });
 
-    // 2) Resolve the integer index from the prompt result.
-    // The prompt may return the index directly (e.g., from a button click `chosenIndex`)
-    // or an action object/ID (as we've seen from PromptSession).
-    let chosenIndex = promptRes.chosenIndex;
+    // 2. The prompt result (`promptRes`) should contain `chosenIndex`, which is the
+    //    1-based index corresponding to the `actions` array.
+    const { chosenIndex, speech, thoughts, notes } = promptRes;
 
-    // Fallback if index isn't a number, but we have an action ID.
-    if (!Number.isInteger(chosenIndex)) {
-      const actionId = promptRes.action?.id;
-      if (typeof actionId === 'string') {
-        // We have an ID. Find its corresponding composite in the `actions` array
-        // that was passed into this method.
-        const matchingComposite = actions.find((comp) => comp.id === actionId);
-
-        if (matchingComposite) {
-          chosenIndex = matchingComposite.index;
-        } else {
-          this.logger.error(
-            `HumanDecisionProvider: Could not find action with ID "${actionId}" in the list of available actions for actor ${actor.id}.`,
-            { availableActions: actions.map((a) => a.id) }
-          );
-          // Throw an error to prevent proceeding with an invalid choice.
-          throw new Error(`Action "${actionId}" is not a valid choice.`);
-        }
-      }
-    }
-
-    // Final validation before returning.
+    // 3. Validate that we received a valid integer index. If not, something has
+    //    gone wrong in the prompting pipeline.
     if (!Number.isInteger(chosenIndex)) {
       this.logger.error(
-        `HumanDecisionProvider: Failed to determine a valid integer index for actor ${actor.id}'s action.`,
+        `HumanDecisionProvider: Did not receive a valid integer 'chosenIndex' from the prompt system for actor ${actor.id}.`,
         { promptResult: promptRes }
       );
       throw new Error('Could not resolve the chosen action to a valid index.');
     }
 
-    // 3) return standardized result
+    // 4. Return the standardized decision result. The calling strategy will use
+    //    `chosenIndex` to select the correct action from its `actions` array.
     return {
       chosenIndex,
-      speech: promptRes.speech ?? null,
-      thoughts: promptRes.thoughts ?? null,
-      notes: promptRes.notes ?? null,
+      speech: speech ?? null,
+      thoughts: thoughts ?? null,
+      notes: notes ?? null,
     };
   }
 }
