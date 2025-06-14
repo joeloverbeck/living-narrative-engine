@@ -10,6 +10,7 @@ import {
 import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
@@ -310,14 +311,12 @@ export class EntityDisplayDataProvider {
             );
             return null;
           }
-          const exitDescription =
-            typeof exit.direction === 'string' && exit.direction.trim()
-              ? exit.direction.trim()
-              : 'Unspecified Exit';
-          const exitTarget =
-            typeof exit.target === 'string' && exit.target.trim()
-              ? exit.target.trim()
-              : undefined;
+          const exitDescription = isNonBlankString(exit.direction)
+            ? exit.direction.trim()
+            : 'Unspecified Exit';
+          const exitTarget = isNonBlankString(exit.target)
+            ? exit.target.trim()
+            : undefined;
 
           return {
             description: exitDescription,
@@ -388,11 +387,9 @@ export class EntityDisplayDataProvider {
     // This path construction assumes a specific mod structure.
     // You might need to adjust this based on your actual asset loading strategy.
     const fullPath = `/data/mods/${modId}/${imagePath}`;
-    const altText =
-      typeof portraitComponent.altText === 'string' &&
-      portraitComponent.altText.trim()
-        ? portraitComponent.altText.trim()
-        : null; // Return null if altText is not provided or empty
+    const altText = isNonBlankString(portraitComponent.altText)
+      ? portraitComponent.altText.trim()
+      : null; // Return null if altText is not provided or empty
 
     this.#logger.debug(
       `${this._logPrefix} getLocationPortraitData: Constructed portrait path for location '${locationEntityId}': ${fullPath}`

@@ -8,6 +8,7 @@ import {
   EXITS_COMPONENT_ID,
   LEADING_COMPONENT_ID,
 } from '../constants/componentIds.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('./entityManager.js').default} EntityManager */
@@ -66,7 +67,7 @@ function _createActorComponentScopeHandler(
       return new Set();
     }
 
-    return new Set(ids.filter((id) => typeof id === 'string' && id));
+    return new Set(ids.filter((id) => isNonBlankString(id)));
   };
 }
 

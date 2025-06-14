@@ -6,6 +6,7 @@
 import NotesService from './notesService.js';
 import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
  * Persists the "notes" produced during an LLM turn into the actor's
@@ -42,7 +43,7 @@ export function persistNotes(action, actorEntity, logger, dispatcher) {
   // Filter out invalid notes before processing, dispatching errors for them.
   const validNotes = [];
   for (const noteText of notesArray) {
-    if (typeof noteText === 'string' && noteText.trim() !== '') {
+    if (isNonBlankString(noteText)) {
       validNotes.push(noteText);
     } else {
       dispatcher?.dispatch(DISPLAY_ERROR_ID, {
