@@ -20,6 +20,7 @@ describe('HumanTurnHandler Constructor', () => {
   let mockCommandOutcomeInterpreter;
   let mockSafeEventDispatcher;
   let mockGameWorldAccess;
+  let mockTurnContextBuilder;
   let mockTurnStrategyFactory; // <-- Changed
   let mockTurnContextBuilder;
   let mockInitialState;
@@ -42,6 +43,14 @@ describe('HumanTurnHandler Constructor', () => {
     mockCommandOutcomeInterpreter = {};
     mockSafeEventDispatcher = {};
     mockGameWorldAccess = {};
+    mockTurnContextBuilder = {
+      build: jest.fn(({ actor }) => ({
+        getActor: () => actor,
+        setAwaitingExternalEvent: jest.fn(),
+        isAwaitingExternalEvent: jest.fn(() => false),
+        endTurn: jest.fn(),
+      })),
+    };
     // New mock for the required factory
     mockTurnStrategyFactory = {
       createForHuman: jest.fn(),
@@ -71,6 +80,7 @@ describe('HumanTurnHandler Constructor', () => {
     safeEventDispatcher: mockSafeEventDispatcher,
     turnContextBuilder: mockTurnContextBuilder,
     turnStrategyFactory: mockTurnStrategyFactory, // <-- Changed
+    turnContextBuilder: mockTurnContextBuilder,
     gameWorldAccess: mockGameWorldAccess,
   });
 

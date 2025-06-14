@@ -12,7 +12,7 @@
 import resolvePath from '../../utils/resolvePath.js';
 import { cloneDeep } from 'lodash';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
-import resolveEntityId from '../../utils/entityRefUtils.js';
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
 
 /**

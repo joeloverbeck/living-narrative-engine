@@ -11,7 +11,8 @@
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
-import resolveEntityId from '../../utils/entityRefUtils.js';
+
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.
