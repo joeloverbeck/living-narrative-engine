@@ -1,6 +1,4 @@
-/**
- * @module src/prompting/promptAssembler.js
- */
+// src/prompting/promptAssembler.js
 
 import { StringAccumulator } from '../utils/stringAccumulator.js';
 
@@ -21,6 +19,7 @@ import { StringAccumulator } from '../utils/stringAccumulator.js';
  * @typedef {object} PromptAssemblerOptions
  * @property {PromptAssemblerElement[]} elements - Ordered array of elements to assemble into the prompt.
  * @property {PlaceholderResolver} placeholderResolver - Resolver for interpolating placeholders in element output.
+ * @property {Map<string, object>} allElementsMap - A map of ALL prompt element configurations for the current LLM.
  */
 
 /**
@@ -31,10 +30,17 @@ import { StringAccumulator } from '../utils/stringAccumulator.js';
  * @internal
  */
 export class PromptAssembler {
+  /** @private @type {PromptAssemblerElement[]} */
+  #elements;
+  /** @private @type {PlaceholderResolver} */
+  #placeholderResolver;
+  /** @private @type {Map<string, object>} */
+  #allElementsMap;
+
   /**
    * @param {PromptAssemblerOptions} options
    */
-  constructor({ elements, placeholderResolver }) {
+  constructor({ elements, placeholderResolver, allElementsMap }) {
     if (!Array.isArray(elements)) {
       throw new Error('PromptAssembler: `elements` must be a non-empty array.');
     }
@@ -46,12 +52,13 @@ export class PromptAssembler {
         'PromptAssembler: `placeholderResolver` is required and must implement `.resolve()`.'
       );
     }
-    /** @private @type {PromptAssemblerElement[]} */
-    this.elements = elements;
-    /** @private @type {PlaceholderResolver} */
-    this.placeholderResolver = placeholderResolver;
-    /** @private @type {Map<string, PromptAssemblerElement>} */
-    this.elementsMap = new Map(elements.map((el) => [el.key, el]));
+    if (!allElementsMap || !(allElementsMap instanceof Map)) {
+      throw new Error('PromptAssembler: `allElementsMap` must be a Map.');
+    }
+
+    this.#elements = elements;
+    this.#placeholderResolver = placeholderResolver;
+    this.#allElementsMap = allElementsMap;
   }
 
   /**
@@ -66,13 +73,14 @@ export class PromptAssembler {
     /** @type {Array<{ key: string, error: Error }>} */
     const errors = [];
 
-    for (const { key, assembler, elementConfig, promptData } of this.elements) {
+    for (const { key, assembler, elementConfig, promptData } of this
+      .#elements) {
       try {
         const fragment = assembler.assemble(
           elementConfig,
           promptData,
-          this.placeholderResolver,
-          this.elementsMap
+          this.#placeholderResolver,
+          this.#allElementsMap // Pass the complete map here
         );
         accumulator.append(fragment);
       } catch (error) {

@@ -1,4 +1,3 @@
-// src/di/registrations/registerAI.js
 /* eslint-env node */
 /**
  * @file Registers all AI-related services, including the LLM adapter, prompting pipeline, and the AITurnHandler.
@@ -97,7 +96,6 @@ import {
 } from '../../prompting/assembling/indexedChoicesAssembler.js';
 import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
 import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
-// --- ADDED IMPORT ---
 import { GenericStrategyFactory } from '../../turns/factories/genericStrategyFactory.js';
 import { AIDecisionOrchestrator } from '../../turns/orchestration/aiDecisionOrchestrator.js';
 import { TurnActionFactory } from '../../turns/factories/turnActionFactory.js';
@@ -225,6 +223,30 @@ export function registerAI(container) {
 
   r.singletonFactory(tokens.AssemblerRegistry, (c) => {
     const registry = new AssemblerRegistry();
+    const standardAssembler = c.resolve(tokens.StandardElementAssembler);
+
+    // List of keys that all use the StandardElementAssembler
+    const standardElementKeys = [
+      'task_definition',
+      'character_persona',
+      'portrayal_guidelines',
+      'content_policy',
+      'world_context',
+      'available_actions_info',
+      'user_input',
+      'final_instructions',
+      'assistant_response_prefix',
+    ];
+
+    // Register the single standard assembler instance for all applicable keys
+    standardElementKeys.forEach((key) =>
+      registry.register(key, standardAssembler)
+    );
+    logger.debug(
+      `AssemblerRegistry: Registered StandardElementAssembler for ${standardElementKeys.length} keys.`
+    );
+
+    // Register all specialized assemblers
     registry.register(
       PERCEPTION_LOG_WRAPPER_KEY,
       c.resolve(tokens.PerceptionLogAssembler)
@@ -245,7 +267,8 @@ export function registerAI(container) {
       INDEXED_CHOICES_KEY,
       c.resolve(tokens.IndexedChoicesAssembler)
     );
-    logger.debug('AssemblerRegistry populated with all element keys');
+    logger.debug('AssemblerRegistry: Registered all specialized assemblers.');
+
     return registry;
   });
 

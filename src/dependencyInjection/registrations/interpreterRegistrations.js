@@ -179,6 +179,7 @@ export function registerInterpreters(container) {
           jsonLogicEvaluationService: c.resolve(
             tokens.JsonLogicEvaluationService
           ),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [

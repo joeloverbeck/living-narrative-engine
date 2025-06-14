@@ -1,13 +1,18 @@
+/* eslint-env node */
+/* eslint jest/expect-expect: ["error", { "assertFunctionNames": ["expect"] }] */
+
 import { jest, test, describe, beforeEach, expect } from '@jest/globals';
 
 import { PromptAssembler } from '../../src/prompting/promptAssembler.js';
 
 describe('PromptAssembler', () => {
   let placeholderResolver;
+  let allElementsMap; // stub Map passed to every constructor
 
   beforeEach(() => {
     // Stub resolver that returns the input value
     placeholderResolver = { resolve: jest.fn((value) => value) };
+    allElementsMap = new Map(); // content not important for these unit tests
   });
 
   test('builds prompt with multiple assemblers in order', () => {
@@ -27,7 +32,11 @@ describe('PromptAssembler', () => {
         promptData: {},
       },
     ];
-    const pa = new PromptAssembler({ elements, placeholderResolver });
+    const pa = new PromptAssembler({
+      elements,
+      placeholderResolver,
+      allElementsMap,
+    });
     const result = pa.build();
 
     expect(result.prompt).toBe('Hello World!');
@@ -36,13 +45,13 @@ describe('PromptAssembler', () => {
       {},
       {},
       placeholderResolver,
-      expect.any(Map)
+      allElementsMap
     );
     expect(assembler2.assemble).toHaveBeenCalledWith(
       {},
       {},
       placeholderResolver,
-      expect.any(Map)
+      allElementsMap
     );
   });
 
@@ -75,7 +84,11 @@ describe('PromptAssembler', () => {
         promptData: { bar: 6 },
       },
     ];
-    const pa = new PromptAssembler({ elements, placeholderResolver });
+    const pa = new PromptAssembler({
+      elements,
+      placeholderResolver,
+      allElementsMap,
+    });
     const result = pa.build();
 
     expect(result.prompt).toBe('XY');
@@ -85,24 +98,48 @@ describe('PromptAssembler', () => {
 
   test('constructor throws if elements is not an array', () => {
     expect(
-      () => new PromptAssembler({ elements: null, placeholderResolver })
+      () =>
+        new PromptAssembler({
+          elements: null,
+          placeholderResolver,
+          allElementsMap,
+        })
     ).toThrow('elements');
     expect(
-      () => new PromptAssembler({ elements: {}, placeholderResolver })
+      () =>
+        new PromptAssembler({
+          elements: {},
+          placeholderResolver,
+          allElementsMap,
+        })
     ).toThrow('elements');
   });
 
   test('constructor throws if placeholderResolver invalid', () => {
     expect(
-      () => new PromptAssembler({ elements: [], placeholderResolver: null })
+      () =>
+        new PromptAssembler({
+          elements: [],
+          placeholderResolver: null,
+          allElementsMap,
+        })
     ).toThrow('placeholderResolver');
     expect(
-      () => new PromptAssembler({ elements: [], placeholderResolver: {} })
+      () =>
+        new PromptAssembler({
+          elements: [],
+          placeholderResolver: {},
+          allElementsMap,
+        })
     ).toThrow('placeholderResolver');
   });
 
   test('build on empty elements returns empty prompt and no errors', () => {
-    const pa = new PromptAssembler({ elements: [], placeholderResolver });
+    const pa = new PromptAssembler({
+      elements: [],
+      placeholderResolver,
+      allElementsMap,
+    });
     const result = pa.build();
 
     expect(result.prompt).toBe('');

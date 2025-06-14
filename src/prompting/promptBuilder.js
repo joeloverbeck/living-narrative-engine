@@ -169,6 +169,7 @@ export class PromptBuilder extends IPromptBuilder {
     const promptAssembler = new PromptAssembler({
       elements: assemblerElements,
       placeholderResolver: this.#placeholderResolver,
+      allElementsMap: elementMap,
     });
 
     const { prompt, errors } = promptAssembler.build();
