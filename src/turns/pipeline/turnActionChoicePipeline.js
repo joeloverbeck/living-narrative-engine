@@ -2,8 +2,7 @@
  * @module src/turns/pipeline/turnActionChoicePipeline.js
  */
 
-import { IActionDiscoveryService } from '../../interfaces/IActionDiscoveryService.js';
-import { IActionIndexer } from '../ports/IActionIndexer.js';
+import { IAvailableActionsProvider } from '../../interfaces/IAvailableActionsProvider.js';
 import { ITurnContext } from '../interfaces/ITurnContext.js';
 
 /**
@@ -14,13 +13,11 @@ import { ITurnContext } from '../interfaces/ITurnContext.js';
 export class TurnActionChoicePipeline {
   /**
    * @param {object} deps
-   * @param {IActionDiscoveryService} deps.discoverySvc - Service to discover valid actions.
-   * @param {IActionIndexer}        deps.indexer      - Service to index discovered actions.
+   * @param {IAvailableActionsProvider} deps.availableActionsProvider - Provider that caches and returns indexed actions.
    * @param {{ debug(message: string): void }} deps.logger - Logger instance.
    */
-  constructor({ discoverySvc, indexer, logger }) {
-    this.discoverySvc = discoverySvc;
-    this.indexer = indexer;
+  constructor({ availableActionsProvider, logger }) {
+    this.availableActionsProvider = availableActionsProvider;
     this.logger = logger;
 
     // Log initialization once when the pipeline is first created
@@ -35,16 +32,15 @@ export class TurnActionChoicePipeline {
    * @returns {Promise<import('../dtos/actionComposite.js').ActionComposite[]>} Deduped, capped, 1-based indexed action list.
    */
   async buildChoices(actor, context) {
-    // Signal the beginning of the turn to clear any prior-turn state.
-    this.indexer.beginTurn?.(actor.id); // no-op if not implemented
-
-    this.logger.debug(`[ChoicePipeline] Discovering actions for ${actor.id}`);
-    const discovered = await this.discoverySvc.getValidActions(actor, context);
-
-    const indexed = this.indexer.index(discovered, actor.id);
-    this.logger.debug(
-      `[ChoicePipeline] Actor ${actor.id}: ${indexed.length} choices ready`
+    this.logger.debug(`[ChoicePipeline] Fetching actions for ${actor.id}`);
+    const actions = await this.availableActionsProvider.get(
+      actor,
+      context,
+      this.logger
     );
-    return indexed;
+    this.logger.debug(
+      `[ChoicePipeline] Actor ${actor.id}: ${actions.length} choices ready`
+    );
+    return actions;
   }
 }
