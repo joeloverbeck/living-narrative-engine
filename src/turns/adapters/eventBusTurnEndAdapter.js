@@ -5,48 +5,35 @@ import { ITurnEndPort } from '../ports/ITurnEndPort.js';
 import {
   TURN_ENDED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
+  DISPLAY_ERROR_ID,
 } from '../../constants/eventIds.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
-/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedDispatcher */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 export default class EventBusTurnEndAdapter extends ITurnEndPort {
-  /** @type {ISafeDispatcher|IValidatedDispatcher} */ #dispatcher;
-  /** @type {boolean} */ #isSafe;
+  /** @type {ISafeDispatcher} */ #dispatcher;
   /** @type {Console|ILogger} */ #log;
 
   /**
    * @param {{
-   * safeEventDispatcher?:      ISafeDispatcher,
-   * validatedEventDispatcher?: IValidatedDispatcher,
-   * logger?:                   Console|ILogger
+   * safeEventDispatcher: ISafeDispatcher,
+   * logger?:             Console|ILogger
    * }} deps
    */
-  constructor({
-    safeEventDispatcher,
-    validatedEventDispatcher,
-    logger = console,
-  }) {
+  constructor({ safeEventDispatcher, logger = console }) {
     super();
 
-    if (safeEventDispatcher?.dispatch) {
-      this.#dispatcher = safeEventDispatcher;
-      this.#isSafe = true;
-    } else if (validatedEventDispatcher?.dispatch) {
-      this.#dispatcher = validatedEventDispatcher;
-      this.#isSafe = false;
-      (logger || console).warn(
-        // Use provided logger if available
-        'EventBusTurnEndAdapter: ISafeEventDispatcher not provided or invalid, ' +
-          'falling back to IValidatedEventDispatcher. Dispatch errors may not be caught gracefully by the adapter.'
-      );
-    } else {
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
       throw new Error(
-        'EventBusTurnEndAdapter: Requires a valid ISafeEventDispatcher (preferred) or IValidatedEventDispatcher.'
+        'EventBusTurnEndAdapter: Requires a valid ISafeEventDispatcher.'
       );
     }
 
+    this.#dispatcher = safeEventDispatcher;
     this.#log = logger;
   }
 
@@ -71,10 +58,14 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
           },
         });
       } catch (dispatchErr) {
-        this.#log.error(
-          `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} about invalid entityId: ${dispatchErr.message}`,
-          dispatchErr
-        );
+        await this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} about invalid entityId.`,
+          details: {
+            error: dispatchErr.message,
+            stack: dispatchErr.stack,
+            entityId,
+          },
+        });
       }
       throw new Error(errMsg);
     }
@@ -97,15 +88,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
     const payload = { entityId, success: isTurnSuccessful };
 
     try {
-      if (this.#isSafe) {
-        await this.#dispatcher.dispatch(TURN_ENDED_ID, payload);
-      } else {
-        // Type assertion for IValidatedDispatcher if #isSafe is false
-        await /** @type {IValidatedDispatcher} */ (this.#dispatcher).dispatch(
-          TURN_ENDED_ID,
-          payload
-        );
-      }
+      await this.#dispatcher.dispatch(TURN_ENDED_ID, payload);
       this.#log.debug(
         `EventBusTurnEndAdapter: Successfully dispatched ${TURN_ENDED_ID} for ${entityId} with success=${isTurnSuccessful}.`
       );
@@ -120,10 +103,14 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
           },
         });
       } catch (dispatchErr) {
-        this.#log.error(
-          `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} after failing ${TURN_ENDED_ID} for ${entityId}: ${dispatchErr.message}`,
-          dispatchErr
-        );
+        await this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} after failing ${TURN_ENDED_ID} for ${entityId}.`,
+          details: {
+            error: dispatchErr.message,
+            stack: dispatchErr.stack,
+            entityId,
+          },
+        });
       }
       throw err; // Re-throw to allow caller to handle
     }
