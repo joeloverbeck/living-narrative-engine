@@ -7,6 +7,7 @@ import {
   POSITION_COMPONENT_ID,
   EXITS_COMPONENT_ID,
 } from '../constants/componentIds.js';
+import { getEntityDisplayName } from '../utils/entityUtils.js';
 
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
@@ -104,19 +105,7 @@ export class EntityDisplayDataProvider {
       return defaultName;
     }
 
-    const nameComponent = entity.getComponentData(NAME_COMPONENT_ID);
-    if (
-      nameComponent &&
-      typeof nameComponent.text === 'string' &&
-      nameComponent.text.trim() !== ''
-    ) {
-      return nameComponent.text;
-    }
-
-    this.#logger.debug(
-      `${this._logPrefix} getEntityName: Entity '${entityId}' found, but no valid NAME_COMPONENT_ID data. Returning entity ID as name.`
-    );
-    return entity.id || defaultName;
+    return getEntityDisplayName(entity, defaultName, this.#logger);
   }
 
   /**
