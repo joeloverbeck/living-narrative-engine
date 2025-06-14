@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "core_handle_follow",
-  "comment": "Checks for follow cycles, then adds core:following to the actor, rebuilds leader caches, emits a perceptible ‘follow’ event, and informs the UI.",
+  "comment": "Checks for follow cycles, then adds core:following to the actor, ensures core:leading exists on the leader, updates follower lists, emits a perceptible ‘follow’ event, and informs the UI.",
   "event_type": "core:attempt_action",
   "condition": {
     "==": [
@@ -74,7 +74,7 @@
           },
           {
             "type": "IF",
-            "comment": "IF an old leader existed, get their ID and rebuild their cache.",
+            "comment": "IF an old leader existed, remove actor from their list.",
             "parameters": {
               "condition": {
                 "var": "context.wasFollowing"
@@ -117,14 +117,47 @@
             }
           },
           {
-            "type": "MODIFY_ARRAY_FIELD",
-            "comment": "Add this actor to the new leader's 'core:leading' component followers list.",
+            "type": "HAS_COMPONENT",
+            "comment": "Check if the new leader already has a 'leading' component.",
             "parameters": {
-              "entity_ref": { "entityId": "{event.payload.targetId}" },
+              "entity_ref": "target",
               "component_type": "core:leading",
-              "field": "followers",
-              "mode": "push",
-              "value": "{event.payload.actorId}"
+              "result_variable": "leaderHasLeadingComponent"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Conditionally add or modify the leader's component.",
+            "parameters": {
+              "condition": {
+                "var": "context.leaderHasLeadingComponent"
+              },
+              "then_actions": [
+                {
+                  "type": "MODIFY_ARRAY_FIELD",
+                  "comment": "This now only runs if the component already exists.",
+                  "parameters": {
+                    "entity_ref": "target",
+                    "component_type": "core:leading",
+                    "field": "followers",
+                    "mode": "push",
+                    "value": "{event.payload.actorId}"
+                  }
+                }
+              ],
+              "else_actions": [
+                {
+                  "type": "ADD_COMPONENT",
+                  "comment": "If component doesn't exist, create it with the first follower.",
+                  "parameters": {
+                    "entity_ref": "target",
+                    "component_type": "core:leading",
+                    "value": {
+                      "followers": ["{event.payload.actorId}"]
+                    }
+                  }
+                }
+              ]
             }
           },
           {
