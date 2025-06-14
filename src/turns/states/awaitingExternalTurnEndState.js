@@ -45,9 +45,6 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   #awaitingActionId = 'unknown-action';
 
   //─────────────────────────────────────────────────────────────────────────────
-  getStateName() {
-    return 'AwaitingExternalTurnEndState';
-  }
 
   //─────────────────────────────────────────────────────────────────────────────
   async enterState(handler, prev) {

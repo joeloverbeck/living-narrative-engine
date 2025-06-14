@@ -16,20 +16,6 @@ import { AbstractTurnState } from './abstractTurnState.js';
  * @augments AbstractTurnState_Base
  */
 export class TurnIdleState extends AbstractTurnState {
-  /**
-   * Creates an instance of TurnIdleState.
-   *
-   * @param {BaseTurnHandler} handler - The BaseTurnHandler instance that manages this state.
-   */
-  constructor(handler) {
-    super(handler);
-  }
-
-  /** @override */
-  getStateName() {
-    return 'TurnIdleState';
-  }
-
   /** @override */
   async enterState(handler, previousState) {
     await super.enterState(handler, previousState);

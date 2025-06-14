@@ -17,14 +17,6 @@ import { ACTION_DECIDED_ID } from '../../constants/eventIds';
  * ● All other errors cause the turn to end with an error.
  */
 export class AwaitingActorDecisionState extends AbstractTurnState {
-  constructor(handler) {
-    super(handler);
-  }
-
-  getStateName() {
-    return 'AwaitingActorDecisionState';
-  }
-
   get name() {
     return this.getStateName();
   }
