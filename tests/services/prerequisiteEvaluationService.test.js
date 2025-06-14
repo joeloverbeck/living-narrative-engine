@@ -110,7 +110,7 @@ describe('PrerequisiteEvaluationService', () => {
     expect(result).toBe(true);
     expect(mockLogger.debug).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `PrereqEval[${mockActionDefinition.id}]: → PASSED (No prerequisites to evaluate).`
+      `PrerequisiteEvaluationService: PrereqEval[${mockActionDefinition.id}]: → PASSED (No prerequisites to evaluate).`
     );
     expect(mockBuilderInstance.buildContext).not.toHaveBeenCalled();
     expect(mockJsonLogicServiceInstance.evaluate).not.toHaveBeenCalled();
@@ -153,7 +153,7 @@ describe('PrerequisiteEvaluationService', () => {
     );
     // ... other evaluate calls
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `PrereqEval[${mockActionDefinition.id}]: Evaluation Context Built Successfully.`
+      `PrerequisiteEvaluationService: PrereqEval[${mockActionDefinition.id}]: Evaluation Context Built Successfully.`
     );
     // ... other log checks ...
     expect(mockLogger.error).not.toHaveBeenCalled();

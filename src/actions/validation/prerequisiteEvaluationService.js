@@ -1,6 +1,7 @@
 // src/actions/validation/prerequisiteEvaluationService.js
 
 import { validateDependency } from '../../utils/validationUtils.js';
+import { createPrefixedLogger } from '../../utils/loggerUtils.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -53,7 +54,10 @@ export class PrerequisiteEvaluationService {
           requiredMethods: ['debug', 'error', 'warn', 'info'],
         }
       );
-      this.#logger = logger;
+      this.#logger = createPrefixedLogger(
+        logger,
+        'PrerequisiteEvaluationService: '
+      );
     } catch (e) {
       const errorMsg = `PrerequisiteEvaluationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       // eslint-disable-next-line no-console

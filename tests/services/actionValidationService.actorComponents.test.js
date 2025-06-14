@@ -4,16 +4,7 @@
  * @jest-environment node
  */
 
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-  test,
-} from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- Service Under Test ---
 import { ActionValidationService } from '../../src/actions/validation/actionValidationService.js';
@@ -516,7 +507,7 @@ describe('ActionValidationService: Orchestration Logic', () => {
 
     // Check for the specific UNEXPECTED ERROR log from AVS's catch block
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `Validation[${actionDefinition.id}]: UNEXPECTED ERROR during validation process for actor '${actor.id}': ${evaluationError.message}`,
+      `ActionValidationService: Validation[${actionDefinition.id}]: UNEXPECTED ERROR during validation process for actor '${actor.id}': ${evaluationError.message}`,
       expect.objectContaining({ error: evaluationError }) // Check the error object itself was logged
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(

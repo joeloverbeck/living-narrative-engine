@@ -12,6 +12,7 @@
 // --- FIX: Import necessary functions and constants ---
 
 import { validateDependency } from '../../utils/validationUtils.js';
+import { createPrefixedLogger } from '../../utils/loggerUtils.js';
 import {
   buildActorContext,
   buildDirectionContext,
@@ -45,7 +46,10 @@ export class ActionValidationContextBuilder {
           requiredMethods: ['debug', 'error', 'warn'],
         }
       );
-      this.#logger = logger;
+      this.#logger = createPrefixedLogger(
+        logger,
+        'ActionValidationContextBuilder: '
+      );
     } catch (e) {
       const errorMsg = `ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       console.error(errorMsg);
