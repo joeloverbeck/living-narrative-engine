@@ -5,29 +5,29 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import Ajv from 'ajv';
-import ruleSchema from '../../data/schemas/rule.schema.json';
-import commonSchema from '../../data/schemas/common.schema.json';
-import operationSchema from '../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../data/schemas/json-logic.schema.json';
-import followRule from '../../data/mods/core/rules/follow.rule.json';
-import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
-import CheckFollowCycleHandler from '../../src/logic/operationHandlers/checkFollowCycleHandler.js';
-import HasComponentHandler from '../../src/logic/operationHandlers/hasComponentHandler.js';
-import QueryComponentHandler from '../../src/logic/operationHandlers/queryComponentHandler.js';
-import AddComponentHandler from '../../src/logic/operationHandlers/addComponentHandler.js';
-import ModifyArrayFieldHandler from '../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
-import DispatchEventHandler from '../../src/logic/operationHandlers/dispatchEventHandler.js';
-import GetTimestampHandler from '../../src/logic/operationHandlers/getTimestampHandler.js';
+import ruleSchema from '../../../data/schemas/rule.schema.json';
+import commonSchema from '../../../data/schemas/common.schema.json';
+import operationSchema from '../../../data/schemas/operation.schema.json';
+import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import followRule from '../../../data/mods/core/rules/follow.rule.json';
+import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
+import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import OperationRegistry from '../../../src/logic/operationRegistry.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import CheckFollowCycleHandler from '../../../src/logic/operationHandlers/checkFollowCycleHandler.js';
+import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
+import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
+import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
+import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
-} from '../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../src/constants/eventIds.js';
+} from '../../../src/constants/componentIds.js';
+import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 
 class SimpleEntityManager {
   constructor(entities) {
