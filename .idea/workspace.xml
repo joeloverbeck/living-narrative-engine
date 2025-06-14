@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Ensuring the app works.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/interpreters/commandOutcomeInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/interpreters/commandOutcomeInterpreter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/indexedChoicesAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/indexedChoicesAssembler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/states/awaitingExternalTurnEndState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/awaitingExternalTurnEndState.test.js" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Ensuring that chosenActionId doesn't get used anymore." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -164,7 +159,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="4061000" />
+      <workItem from="1749876741387" duration="4762000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -350,7 +345,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749880291189</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Ensuring that chosenActionId doesn't get used anymore.">
+      <option name="closed" value="true" />
+      <created>1749880932434</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1749880932434</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -366,6 +369,7 @@
     <MESSAGE value="Ensured playerTurnSubmitted doesn't break." />
     <MESSAGE value="Unified action decision across existing actors." />
     <MESSAGE value="Ensuring the app works." />
-    <option name="LAST_COMMIT_MESSAGE" value="Ensuring the app works." />
+    <MESSAGE value="Ensuring that chosenActionId doesn't get used anymore." />
+    <option name="LAST_COMMIT_MESSAGE" value="Ensuring that chosenActionId doesn't get used anymore." />
   </component>
 </project>
