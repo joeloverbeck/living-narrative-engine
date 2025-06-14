@@ -38,11 +38,7 @@ export class ActionValidationContextBuilder {
   constructor({ entityManager, logger }) {
     // (Constructor remains the same)
     try {
-      this.#logger = initLogger('ActionValidationContextBuilder', logger, [
-        'debug',
-        'error',
-        'warn',
-      ]);
+      this.#logger = initLogger('ActionValidationContextBuilder', logger);
     } catch (e) {
       const errorMsg = `ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       console.error(errorMsg);

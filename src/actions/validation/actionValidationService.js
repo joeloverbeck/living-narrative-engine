@@ -55,11 +55,7 @@ export class ActionValidationService {
   }) {
     // 1. Validate logger dependency first
     try {
-      this.#logger = initLogger('ActionValidationService', logger, [
-        'debug',
-        'error',
-        'info',
-      ]);
+      this.#logger = initLogger('ActionValidationService', logger);
     } catch (e) {
       const errorMsg = `ActionValidationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       // eslint-disable-next-line no-console

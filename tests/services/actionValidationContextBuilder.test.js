@@ -87,7 +87,7 @@ describe('ActionValidationContextBuilder', () => {
     );
   });
 
-  it('should throw an error if ILogger dependency is invalid', () => {
+  it('should fallback to console logger if ILogger dependency is invalid', () => {
     const validEntityManager = {
       getEntityInstance: jest.fn(),
       getComponentData: jest.fn(),
@@ -98,9 +98,7 @@ describe('ActionValidationContextBuilder', () => {
           entityManager: validEntityManager,
           logger: null,
         })
-    ).toThrow(
-      'ActionValidationContextBuilder Constructor: CRITICAL - Invalid or missing ILogger instance. Error: Missing required dependency: ActionValidationContextBuilder: logger.'
-    );
+    ).not.toThrow();
   });
 
   it('should successfully create an instance with valid dependencies', () => {

@@ -7,26 +7,19 @@
  * @property {boolean} [isFunction] - Whether the dependency should be a function.
  */
 
+import { ensureValidLogger, createPrefixedLogger } from './loggerUtils.js';
 import { validateDependency } from './validationUtils.js';
-import { createPrefixedLogger } from './loggerUtils.js';
 
 /**
  * Validates the provided logger and returns a prefixed logger instance.
  *
  * @param {string} serviceName - Name used for log prefix and error messages.
  * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger to validate.
- * @param {string[]} [loggerMethods] - Required logging methods.
  * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger.
  */
-export function initLogger(
-  serviceName,
-  logger,
-  loggerMethods = ['debug', 'error', 'warn', 'info']
-) {
-  validateDependency(logger, `${serviceName}: logger`, console, {
-    requiredMethods: loggerMethods,
-  });
-  return createPrefixedLogger(logger, `${serviceName}: `);
+export function initLogger(serviceName, logger) {
+  const validLogger = ensureValidLogger(logger, serviceName);
+  return createPrefixedLogger(validLogger, `${serviceName}: `);
 }
 
 /**
