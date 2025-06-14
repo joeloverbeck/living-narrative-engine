@@ -10,7 +10,6 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-import { TurnIdleState } from './turnIdleState.js';
 
 import { TURN_ENDED_ID, DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 

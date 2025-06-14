@@ -112,7 +112,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
   }
 
   /**
-   * Handles the 'core:display_speech' event.
+   * Handles the DISPLAY_SPEECH_ID event.
    *
    * @private
    * @param {IEvent<DisplaySpeechPayload>} eventObject - The event object.
@@ -120,7 +120,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
   #onDisplaySpeech(eventObject) {
     if (!eventObject || !eventObject.payload) {
       this.logger.warn(
-        `${this._logPrefix} Received invalid 'core:display_speech' event object.`,
+        `${this._logPrefix} Received invalid DISPLAY_SPEECH_ID event object.`,
         eventObject
       );
       return;
@@ -132,7 +132,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       typeof speechContent !== 'string'
     ) {
       this.logger.warn(
-        `${this._logPrefix} Invalid payload for 'core:display_speech'.`,
+        `${this._logPrefix} Invalid payload for DISPLAY_SPEECH_ID.`,
         eventObject.payload
       );
       return;

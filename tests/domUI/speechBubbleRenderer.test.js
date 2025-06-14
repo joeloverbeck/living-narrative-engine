@@ -343,7 +343,7 @@ describe('SpeechBubbleRenderer', () => {
       const p = { speechContent: 'No sender.' };
       eventCallback({ type: DISPLAY_SPEECH_ID, payload: p });
       expect(logger.warn).toHaveBeenCalledWith(
-        `${renderer._logPrefix} Invalid payload for 'core:display_speech'.`,
+        `${renderer._logPrefix} Invalid payload for DISPLAY_SPEECH_ID.`,
         p
       );
       expect(renderSpeechSpy).not.toHaveBeenCalled();
@@ -352,7 +352,7 @@ describe('SpeechBubbleRenderer', () => {
       const p = { entityId: 'npc1' };
       eventCallback({ type: DISPLAY_SPEECH_ID, payload: p });
       expect(logger.warn).toHaveBeenCalledWith(
-        `${renderer._logPrefix} Invalid payload for 'core:display_speech'.`,
+        `${renderer._logPrefix} Invalid payload for DISPLAY_SPEECH_ID.`,
         p
       );
       expect(renderSpeechSpy).not.toHaveBeenCalled();
@@ -360,14 +360,14 @@ describe('SpeechBubbleRenderer', () => {
     it('should warn and not call renderSpeech if event object or payload is null/undefined', () => {
       eventCallback(null);
       expect(logger.warn).toHaveBeenCalledWith(
-        `${renderer._logPrefix} Received invalid 'core:display_speech' event object.`,
+        `${renderer._logPrefix} Received invalid DISPLAY_SPEECH_ID event object.`,
         null
       );
 
       const evNoPayload = { type: DISPLAY_SPEECH_ID, payload: null };
       eventCallback(evNoPayload);
       expect(logger.warn).toHaveBeenCalledWith(
-        `${renderer._logPrefix} Received invalid 'core:display_speech' event object.`,
+        `${renderer._logPrefix} Received invalid DISPLAY_SPEECH_ID event object.`,
         evNoPayload
       );
       expect(renderSpeechSpy).not.toHaveBeenCalled();

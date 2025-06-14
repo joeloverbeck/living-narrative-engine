@@ -16,6 +16,22 @@ export const ACTION_DECIDED_ID = 'core:action_decided';
 
 export const ATTEMPT_ACTION_ID = 'core:attempt_action';
 export const ENTITY_SPOKE_ID = 'core:entity_spoke';
+
+/**
+ * @typedef {object} DisplaySpeechPayload
+ * @property {string} entityId The ID of the entity that spoke. Used to fetch the portrait.
+ * @property {string} speechContent The text content of what the entity said.
+ * @property {boolean} [allowHtml=false] If true, the speechContent will be treated as HTML.
+ * @property {string} [thoughts] Internal monologue.
+ * @property {string} [notes] Private notes.
+ */
+
+/**
+ * Fired when an entity's speech should be displayed in the UI.
+ * @type {string}
+ * @constant
+ * @see {DisplaySpeechPayload}
+ */
 export const DISPLAY_SPEECH_ID = 'core:display_speech';
 export const AI_TURN_PROCESSING_STARTED = 'core:ai_turn_processing_started';
 export const AI_TURN_PROCESSING_ENDED = 'core:ai_turn_processing_ended';

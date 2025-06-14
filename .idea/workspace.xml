@@ -6,6 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="The Return of the King.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/events/display_speech.event.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/events/display_speech.event.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constants/eventIds.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/eventIds.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingExternalTurnEndState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingExternalTurnEndState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/speechBubbleRenderer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/speechBubbleRenderer.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/rules/followAutoMoveRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/followAutoMoveRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/operationHandlers/rebuildLeaderListCacheHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationHandlers/rebuildLeaderListCacheHandler.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -178,15 +188,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="17657000" />
-    </task>
-    <task id="LOCAL-00030" summary="Trying to return the app to normality.">
-      <option name="closed" value="true" />
-      <created>1749885504987</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1749885504987</updated>
+      <workItem from="1749913762946" duration="19359000" />
     </task>
     <task id="LOCAL-00031" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -572,7 +574,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749931429094</updated>
     </task>
-    <option name="localTasksCounter" value="79" />
+    <task id="LOCAL-00079" summary="The Return of the King.">
+      <option name="closed" value="true" />
+      <created>1749932287746</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1749932287746</updated>
+    </task>
+    <option name="localTasksCounter" value="80" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

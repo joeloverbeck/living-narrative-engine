@@ -1,6 +1,4 @@
 // src/turns/states/processingCommandState.js
-// --- FILE START ---
-
 /**
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
@@ -156,8 +154,15 @@ export class ProcessingCommandState extends AbstractTurnState {
 
     this.#turnActionToProcess = turnAction;
 
-    // --- TKT-013: Get speech from persisted decision metadata and tighten check. ---
-    const speechRaw = turnCtx.getDecisionMeta()?.speech ?? null;
+    // --- MODIFIED SECTION ---
+    // Get all relevant data from the persisted decision metadata.
+    const decisionMeta = turnCtx.getDecisionMeta() ?? {};
+    const {
+      speech: speechRaw,
+      thoughts: thoughtsRaw,
+      notes: notesRaw,
+    } = decisionMeta;
+
     const speech =
       typeof speechRaw === 'string' && speechRaw.trim()
         ? speechRaw.trim()
@@ -172,12 +177,24 @@ export class ProcessingCommandState extends AbstractTurnState {
         /** @type {ISafeEventDispatcher | undefined} */
         const eventDispatcher = turnCtx.getSafeEventDispatcher();
         if (eventDispatcher) {
-          await eventDispatcher.dispatch(ENTITY_SPOKE_ID, {
+          // Construct the base payload
+          const payload = {
             entityId: actorId,
             speechContent: speech,
-          });
+          };
+
+          // Conditionally add thoughts and notes if they are valid strings
+          if (typeof thoughtsRaw === 'string' && thoughtsRaw.trim()) {
+            payload.thoughts = thoughtsRaw.trim();
+          }
+          if (typeof notesRaw === 'string' && notesRaw.trim()) {
+            payload.notes = notesRaw.trim();
+          }
+
+          await eventDispatcher.dispatch(ENTITY_SPOKE_ID, payload);
           logger.debug(
-            `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`
+            `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`,
+            { payload }
           );
         } else {
           logger.warn(
@@ -185,24 +202,23 @@ export class ProcessingCommandState extends AbstractTurnState {
           );
         }
       } catch (eventDispatchError) {
-        // This catch should ideally not be hit if dispatch adheres to its non-throwing contract.
         logger.error(
           `${this.getStateName()}: Unexpected error when trying to use dispatch for ${ENTITY_SPOKE_ID} for actor ${actorId}: ${eventDispatchError.message}`,
           eventDispatchError
         );
       }
-    } else if (speechRaw !== null) {
+    } else if (speechRaw !== null && speechRaw !== undefined) {
       // This covers cases where speechRaw was a non-string or an empty/whitespace string.
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`
       );
     } else {
-      // This covers speechRaw being null (i.e., not present in meta).
+      // This covers speechRaw being null or undefined (i.e., not present in meta).
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} has no 'speech' field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched.`
       );
     }
-    // --- END TKT-013 SECTION ---
+    // --- END MODIFIED SECTION ---
 
     await (async () => {
       try {

@@ -90,6 +90,8 @@
               "payload": {
                 "entityId": "{event.payload.entityId}",
                 "speechContent": "{event.payload.speechContent}",
+                "thoughts": "{event.payload.thoughts}",
+                "notes": "{event.payload.notes}",
                 "allowHtml": false
               }
             }

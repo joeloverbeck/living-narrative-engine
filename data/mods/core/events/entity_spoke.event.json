@@ -14,9 +14,22 @@
       "speechContent": {
         "type": "string",
         "description": "The text content of what the entity said."
+      },
+      "thoughts": {
+        "type": "string",
+        "description": "Internal monologue of the entity.",
+        "minLength": 1
+      },
+      "notes": {
+        "type": "string",
+        "description": "Private OOC notes related to the speech.",
+        "minLength": 1
       }
     },
-    "required": ["entityId", "speechContent"],
+    "required": [
+      "entityId",
+      "speechContent"
+    ],
     "additionalProperties": false
   }
 }

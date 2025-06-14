@@ -19,6 +19,16 @@
         "type": "boolean",
         "description": "If true, the speechContent will be treated as HTML. Defaults to false.",
         "default": false
+      },
+      "thoughts": {
+        "type": "string",
+        "description": "Internal monologue",
+        "minLength": 1
+      },
+      "notes": {
+        "type": "string",
+        "description": "Private notes",
+        "minLength": 1
       }
     },
     "required": ["entityId", "speechContent"],
