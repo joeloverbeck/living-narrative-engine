@@ -153,6 +153,7 @@ describe('Sequential Action Execution – Success Path', () => {
     const realModifyHandler = new ModifyComponentHandler({
       entityManager,
       logger,
+      safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
     });
 
     modifyHandlerSpy = jest.fn((params, rawEvalCtx) => {

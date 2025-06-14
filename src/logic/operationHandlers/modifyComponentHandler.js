@@ -9,6 +9,8 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /**
  * @typedef {object} EntityRefObject
@@ -25,6 +27,12 @@
  */
 
 // ── helper ────────────────────────────────────────────────────────────────────
+/**
+ *
+ * @param root
+ * @param path
+ * @param value
+ */
 function setByPath(root, path, value) {
   const parts = path.split('.').filter(Boolean);
   let cur = root;
@@ -45,8 +53,9 @@ function setByPath(root, path, value) {
 class ModifyComponentHandler {
   /** @type {ILogger}        */ #logger;
   /** @type {EntityManager} */ #entityManager;
+  /** @type {ISafeEventDispatcher} */ #dispatcher;
 
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     if (
       !logger ||
       ['info', 'warn', 'error', 'debug'].some(
@@ -66,6 +75,10 @@ class ModifyComponentHandler {
     }
     this.#logger = logger;
     this.#entityManager = entityManager;
+    if (!safeEventDispatcher?.dispatch) {
+      throw new Error('ModifyComponentHandler needs ISafeEventDispatcher');
+    }
+    this.#dispatcher = safeEventDispatcher;
   }
 
   #resolveEntityId(ref, ctx) {
@@ -90,6 +103,7 @@ class ModifyComponentHandler {
 
   /**
    * Executes a MODIFY_COMPONENT operation (mode = "set" only).
+   *
    * @param {ModifyComponentOperationParams|null|undefined} params
    * @param {ExecutionContext} execCtx
    */
@@ -181,10 +195,15 @@ class ModifyComponentHandler {
         );
       }
     } catch (e) {
-      log.error(
-        `MODIFY_COMPONENT: Error during EntityManager.addComponent for component "${compType}" on entity "${entityId}".`,
-        { error: e }
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'MODIFY_COMPONENT: Error during EntityManager.addComponent.',
+        details: {
+          error: e.message,
+          stack: e.stack,
+          entityId,
+          componentType: compType,
+        },
+      });
     }
   }
 }

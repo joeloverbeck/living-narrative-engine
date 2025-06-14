@@ -128,7 +128,11 @@ describe('T‑07: enemy_damaged ➜ enemy_dead chained rules', () => {
 
     // ---- Handlers we actually need -----------------------------------------
     // MODIFY_COMPONENT – use the real handler so we truly mutate the component
-    const modHandler = new ModifyComponentHandler({ entityManager, logger });
+    const modHandler = new ModifyComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
+    });
     opRegistry.register(
       'MODIFY_COMPONENT',
       modHandler.execute.bind(modHandler)
