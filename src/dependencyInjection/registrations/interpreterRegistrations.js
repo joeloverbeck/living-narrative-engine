@@ -163,10 +163,7 @@ export function registerInterpreters(container) {
         new H({
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
-          // --- FIX START ---
-          // The handler's constructor requires an ISafeEventDispatcher, which was missing.
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-          // --- FIX END ---
         }),
     ],
     [
@@ -197,6 +194,10 @@ export function registerInterpreters(container) {
         new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
+          // --- FIX START ---
+          // The handler's constructor requires an ISafeEventDispatcher, which was missing.
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          // --- FIX END ---
         }),
     ],
     [

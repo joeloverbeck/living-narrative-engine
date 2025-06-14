@@ -4,27 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixed nasty bug in PromptCoordinator.">
-      <change afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/interpreterRegistrations.addPerceptionLogEntryHandler.test.js" afterDir="false" />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normal.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/interpreterRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/modifyArrayFieldHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/modifyArrayFieldHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptCoordinator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptCoordinator.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/providers/humanDecisionProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/providers/humanDecisionProvider.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/humanDecisionFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/humanDecisionFlow.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/rules/dismissRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/dismissRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/rules/followRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/followRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/rules/goRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/goRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/rules/logPerceptibleEventsRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/logPerceptibleEventsRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/operationHandlers/modifyArrayFieldHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationHandlers/modifyArrayFieldHandler.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/prompting/promptCoordinator.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/prompting/promptCoordinator.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/providers/humanDecisionProvider.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/providers/humanDecisionProvider.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,6 +61,7 @@
     "Jest.humanTurnHandler.getTurnEndPort.test.js.executor": "Run",
     "Jest.humanTurnHandler.invalidActor.test.js.executor": "Run",
     "Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor": "Run",
+    "Jest.interpreterRegistrations.handlers.test.js.executor": "Run",
     "Jest.llmDecisionProvider.test.js.executor": "Run",
     "Jest.playerTurnPrompt.schema.test.js.executor": "Run",
     "Jest.playerTurnSubmitted.schema.test.js.executor": "Run",
@@ -115,7 +98,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js">
+  <component name="RunManager" selected="Jest.interpreterRegistrations.handlers.test.js">
     <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -143,15 +126,6 @@
       <test-file value="$PROJECT_DIR$/tests/schemas/entityMoved.schema.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="humanDecisionProvider.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/providers/humanDecisionProvider.test.js" />
-      <method v="2" />
-    </configuration>
     <configuration name="interpreterRegistrations.addPerceptionLogEntryHandler.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -161,13 +135,22 @@
       <test-file value="$PROJECT_DIR$/tests/dependencyInjection/registrations/interpreterRegistrations.addPerceptionLogEntryHandler.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="interpreterRegistrations.handlers.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/dependencyInjection/registrations/interpreterRegistrations.handlers.test.js" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.interpreterRegistrations.handlers.test.js" />
         <item itemvalue="Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js" />
         <item itemvalue="Jest.entityMoved.schema.test.js" />
         <item itemvalue="Jest.actionDecided.schema.test.js" />
         <item itemvalue="Jest.Tests in tests\" />
-        <item itemvalue="Jest.humanDecisionProvider.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -187,7 +170,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="20669000" />
+      <workItem from="1749876741387" duration="21384000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -517,7 +500,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749893587110</updated>
     </task>
-    <option name="localTasksCounter" value="42" />
+    <task id="LOCAL-00042" summary="Trying to return the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749897728491</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1749897728491</updated>
+    </task>
+    <task id="LOCAL-00043" summary="Trying to return the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749897926966</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1749897926966</updated>
+    </task>
+    <option name="localTasksCounter" value="44" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -536,6 +535,7 @@
     <MESSAGE value="Ensuring that chosenActionId doesn't get used anymore." />
     <MESSAGE value="Trying to return the app to normality." />
     <MESSAGE value="Fixed nasty bug in PromptCoordinator." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed nasty bug in PromptCoordinator." />
+    <MESSAGE value="Trying to return the app to normal." />
+    <option name="LAST_COMMIT_MESSAGE" value="Trying to return the app to normal." />
   </component>
 </project>
