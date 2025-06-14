@@ -134,7 +134,16 @@ export function registerTurnLifecycle(container) {
   );
 
   // ──────────────────── Validation Utils ─────────────────────
-  r.singletonFactory(tokens.assertValidActor, () => assertValidActor);
+  r.singletonFactory(
+    tokens.assertValidActor,
+    (c) => (actor, logger, contextName) =>
+      assertValidActor(
+        actor,
+        logger,
+        contextName,
+        c.resolve(tokens.ISafeEventDispatcher)
+      )
+  );
 
   // ───────────────── Turn Context Builder ────────────────────
   r.transientFactory(
