@@ -3,6 +3,7 @@
 import { jest, describe, beforeEach, expect, test } from '@jest/globals';
 import { HumanDecisionProvider } from '../../../src/turns/providers/humanDecisionProvider.js';
 import { ITurnDecisionProvider } from '../../../src/turns/interfaces/ITurnDecisionProvider.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // Mock dependencies
 const mockPromptCoordinator = {
@@ -15,6 +16,8 @@ const mockLogger = {
   error: jest.fn(),
   debug: jest.fn(),
 };
+
+const mockDispatcher = { dispatch: jest.fn() };
 
 // Mock data
 const mockActor = { id: 'player1' };
@@ -36,6 +39,7 @@ describe('HumanDecisionProvider', () => {
     decisionProvider = new HumanDecisionProvider({
       promptCoordinator: mockPromptCoordinator,
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
   });
 
@@ -121,12 +125,14 @@ describe('HumanDecisionProvider', () => {
         'Could not resolve the chosen action to a valid index.'
       );
 
-      // Assert that an error was logged
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Did not receive a valid integer 'chosenIndex'"
-        ),
-        { promptResult: invalidResult }
+      // Assert that an error event was dispatched
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            "Did not receive a valid integer 'chosenIndex'"
+          ),
+        })
       );
     }
   });
@@ -153,6 +159,6 @@ describe('HumanDecisionProvider', () => {
     await expect(
       decisionProvider.decide(mockActor, mockContext, mockActions)
     ).rejects.toThrow('Prompt failed!');
-    expect(mockLogger.error).not.toHaveBeenCalled(); // The provider itself doesn't log this, it just lets the error bubble up.
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });
 });

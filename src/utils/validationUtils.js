@@ -1,4 +1,5 @@
 // src/utils/validationUtils.js
+import { safeDispatchError } from './safeDispatchError.js';
 /**
  * Validates a dependency instance, checking for its existence and, optionally,
  * required methods or if it's expected to be a function.
@@ -64,6 +65,7 @@ export function validateDependency(
  * @param {number} actionsLength
  * @param {string} providerName
  * @param {string} actorId
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher
  * @param {import('../interfaces/coreServices.js').ILogger} logger
  * @param {object} [debugData]
  * @throws {Error} If the index is invalid or out of range.
@@ -73,11 +75,13 @@ export function assertValidActionIndex(
   actionsLength,
   providerName,
   actorId,
+  dispatcher,
   logger,
   debugData = {}
 ) {
   if (!Number.isInteger(chosenIndex)) {
-    logger.error(
+    safeDispatchError(
+      dispatcher,
       `${providerName}: Did not receive a valid integer 'chosenIndex' for actor ${actorId}.`,
       debugData
     );
@@ -85,7 +89,8 @@ export function assertValidActionIndex(
   }
 
   if (chosenIndex < 1 || chosenIndex > actionsLength) {
-    logger.error(
+    safeDispatchError(
+      dispatcher,
       `${providerName}: invalid chosenIndex (${chosenIndex}) for actor ${actorId}.`,
       { ...debugData, actionsCount: actionsLength }
     );

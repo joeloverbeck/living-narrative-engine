@@ -6,6 +6,8 @@
 import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
 import { assertValidActionIndex } from '../../utils/validationUtils.js';
 
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+
 /**
  * @class HumanDecisionProvider
  * @augments ITurnDecisionProvider
@@ -18,11 +20,14 @@ export class HumanDecisionProvider extends ITurnDecisionProvider {
    * @param {object} deps
    * @param {import('../../interfaces/IPromptCoordinator').IPromptCoordinator} deps.promptCoordinator
    * @param {import('../../interfaces/coreServices').ILogger} deps.logger
+   * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    */
-  constructor({ promptCoordinator, logger }) {
+  constructor({ promptCoordinator, logger, safeEventDispatcher }) {
     super();
     this.promptCoordinator = promptCoordinator;
     this.logger = logger;
+    /** @type {ISafeEventDispatcher} */
+    this.safeEventDispatcher = safeEventDispatcher;
   }
 
   /**
@@ -59,6 +64,7 @@ export class HumanDecisionProvider extends ITurnDecisionProvider {
       actions.length,
       'HumanDecisionProvider',
       actor.id,
+      this.safeEventDispatcher,
       this.logger,
       { promptResult: promptRes }
     );
