@@ -1,319 +1,343 @@
 /**
- * @file This test suite proves the proper behavior of the dismiss rule.
+ * @file Integration tests for the dismiss rule.
  * @see tests/integration/dismissRule.integration.test.js
  */
 
-import {
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
-import fs from 'node:fs';
-import _ from 'lodash';
-
-import EventBus from '../../src/events/eventBus.js';
-import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
-import EntityManager from '../../src/entities/entityManager.js';
+import { describe, it, beforeEach, expect } from '@jest/globals';
+import Ajv from 'ajv';
+import ruleSchema from '../../data/schemas/rule.schema.json';
+import commonSchema from '../../data/schemas/common.schema.json';
+import operationSchema from '../../data/schemas/operation.schema.json';
+import jsonLogicSchema from '../../data/schemas/json-logic.schema.json';
+import dismissRule from '../../data/mods/core/rules/dismiss.rule.json';
 import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
+import RemoveComponentHandler from '../../src/logic/operationHandlers/removeComponentHandler.js';
+import ModifyArrayFieldHandler from '../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import HasComponentHandler from '../../src/logic/operationHandlers/hasComponentHandler.js';
+import QueryComponentHandler from '../../src/logic/operationHandlers/queryComponentHandler.js';
+import DispatchEventHandler from '../../src/logic/operationHandlers/dispatchEventHandler.js';
+import GetTimestampHandler from '../../src/logic/operationHandlers/getTimestampHandler.js';
+import {
+  FOLLOWING_COMPONENT_ID,
+  LEADING_COMPONENT_ID,
+  NAME_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+} from '../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../src/constants/eventIds.js';
 
-// ────────────────────────────────────────────────────────────────────────────
-// 1.  “Micro-container” – Mocks and Fakes for External Dependencies
-// ────────────────────────────────────────────────────────────────────────────
-
-const makeLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-});
-
-const makeSchemaValidator = () => ({
-  validate: jest.fn().mockReturnValue({ isValid: true }),
-  isSchemaLoaded: jest.fn().mockReturnValue(false),
-});
-
-const makeSpatialIndexMgr = () => ({
-  addEntity: jest.fn(),
-  removeEntity: jest.fn(),
-  updateEntityLocation: jest.fn(),
-  clearIndex: jest.fn(),
-  getEntitiesInLocation: jest.fn().mockReturnValue(new Set()),
-});
-
-// A simplified DataRegistry that only provides the rule we're testing.
-const makeDataRegistry = (rule) => ({
-  getAllSystemRules: () => [rule],
-  getEventDefinition: () => undefined,
-  getEntityDefinition: (defId) => ({
-    name: _.startCase(defId.split(':')[1] || 'Unknown'),
-  }),
-});
-
-// A fake service to handle leader/follower cache rebuilding.
-class FakeLeaderSyncService {
-  handleQuery = jest.fn(({ action, leaderIds }) => {
-    if (action === 'rebuildFor') {
-      return { success: true, leadersUpdated: leaderIds.length, warnings: [] };
-    }
-    return { success: false };
-  });
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// 2.  Test Harness Builder
-// ────────────────────────────────────────────────────────────────────────────
-
 /**
+ * Simple entity manager used in integration tests.
  *
+ * @class SimpleEntityManager
+ * @description Minimal in-memory entity manager used for integration tests.
  */
-function buildTestHarness() {
-  const logger = makeLogger();
-  const dismissRule = JSON.parse(
-    fs.readFileSync('data/mods/core/rules/dismiss.rule.json', 'utf8')
-  );
+class SimpleEntityManager {
+  /**
+   * Create the manager with the provided entities.
+   *
+   * @description Creates the manager with the provided entities.
+   * @param {Array<{id:string,components:object}>} entities - initial entities
+   */
+  constructor(entities) {
+    this.entities = new Map();
+    for (const e of entities) {
+      this.entities.set(e.id, {
+        id: e.id,
+        components: { ...e.components },
+      });
+    }
+  }
 
-  const dataRegistry = makeDataRegistry(dismissRule);
-  const schemaValidator = makeSchemaValidator();
-  const spatialIndex = makeSpatialIndexMgr();
-  const entityManager = new EntityManager(
-    dataRegistry,
-    schemaValidator,
-    logger,
-    spatialIndex
-  );
+  /**
+   * Return stored entity instance.
+   *
+   * @description Returns the stored entity instance.
+   * @param {string} id - entity id
+   * @returns {object|undefined} The entity object
+   */
+  getEntityInstance(id) {
+    return this.entities.get(id);
+  }
 
-  const leaderSyncService = new FakeLeaderSyncService();
-  const eventBus = new EventBus();
-  const validatedDispatcher = new ValidatedEventDispatcher({
-    eventBus,
-    gameDataRepository: dataRegistry,
-    schemaValidator,
-    logger,
-  });
+  /**
+   * Retrieve component data for an entity.
+   *
+   * @description Retrieves component data for an entity.
+   * @param {string} id - entity identifier
+   * @param {string} type - component type
+   * @returns {any} component data or null
+   */
+  getComponentData(id, type) {
+    return this.entities.get(id)?.components[type] ?? null;
+  }
 
-  // Spy on key interactions
-  jest.spyOn(validatedDispatcher, 'dispatch');
-  jest.spyOn(entityManager, 'removeComponent');
-  jest.spyOn(leaderSyncService, 'handleQuery');
-
-  const opRegistry = new OperationRegistry({ logger });
-  const opInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry: opRegistry,
-  });
-
-  importAndRegisterHandlers(opRegistry, {
-    entityManager,
-    logger,
-    validatedDispatcher,
-  });
-
-  const jsonLogicEvalSvc = new JsonLogicEvaluationService({ logger });
-  const sysInterpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogicEvalSvc,
-    entityManager,
-    operationInterpreter: opInterpreter,
-  });
-
-  sysInterpreter.initialize();
-
-  return {
-    logger,
-    eventBus,
-    validatedDispatcher,
-    entityManager,
-    leaderSyncService,
-    sysInterpreter,
-  };
-}
-
-/**
- * @param {OperationRegistry} registry
- * @param {object} deps
- */
-function importAndRegisterHandlers(registry, deps) {
-  const add = (type, HandlerClass, extraDeps = {}) =>
-    registry.register(type, (params, ctx) =>
-      new HandlerClass({ ...deps, ...extraDeps }).execute(params, ctx)
+  /**
+   * Check if an entity has a component.
+   *
+   * @description Checks if an entity has a component.
+   * @param {string} id - entity id
+   * @param {string} type - component type
+   * @returns {boolean} true if component exists
+   */
+  hasComponent(id, type) {
+    return Object.prototype.hasOwnProperty.call(
+      this.entities.get(id)?.components || {},
+      type
     );
+  }
 
-  const {
-    default: QueryComponentHandler,
-  } = require('../../src/logic/operationHandlers/queryComponentHandler.js');
-  const {
-    default: DispatchEventHandler,
-  } = require('../../src/logic/operationHandlers/dispatchEventHandler.js');
-
-  // Minimal RemoveComponent for 'target'
-  class RemoveComponentHandler {
-    #entityManager;
-
-    constructor(d) {
-      this.#entityManager = d.entityManager;
-    }
-
-    #resolveEntityId(ref, ctx) {
-      const ec = ctx.evaluationContext;
-      if (ref === 'actor') return ec.actor.id;
-      if (ref === 'target') return ec.target.id;
-      return ref;
-    }
-
-    execute(params, ctx) {
-      const id = this.#resolveEntityId(params.entity_ref, ctx);
-      this.#entityManager.removeComponent(id, params.component_type);
+  /**
+   * Add or replace a component on an entity.
+   *
+   * @description Adds or replaces a component on an entity.
+   * @param {string} id - entity id
+   * @param {string} type - component type
+   * @param {object} data - component data
+   */
+  addComponent(id, type, data) {
+    const ent = this.entities.get(id);
+    if (ent) {
+      ent.components[type] = JSON.parse(JSON.stringify(data));
     }
   }
 
-  add('QUERY_COMPONENT', QueryComponentHandler);
-  add('DISPATCH_EVENT', DispatchEventHandler, {
-    dispatcher: deps.validatedDispatcher,
-  });
-  registry.register('REMOVE_COMPONENT', (params, ctx) =>
-    new RemoveComponentHandler(deps).execute(params, ctx)
-  );
+  /**
+   * Remove a component from an entity.
+   *
+   * @description Removes a component from an entity.
+   * @param {string} id - entity id
+   * @param {string} type - component type
+   */
+  removeComponent(id, type) {
+    const ent = this.entities.get(id);
+    if (ent) {
+      delete ent.components[type];
+    }
+  }
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// 3.  Shared Test Fixtures and Helpers
-// ────────────────────────────────────────────────────────────────────────────
-
-const LEADER_ID = 'char:aragorn';
-const FOLLOWER_ID = 'char:gimli';
-const SAME_LOCATION = 'loc:rohan';
-const OTHER_LOCATION = 'loc:gondor';
 
 /**
- * @param {EntityManager} entityManager
- * @param {{id:string,name:string,locationId:string,following?:string}} opts
+ * Initialize interpreter and register handlers with seed entities.
+ *
+ * @description (Re)initializes the interpreter and registers handlers.
+ * @param {Array<{id:string,components:object}>} entities - seed entities
  */
-function seedTestEntity(
-  entityManager,
-  { id, name, locationId, following = null }
-) {
-  const entity = {
-    id,
-    definitionId: `test:${name.toLowerCase()}`,
-    components: new Map([
-      ['core:name', { text: name }],
-      ['core:position', { locationId }],
-    ]),
-    getComponentData(cId) {
-      return this.components.get(cId);
-    },
-    removeComponent(cId) {
-      this.components.delete(cId);
-    },
+function init(entities) {
+  operationRegistry = new OperationRegistry({ logger });
+  entityManager = new SimpleEntityManager(entities);
+
+  const handlers = {
+    REMOVE_COMPONENT: new RemoveComponentHandler({ entityManager, logger }),
+    MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({ entityManager, logger }),
+    HAS_COMPONENT: new HasComponentHandler({ entityManager, logger }),
+    QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
+    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
   };
-  if (following) {
-    entity.components.set('core:following', { leaderId: following });
+
+  for (const [type, handler] of Object.entries(handlers)) {
+    operationRegistry.register(type, handler.execute.bind(handler));
   }
-  entityManager.activeEntities.set(id, entity);
+
+  operationInterpreter = new OperationInterpreter({
+    logger,
+    operationRegistry,
+  });
+
+  jsonLogic = new JsonLogicEvaluationService({ logger });
+
+  interpreter = new SystemLogicInterpreter({
+    logger,
+    eventBus,
+    dataRegistry,
+    jsonLogicEvaluationService: jsonLogic,
+    entityManager,
+    operationInterpreter,
+  });
+
+  listener = null;
+  interpreter.initialize();
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// 4.  The Specs
-// ────────────────────────────────────────────────────────────────────────────
+let logger;
+let eventBus;
+let dataRegistry;
+let entityManager;
+let operationRegistry;
+let operationInterpreter;
+let jsonLogic;
+let interpreter;
+let events;
+let listener;
 
-describe('[Rule] handle_dismiss', () => {
-  let h;
-
+describe('core_handle_dismiss rule integration', () => {
   beforeEach(() => {
-    h = buildTestHarness();
+    logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    events = [];
+    eventBus = {
+      subscribe: jest.fn((ev, l) => {
+        if (ev === '*') listener = l;
+      }),
+      unsubscribe: jest.fn(),
+      dispatch: jest.fn((eventType, payload) => {
+        events.push({ eventType, payload });
+        return Promise.resolve();
+      }),
+      listenerCount: jest.fn().mockReturnValue(1),
+    };
+
+    dataRegistry = {
+      getAllSystemRules: jest.fn().mockReturnValue([dismissRule]),
+    };
+
+    init([]);
   });
 
-  afterEach(() => {
-    h.sysInterpreter.shutdown();
-    jest.clearAllMocks();
+  it('validates dismiss.rule.json against schema', () => {
+    const ajv = new Ajv({ allErrors: true });
+    ajv.addSchema(
+      commonSchema,
+      'http://example.com/schemas/common.schema.json'
+    );
+    ajv.addSchema(
+      operationSchema,
+      'http://example.com/schemas/operation.schema.json'
+    );
+    ajv.addSchema(
+      jsonLogicSchema,
+      'http://example.com/schemas/json-logic.schema.json'
+    );
+    const valid = ajv.validate(ruleSchema, dismissRule);
+    if (!valid) console.error(ajv.errors);
+    expect(valid).toBe(true);
   });
 
-  describe('WHEN leader and follower are in the SAME location', () => {
-    beforeEach(async () => {
-      seedTestEntity(h.entityManager, {
-        id: LEADER_ID,
-        name: 'Aragorn',
-        locationId: SAME_LOCATION,
-      });
-      seedTestEntity(h.entityManager, {
-        id: FOLLOWER_ID,
-        name: 'Gimli',
-        locationId: SAME_LOCATION,
-        following: LEADER_ID,
-      });
+  it('dismiss in same location removes relationship and dispatches events', () => {
+    interpreter.shutdown();
+    init([
+      {
+        id: 'l1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Leader' },
+          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          [LEADING_COMPONENT_ID]: { followers: ['f1'] },
+        },
+      },
+      {
+        id: 'f1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Follower' },
+          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'l1' },
+        },
+      },
+    ]);
 
-      await h.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actorId: LEADER_ID,
-        targetId: FOLLOWER_ID,
-        actionId: 'core:dismiss',
-      });
+    listener({
+      type: ATTEMPT_ACTION_ID,
+      payload: { actorId: 'l1', actionId: 'core:dismiss', targetId: 'f1' },
     });
 
-    test('it must remove the `core:following` component from the target', () => {
-      expect(h.entityManager.removeComponent).toHaveBeenCalledWith(
-        FOLLOWER_ID,
-        'core:following'
-      );
+    expect(
+      entityManager.getComponentData('f1', FOLLOWING_COMPONENT_ID)
+    ).toBeNull();
+    expect(entityManager.getComponentData('l1', LEADING_COMPONENT_ID)).toEqual({
+      followers: [],
     });
-
-    test('it must dispatch a `core:turn_ended` event for the leader', () => {
-      expect(h.validatedDispatcher.dispatch).toHaveBeenCalledWith(
+    expect(events.map((e) => e.eventType)).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
         'core:turn_ended',
-        { entityId: LEADER_ID, success: true }
-      );
-    });
+      ])
+    );
   });
 
-  describe('WHEN leader and follower are in DIFFERENT locations', () => {
-    beforeEach(async () => {
-      seedTestEntity(h.entityManager, {
-        id: LEADER_ID,
-        name: 'Aragorn',
-        locationId: OTHER_LOCATION,
-      });
-      seedTestEntity(h.entityManager, {
-        id: FOLLOWER_ID,
-        name: 'Gimli',
-        locationId: SAME_LOCATION,
-        following: LEADER_ID,
-      });
+  it('dismiss across locations omits perceptible event', () => {
+    interpreter.shutdown();
+    init([
+      {
+        id: 'l1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Leader' },
+          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          [LEADING_COMPONENT_ID]: { followers: ['f1'] },
+        },
+      },
+      {
+        id: 'f1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Follower' },
+          [POSITION_COMPONENT_ID]: { locationId: 'locB' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'l1' },
+        },
+      },
+    ]);
 
-      await h.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actorId: LEADER_ID,
-        targetId: FOLLOWER_ID,
-        actionId: 'core:dismiss',
-      });
+    listener({
+      type: ATTEMPT_ACTION_ID,
+      payload: { actorId: 'l1', actionId: 'core:dismiss', targetId: 'f1' },
     });
 
-    test('it must still remove the `core:following` component from the target', () => {
-      expect(h.entityManager.removeComponent).toHaveBeenCalledWith(
-        FOLLOWER_ID,
-        'core:following'
-      );
+    expect(
+      entityManager.getComponentData('f1', FOLLOWING_COMPONENT_ID)
+    ).toBeNull();
+    expect(entityManager.getComponentData('l1', LEADING_COMPONENT_ID)).toEqual({
+      followers: [],
     });
-
-    test('it must NOT dispatch a `core:perceptible_event`', () => {
-      const perceptibleEventCall =
-        h.validatedDispatcher.dispatch.mock.calls.find(
-          (call) => call[0] === 'core:perceptible_event'
-        );
-      expect(perceptibleEventCall).toBeUndefined();
-    });
-
-    test('it must still dispatch a `core:turn_ended` event', () => {
-      expect(h.validatedDispatcher.dispatch).toHaveBeenCalledWith(
+    expect(events.map((e) => e.eventType)).toEqual(
+      expect.arrayContaining([
+        'core:display_successful_action_result',
         'core:turn_ended',
-        { entityId: LEADER_ID, success: true }
-      );
+      ])
+    );
+    expect(events.map((e) => e.eventType)).not.toContain(
+      'core:perceptible_event'
+    );
+  });
+
+  it('omits UI events when names are missing', () => {
+    interpreter.shutdown();
+    init([
+      {
+        id: 'l1',
+        components: {
+          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          [LEADING_COMPONENT_ID]: { followers: ['f1'] },
+        },
+      },
+      {
+        id: 'f1',
+        components: {
+          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          [FOLLOWING_COMPONENT_ID]: { leaderId: 'l1' },
+        },
+      },
+    ]);
+
+    listener({
+      type: ATTEMPT_ACTION_ID,
+      payload: { actorId: 'l1', actionId: 'core:dismiss', targetId: 'f1' },
     });
+
+    expect(
+      entityManager.getComponentData('f1', FOLLOWING_COMPONENT_ID)
+    ).toBeNull();
+    expect(entityManager.getComponentData('l1', LEADING_COMPONENT_ID)).toEqual({
+      followers: [],
+    });
+    const types = events.map((e) => e.eventType);
+    expect(types).toEqual(expect.arrayContaining(['core:turn_ended']));
+    expect(types).not.toContain('core:perceptible_event');
+    expect(types).not.toContain('core:display_successful_action_result');
   });
 });
