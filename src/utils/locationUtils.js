@@ -3,7 +3,7 @@
 import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import { isNonEmptyString } from './textUtils.js';
-import { ensureValidLogger } from './loggerUtils.js';
+import { getPrefixedLogger } from './loggerUtils.js';
 import {
   isValidEntityManager,
   isValidEntity,
@@ -41,7 +41,7 @@ function _getExitsComponentData(
   logger,
   dispatcher
 ) {
-  const log = ensureValidLogger(logger, 'locationUtils');
+  const log = getPrefixedLogger(logger, '[locationUtils] ');
   let locationEntity = locationEntityOrId;
 
   if (typeof locationEntityOrId === 'string') {
@@ -104,7 +104,7 @@ export function getExitByDirection(
   logger,
   dispatcher
 ) {
-  const log = ensureValidLogger(logger, 'locationUtils');
+  const log = getPrefixedLogger(logger, '[locationUtils] ');
   if (!isNonEmptyString(directionName)) {
     log.debug('getExitByDirection: Invalid or empty directionName provided.');
     return null;
@@ -169,7 +169,7 @@ export function getAvailableExits(
   dispatcher,
   logger
 ) {
-  const log = ensureValidLogger(logger, 'locationUtils');
+  const log = getPrefixedLogger(logger, '[locationUtils] ');
   const exitsData = _getExitsComponentData(
     locationEntityOrId,
     entityManager,

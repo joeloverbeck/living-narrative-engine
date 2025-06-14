@@ -1,6 +1,6 @@
 // src/utils/apiUtils.js
 // --- FILE START ---
-import { ensureValidLogger } from './loggerUtils.js';
+import { getPrefixedLogger } from './loggerUtils.js';
 
 const RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504];
 
@@ -57,7 +57,7 @@ export async function Workspace_retry(
   maxDelayMs,
   logger
 ) {
-  const log = ensureValidLogger(logger, 'Workspace_retry');
+  const log = getPrefixedLogger(logger, '[Workspace_retry] ');
   // This internal recursive function handles the actual fetch attempts and retry logic.
   // It's called by Workspace_retry with the initial attempt number.
   /**

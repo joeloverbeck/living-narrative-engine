@@ -1,7 +1,7 @@
 // src/utils/contextVariableUtils.js
 
 import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
-import { ensureValidLogger } from './loggerUtils.js';
+import { getPrefixedLogger } from './loggerUtils.js';
 
 /**
  * Safely stores a value into `execCtx.evaluationContext.context`. If the context
@@ -17,7 +17,7 @@ import { ensureValidLogger } from './loggerUtils.js';
  * @returns {boolean} `true` if the value was stored successfully, otherwise `false`.
  */
 export function storeResult(variableName, value, execCtx, dispatcher, logger) {
-  const log = ensureValidLogger(logger, 'contextVariableUtils');
+  const log = getPrefixedLogger(logger, '[contextVariableUtils] ');
   const hasContext =
     execCtx?.evaluationContext &&
     typeof execCtx.evaluationContext.context === 'object' &&

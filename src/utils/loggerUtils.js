@@ -67,4 +67,18 @@ export function createPrefixedLogger(baseLogger, prefix) {
   };
 }
 
+/**
+ * @description Convenience wrapper that validates the provided logger and
+ * returns a new logger that automatically prefixes all messages. Useful for
+ * utilities that consistently tag their log output.
+ * @param {ILogger | undefined | null} logger - Logger instance to validate.
+ * @param {string} prefix - The prefix applied to each log message.
+ * @returns {ILogger} Logger instance that prepends `prefix` to each message.
+ */
+export function getPrefixedLogger(logger, prefix) {
+  const validLogger = ensureValidLogger(logger, prefix);
+  const effectivePrefix = prefix || '';
+  return createPrefixedLogger(validLogger, effectivePrefix);
+}
+
 // --- FILE END ---
