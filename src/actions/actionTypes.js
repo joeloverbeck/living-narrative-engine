@@ -7,7 +7,7 @@
 /** @typedef {import('../events/eventBus.js').default} EventBus */ // Assuming EventBus might be an interface or a concrete type used directly
 /** @typedef {import('../constants/eventIds.js').ATTEMPT_ACTION_ID} ATTEMPT_ACTION_ID */
 // --- ADDED Import for ActionTargetContext ---
-/** @typedef {import('../models/ActionTargetContext.js').ActionTargetContext} ActionTargetContext */
+/** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 // --- ADDED Import for ActionDefinition (used in ActionAttemptPseudoEvent) ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */ // Added for ActionContext
 /** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Added for ActionContext

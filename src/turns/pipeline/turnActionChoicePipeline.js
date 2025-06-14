@@ -29,7 +29,8 @@ export class TurnActionChoicePipeline {
 
   /**
    * Discovers, indexes, and returns a list of action choices for an actor's turn.
-   * @param {import('../../models/entity.js').Entity} actor - The entity whose actions we’re building choices for.
+   *
+   * @param {import('../../entities/entity.js').Entity} actor - The entity whose actions we’re building choices for.
    * @param {ITurnContext} context - The current turn context.
    * @returns {Promise<import('../dtos/actionComposite.js').ActionComposite[]>} Deduped, capped, 1-based indexed action list.
    */
