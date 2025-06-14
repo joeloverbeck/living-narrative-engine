@@ -3,9 +3,10 @@
  * @see src/domUI/speechBubbleRenderer.js
  */
 
-import { BoundDomRendererBase } from './boundDomRendererBase.js'; // Adjusted path
+import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DISPLAY_SPEECH_ID } from '../constants/eventIds.js';
-import { PLAYER_COMPONENT_ID } from '../constants/componentIds.js'; // Added import
+import { PLAYER_COMPONENT_ID } from '../constants/componentIds.js';
+import { buildSpeechMeta } from './helpers/buildSpeechMeta.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -18,10 +19,7 @@ import { PLAYER_COMPONENT_ID } from '../constants/componentIds.js'; // Added imp
  */
 
 /**
- * @typedef {object} DisplaySpeechPayload
- * @property {string} entityId The ID of the entity that spoke.
- * @property {string} speechContent The text content of what the entity said.
- * @property {boolean} [allowHtml=false] If true, the speechContent will be treated as HTML.
+ * @typedef {import('../constants/eventIds.js').DisplaySpeechPayload} DisplaySpeechPayload
  */
 
 const DEFAULT_SPEAKER_NAME = 'Unknown Speaker';
@@ -36,6 +34,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
    * Determined by the presence of #message-list or fallback to #outputDiv.
    *
    * @private
+   * @type {HTMLElement|null}
    */
   effectiveSpeechContainer = null;
 
@@ -115,7 +114,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
    * Handles the DISPLAY_SPEECH_ID event.
    *
    * @private
-   * @param {IEvent<DisplaySpeechPayload>} eventObject - The event object.
+   * @param {import('../events/event.js').IEvent<DisplaySpeechPayload>} eventObject - The event object.
    */
   #onDisplaySpeech(eventObject) {
     if (!eventObject || !eventObject.payload) {
@@ -125,7 +124,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       );
       return;
     }
-    const { entityId, speechContent, allowHtml = false } = eventObject.payload;
+    const { entityId, speechContent } = eventObject.payload;
     if (
       typeof entityId !== 'string' ||
       !entityId ||
@@ -137,17 +136,15 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       );
       return;
     }
-    this.renderSpeech(entityId, speechContent, allowHtml);
+    this.renderSpeech(eventObject.payload);
   }
 
   /**
    * Renders the speech bubble for a given entity and content.
    *
-   * @param {string} entityId - The ID of the entity speaking.
-   * @param {string} speechContent - The content of the speech.
-   * @param {boolean} [allowHtml] - Whether to treat speechContent as HTML.
+   * @param {DisplaySpeechPayload} payload - The speech data.
    */
-  renderSpeech(entityId, speechContent, allowHtml = false) {
+  renderSpeech(payload) {
     if (
       !this.effectiveSpeechContainer ||
       !this.#domElementFactory ||
@@ -158,6 +155,14 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       );
       return;
     }
+
+    const {
+      entityId,
+      speechContent,
+      allowHtml = false,
+      thoughts,
+      notes,
+    } = payload;
 
     const speakerName = this.#entityDisplayDataProvider.getEntityName(
       entityId,
@@ -247,6 +252,14 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
         }
       }
       speechBubbleDiv.appendChild(quotedSpeechSpan);
+    }
+
+    const speechMetaFragment = buildSpeechMeta(this.#domElementFactory, {
+      thoughts,
+      notes,
+    });
+    if (speechMetaFragment) {
+      speechBubbleDiv.appendChild(speechMetaFragment);
     }
 
     let hasPortrait = false;

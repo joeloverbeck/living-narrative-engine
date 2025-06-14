@@ -26,10 +26,7 @@
         "minLength": 1
       }
     },
-    "required": [
-      "entityId",
-      "speechContent"
-    ],
+    "required": ["entityId", "speechContent"],
     "additionalProperties": false
   }
 }

@@ -4,7 +4,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing thoughts and notes tooltips." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing thoughts and notes tooltips.">
+      <change afterPath="$PROJECT_DIR$/src/domUI/helpers/buildSpeechMeta.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/domUI/icons.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/domUI/helpers/buildSpeechMeta.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/events/entity_spoke.event.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/events/entity_spoke.event.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/actorTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/actorTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/aiTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/aiTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/containerConfig.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/containerConfig.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/speechBubbleRenderer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/speechBubbleRenderer.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -51,6 +68,7 @@
     "Jest.actionDiscoveryService.locationRetrieval.test.js.executor": "Run",
     "Jest.actionIndexerAdapter.test.js.executor": "Run",
     "Jest.awaitTurnEndState.test.js.executor": "Run",
+    "Jest.buildSpeechMeta.test.js.executor": "Run",
     "Jest.decisionResult.test.js.executor": "Run",
     "Jest.entityMoved.schema.test.js.executor": "Run",
     "Jest.genericTurnHandler.passingThis.test.js.executor": "Run",
@@ -103,7 +121,16 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.promptBuilder.integration.test.js">
+  <component name="RunManager" selected="Jest.buildSpeechMeta.test.js">
+    <configuration name="buildSpeechMeta.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/domUI/helpers/buildSpeechMeta.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="genericTurnHandler.passingThis.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -131,15 +158,6 @@
       <test-file value="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="playerTurnHandler.fixes.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" />
-      <method v="2" />
-    </configuration>
     <configuration name="promptBuilder.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -151,11 +169,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.buildSpeechMeta.test.js" />
         <item itemvalue="Jest.promptBuilder.integration.test.js" />
         <item itemvalue="Jest.genericTurnHandler.passingThis.test.js" />
         <item itemvalue="Jest.humanTurnHandler.startTurn.test.js" />
         <item itemvalue="Jest.genericTurnHandler.test.js" />
-        <item itemvalue="Jest.playerTurnHandler.fixes.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -176,15 +194,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="19673000" />
-    </task>
-    <task id="LOCAL-00032" summary="Trying to return the app to normality.">
-      <option name="closed" value="true" />
-      <created>1749887384331</created>
-      <option name="number" value="00032" />
-      <option name="presentableId" value="LOCAL-00032" />
-      <option name="project" value="LOCAL" />
-      <updated>1749887384331</updated>
+      <workItem from="1749913762946" duration="21625000" />
     </task>
     <task id="LOCAL-00033" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -570,7 +580,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749934040162</updated>
     </task>
-    <option name="localTasksCounter" value="81" />
+    <task id="LOCAL-00081" summary="Implementing thoughts and notes tooltips.">
+      <option name="closed" value="true" />
+      <created>1749934451627</created>
+      <option name="number" value="00081" />
+      <option name="presentableId" value="LOCAL-00081" />
+      <option name="project" value="LOCAL" />
+      <updated>1749934451627</updated>
+    </task>
+    <option name="localTasksCounter" value="82" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
