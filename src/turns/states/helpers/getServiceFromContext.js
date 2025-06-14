@@ -4,7 +4,7 @@
 
 /**
  * @typedef {import('../processingCommandState.js').ProcessingCommandState} ProcessingCommandState
- * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
+ * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  */
 
 import { handleProcessingException } from './handleProcessingException.js';

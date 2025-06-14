@@ -4,9 +4,9 @@
 
 /**
  * @typedef {import('../processingCommandState.js').ProcessingCommandState} ProcessingCommandState
- * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
- * @typedef {import('../../entities/entity.js').default} Entity
- * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
+ * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
+ * @typedef {import('../../../entities/entity.js').default} Entity
+ * @typedef {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
 
 import TurnDirectiveStrategyResolver from '../../strategies/turnDirectiveStrategyResolver.js';
