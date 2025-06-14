@@ -1,6 +1,8 @@
 // src/services/playtimeTracker.js
 
 import IPlaytimeTracker from '../interfaces/IPlaytimeTracker.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -40,13 +42,22 @@ class PlaytimeTracker extends IPlaytimeTracker {
   #logger;
 
   /**
+   * Safe event dispatcher used for reporting errors.
+   *
+   * @private
+   * @type {ISafeEventDispatcher}
+   */
+  #safeEventDispatcher;
+
+  /**
    * Creates a new PlaytimeTracker instance.
    *
    * @param {object} dependencies - The dependencies for the service.
    * @param {ILogger} dependencies.logger - An ILogger compatible logger instance.
-   * @throws {Error} If the logger dependency is not provided.
+   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Dispatcher used to emit error events.
+   * @throws {Error} If required dependencies are not provided.
    */
-  constructor({ logger }) {
+  constructor({ logger, safeEventDispatcher }) {
     super();
 
     if (!logger || typeof logger.info !== 'function') {
@@ -67,6 +78,18 @@ class PlaytimeTracker extends IPlaytimeTracker {
     } else {
       this.#logger = logger;
     }
+
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      console.error(
+        'PlaytimeTracker: safeEventDispatcher dependency is missing or invalid.'
+      );
+      throw new Error('PlaytimeTracker requires a valid SafeEventDispatcher.');
+    }
+
+    this.#safeEventDispatcher = safeEventDispatcher;
 
     this.#logger.debug('PlaytimeTracker: Instance created.');
   }
@@ -143,12 +166,18 @@ class PlaytimeTracker extends IPlaytimeTracker {
   setAccumulatedPlaytime(seconds) {
     if (typeof seconds !== 'number') {
       const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a number, but received ${typeof seconds}.`;
-      this.#logger.error(errorMessage);
+      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: errorMessage,
+        details: { receivedType: typeof seconds },
+      });
       throw new TypeError(errorMessage);
     }
     if (seconds < 0) {
       const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a non-negative number, but received ${seconds}.`;
-      this.#logger.error(errorMessage);
+      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: errorMessage,
+        details: { seconds },
+      });
       throw new RangeError(errorMessage);
     }
 

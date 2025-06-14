@@ -46,6 +46,9 @@ describe('registerPersistence', () => {
     container.register(tokens.ILogger, () => mockLogger);
     container.register(tokens.IEntityManager, () => mockEntityManager);
     container.register(tokens.IDataRegistry, () => mockDataRegistry);
+    container.register(tokens.ISafeEventDispatcher, () => ({
+      dispatch: jest.fn(),
+    }));
   });
 
   afterEach(() => {
@@ -94,7 +97,7 @@ describe('registerPersistence', () => {
         token: tokens.PlaytimeTracker,
         Class: PlaytimeTracker,
         lifecycle: 'singleton',
-        deps: [tokens.ILogger],
+        deps: [tokens.ILogger, tokens.ISafeEventDispatcher],
       },
       {
         token: tokens.GamePersistenceService,
