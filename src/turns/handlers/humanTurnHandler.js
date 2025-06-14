@@ -5,7 +5,7 @@
  */
 
 import { BaseTurnHandler } from './baseTurnHandler.js';
-import { assertValidActor } from '../../utils/actorValidation.js';
+import { AwaitTurnEndState } from '../valueObjects/awaitTurnEndState.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -40,10 +40,11 @@ class HumanTurnHandler extends BaseTurnHandler {
   #gameWorldAccess;
   #entityManager;
 
-  /** @type {boolean} */
-  #isAwaitingTurnEndEvent = false;
-  /** @type {string|null} */
-  #awaitingTurnEndForActorId = null;
+  /**
+   * @private
+   * @type {AwaitTurnEndState}
+   */
+  #awaitState = AwaitTurnEndState.idle();
   /** @type {boolean} */
   #isTerminatingNormally = false;
 
@@ -128,8 +129,11 @@ class HumanTurnHandler extends BaseTurnHandler {
       `${this.constructor.name}.startTurn called for actor ${actor?.id}.`
     );
     super._assertHandlerActive();
-
-    assertValidActor(actor, this._logger, `${this.constructor.name}.startTurn`);
+    if (!actor || typeof actor.id !== 'string' || actor.id.trim() === '') {
+      const errorMsg = `${this.constructor.name}.startTurn: actor is required and must have a valid id.`;
+      this._logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
     this._setCurrentActorInternal(actor);
 
     const humanStrategy = this.#turnStrategyFactory.createForHuman(actor.id);
@@ -137,7 +141,6 @@ class HumanTurnHandler extends BaseTurnHandler {
       `${this.constructor.name}: Instantiated turn strategy for actor ${actor.id} via factory.`
     );
 
-    // The large block of `new TurnContext()` has been replaced by the builder.
     const newTurnContext = this.#turnContextBuilder.build({
       actor,
       strategy: humanStrategy,
@@ -213,29 +216,37 @@ class HumanTurnHandler extends BaseTurnHandler {
     );
   }
 
+  /** @private */
+  _setAwaitState(newState) {
+    this.#awaitState = newState;
+  }
+
+  /** @private */
   _markAwaitingTurnEnd(isAwaiting, actorId = null) {
-    const prevFlag = this.#isAwaitingTurnEndEvent;
-    const prevActor = this.#awaitingTurnEndForActorId;
-    this.#isAwaitingTurnEndEvent = Boolean(isAwaiting);
-    this.#awaitingTurnEndForActorId = this.#isAwaitingTurnEndEvent
-      ? (actorId ?? null)
-      : null;
+    const prevState = this.#awaitState;
+    const newState = isAwaiting
+      ? AwaitTurnEndState.waitingFor(actorId)
+      : AwaitTurnEndState.idle();
+    this._setAwaitState(newState);
     this._logger.debug(
-      `${this.constructor.name}._markAwaitingTurnEnd: ${prevFlag}/${prevActor} → ${this.#isAwaitingTurnEndEvent}/${this.#awaitingTurnEndForActorId}`
+      `${this.constructor.name}._markAwaitingTurnEnd: ${prevState.toString()} → ${newState.toString()}`
     );
   }
 
+  /** @private */
   _getIsAwaitingExternalTurnEndFlag() {
-    return this.#isAwaitingTurnEndEvent;
+    return this.#awaitState.isWaiting();
   }
 
+  /** @private */
   _clearTurnEndWaitingMechanismsInternal() {
-    if (this.#isAwaitingTurnEndEvent || this.#awaitingTurnEndForActorId) {
+    const prevState = this.#awaitState;
+    if (prevState.isWaiting()) {
       this._logger.debug(
-        `${this.constructor.name}: Clearing turn-end waiting flags (was ${this.#isAwaitingTurnEndEvent} for ${this.#awaitingTurnEndForActorId}).`
+        `${this.constructor.name}: Clearing turn-end waiting state (was ${prevState.toString()}).`
       );
+      this._setAwaitState(AwaitTurnEndState.idle());
     }
-    this._markAwaitingTurnEnd(false);
   }
 
   signalNormalApparentTermination() {
