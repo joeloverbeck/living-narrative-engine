@@ -4,11 +4,25 @@
  * @see src/logic/operationHandlers/rebuildLeaderListCacheHandler.js
  */
 import { isNonBlankString } from '../../utils/textUtils.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+
+/**
+ * @class RebuildLeaderListCacheHandler
+ * @description Handles the REBUILD_LEADER_LIST_CACHE operation by updating the
+ *  'core:leading' component for a list of leader entities.
+ */
 class RebuildLeaderListCacheHandler {
   #logger;
   #entityManager;
+  #dispatcher;
 
-  constructor({ logger, entityManager }) {
+  /**
+   * @param {object} deps - Handler dependencies.
+   * @param {import('../../interfaces/coreServices.js').ILogger} deps.logger - Logger instance.
+   * @param {import('../../entities/entityManager.js').default} deps.entityManager - Entity manager used for queries.
+   * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for error events.
+   */
+  constructor({ logger, entityManager, safeEventDispatcher }) {
     if (
       !logger ||
       typeof logger.debug !== 'function' ||
@@ -29,8 +43,17 @@ class RebuildLeaderListCacheHandler {
         'RebuildLeaderListCacheHandler requires a valid IEntityManager.'
       );
     }
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new TypeError(
+        'RebuildLeaderListCacheHandler requires a valid ISafeEventDispatcher.'
+      );
+    }
     this.#logger = logger;
     this.#entityManager = entityManager;
+    this.#dispatcher = safeEventDispatcher;
     this.#logger.debug('[RebuildLeaderListCacheHandler] Initialized.');
   }
 
@@ -91,10 +114,10 @@ class RebuildLeaderListCacheHandler {
         }
         updated++;
       } catch (err) {
-        this.#logger.error(
-          `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for '${leaderId}': ${err.message || err}`,
-          { stack: err.stack }
-        );
+        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for '${leaderId}': ${err.message || err}`,
+          details: { stack: err.stack, leaderId },
+        });
       }
     }
 

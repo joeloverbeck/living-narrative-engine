@@ -12,6 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // --- Constants ---
 const FOLLOWING_COMPONENT_ID = 'core:following';
@@ -56,6 +57,10 @@ const makeMockEntityManager = () => ({
   removeComponent: jest.fn(),
 });
 
+const makeMockDispatcher = () => ({
+  dispatch: jest.fn().mockResolvedValue(true),
+});
+
 // --- Test Suite ---
 
 describe('RebuildLeaderListCacheHandler', () => {
@@ -63,13 +68,16 @@ describe('RebuildLeaderListCacheHandler', () => {
   let mockLogger;
   let handler;
   let mockExecutionContext; // Although not used by the handler, we pass it for completeness.
+  let dispatcher;
 
   beforeEach(() => {
     mockLogger = makeMockLogger();
     mockEntityManager = makeMockEntityManager();
+    dispatcher = makeMockDispatcher();
     handler = new RebuildLeaderListCacheHandler({
       logger: mockLogger,
       entityManager: mockEntityManager,
+      safeEventDispatcher: dispatcher,
     });
     mockExecutionContext = { logger: mockLogger }; // A minimal execution context.
   });
@@ -86,6 +94,7 @@ describe('RebuildLeaderListCacheHandler', () => {
         () =>
           new RebuildLeaderListCacheHandler({
             entityManager: mockEntityManager,
+            safeEventDispatcher: makeMockDispatcher(),
           })
       ).toThrow('RebuildLeaderListCacheHandler requires a valid ILogger.');
       expect(
@@ -93,6 +102,7 @@ describe('RebuildLeaderListCacheHandler', () => {
           new RebuildLeaderListCacheHandler({
             logger: {},
             entityManager: mockEntityManager,
+            safeEventDispatcher: makeMockDispatcher(),
           })
       ).toThrow('RebuildLeaderListCacheHandler requires a valid ILogger.');
     });
@@ -108,10 +118,29 @@ describe('RebuildLeaderListCacheHandler', () => {
           new RebuildLeaderListCacheHandler({
             logger: mockLogger,
             entityManager: {},
+            safeEventDispatcher: makeMockDispatcher(),
           })
       ).toThrow(
         'RebuildLeaderListCacheHandler requires a valid IEntityManager.'
       );
+    });
+
+    test('should throw if safeEventDispatcher is missing or invalid', () => {
+      expect(
+        () =>
+          new RebuildLeaderListCacheHandler({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+          })
+      ).toThrow(/ISafeEventDispatcher/);
+      expect(
+        () =>
+          new RebuildLeaderListCacheHandler({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            safeEventDispatcher: {},
+          })
+      ).toThrow(/ISafeEventDispatcher/);
     });
 
     test('should initialize successfully with valid dependencies', () => {
@@ -120,6 +149,7 @@ describe('RebuildLeaderListCacheHandler', () => {
           new RebuildLeaderListCacheHandler({
             logger: mockLogger,
             entityManager: mockEntityManager,
+            safeEventDispatcher: makeMockDispatcher(),
           })
       ).not.toThrow();
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -434,10 +464,14 @@ describe('RebuildLeaderListCacheHandler', () => {
       handler.execute(params, mockExecutionContext);
 
       // Assert
-      expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        "[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for 'leader1': EntityManager failed",
-        { stack: error.stack }
+      expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message:
+            "[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for 'leader1': EntityManager failed",
+          details: { stack: error.stack, leaderId: 'leader1' },
+        })
       );
 
       // Verify it still processed the second leader
@@ -471,10 +505,14 @@ describe('RebuildLeaderListCacheHandler', () => {
       handler.execute(params, mockExecutionContext);
 
       // Assert
-      expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        "[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for 'leader1': EntityManager remove failed",
-        { stack: error.stack }
+      expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message:
+            "[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for 'leader1': EntityManager remove failed",
+          details: { stack: error.stack, leaderId: 'leader1' },
+        })
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         '[RebuildLeaderListCacheHandler] Rebuilt cache for 0/1 leader(s).'

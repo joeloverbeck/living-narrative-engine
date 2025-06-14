@@ -162,6 +162,7 @@ function init(entities) {
     REBUILD_LEADER_LIST_CACHE: new RebuildLeaderListCacheHandler({
       logger,
       entityManager,
+      safeEventDispatcher: eventBus,
     }),
     QUERY_ENTITIES: new QueryEntitiesHandler({
       entityManager,
