@@ -15,6 +15,7 @@ import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
+import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 export class ActionDiscoveryService extends IActionDiscoveryService {
@@ -116,7 +117,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     try {
       const pos = this.#entityManager.getComponentData(
         actorEntity.id,
-        'core:position'
+        POSITION_COMPONENT_ID
       );
       if (pos && typeof pos.locationId === 'string' && pos.locationId) {
         currentLocation =
