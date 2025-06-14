@@ -4,6 +4,7 @@
  */
 
 import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 import {
   jest,
   describe,
@@ -18,6 +19,7 @@ describe('HasComponentHandler', () => {
   let mockLogger;
   let handler;
   let executionContext;
+  let dispatcher;
 
   beforeEach(() => {
     mockEntityManager = {
@@ -28,6 +30,7 @@ describe('HasComponentHandler', () => {
       error: jest.fn(),
       debug: jest.fn(),
     };
+    dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     executionContext = {
       evaluationContext: {
         context: {},
@@ -40,6 +43,7 @@ describe('HasComponentHandler', () => {
     handler = new HasComponentHandler({
       entityManager: mockEntityManager,
       logger: mockLogger,
+      safeEventDispatcher: dispatcher,
     });
   });
 
@@ -131,11 +135,6 @@ describe('HasComponentHandler', () => {
 
   test('should set result_variable to false and log warning if entity_ref cannot be resolved', () => {
     // Arrange
-    const params = {
-      entity_ref: 'non-existent-entity-ref', // This will fail the actor/target check and be used as an ID
-      component_type: 'core:position',
-      result_variable: 'resultVar',
-    };
     // The handler's current implementation doesn't have a way to know if an ID is valid
     // without another service call. It assumes a string ref that isn't 'actor' or 'target'
     // is a valid ID. The test from the ticket description is better suited for null/undefined.
@@ -143,11 +142,6 @@ describe('HasComponentHandler', () => {
       entity_ref: null,
       component_type: 'core:position',
       result_variable: 'resultForNull',
-    };
-    const paramsUndefined = {
-      // entity_ref is missing
-      component_type: 'core:position',
-      result_variable: 'resultForUndefined',
     };
 
     // Act
@@ -244,9 +238,13 @@ describe('HasComponentHandler', () => {
       'actor-123',
       'core:failing_component'
     );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      `HAS_COMPONENT: An error occurred while checking for component "core:failing_component" on entity "actor-123". Storing 'false'.`,
-      { error }
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          'An error occurred while checking for component "core:failing_component"'
+        ),
+      })
     );
     expect(executionContext.evaluationContext.context.checkFailed).toBe(false);
   });

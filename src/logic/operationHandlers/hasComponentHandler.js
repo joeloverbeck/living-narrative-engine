@@ -8,7 +8,10 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
+
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /**
  * Parameters accepted by {@link HasComponentHandler#execute}.
@@ -28,6 +31,8 @@ class HasComponentHandler {
   #entityManager;
   /** @type {ILogger} */
   #logger;
+  /** @type {ISafeEventDispatcher} */
+  #dispatcher;
 
   /**
    * Creates an instance of HasComponentHandler.
@@ -35,9 +40,10 @@ class HasComponentHandler {
    * @param {object} dependencies - Dependencies object.
    * @param {IEntityManager} dependencies.entityManager - The entity management service.
    * @param {ILogger} dependencies.logger - The logging service instance.
+   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Dispatcher used for error events.
    * @throws {Error} If required dependencies are missing or invalid.
    */
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     if (!logger || typeof logger.warn !== 'function') {
       throw new Error('HasComponentHandler requires a valid ILogger instance.');
     }
@@ -46,8 +52,15 @@ class HasComponentHandler {
         'HasComponentHandler requires a valid IEntityManager instance with a hasComponent method.'
       );
     }
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error('HasComponentHandler requires ISafeEventDispatcher.');
+    }
     this.#entityManager = entityManager;
     this.#logger = logger;
+    this.#dispatcher = safeEventDispatcher;
   }
 
   /**
@@ -85,7 +98,6 @@ class HasComponentHandler {
    * @param {HasComponentOperationParams | null | undefined} params - The parameters for the operation.
    * @param {ExecutionContext} executionContext - The execution context.
    * @returns {void}
-   * @implements {OperationHandler}
    */
   execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
@@ -143,10 +155,16 @@ class HasComponentHandler {
           } component "${trimmedComponentType}". Storing result in "${trimmedResultVar}".`
         );
       } catch (e) {
-        log.error(
-          `HAS_COMPONENT: An error occurred while checking for component "${trimmedComponentType}" on entity "${entityId}". Storing 'false'.`,
-          { error: e }
-        );
+        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `HAS_COMPONENT: An error occurred while checking for component "${trimmedComponentType}" on entity "${entityId}". Storing 'false'.`,
+          details: {
+            error: e.message,
+            stack: e.stack,
+            entityId,
+            componentType: trimmedComponentType,
+            resultVariable: trimmedResultVar,
+          },
+        });
         result = false; // Ensure result is false on error
       }
     }
@@ -156,15 +174,20 @@ class HasComponentHandler {
       if (executionContext?.evaluationContext?.context) {
         executionContext.evaluationContext.context[trimmedResultVar] = result;
       } else {
-        log.error(
-          `HAS_COMPONENT: evaluationContext.context is not available. Cannot store result in "${trimmedResultVar}".`
-        );
+        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `HAS_COMPONENT: evaluationContext.context is not available. Cannot store result in "${trimmedResultVar}".`,
+          details: { resultVariable: trimmedResultVar },
+        });
       }
     } catch (e) {
-      log.error(
-        `HAS_COMPONENT: Failed to write result to context variable "${trimmedResultVar}".`,
-        { error: e }
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `HAS_COMPONENT: Failed to write result to context variable "${trimmedResultVar}".`,
+        details: {
+          error: e.message,
+          stack: e.stack,
+          resultVariable: trimmedResultVar,
+        },
+      });
     }
   }
 }
