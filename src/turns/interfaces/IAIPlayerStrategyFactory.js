@@ -1,5 +1,3 @@
-// src/turns/interfaces/IAIPlayerStrategyFactory.js
-// ****** MODIFIED FILE ******
 /**
  * @typedef {import('./IActorTurnStrategy.js').IActorTurnStrategy} IActorTurnStrategy
  */
@@ -17,12 +15,13 @@ export class IAIPlayerStrategyFactory {
    * Creates a new AI player strategy instance using the dependencies
    * provided to the factory's constructor.
    *
+   * @param {string} actorId - The ID of the actor for whom the strategy is being created.
    * @returns {IActorTurnStrategy} The created AI player strategy.
    * @throws {Error} If the method is not implemented by a concrete class.
    */
-  create() {
+  create(actorId) {
     throw new Error(
-      'IAIPlayerStrategyFactory.create must be implemented by concrete classes.'
+      `IAIPlayerStrategyFactory.create must be implemented by concrete classes. ActorID: ${actorId}`
     );
   }
 }

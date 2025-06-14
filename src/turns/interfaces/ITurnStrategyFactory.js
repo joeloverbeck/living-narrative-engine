@@ -1,3 +1,4 @@
+// src/turns/factories/turnStrategyFactory.js
 /**
  * @file Defines the interface for turn strategy factories.
  * @module turns/factories/turnStrategyFactory
@@ -10,15 +11,15 @@
  */
 export class ITurnStrategyFactory {
   /**
-   * Creates a turn strategy tailored for a human-controlled actor.
+   * Creates a turn strategy for an actor.
    *
    * @param {string} actorId - The ID of the actor for whom the strategy is being created.
    * @returns {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} A configured instance of a turn strategy.
    * @throws {Error} If the method is not implemented by a concrete class.
    */
-  createForHuman(actorId) {
+  create(actorId) {
     throw new Error(
-      `Not implemented: ITurnStrategyFactory.createForHuman. ActorID: ${actorId}`
+      `Not implemented: ITurnStrategyFactory.create. ActorID: ${actorId}`
     );
   }
 }

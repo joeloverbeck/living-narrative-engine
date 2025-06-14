@@ -1,5 +1,4 @@
 // src/utils/contextVariableUtils.js
- 
 
 import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import { ensureValidLogger } from './loggerUtils.js';

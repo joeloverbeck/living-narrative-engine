@@ -9,7 +9,7 @@ import { buildDecisionResult } from '../../utils/decisionResult.js';
  * delegates the pick to a decision provider, then creates and returns
  * a frozen DecisionResult.
  */
-export class GenericTurnStrategy extends IActorTurnStrategy {
+export class GenericTurnStrategy {
   /**
    * @param {object} deps
    * @param {import('../pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} deps.choicePipeline
@@ -18,7 +18,6 @@ export class GenericTurnStrategy extends IActorTurnStrategy {
    * @param {{ debug(message: string): void }} deps.logger
    */
   constructor({ choicePipeline, decisionProvider, turnActionFactory, logger }) {
-    super();
     Object.assign(this, {
       choicePipeline,
       decisionProvider,

@@ -45,8 +45,7 @@ function _getExitsComponentData(
   let locationEntity = locationEntityOrId;
 
   if (typeof locationEntityOrId === 'string') {
-
-     if (!isValidEntityManager(entityManager)) {
+    if (!isValidEntityManager(entityManager)) {
       dispatcher.dispatch(DISPLAY_ERROR_ID, {
         message:
           "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.",
@@ -60,7 +59,7 @@ function _getExitsComponentData(
             typeof entityManager.getEntityInstance === 'function',
         },
       });
-       
+
       return null;
     }
     locationEntity = entityManager.getEntityInstance(locationEntityOrId);
