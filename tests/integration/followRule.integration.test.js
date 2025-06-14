@@ -1,3 +1,8 @@
+/**
+ * @file Integration test that proves the behavior of the follow rule.
+ * @see tests/integration/followRule.integration.test.js
+ */
+
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import Ajv from 'ajv';
 import ruleSchema from '../../data/schemas/rule.schema.json';
@@ -40,18 +45,22 @@ class SimpleEntityManager {
       });
     }
   }
+
   getEntityInstance(id) {
     return this.entities.get(id);
   }
+
   getComponentData(id, type) {
     return this.entities.get(id)?.components[type] ?? null;
   }
+
   hasComponent(id, type) {
     return Object.prototype.hasOwnProperty.call(
       this.entities.get(id)?.components || {},
       type
     );
   }
+
   addComponent(id, type, data) {
     const ent = this.entities.get(id);
     if (ent) {
