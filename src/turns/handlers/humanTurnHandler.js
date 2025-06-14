@@ -266,6 +266,23 @@ class HumanTurnHandler extends BaseTurnHandler {
   async handleSubmittedCommand(commandString, actorEntity) {
     this._assertHandlerActive();
     const currentContext = this.getTurnContext();
+
+    if (!actorEntity || typeof actorEntity.id === 'undefined') {
+      const errMsg = `${this.constructor.name}: handleSubmittedCommand called without valid actorEntity.`;
+      this._logger.error(errMsg);
+      if (currentContext && typeof currentContext.endTurn === 'function') {
+        currentContext.endTurn(
+          new Error('Actor missing in handleSubmittedCommand')
+        );
+      } else {
+        await this._handleTurnEnd(
+          null,
+          new Error('Actor missing in handleSubmittedCommand')
+        );
+      }
+      return;
+    }
+
     if (!currentContext || currentContext.getActor()?.id !== actorEntity.id) {
       const errMsg = `${this.constructor.name}: handleSubmittedCommand actor mismatch or no context. Command for ${actorEntity.id}, context actor: ${currentContext?.getActor()?.id}.`;
       this._logger.error(errMsg);

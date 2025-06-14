@@ -26,13 +26,13 @@ Make sure to consult [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup and e
 # root app
 npm install
 npm run format && npm run lint   # keep style & quality
-npm test                         # runs Jest
+npm run test                         # runs Jest
 
 # proxy server
 cd llm-proxy-server
 npm install
 npm run format && npm run lint
-npm test
+npm run test
 ```
 
 > **Tip:** No global installs needed—everything comes from `devDependencies`.
@@ -43,16 +43,17 @@ npm test
 
 For more details on the project structure and coding standards associated with these scripts, see CONTRIBUTING.md.
 
-| Location | Script           | Purpose                                    |
-| -------- | ---------------- | ------------------------------------------ |
-| root     | `npm run format` | Formats all files with Prettier            |
-| root     | `npm run lint`   | ESLint + auto-fix; fails on remaining errs |
-| root     | `npm test`       | Runs root-level Jest suite                 |
-| root     | `npm run start`  | Builds then serves app with `http-server`  |
-| proxy    | `npm run format` | Formats all files with Prettier            |
-| proxy    | `npm run lint`   | ESLint + auto-fix; fails on remaining errs |
-| proxy    | `npm test`       | Runs proxy tests                           |
-| proxy    | `npm run start`  | Runs node API server                       |
+| Location | Script                | Purpose                                                         |
+| -------- | --------------------- | --------------------------------------------------------------- |
+| root     | `npm run format`      | Formats all files with Prettier                                 |
+| root     | `npm run lint`        | ESLint + auto-fix; fails on remaining errs                      |
+| root     | `npm run test`        | Runs root-level Jest suite                                      |
+| root     | `npm run test:single` | If passing a module path, good for testing modules in isolation |
+| root     | `npm run start`       | Builds then serves app with `http-server`                       |
+| proxy    | `npm run format`      | Formats all files with Prettier                                 |
+| proxy    | `npm run lint`        | ESLint + auto-fix; fails on remaining errs                      |
+| proxy    | `npm run test`        | Runs proxy tests                                                |
+| proxy    | `npm run start`       | Runs node API server                                            |
 
 ---
 
@@ -72,7 +73,7 @@ For more details on the project structure and coding standards associated with t
 
 ### Agent Testing Workflow
 
-1. After code generation, run `npm test` (root) and `cd llm-proxy-server && npm test`.
+1. After code generation, run `npm run test` (root) and `cd llm-proxy-server && npm run test`.
 2. If any tests fail, diagnose the failure, attempt auto-fix via `npm run lint` (root and proxy), then re-run tests.
 3. If tests still fail, create a PR labeled “🚫 tests failing—needs human review” with logs included.
 
@@ -111,8 +112,8 @@ Summary: <one-line what/why>
 Testing Done:
 - [ ] Code formatted     `npm run format`
 - [ ] Lint passes        `npm run lint`
-- [ ] Root tests         `npm test`
-- [ ] Proxy tests        `cd llm-proxy-server && npm test`
+- [ ] Root tests         `npm run test`
+- [ ] Proxy tests        `cd llm-proxy-server && npm run test`
 - [ ] Manual smoke run   `npm run start`
 ```
 

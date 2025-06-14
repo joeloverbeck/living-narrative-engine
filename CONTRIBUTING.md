@@ -208,12 +208,12 @@ moddable nature.
 - **Framework**: All tests are written using **Jest**.
 - **Root Project Tests**:
   - Located in the `tests/` directory.
-  - Run using `npm test` from the root directory.
+  - Run using `npm run test` from the root directory.
   - These tests run in a `jsdom` environment to simulate a browser.
   - Check test coverage using `npm run coverage` from the root directory.
 - **LLM Proxy Server Tests**:
   - Located in the `llm-proxy-server/tests/` directory.
-  - Run using `npm test` from within the `llm-proxy-server` directory (`cd llm-proxy-server && npm test`).
+  - Run using `npm run test` from within the `llm-proxy-server` directory (`cd llm-proxy-server && npm run test`).
 - **Test Structure**: Follow the **Arrange-Act-Assert (AAA)** pattern for clarity.
 - **Coverage**: Aim for high code coverage. New features should ideally be accompanied by tests.
 - **Mocks**: Utilize `jest.mock()` or `jest-mock-extended` for mocking dependencies.
@@ -228,7 +228,7 @@ moddable nature.
 
    - Format your code: `npm run format` (from root).
    - Lint\_ your code: `npm run lint` (from root) AND `cd llm-proxy-server && npm run lint`. Address new errors an
-   - Run all tests: `npm test` (from root) AND `cd llm-proxy-server && npm test`. Ensure they all pass.
+   - Run all tests: `npm run test` (from root) AND `cd llm-proxy-server && npm run test`. Ensure they all pass.
 
 2. **Commit Messages**:
 
@@ -254,8 +254,8 @@ moddable nature.
      Testing Done:
      - [ ] Code formatted (`npm run format` from root)
      - [ ] Lint passes (`npm run lint` in root AND `llm-proxy-server`)
-     - [ ] Root tests pass (`npm test` in root)
-     - [ ] Proxy server tests pass (`cd llm-proxy-server && npm test`)
+     - [ ] Root tests pass (`npm run test` in root)
+     - [ ] Proxy server tests pass (`cd llm-proxy-server && npm run test`)
      - [ ] Manual smoke test / User validation (Describe what was tested)
 
      Related Issues:
