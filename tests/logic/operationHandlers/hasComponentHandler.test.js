@@ -156,8 +156,8 @@ describe('HasComponentHandler', () => {
     // And because of the early return, the context is not modified.
     // Let's adjust the test to match the implementation's behavior.
 
-    // Rerunning the test with a structure that will actually fail at the #resolveEntityId step
-    // The current implementation of #resolveEntityId treats 'non-existent-entity' as a valid ID string
+    // Rerunning the test with a structure that will actually fail at the resolveEntityId step
+    // The current implementation of resolveEntityId treats 'non-existent-entity' as a valid ID string
     // Let's test with an empty string or an invalid object.
     jest.clearAllMocks();
 

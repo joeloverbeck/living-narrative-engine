@@ -345,9 +345,12 @@ describe('Unit Test: createActionValidationContext', () => {
       // Verify target represents the direction
       // (Based on the *updated* logic in createActionValidationContext)
       expect(context.target).toEqual({
+        type: 'direction',
         id: null,
-        direction: direction,
+        direction,
         components: null,
+        blocker: undefined,
+        exitDetails: null,
       });
       // Accessor only called for actor
       expect(createComponentAccessor).toHaveBeenCalledTimes(1);

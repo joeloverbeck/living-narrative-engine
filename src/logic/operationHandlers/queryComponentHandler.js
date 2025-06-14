@@ -6,7 +6,7 @@
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
-import resolveEntityId from '../../utils/entityRefUtils.js';
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 /**
  * @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject
@@ -100,51 +100,12 @@ class QueryComponentHandler {
 
     const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
-      if (typeof entity_ref === 'string') {
-        const trimmedRef = entity_ref.trim();
-        if (!trimmedRef) {
-          logger.error(
-            'QueryComponentHandler: Invalid empty string provided for entity_ref.',
-            { entityRef: entity_ref }
-          );
-        } else if (trimmedRef === 'actor') {
-          logger.error(
-            "QueryComponentHandler: Cannot resolve 'actor' entity ID. Actor missing or has no ID in evaluationContext.actor.",
-            { evalContextActor: executionContext?.evaluationContext?.actor }
-          );
-        } else if (trimmedRef === 'target') {
-          logger.error(
-            "QueryComponentHandler: Cannot resolve 'target' entity ID. Target missing or has no ID in evaluationContext.target.",
-            { evalContextTarget: executionContext?.evaluationContext?.target }
-          );
-        } else {
-          logger.error(
-            'QueryComponentHandler: Invalid entity_ref parameter. Must be "actor", "target", a non-empty entity ID string, or an object like { entityId: "..." }.',
-            { entityRef: entity_ref }
-          );
-        }
-      } else if (
-        entity_ref &&
-        typeof entity_ref === 'object' &&
-        typeof entity_ref.entityId === 'string'
-      ) {
-        if (!entity_ref.entityId.trim()) {
-          logger.error(
-            'QueryComponentHandler: Invalid entity_ref object: entityId property is empty or whitespace.',
-            { entityRef: entity_ref }
-          );
-        } else {
-          logger.error(
-            'QueryComponentHandler: Invalid entity_ref parameter. Must be "actor", "target", a non-empty entity ID string, or an object like { entityId: "..." }.',
-            { entityRef: entity_ref }
-          );
-        }
-      } else {
-        logger.error(
-          'QueryComponentHandler: Invalid entity_ref parameter. Must be "actor", "target", a non-empty entity ID string, or an object like { entityId: "..." }.',
-          { entityRef: entity_ref }
-        );
-      }
+      
+      logger.error(
+        'QueryComponentHandler: Could not resolve entity id from entity_ref.',
+        { entityRef: entity_ref }
+      );
+      
       return;
     }
 

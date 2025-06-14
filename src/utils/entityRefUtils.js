@@ -1,25 +1,32 @@
+
+// src/utils/entityRefUtils.js
 /**
- * @file Utility functions for entity reference resolution.
+ * @module entityRefUtils
+ * @description Utilities for resolving entity references to concrete entity IDs.
+ */
+
+/** @typedef {import('../logic/defs.js').ExecutionContext} ExecutionContext */
+/**
+ * @typedef {object} EntityRefObject
+ * @property {string} entityId
  */
 
 /**
- * Resolves an entity reference to a concrete entity ID.
- * Supports string references 'actor' and 'target', direct ID strings,
- * or objects shaped like `{ entityId: string }`.
- *
- * @param {'actor'|'target'|string|{entityId:string}|null|undefined} ref - The entity reference.
- * @param {object} ctx - The execution context containing evaluationContext.
- * @returns {string|null} The resolved entity ID, or null if it cannot be resolved.
+ * @description Resolves an entity reference into a concrete entity ID string.
+ * Supports the special keywords 'actor' and 'target', plain ID strings,
+ * or objects of the form `{ entityId: string }`.
+ * @param {'actor'|'target'|string|EntityRefObject} ref - Reference to resolve.
+ * @param {ExecutionContext} ctx - The current execution context providing actor/target.
+ * @returns {string|null} The resolved entity ID, or `null` if it cannot be resolved.
  */
 export function resolveEntityId(ref, ctx) {
   const ec = ctx?.evaluationContext ?? {};
-
   if (typeof ref === 'string') {
-    const t = ref.trim();
-    if (!t) return null;
-    if (t === 'actor') return ec.actor?.id ?? null;
-    if (t === 'target') return ec.target?.id ?? null;
-    return t; // assume direct ID string
+    const trimmed = ref.trim();
+    if (!trimmed) return null;
+    if (trimmed === 'actor') return ec.actor?.id ?? null;
+    if (trimmed === 'target') return ec.target?.id ?? null;
+    return trimmed;
   }
 
   if (
@@ -33,5 +40,3 @@ export function resolveEntityId(ref, ctx) {
 
   return null;
 }
-
-export default resolveEntityId;

@@ -10,12 +10,16 @@
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 // --- FIX: Import necessary functions and constants ---
-import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
-import { validateDependency } from '../../utils/validationUtils.js';
-import { getExitByDirection } from '../../utils/locationUtils.js';
-import { createComponentAccessor } from '../../logic/contextAssembler.js';
-import { createPrefixedLogger } from '../../utils/loggerUtils.js';
 
+import { validateDependency } from '../../utils/validationUtils.js';
+import { createPrefixedLogger } from '../../utils/loggerUtils.js';
+import {
+  buildActorContext,
+  buildDirectionContext,
+  buildEntityTargetContext,
+} from './contextBuilders.js';
+
+import { validateDependency } from '../../utils/validationUtils.js';
 /**
  * @class ActionValidationContextBuilder
  * @description Service dedicated to constructing the data context object used
@@ -115,14 +119,11 @@ export class ActionValidationContextBuilder {
     );
 
     // --- 2. Build Actor Context ---
-    const actorContext = {
-      id: actor.id,
-      components: createComponentAccessor(
-        actor.id,
-        this.#entityManager,
-        this.#logger
-      ),
-    };
+    const actorContext = buildActorContext(
+      actor.id,
+      this.#entityManager,
+      this.#logger
+    );
 
     // --- 3. Build Target Context (handles different target types) ---
     let targetContextForEval = null;
@@ -132,53 +133,23 @@ export class ActionValidationContextBuilder {
         targetContext.entityId
       );
       if (targetEntityInstance) {
-        targetContextForEval = {
-          type: 'entity',
-          id: targetContext.entityId,
-          direction: null,
-          components: createComponentAccessor(
-            targetContext.entityId,
-            this.#entityManager,
-            this.#logger
-          ),
-          blocker: undefined,
-          exitDetails: null,
-        };
+        targetContextForEval = buildEntityTargetContext(
+          targetContext.entityId,
+          this.#entityManager,
+          this.#logger
+        );
       } else {
         this.#logger.warn(
           `ActionValidationContextBuilder: Target entity '${targetContext.entityId}' not found for action '${actionDefinition.id}'. Context will have null target entity data.`
         );
       }
-    } else if (targetContext.type === 'direction' && targetContext.direction) {
-      const actorPositionData = this.#entityManager.getComponentData(
+
+      targetContextForEval = buildDirectionContext(
         actor.id,
-        POSITION_COMPONENT_ID
+        targetContext.direction,
+        this.#entityManager,
+        this.#logger
       );
-      const actorLocationId = actorPositionData?.locationId;
-      let targetBlockerValue = undefined;
-      let targetExitDetailsValue = null;
-
-      if (actorLocationId) {
-        const matchedExit = getExitByDirection(
-          actorLocationId,
-          targetContext.direction,
-          this.#entityManager,
-          this.#logger
-        );
-        if (matchedExit) {
-          targetExitDetailsValue = matchedExit;
-          targetBlockerValue = matchedExit.blocker ?? null;
-        }
-      }
-
-      targetContextForEval = {
-        type: 'direction',
-        id: null,
-        direction: targetContext.direction,
-        components: null, // A direction has no components
-        blocker: targetBlockerValue,
-        exitDetails: targetExitDetailsValue,
-      };
     }
 
     // --- 4. Assemble Final Context ---
