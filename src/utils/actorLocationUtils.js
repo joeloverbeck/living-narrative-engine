@@ -7,6 +7,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
+import { isNonEmptyString } from './textUtils.js';
 
 /**
  * Retrieves the current location for the given actor entity.
@@ -20,14 +21,14 @@ import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
  * locationId string, or `null` when unavailable.
  */
 export function getActorLocation(entityId, entityManager) {
-  if (!entityId || typeof entityId !== 'string') return null;
+  if (!isNonEmptyString(entityId)) return null;
   if (!entityManager || typeof entityManager.getComponentData !== 'function') {
     return null;
   }
 
   try {
     const pos = entityManager.getComponentData(entityId, POSITION_COMPONENT_ID);
-    if (pos && typeof pos.locationId === 'string' && pos.locationId) {
+    if (pos && isNonEmptyString(pos.locationId)) {
       const locationEntity =
         typeof entityManager.getEntityInstance === 'function'
           ? entityManager.getEntityInstance(pos.locationId)

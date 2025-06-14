@@ -45,19 +45,10 @@ class Entity extends MapManager {
       // For now, making it mandatory for clarity based on current usage.
       throw new Error('Entity must have a valid string definitionId.');
     }
-    super();
+    super({ throwOnInvalidId: false });
     this.id = instanceId;
     this.definitionId = definitionId;
     // console.log(`Entity created: ${this.id} (from definition: ${this.definitionId})`);
-  }
-
-  /**
-   * @override
-   * Silently ignore invalid IDs so methods return undefined/false
-   * rather than throwing.
-   */
-  onInvalidId() {
-    // no-op
   }
 
   /**

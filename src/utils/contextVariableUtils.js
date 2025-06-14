@@ -1,7 +1,8 @@
 // src/utils/contextVariableUtils.js
-/* eslint-disable no-console */
+ 
 
 import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * Safely stores a value into `execCtx.evaluationContext.context`. If the context
@@ -17,6 +18,7 @@ import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
  * @returns {boolean} `true` if the value was stored successfully, otherwise `false`.
  */
 export function storeResult(variableName, value, execCtx, dispatcher, logger) {
+  const log = ensureValidLogger(logger, 'contextVariableUtils');
   const hasContext =
     execCtx?.evaluationContext &&
     typeof execCtx.evaluationContext.context === 'object' &&
@@ -30,10 +32,8 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
         message,
         details: { variableName },
       });
-    } else if (logger?.error) {
-      logger.error(message, { variableName });
     } else {
-      console.error(message, { variableName });
+      log.error(message, { variableName });
     }
     return false;
   }
@@ -47,17 +47,12 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
         message: `storeResult: Failed to write variable "${variableName}"`,
         details: { variableName, error: e.message, stack: e.stack },
       });
-    } else if (logger?.error) {
-      logger.error(`storeResult: Failed to write variable "${variableName}"`, {
+    } else {
+      log.error(`storeResult: Failed to write variable "${variableName}"`, {
         variableName,
         error: e.message,
         stack: e.stack,
       });
-    } else {
-      console.error(
-        `storeResult: Failed to write variable "${variableName}"`,
-        e
-      );
     }
     return false;
   }

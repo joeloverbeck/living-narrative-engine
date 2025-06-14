@@ -16,7 +16,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { cloneDeep } from 'lodash';
 import Entity from './entity.js';
 import MapManager from '../utils/mapManager.js';
-import SilentMapManager from '../utils/silentMapManager.js';
 import {
   ACTOR_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -145,7 +144,7 @@ class EntityManager extends IEntityManager {
     this.#validator = validator;
     this.#spatialIndexManager = spatialIndexManager;
     this.#definitionToPrimaryInstanceMap = new Map();
-    this.#mapManager = new SilentMapManager();
+    this.#mapManager = new MapManager({ throwOnInvalidId: false });
     this.activeEntities = this.#mapManager.items;
 
     this.#logger.debug('EntityManager initialised.');
