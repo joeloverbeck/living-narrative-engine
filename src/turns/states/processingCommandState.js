@@ -15,11 +15,10 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 import { TurnIdleState } from './turnIdleState.js';
-import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
-import {
-  SYSTEM_ERROR_OCCURRED_ID,
-  ENTITY_SPOKE_ID,
-} from '../../constants/eventIds.js';
+import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
+import { processCommandInternal } from './helpers/processCommandInternal.js';
+import { getServiceFromContext } from './helpers/getServiceFromContext.js';
+import { handleProcessingException } from './helpers/handleProcessingException.js';
 
 /**
  * @class ProcessingCommandState
@@ -248,164 +247,7 @@ export class ProcessingCommandState extends AbstractTurnState {
   }
 
   async _processCommandInternal(turnCtx, actor, turnAction) {
-    const logger = turnCtx.getLogger();
-    const actorId = actor.id;
-
-    try {
-      const commandProcessor = await this._getServiceFromContext(
-        turnCtx,
-        'getCommandProcessor',
-        'ICommandProcessor',
-        actorId
-      );
-      if (!commandProcessor) {
-        return; // Error handled by _getServiceFromContext
-      }
-
-      // --- NEW LOGIC ---
-      // Instead of preparing a command string, we now directly use the turnAction object.
-      // We call the new `dispatchAction` method which bypasses parsing and target resolution.
-      logger.debug(
-        `${this.getStateName()}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`
-      );
-
-      const { success, errorResult } = await commandProcessor.dispatchAction(
-        actor,
-        turnAction
-      );
-
-      // --- END NEW LOGIC ---
-
-      if (!this._isProcessing) {
-        logger.warn(
-          `${this.getStateName()}: Processing flag became false after commandProcessor.dispatchAction() for ${actorId}. Aborting further processing.`
-        );
-        return;
-      }
-
-      const activeTurnCtx = this._getTurnContext();
-      if (
-        !activeTurnCtx ||
-        typeof activeTurnCtx.getActor !== 'function' ||
-        activeTurnCtx.getActor()?.id !== actorId
-      ) {
-        logger.warn(
-          `${this.getStateName()}: Context is invalid, has changed, or actor mismatch after commandProcessor.dispatchAction() for ${actorId}. Current context actor: ${activeTurnCtx?.getActor?.()?.id ?? 'N/A'}. Aborting further processing.`
-        );
-        const contextForException =
-          activeTurnCtx && typeof activeTurnCtx.getActor === 'function'
-            ? activeTurnCtx
-            : turnCtx;
-        await this.#handleProcessingException(
-          contextForException,
-          new Error('Context invalid/changed after action dispatch.'),
-          actorId,
-          false
-        );
-        return;
-      }
-
-      // We need to construct a `CommandResult`-like object for the outcome interpreter.
-      // This bridges the output of the new `dispatchAction` with the existing interpreter interface.
-      const commandResultForInterpreter = {
-        success: success,
-        turnEnded: !success, // A failed dispatch typically ends the turn with an error.
-        originalInput:
-          turnAction.commandString || turnAction.actionDefinitionId,
-        actionResult: { actionId: turnAction.actionDefinitionId },
-        error: success ? undefined : errorResult?.error,
-        internalError: success ? undefined : errorResult?.internalError,
-      };
-
-      logger.debug(
-        `${this.getStateName()}: Action dispatch completed for actor ${actorId}. Result success: ${commandResultForInterpreter.success}.`
-      );
-
-      const outcomeInterpreter = await this._getServiceFromContext(
-        activeTurnCtx,
-        'getCommandOutcomeInterpreter',
-        'ICommandOutcomeInterpreter',
-        actorId
-      );
-      if (!outcomeInterpreter) {
-        return; // Error handled by _getServiceFromContext
-      }
-
-      const directiveType = await outcomeInterpreter.interpret(
-        commandResultForInterpreter,
-        activeTurnCtx
-      );
-      logger.debug(
-        `${this.getStateName()}: Actor ${actorId} - Dispatch result interpreted to directive: ${directiveType}`
-      );
-
-      const directiveStrategy =
-        TurnDirectiveStrategyResolver.resolveStrategy(directiveType);
-      if (!directiveStrategy) {
-        const errorMsg = `${this.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
-        logger.error(errorMsg);
-        await this.#handleProcessingException(
-          activeTurnCtx,
-          new Error(errorMsg),
-          actorId
-        );
-        return;
-      }
-      logger.debug(
-        `${this.getStateName()}: Actor ${actorId} - Resolved strategy ${directiveStrategy.constructor.name} for directive ${directiveType}.`
-      );
-
-      await directiveStrategy.execute(
-        activeTurnCtx,
-        directiveType,
-        commandResultForInterpreter
-      );
-      logger.debug(
-        `${this.getStateName()}: Actor ${actorId} - Directive strategy ${directiveStrategy.constructor.name} executed.`
-      );
-
-      // Check if state is still current before setting _isProcessing to false
-      // This is important if the directiveStrategy.execute itself causes a state transition
-      if (this._isProcessing && this._handler._currentState === this) {
-        logger.debug(
-          `${this.getStateName()}: Directive strategy executed for ${actorId}, state remains ${this.getStateName()}. Processing complete for this state instance.`
-        );
-        this._isProcessing = false; // Processing for *this instance* of the state is done.
-      } else if (this._isProcessing) {
-        logger.debug(
-          `${this.getStateName()}: Directive strategy executed for ${actorId}, but state changed from ${this.getStateName()} to ${this._handler._currentState?.getStateName() ?? 'Unknown'}. Processing considered complete for previous state instance.`
-        );
-        this._isProcessing = false; // Ensure it's false even if state changed.
-      }
-    } catch (error) {
-      const errorHandlingCtx = this._getTurnContext() ?? turnCtx;
-      const actorIdForHandler = errorHandlingCtx?.getActor?.()?.id ?? actorId;
-      const processingError =
-        error instanceof Error
-          ? error
-          : new Error(String(error.message || error));
-      if (!(error instanceof Error) && error.stack) {
-        // Copy stack if it's a non-Error object with a stack
-        processingError.stack = error.stack;
-      }
-      await this.#handleProcessingException(
-        errorHandlingCtx || turnCtx,
-        processingError,
-        actorIdForHandler
-      );
-    } finally {
-      // This finally block might run even if an error within the try block caused a state transition
-      // and already set _isProcessing = false.
-      if (this._isProcessing && this._handler._currentState === this) {
-        // Check if still in this state and processing
-        const finalLogger =
-          this._getTurnContext()?.getLogger() ?? turnCtx.getLogger();
-        finalLogger.warn(
-          `${this.getStateName()}: _isProcessing was unexpectedly true at the end of _processCommandInternal for ${actorId}. Forcing to false.`
-        );
-        this._isProcessing = false;
-      }
-    }
+    return processCommandInternal(this, turnCtx, actor, turnAction);
   }
 
   async _getServiceFromContext(
@@ -414,45 +256,13 @@ export class ProcessingCommandState extends AbstractTurnState {
     serviceNameForLog,
     actorIdForLog
   ) {
-    if (!turnCtx || typeof turnCtx.getLogger !== 'function') {
-      // This might happen if turnCtx becomes null due to an earlier error/reset
-      console.error(
-        `${this.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceNameForLog}, actor ${actorIdForLog}.`
-      );
-      if (this._isProcessing) {
-        // Only set if still processing, to avoid unintended side-effects
-        this._isProcessing = false;
-      }
-      return null;
-    }
-    const logger = turnCtx.getLogger();
-    try {
-      if (typeof turnCtx[methodName] !== 'function') {
-        throw new Error(
-          `Method turnCtx.${methodName}() does not exist or is not a function.`
-        );
-      }
-      const service = turnCtx[methodName]();
-      if (!service) {
-        throw new Error(
-          `Method turnCtx.${methodName}() returned null or undefined.`
-        );
-      }
-      return service;
-    } catch (error) {
-      // Build a new Error that contains the “Failed to retrieve …” message, so tests pass
-      const errorMsg = `${this.getStateName()}: Failed to retrieve ${serviceNameForLog} for actor ${actorIdForLog}. Error: ${error.message}`;
-      logger.error(errorMsg, error);
-
-      // Now pass a brand-new Error(errorMsg) into handleProcessingException
-      const serviceError = new Error(errorMsg);
-      await this.#handleProcessingException(
-        turnCtx,
-        serviceError,
-        actorIdForLog
-      );
-      return null;
-    }
+    return getServiceFromContext(
+      this,
+      turnCtx,
+      methodName,
+      serviceNameForLog,
+      actorIdForLog
+    );
   }
 
   async #handleProcessingException(
@@ -461,123 +271,13 @@ export class ProcessingCommandState extends AbstractTurnState {
     actorIdContext = 'UnknownActor',
     shouldEndTurn = true
   ) {
-    const wasProcessing = this._isProcessing;
-    this._isProcessing = false; // Prevent re-entry or further processing loops
-
-    let logger = console; // Fallback
-    let currentActorIdForLog = actorIdContext;
-
-    if (turnCtx && typeof turnCtx.getLogger === 'function') {
-      logger = turnCtx.getLogger();
-      currentActorIdForLog = turnCtx.getActor?.()?.id ?? actorIdContext;
-    } else {
-      // If turnCtx is invalid, log to console
-      console.error(
-        `${this.getStateName()}: Critical error - turnCtx is invalid in #handleProcessingException. Using console for logging. Actor context for this error: ${currentActorIdForLog}`
-      );
-    }
-
-    logger.error(
-      `${this.getStateName()}: Error during command processing for actor ${currentActorIdForLog} (wasProcessing: ${wasProcessing}): ${error.message}`,
-      error
+    return handleProcessingException(
+      this,
+      turnCtx,
+      error,
+      actorIdContext,
+      shouldEndTurn
     );
-
-    // Attempt to dispatch SYSTEM_ERROR_OCCURRED_ID
-    /** @type {ISafeEventDispatcher | undefined} */
-    let systemErrorDispatcher;
-    if (turnCtx && typeof turnCtx.getSafeEventDispatcher === 'function') {
-      systemErrorDispatcher = turnCtx.getSafeEventDispatcher();
-    } else if (
-      this._handler &&
-      typeof this._handler.safeEventDispatcher === 'object' &&
-      this._handler.safeEventDispatcher !== null &&
-      typeof this._handler.safeEventDispatcher.dispatch === 'function'
-    ) {
-      logger.warn(
-        `${this.getStateName()}: SafeEventDispatcher not found on TurnContext for actor ${currentActorIdForLog}. Attempting to use this._handler.safeEventDispatcher.`
-      );
-      systemErrorDispatcher = this._handler.safeEventDispatcher;
-    }
-
-    if (systemErrorDispatcher) {
-      try {
-        // dispatch should not throw
-        await systemErrorDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `System error in ${this.getStateName()} for actor ${currentActorIdForLog}: ${error.message}`,
-          details: {
-            raw: `OriginalError: ${error.name} - ${error.message}`,
-            stack: error.stack,
-            timestamp: new Date().toISOString(),
-          },
-        });
-      } catch (dispatchError) {
-        // Should not be reached
-        logger.error(
-          `${this.getStateName()}: Unexpected error dispatching SYSTEM_ERROR_OCCURRED_ID via SafeEventDispatcher for ${currentActorIdForLog}: ${dispatchError.message}`,
-          dispatchError
-        );
-      }
-    } else {
-      logger.warn(
-        `${this.getStateName()}: SafeEventDispatcher not available for actor ${currentActorIdForLog}. Cannot dispatch system error event.`
-      );
-    }
-
-    if (shouldEndTurn) {
-      // Always attempt to call turnCtx.endTurn(error), even if getActor() was null
-      if (turnCtx && typeof turnCtx.endTurn === 'function') {
-        logger.debug(
-          `${this.getStateName()}: Ending turn (no valid actor or error state) due to processing exception.`
-        );
-        try {
-          await turnCtx.endTurn(error);
-        } catch (endTurnError) {
-          // If endTurn fails, log and reset the handler
-          logger.error(
-            `${this.getStateName()}: Error calling turnCtx.endTurn(): ${endTurnError.message}`,
-            endTurnError
-          );
-          if (
-            this._handler?._resetTurnStateAndResources &&
-            this._handler?._transitionToState
-          ) {
-            logger.warn(
-              `${this.getStateName()}: Resetting handler due to failure in turnCtx.endTurn().`
-            );
-            await this._handler._resetTurnStateAndResources(
-              `exception-endTurn-failed-${this.getStateName()}`
-            );
-            await this._handler._transitionToState(
-              new TurnIdleState(this._handler)
-            );
-          }
-        }
-      } else {
-        // If endTurn is not available, reset the handler immediately
-        logger.warn(
-          `${this.getStateName()}: Cannot call turnCtx.endTurn(); ITurnContext or its endTurn method is unavailable.`
-        );
-        if (
-          this._handler?._resetTurnStateAndResources &&
-          this._handler?._transitionToState
-        ) {
-          await this._handler._resetTurnStateAndResources(
-            `exception-no-context-end-${this.getStateName()}`
-          );
-          await this._handler._transitionToState(
-            new TurnIdleState(this._handler)
-          );
-        } else {
-          logger.error(
-            `${this.getStateName()}: CRITICAL - Cannot end turn OR reset handler. System may be unstable.`
-          );
-        }
-      }
-    } else {
-      logger.debug(
-        `${this.getStateName()}: #handleProcessingException called with shouldEndTurn=false for actor ${currentActorIdForLog}.`
-      );
-    }
   }
 
   async exitState(handler, nextState) {
