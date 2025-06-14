@@ -14,6 +14,8 @@ import { TurnIdleState } from './turnIdleState.js';
 
 import { TURN_ENDED_ID, DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
+/* global process */
+
 // ─── Config ────────────────────────────────────────────────────────────────────
 /**
  * Dev / prod switch without `import.meta`.
@@ -52,11 +54,9 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     await super.enterState(handler, prev);
 
     if (!ctx) {
-      handler
-        .getLogger()
-        .error(
-          `${this.getStateName()}: entered with no ITurnContext; aborting`
-        );
+      this._resolveLogger(null, handler).error(
+        `${this.getStateName()}: entered with no ITurnContext; aborting`
+      );
       await handler._transitionToState(new TurnIdleState(handler));
       return;
     }
@@ -161,12 +161,10 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     try {
       ctx.endTurn(err);
     } catch (e) {
-      handler
-        .getLogger()
-        .error(
-          `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
-          e
-        );
+      this._resolveLogger(ctx, handler).error(
+        `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
+        e
+      );
       handler._resetTurnStateAndResources('timeout-recovery');
       handler._transitionToState(new TurnIdleState(handler));
     }

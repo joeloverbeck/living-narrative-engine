@@ -29,7 +29,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
 
     const turnContext = this._getTurnContext();
     if (!turnContext) {
-      const logger = this._handler?.getLogger?.() ?? console;
+      const logger = this._resolveLogger(null);
       logger.error(
         `${this.name}: Critical error - TurnContext is not available. Attempting to reset and idle.`
       );
@@ -163,10 +163,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   /* --------------------------------------------------------------------- */
   async exitState(handler, nextState) {
     await super.exitState(handler, nextState);
-    const l =
-      this._getTurnContext()?.getLogger?.() ??
-      this._handler?.getLogger?.() ??
-      console;
+    const l = this._resolveLogger(this._getTurnContext());
     l.debug(
       `${this.name}: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.`
     );
@@ -177,7 +174,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     const turnContext = this._getTurnContext();
 
     if (!turnContext) {
-      const logger = this._handler?.getLogger?.() ?? console;
+      const logger = this._resolveLogger(null);
       const actorIdForLog = actorEntity?.id ?? 'unknown actor';
       logger.error(
         `${this.name}: handleSubmittedCommand (for actor ${actorIdForLog}, cmd: "${commandString}") called, but no ITurnContext. Forcing handler reset.`
@@ -213,8 +210,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async handleTurnEndedEvent(handlerInstance, payload) {
     const handler = handlerInstance || this._handler;
     const turnContext = this._getTurnContext();
-    const logger =
-      turnContext?.getLogger?.() ?? handler?.getLogger?.() ?? console;
+    const logger = this._resolveLogger(turnContext, handler);
 
     if (!turnContext) {
       logger.warn(
@@ -246,8 +242,8 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   /* --------------------------------------------------------------------- */
   async destroy(handlerInstance) {
     const handler = handlerInstance || this._handler;
-    const logger = handler?.getLogger?.() ?? console;
     const turnContext = handler?.getTurnContext?.();
+    const logger = this._resolveLogger(turnContext, handler);
     const actorInCtx = turnContext?.getActor();
 
     if (turnContext) {
