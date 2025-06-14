@@ -105,7 +105,7 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
       DISPLAY_ERROR_ID,
       expect.objectContaining({
         details: expect.objectContaining({
-          actionId: 'use-potion', // explicit chosenActionId wins
+          actionId: 'use-potion',
         }),
       })
     );

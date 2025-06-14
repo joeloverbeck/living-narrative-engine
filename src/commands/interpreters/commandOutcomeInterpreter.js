@@ -110,7 +110,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
       processedActionId =
         chosenAction?.actionDefinitionId || 'core:unknown_action';
       this.#logger.debug(
-        `CommandOutcomeInterpreter: actor ${actorId}: result.actionResult.actionId ('${result.actionResult?.actionId}') invalid/missing. Using chosenActionId: '${processedActionId}'.`
+        `CommandOutcomeInterpreter: actor ${actorId}: result.actionResult.actionId ('${result.actionResult?.actionId}') invalid/missing. Using action identifier: '${processedActionId}'.`
       );
     }
 

@@ -36,7 +36,7 @@ export class IndexedChoicesAssembler extends IPromptElementAssembler {
 
     const lines = indexedChoicesArray.map(
       (choice) =>
-        `chosenActionId: ${choice.index}; ${choice.commandString} (${choice.description})`
+        `index: ${choice.index} --> ${choice.commandString} (${choice.description})`
     );
 
     return `${resolvedPrefix}${lines.join('\n')}${resolvedSuffix}`;
