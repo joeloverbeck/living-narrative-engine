@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Unifying paths.">
-      <change beforePath="$PROJECT_DIR$/src/turns/services/actionIndexingService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/actionIndexingService.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,6 +55,7 @@
     "Jest.awaitTurnEndState.test.js.executor": "Run",
     "Jest.decisionResult.test.js.executor": "Run",
     "Jest.entityMoved.schema.test.js.executor": "Run",
+    "Jest.genericTurnHandler.test.js.executor": "Run",
     "Jest.genericTurnStrategy.test.js.executor": "Run",
     "Jest.genericTurnStrategyFactory.test.js.executor": "Run",
     "Jest.humanDecisionProvider.indexUse.test.js.executor": "Run",
@@ -101,7 +102,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.playerTurnHandler.fixes.test.js">
+  <component name="RunManager" selected="Jest.genericTurnHandler.test.js">
     <configuration name="actionIndexerAdapter.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -120,6 +121,15 @@
       <test-file value="$PROJECT_DIR$/tests/turns/valueObjects/awaitTurnEndState.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="genericTurnHandler.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="genericTurnStrategyFactory.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -127,15 +137,6 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/turns/factories/genericTurnStrategyFactory.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="interpreterRegistrations.handlers.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/dependencyInjection/registrations/interpreterRegistrations.handlers.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="playerTurnHandler.fixes.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -149,11 +150,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.genericTurnHandler.test.js" />
         <item itemvalue="Jest.playerTurnHandler.fixes.test.js" />
         <item itemvalue="Jest.awaitTurnEndState.test.js" />
         <item itemvalue="Jest.genericTurnStrategyFactory.test.js" />
         <item itemvalue="Jest.actionIndexerAdapter.test.js" />
-        <item itemvalue="Jest.interpreterRegistrations.handlers.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -174,15 +175,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="10259000" />
-    </task>
-    <task id="LOCAL-00023" summary="Ensuring the app works.">
-      <option name="closed" value="true" />
-      <created>1749880291189</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1749880291189</updated>
+      <workItem from="1749913762946" duration="10764000" />
     </task>
     <task id="LOCAL-00024" summary="Ensuring that chosenActionId doesn't get used anymore.">
       <option name="closed" value="true" />
@@ -568,7 +561,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749924588382</updated>
     </task>
-    <option name="localTasksCounter" value="72" />
+    <task id="LOCAL-00072" summary="Unifying paths.">
+      <option name="closed" value="true" />
+      <created>1749924765153</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1749924765153</updated>
+    </task>
+    <option name="localTasksCounter" value="73" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
