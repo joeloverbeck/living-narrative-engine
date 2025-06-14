@@ -12,6 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import QueryEntitiesHandler from '../../../src/logic/operationHandlers/queryEntitiesHandler.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // 1. Test Harness Setup
 /**
@@ -60,12 +61,14 @@ describe('QueryEntitiesHandler', () => {
   let mockJsonLogicService;
   let handler;
   let mockExecutionContext;
+  let dispatcher;
 
   beforeEach(() => {
     // 2. Create Mocks and Handler Instance
     mockEntityManager = makeMockEntityManager();
     mockLogger = makeMockLogger();
     mockJsonLogicService = makeMockJsonLogicService();
+    dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
     // Prepare a default set of active entities for tests
     mockEntityManager.activeEntities = new Map([
@@ -80,6 +83,7 @@ describe('QueryEntitiesHandler', () => {
       entityManager: mockEntityManager,
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicService,
+      safeEventDispatcher: dispatcher,
     });
 
     // 3. Prepare mock execution context
@@ -365,6 +369,24 @@ describe('QueryEntitiesHandler', () => {
       const result =
         mockExecutionContext.evaluationContext.context.should_be_all;
       expect(result.length).toBe(5);
+    });
+
+    test('should dispatch an error when context for storage is missing', () => {
+      mockExecutionContext.evaluationContext.context = null;
+      const params = {
+        result_variable: 'x',
+        filters: [],
+      };
+
+      handler.execute(params, mockExecutionContext);
+
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('Cannot store result'),
+          details: { resultVariable: 'x' },
+        })
+      );
     });
   });
 });

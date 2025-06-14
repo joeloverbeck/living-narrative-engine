@@ -7,6 +7,9 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /**
  * @class QueryEntitiesHandler
@@ -20,15 +23,23 @@ class QueryEntitiesHandler {
   #logger;
   /** @type {JsonLogicEvaluationService} */
   #jsonLogicEvaluationService;
+  /** @type {ISafeEventDispatcher} */
+  #dispatcher;
 
   /**
    * @param {object} deps
    * @param {IEntityManager} deps.entityManager - Service for entity management.
    * @param {ILogger} deps.logger - Logging service.
    * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService - Service for evaluating JSON Logic rules.
+   * @param deps.safeEventDispatcher
    * @throws {Error} If any required dependencies are missing or invalid.
    */
-  constructor({ entityManager, logger, jsonLogicEvaluationService }) {
+  constructor({
+    entityManager,
+    logger,
+    jsonLogicEvaluationService,
+    safeEventDispatcher,
+  }) {
     // The ticket specifies checking for specific properties to validate the interface.
     if (!entityManager?.activeEntities)
       throw new Error(
@@ -54,10 +65,13 @@ class QueryEntitiesHandler {
       throw new Error(
         "Dependency 'JsonLogicEvaluationService' is required and must expose an 'evaluate' method."
       );
+    if (!safeEventDispatcher?.dispatch)
+      throw new Error('QueryEntitiesHandler requires ISafeEventDispatcher.');
 
     this.#entityManager = entityManager;
     this.#logger = logger;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
+    this.#dispatcher = safeEventDispatcher;
   }
 
   /**
@@ -212,9 +226,11 @@ class QueryEntitiesHandler {
         `QUERY_ENTITIES: Stored ${finalIds.length} entity IDs in context variable "${resultVariable}".`
       );
     } else {
-      log.error(
-        'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.'
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message:
+          'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.',
+        details: { resultVariable },
+      });
     }
   }
 }
