@@ -49,16 +49,17 @@ beforeEach(() => {
   };
   mockTurnContextBuilder = {
     build: jest.fn(({ actor, setAwaitFlag }) => {
+      
+      let awaiting = false;
       return {
         getActor: () => actor,
-        awaitFlag: false,
-        setAwaitingExternalEvent(flag, id) {
-          this.awaitFlag = flag;
-          if (typeof setAwaitFlag === 'function') setAwaitFlag(flag, id);
+        setAwaitingExternalEvent: (flag, id) => {
+          awaiting = flag;
+          if (setAwaitFlag) setAwaitFlag(flag, id);
         },
-        isAwaitingExternalEvent() {
-          return this.awaitFlag === true;
-        },
+        isAwaitingExternalEvent: () => awaiting,
+        endTurn: jest.fn(),
+        
       };
     }),
   };

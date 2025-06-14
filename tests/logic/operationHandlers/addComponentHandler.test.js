@@ -295,7 +295,7 @@ describe('AddComponentHandler', () => {
         value: {},
       };
       handler.execute(params, buildCtx());
-      // These cases should pass the initial '!entity_ref' check but fail in #resolveEntityId
+      // These cases should pass the initial '!entity_ref' check but fail in resolveEntityId
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Could not resolve entity id'),
         { entity_ref: invalidRef }

@@ -110,6 +110,18 @@ export class Registrar {
   }
 
   /**
+   * Alias for {@link Registrar#instance} maintained for backward compatibility.
+   *
+   * @param {DiToken} token - The token to register the value against.
+   * @param {*} value - The value or instance to register.
+   * @returns {this} The registrar instance for chaining.
+   */
+  value(token, value) {
+    const factory = () => value;
+    return this.register(token, factory, { lifecycle: 'singletonFactory' });
+  }
+
+  /**
    * Register a factory function as a singleton. The factory function will be
    * called only once to create the instance, and this instance will be reused
    * for all subsequent resolutions of the token.
