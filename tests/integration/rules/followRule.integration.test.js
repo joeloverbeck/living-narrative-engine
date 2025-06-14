@@ -102,6 +102,7 @@ describe('core_handle_follow rule integration', () => {
       CHECK_FOLLOW_CYCLE: new CheckFollowCycleHandler({
         logger,
         entityManager,
+        safeEventDispatcher: safeDispatcher,
       }),
       HAS_COMPONENT: new HasComponentHandler({
         entityManager,
