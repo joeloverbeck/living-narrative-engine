@@ -148,8 +148,14 @@ function init(entities) {
   entityManager = new SimpleEntityManager(entities);
   worldContext = new SimpleWorldContext(entityManager, logger);
 
+  const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+
   const handlers = {
-    HAS_COMPONENT: new HasComponentHandler({ entityManager, logger }),
+    HAS_COMPONENT: new HasComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
     QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
