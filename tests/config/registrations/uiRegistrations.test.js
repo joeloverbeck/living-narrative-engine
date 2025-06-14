@@ -46,7 +46,7 @@ describe('registerUI', () => {
               warn: jest.fn(),
               error: jest.fn(),
             };
-          case tokens.IValidatedEventDispatcher:
+          case tokens.ISafeEventDispatcher:
             return { subscribe: jest.fn(), dispatch: jest.fn() };
           // For any other resolved dependency, return a generic mock function.
           default:

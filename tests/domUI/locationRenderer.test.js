@@ -31,6 +31,7 @@ import {
   EXITS_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 /** @returns {import('../../src/interfaces/ILogger.js').ILogger} */
 const createMockLogger = () => ({
@@ -155,7 +156,7 @@ const createMockEntityDisplayDataProvider = () => ({
 describe('LocationRenderer', () => {
   let mockLogger;
   let mockDocumentContext;
-  let mockVed;
+  let mockSafeEventDispatcher;
   let mockDomElementFactory;
   let mockEntityManager;
   let mockEntityDisplayDataProvider;
@@ -182,7 +183,7 @@ describe('LocationRenderer', () => {
   beforeEach(() => {
     mockLogger = createMockLogger();
     mockDocumentContext = createMockDocumentContext();
-    mockVed = createMockVed();
+    mockSafeEventDispatcher = createMockVed();
     mockDomElementFactory = createMockDomElementFactory(mockDocumentContext);
     mockEntityManager = createMockEntityManager();
     mockEntityDisplayDataProvider = createMockEntityDisplayDataProvider();
@@ -235,7 +236,7 @@ describe('LocationRenderer', () => {
     rendererDeps = {
       logger: mockLogger,
       documentContext: mockDocumentContext,
-      validatedEventDispatcher: mockVed,
+      safeEventDispatcher: mockSafeEventDispatcher,
       domElementFactory: mockDomElementFactory,
       entityManager: mockEntityManager,
       entityDisplayDataProvider: mockEntityDisplayDataProvider,
@@ -244,12 +245,14 @@ describe('LocationRenderer', () => {
     };
 
     turnStartedCallback = undefined;
-    mockVed.subscribe.mockImplementation((eventType, callback) => {
-      if (eventType === 'core:turn_started') {
-        turnStartedCallback = callback;
+    mockSafeEventDispatcher.subscribe.mockImplementation(
+      (eventType, callback) => {
+        if (eventType === 'core:turn_started') {
+          turnStartedCallback = callback;
+        }
+        return jest.fn();
       }
-      return jest.fn();
-    });
+    );
 
     mockLocationEntityInstance = {
       id: MOCK_LOCATION_ID,
@@ -291,7 +294,7 @@ describe('LocationRenderer', () => {
         '[LocationRenderer] Attached to base container element:',
         mockContainerElement
       );
-      expect(mockVed.subscribe).toHaveBeenCalledWith(
+      expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledWith(
         'core:turn_started',
         expect.any(Function)
       );
@@ -534,10 +537,13 @@ describe('LocationRenderer', () => {
       expect(
         mockEntityDisplayDataProvider.getLocationDetails
       ).toHaveBeenCalledWith(MOCK_LOCATION_ID);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Location details for ID '${MOCK_LOCATION_ID}' not found.`
-        )
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Location details for ID '${MOCK_LOCATION_ID}' not found.`
+          ),
+        })
       );
       expect(mockDescriptionDisplay.textContent).toContain(
         `Location data for '${MOCK_LOCATION_ID}' missing.`
@@ -869,7 +875,7 @@ describe('LocationRenderer', () => {
       });
       new LocationRenderer({
         ...rendererDeps,
-        validatedEventDispatcher: specificMockVed,
+        safeEventDispatcher: specificMockVed,
         documentContext: mockDocumentContext,
       });
 
@@ -892,8 +898,11 @@ describe('LocationRenderer', () => {
           );
         }
       }
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        "[LocationRenderer] Cannot render, required DOM element 'charactersDisplay' is missing."
+      expect(specificMockVed.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        {
+          message: "[LocationRenderer] Cannot render, required DOM element 'charactersDisplay' is missing.",
+        }
       );
       mockDocumentContext.query = originalQuery; // Restore original mock
     });
@@ -902,7 +911,8 @@ describe('LocationRenderer', () => {
   describe('dispose', () => {
     it('should handle dispose being called multiple times gracefully', () => {
       const renderer = new LocationRenderer(rendererDeps);
-      const mockUnsubscribe = mockVed.subscribe.mock.results[0].value;
+      const mockUnsubscribe =
+        mockSafeEventDispatcher.subscribe.mock.results[0].value;
 
       renderer.dispose();
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);

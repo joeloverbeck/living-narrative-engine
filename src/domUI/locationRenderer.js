@@ -2,6 +2,7 @@
 // --- FILE START ---
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DomUtils } from '../utils/domUtils.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import {
   // POSITION_COMPONENT_ID, // No longer directly used for current location logic
   // NAME_COMPONENT_ID, // Handled by EntityDisplayDataProvider
@@ -14,7 +15,7 @@ import {
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
- * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
@@ -58,13 +59,14 @@ export class LocationRenderer extends BoundDomRendererBase {
   entityManager;
   entityDisplayDataProvider;
   dataRegistry;
+  safeEventDispatcher;
 
   _EVENT_TYPE_SUBSCRIBED = 'core:turn_started';
 
   constructor({
     logger,
     documentContext,
-    validatedEventDispatcher,
+    safeEventDispatcher,
     domElementFactory,
     entityManager,
     entityDisplayDataProvider,
@@ -94,16 +96,28 @@ export class LocationRenderer extends BoundDomRendererBase {
       },
     };
 
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      const errMsg = `${this._logPrefix} ISafeEventDispatcher dependency is required.`;
+      throw new Error(errMsg);
+    }
+
     super({
       logger,
       documentContext,
-      validatedEventDispatcher,
+      validatedEventDispatcher: safeEventDispatcher,
       elementsConfig,
     });
 
+    this.safeEventDispatcher = safeEventDispatcher;
+
     if (!domElementFactory || typeof domElementFactory.create !== 'function') {
       const errMsg = `${this._logPrefix} 'domElementFactory' dependency is missing or invalid.`;
-      this.logger.error(errMsg);
+      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: errMsg,
+      });
       throw new Error(errMsg);
     }
     this.domElementFactory = domElementFactory;
@@ -113,7 +127,9 @@ export class LocationRenderer extends BoundDomRendererBase {
       typeof entityManager.getEntitiesInLocation !== 'function'
     ) {
       const errMsg = `${this._logPrefix} 'entityManager' dependency is missing or invalid.`;
-      this.logger.error(errMsg);
+      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: errMsg,
+      });
       throw new Error(errMsg);
     }
     this.entityManager = entityManager;
@@ -126,7 +142,7 @@ export class LocationRenderer extends BoundDomRendererBase {
       typeof entityDisplayDataProvider.getLocationPortraitData !== 'function' // IMPORTANT ASSUMPTION
     ) {
       const errMsg = `${this._logPrefix} 'entityDisplayDataProvider' dependency is missing or invalid (must include getLocationDetails, getEntityLocationId, and a new getLocationPortraitData).`;
-      this.logger.error(errMsg);
+      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, { message: errMsg });
       throw new Error(errMsg);
     }
     this.entityDisplayDataProvider = entityDisplayDataProvider;
@@ -141,7 +157,7 @@ export class LocationRenderer extends BoundDomRendererBase {
 
     if (!containerElement || containerElement.nodeType !== 1) {
       const errMsg = `${this._logPrefix} 'containerElement' dependency is missing or not a valid DOM element.`;
-      this.logger.error(errMsg);
+      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, { message: errMsg });
       throw new Error(errMsg);
     }
     this.baseContainerElement = containerElement;
@@ -155,14 +171,14 @@ export class LocationRenderer extends BoundDomRendererBase {
       !this.elements.locationPortraitVisualsElement ||
       !this.elements.locationPortraitImageElement
     ) {
-      this.logger.error(
-        `${this._logPrefix} Location portrait DOM elements not bound. Portraits will not be displayed.`
-      );
+      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `${this._logPrefix} Location portrait DOM elements not bound. Portraits will not be displayed.`,
+      });
       // Depending on strictness, you might throw an error or allow graceful degradation.
     }
 
     this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
+      this.safeEventDispatcher.subscribe(
         this._EVENT_TYPE_SUBSCRIBED,
         this.#handleTurnStarted.bind(this)
       )
@@ -209,9 +225,9 @@ export class LocationRenderer extends BoundDomRendererBase {
       );
 
       if (!locationDetails) {
-        this.logger.error(
-          `${this._logPrefix} Location details for ID '${currentLocationInstanceId}' not found.`
-        );
+        this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `${this._logPrefix} Location details for ID '${currentLocationInstanceId}' not found.`,
+        });
         this.#clearAllDisplaysOnErrorWithMessage(
           `Location data for '${currentLocationInstanceId}' missing.`
         );
@@ -264,10 +280,10 @@ export class LocationRenderer extends BoundDomRendererBase {
 
       this.render(displayPayload);
     } catch (error) {
-      this.logger.error(
-        `${this._logPrefix} Error processing '${event.type}' for entity '${currentActorEntityId}':`,
-        error
-      );
+      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `${this._logPrefix} Error processing '${event.type}' for entity '${currentActorEntityId}': ${error.message}`,
+        details: { stack: error.stack },
+      });
       this.#clearAllDisplaysOnErrorWithMessage(
         'Error retrieving location details.'
       );
@@ -349,9 +365,9 @@ export class LocationRenderer extends BoundDomRendererBase {
     } else {
       const ul = this.domElementFactory.ul(undefined, 'location-detail-list');
       if (!ul) {
-        this.logger.error(
-          `${this._logPrefix} Failed to create UL for ${title}.`
-        );
+        this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `${this._logPrefix} Failed to create UL for ${title}.`,
+        });
         // Simplified fallback: render as paragraphs directly in targetElement
         dataArray.forEach((item) => {
           const text =
@@ -424,9 +440,9 @@ export class LocationRenderer extends BoundDomRendererBase {
 
   render(locationDto) {
     if (!this.baseContainerElement || !this.domElementFactory) {
-      this.logger.error(
-        `${this._logPrefix} Cannot render, critical dependencies (baseContainerElement or domElementFactory) missing.`
-      );
+      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `${this._logPrefix} Cannot render, critical dependencies (baseContainerElement or domElementFactory) missing.`,
+      });
       return;
     }
     // Check for all required elements, including new portrait ones
@@ -440,9 +456,9 @@ export class LocationRenderer extends BoundDomRendererBase {
     ];
     for (const elKey of requiredElements) {
       if (!this.elements[elKey]) {
-        this.logger.error(
-          `${this._logPrefix} Cannot render, required DOM element '${elKey}' is missing.`
-        );
+        this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `${this._logPrefix} Cannot render, required DOM element '${elKey}' is missing.`,
+        });
         // Potentially call #clearAllDisplaysOnErrorWithMessage or a similar specific error display
         return;
       }
