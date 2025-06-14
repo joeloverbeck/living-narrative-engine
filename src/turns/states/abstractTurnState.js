@@ -82,33 +82,58 @@ export class AbstractTurnState extends ITurnState {
     return turnCtx;
   }
 
+  /**
+
+   * Resets turn-specific resources and requests a transition to the idle state.
+   *
+   * @protected
+   * @async
+   * @param {string} reason - Contextual reason for the reset.
+   * @returns {Promise<void>}
+   */
+  async _resetToIdle(reason) {
+    if (typeof this._handler?._resetTurnStateAndResources === 'function') {
+      this._handler._resetTurnStateAndResources(reason);
+    }
+    if (typeof this._handler?.requestIdleStateTransition === 'function') {
+      await this._handler.requestIdleStateTransition();
+    }
+  }
+
+  /* Resolves a logger using the provided context or handler.
+   *
+   * @protected
+   * @param {ITurnContext | null} turnCtx - The current ITurnContext, if any.
+   * @param {BaseTurnHandler} [handler] - Optional handler override.
+   * @returns {import('../../logging/consoleLogger.js').default | Console} The logger instance.
+   */
+  _resolveLogger(turnCtx, handler) {
+    if (turnCtx && typeof turnCtx.getLogger === 'function') {
+      try {
+        const l = turnCtx.getLogger();
+        if (l) return l;
+      } catch {
+        /* ignore */
+      }
+    }
+    const h = handler || this._handler;
+    if (h && typeof h.getLogger === 'function') {
+      try {
+        const l = h.getLogger();
+        if (l) return l;
+      } catch {
+        /* ignore */
+      }
+    }
+    return console;
+  }
+
   // --- Interface Methods with Default Implementations ---
 
   /** @override */
   async enterState(handler, previousState) {
     const turnCtx = this._getTurnContext();
-
-    // Robust logger resolution (similar to the updated exitState)
-    let resolvedLogger = turnCtx?.getLogger();
-    if (!resolvedLogger && handler && typeof handler.getLogger === 'function') {
-      try {
-        resolvedLogger = handler.getLogger();
-      } catch {
-        /* ignore */
-      }
-    }
-    if (
-      !resolvedLogger &&
-      this._handler &&
-      typeof this._handler.getLogger === 'function'
-    ) {
-      try {
-        resolvedLogger = this._handler.getLogger();
-      } catch {
-        /* ignore */
-      }
-    }
-    const logger = resolvedLogger || console;
+    const logger = this._resolveLogger(turnCtx, handler);
 
     let actorIdForLog = 'N/A';
     if (turnCtx && typeof turnCtx.getActor === 'function') {
@@ -130,26 +155,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async exitState(handler, nextState) {
     const turnCtx = this._getTurnContext();
-    let resolvedLogger = turnCtx?.getLogger();
-    if (!resolvedLogger && handler && typeof handler.getLogger === 'function') {
-      try {
-        resolvedLogger = handler.getLogger();
-      } catch {
-        /* ignore */
-      }
-    }
-    if (
-      !resolvedLogger &&
-      this._handler &&
-      typeof this._handler.getLogger === 'function'
-    ) {
-      try {
-        resolvedLogger = this._handler.getLogger();
-      } catch {
-        /* ignore */
-      }
-    }
-    const logger = resolvedLogger || console;
+    const logger = this._resolveLogger(turnCtx, handler);
 
     let actorIdForLog = 'N/A';
     if (turnCtx && typeof turnCtx.getActor === 'function') {
@@ -171,7 +177,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async startTurn(handler, actorEntity) {
     const turnCtx = this._getTurnContext();
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ACTOR';
     const warningMessage = `Method 'startTurn(actorId: ${actorIdForLog})' called on state ${this.getStateName()} where it is not expected or handled.`;
     logger.warn(warningMessage);
@@ -183,7 +189,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async handleSubmittedCommand(handler, commandString, actorEntity) {
     const turnCtx = this._getTurnContext();
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const contextActorId = turnCtx?.getActor()?.id ?? 'NO_CONTEXT_ACTOR';
     const errorMessage = `Method 'handleSubmittedCommand(command: "${commandString}", entity: ${actorEntity?.id}, contextActor: ${contextActorId})' must be implemented by concrete state ${this.getStateName()}.`;
     logger.error(errorMessage);
@@ -193,7 +199,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async handleTurnEndedEvent(handler, payload) {
     const turnCtx = this._getTurnContext();
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const warningMessage = `Method 'handleTurnEndedEvent(payloadActorId: ${payload?.entityId})' called on state ${this.getStateName()} where it might not be expected or handled. Current context actor: ${turnCtx?.getActor()?.id ?? 'N/A'}.`;
     logger.warn(warningMessage);
   }
@@ -201,7 +207,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async processCommandResult(handler, actor, cmdProcResult, commandString) {
     const turnCtx = this._getTurnContext(); // Actor should come from turnCtx
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const contextActor = turnCtx?.getActor();
     if (actor.id !== contextActor?.id) {
       logger.warn(
@@ -216,7 +222,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async handleDirective(handler, actor, directive, cmdProcResult) {
     const turnCtx = this._getTurnContext(); // Actor should come from turnCtx
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const contextActor = turnCtx?.getActor();
     if (actor.id !== contextActor?.id) {
       logger.warn(

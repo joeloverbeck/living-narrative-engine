@@ -43,15 +43,10 @@ export class ProcessingCommandState extends AbstractTurnState {
     this.#commandStringForLog =
       commandString || turnAction?.commandString || null;
 
-    const logger = this._handler?.getLogger() ?? console;
+    const logger = this._resolveLogger(null);
     logger.debug(
       `${this.getStateName()} constructed. Command string (arg): "${this.#commandStringForLog}". TurnAction ID (arg): ${turnAction ? `"${turnAction.actionDefinitionId}"` : 'null'}`
     );
-  }
-
-  /** @override */
-  getStateName() {
-    return 'ProcessingCommandState';
   }
 
   /**
@@ -63,7 +58,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     const turnCtx = this._getTurnContext();
 
     if (this._isProcessing) {
-      const logger = turnCtx?.getLogger() ?? this._handler.getLogger();
+      const logger = this._resolveLogger(turnCtx);
       logger.warn(
         `${this.getStateName()}: enterState called while already processing. Actor: ${turnCtx?.getActor()?.id ?? 'N/A'}. Aborting re-entry.`
       );
@@ -72,24 +67,13 @@ export class ProcessingCommandState extends AbstractTurnState {
     this._isProcessing = true;
 
     await super.enterState(this._handler, previousState);
-    const logger = turnCtx ? turnCtx.getLogger() : this._handler.getLogger();
+    const logger = this._resolveLogger(turnCtx);
 
     if (!turnCtx) {
       logger.error(
         `${this.getStateName()}: Turn context is null on enter. Attempting to reset and idle.`
       );
-      if (
-        this._handler &&
-        typeof this._handler._resetTurnStateAndResources === 'function' &&
-        typeof this._handler._transitionToState === 'function'
-      ) {
-        await this._handler._resetTurnStateAndResources(
-          `critical-no-context-${this.getStateName()}`
-        );
-        await this._handler._transitionToState(
-          new TurnIdleState(this._handler)
-        );
-      }
+      await this._resetToIdle(`critical-no-context-${this.getStateName()}`);
       this._isProcessing = false;
       return;
     }
@@ -286,11 +270,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     this._isProcessing = false;
 
     const turnCtx = this._getTurnContext();
-    const logger =
-      turnCtx?.getLogger() ??
-      handler?.getLogger() ??
-      this._handler?.getLogger() ??
-      console;
+    const logger = this._resolveLogger(turnCtx, handler);
     const actorId = turnCtx?.getActor?.()?.id ?? 'N/A_on_exit';
 
     if (wasProcessing) {
@@ -307,11 +287,7 @@ export class ProcessingCommandState extends AbstractTurnState {
 
   async destroy(handler) {
     const turnCtx = this._getTurnContext(); // Get context before calling super, as super.destroy might clear it.
-    const logger =
-      turnCtx?.getLogger() ??
-      handler?.getLogger() ??
-      this._handler?.getLogger() ??
-      console;
+    const logger = this._resolveLogger(turnCtx, handler);
     const actorId = turnCtx?.getActor?.()?.id ?? 'N/A_at_destroy';
 
     logger.debug(

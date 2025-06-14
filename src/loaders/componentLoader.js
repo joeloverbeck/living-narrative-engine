@@ -1,6 +1,7 @@
 // src/loaders/componentLoader.js
 
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { extractBaseId } from '../utils/idUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -95,9 +96,7 @@ class ComponentLoader extends BaseManifestItemLoader {
       throw new Error(`Invalid Component ID in ${filename}`);
     }
 
-    const idParts = trimmedComponentIdFromFile.split(':');
-    const baseComponentId =
-      idParts.length > 1 ? idParts.slice(1).join(':') : idParts[0];
+    const baseComponentId = extractBaseId(trimmedComponentIdFromFile);
     if (!baseComponentId) {
       this._logger.error(
         `ComponentLoader [${modId}]: Could not extract valid base ID from component ID '${trimmedComponentIdFromFile}' in file '${filename}'.`
@@ -196,18 +195,13 @@ class ComponentLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `ComponentLoader [${modId}]: Delegating storage of component definition metadata using BASE ID '${baseComponentId}' to base class helper.`
     );
-    let didOverride = false;
-    try {
-      didOverride = this._storeItemInRegistry(
-        'components',
-        modId,
-        baseComponentId,
-        data,
-        filename
-      );
-    } catch (storageError) {
-      throw storageError;
-    }
+    const didOverride = this._storeItemInRegistry(
+      'components',
+      modId,
+      baseComponentId,
+      data,
+      filename
+    );
 
     // --- 6. Return Result Object ---
     this._logger.debug(

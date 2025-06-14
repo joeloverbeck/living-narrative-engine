@@ -8,6 +8,7 @@ import {
 } from '@jest/globals';
 import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
+import { ActorMismatchError } from '../../../src/errors/actorMismatchError.js';
 
 describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
   let deps;
@@ -95,8 +96,10 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
 
     expect(endSpy).toHaveBeenCalledTimes(1);
     const errorArg = endSpy.mock.calls[0][1];
-    expect(errorArg).toBeInstanceOf(Error);
-    expect(errorArg.message).toBe('Actor missing in handleSubmittedCommand');
+    expect(errorArg).toBeInstanceOf(ActorMismatchError);
+    expect(errorArg.message).toBe(
+      'A valid actor must be provided to handle a command.'
+    );
   });
 
   it('awaits endTurn when actorEntity is null but context exists', async () => {
@@ -120,7 +123,12 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
     await Promise.resolve();
     expect(resolved).toBe(false);
     expect(mockCtx.endTurn).toHaveBeenCalledWith(
-      new Error('Actor missing in handleSubmittedCommand')
+      expect.any(ActorMismatchError)
+    );
+
+    const errorArg = mockCtx.endTurn.mock.calls[0][0];
+    expect(errorArg.message).toBe(
+      'A valid actor must be provided to handle a command.'
     );
 
     resolveEnd();
@@ -142,8 +150,10 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
 
     expect(endSpy).toHaveBeenCalledTimes(1);
     const errorArg = endSpy.mock.calls[0][1];
-    expect(errorArg).toBeInstanceOf(Error);
-    expect(errorArg.message).toBe('Actor missing in handleSubmittedCommand');
+    expect(errorArg).toBeInstanceOf(ActorMismatchError);
+    expect(errorArg.message).toBe(
+      'A valid actor must be provided to handle a command.'
+    );
   });
 
   it('awaits endTurn when actorEntity has invalid id and context exists', async () => {
@@ -167,7 +177,12 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
     await Promise.resolve();
     expect(resolved).toBe(false);
     expect(mockCtx.endTurn).toHaveBeenCalledWith(
-      new Error('Actor missing in handleSubmittedCommand')
+      expect.any(ActorMismatchError)
+    );
+
+    const errorArg = mockCtx.endTurn.mock.calls[0][0];
+    expect(errorArg.message).toBe(
+      'A valid actor must be provided to handle a command.'
     );
 
     resolveEnd();

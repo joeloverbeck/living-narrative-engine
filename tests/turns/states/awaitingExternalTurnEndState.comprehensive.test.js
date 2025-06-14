@@ -90,6 +90,7 @@ const makeMockTurnHandler = () => ({
   getLogger: jest.fn().mockReturnValue(makeMockLogger()),
   getTurnContext: jest.fn(),
   _resetTurnStateAndResources: jest.fn(),
+  requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
 });
 
 // --- Test Suite ---
@@ -170,14 +171,7 @@ describe('AwaitingExternalTurnEndState', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('entered with no ITurnContext')
       );
-      expect(mockHandler._transitionToState).toHaveBeenCalledTimes(1);
-      // Verify that it constructs a new TurnIdleState.
-      expect(TurnIdleState).toHaveBeenCalledWith(mockHandler);
-      // And passes that new instance to the transition function.
-      const idleStateInstance = TurnIdleState.mock.results[0].value;
-      expect(mockHandler._transitionToState).toHaveBeenCalledWith(
-        idleStateInstance
-      );
+      expect(mockHandler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
     });
 
     test('should set up guards and subscribe to events on successful entry', async () => {
@@ -397,12 +391,7 @@ describe('AwaitingExternalTurnEndState', () => {
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
         'timeout-recovery'
       );
-      expect(mockHandler._transitionToState).toHaveBeenCalledTimes(1);
-      expect(TurnIdleState).toHaveBeenCalledWith(mockHandler);
-      const idleStateInstance = TurnIdleState.mock.results[0].value;
-      expect(mockHandler._transitionToState).toHaveBeenCalledWith(
-        idleStateInstance
-      );
+      expect(mockHandler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
     });
   });
 

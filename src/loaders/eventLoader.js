@@ -8,6 +8,7 @@
 // --- Base Class Import ---
 // Adjust path relative to this file's location if needed
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Assuming it's in loaders sibling dir
+import { extractBaseId } from '../utils/idUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -110,18 +111,7 @@ class EventLoader extends BaseManifestItemLoader {
     }
 
     const trimmedFullEventId = fullEventIdFromFile.trim();
-    let baseEventId = ''; // Initialize as empty
-    const colonIndex = trimmedFullEventId.indexOf(':');
-
-    if (colonIndex === -1) {
-      baseEventId = trimmedFullEventId;
-    } else if (colonIndex > 0 && colonIndex < trimmedFullEventId.length - 1) {
-      const namespacePart = trimmedFullEventId.substring(0, colonIndex).trim();
-      const baseIdPart = trimmedFullEventId.substring(colonIndex + 1).trim();
-      if (namespacePart && baseIdPart) {
-        baseEventId = baseIdPart;
-      }
-    }
+    const baseEventId = extractBaseId(trimmedFullEventId);
 
     if (!baseEventId) {
       const errorMsg = `EventLoader [${modId}]: Could not extract valid base event ID from full ID '${trimmedFullEventId}' in file '${filename}'.`;
@@ -188,20 +178,13 @@ class EventLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `EventLoader [${modId}]: Delegating storage for event (base ID: '${baseEventId}') from ${filename} to base helper.`
     );
-    let didOverride = false; // <<< Initialize override flag
-    try {
-      // Capture the boolean return value from the helper
-      didOverride = this._storeItemInRegistry(
-        typeName,
-        modId,
-        baseEventId,
-        data,
-        filename
-      ); // <<< CAPTURE result
-    } catch (storageError) {
-      // Error logging happens in helper, re-throw
-      throw storageError;
-    }
+    const didOverride = this._storeItemInRegistry(
+      typeName,
+      modId,
+      baseEventId,
+      data,
+      filename
+    );
 
     const finalRegistryKey = `${modId}:${baseEventId}`;
     this._logger.debug(

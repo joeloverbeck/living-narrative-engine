@@ -16,25 +16,11 @@ import { AbstractTurnState } from './abstractTurnState.js';
  * @augments AbstractTurnState_Base
  */
 export class TurnIdleState extends AbstractTurnState {
-  /**
-   * Creates an instance of TurnIdleState.
-   *
-   * @param {BaseTurnHandler} handler - The BaseTurnHandler instance that manages this state.
-   */
-  constructor(handler) {
-    super(handler);
-  }
-
-  /** @override */
-  getStateName() {
-    return 'TurnIdleState';
-  }
-
   /** @override */
   async enterState(handler, previousState) {
     await super.enterState(handler, previousState);
 
-    const logger = handler.getLogger();
+    const logger = this._resolveLogger(null, handler);
     logger.debug(
       `${this.getStateName()}: Ensuring clean state by calling handler._resetTurnStateAndResources().`
     );
@@ -52,7 +38,7 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async startTurn(handler, actorEntity) {
     const turnCtx = this._getTurnContext();
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
 
     const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ENTITY';
     logger.debug(
@@ -127,7 +113,7 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async handleSubmittedCommand(handler, commandString, actorEntity) {
     const turnCtx = this._getTurnContext();
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ENTITY';
     const message = `${this.getStateName()}: Command ('${commandString}') submitted by ${actorIdForLog} but no turn is active (handler is Idle).`;
     logger.warn(message);
@@ -137,7 +123,7 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async handleTurnEndedEvent(handler, payload) {
     const turnCtx = this._getTurnContext();
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const payloadActorId = payload?.entityId ?? 'UNKNOWN_ENTITY';
     const message = `${this.getStateName()}: handleTurnEndedEvent called (for ${payloadActorId}) but no turn is active (handler is Idle).`;
     logger.warn(message);
@@ -147,7 +133,7 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async processCommandResult(handler, actor, cmdProcResult, commandString) {
     const turnCtx = this._getTurnContext();
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const actorIdForLog = actor?.id ?? 'UNKNOWN_ENTITY';
     const message = `${this.getStateName()}: processCommandResult called (for ${actorIdForLog}) but no turn is active.`;
     logger.warn(message);
@@ -162,7 +148,7 @@ export class TurnIdleState extends AbstractTurnState {
   /** @override */
   async handleDirective(handler, actor, directive, cmdProcResult) {
     const turnCtx = this._getTurnContext();
-    const logger = turnCtx ? turnCtx.getLogger() : handler.getLogger();
+    const logger = this._resolveLogger(turnCtx, handler);
     const actorIdForLog = actor?.id ?? 'UNKNOWN_ENTITY';
     const message = `${this.getStateName()}: handleDirective called (for ${actorIdForLog}) but no turn is active.`;
     logger.warn(message);
@@ -171,7 +157,7 @@ export class TurnIdleState extends AbstractTurnState {
 
   /** @override */
   async destroy(handler) {
-    const logger = handler.getLogger();
+    const logger = this._resolveLogger(this._getTurnContext(), handler);
     logger.debug(
       `${this.getStateName()}: BaseTurnHandler is being destroyed while in idle state.`
     );

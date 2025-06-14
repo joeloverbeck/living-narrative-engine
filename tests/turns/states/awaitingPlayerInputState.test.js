@@ -527,10 +527,8 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
           `AwaitingActorDecisionState: handleSubmittedCommand (for actor ${testActor.id}, cmd: "${command}") called, but no ITurnContext. Forcing handler reset.`
         )
       );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `AwaitingActorDecisionState: CRITICAL - No ITurnContext or handler methods to process unexpected command submission or to reset.`
-        )
+      expect(consoleErrorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('CRITICAL - No ITurnContext or handler methods')
       );
 
       awaitingPlayerInputState._handler = originalHandlerRef;

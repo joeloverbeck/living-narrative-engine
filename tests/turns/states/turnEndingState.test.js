@@ -365,14 +365,14 @@ describe('TurnEndingState', () => {
       mockHandler._transitionToState.mockClear();
 
       await turnEndingState.destroy(mockHandler);
-      expect(mockSystemLogger.warn).toHaveBeenCalledWith(
+      expect(mockContextSpecificLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Handler destroyed while in TurnEndingState')
       );
     });
 
     it('should log a warning and call super.destroy()', async () => {
       await turnEndingState.destroy(mockHandler);
-      expect(mockSystemLogger.warn).toHaveBeenCalledWith(
+      expect(mockContextSpecificLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
           `Handler destroyed while in TurnEndingState for actor ${actorId}.`
         )
@@ -389,7 +389,7 @@ describe('TurnEndingState', () => {
 
       await turnEndingState.destroy(mockHandler);
 
-      expect(mockSystemLogger.error).toHaveBeenCalledWith(
+      expect(mockContextSpecificLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Failed forced transition to TurnIdleState during destroy for actor ${actorId}: ${transitionError.message}`
         ),
