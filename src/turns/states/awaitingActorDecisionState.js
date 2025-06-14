@@ -1,5 +1,4 @@
 // src/turns/states/awaitingActorDecisionState.js
-// ****** CORRECTED FILE ******
 
 /**
  * @file Defines the AwaitingActorDecisionState class for the turn-based system.
@@ -111,8 +110,18 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       const payload = {
         actorId: actor.id,
         actorType,
-        ...(extractedData ? { extractedData } : {}),
       };
+
+      // Sanitize the extractedData before adding it to the payload to ensure
+      // it conforms to the event schema (e.g., no nulls for string/array types).
+      if (extractedData) {
+        payload.extractedData = {
+          ...extractedData,
+          thoughts: extractedData.thoughts ?? '',
+          notes: extractedData.notes ?? [],
+        };
+      }
+
       try {
         const dispatcher = turnContext.getSafeEventDispatcher();
         await dispatcher.dispatch(ACTION_DECIDED_ID, payload);
