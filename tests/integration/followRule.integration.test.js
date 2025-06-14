@@ -279,7 +279,7 @@ describe('core_handle_follow rule integration', () => {
     ).toBeNull();
     expect(events).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ eventType: 'core:display_error_message' }),
+        expect.objectContaining({ eventType: 'core:display_error' }),
         expect.objectContaining({
           eventType: 'core:turn_ended',
           payload: expect.objectContaining({ success: false }),

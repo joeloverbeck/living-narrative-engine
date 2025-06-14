@@ -33,7 +33,7 @@
             "type": "DISPATCH_EVENT",
             "comment": "Dispatch a decoupled event to the UI indicating the failure.",
             "parameters": {
-              "eventType": "core:display_error_message",
+              "eventType": "core:display_error",
               "payload": {
                 "message": "You cannot follow {target.name}; this would create a follow cycle (e.g. A follows B, B follows A)."
               }
