@@ -395,6 +395,7 @@ export function registerAI(container) {
       new LLMDecisionProvider({
         llmChooser: c.resolve(tokens.ILLMChooser),
         logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
   logger.debug(

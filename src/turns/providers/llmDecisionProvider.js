@@ -5,6 +5,8 @@
 import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
 import { assertValidActionIndex } from '../../utils/validationUtils.js';
 
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+
 /**
  * @class LLMDecisionProvider
  * @augments ITurnDecisionProvider
@@ -16,14 +18,17 @@ export class LLMDecisionProvider extends ITurnDecisionProvider {
    * @param {{
    *  llmChooser: import('../../turns/ports/ILLMChooser').ILLMChooser,
    *  logger: import('../../interfaces/coreServices').ILogger
+   *  safeEventDispatcher: ISafeEventDispatcher
    * }} deps
    */
-  constructor({ llmChooser, logger }) {
+  constructor({ llmChooser, logger, safeEventDispatcher }) {
     super();
     /** @protected @type {import('../../turns/ports/ILLMChooser').ILLMChooser} */
     this.llmChooser = llmChooser;
     /** @protected @type {import('../../interfaces/coreServices').ILogger} */
     this.logger = logger;
+    /** @protected @type {ISafeEventDispatcher} */
+    this.safeEventDispatcher = safeEventDispatcher;
   }
 
   /**
@@ -48,6 +53,7 @@ export class LLMDecisionProvider extends ITurnDecisionProvider {
       actions.length,
       'LLMDecisionProvider',
       actor.id,
+      this.safeEventDispatcher,
       this.logger,
       { llmResult: { index, speech, thoughts, notes } }
     );

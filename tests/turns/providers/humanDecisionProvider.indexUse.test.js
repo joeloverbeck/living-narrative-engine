@@ -15,6 +15,8 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+const mockDispatcher = { dispatch: jest.fn() };
+
 // Test setup
 describe('HumanDecisionProvider', () => {
   let humanDecisionProvider;
@@ -30,6 +32,7 @@ describe('HumanDecisionProvider', () => {
       promptCoordinator: mockPromptCoordinator,
       actionIndexingService: {}, // Not used in the corrected implementation
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
 
     mockActor = { id: 'player-1' };

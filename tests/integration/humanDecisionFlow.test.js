@@ -76,6 +76,7 @@ describe('Integration – Human decision flow', () => {
         new HumanDecisionProvider({
           promptCoordinator: c.resolve(tokens.IPromptCoordinator),
           logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: { dispatch: jest.fn() },
         })
     );
     r.singletonFactory(

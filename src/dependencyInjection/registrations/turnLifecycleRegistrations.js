@@ -112,6 +112,7 @@ export function registerTurnLifecycle(container) {
       new HumanDecisionProvider({
         promptCoordinator: c.resolve(tokens.IPromptCoordinator),
         logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
 

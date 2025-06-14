@@ -253,6 +253,7 @@ export const tokens = freeze({
   EndTurnHandler: 'EndTurnHandler',
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',
   GetTimestampHandler: 'GetTimestampHandler',
+  GetNameHandler: 'GetNameHandler',
   ResolveDirectionHandler: 'ResolveDirectionHandler',
   RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
   CheckFollowCycleHandler: 'CheckFollowCycleHandler',

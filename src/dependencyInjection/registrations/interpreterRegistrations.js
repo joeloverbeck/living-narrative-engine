@@ -26,6 +26,7 @@ import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler
 import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
 import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
+import GetNameHandler from '../../logic/operationHandlers/getNameHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
 import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler';
@@ -140,6 +141,15 @@ export function registerInterpreters(container) {
       tokens.GetTimestampHandler,
       GetTimestampHandler,
       (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
+    ],
+    [
+      tokens.GetNameHandler,
+      GetNameHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+        }),
     ],
     [
       tokens.ResolveDirectionHandler,
@@ -260,6 +270,7 @@ export function registerInterpreters(container) {
       bind(tokens.SystemMoveEntityHandler)
     );
     registry.register('GET_TIMESTAMP', bind(tokens.GetTimestampHandler));
+    registry.register('GET_NAME', bind(tokens.GetNameHandler));
     registry.register(
       'RESOLVE_DIRECTION',
       bind(tokens.ResolveDirectionHandler)

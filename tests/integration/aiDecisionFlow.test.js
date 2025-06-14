@@ -56,6 +56,7 @@ describe('Integration – AI decision flow', () => {
         new LLMDecisionProvider({
           llmChooser: c.resolve(tokens.ILLMChooser),
           logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: { dispatch: jest.fn() },
         })
     );
     r.singletonFactory(

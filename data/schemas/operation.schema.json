@@ -25,6 +25,7 @@
             "LOG",
             "SET_VARIABLE",
             "GET_TIMESTAMP",
+            "GET_NAME",
             "RESOLVE_DIRECTION",
             "SYSTEM_MOVE_ENTITY",
             "REBUILD_LEADER_LIST_CACHE",
@@ -259,6 +260,19 @@
               "parameters": {
                 "$ref": "#/$defs/GetTimestampParameters"
               }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "GET_NAME" }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameters": { "$ref": "#/$defs/GetNameParameters" }
             },
             "required": ["parameters"]
           }
@@ -610,6 +624,23 @@
         }
       },
       "required": ["result_variable"],
+      "additionalProperties": false
+    },
+    "GetNameParameters": {
+      "type": "object",
+      "properties": {
+        "entity_ref": {
+          "$ref": "./common.schema.json#/definitions/entityReference"
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "default_value": {
+          "type": "string"
+        }
+      },
+      "required": ["entity_ref", "result_variable"],
       "additionalProperties": false
     },
     "ResolveDirectionParameters": {

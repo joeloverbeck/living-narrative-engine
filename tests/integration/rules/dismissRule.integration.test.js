@@ -354,7 +354,7 @@ describe('core_handle_dismiss rule integration', () => {
     });
     const types = events.map((e) => e.eventType);
     expect(types).toEqual(expect.arrayContaining(['core:turn_ended']));
-    expect(types).not.toContain('core:perceptible_event');
-    expect(types).not.toContain('core:display_successful_action_result');
+    expect(types).toContain('core:perceptible_event');
+    expect(types).toContain('core:display_successful_action_result');
   });
 });
