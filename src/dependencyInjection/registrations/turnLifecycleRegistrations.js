@@ -40,12 +40,6 @@ export function registerTurnLifecycle(container) {
   );
   r.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
 
-  // ─── Shared index service + adapter ──────────────────────────
-  r.singletonFactory(
-    tokens.IActionIndexer,
-    (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
-  );
-
   // --- Also ensure the TurnActionChoicePipeline is registered if not already ---
   if (!container.isRegistered(tokens.TurnActionChoicePipeline)) {
     r.singletonFactory(
