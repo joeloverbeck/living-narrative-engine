@@ -53,7 +53,10 @@ describe('Integration – AI decision flow', () => {
     r.transientFactory(
       tokens.ILLMDecisionProvider,
       (c) =>
-        new LLMDecisionProvider({ llmChooser: c.resolve(tokens.ILLMChooser) })
+        new LLMDecisionProvider({
+          llmChooser: c.resolve(tokens.ILLMChooser),
+          logger: c.resolve(tokens.ILogger),
+        })
     );
     r.singletonFactory(
       tokens.ITurnActionFactory,
