@@ -40,10 +40,6 @@ export class TurnEndingState extends AbstractTurnState {
     );
   }
 
-  getStateName() {
-    return 'TurnEndingState';
-  }
-
   /* ────────────────────────────────────────────────────────────────── */
   /** @override */
   async enterState(handler, previousState) {

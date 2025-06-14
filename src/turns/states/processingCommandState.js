@@ -50,11 +50,6 @@ export class ProcessingCommandState extends AbstractTurnState {
     );
   }
 
-  /** @override */
-  getStateName() {
-    return 'ProcessingCommandState';
-  }
-
   /**
    * @override
    * @param {BaseTurnHandler} handler
