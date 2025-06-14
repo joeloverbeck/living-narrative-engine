@@ -41,7 +41,7 @@ beforeEach(() => {
     choicePipeline: {},
     humanDecisionProvider: {},
     turnActionFactory: {},
-     turnStrategyFactory: {
+    turnStrategyFactory: {
       createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
     },
     turnContextBuilder: mockTurnContextBuilder,
