@@ -50,7 +50,10 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.ISaveLoadService)}.`
   );
 
-  r.single(tokens.PlaytimeTracker, PlaytimeTracker, [tokens.ILogger]);
+  r.single(tokens.PlaytimeTracker, PlaytimeTracker, [
+    tokens.ILogger,
+    tokens.ISafeEventDispatcher,
+  ]);
   logger.debug(
     `Persistence Registration: Registered ${String(tokens.PlaytimeTracker)}.`
   );

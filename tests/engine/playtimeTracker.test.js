@@ -9,6 +9,9 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+/** @type {{dispatch: jest.Mock}} */
+let mockDispatcher;
+
 // Helper to fast-forward time in tests
 let nowSpy;
 let currentTime;
@@ -17,6 +20,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   currentTime = 1000000;
   nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => currentTime);
+  mockDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 });
 
 afterEach(() => {
@@ -25,7 +29,10 @@ afterEach(() => {
 
 describe('PlaytimeTracker', () => {
   test('startSession sets start time and logs debug', () => {
-    const tracker = new PlaytimeTracker({ logger: mockLogger });
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
     tracker.startSession();
     expect(tracker._getSessionStartTime()).toBe(currentTime);
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -34,7 +41,10 @@ describe('PlaytimeTracker', () => {
   });
 
   test('startSession warns when called twice', () => {
-    const tracker = new PlaytimeTracker({ logger: mockLogger });
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
     tracker.startSession();
     currentTime += 1000;
     tracker.startSession();
@@ -45,7 +55,10 @@ describe('PlaytimeTracker', () => {
   });
 
   test('endSessionAndAccumulate adds playtime when session active', () => {
-    const tracker = new PlaytimeTracker({ logger: mockLogger });
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
     tracker.startSession();
     currentTime += 5000;
     tracker.endSessionAndAccumulate();
@@ -54,7 +67,10 @@ describe('PlaytimeTracker', () => {
   });
 
   test('endSessionAndAccumulate with no session logs debug', () => {
-    const tracker = new PlaytimeTracker({ logger: mockLogger });
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
     tracker.endSessionAndAccumulate();
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'PlaytimeTracker: endSessionAndAccumulate called but no active session was found.'
@@ -62,7 +78,10 @@ describe('PlaytimeTracker', () => {
   });
 
   test('getTotalPlaytime returns accumulated plus current session duration', () => {
-    const tracker = new PlaytimeTracker({ logger: mockLogger });
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
     tracker._setAccumulatedPlaytimeSeconds(10);
     tracker.startSession();
     currentTime += 3000;
@@ -70,13 +89,19 @@ describe('PlaytimeTracker', () => {
   });
 
   test('setAccumulatedPlaytime validates input', () => {
-    const tracker = new PlaytimeTracker({ logger: mockLogger });
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
     expect(() => tracker.setAccumulatedPlaytime('bad')).toThrow(TypeError);
     expect(() => tracker.setAccumulatedPlaytime(-1)).toThrow(RangeError);
   });
 
   test('reset clears accumulated playtime and session start time', () => {
-    const tracker = new PlaytimeTracker({ logger: mockLogger });
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
     tracker._setAccumulatedPlaytimeSeconds(20);
     tracker.startSession();
     tracker.reset();
