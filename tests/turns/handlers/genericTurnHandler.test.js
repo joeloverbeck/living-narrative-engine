@@ -45,7 +45,7 @@ const mockStrategy = {
 };
 
 const mockTurnStrategyFactory = {
-  createForHuman: jest.fn(() => mockStrategy),
+  create: jest.fn(() => mockStrategy),
 };
 
 const mockTurnContext = {
@@ -138,10 +138,8 @@ describe('GenericTurnHandler', () => {
       await handler.startTurn(mockActor);
 
       // 1. Verify a strategy is created for the actor
-      expect(mockTurnStrategyFactory.createForHuman).toHaveBeenCalledWith(
-        mockActor.id
-      );
-      expect(mockTurnStrategyFactory.createForHuman).toHaveBeenCalledTimes(1);
+      expect(mockTurnStrategyFactory.create).toHaveBeenCalledWith(mockActor.id);
+      expect(mockTurnStrategyFactory.create).toHaveBeenCalledTimes(1);
 
       // 2. Verify the turn context builder was used to create the context
       expect(mockTurnContextBuilder.build).toHaveBeenCalledTimes(1);

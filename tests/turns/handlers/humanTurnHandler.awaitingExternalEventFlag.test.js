@@ -45,7 +45,7 @@ beforeEach(() => {
   mockHumanDecisionProvider = {};
   mockTurnActionFactory = {};
   mockTurnStrategyFactory = {
-    createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
+    create: jest.fn(() => ({ decideAction: jest.fn() })),
   };
   mockTurnContextBuilder = {
     build: jest.fn(({ actor, setAwaitFlag }) => {

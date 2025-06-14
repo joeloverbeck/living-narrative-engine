@@ -78,7 +78,7 @@ describe('TurnContext State Isolation', () => {
     };
 
     mockStrategyFactory = {
-      createForHuman: jest.fn().mockReturnValue({ decideAction: jest.fn() }),
+      create: jest.fn().mockReturnValue({ decideAction: jest.fn() }),
     };
   });
 

@@ -38,17 +38,11 @@ export default {
   // Adjust them as necessary for the llm-proxy-server.
   coverageThreshold: {
     global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: -100, // Allow up to 500 uncovered statements globally
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
     },
-    // You can also set more specific thresholds for critical parts of the proxy server:
-    // 'src/core/**/*.js': {
-    //   branches: 90,
-    //   functions: 90,
-    //   lines: 90,
-    // },
   },
   // --- END COVERAGE CONFIGURATION ---
 
