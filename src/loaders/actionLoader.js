@@ -17,6 +17,7 @@
 
 // --- Base Class Import ---
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Correct path assumed based on sibling loaders
+import { extractBaseId } from '../utils/idUtils.js';
 
 /**
  * Loads action definitions from mods.
@@ -106,27 +107,7 @@ class ActionLoader extends BaseManifestItemLoader {
     const trimmedIdFromFile = idFromFile.trim();
 
     // --- CORRECTED: Refined Base ID Extraction Logic ---
-    const idParts = trimmedIdFromFile.split(':');
-    let baseActionId = null; // Initialize to null
-
-    if (idParts.length === 1) {
-      // Case: "name"
-      const potentialBaseId = idParts[0].trim();
-      if (potentialBaseId) {
-        // Ensure it's not just whitespace
-        baseActionId = potentialBaseId;
-      }
-    } else if (idParts.length > 1) {
-      // Case: "ns:name" or potentially invalid like "ns:" or ":name"
-      const namespacePart = idParts[0].trim();
-      // Join back in case of multiple colons in name part, then trim
-      const namePart = idParts.slice(1).join(':').trim();
-      // BOTH parts must be non-empty after trimming
-      if (namespacePart && namePart) {
-        baseActionId = namePart;
-      }
-      // If either part is empty, baseActionId remains null
-    }
+    const baseActionId = extractBaseId(trimmedIdFromFile);
 
     // Check if baseActionId was successfully extracted (is not null)
     if (!baseActionId) {
@@ -150,20 +131,13 @@ class ActionLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `ActionLoader [${modId}]: Delegating storage for action (base ID: '${baseActionId}') from ${filename} to base helper.`
     );
-    let didOverride = false; // <<< Initialize override flag
-    try {
-      // Capture the boolean return value from the helper
-      didOverride = this._storeItemInRegistry(
-        'actions',
-        modId,
-        baseActionId,
-        data,
-        filename
-      ); // <<< CAPTURE result
-    } catch (storageError) {
-      // Error logging happens in helper, re-throw
-      throw storageError;
-    }
+    const didOverride = this._storeItemInRegistry(
+      'actions',
+      modId,
+      baseActionId,
+      data,
+      filename
+    );
 
     // --- Step 4: Return Value ---
     this._logger.debug(
