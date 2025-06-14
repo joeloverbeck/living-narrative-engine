@@ -133,7 +133,7 @@ describe('TurnContext State Isolation', () => {
     const context1 = mockTurnContextFactory.create.mock.results[0].value;
 
     // Act: Set the "awaiting event" state ON THE CONTEXT ITSELF.
-    context1.setAwaitingExternalEvent(true);
+    context1.setAwaitingExternalEvent(true, aiActor1.id);
 
     // Assert: The state is correctly set on the first context.
     expect(context1.isAwaitingExternalEvent()).toBe(true);

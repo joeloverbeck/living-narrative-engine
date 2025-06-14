@@ -135,9 +135,10 @@ export class ITurnContext {
    * Sets the flag indicating the turn is paused awaiting an external event.
    *
    * @param {boolean} isAwaiting - True if the turn should pause, false otherwise.
+   * @param {string} [actorId] - Actor ID associated with the await flag.
    * @returns {void}
    */
-  setAwaitingExternalEvent(isAwaiting) {
+  setAwaitingExternalEvent(isAwaiting, actorId) {
     throw new Error("Method 'setAwaitingExternalEvent()' must be implemented.");
   }
 

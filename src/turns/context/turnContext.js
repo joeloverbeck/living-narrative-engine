@@ -47,12 +47,26 @@ export class TurnContext extends ITurnContext {
   /** @type {OnEndTurnCallback}   */ #onEndTurnCallback;
   /** @type {BaseTurnHandler}     */ #handlerInstance;
   /** @type {boolean}             */ #isAwaitingExternalEvent = false;
+  /** @type {function():boolean|null} */ #isAwaitingExternalEventProvider;
+  /** @type {function(boolean,string|null):void|null} */
+  #onSetAwaitingExternalEventCallback;
 
   /** @type {ITurnAction|null}    */ #chosenAction = null;
   /** @type {AbortController}     */ #promptAbortController;
   /** @type {{speech:string|null, thoughts:string|null, notes:string[]|null}|null} */
   #decisionMeta = null;
 
+  /**
+   * @param {object} deps
+   * @param {Entity} deps.actor - Actor for this turn.
+   * @param {ILogger} deps.logger - Logger instance.
+   * @param {TurnContextServices} deps.services - Bag of services for the turn.
+   * @param {IActorTurnStrategy} deps.strategy - Strategy determining actor actions.
+   * @param {OnEndTurnCallback} deps.onEndTurnCallback - Callback when the turn ends.
+   * @param {BaseTurnHandler} deps.handlerInstance - Owning handler instance.
+   * @param {function():boolean} [deps.isAwaitingExternalEventProvider] - Optional provider for external waiting flag.
+   * @param {function(boolean,string|null):void} [deps.onSetAwaitingExternalEventCallback] - Optional callback when awaiting flag changes.
+   */
   constructor({
     actor,
     logger,
@@ -60,6 +74,8 @@ export class TurnContext extends ITurnContext {
     strategy,
     onEndTurnCallback,
     handlerInstance,
+    isAwaitingExternalEventProvider = null,
+    onSetAwaitingExternalEventCallback = null,
   }) {
     super();
 
@@ -81,6 +97,9 @@ export class TurnContext extends ITurnContext {
     this.#strategy = strategy;
     this.#onEndTurnCallback = onEndTurnCallback;
     this.#handlerInstance = handlerInstance;
+    this.#isAwaitingExternalEventProvider = isAwaitingExternalEventProvider;
+    this.#onSetAwaitingExternalEventCallback =
+      onSetAwaitingExternalEventCallback;
 
     this.#promptAbortController = new AbortController();
 
@@ -160,11 +179,34 @@ export class TurnContext extends ITurnContext {
   /* ───────────────────── AWAITING-EVENT FLAG MANAGEMENT ────────────────── */
 
   isAwaitingExternalEvent() {
+    try {
+      if (this.#isAwaitingExternalEventProvider) {
+        return this.#isAwaitingExternalEventProvider();
+      }
+    } catch (err) {
+      this.#logger.warn(
+        `TurnContext.isAwaitingExternalEvent: provider error – ${err.message}`,
+        err
+      );
+    }
     return this.#isAwaitingExternalEvent;
   }
 
-  setAwaitingExternalEvent(isAwaiting) {
+  setAwaitingExternalEvent(isAwaiting, actorId = null) {
     this.#isAwaitingExternalEvent = !!isAwaiting;
+    if (this.#onSetAwaitingExternalEventCallback) {
+      try {
+        this.#onSetAwaitingExternalEventCallback(
+          this.#isAwaitingExternalEvent,
+          actorId
+        );
+      } catch (err) {
+        this.#logger.error(
+          `TurnContext.setAwaitingExternalEvent: callback error – ${err.message}`,
+          err
+        );
+      }
+    }
     this.#logger.debug(
       `TurnContext for ${this.#actor.id} awaitingExternalEvent → ${this.#isAwaitingExternalEvent}`
     );
