@@ -13,6 +13,7 @@
 // -----------------------------------------------------------------------------
 
 import { v4 as uuidv4 } from 'uuid';
+import { cloneDeep } from 'lodash';
 import Entity from './entity.js';
 import {
   ACTOR_COMPONENT_ID,
@@ -53,17 +54,6 @@ function validationSucceeded(rawResult) {
   if (rawResult === undefined || rawResult === null) return true;
   if (typeof rawResult === 'boolean') return rawResult;
   return !!rawResult.isValid;
-}
-
-/**
- * Deep clone an arbitrary JSON-compatible object.
- *
- * @private
- * @param {object} obj
- * @returns {object}
- */
-function cloneDeep(obj) {
-  return JSON.parse(JSON.stringify(obj));
 }
 
 /**
