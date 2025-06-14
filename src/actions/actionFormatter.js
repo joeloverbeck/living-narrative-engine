@@ -10,6 +10,7 @@
 // --- Dependency Imports ---
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { safeDispatchError } from '../utils/safeDispatchError.js';
 
 /**
  * Formats a validated action and target into a user-facing command string.
@@ -41,35 +42,36 @@ export function formatActionCommand(
 
   // --- 1. Input Validation ---
   if (!actionDefinition || !actionDefinition.template) {
-    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
-      message:
-        'formatActionCommand: Invalid or missing actionDefinition or template.',
-      details: { actionDefinition },
-    });
+    safeDispatchError(
+      safeEventDispatcher,
+      'formatActionCommand: Invalid or missing actionDefinition or template.',
+      { actionDefinition }
+    );
     return null;
   }
   if (!validatedTargetContext) {
-    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
-      message:
-        'formatActionCommand: Invalid or missing validatedTargetContext.',
-      details: { validatedTargetContext },
-    });
+    safeDispatchError(
+      safeEventDispatcher,
+      'formatActionCommand: Invalid or missing validatedTargetContext.',
+      { validatedTargetContext }
+    );
     return null;
   }
   if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
-      message: 'formatActionCommand: Invalid or missing entityManager.',
-      details: { entityManager },
-    });
+    safeDispatchError(
+      safeEventDispatcher,
+      'formatActionCommand: Invalid or missing entityManager.',
+      { entityManager }
+    );
     throw new Error(
       'formatActionCommand requires a valid EntityManager instance.'
     );
   }
   if (typeof getEntityDisplayName !== 'function') {
-    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
-      message:
-        'formatActionCommand: getEntityDisplayName utility function is not available.',
-    });
+    safeDispatchError(
+      safeEventDispatcher,
+      'formatActionCommand: getEntityDisplayName utility function is not available.'
+    );
     throw new Error(
       'formatActionCommand requires the getEntityDisplayName utility function.'
     );
@@ -160,10 +162,11 @@ export function formatActionCommand(
         break;
     }
   } catch (error) {
-    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
-      message: `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
-      details: { error: error.message, stack: error.stack },
-    });
+    safeDispatchError(
+      safeEventDispatcher,
+      `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
+      { error: error.message, stack: error.stack }
+    );
     return null; // Return null on processing error
   }
 

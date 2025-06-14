@@ -361,8 +361,11 @@ Quick reference for and, or, and not/!, including edge-cases and examples.
 **Full JSON Logic Usage Guide ➜ docs/json-logic/json-logic-usage.md**  
 Complete operator list, context explanation, and many ready-made patterns.
 
-**Mod Manifest Loader Usage ➜ docs/mods/modManifestLoader.md**  
+**Mod Manifest Loader Usage ➜ docs/mods/modManifestLoader.md**
 How to use the ModManifestLoader service and handle potential errors.
+
+**Display Error Event Payload ➜ docs/events/display_error_payload.md**
+Overview of the payload structure emitted when dispatching `core:display_error` events.
 
 ### License
 

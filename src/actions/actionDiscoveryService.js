@@ -18,6 +18,7 @@ import { getAvailableExits } from '../utils/locationUtils.js';
 import { createPrefixedLogger } from '../utils/loggerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
+import { safeDispatchError } from '../utils/safeDispatchError.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 export class ActionDiscoveryService extends IActionDiscoveryService {
@@ -250,6 +251,11 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         this.#logger.error(
           `Error processing action ${actionDef.id} for actor ${actorEntity.id}:`,
           err
+        );
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
+          { error: err.message }
         );
       }
     }
