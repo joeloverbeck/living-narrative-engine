@@ -1,7 +1,9 @@
 // src/actions/validation/prerequisiteEvaluationService.js
 
-import { validateDependency } from '../../utils/validationUtils.js';
-import { createPrefixedLogger } from '../../utils/loggerUtils.js';
+import {
+  initLogger,
+  validateServiceDeps,
+} from '../../utils/serviceInitializer.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -46,18 +48,12 @@ export class PrerequisiteEvaluationService {
     actionValidationContextBuilder,
   }) {
     try {
-      validateDependency(
-        logger,
-        'PrerequisiteEvaluationService: logger',
-        console,
-        {
-          requiredMethods: ['debug', 'error', 'warn', 'info'],
-        }
-      );
-      this.#logger = createPrefixedLogger(
-        logger,
-        'PrerequisiteEvaluationService: '
-      );
+      this.#logger = initLogger('PrerequisiteEvaluationService', logger, [
+        'debug',
+        'error',
+        'warn',
+        'info',
+      ]);
     } catch (e) {
       const errorMsg = `PrerequisiteEvaluationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       // eslint-disable-next-line no-console
@@ -66,22 +62,16 @@ export class PrerequisiteEvaluationService {
     }
 
     try {
-      validateDependency(
-        jsonLogicEvaluationService,
-        'PrerequisiteEvaluationService: jsonLogicEvaluationService',
-        this.#logger,
-        {
+      validateServiceDeps('PrerequisiteEvaluationService', this.#logger, {
+        jsonLogicEvaluationService: {
+          value: jsonLogicEvaluationService,
           requiredMethods: ['evaluate'],
-        }
-      );
-      validateDependency(
-        actionValidationContextBuilder,
-        'PrerequisiteEvaluationService: actionValidationContextBuilder',
-        this.#logger,
-        {
+        },
+        actionValidationContextBuilder: {
+          value: actionValidationContextBuilder,
           requiredMethods: ['buildContext'],
-        }
-      );
+        },
+      });
     } catch (e) {
       this.#logger.error(
         `PrerequisiteEvaluationService Constructor: Dependency validation failed. Error: ${e.message}`
