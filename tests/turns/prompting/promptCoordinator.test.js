@@ -151,7 +151,7 @@ describe('PromptCoordinator Integration Test', () => {
     capturedEventHandler({
       payload: {
         submittedByActorId: actor.id,
-        index: chosenIndex,
+        chosenIndex: chosenIndex,
         speech: chosenSpeech,
       },
     });

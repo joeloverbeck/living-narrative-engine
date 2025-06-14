@@ -11,7 +11,7 @@
         "description": "The instance ID of the actor who submitted this turn.",
         "minLength": 1
       },
-      "chosenActionId": {
+      "chosenIndex": {
         "type": "integer",
         "description": "The 1-based index of the action composite chosen by the player from the available list.",
         "minimum": 1
@@ -21,7 +21,7 @@
         "description": "The text from the speech input field, or null if not provided."
       }
     },
-    "required": ["submittedByActorId", "chosenActionId", "speech"],
+    "required": ["submittedByActorId", "chosenIndex", "speech"],
     "additionalProperties": false
   }
 }

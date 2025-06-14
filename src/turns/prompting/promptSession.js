@@ -112,8 +112,8 @@ export class PromptSession {
   }
 
   /**
-   * Handles `core:player_turn_submitted` events.
-   * Expects `{ index: number, speech?, thoughts?, notes? }` in payload.
+   * Handles PLAYER_TURN_SUBMITTED_ID events.
+   * Expects `{ chosenIndex: number, speech?, thoughts?, notes? }` in payload.
    * Resolves the integer to an action composite via ActionIndexingService.
    *
    * @private
@@ -123,14 +123,14 @@ export class PromptSession {
     if (this.#resolved) return;
 
     const {
-      index,
+      chosenIndex,
       speech = null,
       thoughts = null,
       notes = null,
       submittedByActorId = null,
     } = event?.payload ?? {};
 
-    if (!Number.isInteger(index)) {
+    if (!Number.isInteger(chosenIndex)) {
       this.#settle(
         'reject',
         new PromptError(
@@ -156,12 +156,15 @@ export class PromptSession {
 
     let composite;
     try {
-      composite = this.#actionIndexingService.resolve(this.#actorId, index);
+      composite = this.#actionIndexingService.resolve(
+        this.#actorId,
+        chosenIndex
+      );
     } catch (err) {
       this.#settle(
         'reject',
         new PromptError(
-          `Submitted index ${index} is not valid for actor ${this.#actorId}.`,
+          `Submitted index ${chosenIndex} is not valid for actor ${this.#actorId}.`,
           err,
           'INVALID_INDEX'
         )

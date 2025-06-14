@@ -258,7 +258,7 @@ describe('ActionButtonsRenderer', () => {
       expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
       expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
         submittedByActorId: MOCK_ACTOR_ID,
-        chosenActionId: actionToSubmit.index,
+        chosenIndex: actionToSubmit.index,
         speech: 'Player says this',
       });
 
@@ -286,7 +286,7 @@ describe('ActionButtonsRenderer', () => {
 
       expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
         submittedByActorId: MOCK_ACTOR_ID,
-        chosenActionId: actionToSubmit.index,
+        chosenIndex: actionToSubmit.index,
         speech: null,
       });
       expect(commandInputElement.value).toBe('');
@@ -300,7 +300,7 @@ describe('ActionButtonsRenderer', () => {
 
       expect(mockVed.dispatch).toHaveBeenCalledWith(PLAYER_TURN_SUBMITTED_ID, {
         submittedByActorId: MOCK_ACTOR_ID,
-        chosenActionId: actionToSubmit.index,
+        chosenIndex: actionToSubmit.index,
         speech: null,
       });
 

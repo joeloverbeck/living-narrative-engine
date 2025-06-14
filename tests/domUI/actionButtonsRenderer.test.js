@@ -33,7 +33,6 @@ describe('ActionButtonsRenderer', () => {
   let commandInputElement;
 
   const CLASS_PREFIX = '[ActionButtonsRenderer]';
-  const PLAYER_TURN_SUBMITTED_EVENT = 'core:player_turn_submitted';
   const UPDATE_ACTIONS_EVENT_TYPE = 'core:update_available_actions';
 
   // Selectors used in the tests and SUT defaults

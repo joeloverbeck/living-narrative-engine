@@ -15,6 +15,7 @@ import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
+import { PLAYER_TURN_SUBMITTED_ID } from '../../src/constants/eventIds';
 
 // Mock dependencies
 jest.mock('../../src/logging/consoleLogger.js');
@@ -33,7 +34,6 @@ describe('ActionButtonsRenderer', () => {
   let commandInputElement;
 
   const CLASS_PREFIX = '[ActionButtonsRenderer]';
-  const PLAYER_TURN_SUBMITTED_EVENT = 'core:player_turn_submitted';
   const UPDATE_ACTIONS_EVENT_TYPE = 'core:update_available_actions';
 
   // Selectors used in the tests and SUT defaults
@@ -425,15 +425,15 @@ describe('ActionButtonsRenderer', () => {
       await mockSendButton.click(); // Click the main send button (from global setup)
 
       expect(mockVed.dispatch).toHaveBeenCalledWith(
-        PLAYER_TURN_SUBMITTED_EVENT,
+        PLAYER_TURN_SUBMITTED_ID,
         expect.objectContaining({
           submittedByActorId: testActorId,
-          chosenActionId: action.index,
+          chosenIndex: action.index,
         })
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_EVENT}' for action index '${action.index}'.`
+          `${CLASS_PREFIX} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action index '${action.index}'.`
         ),
         expect.objectContaining({ payload: expect.anything() })
       );
@@ -476,15 +476,15 @@ describe('ActionButtonsRenderer', () => {
       await mockSendButton.click(); // Click the main send button
 
       expect(mockVed.dispatch).toHaveBeenCalledWith(
-        PLAYER_TURN_SUBMITTED_EVENT,
+        PLAYER_TURN_SUBMITTED_ID,
         expect.objectContaining({
           submittedByActorId: testActorId,
-          chosenActionId: action.index,
+          chosenIndex: action.index,
         })
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `${CLASS_PREFIX} Exception during dispatch for '${PLAYER_TURN_SUBMITTED_EVENT}'.`
+          `${CLASS_PREFIX} Exception during dispatch for '${PLAYER_TURN_SUBMITTED_ID}'.`
         ),
         expect.objectContaining({
           error: testError,

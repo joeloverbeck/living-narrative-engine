@@ -4,7 +4,7 @@ import eventDefSchema from '../../data/schemas/event-definition.schema.json';
 import eventFile from '../../data/mods/core/events/player_turn_submitted.event.json';
 import { describe, beforeAll, test, expect } from '@jest/globals';
 
-describe('core:player_turn_submitted schema', () => {
+describe('PLAYER_TURN_SUBMITTED_ID schema', () => {
   let ajv;
   let validateDef;
 
@@ -31,7 +31,7 @@ describe('core:player_turn_submitted schema', () => {
       expect(
         validatePayload({
           submittedByActorId: 'actor-123',
-          chosenActionId: 2,
+          chosenIndex: 2,
           speech: 'Let’s do this!',
         })
       ).toBe(true);
@@ -41,7 +41,7 @@ describe('core:player_turn_submitted schema', () => {
       expect(
         validatePayload({
           submittedByActorId: 'actor-123',
-          chosenActionId: 2,
+          chosenIndex: 2,
         })
       ).toBe(false);
     });
@@ -50,17 +50,17 @@ describe('core:player_turn_submitted schema', () => {
       expect(
         validatePayload({
           submittedByActorId: '',
-          chosenActionId: 1,
+          chosenIndex: 1,
           speech: null,
         })
       ).toBe(false);
     });
 
-    test('rejects chosenActionId ≤ 0', () => {
+    test('rejects chosenIndex ≤ 0', () => {
       expect(
         validatePayload({
           submittedByActorId: 'actor-123',
-          chosenActionId: 0,
+          chosenIndex: 0,
           speech: null,
         })
       ).toBe(false);
@@ -70,7 +70,7 @@ describe('core:player_turn_submitted schema', () => {
       expect(
         validatePayload({
           submittedByActorId: 'actor-123',
-          chosenActionId: 1,
+          chosenIndex: 1,
           speech: null,
           extra: 'not allowed',
         })

@@ -46,11 +46,11 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  */
 
 /**
- * Payload for core:player_turn_submitted.
+ * Payload for PLAYER_TURN_SUBMITTED_ID.
  *
  * @typedef {object} CorePlayerTurnSubmittedPayload
  * @property {string} submittedByActorId - The instance ID of the actor who submitted this turn.
- * @property {number} chosenActionId - The 1-based index of the chosen action composite.
+ * @property {number} chosenIndex - The 1-based index of the chosen action composite.
  * @property {string | null} speech - The text from the speech input field, or null if empty.
  */
 
@@ -482,7 +482,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
 
     const eventPayload = {
       submittedByActorId: this.#currentActorId,
-      chosenActionId: index,
+      chosenIndex: index,
       speech: speechText || null,
     };
 

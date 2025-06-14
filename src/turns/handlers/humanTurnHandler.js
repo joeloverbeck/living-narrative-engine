@@ -31,6 +31,7 @@ class HumanTurnHandler extends BaseTurnHandler {
 
   /** @type {boolean} */ #isAwaitingTurnEndEvent = false;
   /** @type {string|null} */ #awaitingTurnEndForActorId = null;
+  // eslint-disable-next-line no-unused-private-class-members
   /** @type {boolean} */ #isTerminatingNormally = false;
 
   /**
@@ -100,6 +101,14 @@ class HumanTurnHandler extends BaseTurnHandler {
     this._logger.debug(
       `${this.constructor.name} initialised. Dependencies assigned. Initial state set.`
     );
+  }
+
+  /**
+   * @override
+   * @returns {ITurnEndPort}
+   */
+  getTurnEndPort() {
+    return this.#turnEndPort;
   }
 
   /**
@@ -265,7 +274,7 @@ class HumanTurnHandler extends BaseTurnHandler {
           new Error('Actor mismatch in handleSubmittedCommand')
         );
       } else {
-        this._handleTurnEnd(
+        await this._handleTurnEnd(
           actorEntity.id,
           new Error('No context in handleSubmittedCommand')
         );

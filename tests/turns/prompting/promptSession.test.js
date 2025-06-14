@@ -106,7 +106,7 @@ describe('PromptSession', () => {
         type: PLAYER_TURN_SUBMITTED_ID,
         payload: {
           submittedByActorId: actorId,
-          index: 1,
+          chosenIndex: 1,
           speech: 'For glory!',
         },
       });
@@ -149,7 +149,7 @@ describe('PromptSession', () => {
 
       mockEventBus.subscribe.mock.calls[0][1]({
         type: PLAYER_TURN_SUBMITTED_ID,
-        payload: { submittedByActorId: 'other', index: 1 },
+        payload: { submittedByActorId: 'other', chosenIndex: 1 },
       });
 
       const err = await done;
@@ -166,7 +166,7 @@ describe('PromptSession', () => {
 
       mockEventBus.subscribe.mock.calls[0][1]({
         type: PLAYER_TURN_SUBMITTED_ID,
-        payload: { submittedByActorId: actorId, index: 99 },
+        payload: { submittedByActorId: actorId, chosenIndex: 99 },
       });
 
       const err = await done;
@@ -295,7 +295,7 @@ describe('PromptSession', () => {
 
       mockEventBus.subscribe.mock.calls[0][1]({
         type: PLAYER_TURN_SUBMITTED_ID,
-        payload: { submittedByActorId: actorId, index: 1 },
+        payload: { submittedByActorId: actorId, chosenIndex: 1 },
       });
 
       await p; // resolved
