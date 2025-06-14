@@ -4,24 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing thoughts and notes tooltips.">
-      <change afterPath="$PROJECT_DIR$/src/domUI/helpers/buildSpeechMeta.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/domUI/icons.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/domUI/helpers/buildSpeechMeta.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/events/entity_spoke.event.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/events/entity_spoke.event.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/entity_speech.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/speechBubbleRenderer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/actorTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/actorTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/aiTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/aiTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/humanTurnHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/config/containerConfig.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/containerConfig.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/domUI/speechBubbleRenderer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/speechBubbleRenderer.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/playerTurnHandler.fixes.test.js" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing thoughts and notes tooltips." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -194,15 +177,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="21625000" />
-    </task>
-    <task id="LOCAL-00033" summary="Trying to return the app to normality.">
-      <option name="closed" value="true" />
-      <created>1749887668731</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1749887668731</updated>
+      <workItem from="1749913762946" duration="21950000" />
     </task>
     <task id="LOCAL-00034" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -588,7 +563,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749934451627</updated>
     </task>
-    <option name="localTasksCounter" value="82" />
+    <task id="LOCAL-00082" summary="Implementing thoughts and notes tooltips.">
+      <option name="closed" value="true" />
+      <created>1749936383188</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1749936383188</updated>
+    </task>
+    <option name="localTasksCounter" value="83" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

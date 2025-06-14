@@ -36,7 +36,6 @@ describe('registerEventBusAdapters', () => {
   beforeEach(() => {
     container = new AppContainer();
 
-
     // Register the logger, which is a common dependency for the registration module itself
     container.register(tokens.ILogger, () => mockLogger);
   });
