@@ -3,9 +3,11 @@
  */
 
 import jsonLogic from 'json-logic-js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 
 /**
@@ -21,23 +23,26 @@ import jsonLogic from 'json-logic-js';
 class MathHandler {
   /** @type {ILogger} */
   #logger;
-  /** @type {JsonLogicEvaluationService} */
-  #jsonLogicEvaluationService;
+  /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #dispatcher;
 
   /**
    * @param {object} deps
    * @param {ILogger} deps.logger - Logging service.
-   * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService - Service providing json-logic configuration.
+   * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for error events.
    */
-  constructor({ logger, jsonLogicEvaluationService }) {
+  constructor({ logger, safeEventDispatcher }) {
     if (!logger || typeof logger.warn !== 'function') {
       throw new Error('MathHandler requires a valid ILogger instance.');
     }
-    if (!jsonLogicEvaluationService) {
-      throw new Error('MathHandler requires JsonLogicEvaluationService.');
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error('MathHandler requires ISafeEventDispatcher.');
     }
     this.#logger = logger;
-    this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
+    this.#dispatcher = safeEventDispatcher;
   }
 
   /**
@@ -76,12 +81,20 @@ class MathHandler {
         executionContext.evaluationContext.context[result_variable.trim()] =
           finalNumber;
       } else {
-        log.error(
-          'MATH: evaluationContext.context not available to store result.'
-        );
+        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message:
+            'MATH: evaluationContext.context not available to store result.',
+          details: {
+            result_variable: result_variable.trim(),
+            value: finalNumber,
+          },
+        });
       }
     } catch (e) {
-      log.error('MATH: Failed to store result_variable.', e);
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'MATH: Failed to store result_variable.',
+        details: { error: e.message, stack: e.stack },
+      });
     }
   }
 
@@ -153,7 +166,10 @@ class MathHandler {
           const num = Number(raw);
           return Number.isNaN(num) ? NaN : num;
         } catch (e) {
-          this.#logger.error('MATH: Error resolving variable operand.', e);
+          this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+            message: 'MATH: Error resolving variable operand.',
+            details: { error: e.message, stack: e.stack },
+          });
           return NaN;
         }
       }
