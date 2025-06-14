@@ -5,6 +5,7 @@
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // --- Type-hints (for editors only) ------------------------------------------
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -25,6 +26,9 @@ const mockLogger = {
   error: jest.fn(),
   debug: jest.fn(),
 };
+
+/** @type {{ dispatch: jest.Mock }} */
+let dispatcher;
 
 // -----------------------------------------------------------------------------
 //  Helper – ExecutionContext factory
@@ -72,9 +76,11 @@ describe('ModifyComponentHandler', () => {
     mockEntityManager.addComponent.mockReturnValue(true);
     // Clear any specific mock implementations for getComponentData from previous tests
     mockEntityManager.getComponentData.mockReset();
+    dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     handler = new ModifyComponentHandler({
       entityManager: mockEntityManager,
       logger: mockLogger,
+      safeEventDispatcher: dispatcher,
     });
   });
 
@@ -97,6 +103,13 @@ describe('ModifyComponentHandler', () => {
     expect(
       () => new ModifyComponentHandler({ entityManager: mockEntityManager })
     ).toThrow(/ILogger/);
+    expect(
+      () =>
+        new ModifyComponentHandler({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+        })
+    ).toThrow(/ISafeEventDispatcher/);
   });
 
   // ---------------------------------------------------------------------------
@@ -374,9 +387,11 @@ describe('ModifyComponentHandler', () => {
       'core:stats',
       { stats: { hp: 25 } }
     );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error during EntityManager.addComponent'),
-      expect.objectContaining({ error: testError })
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        details: expect.objectContaining({ error: testError.message }),
+      })
     );
   });
 });

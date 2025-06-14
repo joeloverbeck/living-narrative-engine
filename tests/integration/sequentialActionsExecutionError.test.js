@@ -124,7 +124,11 @@ describe('Sequential Action Execution – Error Path', () => {
     opRegistry.register('FAILING_ACTION', failingHandlerMock);
 
     // MODIFY_COMPONENT — real handler wrapped to spy (should never be hit)
-    const realMod = new ModifyComponentHandler({ entityManager, logger });
+    const realMod = new ModifyComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
+    });
     skippedModifyHandlerMock = jest.fn((p, ctx) =>
       realMod.execute(
         p,

@@ -157,7 +157,11 @@ function init(entities) {
       worldContext,
       logger,
     }),
-    MODIFY_COMPONENT: new ModifyComponentHandler({ entityManager, logger }),
+    MODIFY_COMPONENT: new ModifyComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
+    }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
   };
 
