@@ -37,8 +37,8 @@ const mockAiStrategy = {
   decideAction: jest.fn(),
 };
 
-const mockAIPlayerStrategyFactory = {
-  create: jest.fn(() => mockAiStrategy),
+const mockStrategyFactory = {
+  createForHuman: jest.fn(() => mockAiStrategy),
 };
 
 const mockTurnContext = {
@@ -46,8 +46,8 @@ const mockTurnContext = {
   // Add other methods if they are called by the handler directly.
 };
 
-const mockTurnContextFactory = {
-  create: jest.fn(() => mockTurnContext),
+const mockTurnContextBuilder = {
+  build: jest.fn(() => mockTurnContext),
 };
 
 const mockActor = { id: 'ai-actor-1', name: 'Test AI' };
@@ -58,8 +58,8 @@ describe('AITurnHandler', () => {
     logger: mockLogger,
     turnStateFactory: mockTurnStateFactory,
     turnEndPort: mockTurnEndPort,
-    aiPlayerStrategyFactory: mockAIPlayerStrategyFactory,
-    turnContextFactory: mockTurnContextFactory,
+    strategyFactory: mockStrategyFactory,
+    turnContextBuilder: mockTurnContextBuilder,
   };
 
   beforeEach(() => {
@@ -90,21 +90,21 @@ describe('AITurnHandler', () => {
     it('should throw an error if the turnEndPort dependency is missing', () => {
       const deps = { ...dependencies, turnEndPort: undefined };
       expect(() => new AITurnHandler(deps)).toThrow(
-        'AITurnHandler: Invalid ITurnEndPort'
+        'GenericTurnHandler: turnEndPort is required'
       );
     });
 
-    it('should throw an error if the aiPlayerStrategyFactory is missing', () => {
-      const deps = { ...dependencies, aiPlayerStrategyFactory: undefined };
+    it('should throw an error if the strategyFactory is missing', () => {
+      const deps = { ...dependencies, strategyFactory: undefined };
       expect(() => new AITurnHandler(deps)).toThrow(
-        'AITurnHandler: Invalid IAIPlayerStrategyFactory'
+        'GenericTurnHandler: strategyFactory is required'
       );
     });
 
-    it('should throw an error if the turnContextFactory is missing', () => {
-      const deps = { ...dependencies, turnContextFactory: undefined };
+    it('should throw an error if the turnContextBuilder is missing', () => {
+      const deps = { ...dependencies, turnContextBuilder: undefined };
       expect(() => new AITurnHandler(deps)).toThrow(
-        'AITurnHandler: Invalid ITurnContextFactory'
+        'GenericTurnHandler: turnContextBuilder is required'
       );
     });
 
@@ -129,25 +129,26 @@ describe('AITurnHandler', () => {
       await expect(handler.startTurn({})).rejects.toThrow(expectedError);
     });
 
-    it('should call aiPlayerStrategyFactory.create to get a strategy', async () => {
+    it('should call strategyFactory.createForHuman to get a strategy', async () => {
       // Act
       await handler.startTurn(mockActor);
 
       // Assert
-      expect(mockAIPlayerStrategyFactory.create).toHaveBeenCalledTimes(1);
+      expect(mockStrategyFactory.createForHuman).toHaveBeenCalledTimes(1);
     });
 
-    it('should call turnContextFactory.create with the correct parameters', async () => {
+    it('should call turnContextBuilder.build with the correct parameters', async () => {
       // Act
       await handler.startTurn(mockActor);
 
       // Assert
-      expect(mockTurnContextFactory.create).toHaveBeenCalledTimes(1);
-      expect(mockTurnContextFactory.create).toHaveBeenCalledWith({
+      expect(mockTurnContextBuilder.build).toHaveBeenCalledTimes(1);
+      expect(mockTurnContextBuilder.build).toHaveBeenCalledWith({
         actor: mockActor,
         strategy: mockAiStrategy,
-        onEndTurnCallback: expect.any(Function),
-        handlerInstance: handler,
+        onEndTurn: expect.any(Function),
+        awaitFlagProvider: expect.any(Function),
+        setAwaitFlag: expect.any(Function),
       });
     });
 
