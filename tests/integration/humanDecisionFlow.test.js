@@ -27,11 +27,6 @@ describe('Integration – Human decision flow', () => {
       warn: jest.fn(),
       error: jest.fn(),
     };
-    const discoverySvc = {
-      getValidActions: jest
-        .fn()
-        .mockResolvedValue([{ id: 'core:wait', command: 'Wait', params: {} }]),
-    };
     const composite = {
       index: 1,
       id: 'core:wait',
@@ -40,32 +35,21 @@ describe('Integration – Human decision flow', () => {
       params: {},
       description: 'Wait',
     };
-    const actionIndexingService = {
-      indexActions: jest.fn().mockReturnValue([composite]),
-      resolve: jest.fn().mockReturnValue(composite),
-      beginTurn: jest.fn(),
-    };
+    const provider = { get: jest.fn().mockResolvedValue([composite]) };
     const promptCoordinator = {
       prompt: jest.fn().mockResolvedValue({ chosenIndex: 1, speech: 'Wait' }),
     };
 
     // Register all the mock instances
     r.instance(tokens.ILogger, logger);
-    r.instance(tokens.IActionDiscoveryService, discoverySvc);
-    r.instance(tokens.ActionIndexingService, actionIndexingService);
+    r.instance(tokens.IAvailableActionsProvider, provider);
     r.instance(tokens.IPromptCoordinator, promptCoordinator);
-
-    r.singletonFactory(
-      tokens.IActionIndexer,
-      (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
-    );
 
     r.singletonFactory(
       tokens.TurnActionChoicePipeline,
       (c) =>
         new TurnActionChoicePipeline({
-          discoverySvc: c.resolve(tokens.IActionDiscoveryService),
-          indexer: c.resolve(tokens.IActionIndexer),
+          availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
           logger: c.resolve(tokens.ILogger),
         })
     );
@@ -96,13 +80,7 @@ describe('Integration – Human decision flow', () => {
     const result = await strategy.decideAction(context);
 
     // Assertions
-    expect(discoverySvc.getValidActions).toHaveBeenCalledWith(actor, context);
-
-    // The ActionIndexerAdapter swaps arguments, so the mock for ActionIndexingService
-    // receives actorId first.
-    expect(actionIndexingService.indexActions).toHaveBeenCalledWith(actor.id, [
-      { id: 'core:wait', command: 'Wait', params: {} },
-    ]);
+    expect(provider.get).toHaveBeenCalledWith(actor, context, logger);
 
     // ─── PRIMARY FIX IS HERE ───
     // The HumanDecisionProvider now passes the indexed actions (composites)

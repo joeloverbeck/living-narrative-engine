@@ -299,6 +299,7 @@ export function registerAI(container) {
     (c) =>
       new AvailableActionsProvider({
         actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
+        actionIndexingService: c.resolve(tokens.ActionIndexingService),
         entityManager: c.resolve(tokens.IEntityManager),
       })
   );
@@ -358,8 +359,7 @@ export function registerAI(container) {
     tokens.TurnActionChoicePipeline,
     (c) =>
       new TurnActionChoicePipeline({
-        discoverySvc: c.resolve(tokens.IActionDiscoveryService),
-        indexer: c.resolve(tokens.IActionIndexer),
+        availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
         logger: c.resolve(tokens.ILogger),
       })
   );
