@@ -344,46 +344,62 @@ class HumanTurnHandler extends BaseTurnHandler {
     );
   }
 
+  /**
+   * @private
+   * @throws {Error} If the current state is null or cannot handle a turn ended event.
+   */
+  _ensureStateCanHandleTurnEndEvent() {
+    if (
+      !this._currentState ||
+      typeof this._currentState.handleTurnEndedEvent !== 'function'
+    ) {
+      throw new Error(
+        `Current state ${this._currentState?.getStateName()} cannot handle turn ended event.`
+      );
+    }
+  }
+
   async handleTurnEndedEvent(payload) {
     this._assertHandlerActive();
     const currentContext = this.getTurnContext();
     const eventPayload = payload?.payload;
 
+    // Path A: No active turn. This is a recoverable state, often due to a late-arriving event
+    // after a turn has already concluded for other reasons.
     if (!currentContext) {
-      this._logger.error(
-        `${this.constructor.name}: handleTurnEndedEvent called but no ITurnContext is active. Payload actor: ${eventPayload?.entityId}`
+      this._logger.warn(
+        `${this.constructor.name}: handleTurnEndedEvent received without an active turn context. This is usually a safe, recoverable condition. Event for entity: ${
+          eventPayload?.entityId ?? 'N/A'
+        }`
       );
+      // The await flag must be reset. This event might be what we were waiting for,
+      // even if the turn ended via another mechanism in the meantime.
+      this._clearTurnEndWaitingMechanismsInternal();
+
+      // Even without a context, the current state (e.g., Idle) might need to react.
       if (
         this._currentState &&
         typeof this._currentState.handleTurnEndedEvent === 'function'
       ) {
         await this._currentState.handleTurnEndedEvent(this, eventPayload);
-      } else {
-        this._logger.error(
-          `${this.constructor.name}: No current state or state cannot handle turn ended event during no-context scenario.`
-        );
       }
-      // Ensure any lingering awaiting flags are cleared when no context exists
-      this._clearTurnEndWaitingMechanismsInternal();
       return;
     }
 
-    if (
-      !this._currentState ||
-      typeof this._currentState.handleTurnEndedEvent !== 'function'
-    ) {
+    // Path B: An active turn exists. Delegate handling to the current state.
+    try {
+      this._ensureStateCanHandleTurnEndEvent();
+      await this._currentState.handleTurnEndedEvent(this, eventPayload);
+    } catch (error) {
       this._logger.error(
-        `${this.constructor.name}: handleTurnEndedEvent called, but current state ${this._currentState?.getStateName()} cannot handle it.`
+        `${this.constructor.name}: Error while delegating 'handleTurnEndedEvent' to state '${this._currentState?.getStateName()}': ${
+          error.message
+        }`,
+        { error }
       );
-      await currentContext.endTurn(
-        new Error(
-          `Current state ${this._currentState?.getStateName()} cannot handle turn ended event.`
-        )
-      );
-      return;
+      // A failure at this stage is a fatal error for the turn.
+      await currentContext.endTurn(error);
     }
-
-    await this._currentState.handleTurnEndedEvent(this, eventPayload);
   }
 }
 
