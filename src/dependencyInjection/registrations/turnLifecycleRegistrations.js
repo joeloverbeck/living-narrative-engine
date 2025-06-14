@@ -13,7 +13,6 @@ import ActionContextBuilder from '../../turns/prompting/actionContextBuilder.js'
 import ValidatedEventDispatcherAdapter from '../../turns/prompting/validatedEventDispatcherAdapter.js';
 import { ConcreteTurnContextFactory } from '../../turns/factories/concreteTurnContextFactory.js';
 import { ConcreteTurnStateFactory } from '../../turns/factories/concreteTurnStateFactory.js';
-import { ActionIndexingService } from '../../turns/services/actionIndexingService.js';
 
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
@@ -41,24 +40,11 @@ export function registerTurnLifecycle(container) {
   );
   r.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
 
-  // ---------- guarantee ActionIndexingService ----------
-  if (
-    !container.isRegistered ||
-    !container.isRegistered(tokens.ActionIndexingService)
-  ) {
-    r.singletonFactory(
-      tokens.ActionIndexingService,
-      (c) => new ActionIndexingService(c.resolve(tokens.ILogger))
-    );
-  }
-
-  /*  NEW – expose an IActionIndexer for the player path                */
-  if (!container.isRegistered(tokens.IActionIndexer)) {
-    r.singletonFactory(
-      tokens.IActionIndexer,
-      (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
-    );
-  }
+  // ─── Shared index service + adapter ──────────────────────────
+  r.singletonFactory(
+    tokens.IActionIndexer,
+    (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
+  );
 
   // --- Also ensure the TurnActionChoicePipeline is registered if not already ---
   if (!container.isRegistered(tokens.TurnActionChoicePipeline)) {
@@ -114,11 +100,12 @@ export function registerTurnLifecycle(container) {
     (c) =>
       new PromptCoordinator({
         logger: c.resolve(tokens.ILogger),
-        actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
         promptOutputPort: c.resolve(tokens.IPromptOutputPort),
-        actionContextBuilder: c.resolve(tokens.ActionContextBuilder),
         actionIndexingService: c.resolve(tokens.ActionIndexingService),
         playerTurnEvents: c.resolve(tokens.IPlayerTurnEvents),
+        // FIX: Provide the missing dependencies.
+        actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
+        actionContextBuilder: c.resolve(tokens.ActionContextBuilder),
       })
   );
   logger.debug(
@@ -130,7 +117,6 @@ export function registerTurnLifecycle(container) {
     (c) =>
       new HumanDecisionProvider({
         promptCoordinator: c.resolve(tokens.IPromptCoordinator),
-        actionIndexingService: c.resolve(tokens.ActionIndexingService),
         logger: c.resolve(tokens.ILogger),
       })
   );
@@ -154,7 +140,9 @@ export function registerTurnLifecycle(container) {
       })
   );
   logger.debug(
-    `Turn Lifecycle Registration: Registered HumanTurnHandler with new strategy deps tagged ${SHUTDOWNABLE.join(', ')}.`
+    `Turn Lifecycle Registration: Registered HumanTurnHandler with new strategy deps tagged ${SHUTDOWNABLE.join(
+      ', '
+    )}.`
   );
 
   // ────────────────── Resolver & manager ──────────────────
@@ -193,7 +181,9 @@ export function registerTurnLifecycle(container) {
       })
   );
   logger.debug(
-    `Turn Lifecycle Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`
+    `Turn Lifecycle Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(
+      ', '
+    )}.`
   );
 
   // ─────────────── ITurnContext façade (read-only) ───────────────

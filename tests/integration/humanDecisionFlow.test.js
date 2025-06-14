@@ -1,5 +1,4 @@
 // tests/integration/humanDecisionFlow.test.js
-// ****** CORRECTED FILE ******
 
 import { describe, it, expect, jest } from '@jest/globals';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
@@ -75,7 +74,6 @@ describe('Integration – Human decision flow', () => {
       (c) =>
         new HumanDecisionProvider({
           promptCoordinator: c.resolve(tokens.IPromptCoordinator),
-          actionIndexingService: c.resolve(tokens.ActionIndexingService),
           logger: c.resolve(tokens.ILogger),
         })
     );
@@ -99,17 +97,20 @@ describe('Integration – Human decision flow', () => {
     // Assertions
     expect(discoverySvc.getValidActions).toHaveBeenCalledWith(actor, context);
 
-    // ─── PRIMARY FIX IS HERE ───
-    // The arguments in the assertion were swapped. The `ActionIndexingService.indexActions`
-    // method signature is `(actorId, actions)`, and the test must reflect that.
-    expect(actionIndexingService.indexActions).toHaveBeenCalledWith(
-      actor.id, // Argument 1: actorId
-      [{ id: 'core:wait', command: 'Wait', params: {} }] // Argument 2: actions array
-    );
+    // The ActionIndexerAdapter swaps arguments, so the mock for ActionIndexingService
+    // receives actorId first.
+    expect(actionIndexingService.indexActions).toHaveBeenCalledWith(actor.id, [
+      { id: 'core:wait', command: 'Wait', params: {} },
+    ]);
 
+    // ─── PRIMARY FIX IS HERE ───
+    // The HumanDecisionProvider now passes the indexed actions (composites)
+    // to the prompt coordinator. The test must expect this new argument.
     expect(promptCoordinator.prompt).toHaveBeenCalledWith(actor, {
+      indexedComposites: [composite], // Expect the indexed actions
       cancellationSignal: null,
     });
+
     // The final result should be correctly formed
     expect(result).toEqual({
       kind: 'success',

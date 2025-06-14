@@ -1,6 +1,6 @@
 // src/turns/services/humanDecisionProvider.test.js
 
-import { jest, describe, beforeEach, expect } from '@jest/globals';
+import { jest, describe, beforeEach, expect, test } from '@jest/globals';
 import { HumanDecisionProvider } from '../../../src/turns/providers/humanDecisionProvider.js';
 import { ITurnDecisionProvider } from '../../../src/turns/interfaces/ITurnDecisionProvider.js';
 
@@ -19,8 +19,11 @@ const mockLogger = {
 // Mock data
 const mockActor = { id: 'player1' };
 const mockContext = {}; // Not used by the corrected implementation
+// FIX: The mockActions array must not be empty for the index validation to pass.
 const mockActions = [
-  /* Not used directly, but represents the list the index refers to */
+  { actionId: 'action1', commandString: 'go north', index: 1 },
+  { actionId: 'action2', commandString: 'take cup', index: 2 },
+  { actionId: 'action3', commandString: 'look', index: 3 },
 ];
 const mockAbortSignal = new AbortController().signal;
 
@@ -36,13 +39,13 @@ describe('HumanDecisionProvider', () => {
     });
   });
 
-  it('should be an instance of ITurnDecisionProvider', () => {
+  test('should be an instance of ITurnDecisionProvider', () => {
     expect(decisionProvider).toBeInstanceOf(ITurnDecisionProvider);
   });
 
   // --- SUCCESS PATHS ---
 
-  it('should return a valid decision result when the prompt resolves with an index and speech', async () => {
+  test('should return a valid decision result when the prompt resolves with an index and speech', async () => {
     // Arrange: Mock the prompt coordinator to return a successful result
     const promptResult = {
       chosenIndex: 2,
@@ -62,6 +65,7 @@ describe('HumanDecisionProvider', () => {
 
     // Assert: Check that the prompt coordinator was called correctly
     expect(mockPromptCoordinator.prompt).toHaveBeenCalledWith(mockActor, {
+      indexedComposites: mockActions, // Ensure it's passed through
       cancellationSignal: mockAbortSignal,
     });
     expect(mockPromptCoordinator.prompt).toHaveBeenCalledTimes(1);
@@ -75,7 +79,7 @@ describe('HumanDecisionProvider', () => {
     });
   });
 
-  it('should return a valid decision with null for missing optional fields', async () => {
+  test('should return a valid decision with null for missing optional fields', async () => {
     // Arrange: Mock a prompt result with only the required index
     const promptResult = { chosenIndex: 1 };
     mockPromptCoordinator.prompt.mockResolvedValue(promptResult);
@@ -98,7 +102,7 @@ describe('HumanDecisionProvider', () => {
 
   // --- FAILURE PATHS & EDGE CASES ---
 
-  it('should throw an error if the prompt result does not include an integer index', async () => {
+  test('should throw an error if the prompt result does not include an integer index', async () => {
     // Arrange: Mock various invalid prompt results
     const invalidResults = [
       { chosenIndex: null },
@@ -127,7 +131,20 @@ describe('HumanDecisionProvider', () => {
     }
   });
 
-  it('should propagate errors from the promptCoordinator', async () => {
+  test('should throw an error if the index is out of bounds', async () => {
+    const outOfBoundsResults = [{ chosenIndex: 0 }, { chosenIndex: 4 }];
+
+    for (const result of outOfBoundsResults) {
+      mockPromptCoordinator.prompt.mockResolvedValue(result);
+      await expect(
+        decisionProvider.decide(mockActor, mockContext, mockActions)
+      ).rejects.toThrow(
+        'Player chose an index that does not exist for this turn.'
+      );
+    }
+  });
+
+  test('should propagate errors from the promptCoordinator', async () => {
     // Arrange: Mock the prompt coordinator to reject the promise
     const promptError = new Error('Prompt failed!');
     mockPromptCoordinator.prompt.mockRejectedValue(promptError);

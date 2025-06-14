@@ -15,9 +15,10 @@ import { validateDependency } from '../../utils/validationUtils.js';
 /**
  * @typedef {object} PlayerPromptResolution
  * @property {import('../services/humanPlayerPromptService.js').DiscoveredActionInfo} action
+ * @property {number} chosenIndex
  * @property {string|null} speech
  * @property {string|null} thoughts - Optional thoughts from the player.
- * @property {string[]|null} notes - Optional notes from the player.
+ * @property {string[]|null} notes  - Optional notes from the player.
  */
 
 /**
@@ -30,6 +31,7 @@ export class PromptSession {
   #abortSignal;
   #logger;
   #actionIndexingService;
+
   #resolved = false;
   #promise = null;
   #resolveCb = null;
@@ -65,6 +67,7 @@ export class PromptSession {
     if (!actorId || typeof actorId !== 'string') {
       throw new Error('PromptSession: actorId must be a non-empty string.');
     }
+
     this.#actorId = actorId;
     this.#eventBus = eventBus;
     this.#logger = logger;
@@ -77,8 +80,8 @@ export class PromptSession {
   /**
    * Fully cleans up listeners and schedules the final promise settlement.
    *
-   * @param kind
-   * @param value
+   * @param {'resolve'|'reject'} kind
+   * @param {*} value
    */
   #settle(kind, value) {
     if (this.#resolved) return;
@@ -96,7 +99,7 @@ export class PromptSession {
       this.#onAbort = null;
     }
 
-    // macrotask – gives callers one full turn to add handlers
+    // macrotask – gives callers a full tick to attach handlers
     const defer =
       typeof setImmediate === 'function'
         ? setImmediate // Node
@@ -111,7 +114,6 @@ export class PromptSession {
   /**
    * Handles PLAYER_TURN_SUBMITTED_ID events.
    * Expects `{ chosenIndex: number, speech?, thoughts?, notes? }` in payload.
-   * Resolves the integer to an action composite via ActionIndexingService.
    *
    * @private
    * @param {*} event
@@ -127,6 +129,7 @@ export class PromptSession {
       submittedByActorId = null,
     } = event?.payload ?? {};
 
+    // Validate index
     if (!Number.isInteger(chosenIndex)) {
       this.#settle(
         'reject',
@@ -139,6 +142,7 @@ export class PromptSession {
       return;
     }
 
+    // Ensure event is for the correct actor
     if (submittedByActorId && submittedByActorId !== this.#actorId) {
       this.#settle(
         'reject',
@@ -151,6 +155,7 @@ export class PromptSession {
       return;
     }
 
+    // Resolve the index to an action composite
     let composite;
     try {
       composite = this.#actionIndexingService.resolve(
@@ -169,6 +174,18 @@ export class PromptSession {
       return;
     }
 
+    if (!composite) {
+      this.#settle(
+        'reject',
+        new PromptError(
+          `Submitted index ${chosenIndex} does not map to any action for actor ${this.#actorId}.`,
+          null,
+          'INVALID_INDEX'
+        )
+      );
+      return;
+    }
+
     const selectedAction = {
       id: composite.actionId,
       name: composite.description || composite.actionId,
@@ -177,11 +194,10 @@ export class PromptSession {
       params: composite.params,
     };
 
-    // ****** CORRECTED LINE ******
-    // Ensure the original chosenIndex is passed along in the resolved object.
+    // ─── Final resolution ───
     this.#settle('resolve', {
-      chosenIndex, // This was the missing piece of the puzzle
       action: selectedAction,
+      chosenIndex, // ← **key addition – tests rely on this**
       speech,
       thoughts,
       notes,
@@ -196,9 +212,10 @@ export class PromptSession {
     );
   };
 
-  // ─────────────────── Public API ───────────────────
+  /* ─────────────── Public API ─────────────── */
+
   /**
-   * Starts listening for the submitted-turn event.
+   * Starts listening for the PLAYER_TURN_SUBMITTED_ID event.
    *
    * @returns {Promise<PlayerPromptResolution>}
    */
@@ -209,6 +226,7 @@ export class PromptSession {
       this.#resolveCb = resolve;
       this.#rejectCb = reject;
 
+      // Handle pre-aborted signals immediately
       if (this.#abortSignal?.aborted) {
         this.#handleAbort();
         return;
@@ -243,17 +261,20 @@ export class PromptSession {
   /**
    * Imperatively cancels the prompt.
    *
-   * @param reason
+   * @param {*} [reason]
    */
   cancel(reason) {
     if (this.#resolved) return;
-    const err =
+    this.#settle(
+      'reject',
       reason ??
-      new PromptError(
-        'Prompt cancelled externally',
-        { actorId: this.#actorId },
-        'PROMPT_CANCELLED'
-      );
-    this.#settle('reject', err);
+        new PromptError(
+          'Prompt cancelled externally',
+          { actorId: this.#actorId },
+          'PROMPT_CANCELLED'
+        )
+    );
   }
 }
+
+export default PromptSession;

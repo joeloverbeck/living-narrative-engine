@@ -1,5 +1,3 @@
-// src/turns/services/humanDecisionProvider.js
-
 /**
  * @file Provides a human decision provider mapping prompt outputs to the
  * ITurnDecisionProvider interface.
@@ -47,28 +45,36 @@ export class HumanDecisionProvider extends ITurnDecisionProvider {
    * @returns {Promise<import('../interfaces/ITurnDecisionProvider').ITurnDecisionResult>}
    */
   async decide(actor, context, actions, abortSignal) {
-    // 1. Prompt the user for their decision. The prompt system handles showing
-    //    the available actions and resolving input to a specific choice.
+    // Hand the *already-indexed* list to the prompt system
     const promptRes = await this.promptCoordinator.prompt(actor, {
+      indexedComposites: actions,
       cancellationSignal: abortSignal,
     });
 
-    // 2. The prompt result (`promptRes`) should contain `chosenIndex`, which is the
-    //    1-based index corresponding to the `actions` array.
     const { chosenIndex, speech, thoughts, notes } = promptRes;
 
-    // 3. Validate that we received a valid integer index. If not, something has
-    //    gone wrong in the prompting pipeline.
+    // FIX: Split validation into two separate checks to provide more accurate error messages.
+
+    // 1. First, validate that we received a proper integer index.
     if (!Number.isInteger(chosenIndex)) {
       this.logger.error(
-        `HumanDecisionProvider: Did not receive a valid integer 'chosenIndex' from the prompt system for actor ${actor.id}.`,
+        `HumanDecisionProvider: Did not receive a valid integer 'chosenIndex' for actor ${actor.id}.`,
         { promptResult: promptRes }
       );
       throw new Error('Could not resolve the chosen action to a valid index.');
     }
 
-    // 4. Return the standardized decision result. The calling strategy will use
-    //    `chosenIndex` to select the correct action from its `actions` array.
+    // 2. Second, validate that the integer is within the bounds of the available actions.
+    if (chosenIndex < 1 || chosenIndex > actions.length) {
+      this.logger.error(
+        `HumanDecisionProvider: invalid chosenIndex (${chosenIndex}) for actor ${actor.id}.`,
+        { promptRes, actionsCount: actions.length }
+      );
+      throw new Error(
+        'Player chose an index that does not exist for this turn.'
+      );
+    }
+
     return {
       chosenIndex,
       speech: speech ?? null,

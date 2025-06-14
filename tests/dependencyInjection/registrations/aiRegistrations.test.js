@@ -1,7 +1,7 @@
 /* eslint-env jest */
 /**
  * @file Tests for AI-related service registrations.
- * @see src/dependencyInjection/registrations/aiRegistrations.js
+ * @see tests/dependencyInjection/registrations/aiRegistrations.test.js
  */
 
 // --- Test Subject ---
@@ -86,9 +86,12 @@ describe('registerAI', () => {
     container.register(tokens.IValidatedEventDispatcher, {
       dispatch: jest.fn(),
     });
-    container.register(tokens.IConfigurationProvider, {});
     container.register(tokens.IActionDiscoveryService, {});
     container.register(tokens.IEntityManager, {});
+    // FIX: The ActionIndexerAdapter constructor requires a service with an `indexActions` method.
+    container.register(tokens.ActionIndexingService, {
+      indexActions: jest.fn(),
+    });
 
     // Final Fix: The initial state object must have a `startTurn` method to be considered valid.
     const mockInitialState = {
@@ -128,6 +131,11 @@ describe('registerAI', () => {
       fallbackContainer.register(tokens.ILogger, plainLogger);
       fallbackContainer.register(tokens.IValidatedEventDispatcher, {
         dispatch: jest.fn(),
+      });
+      // FIX: The fallback container also needs the ActionIndexingService mock
+      // with the `indexActions` method.
+      fallbackContainer.register(tokens.ActionIndexingService, {
+        indexActions: jest.fn(),
       });
 
       registerAI(fallbackContainer);

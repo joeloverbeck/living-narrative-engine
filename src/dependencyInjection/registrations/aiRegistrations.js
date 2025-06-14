@@ -1,4 +1,5 @@
 // src/dependencyInjection/registrations/aiRegistrations.js
+
 /* eslint-env node */
 /**
  * @file Registers all AI-related services, including the LLM adapter, prompting pipeline, and the AITurnHandler.
@@ -99,7 +100,6 @@ import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
 import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
 // --- ADDED IMPORT ---
 import { ConcreteAIPlayerStrategyFactory } from '../../turns/factories/concreteAIPlayerStrategyFactory.js';
-import { ActionIndexingService } from '../../turns/services/actionIndexingService';
 import { AIDecisionOrchestrator } from '../../turns/orchestration/aiDecisionOrchestrator';
 import { TurnActionFactory } from '../../turns/factories/turnActionFactory';
 import { LLMChooser } from '../../turns/adapters/llmChooser';
@@ -323,20 +323,13 @@ export function registerAI(container) {
     (c) => new AIFallbackActionFactory({ logger: c.resolve(tokens.ILogger) })
   );
 
+  // ─── Indexer (shared singleton) ──────────────────────────────
+  // FIX: Use a proper factory function for lazy instantiation.
+  // The service is resolved via `c.resolve` when the factory is executed, not during registration.
   r.singletonFactory(
-    tokens.ActionIndexingService,
-    (c) => new ActionIndexingService(c.resolve(tokens.ILogger))
+    tokens.IActionIndexer,
+    (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
   );
-  logger.debug(
-    `AI Systems Registration: Registered ${tokens.ActionIndexingService}.`
-  );
-
-  if (!container.isRegistered(tokens.IActionIndexer)) {
-    r.singletonFactory(
-      tokens.IActionIndexer,
-      (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
-    );
-  }
 
   r.singletonFactory(
     tokens.TurnActionChoicePipeline,

@@ -3,7 +3,6 @@
  * @see src/turns/prompting/promptCoordinator.js
  */
 
-import { PromptError } from '../../errors/promptError.js';
 import { PromptSession } from './promptSession.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
@@ -95,107 +94,64 @@ class PromptCoordinator extends IPromptCoordinator {
    * @param {AbortSignal} [options.cancellationSignal]
    * @returns {Promise<PlayerPromptResolution>}
    */
-  async prompt(actor, { cancellationSignal } = {}) {
+  /**
+   * Presents the already-indexed choices to the player and resolves their selection.
+   *
+   * @param {Entity} actor
+   * @param {object}  options
+   * @param {ActionComposite[]} options.indexedComposites   // <-- REQUIRED now
+   * @param {AbortSignal}       [options.cancellationSignal]
+   * @returns {Promise<PlayerPromptResolution>}
+   */
+  async prompt(actor, { indexedComposites, cancellationSignal } = {}) {
+    if (!Array.isArray(indexedComposites) || indexedComposites.length === 0) {
+      throw new Error(
+        'PromptCoordinator.prompt: indexedComposites array is required and cannot be empty.'
+      );
+    }
     if (cancellationSignal?.aborted) {
       throw new DOMException('Prompt operation was aborted.', 'AbortError');
     }
 
-    if (this.#activeSession) {
-      this.#logger.warn('A new prompt is superseding an existing one.');
-      this.#activeSession.cancel(
-        new PromptError(
-          `Prompt for actor ${actor.id} superseded the previous prompt.`,
-          null,
-          'PROMPT_SUPERSEDED'
-        )
-      );
-    }
+    // ─── Register the list with the shared ActionIndexingService ───
+    // If another part of the system already registered it, this is a no-op.
+    this.#actionIndexingService.indexActions(
+      actor.id,
+      indexedComposites.map((c) => ({
+        id: c.actionId,
+        command: c.commandString,
+        params: c.params,
+        description: c.description,
+      }))
+    );
 
-    // ─────────────────── Discover & Index ───────────────────
-    let discoveredActions;
-    let indexedComposites;
-    try {
-      this.#logger.debug(`Building context for actor ${actor.id}…`);
-      const ctx = await this.#actionContextBuilder.buildContext(actor);
+    // ─── Send the choices to the UI ───
+    const actionsForPrompt = indexedComposites.map((c) => ({
+      index: c.index,
+      actionId: c.actionId,
+      commandString: c.commandString,
+      params: c.params,
+      description: c.description,
+    }));
+    await this.#promptOutputPort.prompt(actor.id, actionsForPrompt);
 
-      this.#logger.debug(`Discovering actions for actor ${actor.id}…`);
-      discoveredActions = await this.#actionDiscoveryService.getValidActions(
-        actor,
-        ctx
-      );
-
-      // **NEW:** 1-based indexing (dedup, cap, O(1) resolve)
-      indexedComposites = this.#actionIndexingService.indexActions(
-        actor.id,
-        discoveredActions
-      );
-
-      this.#logger.debug(
-        `Displaying ${indexedComposites.length} indexed choices to actor ${actor.id}.`
-      );
-
-      // ───── Transform composites back to the prompt schema ─────
-      // The prompt output port expects objects shaped according to the
-      // PLAYER_TURN_PROMPT event schema ({ index, actionId, commandString,
-      // params, description }). Previously this code forwarded the
-      // ActionComposite objects directly, which use different property names
-      // (actionId → id, commandString → command). That mismatch meant prompts
-      // failed schema validation. We now map the composites back to the
-      // expected property names.
-      const actionsForPrompt = indexedComposites.map((comp) => ({
-        index: comp.index,
-        actionId: comp.actionId,
-        commandString: comp.commandString,
-        params: comp.params,
-        description: comp.description,
-      }));
-
-      await this.#promptOutputPort.prompt(actor.id, actionsForPrompt);
-    } catch (err) {
-      if (
-        err instanceof PromptError &&
-        err.code === 'ACTION_DISCOVERY_FAILED'
-      ) {
-        this.#logger.error(
-          `Action discovery failed for actor ${actor.id}. Surfacing error via output port.`,
-          err
-        );
-        try {
-          await this.#promptOutputPort.prompt(actor.id, [], err);
-        } catch (portError) {
-          this.#logger.error(
-            'Failed to send discovery error to promptOutputPort',
-            portError
-          );
-        }
-      }
-      throw err;
-    }
-
-    // ─────────────────── Create Session ───────────────────
+    // ─── Spawn the session ───
     const session = new PromptSession({
       actorId: actor.id,
       eventBus: this.#playerTurnEvents,
       logger: this.#logger,
       abortSignal: cancellationSignal,
-      actionIndexingService: this.#actionIndexingService,
+      actionIndexingService: this.#actionIndexingService, // <— same singleton
     });
     this.#activeSession = session;
 
-    this.#logger.debug(`Prompt session created for actor ${actor.id}.`);
-
-    const sessionPromise = session.run();
-
-    sessionPromise.finally(() => {
-      if (this.#activeSession === session) {
-        this.#activeSession = null;
-        this.#logger.debug(
-          `Active session for actor ${actor.id} has ended and been cleared.`
-        );
-      }
-    });
-
-    return sessionPromise;
+    const p = session.run();
+    p.finally(
+      () =>
+        (this.#activeSession =
+          this.#activeSession === session ? null : this.#activeSession)
+    );
+    return p;
   }
 
   /** Cancels the currently active prompt, if any. */

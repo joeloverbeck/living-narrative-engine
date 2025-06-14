@@ -9,6 +9,7 @@ import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js';
 import { SafeEventDispatcher } from '../../events/safeEventDispatcher.js';
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
+import { ActionIndexingService } from '../../turns/services/actionIndexingService';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -40,6 +41,15 @@ export function registerInfrastructure(container) {
   const log = container.resolve(tokens.ILogger);
 
   log.debug('Infrastructure Registration: starting…');
+
+  // ─── Shared ActionIndexingService ─────────────────────────────
+  r.singletonFactory(
+    tokens.ActionIndexingService,
+    (c) => new ActionIndexingService(c.resolve(tokens.ILogger))
+  );
+  log.debug(
+    `Infrastructure Registration: Registered ${tokens.ActionIndexingService}.`
+  );
 
   r.single(tokens.EventBus, EventBus);
   log.debug(`Infrastructure Registration: Registered ${tokens.EventBus}.`);

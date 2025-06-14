@@ -1,4 +1,5 @@
 // tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js
+
 import {
   describe,
   test,
@@ -44,8 +45,8 @@ describe('registerTurnLifecycle', () => {
     mockCommandInput,
     mockAiTurnHandler,
     mockActionIndexer,
-    mockTurnActionFactory;
-  mockActionIndexer, mockTurnActionFactory;
+    mockTurnActionFactory,
+    mockActionIndexingService;
 
   beforeEach(() => {
     container = new AppContainer();
@@ -65,6 +66,12 @@ describe('registerTurnLifecycle', () => {
     mockCommandOutcome = mock();
     mockCommandInput = mock();
     mockAiTurnHandler = mock();
+
+    mockActionIndexingService = {
+      indexActions: jest.fn(),
+      getIndexedList: jest.fn(),
+      resolve: jest.fn(),
+    };
 
     // register the bare‐minimum dependencies
     container.register(tokens.ILogger, () => mockLogger);
@@ -91,6 +98,13 @@ describe('registerTurnLifecycle', () => {
     mockAiTurnHandler = mock();
     container.register(tokens.AITurnHandler, () => mockAiTurnHandler);
 
+    // Register the new mock for the service.
+    // This is needed by IActionIndexer and IPromptCoordinator.
+    container.register(
+      tokens.ActionIndexingService,
+      () => mockActionIndexingService
+    );
+
     // register action indexing interface for TurnActionChoicePipeline
     mockActionIndexer = mock();
     container.register(tokens.IActionIndexer, () => mockActionIndexer);
@@ -113,13 +127,17 @@ describe('registerTurnLifecycle', () => {
       'Turn Lifecycle Registration: Registered Turn services and factories.'
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered ${tokens.HumanTurnHandler} with new strategy deps tagged ${SHUTDOWNABLE.join(', ')}.`
+      `Turn Lifecycle Registration: Registered HumanTurnHandler with new strategy deps tagged ${SHUTDOWNABLE.join(
+        ', '
+      )}.`
     );
     expect(calls).toContain(
       `Turn Lifecycle Registration: Registered ${tokens.TurnHandlerResolver} with singleton resolution.`
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(', ')}.`
+      `Turn Lifecycle Registration: Registered ${tokens.ITurnManager} tagged ${INITIALIZABLE.join(
+        ', '
+      )}.`
     );
     expect(calls).toContain(
       `Turn Lifecycle Registration: Registered transient factory for ${tokens.ITurnContext}.`
