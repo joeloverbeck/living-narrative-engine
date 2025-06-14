@@ -4,14 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normal.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/actionIndexingService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/actionIndexingService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/guardrailIndexOverflow.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/guardrailIndexOverflow.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/adapters/actionIndexerAdapter.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/adapters/actionIndexerAdapter.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/actionIndexingService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/actionIndexingService.test.js" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normal." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -175,7 +168,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="24606000" />
+      <workItem from="1749876741387" duration="24907000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -537,7 +530,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749900398857</updated>
     </task>
-    <option name="localTasksCounter" value="46" />
+    <task id="LOCAL-00046" summary="Trying to return the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749902249197</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1749902249197</updated>
+    </task>
+    <option name="localTasksCounter" value="47" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
