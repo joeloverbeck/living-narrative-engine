@@ -9,6 +9,7 @@
 /** @typedef {import('./actionFormatter.js').formatActionCommand} formatActionCommandFn */
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
@@ -23,6 +24,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #formatActionCommandFn;
   #getEntityIdsForScopesFn;
   #logger;
+  #safeEventDispatcher;
 
   /**
    * @param {object} deps
@@ -32,6 +34,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ILogger}            deps.logger
    * @param {formatActionCommandFn} deps.formatActionCommandFn
    * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
+   * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    */
   constructor({
     gameDataRepository,
@@ -40,6 +43,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     logger,
     formatActionCommandFn,
     getEntityIdsForScopesFn,
+    safeEventDispatcher,
   }) {
     super();
     validateDependency(logger, 'ActionDiscoveryService: logger', console, {
@@ -77,12 +81,19 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       this.#logger,
       { isFunction: true }
     );
+    validateDependency(
+      safeEventDispatcher,
+      'ActionDiscoveryService: safeEventDispatcher',
+      this.#logger,
+      { requiredMethods: ['dispatch'] }
+    );
 
     this.#gameDataRepository = gameDataRepository;
     this.#entityManager = entityManager;
     this.#actionValidationService = actionValidationService;
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
+    this.#safeEventDispatcher = safeEventDispatcher;
 
     this.#logger.debug('ActionDiscoveryService initialised.');
   }
@@ -142,7 +153,11 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
               actionDef,
               targetCtx,
               this.#entityManager,
-              { logger: this.#logger, debug: true }
+              {
+                logger: this.#logger,
+                debug: true,
+                safeEventDispatcher: this.#safeEventDispatcher,
+              }
             );
             if (cmd !== null) {
               validActions.push({
@@ -187,7 +202,11 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                 actionDef,
                 targetCtx,
                 this.#entityManager,
-                { logger: this.#logger, debug: true }
+                {
+                  logger: this.#logger,
+                  debug: true,
+                  safeEventDispatcher: this.#safeEventDispatcher,
+                }
               );
               if (cmd !== null) {
                 validActions.push({
@@ -218,7 +237,11 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                 actionDef,
                 targetCtx,
                 this.#entityManager,
-                { logger: this.#logger, debug: true }
+                {
+                  logger: this.#logger,
+                  debug: true,
+                  safeEventDispatcher: this.#safeEventDispatcher,
+                }
               );
               if (cmd !== null) {
                 validActions.push({

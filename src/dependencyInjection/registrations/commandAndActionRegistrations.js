@@ -57,6 +57,7 @@ export function registerCommandAndAction(container) {
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
   logger.debug(

@@ -5,9 +5,11 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 // --- Dependency Imports ---
 import { getEntityDisplayName } from '../utils/entityUtils.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 
 /**
  * Formats a validated action and target into a user-facing command string.
@@ -18,6 +20,7 @@ import { getEntityDisplayName } from '../utils/entityUtils.js';
  * @param {object} [options] - Optional parameters.
  * @param {boolean} [options.debug] - If true, logs additional debug information.
  * @param {ILogger} [options.logger] - Logger instance used for diagnostic output. Defaults to console.
+ * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
  * @returns {string | null} The formatted command string, or null if inputs are invalid.
  * @throws {Error} If critical dependencies (entityManager, getEntityDisplayName) are missing or invalid during processing.
  */
@@ -27,37 +30,46 @@ export function formatActionCommand(
   entityManager,
   options = {}
 ) {
-  const { debug = false, logger = console } = options;
+  const { debug = false, logger = console, safeEventDispatcher } = options;
+
+  if (
+    !safeEventDispatcher ||
+    typeof safeEventDispatcher.dispatch !== 'function'
+  ) {
+    throw new Error('formatActionCommand requires ISafeEventDispatcher');
+  }
 
   // --- 1. Input Validation ---
   if (!actionDefinition || !actionDefinition.template) {
-    logger.error(
-      'formatActionCommand: Invalid or missing actionDefinition or template.',
-      { actionDefinition }
-    );
+    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      message:
+        'formatActionCommand: Invalid or missing actionDefinition or template.',
+      details: { actionDefinition },
+    });
     return null;
   }
   if (!validatedTargetContext) {
-    logger.error(
-      'formatActionCommand: Invalid or missing validatedTargetContext.',
-      { validatedTargetContext }
-    );
+    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      message:
+        'formatActionCommand: Invalid or missing validatedTargetContext.',
+      details: { validatedTargetContext },
+    });
     return null;
   }
   if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-    logger.error('formatActionCommand: Invalid or missing entityManager.', {
-      entityManager,
+    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      message: 'formatActionCommand: Invalid or missing entityManager.',
+      details: { entityManager },
     });
-    // This is a critical dependency, throw an error or return null based on desired strictness
     throw new Error(
       'formatActionCommand requires a valid EntityManager instance.'
     );
   }
   if (typeof getEntityDisplayName !== 'function') {
-    logger.error(
-      'formatActionCommand: getEntityDisplayName utility function is not available.'
-    );
-    // This is a critical dependency
+    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      message:
+        'formatActionCommand: getEntityDisplayName utility function is not available.',
+    });
     throw new Error(
       'formatActionCommand requires the getEntityDisplayName utility function.'
     );
@@ -148,10 +160,10 @@ export function formatActionCommand(
         break;
     }
   } catch (error) {
-    logger.error(
-      `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
-      error
-    );
+    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      message: `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
+      details: { error: error.message, stack: error.stack },
+    });
     return null; // Return null on processing error
   }
 

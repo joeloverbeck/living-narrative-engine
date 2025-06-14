@@ -47,6 +47,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let mockGetEntityIdsForScopesFn;
   let mockGetAvailableExits;
   let availableExits;
+  let mockSafeEventDispatcher;
 
   const HERO_DEFINITION_ID = 'isekai:hero';
   const GUILD_DEFINITION_ID = 'isekai:adventurers_guild';
@@ -98,6 +99,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     mockFormatActionCommandFn = formatActionCommandFn;
     mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
     mockGetAvailableExits = getAvailableExits;
+    mockSafeEventDispatcher = { dispatch: jest.fn() };
 
     mockHeroEntity = new Entity(HERO_INSTANCE_ID, HERO_DEFINITION_ID);
     Object.entries(heroEntityDefinitionData.components).forEach(
@@ -209,6 +211,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
+      safeEventDispatcher: mockSafeEventDispatcher,
     });
   });
 

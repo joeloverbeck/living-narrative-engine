@@ -54,6 +54,8 @@ describe('ActionDiscoveryService – directional discovery', () => {
 
   const getEntityIdsForScopesFn = () => [];
 
+  const safeEventDispatcher = { dispatch: jest.fn() };
+
   const service = new ActionDiscoveryService({
     gameDataRepository,
     entityManager,
@@ -61,6 +63,7 @@ describe('ActionDiscoveryService – directional discovery', () => {
     logger,
     formatActionCommandFn,
     getEntityIdsForScopesFn,
+    safeEventDispatcher,
   });
 
   /** Bare-bones actor / context objects */
