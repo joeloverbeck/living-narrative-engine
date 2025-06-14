@@ -148,11 +148,10 @@ describe('PromptCoordinator Integration Test', () => {
     const indexedComposites = indexerStub.indexActions.mock.results[0].value;
     const expectedActionsForPrompt = indexedComposites.map((comp) => ({
       index: comp.index,
-      id: comp.actionId,
-      name: comp.description,
-      command: comp.commandString,
-      description: comp.description,
+      actionId: comp.actionId,
+      commandString: comp.commandString,
       params: comp.params,
+      description: comp.description,
     }));
 
     expect(promptOutputPort.prompt).toHaveBeenCalledWith(
