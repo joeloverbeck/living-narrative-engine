@@ -14,7 +14,6 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-import { TurnIdleState } from './turnIdleState.js';
 import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
 import { processCommandInternal } from './helpers/processCommandInternal.js';
 import { getServiceFromContext } from './helpers/getServiceFromContext.js';
