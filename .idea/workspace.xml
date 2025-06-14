@@ -5,9 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Unified human and AI paths regarding decision-making.">
-      <change afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.passingThis.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jest.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/jest.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm-proxy-server/jest.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/llm-proxy-server/jest.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actionTypes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionTypes.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/turns/handlers/genericTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/genericTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/pipeline/turnActionChoicePipeline.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/pipeline/turnActionChoicePipeline.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/helpers/getServiceFromContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/helpers/getServiceFromContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/helpers/handleProcessingException.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/helpers/handleProcessingException.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/helpers/processCommandInternal.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/helpers/processCommandInternal.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/turnHandlerResolution.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/aiTurnHandler.awaitingExternalEvent.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/aiTurnHandler.awaitingExternalEvent.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/aiTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/aiTurnHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.awaitingExternalEventFlag.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.awaitingExternalEventFlag.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.validation.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.startTurn.validation.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,6 +70,7 @@
     "Jest.awaitTurnEndState.test.js.executor": "Run",
     "Jest.decisionResult.test.js.executor": "Run",
     "Jest.entityMoved.schema.test.js.executor": "Run",
+    "Jest.genericTurnHandler.passingThis.test.js.executor": "Run",
     "Jest.genericTurnHandler.test.js.executor": "Run",
     "Jest.genericTurnStrategy.test.js.executor": "Run",
     "Jest.genericTurnStrategyFactory.test.js.executor": "Run",
@@ -105,7 +119,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.humanTurnHandler.startTurn.test.js">
+  <component name="RunManager" selected="Jest.genericTurnHandler.passingThis.test.js">
     <configuration name="awaitTurnEndState.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -115,6 +129,15 @@
       <test-file value="$PROJECT_DIR$/tests/turns/valueObjects/awaitTurnEndState.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="genericTurnHandler.passingThis.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.passingThis.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="genericTurnHandler.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -122,15 +145,6 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="genericTurnStrategyFactory.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/factories/genericTurnStrategyFactory.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="humanTurnHandler.startTurn.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -153,11 +167,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.genericTurnHandler.passingThis.test.js" />
         <item itemvalue="Jest.humanTurnHandler.startTurn.test.js" />
         <item itemvalue="Jest.genericTurnHandler.test.js" />
         <item itemvalue="Jest.playerTurnHandler.fixes.test.js" />
         <item itemvalue="Jest.awaitTurnEndState.test.js" />
-        <item itemvalue="Jest.genericTurnStrategyFactory.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -178,15 +192,7 @@
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="12259000" />
-    </task>
-    <task id="LOCAL-00026" summary="Trying to return the app to normality.">
-      <option name="closed" value="true" />
-      <created>1749882592145</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1749882592145</updated>
+      <workItem from="1749913762946" duration="13258000" />
     </task>
     <task id="LOCAL-00027" summary="Trying to return the app to normality.">
       <option name="closed" value="true" />
@@ -572,7 +578,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749926174946</updated>
     </task>
-    <option name="localTasksCounter" value="75" />
+    <task id="LOCAL-00075" summary="Unified human and AI paths regarding decision-making.">
+      <option name="closed" value="true" />
+      <created>1749926776463</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1749926776463</updated>
+    </task>
+    <option name="localTasksCounter" value="76" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

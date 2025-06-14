@@ -42,6 +42,7 @@ module.exports = {
     '!**/coverage/**',
     '!src/interfaces/**',
     '!src/commands/interfaces/**',
+    '!src/turns/interfaces/**',
     '!src/index.js',
     '!index.js',
   ],

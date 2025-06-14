@@ -157,6 +157,7 @@ describe('GenericTurnHandler', () => {
 
       // Verify that the builder receives all necessary components
       expect(mockTurnContextBuilder.build).toHaveBeenCalledWith({
+        handlerInstance: handler, // FIX: Expect the handler instance itself.
         actor: mockActor,
         strategy: mockStrategy,
         onEndTurn: expect.any(Function), // Callback to handle turn termination

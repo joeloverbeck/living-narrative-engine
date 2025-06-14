@@ -144,6 +144,7 @@ describe('AITurnHandler', () => {
       // Assert
       expect(mockTurnContextBuilder.build).toHaveBeenCalledTimes(1);
       expect(mockTurnContextBuilder.build).toHaveBeenCalledWith({
+        handlerInstance: handler, // FIX: Expect the handler instance itself.
         actor: mockActor,
         strategy: mockAiStrategy,
         onEndTurn: expect.any(Function),
