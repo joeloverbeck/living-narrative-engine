@@ -1,7 +1,4 @@
-/**
- * @file Manages a single player prompt lifecycle (human flow).
- * @module src/turns/prompting/promptSession.js
- */
+// src/turns/prompting/promptSession.js
 
 import { PromptError } from '../../errors/promptError.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../constants/eventIds.js';
@@ -180,7 +177,10 @@ export class PromptSession {
       params: composite.params,
     };
 
+    // ****** CORRECTED LINE ******
+    // Ensure the original chosenIndex is passed along in the resolved object.
     this.#settle('resolve', {
+      chosenIndex, // This was the missing piece of the puzzle
       action: selectedAction,
       speech,
       thoughts,

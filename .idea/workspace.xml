@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normality.">
-      <change beforePath="$PROJECT_DIR$/src/turns/providers/humanDecisionProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/providers/humanDecisionProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptSession.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,7 +92,16 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.humanDecisionProvider.test.js">
+  <component name="RunManager" selected="Jest.Tests in tests\">
+    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="DIRECTORY" />
+      <test-directory value="$PROJECT_DIR$/tests" />
+      <method v="2" />
+    </configuration>
     <configuration name="humanDecisionProvider.indexUse.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -119,15 +129,6 @@
       <test-file value="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.awaitTurnEndPromise.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="humanTurnHandler.getTurnEndPort.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/handlers/humanTurnHandler.getTurnEndPort.test.js" />
-      <method v="2" />
-    </configuration>
     <configuration name="humanTurnHandler.invalidActor.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -139,11 +140,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.Tests in tests\" />
         <item itemvalue="Jest.humanDecisionProvider.test.js" />
         <item itemvalue="Jest.humanDecisionProvider.indexUse.test.js" />
         <item itemvalue="Jest.humanTurnHandler.invalidActor.test.js" />
         <item itemvalue="Jest.humanTurnHandler.awaitTurnEndPromise.test.js" />
-        <item itemvalue="Jest.humanTurnHandler.getTurnEndPort.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -163,7 +164,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="7013000" />
+      <workItem from="1749876741387" duration="7639000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -381,7 +382,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749883560375</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Trying to return the app to normality.">
+      <option name="closed" value="true" />
+      <created>1749884077086</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1749884077086</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

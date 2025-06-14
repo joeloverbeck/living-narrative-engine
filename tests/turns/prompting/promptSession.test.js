@@ -113,6 +113,7 @@ describe('PromptSession', () => {
 
       await expect(promise).resolves.toEqual({
         action: expectedActionShape,
+        chosenIndex: 1,
         speech: 'For glory!',
         notes: null,
         thoughts: null,

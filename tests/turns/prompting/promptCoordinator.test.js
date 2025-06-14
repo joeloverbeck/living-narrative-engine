@@ -171,6 +171,7 @@ describe('PromptCoordinator Integration Test', () => {
     // FIX: Updated expectation to include the new fields, which default to null.
     await expect(promptPromise).resolves.toEqual({
       action: expectedAction,
+      chosenIndex: 1,
       speech: chosenSpeech,
       thoughts: null,
       notes: null,
