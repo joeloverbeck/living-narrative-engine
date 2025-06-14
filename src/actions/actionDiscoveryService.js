@@ -52,11 +52,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     safeEventDispatcher,
   }) {
     super();
-    this.#logger = initLogger('ActionDiscoveryService', logger, [
-      'debug',
-      'warn',
-      'error',
-    ]);
+    this.#logger = initLogger('ActionDiscoveryService', logger);
     validateServiceDeps('ActionDiscoveryService', this.#logger, {
       gameDataRepository: {
         value: gameDataRepository,

@@ -48,12 +48,7 @@ export class PrerequisiteEvaluationService {
     actionValidationContextBuilder,
   }) {
     try {
-      this.#logger = initLogger('PrerequisiteEvaluationService', logger, [
-        'debug',
-        'error',
-        'warn',
-        'info',
-      ]);
+      this.#logger = initLogger('PrerequisiteEvaluationService', logger);
     } catch (e) {
       const errorMsg = `PrerequisiteEvaluationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
       // eslint-disable-next-line no-console
