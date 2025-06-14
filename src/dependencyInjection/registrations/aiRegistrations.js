@@ -99,7 +99,6 @@ import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
 import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
 // --- ADDED IMPORT ---
 import { GenericStrategyFactory } from '../../turns/factories/genericStrategyFactory.js';
-import { AIDecisionOrchestrator } from '../../turns/orchestration/aiDecisionOrchestrator.js';
 import { TurnActionFactory } from '../../turns/factories/turnActionFactory.js';
 import { LLMChooser } from '../../turns/adapters/llmChooser.js';
 import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.js';
@@ -375,21 +374,7 @@ export function registerAI(container) {
   // 3) Turn-action factory
   r.singletonFactory(tokens.ITurnActionFactory, () => new TurnActionFactory());
 
-  // 4) AI decision orchestrator
-  r.singletonFactory(
-    tokens.IAIDecisionOrchestrator,
-    (c) =>
-      new AIDecisionOrchestrator({
-        discoverySvc: c.resolve(tokens.IActionDiscoveryService),
-        indexer: c.resolve(tokens.IActionIndexer),
-        llmChooser: c.resolve(tokens.ILLMChooser),
-        turnActionFactory: c.resolve(tokens.ITurnActionFactory),
-        fallbackFactory: c.resolve(tokens.IAIFallbackActionFactory),
-        logger: c.resolve(tokens.ILogger),
-      })
-  );
-
-  // 5) AI-player‐strategy factory
+  // 4) AI-player‐strategy factory
   r.singletonFactory(
     tokens.AIStrategyFactory,
     (c) =>
@@ -398,6 +383,7 @@ export function registerAI(container) {
         decisionProvider: c.resolve(tokens.ILLMDecisionProvider),
         turnActionFactory: c.resolve(tokens.ITurnActionFactory),
         logger: c.resolve(tokens.ILogger),
+        fallbackFactory: c.resolve(tokens.IAIFallbackActionFactory),
       })
   );
 

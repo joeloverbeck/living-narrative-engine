@@ -15,7 +15,6 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // --- System Under Test imports ---------------------------------------------
 // ⚠️ PATH‑TO – please fix to real locations in your project
 import { LLMChooser } from '../../src/turns/adapters/llmChooser.js';
-import { AIDecisionOrchestrator } from '../../src/turns/orchestration/aiDecisionOrchestrator.js';
 
 // ---------------------------------------------------------------------------
 // Lightweight helpers (no behaviour)
@@ -95,81 +94,6 @@ describe('LLMChooser.choose – metadata propagation', () => {
       speech: 'hi',
       thoughts: 'pondering',
       notes: null,
-    });
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 2. INTEGRATION – AIDecisionOrchestrator.decide ----------------------------
-// ---------------------------------------------------------------------------
-
-describe('AIDecisionOrchestrator.decide – metadata bubbles up', () => {
-  let discoverySvc;
-  let indexer;
-  let llmChooser;
-  let turnActionFactory;
-  let fallbackFactory;
-  let logger;
-  /** @type {AIDecisionOrchestrator} */
-  let orchestrator;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-
-    discoverySvc = {
-      getValidActions: jest
-        .fn()
-        .mockResolvedValue([{ id: 'DEF', command: 'CMD', params: {} }]),
-    };
-
-    indexer = { index: jest.fn().mockReturnValue([fakeComposite(1)]) };
-
-    llmChooser = {
-      choose: jest.fn().mockResolvedValue({
-        index: 1,
-        speech: 'spoken',
-        thoughts: 'deep thoughts',
-        notes: ['note‑a'],
-      }),
-    };
-
-    turnActionFactory = {
-      create: jest.fn().mockReturnValue({ type: 'ACTION' }),
-    };
-    fallbackFactory = {
-      create: jest.fn().mockReturnValue({ type: 'FALLBACK' }),
-    };
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    orchestrator = new AIDecisionOrchestrator({
-      discoverySvc,
-      indexer,
-      llmChooser,
-      turnActionFactory,
-      fallbackFactory,
-      logger,
-    });
-  });
-
-  it('produces extractedData with speech, thoughts, notes', async () => {
-    const res = await orchestrator.decide({
-      actor: fakeActor('ai‑2'),
-      context: fakeContext(),
-    });
-
-    expect(res).toEqual({
-      kind: 'success',
-      action: { type: 'ACTION' },
-      extractedData: {
-        speech: 'spoken',
-        thoughts: 'deep thoughts',
-        notes: ['note‑a'],
-      },
     });
   });
 });

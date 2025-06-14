@@ -31,6 +31,8 @@ export class GenericStrategyFactory extends ITurnStrategyFactory {
   #turnActionFactory;
   /** @type {ILogger} */
   #logger;
+  /** @type {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory|null} */
+  #fallbackFactory;
 
   /**
    * @param {object} deps
@@ -38,8 +40,15 @@ export class GenericStrategyFactory extends ITurnStrategyFactory {
    * @param {ITurnDecisionProvider} deps.decisionProvider
    * @param {ITurnActionFactory} deps.turnActionFactory
    * @param {ILogger} deps.logger
+   * @param {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} [deps.fallbackFactory]
    */
-  constructor({ choicePipeline, decisionProvider, turnActionFactory, logger }) {
+  constructor({
+    choicePipeline,
+    decisionProvider,
+    turnActionFactory,
+    logger,
+    fallbackFactory = null,
+  }) {
     super();
 
     if (!choicePipeline) {
@@ -59,6 +68,7 @@ export class GenericStrategyFactory extends ITurnStrategyFactory {
     this.#decisionProvider = decisionProvider;
     this.#turnActionFactory = turnActionFactory;
     this.#logger = logger;
+    this.#fallbackFactory = fallbackFactory;
   }
 
   /**
@@ -76,6 +86,7 @@ export class GenericStrategyFactory extends ITurnStrategyFactory {
       decisionProvider: this.#decisionProvider,
       turnActionFactory: this.#turnActionFactory,
       logger: this.#logger,
+      fallbackFactory: this.#fallbackFactory,
     });
   }
 }
