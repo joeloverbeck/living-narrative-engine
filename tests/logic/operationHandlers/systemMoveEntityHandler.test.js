@@ -12,6 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // --- Mocks ---
 
@@ -38,11 +39,11 @@ const makeMockEntityManager = () => ({
 });
 
 /**
- * Creates a mock IValidatedEventDispatcher.
+ * Creates a mock ISafeEventDispatcher.
  *
- * @returns {import('../../../src/interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher}
+ * @returns {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher}
  */
-const makeMockDispatcher = () => ({
+const makeMockSafeEventDispatcher = () => ({
   dispatch: jest.fn(),
 });
 
@@ -61,17 +62,17 @@ const makeMockExecCtx = (evalContext = {}) => ({
 
 describe('SystemMoveEntityHandler', () => {
   let mockEntityManager;
-  let mockDispatcher;
+  let mockSafeEventDispatcher;
   let mockLogger;
   let handler;
 
   beforeEach(() => {
     mockLogger = makeMockLogger();
     mockEntityManager = makeMockEntityManager();
-    mockDispatcher = makeMockDispatcher();
+    mockSafeEventDispatcher = makeMockSafeEventDispatcher();
     handler = new SystemMoveEntityHandler({
       entityManager: mockEntityManager,
-      dispatcher: mockDispatcher,
+      safeEventDispatcher: mockSafeEventDispatcher,
       logger: mockLogger,
     });
   });
@@ -104,7 +105,7 @@ describe('SystemMoveEntityHandler', () => {
         'SYSTEM_MOVE_ENTITY: "entity_ref" and "target_location_id" are required.'
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 
@@ -234,7 +235,7 @@ describe('SystemMoveEntityHandler', () => {
       expect(execCtx.logger.debug).toHaveBeenCalledWith(
         `SYSTEM_MOVE_ENTITY: Moved entity "${entityId}" from "${fromLocationId}" to "${toLocationId}".`
       );
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:entity_moved',
         {
           eventName: 'core:entity_moved',
@@ -269,7 +270,7 @@ describe('SystemMoveEntityHandler', () => {
         `SYSTEM_MOVE_ENTITY: Entity "${entityId}" is already in location "${fromLocationId}". No move needed.`
       );
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     test('should abort and warn if the entity has no core:position component', async () => {
@@ -284,7 +285,7 @@ describe('SystemMoveEntityHandler', () => {
         `SYSTEM_MOVE_ENTITY: Entity "${entityId}" has no 'core:position' component. Cannot move.`
       );
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     test('should abort and warn if addComponent reports failure', async () => {
@@ -301,14 +302,14 @@ describe('SystemMoveEntityHandler', () => {
       expect(execCtx.logger.warn).toHaveBeenCalledWith(
         `SYSTEM_MOVE_ENTITY: EntityManager reported failure for addComponent on entity "${entityId}".`
       );
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 
   // 4. Error Handling
   // -----------------------------------------------------------------------------
   describe('Execute: Error Handling', () => {
-    test('should log an error if getComponentData throws', async () => {
+    test('should dispatch an error if getComponentData throws', async () => {
       // Arrange
       const error = new Error('Database connection lost');
       mockEntityManager.getComponentData.mockImplementation(() => {
@@ -321,14 +322,16 @@ describe('SystemMoveEntityHandler', () => {
       await handler.execute(params, execCtx);
 
       // Assert
-      expect(execCtx.logger.error).toHaveBeenCalledWith(
-        `SYSTEM_MOVE_ENTITY: Failed to move entity "player". Error: ${error.message}`,
-        { error }
+      expect(execCtx.logger.error).not.toHaveBeenCalled();
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: `SYSTEM_MOVE_ENTITY: Failed to move entity "player". Error: ${error.message}`,
+        })
       );
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
-    test('should log an error if addComponent throws', async () => {
+    test('should dispatch an error if addComponent throws', async () => {
       // Arrange
       const error = new Error('Failed to write component');
       mockEntityManager.getComponentData.mockReturnValue({
@@ -344,11 +347,13 @@ describe('SystemMoveEntityHandler', () => {
       await handler.execute(params, execCtx);
 
       // Assert
-      expect(execCtx.logger.error).toHaveBeenCalledWith(
-        `SYSTEM_MOVE_ENTITY: Failed to move entity "player". Error: ${error.message}`,
-        { error }
+      expect(execCtx.logger.error).not.toHaveBeenCalled();
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: `SYSTEM_MOVE_ENTITY: Failed to move entity "player". Error: ${error.message}`,
+        })
       );
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 });
