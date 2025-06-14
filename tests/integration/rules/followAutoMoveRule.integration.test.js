@@ -167,6 +167,7 @@ function init(entities) {
       entityManager,
       logger,
       jsonLogicEvaluationService: jsonLogic,
+      safeEventDispatcher: eventBus,
     }),
     QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
