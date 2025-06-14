@@ -8,6 +8,7 @@
  */
 
 import { FOLLOWING_COMPONENT_ID } from '../constants/componentIds.js';
+import { isValidEntityManager } from './entityValidationUtils.js';
 
 /**
  * @description
@@ -33,7 +34,11 @@ export function wouldCreateCycle(
   prospectiveLeaderId,
   entityManager
 ) {
-  if (!prospectiveFollowerId || !prospectiveLeaderId || !entityManager) {
+  if (
+    !prospectiveFollowerId ||
+    !prospectiveLeaderId ||
+    !isValidEntityManager(entityManager)
+  ) {
     // Cannot perform check without required IDs and entity manager.
     return false;
   }

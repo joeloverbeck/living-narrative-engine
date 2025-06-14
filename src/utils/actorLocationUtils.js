@@ -8,6 +8,7 @@
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { isNonEmptyString } from './textUtils.js';
+import { isValidEntityManager } from './entityValidationUtils.js';
 
 /**
  * Retrieves the current location for the given actor entity.
@@ -22,7 +23,7 @@ import { isNonEmptyString } from './textUtils.js';
  */
 export function getActorLocation(entityId, entityManager) {
   if (!isNonEmptyString(entityId)) return null;
-  if (!entityManager || typeof entityManager.getComponentData !== 'function') {
+  if (!isValidEntityManager(entityManager)) {
     return null;
   }
 

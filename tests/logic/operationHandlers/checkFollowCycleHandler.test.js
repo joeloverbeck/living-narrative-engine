@@ -48,6 +48,7 @@ const makeMockEntityManager = () => ({
   // Add other methods to satisfy the interface if needed, even if they do nothing.
   getEntityDefinition: jest.fn(),
   validate: jest.fn(),
+  getComponentData: jest.fn(),
 });
 
 describe('CheckFollowCycleHandler', () => {

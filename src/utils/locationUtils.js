@@ -4,6 +4,10 @@ import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import { isNonEmptyString } from './textUtils.js';
 import { ensureValidLogger } from './loggerUtils.js';
+import {
+  isValidEntityManager,
+  isValidEntity,
+} from './entityValidationUtils.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -41,10 +45,8 @@ function _getExitsComponentData(
   let locationEntity = locationEntityOrId;
 
   if (typeof locationEntityOrId === 'string') {
-    if (
-      !entityManager ||
-      typeof entityManager.getEntityInstance !== 'function'
-    ) {
+
+     if (!isValidEntityManager(entityManager)) {
       dispatcher.dispatch(DISPLAY_ERROR_ID, {
         message:
           "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.",
@@ -58,15 +60,13 @@ function _getExitsComponentData(
             typeof entityManager.getEntityInstance === 'function',
         },
       });
+       
       return null;
     }
     locationEntity = entityManager.getEntityInstance(locationEntityOrId);
   }
 
-  if (
-    !locationEntity ||
-    typeof locationEntity.getComponentData !== 'function'
-  ) {
+  if (!isValidEntity(locationEntity)) {
     const id =
       typeof locationEntityOrId === 'string'
         ? locationEntityOrId
