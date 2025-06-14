@@ -57,7 +57,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
       this._resolveLogger(null, handler).error(
         `${this.getStateName()}: entered with no ITurnContext; aborting`
       );
-      await handler._transitionToState(new TurnIdleState(handler));
+      await this._resetToIdle('enter-no-context');
       return;
     }
 
@@ -161,12 +161,12 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     try {
       ctx.endTurn(err);
     } catch (e) {
+
       this._resolveLogger(ctx, handler).error(
         `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
         e
       );
-      handler._resetTurnStateAndResources('timeout-recovery');
-      handler._transitionToState(new TurnIdleState(handler));
+      this._resetToIdle('timeout-recovery');
     }
   }
 }

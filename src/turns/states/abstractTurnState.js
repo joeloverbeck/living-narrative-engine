@@ -83,6 +83,23 @@ export class AbstractTurnState extends ITurnState {
   }
 
   /**
+
+   * Resets turn-specific resources and requests a transition to the idle state.
+   *
+   * @protected
+   * @async
+   * @param {string} reason - Contextual reason for the reset.
+   * @returns {Promise<void>}
+   */
+  async _resetToIdle(reason) {
+    if (typeof this._handler?._resetTurnStateAndResources === 'function') {
+      this._handler._resetTurnStateAndResources(reason);
+    }
+    if (typeof this._handler?.requestIdleStateTransition === 'function') {
+      await this._handler.requestIdleStateTransition();
+    }
+  }
+  
    * Resolves a logger using the provided context or handler.
    *
    * @protected
@@ -92,6 +109,7 @@ export class AbstractTurnState extends ITurnState {
    */
   _resolveLogger(turnCtx, handler) {
     if (turnCtx && typeof turnCtx.getLogger === 'function') {
+
       try {
         const l = turnCtx.getLogger();
         if (l) return l;

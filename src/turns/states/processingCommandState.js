@@ -74,18 +74,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       logger.error(
         `${this.getStateName()}: Turn context is null on enter. Attempting to reset and idle.`
       );
-      if (
-        this._handler &&
-        typeof this._handler._resetTurnStateAndResources === 'function' &&
-        typeof this._handler._transitionToState === 'function'
-      ) {
-        await this._handler._resetTurnStateAndResources(
-          `critical-no-context-${this.getStateName()}`
-        );
-        await this._handler._transitionToState(
-          new TurnIdleState(this._handler)
-        );
-      }
+      await this._resetToIdle(`critical-no-context-${this.getStateName()}`);
       this._isProcessing = false;
       return;
     }
@@ -534,16 +523,17 @@ export class ProcessingCommandState extends AbstractTurnState {
           );
           if (
             this._handler?._resetTurnStateAndResources &&
-            this._handler?._transitionToState
+            this._handler?.requestIdleStateTransition
           ) {
             logger.warn(
               `${this.getStateName()}: Resetting handler due to failure in turnCtx.endTurn().`
             );
-            await this._handler._resetTurnStateAndResources(
+            await this._resetToIdle(
               `exception-endTurn-failed-${this.getStateName()}`
             );
-            await this._handler._transitionToState(
-              new TurnIdleState(this._handler)
+          } else {
+            logger.error(
+              `${this.getStateName()}: CRITICAL - Cannot end turn OR reset handler. System may be unstable.`
             );
           }
         }
@@ -554,13 +544,10 @@ export class ProcessingCommandState extends AbstractTurnState {
         );
         if (
           this._handler?._resetTurnStateAndResources &&
-          this._handler?._transitionToState
+          this._handler?.requestIdleStateTransition
         ) {
-          await this._handler._resetTurnStateAndResources(
+          await this._resetToIdle(
             `exception-no-context-end-${this.getStateName()}`
-          );
-          await this._handler._transitionToState(
-            new TurnIdleState(this._handler)
           );
         } else {
           logger.error(
