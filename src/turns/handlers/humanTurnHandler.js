@@ -268,7 +268,11 @@ class HumanTurnHandler extends BaseTurnHandler {
     this._assertHandlerActive();
     const currentContext = this.getTurnContext();
 
-    if (!actorEntity || typeof actorEntity.id === 'undefined') {
+    if (
+      !actorEntity ||
+      typeof actorEntity.id !== 'string' ||
+      actorEntity.id.trim() === ''
+    ) {
       const errMsg = `${this.constructor.name}: handleSubmittedCommand called without valid actorEntity.`;
       this._logger.error(errMsg);
       if (currentContext && typeof currentContext.endTurn === 'function') {

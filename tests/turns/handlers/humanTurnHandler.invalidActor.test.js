@@ -111,4 +111,51 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
     await promise;
     expect(resolved).toBe(true);
   });
+
+  it('ends the turn when actorEntity has invalid id and no context', async () => {
+    const handler = new HumanTurnHandler(deps);
+    jest.spyOn(handler, 'getTurnContext').mockReturnValue(null);
+
+    const endSpy = jest
+      .spyOn(handler, '_handleTurnEnd')
+      .mockResolvedValue(undefined);
+
+    await expect(
+      handler.handleSubmittedCommand('look', { id: '' })
+    ).resolves.toBeUndefined();
+
+    expect(endSpy).toHaveBeenCalledTimes(1);
+    const errorArg = endSpy.mock.calls[0][1];
+    expect(errorArg).toBeInstanceOf(Error);
+    expect(errorArg.message).toBe('Actor missing in handleSubmittedCommand');
+  });
+
+  it('awaits endTurn when actorEntity has invalid id and context exists', async () => {
+    const handler = new HumanTurnHandler(deps);
+    let resolveEnd;
+    const endPromise = new Promise((res) => {
+      resolveEnd = res;
+    });
+    const mockCtx = {
+      getActor: () => ({ id: 'actor1' }),
+      endTurn: jest.fn(() => endPromise),
+    };
+    jest.spyOn(handler, 'getTurnContext').mockReturnValue(mockCtx);
+
+    const promise = handler.handleSubmittedCommand('look', { id: 123 });
+    let resolved = false;
+    promise.then(() => {
+      resolved = true;
+    });
+
+    await Promise.resolve();
+    expect(resolved).toBe(false);
+    expect(mockCtx.endTurn).toHaveBeenCalledWith(
+      new Error('Actor missing in handleSubmittedCommand')
+    );
+
+    resolveEnd();
+    await promise;
+    expect(resolved).toBe(true);
+  });
 });
