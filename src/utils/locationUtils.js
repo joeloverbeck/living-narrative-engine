@@ -1,6 +1,7 @@
 // src/utils/locationUtils.js
 
 import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import { isNonEmptyString } from './textUtils.js';
 import { ensureValidLogger } from './loggerUtils.js';
 
@@ -26,9 +27,16 @@ import { ensureValidLogger } from './loggerUtils.js';
  * @param {Entity | string} locationEntityOrId - Entity instance or ID to check.
  * @param {IEntityManager} entityManager - Used to fetch the entity when an ID is provided.
  * @param {ILogger} [logger] - Optional logger for debug messages.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
+ * Safe dispatcher for error events.
  * @returns {ExitData[] | null} Array of exit objects or null when unavailable.
  */
-function _getExitsComponentData(locationEntityOrId, entityManager, logger) {
+function _getExitsComponentData(
+  locationEntityOrId,
+  entityManager,
+  logger,
+  dispatcher
+) {
   const log = ensureValidLogger(logger, 'locationUtils');
   let locationEntity = locationEntityOrId;
 
@@ -37,9 +45,19 @@ function _getExitsComponentData(locationEntityOrId, entityManager, logger) {
       !entityManager ||
       typeof entityManager.getEntityInstance !== 'function'
     ) {
-      log.error(
-        "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid."
-      );
+      dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message:
+          "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.",
+        details: {
+          locationId:
+            typeof locationEntityOrId === 'string'
+              ? locationEntityOrId
+              : locationEntityOrId?.id,
+          entityManagerValid:
+            !!entityManager &&
+            typeof entityManager.getEntityInstance === 'function',
+        },
+      });
       return null;
     }
     locationEntity = entityManager.getEntityInstance(locationEntityOrId);
@@ -76,13 +94,16 @@ function _getExitsComponentData(locationEntityOrId, entityManager, logger) {
  * @param {string} directionName - Direction to search for.
  * @param {IEntityManager} entityManager - Manager used to fetch the entity.
  * @param {ILogger} [logger] - Optional logger for diagnostics.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
+ * Safe dispatcher for error events.
  * @returns {ExitData | null} The exit data if found, otherwise null.
  */
 export function getExitByDirection(
   locationEntityOrId,
   directionName,
   entityManager,
-  logger
+  logger,
+  dispatcher
 ) {
   const log = ensureValidLogger(logger, 'locationUtils');
   if (!isNonEmptyString(directionName)) {
@@ -93,7 +114,8 @@ export function getExitByDirection(
   const exitsData = _getExitsComponentData(
     locationEntityOrId,
     entityManager,
-    log
+    log,
+    dispatcher
   );
   if (!exitsData || exitsData.length === 0) {
     return null;
@@ -137,15 +159,23 @@ export function getExitByDirection(
  *
  * @param {Entity | string} locationEntityOrId - Location entity or its ID.
  * @param {IEntityManager} entityManager - Manager used to fetch the entity.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
+ * Safe dispatcher for error events.
  * @param {ILogger} [logger] - Optional logger for diagnostics.
  * @returns {ExitData[]} Array of valid exit objects.
  */
-export function getAvailableExits(locationEntityOrId, entityManager, logger) {
+export function getAvailableExits(
+  locationEntityOrId,
+  entityManager,
+  dispatcher,
+  logger
+) {
   const log = ensureValidLogger(logger, 'locationUtils');
   const exitsData = _getExitsComponentData(
     locationEntityOrId,
     entityManager,
-    log
+    log,
+    dispatcher
   );
   if (!exitsData || exitsData.length === 0) {
     return [];
