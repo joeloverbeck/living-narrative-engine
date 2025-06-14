@@ -32,145 +32,87 @@
       }
     },
     {
-      "type": "HAS_COMPONENT",
-      "comment": "Step 3.1: Check for actor's name component for messaging.",
+      "type": "GET_NAME",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "core:name",
-        "result_variable": "hasActorName"
+        "result_variable": "actorName"
       }
     },
     {
-      "type": "HAS_COMPONENT",
-      "comment": "Step 3.2: Check for target's name component for messaging.",
+      "type": "GET_NAME",
       "parameters": {
         "entity_ref": "target",
-        "component_type": "core:name",
-        "result_variable": "hasTargetName"
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor's position",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get target's position",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "core:position",
+        "result_variable": "targetPosition"
       }
     },
     {
       "type": "IF",
-      "comment": "Step 3.3: Only dispatch UI/perceptible events if names are available to prevent malformed messages.",
+      "comment": "Only dispatch a perceptible event if the leader and follower are in the same location.",
       "parameters": {
         "condition": {
-          "and": [
+          "==": [
             {
-              "var": "context.hasActorName"
+              "var": "context.actorPosition.locationId"
             },
             {
-              "var": "context.hasTargetName"
+              "var": "context.targetPosition.locationId"
             }
           ]
         },
         "then_actions": [
           {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get actor's (leader's) position for co-location check.",
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
             "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:position",
-              "result_variable": "actorPosition"
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get target's (follower's) position for co-location check.",
-            "parameters": {
-              "entity_ref": "target",
-              "component_type": "core:position",
-              "result_variable": "targetPosition"
-            }
-          },
-          {
-            "type": "IF",
-            "comment": "Only dispatch a perceptible event if the leader and follower are in the same location.",
-            "parameters": {
-              "condition": {
-                "==": [
-                  {
-                    "var": "context.actorPosition.locationId"
-                  },
-                  {
-                    "var": "context.targetPosition.locationId"
-                  }
-                ]
-              },
-              "then_actions": [
-                {
-                  "type": "QUERY_COMPONENT",
-                  "comment": "Get actor's name for the event description.",
-                  "parameters": {
-                    "entity_ref": "actor",
-                    "component_type": "core:name",
-                    "result_variable": "actorName"
-                  }
-                },
-                {
-                  "type": "QUERY_COMPONENT",
-                  "comment": "Get target's name for the event description.",
-                  "parameters": {
-                    "entity_ref": "target",
-                    "component_type": "core:name",
-                    "result_variable": "targetName"
-                  }
-                },
-                {
-                  "type": "GET_TIMESTAMP",
-                  "comment": "Get the current ISO timestamp for perception logging.",
-                  "parameters": {
-                    "result_variable": "nowIso"
-                  }
-                },
-                {
-                  "type": "DISPATCH_EVENT",
-                  "comment": "This event is for other characters to observe.",
-                  "parameters": {
-                    "eventType": "core:perceptible_event",
-                    "payload": {
-                      "eventName": "core:perceptible_event",
-                      "locationId": "{context.actorPosition.locationId}",
-                      "descriptionText": "{context.actorName.text} has dismissed {context.targetName.text} from their service.",
-                      "timestamp": "{context.nowIso}",
-                      "perceptionType": "state_change_observable",
-                      "actorId": "{event.payload.actorId}",
-                      "targetId": "{event.payload.targetId}",
-                      "involvedEntities": []
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get actor's name for the UI message.",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:name",
-              "result_variable": "actorName"
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get target's name for the UI message.",
-            "parameters": {
-              "entity_ref": "target",
-              "component_type": "core:name",
-              "result_variable": "targetName"
+              "result_variable": "nowIso"
             }
           },
           {
             "type": "DISPATCH_EVENT",
-            "comment": "Dispatch a decoupled event to the UI indicating the successful dismiss action.",
+            "comment": "This event is for other characters to observe.",
             "parameters": {
-              "eventType": "core:display_successful_action_result",
+              "eventType": "core:perceptible_event",
               "payload": {
-                "message": "{context.actorName.text} dismisses {context.targetName.text} from their service."
+                "eventName": "core:perceptible_event",
+                "locationId": "{context.actorPosition.locationId}",
+                "descriptionText": "{context.actorName} has dismissed {context.targetName} from their service.",
+                "timestamp": "{context.nowIso}",
+                "perceptionType": "state_change_observable",
+                "actorId": "{event.payload.actorId}",
+                "targetId": "{event.payload.targetId}",
+                "involvedEntities": []
               }
             }
           }
         ]
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch a decoupled event to the UI indicating the successful dismiss action.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actorName} dismisses {context.targetName} from their service."
+        }
       }
     },
     {

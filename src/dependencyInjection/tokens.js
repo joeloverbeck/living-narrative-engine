@@ -251,6 +251,7 @@ export const tokens = freeze({
   SetVariableHandler: 'SetVariableHandler',
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',
   GetTimestampHandler: 'GetTimestampHandler',
+  GetNameHandler: 'GetNameHandler',
   ResolveDirectionHandler: 'ResolveDirectionHandler',
   RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
   CheckFollowCycleHandler: 'CheckFollowCycleHandler',

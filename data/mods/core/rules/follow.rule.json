@@ -161,21 +161,18 @@
             }
           },
           {
-            "type": "QUERY_COMPONENT",
-            "comment": "Grab human-readable names for the perceptible log and UI message.",
+            "type": "GET_NAME",
             "parameters": {
               "entity_ref": "actor",
-              "component_type": "core:name",
               "result_variable": "followerName"
             }
           },
           {
-            "type": "QUERY_COMPONENT",
+            "type": "GET_NAME",
             "parameters": {
               "entity_ref": {
                 "entityId": "{event.payload.targetId}"
               },
-              "component_type": "core:name",
               "result_variable": "leaderName"
             }
           },
@@ -203,7 +200,7 @@
               "payload": {
                 "eventName": "core:perceptible_event",
                 "locationId": "{context.actorPos.locationId}",
-                "descriptionText": "{context.followerName.text} has decided to follow {context.leaderName.text}.",
+                "descriptionText": "{context.followerName} has decided to follow {context.leaderName}.",
                 "timestamp": "{context.nowIso}",
                 "perceptionType": "action_target_general",
                 "actorId": "{event.payload.actorId}",
@@ -218,7 +215,7 @@
             "parameters": {
               "eventType": "core:display_successful_action_result",
               "payload": {
-                "message": "{context.followerName.text} is now following {context.leaderName.text}."
+                "message": "{context.followerName} is now following {context.leaderName}."
               }
             }
           },
