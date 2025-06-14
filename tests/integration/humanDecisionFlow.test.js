@@ -43,6 +43,7 @@ describe('Integration – Human decision flow', () => {
     const actionIndexingService = {
       indexActions: jest.fn().mockReturnValue([composite]),
       resolve: jest.fn().mockReturnValue(composite),
+      beginTurn: jest.fn(),
     };
     const promptCoordinator = {
       prompt: jest.fn().mockResolvedValue({ chosenIndex: 1, speech: 'Wait' }),
