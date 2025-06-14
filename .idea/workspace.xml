@@ -4,12 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to return the app to normality.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixed nasty bug in PromptCoordinator.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constants/eventIds.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/eventIds.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/adapters/eventBusPromptAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/eventBusPromptAdapter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/schemas/playerTurnPrompt.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/playerTurnPrompt.schema.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/adapters/eventBusPromptAdapter.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/adapters/eventBusPromptAdapter.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/prompting/promptCoordinator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/prompting/promptCoordinator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/prompting/promptCoordinator.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/prompting/promptCoordinator.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -171,7 +169,7 @@
       <updated>1749824452963</updated>
       <workItem from="1749824454676" duration="14714000" />
       <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="15571000" />
+      <workItem from="1749876741387" duration="16586000" />
     </task>
     <task id="LOCAL-00001" summary="Uploading stuff from the office.">
       <option name="closed" value="true" />
@@ -485,7 +483,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749891503773</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="Fixed nasty bug in PromptCoordinator.">
+      <option name="closed" value="true" />
+      <created>1749892834439</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1749892834439</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -503,6 +509,7 @@
     <MESSAGE value="Ensuring the app works." />
     <MESSAGE value="Ensuring that chosenActionId doesn't get used anymore." />
     <MESSAGE value="Trying to return the app to normality." />
-    <option name="LAST_COMMIT_MESSAGE" value="Trying to return the app to normality." />
+    <MESSAGE value="Fixed nasty bug in PromptCoordinator." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed nasty bug in PromptCoordinator." />
   </component>
 </project>
