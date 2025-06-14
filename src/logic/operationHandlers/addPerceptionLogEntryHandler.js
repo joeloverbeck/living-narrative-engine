@@ -4,6 +4,7 @@
  */
 
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 const DEFAULT_MAX_LOG_ENTRIES = 50;
 
@@ -16,14 +17,20 @@ const DEFAULT_MAX_LOG_ENTRIES = 50;
 class AddPerceptionLogEntryHandler {
   /** @type {import('../../interfaces/coreServices.js').ILogger}      */ #logger;
   /** @type {import('../../entities/entityManager.js').default}       */ #entityManager;
+  /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ #dispatcher;
 
-  constructor({ logger, entityManager }) {
+  constructor({ logger, entityManager, safeEventDispatcher }) {
     if (!logger?.debug)
       throw new Error('AddPerceptionLogEntryHandler needs ILogger');
     if (!entityManager?.getEntitiesInLocation)
       throw new Error('AddPerceptionLogEntryHandler needs IEntityManager');
+    if (!safeEventDispatcher?.dispatch)
+      throw new Error(
+        'AddPerceptionLogEntryHandler needs ISafeEventDispatcher'
+      );
     this.#logger = logger;
     this.#entityManager = entityManager;
+    this.#dispatcher = safeEventDispatcher;
   }
 
   /**
@@ -35,16 +42,25 @@ class AddPerceptionLogEntryHandler {
 
     /* ── validation ─────────────────────────────────────────────── */
     if (!params || typeof params !== 'object') {
-      log.error('ADD_PERCEPTION_LOG_ENTRY: params missing/invalid', { params });
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'ADD_PERCEPTION_LOG_ENTRY: params missing/invalid',
+        details: { params },
+      });
       return;
     }
     const { location_id, entry } = params;
     if (typeof location_id !== 'string' || !location_id.trim()) {
-      log.error('ADD_PERCEPTION_LOG_ENTRY: location_id is required');
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
+        details: { location_id },
+      });
       return;
     }
     if (!entry || typeof entry !== 'object') {
-      log.error('ADD_PERCEPTION_LOG_ENTRY: entry object is required');
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'ADD_PERCEPTION_LOG_ENTRY: entry object is required',
+        details: { entry },
+      });
       return;
     }
 
@@ -97,12 +113,10 @@ class AddPerceptionLogEntryHandler {
         this.#entityManager.addComponent(id, PERCEPTION_LOG_COMPONENT_ID, next);
         updated++;
       } catch (e) {
-        log.error(
-          `ADD_PERCEPTION_LOG_ENTRY: failed to update ${id}: ${e.message}`,
-          {
-            stack: e.stack,
-          }
-        );
+        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `ADD_PERCEPTION_LOG_ENTRY: failed to update ${id}: ${e.message}`,
+          details: { stack: e.stack, entityId: id },
+        });
       }
     }
 
