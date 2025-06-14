@@ -25,6 +25,9 @@ beforeEach(() => {
   mockTurnStateFactory = {
     createInitialState: jest.fn().mockReturnValue({ stateName: 'init' }),
   };
+  mockTurnStrategyFactory = {
+    createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
+  };
   deps = {
     logger: mockLogger,
     turnStateFactory: mockTurnStateFactory,

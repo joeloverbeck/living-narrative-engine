@@ -1,4 +1,4 @@
-// --- FILE START ---
+// src/di/tokens.js
 /**
  * @file Centralized repository for Dependency Injection (DI) keys/tokens.
  * Using tokens instead of raw strings prevents typos and aids refactoring.
@@ -9,7 +9,6 @@ import { freeze } from '../utils/objectUtils';
 /**
  * A frozen object containing all unique keys used for registering and resolving
  * services and dependencies within the application's DI container.
- * Using Object.freeze prevents accidental modification.
  *
  * @typedef {string} DiToken
  * @property {DiToken} ILogger - Token for the core logging service.
@@ -313,7 +312,10 @@ export const tokens = freeze({
   ILocationSummaryProvider: 'ILocationSummaryProvider',
   IActorDataExtractor: 'IActorDataExtractor',
 
+  // --- Utils ---
+  assertValidActor: 'assertValidActor',
+
   // Core Builders
   ActionContextBuilder: 'ActionContextBuilder',
+  TurnContextBuilder: 'TurnContextBuilder',
 });
-// --- FILE END ---
