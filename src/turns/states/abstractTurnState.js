@@ -99,8 +99,8 @@ export class AbstractTurnState extends ITurnState {
       await this._handler.requestIdleStateTransition();
     }
   }
-  
-   * Resolves a logger using the provided context or handler.
+
+  /* Resolves a logger using the provided context or handler.
    *
    * @protected
    * @param {ITurnContext | null} turnCtx - The current ITurnContext, if any.
@@ -109,7 +109,6 @@ export class AbstractTurnState extends ITurnState {
    */
   _resolveLogger(turnCtx, handler) {
     if (turnCtx && typeof turnCtx.getLogger === 'function') {
-
       try {
         const l = turnCtx.getLogger();
         if (l) return l;

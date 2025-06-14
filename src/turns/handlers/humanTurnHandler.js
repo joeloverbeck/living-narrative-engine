@@ -6,6 +6,7 @@
 
 import { BaseTurnHandler } from './baseTurnHandler.js';
 import { AwaitTurnEndState } from '../valueObjects/awaitTurnEndState.js';
+import { ActorMismatchError } from '../../errors/actorMismatchError.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
@@ -275,31 +276,44 @@ class HumanTurnHandler extends BaseTurnHandler {
     ) {
       const errMsg = `${this.constructor.name}: handleSubmittedCommand called without valid actorEntity.`;
       this._logger.error(errMsg);
+      const error = new ActorMismatchError(
+        'A valid actor must be provided to handle a command.',
+        {
+          expectedActorId: currentContext?.getActor()?.id ?? 'Unknown',
+          actualActorId: null,
+          operation: 'handleSubmittedCommand',
+        }
+      );
       if (currentContext && typeof currentContext.endTurn === 'function') {
-        await currentContext.endTurn(
-          new Error('Actor missing in handleSubmittedCommand')
-        );
+        await currentContext.endTurn(error);
       } else {
-        await this._handleTurnEnd(
-          null,
-          new Error('Actor missing in handleSubmittedCommand')
-        );
+        await this._handleTurnEnd(null, error);
       }
       return;
     }
 
     if (!currentContext || currentContext.getActor()?.id !== actorEntity.id) {
-      const errMsg = `${this.constructor.name}: handleSubmittedCommand actor mismatch or no context. Command for ${actorEntity.id}, context actor: ${currentContext?.getActor()?.id}.`;
-      this._logger.error(errMsg);
+      const expectedId = currentContext?.getActor()?.id ?? 'None (no context)';
+      const actualId = actorEntity.id;
+      const message = !currentContext
+        ? `Cannot handle command for actor '${actualId}'; no active turn context.`
+        : `Actor mismatch: command for '${actualId}' but current context is for '${expectedId}'.`;
+
+      const error = new ActorMismatchError(message, {
+        expectedActorId: expectedId,
+        actualActorId: actualId,
+        operation: 'handleSubmittedCommand',
+      });
+
+      this._logger.error(`${this.constructor.name}: ${error.message}`, {
+        expectedId,
+        actualId,
+      });
+
       if (currentContext && typeof currentContext.endTurn === 'function') {
-        await currentContext.endTurn(
-          new Error('Actor mismatch in handleSubmittedCommand')
-        );
+        await currentContext.endTurn(error);
       } else {
-        await this._handleTurnEnd(
-          actorEntity.id,
-          new Error('No context in handleSubmittedCommand')
-        );
+        await this._handleTurnEnd(actorEntity.id, error);
       }
       return;
     }

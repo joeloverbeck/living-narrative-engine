@@ -8,6 +8,7 @@ import {
 } from '@jest/globals';
 import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
+import { ActorMismatchError } from '../../../src/errors/actorMismatchError.js';
 
 // New test to verify that handleSubmittedCommand awaits _handleTurnEnd
 
@@ -108,7 +109,13 @@ describe('HumanTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () =
     expect(resolved).toBe(false);
     expect(handleEndSpy).toHaveBeenCalledWith(
       actor.id,
-      new Error('No context in handleSubmittedCommand')
+      expect.any(ActorMismatchError) // Use expect.any with the specific error class
+    );
+
+    // Additionally, verify the message of the error passed to the spy
+    const errorArg = handleEndSpy.mock.calls[0][1];
+    expect(errorArg.message).toBe(
+      "Cannot handle command for actor 'actor1'; no active turn context."
     );
 
     resolveHandleEnd();

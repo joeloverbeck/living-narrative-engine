@@ -161,7 +161,6 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     try {
       ctx.endTurn(err);
     } catch (e) {
-
       this._resolveLogger(ctx, handler).error(
         `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
         e

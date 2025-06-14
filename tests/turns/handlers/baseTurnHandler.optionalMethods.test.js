@@ -37,7 +37,9 @@ describe('BaseTurnHandler robustness for optional state methods', () => {
       getStateName: () => 'CustomState',
       // no isIdle()
     };
-    await expect(handler._transitionToState(customState)).resolves.toBeUndefined();
+    await expect(
+      handler._transitionToState(customState)
+    ).resolves.toBeUndefined();
     expect(handler._currentState).toBe(customState);
   });
 

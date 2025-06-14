@@ -8,6 +8,7 @@ import {
 } from '@jest/globals';
 import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
+import { ActorMismatchError } from '../../../src/errors/actorMismatchError.js';
 
 // New test verifying handleSubmittedCommand awaits endTurn on actor mismatch
 
@@ -107,9 +108,19 @@ describe('HumanTurnHandler handleSubmittedCommand actor mismatch', () => {
 
     await Promise.resolve();
     expect(resolved).toBe(false);
+
+    // Check that endTurn was called with the correct error type
     expect(mockCtx.endTurn).toHaveBeenCalledWith(
-      new Error('Actor mismatch in handleSubmittedCommand')
+      expect.any(ActorMismatchError)
     );
+
+    // For better testing, also check the properties of the error
+    const errorArg = mockCtx.endTurn.mock.calls[0][0];
+    expect(errorArg.message).toBe(
+      "Actor mismatch: command for 'actorB' but current context is for 'actorA'."
+    );
+    expect(errorArg.expectedActorId).toBe('actorA');
+    expect(errorArg.actualActorId).toBe('actorB');
 
     resolveEnd();
     await promise;
