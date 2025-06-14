@@ -229,7 +229,6 @@ export const tokens = freeze({
   ILLMChooser: 'ILLMChooser',
   IActionIndexer: 'IActionIndexer',
   ITurnActionFactory: 'ITurnActionFactory',
-  IAIDecisionOrchestrator: 'IAIDecisionOrchestrator',
 
   // Initialization & Orchestration
   WorldInitializer: 'WorldInitializer',

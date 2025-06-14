@@ -73,4 +73,41 @@ describe('GenericTurnStrategy', () => {
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.extractedData)).toBe(true);
   });
+
+  it('returns fallback decision when an error occurs and factory provided', async () => {
+    const fakeActor = { id: 'actor2' };
+    const fakeContext = {
+      getActor: () => fakeActor,
+      getPromptSignal: () => null,
+    };
+
+    const choicePipeline = {
+      buildChoices: jest.fn().mockResolvedValue([]),
+    };
+    const decisionProvider = {
+      decide: jest.fn().mockRejectedValue(new Error('fail')),
+    };
+    const turnActionFactory = { create: jest.fn() };
+    const fallbackAction = { actionDefinitionId: 'fb', speech: 'wait' };
+    const fallbackFactory = {
+      create: jest.fn().mockReturnValue(fallbackAction),
+    };
+    const logger = { debug: jest.fn() };
+
+    const strategy = new GenericTurnStrategy({
+      choicePipeline,
+      decisionProvider,
+      turnActionFactory,
+      logger,
+      fallbackFactory,
+    });
+
+    const result = await strategy.decideAction(fakeContext);
+
+    expect(result).toEqual({
+      kind: 'fallback',
+      action: fallbackAction,
+      extractedData: { speech: 'wait', thoughts: null, notes: null },
+    });
+  });
 });
