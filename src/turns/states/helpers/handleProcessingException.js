@@ -3,7 +3,7 @@
  */
 
 /**
- * @typedef {import('../processingCommandState.js').ProcessingCommandState} ProcessingCommandState
+ * @typedef {import('../../types/stateTypes.js').ProcessingCommandStateLike} ProcessingCommandStateLike
  * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
@@ -14,7 +14,7 @@ import { TurnIdleState } from '../turnIdleState.js';
 /**
  * Handles exceptions that occur during command processing.
  *
- * @param {ProcessingCommandState} state - Owning state instance.
+ * @param {ProcessingCommandStateLike} state - Owning state instance.
  * @param {ITurnContext} turnCtx - Current turn context.
  * @param {Error} error - Error being handled.
  * @param {string} [actorIdContext] - Actor ID for logging context.

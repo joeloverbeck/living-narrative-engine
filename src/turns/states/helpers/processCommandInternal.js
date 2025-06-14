@@ -3,7 +3,7 @@
  */
 
 /**
- * @typedef {import('../processingCommandState.js').ProcessingCommandState} ProcessingCommandState
+ * @typedef {import('../../types/stateTypes.js').ProcessingCommandStateLike} ProcessingCommandStateLike
  * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
@@ -16,7 +16,7 @@ import { handleProcessingException } from './handleProcessingException.js';
 /**
  * Executes the main command processing workflow.
  *
- * @param {ProcessingCommandState} state - Owning state instance.
+ * @param {ProcessingCommandStateLike} state - Owning state instance.
  * @param {ITurnContext} turnCtx - Current turn context.
  * @param {Entity} actor - Actor executing the command.
  * @param {ITurnAction} turnAction - Action to process.
