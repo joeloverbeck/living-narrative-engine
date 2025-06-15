@@ -1,0 +1,22 @@
+{
+  "$schema": "http://example.com/schemas/macro.schema.json",
+  "macro_id": "core:logFailureAndEndTurn",
+  "actions": [
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_failed_action_result",
+        "payload": {
+          "message": "{context.logMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": false
+      }
+    }
+  ]
+}

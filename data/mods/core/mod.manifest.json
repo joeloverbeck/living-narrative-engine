@@ -54,6 +54,10 @@
       "dismiss.rule.json",
       "follow_auto_move.rule.json"
     ],
+    "macros": [
+      "logSuccessAndEndTurn.macro.json",
+      "logFailureAndEndTurn.macro.json"
+    ],
     "events": [
       "action_decided.event.json",
       "ui_ready.event.json",
