@@ -91,6 +91,84 @@ class GamePersistenceService extends IGamePersistenceService {
   }
 
   /**
+   * @description Serializes a single entity for saving.
+   * @param {Entity} entity - The entity instance to serialize.
+   * @returns {{instanceId: string, definitionId: string, components: Record<string, any>}}
+   *   Clean serialized representation of the entity.
+   * @private
+   */
+  #serializeEntity(entity) {
+    const components = this.#applyComponentCleaners(
+      entity.componentEntries,
+      entity.id
+    );
+    return {
+      instanceId: entity.id,
+      definitionId: entity.definitionId,
+      components,
+    };
+  }
+
+  /**
+   * @description Cleans and prepares component data for serialization.
+   * @param {Map<string, any>} componentEntries - Raw component map from the entity.
+   * @param {string} entityId - Identifier of the owning entity (for logging).
+   * @returns {Record<string, any>} Object containing cleaned components.
+   * @private
+   */
+  #applyComponentCleaners(componentEntries, entityId) {
+    const components = {};
+    for (const [componentTypeId, componentData] of componentEntries) {
+      if (componentTypeId === CURRENT_ACTOR_COMPONENT_ID) {
+        this.#logger.debug(
+          `GamePersistenceService.captureCurrentGameState: Skipping component '${CURRENT_ACTOR_COMPONENT_ID}' for entity '${entityId}' during save.`
+        );
+        continue;
+      }
+
+      const dataToSave = this.#componentCleaningService.clean(
+        componentTypeId,
+        componentData
+      );
+
+      if (dataToSave !== null && typeof dataToSave !== 'object') {
+        components[componentTypeId] = dataToSave;
+      } else if (Object.keys(dataToSave).length > 0) {
+        components[componentTypeId] = dataToSave;
+      } else {
+        this.#logger.debug(
+          `Skipping component '${componentTypeId}' for entity '${entityId}' as it is empty after cleaning.`
+        );
+      }
+    }
+    return components;
+  }
+
+  /**
+   * @description Restores a single serialized entity via the EntityManager.
+   * @param {{instanceId: string, definitionId: string, components: Record<string, any>}} savedEntityData
+   *   - Serialized entity data from the save file.
+   * @returns {void}
+   * @private
+   */
+  #restoreEntity(savedEntityData) {
+    try {
+      const restoredEntity =
+        this.#entityManager.reconstructEntity(savedEntityData);
+      if (!restoredEntity) {
+        this.#logger.warn(
+          `GamePersistenceService.restoreGameState: Failed to restore entity with instanceId: ${savedEntityData.instanceId} (Def: ${savedEntityData.definitionId}). reconstructEntity indicated failure.`
+        );
+      }
+    } catch (entityError) {
+      this.#logger.warn(
+        `GamePersistenceService.restoreGameState: Error during reconstructEntity for instanceId: ${savedEntityData.instanceId}. Error: ${entityError.message}. Skipping.`,
+        entityError
+      );
+    }
+  }
+
+  /**
    * Builds the active mods manifest section for the save data.
    *
    * @returns {{modId: string, version: string}[]} Array of active mod info.
@@ -153,35 +231,7 @@ class GamePersistenceService extends IGamePersistenceService {
 
     const entitiesData = [];
     for (const entity of this.#entityManager.activeEntities.values()) {
-      const components = {};
-      for (const [componentTypeId, componentData] of entity.componentEntries) {
-        if (componentTypeId === CURRENT_ACTOR_COMPONENT_ID) {
-          this.#logger.debug(
-            `GamePersistenceService.captureCurrentGameState: Skipping component '${CURRENT_ACTOR_COMPONENT_ID}' for entity '${entity.id}' during save.`
-          );
-          continue;
-        }
-
-        const dataToSave = this.#componentCleaningService.clean(
-          componentTypeId,
-          componentData
-        );
-
-        if (dataToSave !== null && typeof dataToSave !== 'object') {
-          components[componentTypeId] = dataToSave;
-        } else if (Object.keys(dataToSave).length > 0) {
-          components[componentTypeId] = dataToSave;
-        } else {
-          this.#logger.debug(
-            `Skipping component '${componentTypeId}' for entity '${entity.id}' as it is empty after cleaning.`
-          );
-        }
-      }
-      entitiesData.push({
-        instanceId: entity.id,
-        definitionId: entity.definitionId,
-        components: components,
-      });
+      entitiesData.push(this.#serializeEntity(entity));
     }
     this.#logger.debug(
       `GamePersistenceService: Captured ${entitiesData.length} entities.`
@@ -348,22 +398,8 @@ class GamePersistenceService extends IGamePersistenceService {
           );
           continue;
         }
-        try {
-          // When restoring, we explicitly tolerate missing keys (like 'thoughts' or 'notes')
-          // because reconstructEntity should not fail if a property is missing from the data.
-          const restoredEntity =
-            this.#entityManager.reconstructEntity(savedEntityData);
-          if (!restoredEntity) {
-            this.#logger.warn(
-              `GamePersistenceService.restoreGameState: Failed to restore entity with instanceId: ${savedEntityData.instanceId} (Def: ${savedEntityData.definitionId}). reconstructEntity indicated failure.`
-            );
-          }
-        } catch (entityError) {
-          this.#logger.warn(
-            `GamePersistenceService.restoreGameState: Error during reconstructEntity for instanceId: ${savedEntityData.instanceId}. Error: ${entityError.message}. Skipping.`,
-            entityError
-          );
-        }
+        // Tolerate missing optional keys in savedEntityData
+        this.#restoreEntity(savedEntityData);
       }
     }
     this.#logger.debug(
