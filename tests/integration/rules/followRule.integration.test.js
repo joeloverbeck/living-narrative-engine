@@ -3,7 +3,7 @@
  * @see tests/integration/followRule.integration.test.js
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import Ajv from 'ajv';
 import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
@@ -31,6 +31,8 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
+import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 
 class SimpleEntityManager {
   constructor(entities) {
@@ -149,13 +151,10 @@ describe('core_handle_follow rule integration', () => {
         dispatcher: eventBus,
         logger,
       }),
-      END_TURN: new EndTurnHandler({
-        safeEventDispatcher: safeDispatcher,
-        logger,
-      }),
+      END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-      GET_NAME: { execute: jest.fn() },
-      SET_VARIABLE: { execute: jest.fn() },
+      GET_NAME: new GetNameHandler({ entityManager, logger }),
+      SET_VARIABLE: new SetVariableHandler({ logger }),
     };
 
     for (const [type, handler] of Object.entries(handlers)) {
@@ -239,7 +238,7 @@ describe('core_handle_follow rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it('successful follow updates components and dispatches events', () => {
+  it('successful follow updates components and dispatches events', async () => {
     interpreter.shutdown();
     init([
       {
@@ -257,7 +256,7 @@ describe('core_handle_follow rule integration', () => {
         },
       },
     ]);
-    listener({
+    await listener({
       type: ATTEMPT_ACTION_ID,
       payload: { actorId: 'f1', actionId: 'core:follow', targetId: 'l1' },
     });
@@ -280,7 +279,7 @@ describe('core_handle_follow rule integration', () => {
     );
   });
 
-  it('cycle detection branch dispatches error and no mutations', () => {
+  it('cycle detection branch dispatches error and no mutations', async () => {
     entityManager = new SimpleEntityManager([
       {
         id: 'f1',
@@ -316,7 +315,7 @@ describe('core_handle_follow rule integration', () => {
         },
       },
     ]);
-    listener({
+    await listener({
       type: ATTEMPT_ACTION_ID,
       payload: { actorId: 'f1', actionId: 'core:follow', targetId: 'l1' },
     });
