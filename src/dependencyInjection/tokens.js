@@ -326,6 +326,7 @@ export const tokens = freeze({
   IfCoLocatedHandler: 'IfCoLocatedHandler',
   MathHandler: 'MathHandler',
   AutoMoveFollowersHandler: 'AutoMoveFollowersHandler',
+  MergeClosenessCircleHandler: 'MergeClosenessCircleHandler',
 
   // --- Actions ---
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',
