@@ -8,11 +8,12 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { resolvePath } from '../../utils/objectUtils.js';
-import storeResult from '../../utils/contextVariableUtils.js';
+import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
 
 /**
  * Safely sets a value on a nested object using a dot-notation path.
+ *
  * @param {object} obj The object to modify.
  * @param {string} path The dot-notation path (e.g., 'a.b.c').
  * @param {*} value The value to set at the path.
@@ -179,7 +180,7 @@ class ModifyContextArrayHandler {
     const resultForStorage = mode === 'pop' ? operationResult : finalArray;
 
     if (result_variable) {
-      storeResult(
+      setContextValue(
         result_variable,
         resultForStorage,
         executionContext,

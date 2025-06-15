@@ -12,7 +12,7 @@
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 import { wouldCreateCycle } from '../../utils/followUtils.js';
-import storeResult from '../../utils/contextVariableUtils.js';
+import { setContextValue } from '../../utils/contextVariableUtils.js';
 
 /**
  * @typedef {object} CheckFollowCycleParams
@@ -86,8 +86,8 @@ class CheckFollowCycleHandler {
     const cycleDetected = wouldCreateCycle(fid, lid, this.#entityManager);
     const result = { success: true, cycleDetected };
 
-    const stored = storeResult(
-      result_variable.trim(),
+    const stored = setContextValue(
+      result_variable,
       result,
       execCtx,
       this.#dispatcher,
