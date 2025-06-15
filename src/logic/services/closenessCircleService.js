@@ -15,6 +15,7 @@
 
 /**
  * Deduplicates items in an array while preserving order of first appearance.
+ *
  * @param {EntityId[]} items - The array of entity IDs to deduplicate.
  * @returns {EntityId[]} A new array containing only the unique items from the input.
  * @example
@@ -31,6 +32,7 @@ function dedupe(items = []) {
 /**
  * Merges multiple arrays of entity IDs into a single, deduplicated array.
  * This is used to calculate the full set of partners in a new or expanding Closeness Circle.
+ *
  * @param {...EntityId[]} arrays - A variable number of arrays to merge.
  * @returns {EntityId[]} A new, single array containing all unique entity IDs from the provided arrays.
  * @example
@@ -50,6 +52,7 @@ function merge(...arrays) {
 /**
  * "Repairs" a list of partners by ensuring it contains only unique, sorted entity IDs.
  * Sorting provides a canonical representation, making lists easier to compare.
+ *
  * @param {EntityId[]} partners - The list of partner IDs to repair.
  * @returns {EntityId[]} A new array with unique and sorted partner IDs.
  * @example

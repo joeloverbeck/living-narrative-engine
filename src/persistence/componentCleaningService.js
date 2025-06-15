@@ -2,6 +2,7 @@
 
 import { deepClone } from '../utils/objectUtils.js';
 import { setupService } from '../utils/serviceInitializer.js';
+/** @typedef {import('../interfaces/IComponentCleaningService.js').IComponentCleaningService} IComponentCleaningService */
 import {
   NOTES_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -11,6 +12,7 @@ import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 
 /**
  * @class ComponentCleaningService
+ * @implements {IComponentCleaningService}
  * @description Provides registration and execution of component data cleaners.
  */
 class ComponentCleaningService {
