@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented thoughts and notes tooltips.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixed issue with the dismiss rule.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -182,15 +180,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="323000" />
-    </task>
-    <task id="LOCAL-00041" summary="Fixed nasty bug in PromptCoordinator.">
-      <option name="closed" value="true" />
-      <created>1749893587110</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1749893587110</updated>
+      <workItem from="1749963238113" duration="1566000" />
     </task>
     <task id="LOCAL-00042" summary="Trying to return the app to normal.">
       <option name="closed" value="true" />
@@ -576,7 +566,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749940523195</updated>
     </task>
-    <option name="localTasksCounter" value="90" />
+    <task id="LOCAL-00090" summary="Fixed issue with the dismiss rule.">
+      <option name="closed" value="true" />
+      <created>1749963622265</created>
+      <option name="number" value="00090" />
+      <option name="presentableId" value="LOCAL-00090" />
+      <option name="project" value="LOCAL" />
+      <updated>1749963622265</updated>
+    </task>
+    <option name="localTasksCounter" value="91" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -607,6 +605,7 @@
     <MESSAGE value="The Return of the King." />
     <MESSAGE value="Implementing thoughts and notes tooltips." />
     <MESSAGE value="Implemented thoughts and notes tooltips." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented thoughts and notes tooltips." />
+    <MESSAGE value="Fixed issue with the dismiss rule." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed issue with the dismiss rule." />
   </component>
 </project>

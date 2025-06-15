@@ -157,11 +157,16 @@ function init(entities) {
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    GET_NAME: new GetNameHandler({ entityManager, logger, safeEventDispatcher: safeDispatcher }),
+    GET_NAME: new GetNameHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
     IF_CO_LOCATED: new IfCoLocatedHandler({
       entityManager,
       logger,
-      operationInterpreter
+      operationInterpreter,
+      safeEventDispatcher: safeDispatcher,
     }),
   };
 
