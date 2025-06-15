@@ -24,8 +24,7 @@ import ModDependencyError from '../errors/modDependencyError.js';
 import WorldLoaderError from '../errors/worldLoaderError.js';
 // import {ENGINE_VERSION} from '../engineVersion.js'; // Not directly used in this logic, commented out
 import { resolveOrder } from '../modding/modLoadOrderResolver.js';
-import { validateLoaderDeps } from '../utils/validationUtils.js';
-import { ensureValidLogger } from '../utils/loggerUtils.js';
+import AbstractLoader from './abstractLoader.js';
 
 // --- Type Definitions for Loader Results ---
 /**
@@ -62,7 +61,7 @@ import { ensureValidLogger } from '../utils/loggerUtils.js';
  */
 
 // ── Class ────────────────────────────────────────────────────────────────────
-class WorldLoader {
+class WorldLoader extends AbstractLoader {
   // Private fields
   /** @type {IDataRegistry}  */ #registry;
   /** @type {ILogger}        */ #logger;
@@ -122,9 +121,7 @@ class WorldLoader {
     modManifestLoader,
     validatedEventDispatcher,
   }) {
-    this.#logger = ensureValidLogger(logger, 'WorldLoader');
-
-    validateLoaderDeps(this.#logger, [
+    super(logger, [
       {
         dependency: registry,
         name: 'IDataRegistry',
@@ -186,6 +183,8 @@ class WorldLoader {
         methods: ['dispatch'],
       },
     ]);
+
+    this.#logger = this._logger;
 
     // --- Store dependencies ---
     this.#registry = registry;

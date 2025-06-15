@@ -11,7 +11,7 @@
  * @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult
  */
 
-import { validateLoaderDeps } from '../utils/validationUtils.js';
+import AbstractLoader from './abstractLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidation.js';
 
@@ -32,7 +32,7 @@ import { validateAgainstSchema } from '../utils/schemaValidation.js';
  * @abstract
  * @class BaseManifestItemLoader
  */
-export class BaseManifestItemLoader {
+export class BaseManifestItemLoader extends AbstractLoader {
   /**
    * Protected reference to the configuration service.
    *
@@ -68,13 +68,6 @@ export class BaseManifestItemLoader {
    * @type {IDataRegistry}
    */
   _dataRegistry;
-  /**
-   * Protected reference to the logger service.
-   *
-   * @protected
-   * @type {ILogger}
-   */
-  _logger;
 
   /**
    * The primary schema ID used for validation by this loader instance.
@@ -107,16 +100,7 @@ export class BaseManifestItemLoader {
     dataRegistry,
     logger
   ) {
-    // --- Dependency Validation ---
-    if (typeof contentType !== 'string' || contentType.trim() === '') {
-      const errorMsg = `BaseManifestItemLoader requires a non-empty string for 'contentType'. Received: ${contentType}`;
-      if (logger && typeof logger.error === 'function') {
-        logger.error(errorMsg);
-      }
-      throw new TypeError(errorMsg);
-    }
-    const trimmedContentType = contentType.trim();
-    validateLoaderDeps(logger, [
+    super(logger, [
       {
         dependency: config,
         name: 'IConfiguration',
@@ -143,7 +127,13 @@ export class BaseManifestItemLoader {
         methods: ['store', 'get'],
       },
     ]);
-    this._logger = logger;
+
+    if (typeof contentType !== 'string' || contentType.trim() === '') {
+      const errorMsg = `BaseManifestItemLoader requires a non-empty string for 'contentType'. Received: ${contentType}`;
+      this._logger.error(errorMsg);
+      throw new TypeError(errorMsg);
+    }
+    const trimmedContentType = contentType.trim();
 
     // --- Store Dependencies ---
     this._config = config;

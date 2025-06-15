@@ -19,9 +19,9 @@
  * and compilation of JSON schemas specified in the application's configuration.
  * It focuses solely on processing the schemas listed in the configuration's `schemaFiles`.
  */
-import { validateLoaderDeps } from '../utils/validationUtils.js';
+import AbstractLoader from './abstractLoader.js';
 
-class SchemaLoader {
+class SchemaLoader extends AbstractLoader {
   #config;
   #resolver;
   #fetcher;
@@ -39,7 +39,7 @@ class SchemaLoader {
    * @throws {Error} If any required dependency is not provided or invalid.
    */
   constructor(configuration, pathResolver, fetcher, validator, logger) {
-    validateLoaderDeps(logger, [
+    super(logger, [
       {
         dependency: configuration,
         name: 'IConfiguration',
@@ -66,7 +66,7 @@ class SchemaLoader {
     this.#resolver = pathResolver;
     this.#fetcher = fetcher;
     this.#validator = validator;
-    this.#logger = logger;
+    this.#logger = this._logger;
 
     // --- Changed log level from info to debug for instance creation ---
     this.#logger.debug('SchemaLoader: Instance created and services injected.');
