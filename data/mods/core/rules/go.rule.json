@@ -13,23 +13,20 @@
   },
   "actions": [
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 1.1: Attempt to fetch the actor's name component.",
+      "type": "QUERY_COMPONENTS",
+      "comment": "Fetch actor name and position components in bulk.",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "core:name",
-        "result_variable": "actorNameComponent",
-        "missing_value": null
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 1.2: Attempt to fetch the actor's position component.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:position",
-        "result_variable": "actorPositionComponentPreMove",
-        "missing_value": null
+        "pairs": [
+          {
+            "component_type": "core:name",
+            "result_variable": "actorNameComponent"
+          },
+          {
+            "component_type": "core:position",
+            "result_variable": "actorPositionComponentPreMove"
+          }
+        ]
       }
     },
     {

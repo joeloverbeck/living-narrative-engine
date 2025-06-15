@@ -23,6 +23,7 @@ import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
 import QueryComponentHandler from '../../logic/operationHandlers/queryComponentHandler.js';
+import QueryComponentsHandler from '../../logic/operationHandlers/queryComponentsHandler.js';
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
 import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
@@ -136,6 +137,16 @@ export function registerInterpreters(container) {
     [
       tokens.QueryComponentHandler,
       QueryComponentHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.QueryComponentsHandler,
+      QueryComponentsHandler,
       (c, Handler) =>
         new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
@@ -362,6 +373,7 @@ export function registerInterpreters(container) {
     registry.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));
     registry.register('REMOVE_COMPONENT', bind(tokens.RemoveComponentHandler));
     registry.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));
+    registry.register('QUERY_COMPONENTS', bind(tokens.QueryComponentsHandler));
     registry.register('QUERY_ENTITIES', bind(tokens.QueryEntitiesHandler));
     registry.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
     registry.register('END_TURN', bind(tokens.EndTurnHandler));
