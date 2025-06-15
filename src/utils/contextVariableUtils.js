@@ -2,6 +2,7 @@
 
 import { getPrefixedLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchError.js';
+import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
 
 /**
  * Safely stores a value into `execCtx.evaluationContext.context`. If the context
@@ -18,6 +19,19 @@ import { safeDispatchError } from './safeDispatchError.js';
  */
 export function storeResult(variableName, value, execCtx, dispatcher, logger) {
   const log = getPrefixedLogger(logger, '[contextVariableUtils] ');
+
+  let safeDispatcher = dispatcher;
+  if (!safeDispatcher && execCtx?.validatedEventDispatcher) {
+    try {
+      safeDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher: execCtx.validatedEventDispatcher,
+        logger: log,
+      });
+    } catch {
+      safeDispatcher = null;
+    }
+  }
+
   const hasContext =
     execCtx?.evaluationContext &&
     typeof execCtx.evaluationContext.context === 'object' &&
@@ -26,10 +40,8 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
   if (!hasContext) {
     const message =
       'storeResult: evaluationContext.context is missing; cannot store result';
-    if (dispatcher) {
-      safeDispatchError(dispatcher, message, { variableName });
-    } else {
-      log.error(message, { variableName });
+    if (safeDispatcher) {
+      safeDispatchError(safeDispatcher, message, { variableName });
     }
     return false;
   }
@@ -38,9 +50,9 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
     execCtx.evaluationContext.context[variableName] = value;
     return true;
   } catch (e) {
-    if (dispatcher) {
+    if (safeDispatcher) {
       safeDispatchError(
-        dispatcher,
+        safeDispatcher,
         `storeResult: Failed to write variable "${variableName}"`,
         {
           variableName,
@@ -48,12 +60,6 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
           stack: e.stack,
         }
       );
-    } else {
-      log.error(`storeResult: Failed to write variable "${variableName}"`, {
-        variableName,
-        error: e.message,
-        stack: e.stack,
-      });
     }
     return false;
   }
