@@ -17,6 +17,8 @@ import {
   validateDeps,
   getExecLogger,
 } from './handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
+
 
 /**
  * @typedef {object} EntityRefObject
@@ -87,8 +89,7 @@ class ModifyComponentHandler {
     const log = getExecLogger(this.#logger, execCtx);
 
     // ── validate base params ───────────────────────────────────────
-    if (!params || typeof params !== 'object') {
-      log.warn('MODIFY_COMPONENT: params missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'MODIFY_COMPONENT')) {
       return;
     }
     const { entity_ref, component_type, field, mode = 'set', value } = params;

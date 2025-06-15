@@ -10,6 +10,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 const EVENT_ID = 'core:perceptible_event';
 
@@ -69,11 +70,13 @@ class DispatchPerceptibleEventHandler {
    * @param {ExecutionContext} _ctx - Execution context (unused).
    */
   execute(params, _ctx) {
-    if (!params || typeof params !== 'object') {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_PERCEPTIBLE_EVENT: params missing or invalid',
-        details: { params },
-      });
+    if (
+      !assertParamsObject(
+        params,
+        this.#dispatcher,
+        'DISPATCH_PERCEPTIBLE_EVENT'
+      )
+    ) {
       return;
     }
 

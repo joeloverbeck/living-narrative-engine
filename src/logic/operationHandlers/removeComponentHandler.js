@@ -20,6 +20,8 @@ import {
   validateDeps,
   getExecLogger,
 } from './handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
+
 
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.
@@ -85,8 +87,7 @@ class RemoveComponentHandler {
     const log = getExecLogger(this.#logger, executionContext);
 
     // 1. Validate Parameters
-    if (!params || typeof params !== 'object') {
-      log.warn('REMOVE_COMPONENT: params missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'REMOVE_COMPONENT')) {
       return;
     }
 

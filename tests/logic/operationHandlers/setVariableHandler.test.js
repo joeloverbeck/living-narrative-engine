@@ -117,19 +117,19 @@ describe('SetVariableHandler', () => {
       [
         'null params',
         null,
-        'SET_VARIABLE: Missing or invalid parameters object.',
+        'SET_VARIABLE: params missing or invalid.',
         { params: null },
       ],
       [
         'undefined params',
         undefined,
-        'SET_VARIABLE: Missing or invalid parameters object.',
+        'SET_VARIABLE: params missing or invalid.',
         { params: undefined },
       ],
       [
         'non-object params',
         'string',
-        'SET_VARIABLE: Missing or invalid parameters object.',
+        'SET_VARIABLE: params missing or invalid.',
         { params: 'string' },
       ],
       [
@@ -139,17 +139,24 @@ describe('SetVariableHandler', () => {
         { variable_name: undefined },
       ],
     ])(
-      'logs error and returns if params object is invalid (%s)',
+      'logs warning and returns if params object is invalid (%s)',
       (desc, invalidParams, expectedErrorMsg, expectedErrorObj) => {
         const execCtx = buildCtx(mockLoggerInstance); // Pass logger
         const initialVarStoreState = JSON.stringify(
           execCtx.evaluationContext.context
         );
         handler.execute(invalidParams, execCtx);
-        expect(mockLoggerInstance.error).toHaveBeenCalledWith(
-          expectedErrorMsg,
-          expectedErrorObj
-        );
+        if (desc === 'array params') {
+          expect(mockLoggerInstance.error).toHaveBeenCalledWith(
+            expectedErrorMsg,
+            expectedErrorObj
+          );
+        } else {
+          expect(mockLoggerInstance.warn).toHaveBeenCalledWith(
+            expectedErrorMsg,
+            expectedErrorObj
+          );
+        }
         expect(JSON.stringify(execCtx.evaluationContext.context)).toEqual(
           initialVarStoreState
         );

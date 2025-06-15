@@ -19,6 +19,8 @@ import {
   validateDeps,
   getExecLogger,
 } from './handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
+
 
 /**
  * Parameters accepted by {@link AddComponentHandler#execute}.
@@ -75,8 +77,7 @@ class AddComponentHandler {
     const log = getExecLogger(this.#logger, executionContext);
 
     // 1. Validate Parameters
-    if (!params || typeof params !== 'object') {
-      log.warn('ADD_COMPONENT: params missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'ADD_COMPONENT')) {
       return;
     }
 

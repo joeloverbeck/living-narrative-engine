@@ -14,6 +14,7 @@
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * Parameters accepted by {@link HasComponentHandler#execute}.
@@ -86,8 +87,7 @@ class HasComponentHandler {
     const log = executionContext?.logger ?? this.#logger;
 
     // 1. Validate Parameters
-    if (!params || typeof params !== 'object') {
-      log.warn('HAS_COMPONENT: Parameters missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'HAS_COMPONENT')) {
       return;
     }
 

@@ -10,6 +10,7 @@
 
 // <<< ADDED Import: jsonLogic directly >>>
 import jsonLogic from 'json-logic-js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * Parameters expected by the SetVariableHandler#execute method.
@@ -77,10 +78,7 @@ class SetVariableHandler {
     const logger = this.#logger;
 
     // --- 1. Validate Parameters ---
-    if (!params || typeof params !== 'object') {
-      logger.error('SET_VARIABLE: Missing or invalid parameters object.', {
-        params,
-      });
+    if (!assertParamsObject(params, logger, 'SET_VARIABLE')) {
       return;
     }
 

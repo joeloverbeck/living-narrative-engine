@@ -13,6 +13,7 @@ import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class IfCoLocatedHandler {
   /** @type {ILogger} */
@@ -65,11 +66,7 @@ class IfCoLocatedHandler {
   execute(params, execCtx) {
     const log = execCtx?.logger ?? this.#logger;
 
-    if (!params || typeof params !== 'object') {
-      safeDispatchError(
-        this.#dispatcher,
-        'IF_CO_LOCATED: params missing or invalid'
-      );
+    if (!assertParamsObject(params, this.#dispatcher, 'IF_CO_LOCATED')) {
       return;
     }
 

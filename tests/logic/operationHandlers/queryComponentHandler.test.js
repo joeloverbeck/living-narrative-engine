@@ -366,7 +366,7 @@ describe('QueryComponentHandler', () => {
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       DISPLAY_ERROR_ID,
       expect.objectContaining({
-        message: 'QueryComponentHandler: Missing or invalid parameters object.',
+        message: 'QueryComponentHandler: params missing or invalid.',
       })
     );
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
@@ -376,7 +376,7 @@ describe('QueryComponentHandler', () => {
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       DISPLAY_ERROR_ID,
       expect.objectContaining({
-        message: 'QueryComponentHandler: Missing or invalid parameters object.',
+        message: 'QueryComponentHandler: params missing or invalid.',
       })
     );
   });
