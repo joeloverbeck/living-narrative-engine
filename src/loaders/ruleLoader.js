@@ -152,16 +152,18 @@ class RuleLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `RuleLoader [${modId}]: Delegating storage for rule (base ID: '${baseRuleId}') from ${filename} to base helper.`
     );
-    let didOverride = false; // <<< Initialize override flag
+    let qualifiedId;
+    let didOverride = false;
     try {
-      // Capture the boolean return value from the helper
-      didOverride = this._storeItemInRegistry(
+      const result = this._storeItemInRegistry(
         'rules',
         modId,
         baseRuleId,
         data,
         filename
-      ); // <<< CAPTURE result
+      );
+      qualifiedId = result.qualifiedId;
+      didOverride = result.didOverride;
     } catch (storageError) {
       // Error logging happens in helper, re-throw
       throw storageError;
@@ -169,12 +171,11 @@ class RuleLoader extends BaseManifestItemLoader {
     // --- End Storage ---
 
     // --- Return Value ---
-    const finalRegistryKey = `${modId}:${baseRuleId}`; // Construct the prefixed ID used for storage
+    const finalRegistryKey = qualifiedId ?? `${modId}:${baseRuleId}`;
     this._logger.debug(
       `RuleLoader [${modId}]: Successfully processed rule from ${filename}. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
     );
-    // Return the object as required by the base class contract
-    return { qualifiedId: finalRegistryKey, didOverride: didOverride }; // <<< MODIFIED Return Value
+    return { qualifiedId: finalRegistryKey, didOverride };
   }
 
   /**
