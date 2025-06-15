@@ -54,33 +54,19 @@
       }
     },
     {
-      "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Dispatch an event for other characters to observe.",
+      "type": "SET_VARIABLE",
       "parameters": {
-        "location_id": "{context.locationId}",
-        "description_text": "{context.logMessage}",
-        "perception_type": "action_target_general",
-        "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.targetId}"
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
       }
     },
     {
-      "type": "DISPATCH_EVENT",
-      "comment": "Notify the actor's client with a third-person success message.",
+      "type": "SET_VARIABLE",
       "parameters": {
-        "eventType": "core:display_successful_action_result",
-        "payload": {
-          "message": "{context.logMessage}"
-        }
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
       }
     },
-    {
-      "type": "END_TURN",
-      "comment": "Signal to the Turn Manager that the actor's turn is over.",
-      "parameters": {
-        "entityId": "{event.payload.actorId}",
-        "success": true
-      }
-    }
+    { "macro": "core:logSuccessAndEndTurn" }
   ]
 }

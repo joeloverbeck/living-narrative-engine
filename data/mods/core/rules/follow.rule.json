@@ -30,23 +30,23 @@
         },
         "then_actions": [
           {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch a decoupled event to the UI indicating the failure.",
+            "type": "GET_NAME",
+            "comment": "Fetch the leader's name for the failure message.",
             "parameters": {
-              "eventType": "core:display_error",
-              "payload": {
-                "message": "You cannot follow {target.name}; this would create a follow cycle (e.g. A follows B, B follows A)."
-              }
+              "entity_ref": {
+                "entityId": "{event.payload.targetId}"
+              },
+              "result_variable": "targetName"
             }
           },
           {
-            "type": "END_TURN",
-            "comment": "Signal to the Turn Manager that the actor's turn is over (and was unsuccessful).",
+            "type": "SET_VARIABLE",
             "parameters": {
-              "entityId": "{event.payload.actorId}",
-              "success": false
+              "variable_name": "logMessage",
+              "value": "You cannot follow {context.targetName}; this would create a follow cycle (e.g. A follows B, B follows A)."
             }
-          }
+          },
+          { "macro": "core:logFailureAndEndTurn" }
         ]
       }
     },
