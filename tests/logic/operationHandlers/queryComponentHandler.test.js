@@ -549,6 +549,28 @@ describe('QueryComponentHandler', () => {
     );
   });
 
+  test('execute should store provided missing_value when component not found', () => {
+    const params = {
+      entity_ref: 'target',
+      component_type: 'ns:missing',
+      result_variable: 'maybe',
+      missing_value: null,
+    };
+    const context = getMockContext();
+    mockEntityManager.getComponentData.mockReturnValue(undefined);
+
+    handler.execute(params, context);
+
+    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+      mockTargetId,
+      'ns:missing'
+    );
+    expect(context.evaluationContext.context.maybe).toBeNull();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Stored \'null\' in "maybe"')
+    );
+  });
+
   test('execute should trim component_type and result_variable', () => {
     const params = {
       entity_ref: 'actor',

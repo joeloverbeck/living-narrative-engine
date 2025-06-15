@@ -13,7 +13,6 @@ import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import ModifyContextArrayHandler from '../../../src/logic/operationHandlers/modifyContextArrayHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
@@ -98,7 +97,7 @@ function init(entities) {
 
   // Register all necessary handlers for the rule to run
   const handlers = {
-    QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
+    QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,

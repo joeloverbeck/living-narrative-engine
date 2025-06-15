@@ -13,21 +13,23 @@
   },
   "actions": [
     {
-      "type": "QUERY_COMPONENT_OPTIONAL",
+      "type": "QUERY_COMPONENT",
       "comment": "Step 1: Get actor's current closeness component, if any.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "intimacy:closeness",
-        "result_variable": "actorCloseness"
+        "result_variable": "actorCloseness",
+        "missing_value": null
       }
     },
     {
-      "type": "QUERY_COMPONENT_OPTIONAL",
+      "type": "QUERY_COMPONENT",
       "comment": "Step 2: Get target's current closeness component, if any.",
       "parameters": {
         "entity_ref": "target",
         "component_type": "intimacy:closeness",
-        "result_variable": "targetCloseness"
+        "result_variable": "targetCloseness",
+        "missing_value": null
       }
     },
     {
