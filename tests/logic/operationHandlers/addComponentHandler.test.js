@@ -82,7 +82,7 @@ describe('AddComponentHandler', () => {
           logger: mockLogger,
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/EntityManager/);
+    ).toThrow(/entityManager/);
     expect(
       () =>
         new AddComponentHandler({
@@ -90,14 +90,14 @@ describe('AddComponentHandler', () => {
           logger: mockLogger,
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/addComponent method/);
+    ).toThrow(/addComponent/);
     expect(
       () =>
         new AddComponentHandler({
           entityManager: mockEntityManager,
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/ILogger/);
+    ).toThrow(/logger/);
   });
 
   test('throws if safeEventDispatcher is missing or invalid', () => {
@@ -107,7 +107,7 @@ describe('AddComponentHandler', () => {
           entityManager: mockEntityManager,
           logger: mockLogger,
         })
-    ).toThrow(/ISafeEventDispatcher/);
+    ).toThrow(/safeEventDispatcher/);
     expect(
       () =>
         new AddComponentHandler({
@@ -115,7 +115,7 @@ describe('AddComponentHandler', () => {
           logger: mockLogger,
           safeEventDispatcher: {},
         })
-    ).toThrow(/ISafeEventDispatcher/);
+    ).toThrow(/safeEventDispatcher/);
   });
 
   // --- Happy Path - Basic Add/Replace ------------------------------------

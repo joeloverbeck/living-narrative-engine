@@ -5,7 +5,6 @@
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import Ajv from 'ajv';
-import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
@@ -241,7 +240,7 @@ describe.skip('intimacy:handle_thumb_wipe_cheek rule integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    
+
     expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
     expect(perceptibleEvent.payload.actorId).toBe('hero');
     expect(perceptibleEvent.payload.targetId).toBe('friend');
@@ -250,7 +249,7 @@ describe.skip('intimacy:handle_thumb_wipe_cheek rule integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(uiEvent).toBeDefined();
-    
+
     expect(uiEvent.payload.message).toBeDefined();
 
     // Assert the turn ended correctly

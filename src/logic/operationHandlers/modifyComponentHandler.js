@@ -12,6 +12,11 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import {
+  initHandlerLogger,
+  validateDeps,
+  getExecLogger,
+} from './handlerUtils.js';
 
 /**
  * @typedef {object} EntityRefObject
@@ -57,28 +62,18 @@ class ModifyComponentHandler {
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    if (
-      !logger ||
-      ['info', 'warn', 'error', 'debug'].some(
-        (m) => typeof logger[m] !== 'function'
-      )
-    ) {
-      throw new Error('ModifyComponentHandler needs a valid ILogger.');
-    }
-    if (
-      !entityManager ||
-      typeof entityManager.getComponentData !== 'function' ||
-      typeof entityManager.addComponent !== 'function'
-    ) {
-      throw new Error(
-        'ModifyComponentHandler needs EntityManager#getComponentData & #addComponent.'
-      );
-    }
-    this.#logger = logger;
+    this.#logger = initHandlerLogger('ModifyComponentHandler', logger);
+    validateDeps('ModifyComponentHandler', this.#logger, {
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData', 'addComponent'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
-    if (!safeEventDispatcher?.dispatch) {
-      throw new Error('ModifyComponentHandler needs ISafeEventDispatcher');
-    }
     this.#dispatcher = safeEventDispatcher;
   }
 
@@ -89,7 +84,7 @@ class ModifyComponentHandler {
    * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
-    const log = execCtx?.logger ?? this.#logger;
+    const log = getExecLogger(this.#logger, execCtx);
 
     // ── validate base params ───────────────────────────────────────
     if (!params || typeof params !== 'object') {
