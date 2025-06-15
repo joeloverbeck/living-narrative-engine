@@ -15,6 +15,7 @@
           "description": "Required. The identifier determining the type of operation and the expected structure of the 'parameters' object.",
           "enum": [
             "QUERY_COMPONENT",
+            "QUERY_COMPONENT_OPTIONAL",
             "MODIFY_COMPONENT",
             "ADD_COMPONENT",
             "REMOVE_COMPONENT",
@@ -68,6 +69,22 @@
             "properties": {
               "parameters": {
                 "$ref": "#/$defs/QueryComponentParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "QUERY_COMPONENT_OPTIONAL" }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/QueryComponentOptionalParameters"
               }
             },
             "required": ["parameters"]
@@ -462,6 +479,25 @@
     "QueryComponentParameters": {
       "type": "object",
       "description": "Parameters for the QUERY_COMPONENT operation.",
+      "properties": {
+        "entity_ref": {
+          "$ref": "./common.schema.json#/definitions/entityReference"
+        },
+        "component_type": {
+          "$ref": "./common.schema.json#/definitions/namespacedId"
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
+        }
+      },
+      "required": ["entity_ref", "component_type", "result_variable"],
+      "additionalProperties": false
+    },
+    "QueryComponentOptionalParameters": {
+      "type": "object",
+      "description": "Parameters for the QUERY_COMPONENT_OPTIONAL operation.",
       "properties": {
         "entity_ref": {
           "$ref": "./common.schema.json#/definitions/entityReference"

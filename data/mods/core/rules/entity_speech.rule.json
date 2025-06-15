@@ -5,21 +5,21 @@
   "event_type": "core:entity_spoke",
   "actions": [
     {
-      "type": "HAS_COMPONENT",
-      "comment": "Step 1.1: Check if the speaker has a name.",
+      "type": "QUERY_COMPONENT_OPTIONAL",
+      "comment": "Step 1.1: Attempt to get the speaker's name component.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:name",
-        "result_variable": "hasName"
+        "result_variable": "speakerNameComponent"
       }
     },
     {
-      "type": "HAS_COMPONENT",
-      "comment": "Step 1.2: Check if the speaker has a position.",
+      "type": "QUERY_COMPONENT_OPTIONAL",
+      "comment": "Step 1.2: Attempt to get the speaker's position component.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:position",
-        "result_variable": "hasPosition"
+        "result_variable": "speakerPositionComponent"
       }
     },
     {
@@ -28,33 +28,11 @@
       "parameters": {
         "condition": {
           "and": [
-            {
-              "var": "context.hasName"
-            },
-            {
-              "var": "context.hasPosition"
-            }
+            { "var": "context.speakerNameComponent" },
+            { "var": "context.speakerPositionComponent" }
           ]
         },
         "then_actions": [
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Fetch the name component of the entity that spoke (actor is event.payload.entityId).",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:name",
-              "result_variable": "speakerNameComponent"
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Fetch the position component of the entity that spoke to get their locationId.",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:position",
-              "result_variable": "speakerPositionComponent"
-            }
-          },
           {
             "type": "GET_TIMESTAMP",
             "comment": "Get the current ISO timestamp for perception logging.",

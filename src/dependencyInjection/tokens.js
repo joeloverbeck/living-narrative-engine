@@ -123,6 +123,7 @@ import { freeze } from '../utils/objectUtils';
  * @property {DiToken} AddComponentHandler - Token for the 'ADD_COMPONENT' operation handler.
  * @property {DiToken} RemoveComponentHandler - Token for the 'REMOVE_COMPONENT' operation handler.
  * @property {DiToken} QueryComponentHandler - Token for the 'QUERY_COMPONENT' operation handler.
+ * @property {DiToken} QueryComponentOptionalHandler - Token for the 'QUERY_COMPONENT_OPTIONAL' operation handler.
  * @property {DiToken} SetVariableHandler - Token for the 'SET_VARIABLE' operation handler.
  * @property {DiToken} EndTurnHandler - Token for the 'END_TURN' operation handler.
  *
@@ -250,6 +251,7 @@ export const tokens = freeze({
   AddComponentHandler: 'AddComponentHandler',
   RemoveComponentHandler: 'RemoveComponentHandler',
   QueryComponentHandler: 'QueryComponentHandler',
+  QueryComponentOptionalHandler: 'QueryComponentOptionalHandler',
   SetVariableHandler: 'SetVariableHandler',
   EndTurnHandler: 'EndTurnHandler',
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',

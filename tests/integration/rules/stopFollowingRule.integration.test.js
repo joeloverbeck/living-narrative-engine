@@ -15,8 +15,7 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
-import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
-import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
+import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
@@ -139,12 +138,10 @@ function init(entities) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
-    HAS_COMPONENT: new HasComponentHandler({
+    QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
     }),
-    QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
