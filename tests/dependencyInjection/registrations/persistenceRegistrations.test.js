@@ -97,7 +97,7 @@ describe('registerPersistence', () => {
         token: tokens.IStorageProvider,
         Class: BrowserStorageProvider,
         lifecycle: 'singleton',
-        deps: [tokens.ILogger],
+        deps: [tokens.ILogger, tokens.ISafeEventDispatcher],
       },
       {
         token: tokens.ISaveLoadService,
