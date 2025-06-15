@@ -9,6 +9,7 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import stopFollowingRule from '../../../data/mods/core/rules/stop_following.rule.json';
 import logFailureAndEndTurn from '../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
@@ -285,6 +286,7 @@ describe('core_handle_stop_following rule integration', () => {
       operationSchema,
       'http://example.com/schemas/operation.schema.json'
     );
+    loadOperationSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'

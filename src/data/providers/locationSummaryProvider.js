@@ -12,6 +12,7 @@ import {
   DEFAULT_FALLBACK_EXIT_DIRECTION,
   DEFAULT_FALLBACK_LOCATION_NAME,
 } from '../../constants/textDefaults.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -26,19 +27,31 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
   #entityManager;
   /** @type {IEntitySummaryProvider} */
   #summaryProvider;
+  /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #dispatcher;
 
   /**
-   * @param {object} dependencies
-   * @param {IEntityManager} dependencies.entityManager
-   * @param {IEntitySummaryProvider} dependencies.summaryProvider
+   * Creates the provider.
+   *
+   * @param {object} dependencies - Constructor dependencies
+   * @param {IEntityManager} dependencies.entityManager - Provides entity lookups.
+   * @param {IEntitySummaryProvider} dependencies.summaryProvider - Supplies summary data for entities.
+   * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dependencies.safeEventDispatcher - Dispatcher for error events.
    */
-  constructor({ entityManager, summaryProvider }) {
+  constructor({ entityManager, summaryProvider, safeEventDispatcher }) {
     super();
+    if (!safeEventDispatcher?.dispatch) {
+      throw new Error(
+        'LocationSummaryProvider requires a valid ISafeEventDispatcher.'
+      );
+    }
     this.#entityManager = entityManager;
     this.#summaryProvider = summaryProvider;
+    /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+    this.#dispatcher = safeEventDispatcher;
   }
 
-  async #buildExitDTOs(locationEntity, logger) {
+  async #buildExitDTOs(locationEntity) {
     const exitsComponentData =
       locationEntity.getComponentData(EXITS_COMPONENT_ID);
     if (!exitsComponentData || !Array.isArray(exitsComponentData)) return [];
@@ -60,9 +73,10 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
               targetSummary?.name || DEFAULT_FALLBACK_LOCATION_NAME,
           };
         } catch (err) {
-          logger.error(
-            `LocationSummaryProvider: Error fetching exit target entity '${exitData.target}': ${err.message}`
-          );
+          this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+            message: `LocationSummaryProvider: Error fetching exit target entity '${exitData.target}': ${err.message}`,
+            details: { error: err.message, stack: err.stack, exitData },
+          });
           return null;
         }
       });
@@ -85,7 +99,7 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
           return otherEntity
             ? this.#summaryProvider.getSummary(otherEntity)
             : null;
-        } catch (err) {
+        } catch (_err) {
           logger.warn(
             `LocationSummaryProvider: Could not retrieve entity '${entityId}' in location '${locationId}'.`
           );
@@ -123,7 +137,7 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
       }
 
       const locationSummary = this.#summaryProvider.getSummary(locationEntity);
-      const exits = await this.#buildExitDTOs(locationEntity, logger);
+      const exits = await this.#buildExitDTOs(locationEntity);
       const characters = await this.#buildCharacterDTOs(
         locationEntity.id,
         actor.id,
@@ -138,10 +152,15 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
         characters,
       };
     } catch (err) {
-      logger.error(
-        `LocationSummaryProvider: Critical error generating summary for location '${position.locationId}': ${err.message}`,
-        err
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `LocationSummaryProvider: Critical error generating summary for location '${position.locationId}': ${err.message}`,
+        details: {
+          error: err.message,
+          stack: err.stack,
+          locationId: position.locationId,
+          actorId: actor.id,
+        },
+      });
       return null;
     }
   }
