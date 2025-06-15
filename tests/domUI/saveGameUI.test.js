@@ -5,6 +5,10 @@ import { JSDOM } from 'jsdom';
 import { SaveGameUI } from '../../src/domUI/index.js'; // Adjust path if necessary
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import * as renderSlotItemModule from '../../src/domUI/helpers/renderSlotItem.js';
+import {
+  formatSaveFileMetadata,
+  formatEmptySlot,
+} from '../../src/domUI/helpers/slotDataFormatter.js';
 
 import {
   afterEach,
@@ -172,6 +176,33 @@ describe('SaveGameUI', () => {
     }
     await awaitTick();
   }
+
+  describe('_getSaveSlotsData', () => {
+    it('should build slot metadata with helper', async () => {
+      mockSaveLoadService.listManualSaveSlots.mockResolvedValueOnce([
+        {
+          identifier: 'id1',
+          saveName: 'Slot One',
+          timestamp: '2023-01-01T00:00:00Z',
+          playtimeSeconds: 5,
+          isCorrupted: false,
+        },
+      ]);
+
+      const result = await saveGameUI._getSaveSlotsData();
+
+      expect(result[0].slotItemMeta).toEqual(
+        formatSaveFileMetadata({
+          identifier: 'id1',
+          saveName: 'Slot One',
+          timestamp: '2023-01-01T00:00:00Z',
+          playtimeSeconds: 5,
+          isCorrupted: false,
+        })
+      );
+      expect(result[1].slotItemMeta).toEqual(formatEmptySlot('Empty Slot 2'));
+    });
+  });
 
   describe('populateSlotsList integration', () => {
     it('should populate the save slots container with slot items', async () => {
