@@ -20,10 +20,12 @@
 // --- Implementation Imports -------------------------------------------------
 import ModDependencyValidator from '../modding/modDependencyValidator.js';
 import validateModEngineVersions from '../modding/modVersionValidator.js';
-import ModDependencyError from '../errors/modDependencyError.js'; // Ensure this path is correct
+import ModDependencyError from '../errors/modDependencyError.js';
 import WorldLoaderError from '../errors/worldLoaderError.js';
 // import {ENGINE_VERSION} from '../engineVersion.js'; // Not directly used in this logic, commented out
 import { resolveOrder } from '../modding/modLoadOrderResolver.js';
+import { validateLoaderDeps } from '../utils/validationUtils.js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
 
 // --- Type Definitions for Loader Results ---
 /**
@@ -120,37 +122,73 @@ class WorldLoader {
     modManifestLoader,
     validatedEventDispatcher,
   }) {
-    // --- Dependency Validation (simplified for brevity, assume checks pass) ---
-    if (!registry) throw new Error("WorldLoader: Missing/invalid 'registry'.");
-    if (!logger) throw new Error("WorldLoader: Missing/invalid 'logger'.");
-    if (!schemaLoader)
-      throw new Error("WorldLoader: Missing/invalid 'schemaLoader'.");
-    if (!componentLoader)
-      throw new Error("WorldLoader: Missing/invalid 'componentLoader'.");
-    if (!ruleLoader)
-      throw new Error("WorldLoader: Missing/invalid 'ruleLoader'.");
-    if (!actionLoader)
-      throw new Error("WorldLoader: Missing/invalid 'actionLoader'.");
-    if (!eventLoader)
-      throw new Error("WorldLoader: Missing/invalid 'eventLoader'.");
-    if (!entityLoader)
-      throw new Error("WorldLoader: Missing/invalid 'entityLoader'.");
-    if (!validator)
-      throw new Error("WorldLoader: Missing/invalid 'validator'.");
-    if (!configuration)
-      throw new Error("WorldLoader: Missing/invalid 'configuration'.");
-    if (!gameConfigLoader)
-      throw new Error("WorldLoader: Missing/invalid 'gameConfigLoader'.");
-    if (!modManifestLoader)
-      throw new Error("WorldLoader: Missing/invalid 'modManifestLoader'.");
-    if (!validatedEventDispatcher)
-      throw new Error(
-        "WorldLoader: Missing/invalid 'validatedEventDispatcher'."
-      );
+    this.#logger = ensureValidLogger(logger, 'WorldLoader');
+
+    validateLoaderDeps(this.#logger, [
+      {
+        dependency: registry,
+        name: 'IDataRegistry',
+        methods: ['store', 'get', 'clear'],
+      },
+      {
+        dependency: schemaLoader,
+        name: 'SchemaLoader',
+        methods: ['loadAndCompileAllSchemas'],
+      },
+      {
+        dependency: componentLoader,
+        name: 'ComponentLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: ruleLoader,
+        name: 'RuleLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: actionLoader,
+        name: 'ActionLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: eventLoader,
+        name: 'EventLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: entityLoader,
+        name: 'EntityLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: validator,
+        name: 'ISchemaValidator',
+        methods: ['isSchemaLoaded'],
+      },
+      {
+        dependency: configuration,
+        name: 'IConfiguration',
+        methods: ['getContentTypeSchemaId'],
+      },
+      {
+        dependency: gameConfigLoader,
+        name: 'GameConfigLoader',
+        methods: ['loadConfig'],
+      },
+      {
+        dependency: modManifestLoader,
+        name: 'ModManifestLoader',
+        methods: ['loadRequestedManifests'],
+      },
+      {
+        dependency: validatedEventDispatcher,
+        name: 'ValidatedEventDispatcher',
+        methods: ['dispatch'],
+      },
+    ]);
 
     // --- Store dependencies ---
     this.#registry = registry;
-    this.#logger = logger;
     this.#schemaLoader = schemaLoader;
     this.#componentDefinitionLoader = componentLoader;
     this.#ruleLoader = ruleLoader;
@@ -602,6 +640,7 @@ class WorldLoader {
    * @private
    * @deprecated Use inline summary logging logic after the mod processing loop instead.
    */
+  // eslint-disable-next-line no-unused-private-class-members
   #logModLoadSummary /* modId, modResults, durationMs */() {
     // This method is intentionally left empty as the logic is now inline above.
     this.#logger.warn(
