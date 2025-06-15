@@ -5,11 +5,11 @@
 // -----------------------------------------------------------------------------
 
 import { createJsonLogicContext } from './contextAssembler.js';
-import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
 import { setupService } from '../utils/serviceInitializer.js';
+import { executeActionSequence } from './actionSequence.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -313,138 +313,14 @@ class SystemLogicInterpreter {
   /* Action execution – intentionally public-ish for tests                 */
 
   _executeActions(actions, nestedCtx, scopeLabel) {
-    const total = actions.length;
-
-    for (let i = 0; i < total; i++) {
-      const op = actions[i];
-      const opIndex = i + 1;
-      const opType = op?.type ?? 'MISSING_TYPE';
-      const tag = `[${scopeLabel} - Action ${opIndex}/${total}]`;
-
-      // validation ---------------------------------------------------------
-      if (!op || typeof op !== 'object' || !op.type) {
-        this.#logger.error(
-          `${tag} Invalid operation object. Halting sequence.`,
-          op
-        );
-        break;
-      }
-
-      // universal per-operation condition ----------------------------------
-      if (op.condition) {
-        const { result, errored, error } = evaluateConditionWithLogging(
-          this.#jsonLogic,
-          op.condition,
-          nestedCtx.evaluationContext,
-          this.#logger,
-          tag
-        );
-        if (errored) {
-          this.#logger.error(
-            `${tag} Condition evaluation failed – op skipped.`,
-            error
-          );
-          continue;
-        }
-        if (!result) {
-          this.#logger.debug(`${tag} Condition=false – op skipped.`);
-          continue;
-        }
-      }
-
-      // delegate -----------------------------------------------------------
-      try {
-        if (opType === 'IF') {
-          this.#handleIf(op, nestedCtx, `${scopeLabel} IF#${opIndex}`);
-        } else if (opType === 'FOR_EACH') {
-          this.#handleForEach(
-            op,
-            nestedCtx,
-            `${scopeLabel} FOR_EACH#${opIndex}`
-          );
-        } else {
-          this.#operationInterpreter.execute(op, nestedCtx);
-        }
-      } catch (err) {
-        this.#logger.error(
-          `${tag} CRITICAL error during execution of Operation ${opType}`,
-          err
-        );
-        // Legacy additional log line (several tests expect it)
-        const idMatch = scopeLabel.match(/Rule '(.+?)'/);
-        const ruleIdForLog = idMatch ? idMatch[1] : 'UNKNOWN_RULE';
-        this.#logger.error(`rule '${ruleIdForLog}' threw:`, err);
-        break; // halt subsequent actions
-      }
-    }
-  }
-
-  /* --------------------------------------------------------------------- */
-
-  /* Built-in flow-control helpers                                         */
-
-  #handleIf(node, nestedCtx, label) {
-    const {
-      condition,
-      then_actions: thenActs = [],
-      else_actions: elseActs = [],
-    } = node.parameters || {};
-
-    const { result, errored } = evaluateConditionWithLogging(
-      this.#jsonLogic,
-      condition,
-      nestedCtx.evaluationContext,
-      this.#logger,
-      label
-    );
-
-    if (errored) {
-      return;
-    }
-
-    this._executeActions(result ? thenActs : elseActs, nestedCtx, label);
-  }
-
-  #handleForEach(node, nestedCtx, label) {
-    const {
-      collection: path,
-      item_variable: varName,
+    executeActionSequence(
       actions,
-    } = node.parameters || {};
-
-    if (
-      !path?.trim() ||
-      !varName?.trim() ||
-      !Array.isArray(actions) ||
-      actions.length === 0
-    ) {
-      this.#logger.warn(`${label}: invalid parameters.`);
-      return;
-    }
-
-    const collection = resolvePath(nestedCtx.evaluationContext, path.trim());
-    if (!Array.isArray(collection)) {
-      this.#logger.warn(`${label}: '${path}' did not resolve to an array.`);
-      return;
-    }
-
-    const store = nestedCtx.evaluationContext.context;
-    const hadPrior = Object.prototype.hasOwnProperty.call(store, varName);
-    const saved = store[varName];
-
-    try {
-      for (let i = 0; i < collection.length; i++) {
-        store[varName] = collection[i];
-        this._executeActions(
-          actions,
-          nestedCtx,
-          `${label} > Item ${i + 1}/${collection.length}`
-        );
-      }
-    } finally {
-      hadPrior ? (store[varName] = saved) : delete store[varName];
-    }
+      { ...nestedCtx, scopeLabel, jsonLogic: this.#jsonLogic },
+      this.#logger,
+      this.#operationInterpreter
+    );
   }
+
 }
 
 export default SystemLogicInterpreter;

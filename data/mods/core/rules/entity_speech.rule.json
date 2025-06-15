@@ -5,23 +5,20 @@
   "event_type": "core:entity_spoke",
   "actions": [
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 1.1: Attempt to get the speaker's name component.",
+      "type": "QUERY_COMPONENTS",
+      "comment": "Fetch required speaker components in bulk.",
       "parameters": {
         "entity_ref": "actor",
-        "component_type": "core:name",
-        "result_variable": "speakerNameComponent",
-        "missing_value": null
-      }
-    },
-    {
-      "type": "QUERY_COMPONENT",
-      "comment": "Step 1.2: Attempt to get the speaker's position component.",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "core:position",
-        "result_variable": "speakerPositionComponent",
-        "missing_value": null
+        "pairs": [
+          {
+            "component_type": "core:name",
+            "result_variable": "speakerNameComponent"
+          },
+          {
+            "component_type": "core:position",
+            "result_variable": "speakerPositionComponent"
+          }
+        ]
       }
     },
     {
