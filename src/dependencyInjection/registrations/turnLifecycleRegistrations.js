@@ -22,11 +22,10 @@ import {
   PLAYER_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../constants/componentIds.js';
-import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline.js';
 import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider.js';
-import { GenericStrategyFactory } from '../../turns/factories/genericStrategyFactory.js';
 import { TurnContextBuilder } from '../../turns/builders/turnContextBuilder.js';
 import { assertValidEntity } from '../../utils/entityAssertions.js';
+import { registerGenericStrategy } from './registerGenericStrategy.js';
 
 /**
  * @param {import('../appContainer.js').default} container
@@ -42,16 +41,6 @@ export function registerTurnLifecycle(container) {
     (c) => new TurnOrderService({ logger: c.resolve(tokens.ILogger) })
   );
   r.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
-
-  // --- Also ensure the TurnActionChoicePipeline is registered if not already ---
-  if (!container.isRegistered(tokens.TurnActionChoicePipeline)) {
-    r.singletonFactory(tokens.TurnActionChoicePipeline, (c) => {
-      return new TurnActionChoicePipeline({
-        availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
-        logger: c.resolve(tokens.ILogger),
-      });
-    });
-  }
 
   // ─────────────────── Turn-context factory ──────────────────
   r.singletonFactory(
@@ -114,18 +103,10 @@ export function registerTurnLifecycle(container) {
   );
 
   // ────────────────── Turn Strategy Factory ──────────────────
-  r.singletonFactory(
-    tokens.HumanStrategyFactory,
-    (c) =>
-      new GenericStrategyFactory({
-        logger: c.resolve(tokens.ILogger),
-        choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
-        decisionProvider: c.resolve(tokens.IHumanDecisionProvider),
-        turnActionFactory: c.resolve(tokens.ITurnActionFactory),
-      })
-  );
-  logger.debug(
-    `Turn Lifecycle Registration: Registered ${tokens.HumanStrategyFactory} with singleton resolution.`
+  registerGenericStrategy(
+    container,
+    tokens.IHumanDecisionProvider,
+    tokens.HumanStrategyFactory
   );
 
   // ──────────────────── Validation Utils ─────────────────────

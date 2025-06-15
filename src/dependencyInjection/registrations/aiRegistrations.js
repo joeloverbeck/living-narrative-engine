@@ -96,12 +96,10 @@ import {
 } from '../../prompting/assembling/indexedChoicesAssembler.js';
 import { AssemblerRegistry } from '../../prompting/assemblerRegistry.js';
 import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.js';
-import { GenericStrategyFactory } from '../../turns/factories/genericStrategyFactory.js';
-import { TurnActionFactory } from '../../turns/factories/turnActionFactory.js';
 import { LLMChooser } from '../../turns/adapters/llmChooser.js';
 import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.js';
-import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline.js';
 import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider.js';
+import { registerGenericStrategy } from './registerGenericStrategy.js';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -355,15 +353,6 @@ export function registerAI(container) {
     (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
   );
 
-  r.singletonFactory(
-    tokens.TurnActionChoicePipeline,
-    (c) =>
-      new TurnActionChoicePipeline({
-        availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
-        logger: c.resolve(tokens.ILogger),
-      })
-  );
-
   r.singletonFactory(tokens.IAIPromptPipeline, (c) => {
     return new AIPromptPipeline({
       llmAdapter: c.resolve(tokens.LLMAdapter),
@@ -402,24 +391,10 @@ export function registerAI(container) {
     `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`
   );
 
-  // 3) Turn-action factory
-  r.singletonFactory(tokens.ITurnActionFactory, () => new TurnActionFactory());
-
-  // 4) AI-player‐strategy factory
-  r.singletonFactory(
-    tokens.AIStrategyFactory,
-    (c) =>
-      new GenericStrategyFactory({
-        choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
-        decisionProvider: c.resolve(tokens.ILLMDecisionProvider),
-        turnActionFactory: c.resolve(tokens.ITurnActionFactory),
-        logger: c.resolve(tokens.ILogger),
-        fallbackFactory: c.resolve(tokens.IAIFallbackActionFactory),
-      })
-  );
-
-  logger.debug(
-    `AI Systems Registration: Registered ${tokens.AIStrategyFactory} factory.`
+  registerGenericStrategy(
+    container,
+    tokens.ILLMDecisionProvider,
+    tokens.AIStrategyFactory
   );
 
   // --- AI TURN HANDLER (MODIFIED) ---
