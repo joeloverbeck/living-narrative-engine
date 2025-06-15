@@ -10,17 +10,16 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 
 /**
  * @class QueryEntitiesHandler
  * @description Handles the 'QUERY_ENTITIES' operation. It queries for entities based on a set of filters.
  * This implementation supports filtering by location and by component presence.
  */
-class QueryEntitiesHandler {
+class QueryEntitiesHandler extends BaseOperationHandler {
   /** @type {IEntityManager} */
   #entityManager;
-  /** @type {ILogger} */
-  #logger;
   /** @type {JsonLogicEvaluationService} */
   #jsonLogicEvaluationService;
   /** @type {ISafeEventDispatcher} */
@@ -40,36 +39,32 @@ class QueryEntitiesHandler {
     jsonLogicEvaluationService,
     safeEventDispatcher,
   }) {
-    // The ticket specifies checking for specific properties to validate the interface.
+    super('QueryEntitiesHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: [
+          'getEntitiesInLocation',
+          'hasComponent',
+          'getComponentData',
+        ],
+      },
+      jsonLogicEvaluationService: {
+        value: jsonLogicEvaluationService,
+        requiredMethods: ['evaluate'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
+
     if (!entityManager?.activeEntities)
       throw new Error(
         "Dependency 'IEntityManager' is required and must expose 'activeEntities'."
       );
-    if (!entityManager?.getEntitiesInLocation)
-      throw new Error(
-        "Dependency 'IEntityManager' is required and must expose 'getEntitiesInLocation'."
-      );
-    if (!entityManager?.hasComponent)
-      throw new Error(
-        "Dependency 'IEntityManager' is required and must expose a 'hasComponent' method."
-      );
-    if (!entityManager?.getComponentData)
-      throw new Error(
-        "Dependency 'IEntityManager' is required and must expose a 'getComponentData' method."
-      );
-    if (!logger?.warn)
-      throw new Error(
-        "Dependency 'ILogger' is required and must expose a 'warn' method."
-      );
-    if (!jsonLogicEvaluationService?.evaluate)
-      throw new Error(
-        "Dependency 'JsonLogicEvaluationService' is required and must expose an 'evaluate' method."
-      );
-    if (!safeEventDispatcher?.dispatch)
-      throw new Error('QueryEntitiesHandler requires ISafeEventDispatcher.');
 
     this.#entityManager = entityManager;
-    this.#logger = logger;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#dispatcher = safeEventDispatcher;
   }
@@ -87,7 +82,7 @@ class QueryEntitiesHandler {
    * @param {ExecutionContext} executionContext - The context of the current execution.
    */
   execute(params, executionContext) {
-    const log = executionContext?.logger ?? this.#logger;
+    const log = this.getLogger(executionContext);
 
     // 1. Parameter Validation
     if (

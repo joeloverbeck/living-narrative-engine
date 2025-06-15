@@ -15,9 +15,9 @@ import {
 } from '../../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import SystemMoveEntityHandler from './systemMoveEntityHandler.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 
-class AutoMoveFollowersHandler {
-  /** @type {ILogger} */ #logger;
+class AutoMoveFollowersHandler extends BaseOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
   /** @type {SystemMoveEntityHandler} */ #moveHandler;
@@ -35,18 +35,22 @@ class AutoMoveFollowersHandler {
     systemMoveEntityHandler,
     safeEventDispatcher,
   }) {
-    if (!logger?.debug)
-      throw new Error('AutoMoveFollowersHandler requires ILogger');
-    if (!entityManager?.getEntitiesWithComponent)
-      throw new Error('AutoMoveFollowersHandler requires EntityManager');
-    if (!systemMoveEntityHandler?.execute)
-      throw new Error(
-        'AutoMoveFollowersHandler requires SystemMoveEntityHandler'
-      );
-    if (!safeEventDispatcher?.dispatch)
-      throw new Error('AutoMoveFollowersHandler requires ISafeEventDispatcher');
+    super('AutoMoveFollowersHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getEntitiesWithComponent', 'getComponentData'],
+      },
+      systemMoveEntityHandler: {
+        value: systemMoveEntityHandler,
+        requiredMethods: ['execute'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
 
-    this.#logger = logger;
     this.#entityManager = entityManager;
     this.#moveHandler = systemMoveEntityHandler;
     this.#dispatcher = safeEventDispatcher;
@@ -142,7 +146,7 @@ class AutoMoveFollowersHandler {
         });
       }
     }
-    this.#logger.debug(
+    this.logger.debug(
       `[AutoMoveFollowersHandler] moved ${followerIds.length} follower(s).`
     );
   }
