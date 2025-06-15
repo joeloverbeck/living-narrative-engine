@@ -18,6 +18,9 @@
     "core:perception_log": {
       "maxEntries": 50,
       "logEntries": []
+    },
+    "core:movement": {
+      "locked": false
     }
   }
 }

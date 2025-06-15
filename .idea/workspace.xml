@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing base intimacy system.">
-      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/components/closeness.component.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" afterDir="false" />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Returning the app to normal.">
+      <change afterPath="$PROJECT_DIR$/src/logic/operationHandlers/modifyContextArrayHandler.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -58,12 +56,16 @@
     "Jest.awaitTurnEndState.test.js.executor": "Run",
     "Jest.buildSpeechMeta.test.js.executor": "Run",
     "Jest.closeness.schema.test.js.executor": "Run",
+    "Jest.closenessCircleService.test.js.executor": "Run",
+    "Jest.containerConfig.test.js.executor": "Run",
     "Jest.decisionResult.test.js.executor": "Run",
+    "Jest.entity.schema.test.js.executor": "Run",
     "Jest.entityMoved.schema.test.js.executor": "Run",
     "Jest.genericTurnHandler.passingThis.test.js.executor": "Run",
     "Jest.genericTurnHandler.test.js.executor": "Run",
     "Jest.genericTurnStrategy.test.js.executor": "Run",
     "Jest.genericTurnStrategyFactory.test.js.executor": "Run",
+    "Jest.getCloseRule.integration.test.js.executor": "Run",
     "Jest.humanDecisionProvider.indexUse.test.js.executor": "Run",
     "Jest.humanDecisionProvider.test.js.executor": "Run",
     "Jest.humanTurnHandler.awaitTurnEndPromise.test.js.executor": "Run",
@@ -73,6 +75,7 @@
     "Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor": "Run",
     "Jest.interpreterRegistrations.handlers.test.js.executor": "Run",
     "Jest.llmDecisionProvider.test.js.executor": "Run",
+    "Jest.modManifestLoader.validation.test.js.executor": "Run",
     "Jest.modifyArrayFieldHandler.pushUnique.test.js.executor": "Run",
     "Jest.nestedPlaceholderResolution.integration.test.js.executor": "Run",
     "Jest.playerTurnHandler.fixes.test.js.executor": "Run",
@@ -83,6 +86,7 @@
     "Jest.promptSession.indexOnly.test.js.executor": "Run",
     "Jest.promptSession.test.js.executor": "Run",
     "Jest.scope.integration.test.js.executor": "Run",
+    "Jest.stopFollowingRule.integration.test.js.executor": "Run",
     "Jest.turnActionChoicePipeline.test.js.executor": "Run",
     "Jest.turnIdleState.test.js.executor": "Run",
     "Jest.updateAvailableActions.schema.test.js.executor": "Run",
@@ -112,59 +116,59 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.closeness.schema.test.js">
-    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="DIRECTORY" />
-      <test-directory value="$PROJECT_DIR$/tests" />
-      <method v="2" />
-    </configuration>
-    <configuration name="buildSpeechMeta.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Jest.stopFollowingRule.integration.test.js">
+    <configuration name="containerConfig.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
       <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/domUI/helpers/buildSpeechMeta.test.js" />
+      <test-file value="$PROJECT_DIR$/tests/dependencyInjection/containerConfig.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="closeness.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+    <configuration name="entity.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
       <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" />
+      <test-file value="$PROJECT_DIR$/tests/schemas/entity.schema.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="modifyArrayFieldHandler.pushUnique.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+    <configuration name="getCloseRule.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
       <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/logic/operationHandlers/modifyArrayFieldHandler.pushUnique.test.js" />
+      <test-file value="$PROJECT_DIR$/tests/integration/rules/getCloseRule.integration.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="nestedPlaceholderResolution.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+    <configuration name="modManifestLoader.validation.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
       <working-dir value="$PROJECT_DIR$" />
       <envs />
       <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/integration/nestedPlaceholderResolution.integration.test.js" />
+      <test-file value="$PROJECT_DIR$/tests/modding/modManifestLoader.validation.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="stopFollowingRule.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Jest.closeness.schema.test.js" />
-        <item itemvalue="Jest.modifyArrayFieldHandler.pushUnique.test.js" />
-        <item itemvalue="Jest.Tests in tests\" />
-        <item itemvalue="Jest.nestedPlaceholderResolution.integration.test.js" />
-        <item itemvalue="Jest.buildSpeechMeta.test.js" />
+        <item itemvalue="Jest.stopFollowingRule.integration.test.js" />
+        <item itemvalue="Jest.entity.schema.test.js" />
+        <item itemvalue="Jest.containerConfig.test.js" />
+        <item itemvalue="Jest.getCloseRule.integration.test.js" />
+        <item itemvalue="Jest.modManifestLoader.validation.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -186,119 +190,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="19968000" />
-    </task>
-    <task id="LOCAL-00065" summary="Chores.">
-      <option name="closed" value="true" />
-      <created>1749920171325</created>
-      <option name="number" value="00065" />
-      <option name="presentableId" value="LOCAL-00065" />
-      <option name="project" value="LOCAL" />
-      <updated>1749920171325</updated>
-    </task>
-    <task id="LOCAL-00066" summary="Chores.">
-      <option name="closed" value="true" />
-      <created>1749920871075</created>
-      <option name="number" value="00066" />
-      <option name="presentableId" value="LOCAL-00066" />
-      <option name="project" value="LOCAL" />
-      <updated>1749920871075</updated>
-    </task>
-    <task id="LOCAL-00067" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749922089771</created>
-      <option name="number" value="00067" />
-      <option name="presentableId" value="LOCAL-00067" />
-      <option name="project" value="LOCAL" />
-      <updated>1749922089771</updated>
-    </task>
-    <task id="LOCAL-00068" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749922196013</created>
-      <option name="number" value="00068" />
-      <option name="presentableId" value="LOCAL-00068" />
-      <option name="project" value="LOCAL" />
-      <updated>1749922196013</updated>
-    </task>
-    <task id="LOCAL-00069" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749923376977</created>
-      <option name="number" value="00069" />
-      <option name="presentableId" value="LOCAL-00069" />
-      <option name="project" value="LOCAL" />
-      <updated>1749923376977</updated>
-    </task>
-    <task id="LOCAL-00070" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749923884930</created>
-      <option name="number" value="00070" />
-      <option name="presentableId" value="LOCAL-00070" />
-      <option name="project" value="LOCAL" />
-      <updated>1749923884930</updated>
-    </task>
-    <task id="LOCAL-00071" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749924588382</created>
-      <option name="number" value="00071" />
-      <option name="presentableId" value="LOCAL-00071" />
-      <option name="project" value="LOCAL" />
-      <updated>1749924588382</updated>
-    </task>
-    <task id="LOCAL-00072" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749924765153</created>
-      <option name="number" value="00072" />
-      <option name="presentableId" value="LOCAL-00072" />
-      <option name="project" value="LOCAL" />
-      <updated>1749924765153</updated>
-    </task>
-    <task id="LOCAL-00073" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749925369713</created>
-      <option name="number" value="00073" />
-      <option name="presentableId" value="LOCAL-00073" />
-      <option name="project" value="LOCAL" />
-      <updated>1749925369713</updated>
-    </task>
-    <task id="LOCAL-00074" summary="Unified human and AI paths regarding decision-making.">
-      <option name="closed" value="true" />
-      <created>1749926174946</created>
-      <option name="number" value="00074" />
-      <option name="presentableId" value="LOCAL-00074" />
-      <option name="project" value="LOCAL" />
-      <updated>1749926174946</updated>
-    </task>
-    <task id="LOCAL-00075" summary="Unified human and AI paths regarding decision-making.">
-      <option name="closed" value="true" />
-      <created>1749926776463</created>
-      <option name="number" value="00075" />
-      <option name="presentableId" value="LOCAL-00075" />
-      <option name="project" value="LOCAL" />
-      <updated>1749926776463</updated>
-    </task>
-    <task id="LOCAL-00076" summary="Unified human and AI paths regarding decision-making.">
-      <option name="closed" value="true" />
-      <created>1749927718704</created>
-      <option name="number" value="00076" />
-      <option name="presentableId" value="LOCAL-00076" />
-      <option name="project" value="LOCAL" />
-      <updated>1749927718704</updated>
-    </task>
-    <task id="LOCAL-00077" summary="Ensuring that the king returns.">
-      <option name="closed" value="true" />
-      <created>1749930104979</created>
-      <option name="number" value="00077" />
-      <option name="presentableId" value="LOCAL-00077" />
-      <option name="project" value="LOCAL" />
-      <updated>1749930104979</updated>
-    </task>
-    <task id="LOCAL-00078" summary="The Return of the King.">
-      <option name="closed" value="true" />
-      <created>1749931429094</created>
-      <option name="number" value="00078" />
-      <option name="presentableId" value="LOCAL-00078" />
-      <option name="project" value="LOCAL" />
-      <updated>1749931429094</updated>
+      <workItem from="1749963238113" duration="28668000" />
     </task>
     <task id="LOCAL-00079" summary="The Return of the King.">
       <option name="closed" value="true" />
@@ -580,15 +472,125 @@
       <option name="project" value="LOCAL" />
       <updated>1749985224549</updated>
     </task>
-    <option name="localTasksCounter" value="114" />
+    <task id="LOCAL-00114" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749986324418</created>
+      <option name="number" value="00114" />
+      <option name="presentableId" value="LOCAL-00114" />
+      <option name="project" value="LOCAL" />
+      <updated>1749986324418</updated>
+    </task>
+    <task id="LOCAL-00115" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749988806000</created>
+      <option name="number" value="00115" />
+      <option name="presentableId" value="LOCAL-00115" />
+      <option name="project" value="LOCAL" />
+      <updated>1749988806000</updated>
+    </task>
+    <task id="LOCAL-00116" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749989285934</created>
+      <option name="number" value="00116" />
+      <option name="presentableId" value="LOCAL-00116" />
+      <option name="project" value="LOCAL" />
+      <updated>1749989285934</updated>
+    </task>
+    <task id="LOCAL-00117" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749989650401</created>
+      <option name="number" value="00117" />
+      <option name="presentableId" value="LOCAL-00117" />
+      <option name="project" value="LOCAL" />
+      <updated>1749989650401</updated>
+    </task>
+    <task id="LOCAL-00118" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749990020994</created>
+      <option name="number" value="00118" />
+      <option name="presentableId" value="LOCAL-00118" />
+      <option name="project" value="LOCAL" />
+      <updated>1749990020994</updated>
+    </task>
+    <task id="LOCAL-00119" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749991048746</created>
+      <option name="number" value="00119" />
+      <option name="presentableId" value="LOCAL-00119" />
+      <option name="project" value="LOCAL" />
+      <updated>1749991048746</updated>
+    </task>
+    <task id="LOCAL-00120" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749991448781</created>
+      <option name="number" value="00120" />
+      <option name="presentableId" value="LOCAL-00120" />
+      <option name="project" value="LOCAL" />
+      <updated>1749991448781</updated>
+    </task>
+    <task id="LOCAL-00121" summary="Made changes to the mod manifest schema.">
+      <option name="closed" value="true" />
+      <created>1749992233384</created>
+      <option name="number" value="00121" />
+      <option name="presentableId" value="LOCAL-00121" />
+      <option name="project" value="LOCAL" />
+      <updated>1749992233384</updated>
+    </task>
+    <task id="LOCAL-00122" summary="Made changes to the mod manifest schema.">
+      <option name="closed" value="true" />
+      <created>1749992376841</created>
+      <option name="number" value="00122" />
+      <option name="presentableId" value="LOCAL-00122" />
+      <option name="project" value="LOCAL" />
+      <updated>1749992376841</updated>
+    </task>
+    <task id="LOCAL-00123" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749992632111</created>
+      <option name="number" value="00123" />
+      <option name="presentableId" value="LOCAL-00123" />
+      <option name="project" value="LOCAL" />
+      <updated>1749992632111</updated>
+    </task>
+    <task id="LOCAL-00124" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749993596075</created>
+      <option name="number" value="00124" />
+      <option name="presentableId" value="LOCAL-00124" />
+      <option name="project" value="LOCAL" />
+      <updated>1749993596075</updated>
+    </task>
+    <task id="LOCAL-00125" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749994989649</created>
+      <option name="number" value="00125" />
+      <option name="presentableId" value="LOCAL-00125" />
+      <option name="project" value="LOCAL" />
+      <updated>1749994989649</updated>
+    </task>
+    <task id="LOCAL-00126" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749995079496</created>
+      <option name="number" value="00126" />
+      <option name="presentableId" value="LOCAL-00126" />
+      <option name="project" value="LOCAL" />
+      <updated>1749995079496</updated>
+    </task>
+    <task id="LOCAL-00127" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749995539850</created>
+      <option name="number" value="00127" />
+      <option name="presentableId" value="LOCAL-00127" />
+      <option name="project" value="LOCAL" />
+      <updated>1749995539850</updated>
+    </task>
+    <option name="localTasksCounter" value="128" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fixing dependency cycles." />
-    <MESSAGE value="Unifying action decision." />
     <MESSAGE value="Ensured playerTurnSubmitted doesn't break." />
     <MESSAGE value="Unified action decision across existing actors." />
     <MESSAGE value="Ensuring the app works." />
@@ -612,6 +614,8 @@
     <MESSAGE value="Minor changes." />
     <MESSAGE value="Formatting." />
     <MESSAGE value="Implementing base intimacy system." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implementing base intimacy system." />
+    <MESSAGE value="Made changes to the mod manifest schema." />
+    <MESSAGE value="Returning the app to normal." />
+    <option name="LAST_COMMIT_MESSAGE" value="Returning the app to normal." />
   </component>
 </project>

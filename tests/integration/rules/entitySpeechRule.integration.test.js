@@ -68,16 +68,22 @@ function init(entities) {
   entityManager = new SimpleEntityManager(entities);
 
   const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+  const safeSpeechDispatcher = {
+    dispatch: jest.fn((eventType, payload) =>
+      eventBus.dispatch(eventType, payload)
+    ),
+  };
 
   const handlers = {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
       logger,
+      safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     DISPATCH_SPEECH: new DispatchSpeechHandler({
-      dispatcher: eventBus,
+      dispatcher: safeSpeechDispatcher,
       logger,
     }),
   };

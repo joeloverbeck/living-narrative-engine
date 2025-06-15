@@ -134,7 +134,12 @@ describe('End-to-End Notes Persistence Flow', () => {
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
-    processor = new LLMResponseProcessor({ schemaValidator, logger });
+    const safeEventDispatcher = { dispatch: jest.fn() };
+    processor = new LLMResponseProcessor({
+      schemaValidator,
+      logger,
+      safeEventDispatcher,
+    });
   });
 
   test('notes persist and appear in subsequent prompt', async () => {

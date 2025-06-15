@@ -1,5 +1,6 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
+import { webcrypto } from 'crypto';
 
 /**
  *
@@ -21,12 +22,18 @@ describe('SaveLoadService constructor validation', () => {
   test('throws if logger missing', () => {
     const deps = makeDeps();
     expect(
-      () => new SaveLoadService({ storageProvider: deps.storageProvider })
+      () =>
+        new SaveLoadService({
+          storageProvider: deps.storageProvider,
+          crypto: webcrypto,
+        })
     ).toThrow();
   });
 
   test('throws if storageProvider missing', () => {
     const deps = makeDeps();
-    expect(() => new SaveLoadService({ logger: deps.logger })).toThrow();
+    expect(
+      () => new SaveLoadService({ logger: deps.logger, crypto: webcrypto })
+    ).toThrow();
   });
 });

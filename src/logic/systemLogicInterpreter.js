@@ -7,10 +7,8 @@
 import { createJsonLogicContext } from './contextAssembler.js';
 import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
-import {
-  initLogger,
-  validateServiceDeps,
-} from '../utils/serviceInitializer.js';
+import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
+import { setupService } from '../utils/serviceInitializer.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -48,8 +46,7 @@ class SystemLogicInterpreter {
     entityManager,
     operationInterpreter,
   }) {
-    this.#logger = initLogger('SystemLogicInterpreter', logger);
-    validateServiceDeps('SystemLogicInterpreter', this.#logger, {
+    this.#logger = setupService('SystemLogicInterpreter', logger, {
       eventBus: {
         value: eventBus,
         requiredMethods: ['subscribe', 'unsubscribe'],
@@ -64,11 +61,7 @@ class SystemLogicInterpreter {
       },
       entityManager: {
         value: entityManager,
-        requiredMethods: [
-          'getEntityInstance',
-          'getComponentData',
-          'hasComponent',
-        ],
+        requiredMethods: REQUIRED_ENTITY_MANAGER_METHODS,
       },
       operationInterpreter: {
         value: operationInterpreter,

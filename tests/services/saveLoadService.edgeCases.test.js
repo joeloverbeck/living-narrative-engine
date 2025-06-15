@@ -48,7 +48,11 @@ describe('SaveLoadService edge cases', () => {
 
   beforeEach(() => {
     ({ logger, storageProvider } = makeDeps());
-    service = new SaveLoadService({ logger, storageProvider });
+    service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
   });
 
   describe('private helper failures via saveManualGame', () => {
@@ -65,7 +69,7 @@ describe('SaveLoadService edge cases', () => {
       };
       const result = await service.saveManualGame('Slot', obj);
       expect(result.success).toBe(false);
-      expect(result.error).toMatch(/Checksum generation failed/);
+      expect(result.error.message).toMatch(/Checksum generation failed/);
       expect(logger.error).toHaveBeenCalled();
       digestSpy.mockRestore();
     });
@@ -81,7 +85,7 @@ describe('SaveLoadService edge cases', () => {
       cyc.self = cyc;
       const result = await service.saveManualGame('Loop', cyc);
       expect(result.success).toBe(false);
-      expect(result.error).toMatch(/deep clone/);
+      expect(result.error.message).toMatch(/deep clone/);
       expect(logger.error).toHaveBeenCalled();
     });
 
@@ -90,7 +94,7 @@ describe('SaveLoadService edge cases', () => {
       const obj = { metadata: {}, modManifest: {}, integrityChecks: {} };
       const result = await service.saveManualGame('Bad', obj);
       expect(result.success).toBe(false);
-      expect(result.error).toMatch(/Invalid gameState/);
+      expect(result.error.message).toMatch(/Invalid gameState/);
       expect(logger.error).toHaveBeenCalled();
     });
   });
@@ -262,7 +266,7 @@ describe('SaveLoadService edge cases', () => {
       };
       const res = await service.saveManualGame('Dir', obj);
       expect(res.success).toBe(false);
-      expect(res.error).toMatch(/Failed to create save directory/);
+      expect(res.error.message).toMatch(/Failed to create save directory/);
       expect(logger.error).toHaveBeenCalled();
     });
 
@@ -280,7 +284,7 @@ describe('SaveLoadService edge cases', () => {
       };
       const res = await service.saveManualGame('Disk', obj);
       expect(res.success).toBe(false);
-      expect(res.error).toMatch(/Not enough disk space/);
+      expect(res.error.message).toMatch(/Not enough disk space/);
       expect(logger.error).toHaveBeenCalled();
     });
 
@@ -297,7 +301,7 @@ describe('SaveLoadService edge cases', () => {
       };
       const res = await service.saveManualGame('Reject', obj);
       expect(res.success).toBe(false);
-      expect(res.error).toMatch(/unexpected error/i);
+      expect(res.error.message).toMatch(/unexpected error/i);
       expect(logger.error).toHaveBeenCalled();
     });
   });

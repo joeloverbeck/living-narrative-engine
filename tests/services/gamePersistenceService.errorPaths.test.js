@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -20,6 +21,9 @@ describe('GamePersistenceService error paths', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
+  let componentCleaningService;
+  let metadataBuilder;
+  let safeEventDispatcher;
   let service;
 
   beforeEach(() => {
@@ -35,12 +39,29 @@ describe('GamePersistenceService error paths', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
+    safeEventDispatcher = { dispatch: jest.fn() };
+    componentCleaningService = new ComponentCleaningService({
+      logger,
+      safeEventDispatcher,
+    });
+    metadataBuilder = {
+      build: jest.fn((n, p) => ({
+        saveFormatVersion: '1',
+        engineVersion: 'x',
+        gameTitle: n || 'Unknown Game',
+        timestamp: 't',
+        playtimeSeconds: p,
+        saveName: '',
+      })),
+    };
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
+      componentCleaningService,
+      metadataBuilder,
     });
   });
 
@@ -54,10 +75,12 @@ describe('GamePersistenceService error paths', () => {
       expect(() => service.captureCurrentGameState('World')).toThrow(
         'Failed to deep clone object data.'
       );
-      expect(logger.error).toHaveBeenCalledWith(
-        'GamePersistenceService.#cleanComponentData deepClone failed:',
-        expect.any(Error),
-        cyc
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:display_error',
+        expect.objectContaining({
+          message: 'ComponentCleaningService.clean deepClone failed',
+          details: expect.objectContaining({ componentId: 'loop' }),
+        })
       );
     });
   });
@@ -71,7 +94,7 @@ describe('GamePersistenceService error paths', () => {
         gameState: { entities: [] },
       });
       expect(result.success).toBe(false);
-      expect(result.error).toMatch('Critical error');
+      expect(result.error.message).toMatch('Critical error');
       expect(logger.error).toHaveBeenCalled();
     });
   });
@@ -91,6 +114,16 @@ describe('GamePersistenceService error paths', () => {
       expect(logger.error).toHaveBeenCalled();
       expect(playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(0);
     });
+
+    it('resets playtime when metadata is missing', async () => {
+      const data = {
+        gameState: { entities: [] },
+        metadata: {},
+      };
+      await service.restoreGameState(data);
+      expect(playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(0);
+      expect(logger.warn).toHaveBeenCalled();
+    });
   });
 
   describe('loadAndRestoreGame failures', () => {
@@ -98,7 +131,7 @@ describe('GamePersistenceService error paths', () => {
       saveLoadService.loadGameData.mockRejectedValue(new Error('load fail'));
       const result = await service.loadAndRestoreGame('slot');
       expect(result.success).toBe(false);
-      expect(result.error).toMatch('Unexpected error');
+      expect(result.error.message).toMatch('Unexpected error');
       expect(logger.error).toHaveBeenCalled();
     });
   });

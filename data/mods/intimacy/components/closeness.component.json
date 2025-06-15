@@ -5,9 +5,7 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": [
-      "partners"
-    ],
+    "required": ["partners"],
     "properties": {
       "partners": {
         "type": "array",

@@ -4,6 +4,8 @@
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { parseAndRepairJson } from '../../utils/llmUtils.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 /**
  * Custom error for LLM response processing failures.
@@ -28,11 +30,13 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
   #schemaValidator;
   /** @type {ILogger} */
   #logger;
+  /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #safeEventDispatcher;
 
   /**
-   * @param {{ schemaValidator: ISchemaValidator, logger: ILogger }} options
+   * @param {{ schemaValidator: ISchemaValidator, logger: ILogger, safeEventDispatcher: import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher }} options
    */
-  constructor({ schemaValidator, logger }) {
+  constructor({ schemaValidator, logger, safeEventDispatcher }) {
     super();
     if (
       !schemaValidator ||
@@ -44,9 +48,18 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     if (!logger) {
       throw new Error('LLMResponseProcessor needs a valid ILogger');
     }
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error(
+        'LLMResponseProcessor requires a valid ISafeEventDispatcher'
+      );
+    }
 
     this.#schemaValidator = schemaValidator;
     this.#logger = logger;
+    this.#safeEventDispatcher = safeEventDispatcher;
 
     // Ensure the required schema is loaded
     if (
@@ -78,13 +91,14 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     try {
       parsed = await parseAndRepairJson(llmJsonResponse, this.#logger);
     } catch (err) {
-      this.#logger.error(
-        `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`,
-        { rawResponse: llmJsonResponse }
-      );
-      throw new LLMProcessingError(
-        `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`
-      );
+      const errorMsg = `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`;
+      safeDispatchError(this.#safeEventDispatcher, errorMsg, {
+        actorId,
+        rawResponse: llmJsonResponse,
+        error: err.message,
+        stack: err.stack,
+      });
+      throw new LLMProcessingError(errorMsg);
     }
 
     // Schema-validate
@@ -94,10 +108,11 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     );
     const { isValid, errors } = validationResult;
     if (!isValid) {
-      this.#logger.error(
-        `LLMResponseProcessor: schema invalid for actor ${actorId}`,
-        { errors, parsed }
-      );
+      const errorMsg = `LLMResponseProcessor: schema invalid for actor ${actorId}`;
+      safeDispatchError(this.#safeEventDispatcher, errorMsg, {
+        errors,
+        parsed,
+      });
       throw new LLMProcessingError(
         `LLM response JSON schema validation failed for actor ${actorId}.`,
         { validationErrors: errors }

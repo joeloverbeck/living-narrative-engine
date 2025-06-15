@@ -25,7 +25,9 @@
       "type": "IF",
       "comment": "Step 2: Proceed only if the actor has the 'core:following' component.",
       "parameters": {
-        "condition": { "var": "context.oldFollowingData" },
+        "condition": {
+          "var": "context.oldFollowingData"
+        },
         "then_actions": [
           {
             "type": "REMOVE_COMPONENT",
@@ -111,6 +113,16 @@
                   }
                 }
               ]
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch a UI event indicating the successful unfollow action.",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{context.actorName.text} stops following {context.oldLeaderName.text}."
+              }
             }
           },
           {

@@ -8,6 +8,7 @@ import { cloneDeep } from 'lodash'; // Using lodash cloneDeep as requested
 import validateModEngineVersions from '../../src/modding/modVersionValidator.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
 import { ENGINE_VERSION } from '../../src/engine/engineVersion.js'; // Use the actual engine version
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 // Mock Logger Factory
 const createMockLogger = () => ({
@@ -16,12 +17,15 @@ const createMockLogger = () => ({
   error: jest.fn(),
   debug: jest.fn(),
 });
+const createMockDispatcher = () => ({ dispatch: jest.fn() });
 
 describe('ModVersionValidator Service: validateModEngineVersions', () => {
   let mockLogger;
+  let mockDispatcher;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
+    mockDispatcher = createMockDispatcher();
     // Note: No need to mock engineVersionSatisfies itself,
     // as we want to test the integration and error handling around it.
   });
@@ -41,42 +45,42 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
     it('should pass validation and log info if no mods are provided', () => {
       const manifests = createManifestMap([]);
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     // --- Case: No gameVersion ---
     it('should skip and pass if a mod manifest has no gameVersion field (undefined)', () => {
       const manifests = createManifestMap([{ id: 'modA', version: '1.0.0' }]); // gameVersion is undefined
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should skip and pass if a mod manifest has gameVersion: null', () => {
       const manifests = createManifestMap([{ id: 'modB', gameVersion: null }]);
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should skip and pass if a mod manifest has gameVersion: "" (empty string)', () => {
       const manifests = createManifestMap([{ id: 'modC', gameVersion: '' }]);
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should skip and pass if a mod manifest has gameVersion: "   " (whitespace only)', () => {
       const manifests = createManifestMap([{ id: 'modD', gameVersion: '   ' }]);
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     // --- Case: Satisfied range ---
@@ -85,9 +89,9 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
         { id: 'modE', gameVersion: `^${ENGINE_VERSION}` },
       ]);
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should pass with multiple compatible mods using different valid range types', () => {
@@ -97,9 +101,9 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
         { id: 'modH', gameVersion: '*' }, // Wildcard should always satisfy
       ]);
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should pass with a mix of compatible mods and mods without gameVersion', () => {
@@ -110,9 +114,9 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
         { id: 'modL', gameVersion: '   ' }, // Skipped (whitespace gameVersion)
       ]);
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should trim whitespace around a valid and compatible range', () => {
@@ -120,7 +124,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
         { id: 'modM', gameVersion: `  ^${ENGINE_VERSION}  ` },
       ]);
       expect(() =>
-        validateModEngineVersions(manifests, mockLogger)
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).not.toThrow();
     });
   });
@@ -136,20 +140,23 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       const expectedErrorMsg = `Mod 'modBad1' incompatible with engine v${ENGINE_VERSION} (requires '${incompatibleRange}').`;
 
       // Assertion 1: Function throws correct type
-      expect(() => validateModEngineVersions(manifests, mockLogger)).toThrow(
-        ModDependencyError
-      );
+      expect(() =>
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
+      ).toThrow(ModDependencyError);
 
       // Assertion 2: Logger error called once
-      expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      // Assertion 3: Logger error called with correct message
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      // Assertion 3: dispatcher called with correct payload
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({ message: expectedErrorMsg })
+      );
       // Assertion 4: Logger info not called
       expect(mockLogger.info).not.toHaveBeenCalled(); // Should not log success info
 
       // Assertion 5: Also check the error message content from the thrown error via try/catch
       try {
-        validateModEngineVersions(manifests, mockLogger);
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher);
       } catch (e) {
         expect(e.message).toBe(expectedErrorMsg);
       }
@@ -171,14 +178,17 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       const expectedFullErrorMsg = `${expectedErrorMsgPart1}\n${expectedErrorMsgPart2}`;
 
       // Assertion 1: Function throws correct type and message
-      expect(() => validateModEngineVersions(manifests, mockLogger)).toThrow(
-        new ModDependencyError(expectedFullErrorMsg)
-      );
+      expect(() =>
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
+      ).toThrow(new ModDependencyError(expectedFullErrorMsg));
 
       // Assertion 2: Logger error called once
-      expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      // Assertion 3: Logger error called with correct message
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedFullErrorMsg);
+      expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      // Assertion 3: dispatcher called with correct payload
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({ message: expectedFullErrorMsg })
+      );
       // Assertion 4: Logger info not called
       expect(mockLogger.info).not.toHaveBeenCalled();
       // Corrected assertion count
@@ -192,10 +202,13 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       ]);
       const expectedErrorMsg = `Mod 'modBad4' incompatible with engine v${ENGINE_VERSION} (requires '${incompatibleRange}').`; // Note: Trimmed range in message
 
-      expect(() => validateModEngineVersions(manifests, mockLogger)).toThrow(
-        new ModDependencyError(expectedErrorMsg)
+      expect(() =>
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
+      ).toThrow(new ModDependencyError(expectedErrorMsg));
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({ message: expectedErrorMsg })
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
       expect.assertions(2);
     });
   });
@@ -212,12 +225,14 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       const expectedTypeErrorMsg = `Mod 'modMalformed1' has an invalid gameVersion range: ${baseErrorMsg}`;
 
       // --- Assert: Function throws ---
-      expect(() => validateModEngineVersions(manifests, mockLogger))
+      expect(() =>
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
+      )
         // --- Assert: TypeError type on throw --- (Not ModDependencyError)
         .toThrow(new TypeError(expectedTypeErrorMsg));
 
       // --- Assert: Logger receives .error with expected message(s) --- (Should NOT be called for TypeError)
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.info).not.toHaveBeenCalled();
       expect.assertions(3); // toThrow, error not called, info not called
     });
@@ -232,12 +247,12 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
 
       // --- Assert: Function throws ---
       // --- Assert: TypeError type on throw ---
-      expect(() => validateModEngineVersions(manifests, mockLogger)).toThrow(
-        new TypeError(expectedTypeErrorMsg)
-      );
+      expect(() =>
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
+      ).toThrow(new TypeError(expectedTypeErrorMsg));
 
       // --- Assert: Logger receives .error --- (Should NOT be called)
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.info).not.toHaveBeenCalled();
       expect.assertions(3);
     });
@@ -252,11 +267,11 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       const baseErrorMsg = `Invalid SemVer range provided: "${invalidRange}".`;
       const expectedTypeErrorMsg = `Mod 'modMalformed3' has an invalid gameVersion range: ${baseErrorMsg}`;
 
-      expect(() => validateModEngineVersions(manifests, mockLogger)).toThrow(
-        new TypeError(expectedTypeErrorMsg)
-      );
+      expect(() =>
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher)
+      ).toThrow(new TypeError(expectedTypeErrorMsg));
 
-      expect(mockLogger.error).not.toHaveBeenCalled(); // No ModDependencyError logged
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled(); // No ModDependencyError logged
       expect(mockLogger.info).not.toHaveBeenCalled(); // Did not complete successfully
       expect.assertions(3);
     });
@@ -265,16 +280,18 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
   describe('Input Validation', () => {
     it('should throw an Error if manifests is not a Map', () => {
       const invalidInput = [{ id: 'modA' }]; // Array, not Map
-      expect(() => validateModEngineVersions(invalidInput, mockLogger)).toThrow(
-        'validateModEngineVersions: Input `manifests` must be a Map.'
-      );
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(() =>
+        validateModEngineVersions(invalidInput, mockLogger, mockDispatcher)
+      ).toThrow('validateModEngineVersions: Input `manifests` must be a Map.');
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockLogger.info).not.toHaveBeenCalled();
     });
 
     it('should throw an Error if logger is missing or invalid (null)', () => {
       const manifests = createManifestMap([]);
-      expect(() => validateModEngineVersions(manifests, null)).toThrow(
+      expect(() =>
+        validateModEngineVersions(manifests, null, mockDispatcher)
+      ).toThrow(
         'validateModEngineVersions: Input `logger` must be a valid ILogger instance.'
       );
     });
@@ -282,7 +299,9 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
     it('should throw an Error if logger is invalid (missing error method)', () => {
       const manifests = createManifestMap([]);
       const badLogger = { info: jest.fn() }; // missing error
-      expect(() => validateModEngineVersions(manifests, badLogger)).toThrow(
+      expect(() =>
+        validateModEngineVersions(manifests, badLogger, mockDispatcher)
+      ).toThrow(
         'validateModEngineVersions: Input `logger` must be a valid ILogger instance.'
       );
     });
@@ -290,7 +309,9 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
     it('should throw an Error if logger methods are not functions', () => {
       const manifests = createManifestMap([]);
       const badLogger = { info: 'hello', error: 'world' };
-      expect(() => validateModEngineVersions(manifests, badLogger)).toThrow(
+      expect(() =>
+        validateModEngineVersions(manifests, badLogger, mockDispatcher)
+      ).toThrow(
         'validateModEngineVersions: Input `logger` must be a valid ILogger instance.'
       );
     });
@@ -305,7 +326,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
         { id: 'modBad6', gameVersion: incompatibleRange },
       ]);
       try {
-        validateModEngineVersions(manifests, mockLogger);
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher);
         // Should not reach here
         throw new Error('Test failed: Expected function to throw.');
       } catch (e) {
@@ -322,7 +343,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
         { id: 'modMalformed4', gameVersion: invalidRange },
       ]);
       try {
-        validateModEngineVersions(manifests, mockLogger);
+        validateModEngineVersions(manifests, mockLogger, mockDispatcher);
         // Should not reach here
         throw new Error('Test failed: Expected function to throw.');
       } catch (e) {
@@ -343,7 +364,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
 
       // Assertion 1
       expect(() =>
-        validateModEngineVersions(mapSuccess, mockLogger)
+        validateModEngineVersions(mapSuccess, mockLogger, mockDispatcher)
       ).not.toThrow();
       // Assertion 2
       expect(mapSuccess).toEqual(mapSuccessCopy); // Compare original with deep copy
@@ -357,7 +378,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       const mapIncompatibleCopy = cloneDeep(mapIncompatible);
 
       try {
-        validateModEngineVersions(mapIncompatible, mockLogger);
+        validateModEngineVersions(mapIncompatible, mockLogger, mockDispatcher);
       } catch (e) {
         // Assertion 3
         expect(e).toBeInstanceOf(ModDependencyError); // Ensure it was the expected error
@@ -374,7 +395,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       const mapMalformedCopy = cloneDeep(mapMalformed);
 
       try {
-        validateModEngineVersions(mapMalformed, mockLogger);
+        validateModEngineVersions(mapMalformed, mockLogger, mockDispatcher);
       } catch (e) {
         // Assertion 5
         expect(e).toBeInstanceOf(TypeError); // Ensure it was the expected error

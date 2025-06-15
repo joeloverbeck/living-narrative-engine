@@ -7,11 +7,10 @@
 
 // --- Base Class Import ---
 // Adjust path relative to this file's location if needed
-import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Assuming it's in loaders sibling dir
+import { BaseInlineSchemaLoader } from './baseInlineSchemaLoader.js';
 
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
-import { extractBaseId } from '../utils/idUtils.js';
-import { registerInlineSchema } from '../utils/schemaUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -30,9 +29,9 @@ import { registerInlineSchema } from '../utils/schemaUtils.js';
  * particularly payload schema registration, is implemented in this class.
  *
  * @class EventLoader
- * @augments BaseManifestItemLoader
+ * @augments BaseInlineSchemaLoader
  */
-class EventLoader extends BaseManifestItemLoader {
+class EventLoader extends BaseInlineSchemaLoader {
   /**
    * Creates an instance of EventLoader.
    * Passes dependencies and the specific content type 'events' to the base class constructor.
@@ -98,41 +97,18 @@ class EventLoader extends BaseManifestItemLoader {
     // --- Event ID Extraction & Validation ---
     const { fullId: trimmedFullEventId, baseId: baseEventId } =
       parseAndValidateId(data, 'id', modId, filename, this._logger);
+
+    const hasPayload =
+      data.payloadSchema &&
+      typeof data.payloadSchema === 'object' &&
+      Object.keys(data.payloadSchema).length > 0;
+
     this._logger.debug(
       `EventLoader [${modId}]: Extracted full event ID '${trimmedFullEventId}' and base event ID '${baseEventId}' from ${filename}.`
     );
-
-    // --- Payload Schema Registration ---
-    const payloadSchema = data.payloadSchema;
-    if (
-      payloadSchema &&
-      typeof payloadSchema === 'object' &&
-      Object.keys(payloadSchema).length > 0
-    ) {
+    if (hasPayload) {
       this._logger.debug(
         `EventLoader [${modId}]: Found valid payloadSchema in ${filename} for event '${trimmedFullEventId}'.`
-      );
-      const payloadSchemaId = `${trimmedFullEventId}#payload`;
-      this._logger.debug(
-        `EventLoader [${modId}]: Generated payload schema ID: ${payloadSchemaId}`
-      );
-
-      await registerInlineSchema(
-        this._schemaValidator,
-        payloadSchema,
-        payloadSchemaId,
-        this._logger,
-        {
-          warnMessage: `EventLoader [${modId}]: Payload schema ID '${payloadSchemaId}' for event '${trimmedFullEventId}' was already loaded. Overwriting/duplicate.`,
-          successDebugMessage: `EventLoader [${modId}]: Successfully registered payload schema '${payloadSchemaId}'.`,
-          errorLogMessage: `EventLoader [${modId}]: CRITICAL - Failed to register payload schema '${payloadSchemaId}' for event '${trimmedFullEventId}'.`,
-          throwErrorMessage: `CRITICAL: Failed to register payload schema '${payloadSchemaId}'.`,
-          errorContext: () => ({
-            modId,
-            filename,
-            eventId: trimmedFullEventId,
-          }),
-        }
       );
     } else {
       this._logger.debug(
@@ -140,16 +116,38 @@ class EventLoader extends BaseManifestItemLoader {
       );
     }
 
-    // --- Data Storage and Return Value ---
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
+      data,
+      idProp: 'id',
+      category: typeName,
+      modId,
+      filename,
+      schemaProp: hasPayload ? 'payloadSchema' : undefined,
+      schemaSuffix: hasPayload ? '#payload' : '',
+      schemaMessages: (fullId) => ({
+        warnMessage: `EventLoader [${modId}]: Payload schema ID '${fullId}#payload' for event '${fullId}' was already loaded. Overwriting/duplicate.`,
+        successDebugMessage: `EventLoader [${modId}]: Successfully registered payload schema '${fullId}#payload'.`,
+        errorLogMessage: `EventLoader [${modId}]: CRITICAL - Failed to register payload schema '${fullId}#payload' for event '${fullId}'.`,
+        throwErrorMessage: `CRITICAL: Failed to register payload schema '${fullId}#payload'.`,
+        errorContext: () => ({ modId, filename, eventId: fullId }),
+      }),
+    });
+
+    this._logger.debug(
+      `EventLoader [${modId}]: Extracted full event ID '${trimmedFullEventId}' and base event ID '${baseEventId}' from ${filename}.`
+    );
+    if (hasPayload) {
+      this._logger.debug(
+        `EventLoader [${modId}]: Found valid payloadSchema in ${filename} for event '${trimmedFullEventId}'.`
+      );
+    } else {
+      this._logger.debug(
+        `EventLoader [${modId}]: No valid payloadSchema found for event '${trimmedFullEventId}'. Skipping registration.`
+      );
+    }
+
     this._logger.debug(
       `EventLoader [${modId}]: Delegating storage for event (base ID: '${baseEventId}') from ${filename} to base helper.`
-    );
-    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
-      data,
-      'id',
-      typeName,
-      modId,
-      filename
     );
 
     this._logger.debug(

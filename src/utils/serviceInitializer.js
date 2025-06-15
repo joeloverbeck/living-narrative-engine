@@ -44,4 +44,22 @@ export function validateServiceDeps(serviceName, logger, deps) {
   }
 }
 
+/**
+ * @description Convenience helper that initializes a service logger and
+ * validates its dependencies in one step.
+ * @param {string} serviceName - The service name used for logger prefixing and
+ *   validation messages.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger to
+ *   validate and wrap.
+ * @param {Record<string, DependencySpec>} [deps] - Optional dependency map for
+ *   validation via {@link validateServiceDeps}.
+ * @returns {import('../interfaces/coreServices.js').ILogger} The initialized and
+ *   prefixed logger instance.
+ */
+export function setupService(serviceName, logger, deps) {
+  const prefixedLogger = initLogger(serviceName, logger);
+  validateServiceDeps(serviceName, prefixedLogger, deps);
+  return prefixedLogger;
+}
+
 // --- FILE END ---

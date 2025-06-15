@@ -22,6 +22,8 @@ describe('GamePersistenceService additional coverage', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
+  let componentCleaningService;
+  let metadataBuilder;
   let service;
 
   beforeEach(() => {
@@ -37,12 +39,25 @@ describe('GamePersistenceService additional coverage', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(42),
       setAccumulatedPlaytime: jest.fn(),
     };
+    componentCleaningService = { clean: jest.fn((id, data) => data) };
+    metadataBuilder = {
+      build: jest.fn((n, p) => ({
+        saveFormatVersion: '1',
+        engineVersion: 'x',
+        gameTitle: n || 'Unknown Game',
+        timestamp: 't',
+        playtimeSeconds: p,
+        saveName: '',
+      })),
+    };
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
+      componentCleaningService,
+      metadataBuilder,
     });
   });
 
@@ -151,7 +166,7 @@ describe('GamePersistenceService additional coverage', () => {
       });
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
-      expect(res.error).toBe('no');
+      expect(res.error.message).toBe('no');
     });
 
     it('loads and restores on success', async () => {

@@ -7,17 +7,16 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": [
-      "closeness.component.json"
-    ],
+    "components": ["closeness.component.json"],
     "characters": [],
     "items": [],
     "locations": [],
-    "actions": [
-    ],
+    "actions": ["get_close.action.json", "step_back.action.json"],
     "rules": [
+      "get_close.rule.json",
+      "step_back.rule.json",
+      "intimacy_show_onlookers.rule.json"
     ],
-    "events": [
-    ]
+    "events": []
   }
 }

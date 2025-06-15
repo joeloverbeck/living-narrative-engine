@@ -2,6 +2,7 @@
 
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 const getLoggerMock = () => ({
   info: jest.fn(),
@@ -13,6 +14,7 @@ const getLoggerMock = () => ({
 describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
   let entityManagerMock;
   let loggerMock;
+  let dispatcherMock;
   let handler;
 
   beforeEach(() => {
@@ -20,9 +22,11 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
       getComponentData: jest.fn(),
     };
     loggerMock = getLoggerMock();
+    dispatcherMock = { dispatch: jest.fn() };
     handler = new QueryComponentHandler({
       entityManager: entityManagerMock,
       logger: loggerMock,
+      safeEventDispatcher: dispatcherMock,
     });
   });
 
@@ -150,13 +154,12 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
 
     handler.execute(params, executionContext);
 
-    expect(loggerMock.error).toHaveBeenCalledWith(
-      // Error message now refers to the nested path
-      'QueryComponentHandler: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
+    expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
       expect.objectContaining({
-        executionContext: expect.objectContaining({
-          evaluationContext: expect.objectContaining({ context: null }),
-        }),
+        message: expect.stringContaining(
+          'executionContext.evaluationContext.context is missing'
+        ),
       })
     );
     expect(entityManagerMock.getComponentData).not.toHaveBeenCalled();
@@ -175,14 +178,12 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
 
     handler.execute(params, executionContext);
 
-    expect(loggerMock.error).toHaveBeenCalledWith(
-      'QueryComponentHandler: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
+    expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
       expect.objectContaining({
-        executionContext: expect.objectContaining({
-          evaluationContext: expect.objectContaining({
-            context: 'not_an_object',
-          }),
-        }),
+        message: expect.stringContaining(
+          'executionContext.evaluationContext.context is missing'
+        ),
       })
     );
     expect(entityManagerMock.getComponentData).not.toHaveBeenCalled();
@@ -198,11 +199,11 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
       // entity_ref is missing
     };
     handler.execute(params, executionContext);
-    // The FIRST error should be about the missing evaluationContext.context IF it were missing.
-    // But since it's present, the next error should be about entity_ref.
-    expect(loggerMock.error).toHaveBeenCalledWith(
-      'QueryComponentHandler: Missing required "entity_ref" parameter.',
-      { params }
+    expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Missing required "entity_ref"'),
+      })
     );
     expect(entityManagerMock.getComponentData).not.toHaveBeenCalled();
   });
@@ -215,9 +216,11 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
       result_variable: 'actorName',
     };
     handler.execute(params, executionContext);
-    expect(loggerMock.error).toHaveBeenCalledWith(
-      'QueryComponentHandler: Missing or invalid required "component_type" parameter (must be non-empty string).',
-      { params }
+    expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('"component_type"'),
+      })
     );
     expect(entityManagerMock.getComponentData).not.toHaveBeenCalled();
   });
@@ -230,9 +233,11 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
       result_variable: '', // Invalid
     };
     handler.execute(params, executionContext);
-    expect(loggerMock.error).toHaveBeenCalledWith(
-      'QueryComponentHandler: Missing or invalid required "result_variable" parameter (must be non-empty string).',
-      { params }
+    expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('"result_variable"'),
+      })
     );
     expect(entityManagerMock.getComponentData).not.toHaveBeenCalled();
   });
@@ -257,9 +262,13 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
 
     handler.execute(params, executionContext);
 
-    expect(loggerMock.error).toHaveBeenCalledWith(
-      `QueryComponentHandler: Error during EntityManager.getComponentData for component "core:name" on entity "${mockActorId}".`,
-      expect.objectContaining({ error: emError.message })
+    expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          'Error during EntityManager.getComponentData'
+        ),
+      })
     );
     expect(
       executionContext.evaluationContext.context.faultyComp
@@ -279,9 +288,11 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
       result_variable: 'actorName',
     };
     handler.execute(params, executionContext);
-    expect(loggerMock.error).toHaveBeenCalledWith(
-      'QueryComponentHandler: Could not resolve entity id from entity_ref.',
-      expect.anything()
+    expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Could not resolve entity id'),
+      })
     );
     expect(entityManagerMock.getComponentData).not.toHaveBeenCalled();
   });

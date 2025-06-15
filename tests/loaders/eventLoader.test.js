@@ -152,6 +152,8 @@ let eventLoader;
 // --- Spies ---
 let validatePrimarySchemaSpy;
 let storeItemInRegistrySpy;
+const realStoreItemInRegistry =
+  BaseManifestItemLoader.prototype._storeItemInRegistry;
 let loadItemsInternalSpy;
 
 // --- Test Constants ---
@@ -218,7 +220,9 @@ beforeEach(() => {
   // --- Mock Base Class Internal Methods' Behavior ---
   loadItemsInternalSpy.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
   validatePrimarySchemaSpy.mockReturnValue({ isValid: true, errors: null });
-  storeItemInRegistrySpy.mockReturnValue(false); // Default: no override
+  storeItemInRegistrySpy.mockImplementation((...args) =>
+    realStoreItemInRegistry.apply(eventLoader, args)
+  );
 
   // Bind the actual _processFetchedItem method for testing
   if (EventLoader.prototype._processFetchedItem) {
@@ -466,7 +470,9 @@ describe('EventLoader', () => {
       mockValidator.isSchemaLoaded.mockReturnValue(false);
       mockValidator.addSchema.mockResolvedValue(undefined);
       mockRegistry.get.mockReturnValue(undefined);
-      storeItemInRegistrySpy.mockReturnValue(false); // Default: no override
+      storeItemInRegistrySpy.mockImplementation((...args) =>
+        realStoreItemInRegistry.apply(eventLoader, args)
+      );
       validatePrimarySchemaSpy.mockClear();
       storeItemInRegistrySpy.mockClear();
     });
@@ -724,7 +730,9 @@ describe('EventLoader', () => {
 
     it('Warning: Payload schema already loaded', async () => {
       mockValidator.isSchemaLoaded.mockReturnValueOnce(true);
-      storeItemInRegistrySpy.mockReturnValue(false);
+      storeItemInRegistrySpy.mockImplementation((...args) =>
+        realStoreItemInRegistry.apply(eventLoader, args)
+      );
       const fetchedData = JSON.parse(JSON.stringify(baseEventData));
       const result = await eventLoader._processFetchedItem(
         TEST_MOD_ID,

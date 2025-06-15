@@ -84,7 +84,11 @@ function init(entities) {
   entityManager = new SimpleEntityManager(entities);
 
   const handlers = {
-    QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
+    QUERY_COMPONENT: new QueryComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: eventBus,
+    }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
   };
 

@@ -136,7 +136,10 @@ export function registerAI(container) {
       projectRootPath: null,
       proxyServerUrl: globalThis.process?.env?.PROXY_URL || undefined,
     });
-    const apiKeyProvider = new ClientApiKeyProvider({ logger });
+    const apiKeyProvider = new ClientApiKeyProvider({
+      logger,
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
     const httpClient = c.resolve(tokens.IHttpClient);
     const llmStrategyFactory = new LLMStrategyFactory({ httpClient, logger });
 
@@ -345,6 +348,7 @@ export function registerAI(container) {
       new LLMResponseProcessor({
         schemaValidator: c.resolve(tokens.ISchemaValidator),
         logger: c.resolve(tokens.ILogger), // <-- INJECT LOGGER HERE
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
   r.singletonFactory(

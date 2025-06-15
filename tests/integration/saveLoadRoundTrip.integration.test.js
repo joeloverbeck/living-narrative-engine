@@ -1,6 +1,7 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 import receptionistDef from '../../data/mods/isekai/characters/receptionist.character.json';
 import { webcrypto } from 'crypto';
 
@@ -60,6 +61,9 @@ describe('Persistence round-trip', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
+  let componentCleaningService;
+  let metadataBuilder;
+  let safeEventDispatcher;
   let persistence;
   let entity;
   const saveName = 'RoundTripTest';
@@ -67,7 +71,11 @@ describe('Persistence round-trip', () => {
   beforeEach(() => {
     logger = makeLogger();
     storageProvider = createMemoryStorageProvider();
-    saveLoadService = new SaveLoadService({ logger, storageProvider });
+    saveLoadService = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
 
     entity = makeEntity('e1', receptionistDef);
 
@@ -93,6 +101,21 @@ describe('Persistence round-trip', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
+    safeEventDispatcher = { dispatch: jest.fn() };
+    componentCleaningService = new ComponentCleaningService({
+      logger,
+      safeEventDispatcher,
+    });
+    metadataBuilder = {
+      build: jest.fn((n, p) => ({
+        saveFormatVersion: '1',
+        engineVersion: 'x',
+        gameTitle: n || 'Unknown Game',
+        timestamp: 't',
+        playtimeSeconds: p,
+        saveName: '',
+      })),
+    };
 
     persistence = new GamePersistenceService({
       logger,
@@ -100,6 +123,8 @@ describe('Persistence round-trip', () => {
       entityManager,
       dataRegistry,
       playtimeTracker,
+      componentCleaningService,
+      metadataBuilder,
     });
   });
 

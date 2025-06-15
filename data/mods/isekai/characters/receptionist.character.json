@@ -61,6 +61,9 @@
         "*Touching her locket subtly as a strange magical pulse is felt* That's... peculiar. Not the usual ambient hum of a city teeming with hedge mages. Something with a bit more 'bite' in the air. Best to make a note.",
         "Do remember, the most valuable treasure you can bring back isn't always gold or a griffin's feather. Sometimes, it's simply yourselves, and the lessons learned. Though the gold is, of course, also appreciated for Guild upkeep."
       ]
+    },
+    "core:movement": {
+      "locked": false
     }
   }
 }

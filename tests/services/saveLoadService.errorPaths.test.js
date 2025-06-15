@@ -57,7 +57,11 @@ describe('SaveLoadService error paths', () => {
 
   beforeEach(() => {
     ({ logger, storageProvider } = makeDeps());
-    service = new SaveLoadService({ logger, storageProvider });
+    service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
     global.encodeMock = jest.fn();
     global.decodeMock = jest.fn();
   });
@@ -74,7 +78,7 @@ describe('SaveLoadService error paths', () => {
     storageProvider.deleteFile.mockRejectedValue(new Error('fs failure'));
     const res = await service.deleteManualSave('saves/manual_saves/bad.sav');
     expect(res.success).toBe(false);
-    expect(res.error).toMatch(/unexpected error/i);
+    expect(res.error.message).toMatch(/unexpected error/i);
     expect(logger.error).toHaveBeenCalled();
   });
 
@@ -128,7 +132,7 @@ describe('SaveLoadService error paths', () => {
     cyc.self = cyc;
     const res = await service.saveManualGame('Loop', cyc);
     expect(res.success).toBe(false);
-    expect(res.error).toMatch(/deep clone/i);
+    expect(res.error.message).toMatch(/deep clone/i);
     expect(logger.error).toHaveBeenCalled();
   });
 });

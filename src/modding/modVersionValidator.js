@@ -3,6 +3,7 @@
 import engineVersionSatisfies from '../engine/engineVersionSatisfies.js';
 import ModDependencyError from '../errors/modDependencyError.js';
 import { ENGINE_VERSION } from '../engine/engineVersion.js'; // Import the actual engine version
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -20,11 +21,16 @@ import { ENGINE_VERSION } from '../engine/engineVersion.js'; // Import the actua
  *
  * @param {Map<string, ModManifestForVersionCheck>} manifests - A map of mod manifests, keyed by mod ID (case sensitivity depends on how the map was populated, typically lower-case).
  * @param {ILogger} logger - Logger instance for reporting results.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher - Dispatcher for UI error events.
  * @returns {void} - Returns nothing upon successful validation.
  * @throws {ModDependencyError} If one or more mods have a `gameVersion` range incompatible with the current `ENGINE_VERSION`. The error message will contain details about all incompatible mods.
  * @throws {TypeError} If a mod's `gameVersion` field is not null/undefined and is either not a string or contains an invalid SemVer range string (propagated from `engineVersionSatisfies`).
  */
-export default function validateModEngineVersions(manifests, logger) {
+export default function validateModEngineVersions(
+  manifests,
+  logger,
+  safeEventDispatcher
+) {
   const fatals = []; // Stores incompatibility messages
 
   if (!(manifests instanceof Map)) {
@@ -37,6 +43,14 @@ export default function validateModEngineVersions(manifests, logger) {
     // Basic type check for the logger
     throw new Error(
       'validateModEngineVersions: Input `logger` must be a valid ILogger instance.'
+    );
+  }
+  if (
+    !safeEventDispatcher ||
+    typeof safeEventDispatcher.dispatch !== 'function'
+  ) {
+    throw new Error(
+      'validateModEngineVersions: safeEventDispatcher with dispatch method is required.'
     );
   }
 
@@ -97,7 +111,10 @@ export default function validateModEngineVersions(manifests, logger) {
   // --- Acceptance: Throws only ModDependencyError on failure (for incompatibility) ---
   if (fatals.length) {
     const errorMessage = fatals.join('\n');
-    logger.error(errorMessage); // Log the errors before throwing
+    safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      message: errorMessage,
+      details: { incompatibilities: fatals, engineVersion: ENGINE_VERSION },
+    });
     throw new ModDependencyError(errorMessage);
   }
 

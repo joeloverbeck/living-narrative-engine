@@ -1,4 +1,5 @@
 // src/tests/shutdown/services/shutdownService.test.js
+/* eslint-disable jest/no-conditional-expect */
 
 import ShutdownService from '../../../src/shutdown/services/shutdownService.js';
 import { SHUTDOWNABLE } from '../../../src/dependencyInjection/tags.js';
@@ -288,9 +289,7 @@ describe('ShutdownService', () => {
       expect(loggerDebugCalls).toContain(
         "Dispatched 'shutdown:shutdown_service:started' event."
       );
-      expect(loggerDebugCalls).toContain(
-        'ShutdownService: Dispatched ui:show_message event.'
-      );
+      expect(loggerDebugCalls).toContain("Dispatched 'ui:show_message' event.");
 
       // 2. Stop Turn Manager (Indices 4, 5) <<< UPDATED
       expect(loggerDebugCalls[4]).toBe(
