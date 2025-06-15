@@ -33,6 +33,7 @@ const mockDataRegistry = {};
 /** @type {jest.Mocked<PlaytimeTracker>} */
 const mockPlaytimeTracker = {};
 const mockComponentCleaningService = { clean: jest.fn() };
+const mockMetadataBuilder = { build: jest.fn() };
 /** @type {jest.Mocked<AppContainer>} */
 const mockAppContainer = {
   resolve: jest.fn(), // Mock resolve as it might be used in the TODO part in the future
@@ -52,6 +53,7 @@ describe('GamePersistenceService', () => {
       dataRegistry: mockDataRegistry,
       playtimeTracker: mockPlaytimeTracker,
       componentCleaningService: mockComponentCleaningService,
+      metadataBuilder: mockMetadataBuilder,
     });
     // Clear the logger.info/debug calls made by the constructor, if any,
     // to not interfere with test-specific logger assertions.

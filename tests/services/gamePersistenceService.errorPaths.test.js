@@ -22,6 +22,7 @@ describe('GamePersistenceService error paths', () => {
   let dataRegistry;
   let playtimeTracker;
   let componentCleaningService;
+  let metadataBuilder;
   let service;
 
   beforeEach(() => {
@@ -38,6 +39,16 @@ describe('GamePersistenceService error paths', () => {
       setAccumulatedPlaytime: jest.fn(),
     };
     componentCleaningService = new ComponentCleaningService({ logger });
+    metadataBuilder = {
+      build: jest.fn((n, p) => ({
+        saveFormatVersion: '1',
+        engineVersion: 'x',
+        gameTitle: n || 'Unknown Game',
+        timestamp: 't',
+        playtimeSeconds: p,
+        saveName: '',
+      })),
+    };
     service = new GamePersistenceService({
       logger,
       saveLoadService,
@@ -45,6 +56,7 @@ describe('GamePersistenceService error paths', () => {
       dataRegistry,
       playtimeTracker,
       componentCleaningService,
+      metadataBuilder,
     });
   });
 

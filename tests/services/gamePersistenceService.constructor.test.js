@@ -12,6 +12,7 @@ function makeDeps() {
     dataRegistry: {},
     playtimeTracker: {},
     componentCleaningService: { clean: jest.fn() },
+    metadataBuilder: { build: jest.fn() },
   };
 }
 
@@ -23,6 +24,7 @@ describe('GamePersistenceService constructor validation', () => {
     'dataRegistry',
     'playtimeTracker',
     'componentCleaningService',
+    'metadataBuilder',
   ];
 
   test.each(required)('throws if %s is missing', (prop) => {

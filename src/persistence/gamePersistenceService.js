@@ -1,4 +1,5 @@
 import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.js';
+import SaveMetadataBuilder from './saveMetadataBuilder.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -35,6 +36,7 @@ class GamePersistenceService extends IGamePersistenceService {
   #dataRegistry;
   #playtimeTracker;
   #componentCleaningService;
+  #metadataBuilder;
 
   /**
    * Creates a new GamePersistenceService instance.
@@ -46,6 +48,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @param {IDataRegistry} dependencies.dataRegistry - Data registry.
    * @param {PlaytimeTracker} dependencies.playtimeTracker - Playtime tracker.
    * @param {IComponentCleaningService} dependencies.componentCleaningService - Component cleaning service.
+   * @param {SaveMetadataBuilder} dependencies.metadataBuilder - Builder for save metadata.
    */
   constructor({
     logger,
@@ -54,6 +57,7 @@ class GamePersistenceService extends IGamePersistenceService {
     dataRegistry,
     playtimeTracker,
     componentCleaningService,
+    metadataBuilder,
   }) {
     super();
     const missingDependencies = [];
@@ -64,6 +68,7 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!playtimeTracker) missingDependencies.push('playtimeTracker');
     if (!componentCleaningService)
       missingDependencies.push('componentCleaningService');
+    if (!metadataBuilder) missingDependencies.push('metadataBuilder');
 
     if (missingDependencies.length > 0) {
       const errorMessage = `GamePersistenceService: Fatal - Missing required dependencies: ${missingDependencies.join(', ')}.`;
@@ -81,6 +86,7 @@ class GamePersistenceService extends IGamePersistenceService {
     this.#dataRegistry = dataRegistry;
     this.#playtimeTracker = playtimeTracker;
     this.#componentCleaningService = componentCleaningService;
+    this.#metadataBuilder = metadataBuilder;
     this.#logger.debug('GamePersistenceService: Instance created.');
   }
 
@@ -123,31 +129,6 @@ class GamePersistenceService extends IGamePersistenceService {
       );
     }
     return activeModsManifest;
-  }
-
-  /**
-   * Creates the metadata block for the save data.
-   *
-   * @param {string | null | undefined} activeWorldName - Name of the active world.
-   * @param {number} playtimeSeconds - Current total playtime.
-   * @returns {object} Metadata object for the save file.
-   * @private
-   */
-  #createMetadata(activeWorldName, playtimeSeconds) {
-    const currentWorldNameForMeta = activeWorldName || 'Unknown Game';
-    if (!activeWorldName) {
-      this.#logger.warn(
-        `GamePersistenceService.captureCurrentGameState: No activeWorldName was provided by the caller. Defaulting gameTitle to 'Unknown Game'.`
-      );
-    }
-    return {
-      saveFormatVersion: '1.0.0',
-      engineVersion: '0.1.0-stub',
-      gameTitle: currentWorldNameForMeta,
-      timestamp: new Date().toISOString(),
-      playtimeSeconds,
-      saveName: '',
-    };
   }
 
   /**
@@ -213,7 +194,7 @@ class GamePersistenceService extends IGamePersistenceService {
       `GamePersistenceService: Fetched total playtime: ${currentTotalPlaytime}s.`
     );
 
-    const metadata = this.#createMetadata(
+    const metadata = this.#metadataBuilder.build(
       activeWorldName,
       currentTotalPlaytime
     );
