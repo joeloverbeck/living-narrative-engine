@@ -9,6 +9,7 @@ const ruleSchema = require('../../data/schemas/rule.schema.json');
 const commonSchema = require('../../data/schemas/common.schema.json');
 const operationSchema = require('../../data/schemas/operation.schema.json');
 const jsonLogicSchema = require('../../data/schemas/json-logic.schema.json');
+const loadOperationSchemas = require('../helpers/loadOperationSchemas.js');
 
 // and your rule under test
 const rule = require('../../data/mods/core/rules/follow_auto_move.rule.json');
@@ -45,6 +46,7 @@ describe('core_follow_auto_move.rule.json', () => {
       operationSchema,
       'http://example.com/schemas/operation.schema.json'
     );
+    loadOperationSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'

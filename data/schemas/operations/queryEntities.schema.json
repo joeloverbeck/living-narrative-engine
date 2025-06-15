@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/queryEntities.schema.json",
+  "title": "QUERY_ENTITIES Operation",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "QUERY_ENTITIES"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
+    },
+    "condition": {
+      "$ref": "../json-logic.schema.json#",
+      "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+    },
+    "parameters": {
+      "$ref": "#/$defs/Parameters"
+    }
+  },
+  "required": ["type", "parameters"],
+  "additionalProperties": false,
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the QUERY_ENTITIES operation. Finds entities matching a set of filters.",
+      "properties": {
+        "result_variable": {
+          "type": "string",
+          "description": "Required. The context variable to store the resulting array of entity IDs in.",
+          "minLength": 1
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Optional. The maximum number of entity IDs to return.",
+          "minimum": 1
+        },
+        "filters": {
+          "type": "array",
+          "description": "Required. An array of filter conditions. An entity must pass all filters to be included.",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "properties": {
+              "by_location": {
+                "type": "string",
+                "description": "Filter for entities in a specific location ID.",
+                "minLength": 1
+              },
+              "with_component": {
+                "$ref": "../common.schema.json#/definitions/namespacedId",
+                "description": "Filter for entities that have a specific component type."
+              },
+              "with_component_data": {
+                "type": "object",
+                "description": "Advanced filter for entities based on data within one of their components.",
+                "properties": {
+                  "component_type": {
+                    "$ref": "../common.schema.json#/definitions/namespacedId"
+                  },
+                  "condition": {
+                    "$ref": "../json-logic.schema.json#"
+                  }
+                },
+                "required": ["component_type", "condition"]
+              }
+            }
+          }
+        }
+      },
+      "required": ["result_variable", "filters"],
+      "additionalProperties": false
+    }
+  }
+}

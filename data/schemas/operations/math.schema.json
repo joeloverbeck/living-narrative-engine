@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/math.schema.json",
+  "title": "MATH Operation",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "MATH"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
+    },
+    "condition": {
+      "$ref": "../json-logic.schema.json#",
+      "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+    },
+    "parameters": {
+      "$ref": "#/$defs/Parameters"
+    }
+  },
+  "required": ["type", "parameters"],
+  "additionalProperties": false,
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the MATH operation. Performs a calculation and stores the result.",
+      "properties": {
+        "result_variable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expression": {
+          "$ref": "#/$defs/MathExpression"
+        }
+      },
+      "required": ["result_variable", "expression"]
+    },
+    "MathExpression": {
+      "type": "object",
+      "description": "A recursive mathematical expression.",
+      "properties": {
+        "operator": {
+          "type": "string",
+          "enum": ["add", "subtract", "multiply", "divide", "modulo"]
+        },
+        "operands": {
+          "type": "array",
+          "description": "An array of two operands for the operation.",
+          "items": {
+            "$ref": "#/$defs/MathOperand"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": ["operator", "operands"]
+    },
+    "MathOperand": {
+      "description": "An operand for a math expression. Can be a number, a variable reference, or a nested expression.",
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "var": {
+              "type": "string"
+            }
+          },
+          "required": ["var"],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/MathExpression"
+        }
+      ]
+    }
+  }
+}

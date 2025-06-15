@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/breakFollowRelation.schema.json",
+  "title": "BREAK_FOLLOW_RELATION Operation",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "BREAK_FOLLOW_RELATION"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
+    },
+    "condition": {
+      "$ref": "../json-logic.schema.json#",
+      "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+    },
+    "parameters": {
+      "$ref": "#/$defs/Parameters"
+    }
+  },
+  "required": ["type", "parameters"],
+  "additionalProperties": false,
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the BREAK_FOLLOW_RELATION operation.",
+      "properties": {
+        "follower_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["follower_id"],
+      "additionalProperties": false
+    }
+  }
+}
