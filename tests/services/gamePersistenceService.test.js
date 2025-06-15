@@ -50,7 +50,6 @@ describe('GamePersistenceService', () => {
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
       playtimeTracker: mockPlaytimeTracker,
-      container: mockAppContainer,
     });
     // Clear the logger.info/debug calls made by the constructor, if any,
     // to not interfere with test-specific logger assertions.

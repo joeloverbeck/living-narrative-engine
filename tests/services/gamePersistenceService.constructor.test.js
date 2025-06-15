@@ -11,7 +11,6 @@ function makeDeps() {
     entityManager: {},
     dataRegistry: {},
     playtimeTracker: {},
-    container: {},
   };
 }
 
@@ -22,7 +21,6 @@ describe('GamePersistenceService constructor validation', () => {
     'entityManager',
     'dataRegistry',
     'playtimeTracker',
-    'container',
   ];
 
   test.each(required)('throws if %s is missing', (prop) => {
