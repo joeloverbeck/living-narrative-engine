@@ -363,13 +363,9 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             validLogger
           )
-      ).toThrow(
-        new TypeError(
-          'BaseManifestItemLoader requires a valid IConfiguration instance.'
-        )
-      );
+      ).toThrow(new TypeError('Missing required dependency: IConfiguration.'));
       expect(validLogger.error).toHaveBeenCalledWith(
-        'BaseManifestItemLoader: Invalid IConfiguration dependency provided.'
+        'Missing required dependency: IConfiguration.'
       );
     });
 
@@ -388,11 +384,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          'BaseManifestItemLoader requires a valid IConfiguration instance.'
+          "Invalid or missing method 'getModsBasePath' on dependency 'IConfiguration'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        'BaseManifestItemLoader: Invalid IConfiguration dependency provided.'
+        "Invalid or missing method 'getModsBasePath' on dependency 'IConfiguration'."
       );
     });
 
@@ -415,11 +411,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: IConfiguration instance must have a 'getModsBasePath' method."
+          "Invalid or missing method 'getModsBasePath' on dependency 'IConfiguration'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: IConfiguration missing 'getModsBasePath' method."
+        "Invalid or missing method 'getModsBasePath' on dependency 'IConfiguration'."
       );
     });
 
@@ -442,11 +438,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: IConfiguration instance must have a 'getContentTypeSchemaId' method."
+          "Invalid or missing method 'getContentTypeSchemaId' on dependency 'IConfiguration'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: IConfiguration missing 'getContentTypeSchemaId' method."
+        "Invalid or missing method 'getContentTypeSchemaId' on dependency 'IConfiguration'."
       );
     });
   });
@@ -465,13 +461,9 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             validLogger
           )
-      ).toThrow(
-        new TypeError(
-          'BaseManifestItemLoader requires a valid IPathResolver instance.'
-        )
-      );
+      ).toThrow(new TypeError('Missing required dependency: IPathResolver.'));
       expect(validLogger.error).toHaveBeenCalledWith(
-        'BaseManifestItemLoader: Invalid IPathResolver dependency provided.'
+        'Missing required dependency: IPathResolver.'
       );
     });
 
@@ -494,11 +486,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: IPathResolver instance must have a 'resolveModContentPath' method."
+          "Invalid or missing method 'resolveModContentPath' on dependency 'IPathResolver'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: IPathResolver missing 'resolveModContentPath' method."
+        "Invalid or missing method 'resolveModContentPath' on dependency 'IPathResolver'."
       );
     });
   });
@@ -517,13 +509,9 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             validLogger
           )
-      ).toThrow(
-        new TypeError(
-          'BaseManifestItemLoader requires a valid IDataFetcher instance.'
-        )
-      );
+      ).toThrow(new TypeError('Missing required dependency: IDataFetcher.'));
       expect(validLogger.error).toHaveBeenCalledWith(
-        'BaseManifestItemLoader: Invalid IDataFetcher dependency provided.'
+        'Missing required dependency: IDataFetcher.'
       );
     });
 
@@ -546,11 +534,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: IDataFetcher instance must have a 'fetch' method."
+          "Invalid or missing method 'fetch' on dependency 'IDataFetcher'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: IDataFetcher missing 'fetch' method."
+        "Invalid or missing method 'fetch' on dependency 'IDataFetcher'."
       );
     });
   });
@@ -570,12 +558,10 @@ describe('BaseManifestItemLoader Constructor', () => {
             validLogger
           )
       ).toThrow(
-        new TypeError(
-          'BaseManifestItemLoader requires a valid ISchemaValidator instance.'
-        )
+        new TypeError('Missing required dependency: ISchemaValidator.')
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        'BaseManifestItemLoader: Invalid ISchemaValidator dependency provided.'
+        'Missing required dependency: ISchemaValidator.'
       );
     });
 
@@ -598,11 +584,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: ISchemaValidator instance must have a 'validate' method."
+          "Invalid or missing method 'validate' on dependency 'ISchemaValidator'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: ISchemaValidator missing 'validate' method."
+        "Invalid or missing method 'validate' on dependency 'ISchemaValidator'."
       );
     });
 
@@ -625,11 +611,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: ISchemaValidator instance must have a 'getValidator' method."
+          "Invalid or missing method 'getValidator' on dependency 'ISchemaValidator'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: ISchemaValidator missing 'getValidator' method."
+        "Invalid or missing method 'getValidator' on dependency 'ISchemaValidator'."
       );
     });
 
@@ -653,11 +639,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: ISchemaValidator instance must have a 'isSchemaLoaded' method."
+          "Invalid or missing method 'isSchemaLoaded' on dependency 'ISchemaValidator'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: ISchemaValidator missing 'isSchemaLoaded' method."
+        "Invalid or missing method 'isSchemaLoaded' on dependency 'ISchemaValidator'."
       );
     });
   });
@@ -676,13 +662,9 @@ describe('BaseManifestItemLoader Constructor', () => {
             null,
             validLogger
           )
-      ).toThrow(
-        new TypeError(
-          'BaseManifestItemLoader requires a valid IDataRegistry instance.'
-        )
-      );
+      ).toThrow(new TypeError('Missing required dependency: IDataRegistry.'));
       expect(validLogger.error).toHaveBeenCalledWith(
-        'BaseManifestItemLoader: Invalid IDataRegistry dependency provided.'
+        'Missing required dependency: IDataRegistry.'
       );
     });
 
@@ -705,11 +687,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: IDataRegistry instance must have a 'store' method."
+          "Invalid or missing method 'store' on dependency 'IDataRegistry'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: IDataRegistry missing 'store' method."
+        "Invalid or missing method 'store' on dependency 'IDataRegistry'."
       );
     });
 
@@ -732,11 +714,11 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: IDataRegistry instance must have a 'get' method."
+          "Invalid or missing method 'get' on dependency 'IDataRegistry'."
         )
       );
       expect(validLogger.error).toHaveBeenCalledWith(
-        "BaseManifestItemLoader: IDataRegistry missing 'get' method."
+        "Invalid or missing method 'get' on dependency 'IDataRegistry'."
       );
     });
   });
@@ -755,11 +737,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             null
           )
-      ).toThrow(
-        new TypeError(
-          'BaseManifestItemLoader requires a valid ILogger instance.'
-        )
-      );
+      ).toThrow(new TypeError('Missing required dependency: ILogger.'));
     });
     it('should throw TypeError if logger is undefined', () => {
       expect(
@@ -773,11 +751,7 @@ describe('BaseManifestItemLoader Constructor', () => {
             mockRegistry,
             undefined
           )
-      ).toThrow(
-        new TypeError(
-          'BaseManifestItemLoader requires a valid ILogger instance.'
-        )
-      );
+      ).toThrow(new TypeError('Missing required dependency: ILogger.'));
     });
 
     it('should throw TypeError if logger is not an object', () => {
@@ -794,7 +768,7 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          'BaseManifestItemLoader requires a valid ILogger instance.'
+          "Invalid or missing method 'info' on dependency 'ILogger'."
         )
       );
     });
@@ -814,7 +788,7 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: ILogger instance must have a 'info' method."
+          "Invalid or missing method 'info' on dependency 'ILogger'."
         )
       );
     });
@@ -833,7 +807,7 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: ILogger instance must have a 'warn' method."
+          "Invalid or missing method 'warn' on dependency 'ILogger'."
         )
       );
     });
@@ -852,7 +826,7 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: ILogger instance must have a 'error' method."
+          "Invalid or missing method 'error' on dependency 'ILogger'."
         )
       );
     });
@@ -871,7 +845,7 @@ describe('BaseManifestItemLoader Constructor', () => {
           )
       ).toThrow(
         new TypeError(
-          "BaseManifestItemLoader: ILogger instance must have a 'debug' method."
+          "Invalid or missing method 'debug' on dependency 'ILogger'."
         )
       );
     });

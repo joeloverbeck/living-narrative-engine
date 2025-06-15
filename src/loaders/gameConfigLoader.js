@@ -12,7 +12,7 @@
 /** @typedef {import('../../data/schemas/game.schema.json')} GameConfig */ // Assuming this type exists
 
 import { CORE_MOD_ID } from '../constants/core';
-import { validateDependency } from '../utils/validationUtils.js';
+import { validateLoaderDeps } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
 
@@ -47,18 +47,28 @@ class GameConfigLoader {
   }) {
     this.#logger = ensureValidLogger(logger, 'GameConfigLoader');
 
-    validateDependency(configuration, 'IConfiguration', this.#logger, {
-      requiredMethods: ['getGameConfigFilename', 'getContentTypeSchemaId'],
-    });
-    validateDependency(pathResolver, 'IPathResolver', this.#logger, {
-      requiredMethods: ['resolveGameConfigPath'],
-    });
-    validateDependency(dataFetcher, 'IDataFetcher', this.#logger, {
-      requiredMethods: ['fetch'],
-    });
-    validateDependency(schemaValidator, 'ISchemaValidator', this.#logger, {
-      requiredMethods: ['isSchemaLoaded', 'getValidator'],
-    });
+    validateLoaderDeps(this.#logger, [
+      {
+        dependency: configuration,
+        name: 'IConfiguration',
+        methods: ['getGameConfigFilename', 'getContentTypeSchemaId'],
+      },
+      {
+        dependency: pathResolver,
+        name: 'IPathResolver',
+        methods: ['resolveGameConfigPath'],
+      },
+      {
+        dependency: dataFetcher,
+        name: 'IDataFetcher',
+        methods: ['fetch'],
+      },
+      {
+        dependency: schemaValidator,
+        name: 'ISchemaValidator',
+        methods: ['isSchemaLoaded', 'getValidator'],
+      },
+    ]);
 
     this.#configuration = configuration;
     this.#pathResolver = pathResolver;

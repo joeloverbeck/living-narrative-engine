@@ -10,6 +10,7 @@
  * @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest
  * @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult
  */
+import { validateLoaderDeps } from '../utils/validationUtils.js';
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
  * @typedef {object} LoadItemsResult
@@ -111,132 +112,34 @@ export class BaseManifestItemLoader {
       throw new TypeError(errorMsg);
     }
     const trimmedContentType = contentType.trim();
-    if (!logger || typeof logger !== 'object') {
-      throw new TypeError(
-        'BaseManifestItemLoader requires a valid ILogger instance.'
-      );
-    }
-    const requiredLoggerMethods = ['info', 'warn', 'error', 'debug'];
-    for (const method of requiredLoggerMethods) {
-      if (typeof logger[method] !== 'function') {
-        throw new TypeError(
-          `BaseManifestItemLoader: ILogger instance must have a '${method}' method.`
-        );
-      }
-    }
+    validateLoaderDeps(logger, [
+      {
+        dependency: config,
+        name: 'IConfiguration',
+        methods: ['getModsBasePath', 'getContentTypeSchemaId'],
+      },
+      {
+        dependency: pathResolver,
+        name: 'IPathResolver',
+        methods: ['resolveModContentPath'],
+      },
+      {
+        dependency: dataFetcher,
+        name: 'IDataFetcher',
+        methods: ['fetch'],
+      },
+      {
+        dependency: schemaValidator,
+        name: 'ISchemaValidator',
+        methods: ['validate', 'getValidator', 'isSchemaLoaded'],
+      },
+      {
+        dependency: dataRegistry,
+        name: 'IDataRegistry',
+        methods: ['store', 'get'],
+      },
+    ]);
     this._logger = logger;
-    if (!config || typeof config !== 'object') {
-      this._logger.error(
-        'BaseManifestItemLoader: Invalid IConfiguration dependency provided.'
-      );
-      throw new TypeError(
-        'BaseManifestItemLoader requires a valid IConfiguration instance.'
-      );
-    }
-    if (typeof config.getModsBasePath !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: IConfiguration missing 'getModsBasePath' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: IConfiguration instance must have a 'getModsBasePath' method."
-      );
-    }
-    if (typeof config.getContentTypeSchemaId !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: IConfiguration missing 'getContentTypeSchemaId' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: IConfiguration instance must have a 'getContentTypeSchemaId' method."
-      );
-    }
-    if (!pathResolver || typeof pathResolver !== 'object') {
-      this._logger.error(
-        'BaseManifestItemLoader: Invalid IPathResolver dependency provided.'
-      );
-      throw new TypeError(
-        'BaseManifestItemLoader requires a valid IPathResolver instance.'
-      );
-    }
-    if (typeof pathResolver.resolveModContentPath !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: IPathResolver missing 'resolveModContentPath' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: IPathResolver instance must have a 'resolveModContentPath' method."
-      );
-    }
-    if (!dataFetcher || typeof dataFetcher !== 'object') {
-      this._logger.error(
-        'BaseManifestItemLoader: Invalid IDataFetcher dependency provided.'
-      );
-      throw new TypeError(
-        'BaseManifestItemLoader requires a valid IDataFetcher instance.'
-      );
-    }
-    if (typeof dataFetcher.fetch !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: IDataFetcher missing 'fetch' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: IDataFetcher instance must have a 'fetch' method."
-      );
-    }
-    if (!schemaValidator || typeof schemaValidator !== 'object') {
-      this._logger.error(
-        'BaseManifestItemLoader: Invalid ISchemaValidator dependency provided.'
-      );
-      throw new TypeError(
-        'BaseManifestItemLoader requires a valid ISchemaValidator instance.'
-      );
-    }
-    if (typeof schemaValidator.validate !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: ISchemaValidator missing 'validate' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: ISchemaValidator instance must have a 'validate' method."
-      );
-    }
-    if (typeof schemaValidator.getValidator !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: ISchemaValidator missing 'getValidator' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: ISchemaValidator instance must have a 'getValidator' method."
-      );
-    }
-    if (typeof schemaValidator.isSchemaLoaded !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: ISchemaValidator missing 'isSchemaLoaded' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: ISchemaValidator instance must have a 'isSchemaLoaded' method."
-      );
-    }
-    if (!dataRegistry || typeof dataRegistry !== 'object') {
-      this._logger.error(
-        'BaseManifestItemLoader: Invalid IDataRegistry dependency provided.'
-      );
-      throw new TypeError(
-        'BaseManifestItemLoader requires a valid IDataRegistry instance.'
-      );
-    }
-    if (typeof dataRegistry.store !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: IDataRegistry missing 'store' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: IDataRegistry instance must have a 'store' method."
-      );
-    }
-    if (typeof dataRegistry.get !== 'function') {
-      this._logger.error(
-        "BaseManifestItemLoader: IDataRegistry missing 'get' method."
-      );
-      throw new TypeError(
-        "BaseManifestItemLoader: IDataRegistry instance must have a 'get' method."
-      );
-    }
 
     // --- Store Dependencies ---
     this._config = config;
