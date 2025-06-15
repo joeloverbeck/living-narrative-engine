@@ -4,6 +4,8 @@
 
 /** @typedef {import('./defs.js').OperationHandler}           OperationHandler */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 class OperationRegistry {
   /** @type {Map<string, OperationHandler>} */ #registry = new Map();
@@ -17,9 +19,14 @@ class OperationRegistry {
    *        • new OperationRegistry()
    */
   constructor(arg = null) {
-    this.#logger =
+    const maybeLogger =
       arg && typeof arg === 'object' && 'logger' in arg ? arg.logger : arg;
-
+    if (maybeLogger) {
+      validateDependency(maybeLogger, 'logger', console, {
+        requiredMethods: ['info', 'warn', 'error', 'debug'],
+      });
+    }
+    this.#logger = ensureValidLogger(maybeLogger, 'OperationRegistry');
     this.#log('info', 'OperationRegistry initialized.');
   }
 

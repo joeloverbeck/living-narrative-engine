@@ -1,5 +1,7 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 // -----------------------------------------------------------------------------
 // Ensure the alias "not" behaves the same as the built‑in "!" operator.
@@ -46,16 +48,10 @@ class JsonLogicEvaluationService {
    * @throws {Error} If required dependencies are missing or invalid.
    */
   constructor({ logger }) {
-    if (
-      !logger ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      throw new Error(
-        'JsonLogicEvaluationService requires a valid ILogger instance.'
-      );
-    }
-    this.#logger = logger;
+    validateDependency(logger, 'logger', console, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+    this.#logger = ensureValidLogger(logger, 'JsonLogicEvaluationService');
     this.#logger.debug('JsonLogicEvaluationService initialized.');
   }
 

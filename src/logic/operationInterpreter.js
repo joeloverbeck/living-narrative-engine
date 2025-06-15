@@ -1,5 +1,7 @@
 // src/logic/operationInterpreter.js (WITH ADDED LOGS)
 import { resolvePlaceholders } from './contextUtils.js'; // Adjust path as needed
+import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').ExecutionContext} ExecutionContext */ // Placeholder
@@ -11,20 +13,21 @@ class OperationInterpreter {
   #registry;
 
   constructor({ logger, operationRegistry }) {
-    if (!logger || typeof logger.error !== 'function') {
-      throw new Error(
-        'OperationInterpreter requires a valid ILogger instance.'
-      );
-    }
-    if (
-      !operationRegistry ||
-      typeof operationRegistry.getHandler !== 'function'
-    ) {
-      throw new Error(
-        'OperationInterpreter requires a valid OperationRegistry instance.'
-      );
-    }
-    this.#logger = logger;
+    validateDependency(logger, 'logger', console, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+    const effectiveLogger = ensureValidLogger(logger, 'OperationInterpreter');
+
+    validateDependency(
+      operationRegistry,
+      'operationRegistry',
+      effectiveLogger,
+      {
+        requiredMethods: ['getHandler'],
+      }
+    );
+
+    this.#logger = effectiveLogger;
     this.#registry = operationRegistry;
     this.#logger.debug(
       'OperationInterpreter Initialized (using OperationRegistry).'

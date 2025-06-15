@@ -10,6 +10,9 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 
+import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
+
 /** @typedef {string | number | null | undefined} EntityId */
 
 /**
@@ -158,25 +161,15 @@ export function createJsonLogicContext(
       "createJsonLogicContext: Missing or invalid 'event' object."
     );
   }
-  if (
-    !entityManager ||
-    typeof entityManager.getComponentData !== 'function' ||
-    typeof entityManager.getEntityInstance !== 'function'
-  ) {
-    throw new Error(
-      "createJsonLogicContext: Missing or invalid 'entityManager' instance."
-    );
-  }
-  if (
-    !logger ||
-    typeof logger.debug !== 'function' ||
-    typeof logger.warn !== 'function' ||
-    typeof logger.error !== 'function'
-  ) {
-    throw new Error(
-      "createJsonLogicContext: Missing or invalid 'logger' instance."
-    );
-  }
+  validateDependency(logger, 'logger', console, {
+    requiredMethods: ['debug', 'warn', 'error', 'info'],
+  });
+  const effectiveLogger = ensureValidLogger(logger, 'createJsonLogicContext');
+  validateDependency(entityManager, 'entityManager', effectiveLogger, {
+    requiredMethods: ['getComponentData', 'getEntityInstance', 'hasComponent'],
+  });
+
+  logger = effectiveLogger;
 
   logger.debug(
     `Creating JsonLogicEvaluationContext for event type [${event.type}]. ActorID: [${actorId ?? 'None'}], TargetID: [${targetId ?? 'None'}]`
