@@ -55,35 +55,16 @@
       }
     },
     {
-      "type": "QUERY_COMPONENT",
-      "comment": "Get target's position",
-      "parameters": {
-        "entity_ref": "target",
-        "component_type": "core:position",
-        "result_variable": "targetPosition"
-      }
-    },
-    {
-      "type": "IF",
+      "type": "IF_CO_LOCATED",
       "comment": "Only dispatch a perceptible event if the leader and follower are in the same location.",
       "parameters": {
-        "condition": {
-          "==": [
-            {
-              "var": "context.actorPosition.locationId"
-            },
-            {
-              "var": "context.targetPosition.locationId"
-            }
-          ]
-        },
+        "entity_ref_a": "actor",
+        "entity_ref_b": "target",
         "then_actions": [
           {
             "type": "GET_TIMESTAMP",
             "comment": "Get the current ISO timestamp for perception logging.",
-            "parameters": {
-              "result_variable": "nowIso"
-            }
+            "parameters": { "result_variable": "nowIso" }
           },
           {
             "type": "DISPATCH_EVENT",

@@ -20,6 +20,7 @@ import QueryComponentHandler from '../../../src/logic/operationHandlers/queryCom
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
+import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -122,6 +123,11 @@ function init(entities) {
   operationRegistry = new OperationRegistry({ logger });
   entityManager = new SimpleEntityManager(entities);
 
+  operationInterpreter = new OperationInterpreter({
+    logger,
+    operationRegistry,
+  });
+
   const handlers = {
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,
@@ -142,16 +148,17 @@ function init(entities) {
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+    IF_CO_LOCATED: new IfCoLocatedHandler({
+      entityManager,
+      logger,
+      operationInterpreter,
+      safeEventDispatcher: safeDispatcher,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
     operationRegistry.register(type, handler.execute.bind(handler));
   }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
 
   jsonLogic = new JsonLogicEvaluationService({ logger });
 

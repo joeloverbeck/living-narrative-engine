@@ -86,17 +86,6 @@
           },
           {
             "type": "QUERY_COMPONENT",
-            "comment": "Get old leader's position for co-location check.",
-            "parameters": {
-              "entity_ref": {
-                "entityId": "{context.oldFollowingData.leaderId}"
-              },
-              "component_type": "core:position",
-              "result_variable": "oldLeaderPosition"
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
             "comment": "Get old leader's name for the event description.",
             "parameters": {
               "entity_ref": {
@@ -107,18 +96,12 @@
             }
           },
           {
-            "type": "IF",
+            "type": "IF_CO_LOCATED",
             "comment": "Only dispatch a perceptible event if the actor and old leader are in the same location.",
             "parameters": {
-              "condition": {
-                "==": [
-                  {
-                    "var": "context.actorPosition.locationId"
-                  },
-                  {
-                    "var": "context.oldLeaderPosition.locationId"
-                  }
-                ]
+              "entity_ref_a": "actor",
+              "entity_ref_b": {
+                "entityId": "{context.oldFollowingData.leaderId}"
               },
               "then_actions": [
                 {
