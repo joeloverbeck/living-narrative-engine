@@ -327,6 +327,7 @@ export const tokens = freeze({
   MathHandler: 'MathHandler',
   RemoveFromClosenessCircleHandler: 'RemoveFromClosenessCircleHandler',
   AutoMoveFollowersHandler: 'AutoMoveFollowersHandler',
+  MergeClosenessCircleHandler: 'MergeClosenessCircleHandler',
 
   // --- Actions ---
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',

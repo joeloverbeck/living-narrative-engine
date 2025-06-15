@@ -6,6 +6,7 @@
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { getExitByDirection } from '../../utils/locationUtils.js';
 import { createComponentAccessor } from '../../logic/componentAccessor.js';
+import { createEntityContext } from '../../logic/contextAssembler.js';
 
 /**
  * @description Build the actor portion of an action validation context.
@@ -15,10 +16,7 @@ import { createComponentAccessor } from '../../logic/componentAccessor.js';
  * @returns {{id: string, components: object}} Actor context object.
  */
 export function buildActorContext(entityId, entityManager, logger) {
-  return {
-    id: entityId,
-    components: createComponentAccessor(entityId, entityManager, logger),
-  };
+  return createEntityContext(entityId, entityManager, logger);
 }
 
 /**

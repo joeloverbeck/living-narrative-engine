@@ -136,6 +136,19 @@ describe('SaveLoadService additional coverage', () => {
     expect(res.success).toBe(true);
   });
 
+  it('does not mutate the provided game state object', async () => {
+    storageProvider.ensureDirectoryExists.mockResolvedValue();
+    storageProvider.writeFileAtomically.mockResolvedValue({ success: true });
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: { level: 1 },
+    };
+    const original = JSON.stringify(obj);
+    await service.saveManualGame('NoMutate', obj);
+    expect(JSON.stringify(obj)).toBe(original);
+  });
+
   it('deepClone returns primitive values unchanged', async () => {
     storageProvider.ensureDirectoryExists.mockResolvedValue();
     let written;
