@@ -1,7 +1,7 @@
 // src/domUI/llmSelectionModal.js
 // --- FILE START ---
 
-import { BaseModalRenderer } from './baseModalRenderer.js'; // MODIFIED: Import BaseModalRenderer
+import { SlotModalBase } from './slotModalBase.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -38,16 +38,18 @@ const LLM_SELECTION_MODAL_ELEMENTS_CONFIG = {
 
 /**
  * @class LlmSelectionModal
- * @augments BaseModalRenderer
+ * @augments SlotModalBase
  * @description Manages the LLM selection modal, including its visibility,
  * fetching LLM options, displaying them, and handling LLM selection by the user.
  * It extends BaseModalRenderer for modal behaviors and uses BaseListDisplayComponent
  * patterns for rendering the LLM list.
  */
-export class LlmSelectionModal extends BaseModalRenderer {
+export class LlmSelectionModal extends SlotModalBase {
   #llmAdapter;
   #domElementFactory; // Keep for direct use in _renderListItem
   #changeLlmButton = null; // External button, managed here for its event listener
+  /** @type {string | null} */
+  currentActiveLlmId = null;
 
   /**
    * Creates an instance of LlmSelectionModal.
@@ -84,11 +86,12 @@ export class LlmSelectionModal extends BaseModalRenderer {
       );
 
     super({
+      datasetKey: 'llmId',
       logger,
       documentContext,
       validatedEventDispatcher,
       elementsConfig: LLM_SELECTION_MODAL_ELEMENTS_CONFIG,
-      domElementFactory, // Pass to BaseModalRenderer if it needs it, or store locally
+      domElementFactory,
     });
 
     this.#llmAdapter = llmAdapter;
@@ -104,6 +107,13 @@ export class LlmSelectionModal extends BaseModalRenderer {
     } else {
       this.logger.error(
         `${this._logPrefix} Could not find #change-llm-button element. Modal cannot be opened by this button.`
+      );
+    }
+    if (this.elements.listContainerElement) {
+      this._addDomListener(
+        this.elements.listContainerElement,
+        'keydown',
+        this._handleSlotNavigation.bind(this)
       );
     }
     // Note: #bindDomElements and #attachEventListeners for modal's own elements are handled by BaseModalRenderer/BoundDomRendererBase
@@ -171,27 +181,27 @@ export class LlmSelectionModal extends BaseModalRenderer {
   // --- List Rendering (using BaseListDisplayComponent patterns) ---
 
   /**
-   * Fetches LLM options and the currently active LLM ID from the adapter.
+   * Fetches LLM options and stores the currently active LLM ID.
    *
    * @private
    * @async
-   * @returns {Promise<LlmListData | null>} Object containing llmOptions and currentActiveLlmId, or null on error.
+   * @returns {Promise<LlmConfigOption[]>} Array of LLM option objects.
    */
   async _getListItemsData() {
     this.logger.debug(`${this._logPrefix} Fetching LLM list data...`);
     try {
       const llmOptions = await this.#llmAdapter.getAvailableLlmOptions();
-      const currentActiveLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
+      this.currentActiveLlmId = await this.#llmAdapter.getCurrentActiveLlmId();
       this.logger.debug(
-        `${this._logPrefix} Fetched ${llmOptions.length} LLM options. Active ID: ${currentActiveLlmId}`
+        `${this._logPrefix} Fetched ${llmOptions.length} LLM options. Active ID: ${this.currentActiveLlmId}`
       );
-      return { llmOptions, currentActiveLlmId };
+      return llmOptions;
     } catch (error) {
       this.logger.error(
         `${this._logPrefix} Error fetching LLM data from adapter: ${error.message}`,
         { error }
       );
-      return null; // Indicates an error in fetching data
+      return [];
     }
   }
 
@@ -204,9 +214,9 @@ export class LlmSelectionModal extends BaseModalRenderer {
    * @param {LlmListData} allData - All fetched list data, including currentActiveLlmId.
    * @returns {HTMLLIElement | null} The rendered <li> element or null if creation fails.
    */
-  _renderListItem(optionData, itemIndex, allData) {
+  _renderListItem(optionData, itemIndex) {
     const { configId, displayName } = optionData;
-    const { currentActiveLlmId } = allData;
+    const currentActiveLlmId = this.currentActiveLlmId;
 
     if (!configId) {
       this.logger.warn(
@@ -219,7 +229,7 @@ export class LlmSelectionModal extends BaseModalRenderer {
     const nameForDisplay = displayName || configId; // Fallback to configId if displayName is missing
 
     const listItemElement = this.#domElementFactory.create('li', {
-      cls: 'llm-item',
+      cls: 'llm-item save-slot',
       text: nameForDisplay,
     });
 
@@ -318,7 +328,6 @@ export class LlmSelectionModal extends BaseModalRenderer {
       this.logger.error(
         `${this._logPrefix} Cannot render LLM list: 'listContainerElement' is not available.`
       );
-      // Display a status message if the container itself is missing, though BaseModalRenderer checks this on construction.
       this._displayStatusMessage(
         'Internal error: LLM list container missing.',
         'error'
@@ -326,49 +335,26 @@ export class LlmSelectionModal extends BaseModalRenderer {
       return;
     }
 
-    // Clear previous content and any managed DOM listeners associated with old items
-    // BaseModalRenderer's dispose or a more granular cleanup might be needed if listeners accumulate across renders.
-    // For now, assuming _addDomListener handles this gracefully or dispose is called appropriately.
-    // If _renderListItem adds listeners, they should be managed. _addDomListener does this.
-    listContainer.innerHTML = ''; // Simple clear, BaseModalRenderer should clean up listeners on 'li' if they were added with _addDomListener
+    await this.populateSlotsList(
+      () => this._getListItemsData(),
+      (option, index) => this._renderListItem(option, index),
+      () => this._getEmptyListMessage(),
+      'Loading Language Models...'
+    );
 
-    const listData = await this._getListItemsData();
-    let errorOccurred = false;
-    let errorMessage = '';
-
-    if (!listData) {
-      // Indicates error during data fetching
-      errorOccurred = true;
-      // The specific error message might have been logged in _getListItemsData.
-      // A generic message is used here or could be passed from _getListItemsData.
-      errorMessage =
-        'Failed to load Language Model list. Please try again later.';
-    }
-
-    if (
-      errorOccurred ||
-      !listData.llmOptions ||
-      listData.llmOptions.length === 0
-    ) {
+    if (this.currentSlotsDisplayData.length === 0) {
       this.logger.warn(
         `${this._logPrefix} LLM list is empty or failed to load. Displaying empty/error message.`
       );
-      const emptyMessageElement = this._getEmptyListMessage(
-        errorOccurred,
-        errorMessage
-      );
-      if (emptyMessageElement) {
-        listContainer.appendChild(emptyMessageElement);
-      }
-    } else {
-      listData.llmOptions.forEach((option, index) => {
-        const listItemElement = this._renderListItem(option, index, listData);
-        if (listItemElement) {
-          listContainer.appendChild(listItemElement);
-        }
-      });
     }
-    this._onListRendered(listData, listContainer);
+
+    this._onListRendered(
+      {
+        llmOptions: this.currentSlotsDisplayData,
+        currentActiveLlmId: this.currentActiveLlmId,
+      },
+      listContainer
+    );
   }
 
   /**
@@ -400,23 +386,12 @@ export class LlmSelectionModal extends BaseModalRenderer {
       `Switching to ${clickedItem.textContent?.trim()}...`,
       'debug'
     );
-    this._setOperationInProgress(true); // Disable buttons during operation
 
-    // Optimistic visual update of the list
-    if (this.elements.listContainerElement) {
-      const items =
-        this.elements.listContainerElement.querySelectorAll('li.llm-item');
-      items.forEach((item) => {
-        const htmlItem = /** @type {HTMLElement} */ (item);
-        const isSelected = htmlItem.dataset.llmId === selectedLlmId;
-        htmlItem.classList.toggle('selected', isSelected);
-        htmlItem.setAttribute('aria-checked', String(isSelected));
-        htmlItem.setAttribute('tabindex', isSelected ? '0' : '-1');
-        if (isSelected) {
-          htmlItem.focus(); // Ensure focus moves to the selected item
-        }
-      });
-    }
+    const selectedData = this.currentSlotsDisplayData.find(
+      (o) => String(o.configId) === String(selectedLlmId)
+    ) || { configId: selectedLlmId };
+    this._handleSlotSelection(clickedItem, selectedData);
+    this._setOperationInProgress(true);
 
     try {
       this.logger.debug(
