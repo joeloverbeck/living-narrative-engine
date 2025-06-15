@@ -177,7 +177,9 @@ class GamePersistenceService extends IGamePersistenceService {
         // Only add the component to the save file if it still has data.
         // For example, if a notes component only had an empty `notes` array
         // and that key was deleted, the component object might now be empty.
-        if (Object.keys(dataToSave).length > 0) {
+        if (dataToSave !== null && typeof dataToSave !== 'object') {
+          components[componentTypeId] = dataToSave;
+        } else if (Object.keys(dataToSave).length > 0) {
           components[componentTypeId] = dataToSave;
         } else {
           this.#logger.debug(
