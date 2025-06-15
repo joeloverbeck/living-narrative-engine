@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing base intimacy system." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing base intimacy system.">
+      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/components/closeness.component.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -52,6 +57,7 @@
     "Jest.actionIndexerAdapter.test.js.executor": "Run",
     "Jest.awaitTurnEndState.test.js.executor": "Run",
     "Jest.buildSpeechMeta.test.js.executor": "Run",
+    "Jest.closeness.schema.test.js.executor": "Run",
     "Jest.decisionResult.test.js.executor": "Run",
     "Jest.entityMoved.schema.test.js.executor": "Run",
     "Jest.genericTurnHandler.passingThis.test.js.executor": "Run",
@@ -67,6 +73,7 @@
     "Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor": "Run",
     "Jest.interpreterRegistrations.handlers.test.js.executor": "Run",
     "Jest.llmDecisionProvider.test.js.executor": "Run",
+    "Jest.modifyArrayFieldHandler.pushUnique.test.js.executor": "Run",
     "Jest.nestedPlaceholderResolution.integration.test.js.executor": "Run",
     "Jest.playerTurnHandler.fixes.test.js.executor": "Run",
     "Jest.playerTurnPrompt.schema.test.js.executor": "Run",
@@ -105,7 +112,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.modifyArrayFieldHandler.pushUnique.test.js">
+  <component name="RunManager" selected="Jest.closeness.schema.test.js">
     <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -122,6 +129,15 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/domUI/helpers/buildSpeechMeta.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="closeness.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="modifyArrayFieldHandler.pushUnique.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -142,22 +158,13 @@
       <test-file value="$PROJECT_DIR$/tests/integration/nestedPlaceholderResolution.integration.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="promptBuilder.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/integration/promptBuilder.integration.test.js" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.closeness.schema.test.js" />
         <item itemvalue="Jest.modifyArrayFieldHandler.pushUnique.test.js" />
         <item itemvalue="Jest.Tests in tests\" />
         <item itemvalue="Jest.nestedPlaceholderResolution.integration.test.js" />
         <item itemvalue="Jest.buildSpeechMeta.test.js" />
-        <item itemvalue="Jest.promptBuilder.integration.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -179,15 +186,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="18985000" />
-    </task>
-    <task id="LOCAL-00064" summary="Refactoring HumanTurnHandler.">
-      <option name="closed" value="true" />
-      <created>1749919199537</created>
-      <option name="number" value="00064" />
-      <option name="presentableId" value="LOCAL-00064" />
-      <option name="project" value="LOCAL" />
-      <updated>1749919199537</updated>
+      <workItem from="1749963238113" duration="19968000" />
     </task>
     <task id="LOCAL-00065" summary="Chores.">
       <option name="closed" value="true" />
@@ -573,7 +572,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749984910876</updated>
     </task>
-    <option name="localTasksCounter" value="113" />
+    <task id="LOCAL-00113" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749985224549</created>
+      <option name="number" value="00113" />
+      <option name="presentableId" value="LOCAL-00113" />
+      <option name="project" value="LOCAL" />
+      <updated>1749985224549</updated>
+    </task>
+    <option name="localTasksCounter" value="114" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

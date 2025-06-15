@@ -1,0 +1,23 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "intimacy:closeness",
+  "description": "A fully-connected, order-independent set of actors who have explicitly chosen to be 'close'. Its presence indicates an actor is part of a Closeness Circle.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "partners"
+    ],
+    "properties": {
+      "partners": {
+        "type": "array",
+        "description": "A list of entity IDs that are also in this closeness circle.",
+        "uniqueItems": true,
+        "default": [],
+        "items": {
+          "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId"
+        }
+      }
+    }
+  }
+}

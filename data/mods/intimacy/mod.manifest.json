@@ -1,0 +1,23 @@
+{
+  "$schema": "http://example.com/schemas/mod.manifest.schema.json",
+  "id": "intimacy",
+  "version": "1.0.0",
+  "name": "intimacy",
+  "description": "This module allows intimacy between characters. Sex is not included.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "components": [
+      "closeness.component.json"
+    ],
+    "characters": [],
+    "items": [],
+    "locations": [],
+    "actions": [
+    ],
+    "rules": [
+    ],
+    "events": [
+    ]
+  }
+}
