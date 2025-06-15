@@ -18,6 +18,7 @@ import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 /** @typedef {import('../entities/entityManager.js').default}               EntityManager */
 /** @typedef {import('./operationInterpreter.js').default}                  OperationInterpreter */
 /** @typedef {import('../../data/schemas/rule.schema.json').SystemRule}     SystemRule */
+/** @typedef {import('./defs.js').JsonLogicEvaluationContext}               JsonLogicEvaluationContext */
 /** @typedef {{catchAll:SystemRule[], byAction:Map<string,SystemRule[]>}}   RuleBucket */
 
 /* ---------------------------------------------------------------------------
@@ -245,6 +246,39 @@ class SystemLogicInterpreter {
 
   /* Rule processing                                                       */
 
+  /**
+   * Helper for evaluating JSON Logic conditions with consistent logging and
+   * error handling.
+   *
+   * @param {object} condition - JSON Logic rule to evaluate.
+   * @param {JsonLogicEvaluationContext} ctx - Context used for evaluation.
+   * @param {string} label - Prefix for log messages identifying the condition.
+   * @returns {{result:boolean, errored:boolean, error:Error|undefined}} Outcome
+   * of the evaluation and any thrown error.
+   */
+  _evaluateCondition(condition, ctx, label) {
+    let rawResult;
+    let result = false;
+    try {
+      rawResult = this.#jsonLogic.evaluate(condition, ctx);
+      this.#logger.debug(
+        `${label} Condition evaluation raw result: ${rawResult}`
+      );
+      result = !!rawResult;
+    } catch (error) {
+      this.#logger.error(
+        `${label} Error during condition evaluation. Treating condition as FALSE.`,
+        error
+      );
+      return { result: false, errored: true, error };
+    }
+
+    this.#logger.debug(
+      `${label} Condition evaluation final boolean result: ${result}`
+    );
+    return { result, errored: false, error: undefined };
+  }
+
   #evaluateRuleCondition(rule, flatCtx) {
     const ruleId = rule.rule_id || 'NO_ID';
 
@@ -265,26 +299,12 @@ class SystemLogicInterpreter {
       `[Rule ${ruleId}] Condition found. Evaluating using jsonLogicDataForEval...`
     );
 
-    let rawResult;
-    let passed = false;
-    try {
-      rawResult = this.#jsonLogic.evaluate(rule.condition, flatCtx);
-      this.#logger.debug(
-        `[Rule ${ruleId}] Condition evaluation raw result: ${rawResult}`
-      );
-      passed = !!rawResult;
-    } catch (e) {
-      this.#logger.error(
-        `[Rule ${ruleId}] Error during condition evaluation. Treating condition as FALSE.`,
-        e
-      );
-      return { passed: false, errored: true };
-    }
-
-    this.#logger.debug(
-      `[Rule ${ruleId}] Condition evaluation final boolean result: ${passed}`
+    const { result: passed, errored } = this._evaluateCondition(
+      rule.condition,
+      flatCtx,
+      `[Rule ${ruleId}]`
     );
-    return { passed, errored: false };
+    return { passed, errored };
   }
 
   #processRule(rule, event, nestedCtx) {
@@ -332,18 +352,20 @@ class SystemLogicInterpreter {
 
       // universal per-operation condition ----------------------------------
       if (op.condition) {
-        try {
-          if (
-            !this.#jsonLogic.evaluate(op.condition, nestedCtx.evaluationContext)
-          ) {
-            this.#logger.debug(`${tag} Condition=false – op skipped.`);
-            continue;
-          }
-        } catch (e) {
+        const { result, errored, error } = this._evaluateCondition(
+          op.condition,
+          nestedCtx.evaluationContext,
+          tag
+        );
+        if (errored) {
           this.#logger.error(
             `${tag} Condition evaluation failed – op skipped.`,
-            e
+            error
           );
+          continue;
+        }
+        if (!result) {
+          this.#logger.debug(`${tag} Condition=false – op skipped.`);
           continue;
         }
       }
