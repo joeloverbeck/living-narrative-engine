@@ -67,7 +67,11 @@ describe('Persistence round-trip', () => {
   beforeEach(() => {
     logger = makeLogger();
     storageProvider = createMemoryStorageProvider();
-    saveLoadService = new SaveLoadService({ logger, storageProvider });
+    saveLoadService = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
 
     entity = makeEntity('e1', receptionistDef);
 

@@ -44,7 +44,11 @@ describe('SaveLoadService additional coverage', () => {
 
   beforeEach(() => {
     ({ logger, storageProvider } = makeDeps());
-    service = new SaveLoadService({ logger, storageProvider });
+    service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
   });
 
   it('returns empty list when directory missing', async () => {

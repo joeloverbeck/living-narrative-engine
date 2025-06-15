@@ -57,7 +57,11 @@ describe('SaveLoadService error paths', () => {
 
   beforeEach(() => {
     ({ logger, storageProvider } = makeDeps());
-    service = new SaveLoadService({ logger, storageProvider });
+    service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
     global.encodeMock = jest.fn();
     global.decodeMock = jest.fn();
   });
