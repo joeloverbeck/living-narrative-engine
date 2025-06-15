@@ -4,7 +4,11 @@
  * @jest-environment node
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import { resolvePlaceholders } from '../../src/logic/contextUtils.js';
+import {
+  resolvePlaceholders,
+  resolveEntityNameFallback,
+} from '../../src/logic/contextUtils.js';
+import { NAME_COMPONENT_ID } from '../../src/constants/componentIds.js';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
 
@@ -451,6 +455,31 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       context.context = 'This is a top-level context string'; // Add a conflicting top-level 'context'
       const input = '{context.varA}'; // This should still refer to evaluationContext.context.varA
       expect(resolvePlaceholders(input, context, mockLogger)).toBe('valueA');
+    });
+  });
+
+  describe('resolveEntityNameFallback helper', () => {
+    test('should return actor name from NAME_COMPONENT_ID component', () => {
+      const actorData = {
+        id: 'a1',
+        components: { [NAME_COMPONENT_ID]: { text: 'Hero' } },
+      };
+      const context = createMockExecutionContext({}, {}, actorData);
+
+      expect(resolveEntityNameFallback('actor.name', context, mockLogger)).toBe(
+        'Hero'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Resolved placeholder "actor.name"')
+      );
+    });
+
+    test('should return undefined when component missing', () => {
+      const context = createMockExecutionContext();
+
+      expect(
+        resolveEntityNameFallback('actor.name', context, mockLogger)
+      ).toBeUndefined();
     });
   });
 });

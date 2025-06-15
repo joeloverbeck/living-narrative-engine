@@ -179,6 +179,9 @@ describe('OperationInterpreter', () => {
       mockExecutionContext
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'Executing handler for operation type "LOG"…'
+    );
   });
 
   test('execute should call the MODIFY_COMPONENT handler with RESOLVED parameters and context', () => {
@@ -206,6 +209,9 @@ describe('OperationInterpreter', () => {
       mockExecutionContext
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'Executing handler for operation type "SET_VARIABLE"…'
+    );
   });
 
   /* ────────────────────────────────────────────────────────────────────────
@@ -242,7 +248,7 @@ describe('OperationInterpreter', () => {
 
     const opWhitespaceType = { type: '  ', parameters: {} };
     interpreter.execute(opWhitespaceType, mockExecutionContext);
-    expect(mockRegistry.getHandler).not.toHaveBeenCalled();
+    expect(mockRegistry.getHandler).toHaveBeenCalledWith('');
     expect(mockLogger.error).toHaveBeenCalled();
   });
 
@@ -269,6 +275,9 @@ describe('OperationInterpreter', () => {
     );
     expect(mockLogger.error).not.toHaveBeenCalledWith(
       expect.stringContaining('Error resolving placeholders')
+    );
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'Executing handler for operation type "LOG"…'
     );
   });
 

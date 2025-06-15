@@ -13,16 +13,22 @@ const PLACEHOLDER_FIND_REGEX = /{\s*([^}\s]+)\s*}/g; // Only matches {...}
 const FULL_STRING_PLACEHOLDER_REGEX = /^{\s*([^}\s]+)\s*}$/; // Only matches {...}
 
 /**
- * Provides a fallback to resolve common, convenient entity properties like 'actor.name' or 'target.name'
- * by looking for the NAME_COMPONENT_ID component on the respective entity.
+ * Provides a fallback to resolve common placeholders such as `actor.name` or
+ * `target.name`.
  *
+ * @description Looks for the `NAME_COMPONENT_ID` component on the relevant
+ * entity and returns its text value when present.
  * @param {string} placeholderPath - The original path, e.g., 'target.name'.
- * @param {object} resolutionRoot - The root context object to resolve from (e.g., nestedExecutionContext).
+ * @param {object} resolutionRoot - The root context object to resolve from
+ *   (e.g., nestedExecutionContext).
  * @param {ILogger} [logger] - Optional logger for debug messages.
  * @returns {string|undefined} The resolved name, or undefined if not found.
- * @private
  */
-function _resolveEntityNameFallback(placeholderPath, resolutionRoot, logger) {
+export function resolveEntityNameFallback(
+  placeholderPath,
+  resolutionRoot,
+  logger
+) {
   if (!resolutionRoot) return undefined;
 
   let entity;
@@ -128,7 +134,7 @@ export function resolvePlaceholders(
         // --- START FIX ---
         // If the primary resolution failed, attempt our smart fallback for common cases.
         if (resolvedValue === undefined) {
-          resolvedValue = _resolveEntityNameFallback(
+          resolvedValue = resolveEntityNameFallback(
             placeholderPath,
             executionContext, // Pass the original, top-level context for the fallback
             logger
@@ -214,7 +220,7 @@ export function resolvePlaceholders(
             // --- START FIX ---
             // If the primary resolution failed, attempt our smart fallback for common cases.
             if (resolvedValue === undefined) {
-              resolvedValue = _resolveEntityNameFallback(
+              resolvedValue = resolveEntityNameFallback(
                 placeholderPath,
                 executionContext, // Pass the original, top-level context for the fallback
                 logger
