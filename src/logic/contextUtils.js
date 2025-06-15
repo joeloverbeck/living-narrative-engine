@@ -55,6 +55,78 @@ export function resolveEntityNameFallback(
 }
 
 /**
+ * Resolves a placeholder path against the provided execution context.
+ *
+ * @description Handles the `context.` prefix, uses {@link resolvePath}, and
+ * falls back to {@link resolveEntityNameFallback} when direct resolution fails.
+ * @param {string} placeholderPath - Path from the placeholder (e.g.,
+ *   `context.varA`).
+ * @param {object} executionContext - The execution context root object.
+ * @param {ILogger} [logger] - Optional logger for warnings and errors.
+ * @param {string} [logPath] - String used in log messages to indicate the
+ *   source of the resolution attempt.
+ * @returns {any|undefined} The resolved value, or `undefined` when resolution
+ *   fails.
+ */
+function resolvePlaceholderPath(
+  placeholderPath,
+  executionContext,
+  logger,
+  logPath = ''
+) {
+  if (!placeholderPath) {
+    logger?.warn(`Failed to extract path from placeholder at ${logPath}`);
+    return undefined;
+  }
+
+  if (!executionContext || typeof executionContext !== 'object') {
+    logger?.warn(
+      `Cannot resolve placeholder path "${placeholderPath}" at ${logPath}: executionContext is not a valid object.`
+    );
+    return undefined;
+  }
+
+  let pathForResolvePath = placeholderPath;
+  let effectiveRoot = executionContext;
+
+  if (placeholderPath.startsWith('context.')) {
+    if (
+      executionContext.evaluationContext &&
+      typeof executionContext.evaluationContext.context === 'object' &&
+      executionContext.evaluationContext.context !== null
+    ) {
+      effectiveRoot = executionContext.evaluationContext.context;
+      pathForResolvePath = placeholderPath.substring('context.'.length);
+    } else {
+      logger?.warn(
+        `Placeholder "${placeholderPath}" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${logPath}`
+      );
+    }
+  }
+
+  let resolvedValue;
+  try {
+    resolvedValue = resolvePath(effectiveRoot, pathForResolvePath);
+  } catch (e) {
+    logger?.error(
+      `Error resolving path "${placeholderPath}" (interpreted as "${pathForResolvePath}") at ${logPath}`,
+      e
+    );
+    resolvedValue = undefined;
+  }
+
+  if (resolvedValue === undefined) {
+    resolvedValue = resolveEntityNameFallback(
+      placeholderPath,
+      executionContext,
+      logger
+    );
+  }
+
+  return resolvedValue;
+}
+
+/**
  * Recursively resolves placeholder strings (e.g., "{actor.id}", "{context.variableName}") within an input structure
  * using values from the provided executionContext. Handles nested objects and arrays.
  * Replaces placeholders found within strings. If a string consists *only* of a placeholder
@@ -91,9 +163,6 @@ export function resolvePlaceholders(
         ? `${currentPath} -> ${placeholderSyntax}`
         : placeholderSyntax;
 
-      let pathForResolvePath = placeholderPath;
-      let effectiveResolutionRoot = executionContext;
-
       if (!placeholderPath) {
         logger?.warn(
           `Failed to extract path from full string placeholder: "${input}"`
@@ -102,56 +171,28 @@ export function resolvePlaceholders(
       }
 
       if (executionContext && typeof executionContext === 'object') {
-        let resolvedValue;
-        try {
-          if (placeholderPath.startsWith('context.')) {
-            if (
-              executionContext.evaluationContext &&
-              typeof executionContext.evaluationContext.context === 'object' &&
-              executionContext.evaluationContext.context !== null
-            ) {
-              effectiveResolutionRoot =
-                executionContext.evaluationContext.context;
-              pathForResolvePath = placeholderPath.substring('context.'.length);
-            } else {
-              logger?.warn(
-                `Placeholder "${placeholderPath}" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${fullLogPath}`
-              );
-            }
-          }
-          resolvedValue = resolvePath(
-            effectiveResolutionRoot,
-            pathForResolvePath
-          );
-        } catch (e) {
-          logger?.error(
-            `Error resolving path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from ${placeholderSyntax}. Path: ${fullLogPath}`,
-            e
-          );
-          resolvedValue = undefined;
-        }
-
-        // --- START FIX ---
-        // If the primary resolution failed, attempt our smart fallback for common cases.
-        if (resolvedValue === undefined) {
-          resolvedValue = resolveEntityNameFallback(
-            placeholderPath,
-            executionContext, // Pass the original, top-level context for the fallback
-            logger
-          );
-        }
-        // --- END FIX ---
+        const resolvedValue = resolvePlaceholderPath(
+          placeholderPath,
+          executionContext,
+          logger,
+          fullLogPath
+        );
 
         if (resolvedValue === undefined) {
           if (!isOptional) {
             logger?.warn(
-              `Placeholder path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
+              `Placeholder path "${placeholderPath}" from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
             );
           }
           return undefined; // callers now see “no value”
         }
+
         logger?.debug(
-          `Resolved full string placeholder ${placeholderSyntax} to: ${typeof resolvedValue === 'object' ? JSON.stringify(resolvedValue) : resolvedValue}`
+          `Resolved full string placeholder ${placeholderSyntax} to: ${
+            typeof resolvedValue === 'object'
+              ? JSON.stringify(resolvedValue)
+              : resolvedValue
+          }`
         );
         return resolvedValue;
       } else {
@@ -174,9 +215,6 @@ export function resolvePlaceholders(
             ? `${currentPath} -> ${placeholderSyntax} (within string)`
             : `${placeholderSyntax} (within string)`;
 
-          let pathForResolvePath = placeholderPath;
-          let effectiveResolutionRoot = executionContext;
-
           if (!placeholderPath) {
             logger?.warn(
               `Failed to extract path from placeholder match: "${match}" in string "${input}"`
@@ -185,57 +223,22 @@ export function resolvePlaceholders(
           }
 
           if (executionContext && typeof executionContext === 'object') {
-            let resolvedValue;
-            try {
-              if (placeholderPath.startsWith('context.')) {
-                if (
-                  executionContext.evaluationContext &&
-                  typeof executionContext.evaluationContext.context ===
-                    'object' &&
-                  executionContext.evaluationContext.context !== null
-                ) {
-                  effectiveResolutionRoot =
-                    executionContext.evaluationContext.context;
-                  pathForResolvePath = placeholderPath.substring(
-                    'context.'.length
-                  );
-                } else {
-                  logger?.warn(
-                    `Embedded placeholder "${placeholderPath}" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${fullLogPath}`
-                  );
-                }
-              }
-              resolvedValue = resolvePath(
-                effectiveResolutionRoot,
-                pathForResolvePath
-              );
-            } catch (e) {
-              logger?.error(
-                `Error resolving path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from embedded ${placeholderSyntax}. Path: ${fullLogPath}`,
-                e
-              );
-              resolvedValue = undefined;
-            }
-
-            // --- START FIX ---
-            // If the primary resolution failed, attempt our smart fallback for common cases.
-            if (resolvedValue === undefined) {
-              resolvedValue = resolveEntityNameFallback(
-                placeholderPath,
-                executionContext, // Pass the original, top-level context for the fallback
-                logger
-              );
-            }
-            // --- END FIX ---
+            const resolvedValue = resolvePlaceholderPath(
+              placeholderPath,
+              executionContext,
+              logger,
+              fullLogPath
+            );
 
             if (resolvedValue === undefined) {
               if (!isOptional) {
                 logger?.warn(
-                  `Embedded placeholder path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
+                  `Embedded placeholder path "${placeholderPath}" from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
                 );
               }
               return match;
             }
+
             replaced = true;
             const stringValue =
               resolvedValue === null ? 'null' : String(resolvedValue);
