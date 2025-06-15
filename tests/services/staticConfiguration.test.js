@@ -23,6 +23,8 @@ const EXPECTED_SCHEMA_FILES = [
   'llm-configs.schema.json',
   'prompt-text.schema.json',
   'macro.schema.json',
+  'ui-icons.schema.json',
+  'ui-labels.schema.json',
   'addComponent.schema.json',
   'addPerceptionLogEntry.schema.json',
   'autoMoveFollowers.schema.json',
@@ -67,6 +69,8 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
   operations: 'http://example.com/schemas/operation.schema.json',
   rules: 'http://example.com/schemas/rule.schema.json',
   'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
+  'ui-icons': 'http://example.com/schemas/ui-icons.schema.json',
+  'ui-labels': 'http://example.com/schemas/ui-labels.schema.json',
 };
 
 // Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
