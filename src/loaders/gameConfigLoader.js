@@ -15,6 +15,7 @@ import { CORE_MOD_ID } from '../constants/core';
 import { validateLoaderDeps } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
+import { validateAgainstSchema } from '../utils/schemaValidation.js';
 
 /**
  * Service responsible for locating, fetching, validating, and parsing the game configuration file (e.g., game.json).
@@ -92,7 +93,6 @@ class GameConfigLoader {
    */
   async loadConfig() {
     let configPath = '';
-    let rawContent = null;
     let parsedConfig = null;
 
     try {
@@ -140,41 +140,26 @@ class GameConfigLoader {
         `GameConfigLoader: Using schema ID '${schemaId}' for validation.`
       );
 
-      if (!this.#schemaValidator.isSchemaLoaded(schemaId)) {
-        this.#logger.error(
-          `FATAL: Game config schema ('${schemaId}') is not loaded in the validator. Ensure SchemaLoader ran first and '${this.#configuration.getGameConfigFilename()}.schema.json' is configured.`
-        );
-        throw new Error(
-          `Required game config schema ('${schemaId}') not loaded.`
-        );
-      }
-
-      const validatorFn = this.#schemaValidator.getValidator(schemaId);
-      if (!validatorFn) {
-        this.#logger.error(
-          `FATAL: Could not retrieve validator function for game config schema '${schemaId}'. Schema might be invalid or compilation failed.`
-        );
-        throw new Error(
-          `Validator function unavailable for game config schema '${schemaId}'.`
-        );
-      }
-
-      this.#logger.debug(
-        `GameConfigLoader: Validating parsed config against schema '${schemaId}'...`
+      validateAgainstSchema(
+        this.#schemaValidator,
+        schemaId,
+        parsedConfig,
+        this.#logger,
+        {
+          validationDebugMessage: `GameConfigLoader: Validating parsed config against schema '${schemaId}'...`,
+          notLoadedMessage: `FATAL: Game config schema ('${schemaId}') is not loaded in the validator. Ensure SchemaLoader ran first and '${this.#configuration.getGameConfigFilename()}.schema.json' is configured.`,
+          notLoadedLogLevel: 'error',
+          notLoadedThrowMessage: `Required game config schema ('${schemaId}') not loaded.`,
+          noValidatorMessage: `FATAL: Could not retrieve validator function for game config schema '${schemaId}'. Schema might be invalid or compilation failed.`,
+          noValidatorThrowMessage: `Validator function unavailable for game config schema '${schemaId}'.`,
+          failureMessage: (errors) => {
+            const formattedErrors = formatAjvErrors(errors);
+            return `FATAL: Game configuration file '${configFilename}' failed schema validation. Path: ${configPath}. Schema ID: '${schemaId}'. Errors: ${formattedErrors}`;
+          },
+          failureThrowMessage: `Game configuration validation failed for '${configFilename}'.`,
+          appendErrorDetails: false,
+        }
       );
-      const validationResult = validatorFn(parsedConfig);
-
-      // AC: Schema Validation Error Handling
-      if (!validationResult.isValid) {
-        const formattedErrors = formatAjvErrors(validationResult.errors);
-        this.#logger.error(
-          `FATAL: Game configuration file '${configFilename}' failed schema validation. Path: ${configPath}. Schema ID: '${schemaId}'. Errors: ${formattedErrors}`
-        );
-        // Throw a new error specifically indicating validation failure
-        throw new Error(
-          `Game configuration validation failed for '${configFilename}'.`
-        );
-      }
 
       // 5. Validation Success - Check 'mods' array
       this.#logger.debug(
