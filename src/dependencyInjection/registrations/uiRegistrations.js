@@ -125,7 +125,7 @@ export function registerUI(
       new InputStateController({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         inputElement: c.resolve(tokens.inputElement),
       })
   );

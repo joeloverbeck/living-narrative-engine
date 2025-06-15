@@ -11,25 +11,24 @@ import { JSDOM } from 'jsdom';
 import { InputStateController } from '../../src/domUI'; // Assuming index exports it
 import DocumentContext from '../../src/domUI/documentContext.js';
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
-import ValidatedEventDispatcher from '../../src/events/validatedEventDispatcher.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 // Mock dependencies
 jest.mock('../../src/logging/consoleLogger.js');
-jest.mock('../../src/events/validatedEventDispatcher.js');
 
 describe('InputStateController', () => {
   let dom;
   let document;
   let docContext;
   let mockLogger;
-  let mockVed;
+  let mockDispatcher;
   let inputElement;
   let mockSubscriptions;
 
-  // Helper to get the handler function passed to ved.subscribe
+  // Helper to get the handler function passed to dispatcher.subscribe
   const getVedHandler = (eventType) => {
     // Find the call to subscribe for the specific eventType
-    const call = mockVed.subscribe.mock.calls.find(
+    const call = mockDispatcher.subscribe.mock.calls.find(
       (callArgs) => callArgs[0] === eventType
     );
     // Return the second argument, which is the handler function
@@ -47,15 +46,15 @@ describe('InputStateController', () => {
 
     // --- Mock Creation ---
     mockLogger = new ConsoleLogger();
-    mockVed = new ValidatedEventDispatcher(null, mockLogger); // Assuming VED can handle null dispatcher for tests
-
-    // --- Mock VED's subscribe method ---
     mockSubscriptions = [];
-    mockVed.subscribe = jest.fn((_eventType, _handler) => {
-      const subscription = { unsubscribe: jest.fn() };
-      mockSubscriptions.push(subscription);
-      return subscription;
-    });
+    mockDispatcher = {
+      subscribe: jest.fn((_eventType, _handler) => {
+        const subscription = { unsubscribe: jest.fn() };
+        mockSubscriptions.push(subscription);
+        return subscription;
+      }),
+      dispatch: jest.fn().mockResolvedValue(true),
+    };
 
     // --- Mock Logger Methods ---
     mockLogger.info = jest.fn();
@@ -77,7 +76,7 @@ describe('InputStateController', () => {
     return new InputStateController({
       logger: mockLogger,
       documentContext: docContext,
-      validatedEventDispatcher: mockVed,
+      safeEventDispatcher: mockDispatcher,
       inputElement: element,
     });
   };
@@ -109,10 +108,13 @@ describe('InputStateController', () => {
       expect(() => createController(null)).toThrow(
         "'inputElement' dependency is missing or not a valid DOM element."
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "'inputElement' dependency is missing or not a valid DOM element."
-        )
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            "'inputElement' dependency is missing or not a valid DOM element."
+          ),
+        })
       );
     });
 
@@ -125,10 +127,13 @@ describe('InputStateController', () => {
       ).toThrow(
         "'inputElement' dependency is missing or not a valid DOM element."
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "'inputElement' dependency is missing or not a valid DOM element."
-        )
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            "'inputElement' dependency is missing or not a valid DOM element."
+          ),
+        })
       );
     });
 
@@ -137,22 +142,24 @@ describe('InputStateController', () => {
       expect(() => createController(divElement)).toThrow(
         "'inputElement' must be an HTMLInputElement (<input>), but received 'DIV'."
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "'inputElement' must be an HTMLInputElement (<input>), but received 'DIV'."
-        ),
-        { element: divElement }
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            "'inputElement' must be an HTMLInputElement (<input>), but received 'DIV'."
+          ),
+        })
       );
     });
 
     it('should subscribe to VED events on construction', () => {
       createController();
-      expect(mockVed.subscribe).toHaveBeenCalledTimes(2);
-      expect(mockVed.subscribe).toHaveBeenCalledWith(
+      expect(mockDispatcher.subscribe).toHaveBeenCalledTimes(2);
+      expect(mockDispatcher.subscribe).toHaveBeenCalledWith(
         'core:disable_input',
         expect.any(Function)
       );
-      expect(mockVed.subscribe).toHaveBeenCalledWith(
+      expect(mockDispatcher.subscribe).toHaveBeenCalledWith(
         'core:enable_input',
         expect.any(Function)
       );
