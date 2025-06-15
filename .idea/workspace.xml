@@ -5,10 +5,48 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing base intimacy system.">
-      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/components/closeness.component.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/get_close.action.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/step_back.action.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/actions/go.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/actions/go.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/components/actor.component.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/components/actor.component.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/components/current_actor.component.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/components/current_actor.component.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/components/description.component.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/components/description.component.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/components/exits.component.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/components/exits.component.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/components/name.component.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/components/name.component.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/components/player.component.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/components/player.component.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/components/position.component.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/components/position.component.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/components/closeness.component.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/components/closeness.component.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/hero.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/hero.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/ninja.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/ninja.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/receptionist.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/receptionist.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/sidekick.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/sidekick.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/locations/adventurers_guild.location.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/locations/adventurers_guild.location.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/locations/town.location.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/locations/town.location.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/mods/namespaced_ids_and_resolveFields.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/mods/namespaced_ids_and_resolveFields.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constants/entityManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/entityManager.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/actionResultRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/actionResultRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/loadGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/loadGameUI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/saveGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/saveGameUI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/slotModalBase.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/slotModalBase.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/baseManifestItemLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/baseManifestItemLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/ruleLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/ruleLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/contextAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/contextAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/saveLoadService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveLoadService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/actionResultRenderer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionResultRenderer.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/loadGameUI.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/loadGameUI.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/saveGameUI.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/saveGameUI.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/eventLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/eventLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/actionLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/actionLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.happyPath.core.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.happyPath.core.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.privateHelpers.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.privateHelpers.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -186,15 +224,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="19968000" />
-    </task>
-    <task id="LOCAL-00065" summary="Chores.">
-      <option name="closed" value="true" />
-      <created>1749920171325</created>
-      <option name="number" value="00065" />
-      <option name="presentableId" value="LOCAL-00065" />
-      <option name="project" value="LOCAL" />
-      <updated>1749920171325</updated>
+      <workItem from="1749963238113" duration="21459000" />
     </task>
     <task id="LOCAL-00066" summary="Chores.">
       <option name="closed" value="true" />
@@ -580,7 +610,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749985224549</updated>
     </task>
-    <option name="localTasksCounter" value="114" />
+    <task id="LOCAL-00114" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749986324418</created>
+      <option name="number" value="00114" />
+      <option name="presentableId" value="LOCAL-00114" />
+      <option name="project" value="LOCAL" />
+      <updated>1749986324418</updated>
+    </task>
+    <option name="localTasksCounter" value="115" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

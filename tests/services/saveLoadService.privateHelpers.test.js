@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, jest, beforeAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  jest,
+  beforeAll,
+} from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';

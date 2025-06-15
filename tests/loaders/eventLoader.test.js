@@ -152,7 +152,8 @@ let eventLoader;
 // --- Spies ---
 let validatePrimarySchemaSpy;
 let storeItemInRegistrySpy;
-const realStoreItemInRegistry = BaseManifestItemLoader.prototype._storeItemInRegistry;
+const realStoreItemInRegistry =
+  BaseManifestItemLoader.prototype._storeItemInRegistry;
 let loadItemsInternalSpy;
 
 // --- Test Constants ---

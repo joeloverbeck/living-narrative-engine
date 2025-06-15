@@ -1,0 +1,19 @@
+{
+  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "id": "intimacy:step_back",
+  "commandVerb": "stepback",
+  "name": "Step Back",
+  "description": "Step back from a moment of closeness, allowing free movement again.",
+  "target_domain": "none",
+  "template": "stepback",
+  "prerequisites": [
+    {
+      "logic": {
+        "!!": {
+          "var": "actor.components.intimacy:closeness"
+        }
+      },
+      "failure_message": "You are not in a state of closeness to step back from."
+    }
+  ]
+}

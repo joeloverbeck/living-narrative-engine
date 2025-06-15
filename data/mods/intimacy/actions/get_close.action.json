@@ -1,0 +1,59 @@
+{
+  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "id": "intimacy:get_close",
+  "commandVerb": "approach",
+  "name": "Get Close",
+  "description": "Initiate physical and emotional closeness with another character, locking you both in place as you focus on each other.",
+  "target_domain": "environment",
+  "template": "approach {target}",
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            "!!": {
+              "var": "target.components.core:actor"
+            }
+          },
+          {
+            "!=": [
+              {
+                "var": "actor.id"
+              },
+              {
+                "var": "target.id"
+              }
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "actor.components.core:position.locationId"
+              },
+              {
+                "var": "target.components.core:position.locationId"
+              }
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "actor.components.core:movement.locked"
+              },
+              false
+            ]
+          },
+          {
+            "==": [
+              {
+                "var": "target.components.core:movement.locked"
+              },
+              false
+            ]
+          }
+        ]
+      },
+      "failure_message": "You cannot get close with that target right now."
+    }
+  ]
+}
