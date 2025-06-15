@@ -17,6 +17,7 @@ import HasComponentHandler from '../../../src/logic/operationHandlers/hasCompone
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchSpeechHandler from '../../../src/logic/operationHandlers/dispatchSpeechHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -78,6 +79,10 @@ function init(entities) {
     QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+    DISPATCH_SPEECH: new DispatchSpeechHandler({
+      dispatcher: eventBus,
+      logger,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {

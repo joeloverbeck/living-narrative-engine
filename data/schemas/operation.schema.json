@@ -19,6 +19,7 @@
             "ADD_COMPONENT",
             "REMOVE_COMPONENT",
             "DISPATCH_EVENT",
+            "DISPATCH_SPEECH",
             "END_TURN",
             "IF",
             "FOR_EACH",
@@ -140,6 +141,20 @@
               "parameters": {
                 "$ref": "#/$defs/DispatchEventParameters"
               }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "DISPATCH_SPEECH" }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": { "$ref": "#/$defs/DispatchSpeechParameters" }
             },
             "required": ["parameters"]
           }
@@ -532,6 +547,33 @@
         }
       },
       "required": ["eventType"],
+      "additionalProperties": false
+    },
+    "DispatchSpeechParameters": {
+      "type": "object",
+      "description": "Parameters for the DISPATCH_SPEECH operation. Emits core:display_speech.",
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "speech_content": {
+          "type": "string",
+          "minLength": 1
+        },
+        "thoughts": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allow_html": {
+          "type": "boolean"
+        }
+      },
+      "required": ["entity_id", "speech_content"],
       "additionalProperties": false
     },
     "EndTurnParameters": {
