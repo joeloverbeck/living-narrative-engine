@@ -265,6 +265,7 @@ export const tokens = freeze({
   HasComponentHandler: 'HasComponentHandler',
   ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
   IfCoLocatedHandler: 'IfCoLocatedHandler',
+  IfHandler: 'IfHandler',
   MathHandler: 'MathHandler',
 
   // --- Actions ---

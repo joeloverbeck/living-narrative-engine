@@ -17,6 +17,7 @@ import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchSpeechHandler from '../../../src/logic/operationHandlers/dispatchSpeechHandler.js';
+import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -67,7 +68,14 @@ function init(entities) {
   operationRegistry = new OperationRegistry({ logger });
   entityManager = new SimpleEntityManager(entities);
 
+  jsonLogic = new JsonLogicEvaluationService({ logger });
+
   const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+
+  operationInterpreter = new OperationInterpreter({
+    logger,
+    operationRegistry,
+  });
 
   const handlers = {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
@@ -80,18 +88,16 @@ function init(entities) {
       dispatcher: eventBus,
       logger,
     }),
+    IF: new IfHandler({
+      logger,
+      jsonLogicEvaluationService: jsonLogic,
+      operationInterpreter,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
     operationRegistry.register(type, handler.execute.bind(handler));
   }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({ logger });
 
   interpreter = new SystemLogicInterpreter({
     logger,

@@ -280,12 +280,19 @@ describe('OperationInterpreter', () => {
      IF behaves like any other op (no special logic in interpreter)
      ─────────────────────────────────────────────────────────────────────── */
   test('execute should treat IF like any other type (lookup in registry)', () => {
-    mockRegistry.getHandler.mockReturnValue(undefined);
+    const mockIfHandler = jest.fn();
+    mockRegistry.getHandler.mockReturnValue(mockIfHandler);
     interpreter.execute(ifOperation, mockExecutionContext);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('IF');
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "IF".'
+    expect(mockIfHandler).toHaveBeenCalledTimes(1);
+    expect(mockIfHandler).toHaveBeenCalledWith(
+      {
+        condition: { '==': [1, 1] },
+        then_actions: [{ type: 'LOG', parameters: { message: 'IF was true' } }],
+      },
+      mockExecutionContext
     );
+    expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
   /* ────────────────────────────────────────────────────────────────────────

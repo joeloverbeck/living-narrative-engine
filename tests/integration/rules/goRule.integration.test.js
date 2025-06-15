@@ -20,6 +20,7 @@ import ResolveDirectionHandler from '../../../src/logic/operationHandlers/resolv
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
+import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -150,6 +151,13 @@ function init(entities) {
 
   const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
+  jsonLogic = new JsonLogicEvaluationService({ logger });
+
+  operationInterpreter = new OperationInterpreter({
+    logger,
+    operationRegistry,
+  });
+
   const handlers = {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
@@ -168,18 +176,16 @@ function init(entities) {
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+    IF: new IfHandler({
+      logger,
+      jsonLogicEvaluationService: jsonLogic,
+      operationInterpreter,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
     operationRegistry.register(type, handler.execute.bind(handler));
   }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({ logger });
 
   interpreter = new SystemLogicInterpreter({
     logger,

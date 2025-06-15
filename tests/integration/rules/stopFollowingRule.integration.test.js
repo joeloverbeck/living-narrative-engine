@@ -20,6 +20,7 @@ import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimesta
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
+import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -127,6 +128,8 @@ function init(entities) {
     operationRegistry,
   });
 
+  jsonLogic = new JsonLogicEvaluationService({ logger });
+
   const handlers = {
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,
@@ -151,13 +154,16 @@ function init(entities) {
       operationInterpreter,
       safeEventDispatcher: safeDispatcher,
     }),
+    IF: new IfHandler({
+      logger,
+      jsonLogicEvaluationService: jsonLogic,
+      operationInterpreter,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
     operationRegistry.register(type, handler.execute.bind(handler));
   }
-
-  jsonLogic = new JsonLogicEvaluationService({ logger });
 
   interpreter = new SystemLogicInterpreter({
     logger,
