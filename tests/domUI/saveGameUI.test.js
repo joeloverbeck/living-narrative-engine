@@ -195,6 +195,10 @@ describe('SaveGameUI', () => {
       const slots = listContainerElement.querySelectorAll('.save-slot');
       expect(slots.length).toBe(10);
       expect(slots[0].textContent).toContain('Slot One');
+      const tsText = slots[0].querySelector('.slot-timestamp')?.textContent;
+      expect(tsText).toBe(
+        `Saved: ${new Date('2023-01-01T00:00:00Z').toLocaleString()}`
+      );
       expect(slots[1].dataset.slotId).toBe('1');
     });
   });

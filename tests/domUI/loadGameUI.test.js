@@ -127,6 +127,9 @@ describe('LoadGameUI basic behaviors', () => {
     expect(el.querySelector('.slot-playtime')?.textContent).toContain(
       '00:01:00'
     );
+    expect(el.querySelector('.slot-timestamp')?.textContent).toBe(
+      `Saved: ${new Date(slotData.timestamp).toLocaleString()}`
+    );
   });
 
   it('should populate the load slots list using the shared method', async () => {
