@@ -3,8 +3,7 @@
   "$id": "http://example.com/schemas/operation.schema.json",
   "title": "Operation Schema",
   "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events), control the flow of execution (conditional logic), manage variables, query external system data, or interact with the UI. Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
-  "type": "object",
-  "$ref": "#/$defs/Operation",
+  "oneOf": [{ "$ref": "#/$defs/Operation" }, { "$ref": "#/$defs/MacroCall" }],
   "$defs": {
     "Operation": {
       "type": "object",
@@ -525,6 +524,17 @@
           }
         }
       ]
+    },
+    "MacroCall": {
+      "type": "object",
+      "properties": {
+        "macro": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["macro"],
+      "additionalProperties": false
     },
     "ModifyContextArrayParameters": {
       "type": "object",
