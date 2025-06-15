@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Minor changes.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -181,15 +179,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="12339000" />
-    </task>
-    <task id="LOCAL-00055" summary="Uploading with errors for Codex to fix.">
-      <option name="closed" value="true" />
-      <created>1749908913901</created>
-      <option name="number" value="00055" />
-      <option name="presentableId" value="LOCAL-00055" />
-      <option name="project" value="LOCAL" />
-      <updated>1749908913901</updated>
+      <workItem from="1749963238113" duration="12805000" />
     </task>
     <task id="LOCAL-00056" summary="Uploading with errors for Codex to fix.">
       <option name="closed" value="true" />
@@ -575,7 +565,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749976315308</updated>
     </task>
-    <option name="localTasksCounter" value="104" />
+    <task id="LOCAL-00104" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1749977311080</created>
+      <option name="number" value="00104" />
+      <option name="presentableId" value="LOCAL-00104" />
+      <option name="project" value="LOCAL" />
+      <updated>1749977311080</updated>
+    </task>
+    <option name="localTasksCounter" value="105" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -604,9 +602,9 @@
     <MESSAGE value="Implementing thoughts and notes tooltips." />
     <MESSAGE value="Implemented thoughts and notes tooltips." />
     <MESSAGE value="Fixed issue with the dismiss rule." />
-    <MESSAGE value="Formatting." />
     <MESSAGE value="Improved OperationInterpreter." />
     <MESSAGE value="Minor changes." />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor changes." />
+    <MESSAGE value="Formatting." />
+    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
   </component>
 </project>
