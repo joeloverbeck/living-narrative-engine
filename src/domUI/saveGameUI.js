@@ -3,6 +3,7 @@
 import { BaseModalRenderer } from './baseModalRenderer.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatPlaytime } from '../utils/textUtils.js';
+import { setupRadioListNavigation } from '../utils/listNavigation.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -527,75 +528,30 @@ export class SaveGameUI extends BaseModalRenderer {
    */
   _handleSlotNavigation(event) {
     if (!this.elements.listContainerElement) return;
-    const target = /** @type {HTMLElement} */ (event.target);
 
-    if (
-      !target.classList.contains('save-slot') ||
-      target.closest('.disabled-interaction')
-    ) {
-      return; // Ignore if not a slot or if operations are in progress / list disabled
-    }
-
-    const slots = Array.from(
-      this.elements.listContainerElement.querySelectorAll(
-        '.save-slot[role="radio"]'
-      )
-    );
-    if (slots.length === 0) return;
-
-    let currentIndex = slots.findIndex((slot) => slot === target);
-    let nextIndex = -1;
-
-    switch (event.key) {
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        event.preventDefault();
-        nextIndex = currentIndex > 0 ? currentIndex - 1 : slots.length - 1;
-        break;
-      case 'ArrowDown':
-      case 'ArrowRight':
-        event.preventDefault();
-        nextIndex = currentIndex < slots.length - 1 ? currentIndex + 1 : 0;
-        break;
-      case 'Home':
-        event.preventDefault();
-        nextIndex = 0;
-        break;
-      case 'End':
-        event.preventDefault();
-        nextIndex = slots.length - 1;
-        break;
-      case 'Enter':
-      case ' ': {
-        event.preventDefault();
-        const slotId = parseInt(target.dataset.slotId || '-1', 10);
+    const arrowHandler = setupRadioListNavigation(
+      this.elements.listContainerElement,
+      '.save-slot[role="radio"]',
+      'slotId',
+      (el, value) => {
+        const slotId = parseInt(value || '-1', 10);
         const slotData = this.currentSlotsDisplayData.find(
           (s) => s.slotId === slotId
         );
-        if (slotData) {
-          this._handleSlotSelection(target, slotData);
-        }
-        // If Enter on a selected, valid slot, could potentially trigger save, but for now, selection is enough.
-        return;
+        if (slotData) this._handleSlotSelection(el, slotData);
       }
-      default:
-        return;
-    }
+    );
 
-    if (nextIndex !== -1 && nextIndex !== currentIndex) {
-      const nextSlot = /** @type {HTMLElement | undefined} */ (
-        slots[nextIndex]
+    arrowHandler(event);
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const target = /** @type {HTMLElement} */ (event.target);
+      const slotId = parseInt(target.dataset.slotId || '-1', 10);
+      const slotData = this.currentSlotsDisplayData.find(
+        (s) => s.slotId === slotId
       );
-      if (nextSlot) {
-        // Previous target's tabindex is handled by _handleSlotSelection
-        nextSlot.focus(); // Focus will trigger click, which calls _handleSlotSelection
-        // Or, explicitly call _handleSlotSelection:
-        const nextSlotId = parseInt(nextSlot.dataset.slotId || '-1', 10);
-        const nextSlotData = this.currentSlotsDisplayData.find(
-          (s) => s.slotId === nextSlotId
-        );
-        if (nextSlotData) this._handleSlotSelection(nextSlot, nextSlotData);
-      }
+      if (slotData) this._handleSlotSelection(target, slotData);
     }
   }
 
