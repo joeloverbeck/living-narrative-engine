@@ -10,10 +10,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 
-import {
-  initLogger,
-  validateServiceDeps,
-} from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializer.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { createComponentAccessor } from './componentAccessor.js';
 
@@ -99,8 +96,7 @@ export function createJsonLogicContext(
       "createJsonLogicContext: Missing or invalid 'event' object."
     );
   }
-  const effectiveLogger = initLogger('createJsonLogicContext', logger);
-  validateServiceDeps('createJsonLogicContext', effectiveLogger, {
+  const effectiveLogger = setupService('createJsonLogicContext', logger, {
     entityManager: {
       value: entityManager,
       requiredMethods: REQUIRED_ENTITY_MANAGER_METHODS,

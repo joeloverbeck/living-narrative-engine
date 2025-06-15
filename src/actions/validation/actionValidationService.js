@@ -11,10 +11,7 @@
 
 import { ActionTargetContext } from '../../models/actionTargetContext.js';
 import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
-import {
-  initLogger,
-  validateServiceDeps,
-} from '../../utils/serviceInitializer.js';
+import { setupService } from '../../utils/serviceInitializer.js';
 // --- Refactor-AVS-3.4: Remove dependency ---
 // REMOVED: import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
 // --- End Refactor-AVS-3.4 ---
@@ -53,48 +50,30 @@ export class ActionValidationService {
     // REMOVED: actionValidationContextBuilder, // AC1: Dependency removed from constructor destructuring
     // --- End Refactor-AVS-3.4 ---
   }) {
-    // 1. Validate logger dependency first
-    try {
-      this.#logger = initLogger('ActionValidationService', logger);
-    } catch (e) {
-      const errorMsg = `ActionValidationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
-      // eslint-disable-next-line no-console
-      console.error(errorMsg);
+    this.#logger = setupService('ActionValidationService', logger, {
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getEntityInstance'],
+      },
+      domainContextCompatibilityChecker: {
+        value: domainContextCompatibilityChecker,
+        requiredMethods: ['check'],
+      },
+      prerequisiteEvaluationService: {
+        value: prerequisiteEvaluationService,
+        requiredMethods: ['evaluate'],
+      },
+    });
+
+    if (
+      prerequisiteEvaluationService &&
+      typeof prerequisiteEvaluationService.evaluate === 'function' &&
+      prerequisiteEvaluationService.evaluate.length !== 4
+    ) {
+      const errorMsg =
+        "ActionValidationService Constructor: PrerequisiteEvaluationService 'evaluate' method must have 4 arguments.";
+      this.#logger.error(errorMsg);
       throw new Error(errorMsg);
-    }
-
-    // 2. Validate other dependencies using the validated logger
-    try {
-      validateServiceDeps('ActionValidationService', this.#logger, {
-        entityManager: {
-          value: entityManager,
-          requiredMethods: ['getEntityInstance'],
-        },
-        domainContextCompatibilityChecker: {
-          value: domainContextCompatibilityChecker,
-          requiredMethods: ['check'],
-        },
-        prerequisiteEvaluationService: {
-          value: prerequisiteEvaluationService,
-          requiredMethods: ['evaluate'],
-        },
-      });
-
-      if (
-        prerequisiteEvaluationService &&
-        typeof prerequisiteEvaluationService.evaluate === 'function' &&
-        prerequisiteEvaluationService.evaluate.length !== 4
-      ) {
-        const errorMsg =
-          "ActionValidationService Constructor: PrerequisiteEvaluationService 'evaluate' method must have 4 arguments.";
-        this.#logger.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-    } catch (e) {
-      this.#logger.error(
-        `ActionValidationService Constructor: Dependency validation failed. Error: ${e.message}`
-      );
-      throw e;
     }
 
     this.#entityManager = entityManager;
