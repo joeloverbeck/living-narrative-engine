@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.json",
   "rule_id": "handle_dismiss",
-  "comment": "Handles the 'core:dismiss' action. Removes the component from the TARGET, updates the ACTOR's (leader's) cache, dispatches a conditional perceptible event, and ends the turn.",
+  "comment": "Handles the 'core:dismiss' action. Removes the component from the TARGET, updates the ACTOR's (leader's) cache, dispatches a conditional perceptible event and a success UI event, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
     "==": [
@@ -103,6 +103,17 @@
             }
           }
         ]
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Step 3: Notify the actor's client that the action was successful.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "actorId": "{event.payload.actorId}",
+          "message": "{context.actorName} dismisses {context.targetName}."
+        }
       }
     },
     {

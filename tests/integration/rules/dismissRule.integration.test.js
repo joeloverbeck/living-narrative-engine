@@ -21,6 +21,7 @@ import QueryComponentHandler from '../../../src/logic/operationHandlers/queryCom
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
+import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -150,6 +151,7 @@ function init(entities) {
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    GET_NAME: new GetNameHandler({ entityManager, logger }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
