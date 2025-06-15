@@ -9,6 +9,17 @@
   "prerequisites": [
     {
       "logic": {
+        "==": [
+          {
+            "var": "actor.components.core:movement.locked"
+          },
+          false
+        ]
+      },
+      "failure_message": "You are rooted and cannot move."
+    },
+    {
+      "logic": {
         "and": [
           {
             "!!": {

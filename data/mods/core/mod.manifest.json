@@ -27,7 +27,8 @@
       "notes.component.json",
       "goals.component.json",
       "following.component.json",
-      "leading.component.json"
+      "leading.component.json",
+      "movement.component.json"
     ],
     "characters": [],
     "items": [],

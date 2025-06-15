@@ -1,0 +1,23 @@
+{
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "id": "core:movement",
+  "description": "Controls an entity's ability to perform voluntary movement. Contains a lock that can be set by other systems (like the intimacy mod) to temporarily prevent actions such as 'go' or 'follow'.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "locked": {
+        "description": "If true, voluntary movement actions are blocked for the entity. Systems can set this to 'freeze' a character in place. Forced movement (e.g., teleports, knock-back) ignores this flag.",
+        "type": "boolean",
+        "default": false
+      },
+      "forcedOverride": {
+        "description": "Reserved for future use. A potential mechanism for special actions to bypass the 'locked' state.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": ["locked"],
+    "additionalProperties": false
+  },
+  "resolveFields": []
+}
