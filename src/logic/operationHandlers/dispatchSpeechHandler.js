@@ -10,6 +10,7 @@ import {
   DISPLAY_SPEECH_ID,
   DISPLAY_ERROR_ID,
 } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 /**
  * Parameters accepted by {@link DispatchSpeechHandler#execute}.
@@ -61,10 +62,11 @@ class DispatchSpeechHandler {
       !params.entity_id.trim() ||
       typeof params.speech_content !== 'string'
     ) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_SPEECH: invalid parameters.',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_SPEECH: invalid parameters.',
+        { params }
+      );
       return;
     }
 
@@ -89,10 +91,11 @@ class DispatchSpeechHandler {
     try {
       this.#dispatcher.dispatch(DISPLAY_SPEECH_ID, payload);
     } catch (err) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_SPEECH: Error dispatching display_speech.',
-        details: { errorMessage: err.message, stack: err.stack },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_SPEECH: Error dispatching display_speech.',
+        { errorMessage: err.message, stack: err.stack }
+      );
     }
   }
 }

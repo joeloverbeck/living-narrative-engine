@@ -110,10 +110,11 @@ class IfCoLocatedHandler {
         posB?.locationId &&
         posA.locationId === posB.locationId;
     } catch (e) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: `IF_CO_LOCATED: error reading positions for '${idA}' or '${idB}'`,
-        details: { error: e.message, stack: e.stack },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        `IF_CO_LOCATED: error reading positions for '${idA}' or '${idB}'`,
+        { error: e.message, stack: e.stack }
+      );
       same = false;
     }
 
@@ -126,14 +127,15 @@ class IfCoLocatedHandler {
       try {
         this.#opInterpreter.execute(op, execCtx);
       } catch (err) {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-          message: 'IF_CO_LOCATED: nested operation threw',
-          details: {
+        safeDispatchError(
+          this.#dispatcher,
+          'IF_CO_LOCATED: nested operation threw',
+          {
             error: err?.message,
             stack: err?.stack,
             op,
-          },
-        });
+          }
+        );
         break;
       }
     }
