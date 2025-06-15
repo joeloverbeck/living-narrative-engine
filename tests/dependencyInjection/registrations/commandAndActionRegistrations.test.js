@@ -27,7 +27,6 @@ import { ActionValidationContextBuilder } from '../../../src/actions/validation/
 import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { DomainContextCompatibilityChecker } from '../../../src/validation/domainContextCompatibilityChecker.js';
 import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
-import CommandParser from '../../../src/commands/commandParser.js';
 import CommandProcessor from '../../../src/commands/commandProcessor.js';
 
 describe('registerCommandAndAction', () => {
@@ -92,9 +91,6 @@ describe('registerCommandAndAction', () => {
       'Command and Action Registration: Registered Action Validation services.'
     );
     expect(logCalls).toContain(
-      `Command and Action Registration: Registered ${String(tokens.ICommandParser)}.`
-    );
-    expect(logCalls).toContain(
       `Command and Action Registration: Registered ${String(
         tokens.ICommandProcessor
       )}.`
@@ -139,12 +135,6 @@ describe('registerCommandAndAction', () => {
         token: tokens.ActionValidationService,
         Class: ActionValidationService,
         lifecycle: 'singleton',
-        tags: undefined,
-      },
-      {
-        token: tokens.ICommandParser,
-        Class: CommandParser,
-        lifecycle: 'singletonFactory',
         tags: undefined,
       },
       {
