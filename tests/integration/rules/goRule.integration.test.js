@@ -13,8 +13,7 @@ import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
-import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
+import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import ResolveDirectionHandler from '../../../src/logic/operationHandlers/resolveDirectionHandler.js';
@@ -152,12 +151,10 @@ function init(entities) {
   const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
   const handlers = {
-    HAS_COMPONENT: new HasComponentHandler({
+    QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
     }),
-    QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
     RESOLVE_DIRECTION: new ResolveDirectionHandler({

@@ -13,21 +13,21 @@
   },
   "actions": [
     {
-      "type": "HAS_COMPONENT",
-      "comment": "Step 1.1: Check if the actor has a name for messaging.",
+      "type": "QUERY_COMPONENT_OPTIONAL",
+      "comment": "Step 1.1: Attempt to fetch the actor's name component.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:name",
-        "result_variable": "actorHasName"
+        "result_variable": "actorNameComponent"
       }
     },
     {
-      "type": "HAS_COMPONENT",
-      "comment": "Step 1.2: Check if the actor has a position, which is required for movement.",
+      "type": "QUERY_COMPONENT_OPTIONAL",
+      "comment": "Step 1.2: Attempt to fetch the actor's position component.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:position",
-        "result_variable": "actorHasPosition"
+        "result_variable": "actorPositionComponentPreMove"
       }
     },
     {
@@ -36,33 +36,11 @@
       "parameters": {
         "condition": {
           "and": [
-            {
-              "var": "context.actorHasName"
-            },
-            {
-              "var": "context.actorHasPosition"
-            }
+            { "var": "context.actorNameComponent" },
+            { "var": "context.actorPositionComponentPreMove" }
           ]
         },
         "then_actions": [
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Fetch the actor's name for messaging.",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:name",
-              "result_variable": "actorNameComponent"
-            }
-          },
-          {
-            "type": "QUERY_COMPONENT",
-            "comment": "Fetch the actor's current position (pre-move).",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:position",
-              "result_variable": "actorPositionComponentPreMove"
-            }
-          },
           {
             "type": "QUERY_COMPONENT",
             "comment": "Fetch the name of the current location (pre-move).",
