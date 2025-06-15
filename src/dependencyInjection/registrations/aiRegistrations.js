@@ -173,6 +173,7 @@ export function registerAI(container) {
     (c) =>
       new GameStateValidationServiceForPrompting({
         logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
   r.singletonFactory(
