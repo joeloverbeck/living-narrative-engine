@@ -64,7 +64,9 @@
           {
             "type": "GET_TIMESTAMP",
             "comment": "Get the current ISO timestamp for perception logging.",
-            "parameters": { "result_variable": "nowIso" }
+            "parameters": {
+              "result_variable": "nowIso"
+            }
           },
           {
             "type": "DISPATCH_EVENT",
@@ -92,7 +94,7 @@
       "parameters": {
         "eventType": "core:display_successful_action_result",
         "payload": {
-          "actorId": "{event.payload.actorId}",
+          "entityId": "{event.payload.actorId}",
           "message": "{context.actorName} dismisses {context.targetName}."
         }
       }
