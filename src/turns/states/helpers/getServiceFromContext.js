@@ -8,6 +8,7 @@
  */
 
 import { handleProcessingException } from './handleProcessingException.js';
+import { safeDispatchError } from '../../../utils/safeDispatchError.js';
 
 /**
  * Safely obtains a service from the turn context.
@@ -36,6 +37,15 @@ export async function getServiceFromContext(
     return null;
   }
   const logger = turnCtx.getLogger();
+  let dispatcher = null;
+  if (typeof turnCtx.getSafeEventDispatcher === 'function') {
+    dispatcher = turnCtx.getSafeEventDispatcher();
+  } else if (
+    state._handler?.safeEventDispatcher &&
+    typeof state._handler.safeEventDispatcher.dispatch === 'function'
+  ) {
+    dispatcher = state._handler.safeEventDispatcher;
+  }
   try {
     if (typeof turnCtx[methodName] !== 'function') {
       throw new Error(
@@ -51,7 +61,17 @@ export async function getServiceFromContext(
     return service;
   } catch (error) {
     const errorMsg = `${state.getStateName()}: Failed to retrieve ${serviceNameForLog} for actor ${actorIdForLog}. Error: ${error.message}`;
-    logger.error(errorMsg, error);
+    if (dispatcher) {
+      safeDispatchError(dispatcher, errorMsg, {
+        actorId: actorIdForLog,
+        service: serviceNameForLog,
+        method: methodName,
+        error: error.message,
+        stack: error.stack,
+      });
+    } else {
+      logger.error(errorMsg, error);
+    }
     const serviceError = new Error(errorMsg);
     await handleProcessingException(
       state,
