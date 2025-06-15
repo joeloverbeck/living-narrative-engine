@@ -3,7 +3,7 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatPlaytime, formatTimestamp } from '../utils/textUtils.js';
-import { createSelectableItem } from './helpers/createSelectableItem.js';
+import { renderSlotItem } from './helpers/renderSlotItem.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -301,30 +301,12 @@ export class SaveGameUI extends SlotModalBase {
   _renderSaveSlotItem(slotData, itemIndex) {
     if (!this.domElementFactory) return null;
 
-    const slotDiv = createSelectableItem(
-      this.domElementFactory,
-      'div',
-      'slotId',
-      slotData.slotId,
-      '',
-      slotData.isEmpty,
-      slotData.isCorrupted
-    );
-    if (!slotDiv) return null;
-    slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
-
-    const slotInfoDiv = this.domElementFactory.div('slot-info');
-    if (!slotInfoDiv) return slotDiv; // Return partially constructed div
-
     let nameText = slotData.saveName || `Slot ${slotData.slotId + 1}`;
     if (slotData.isEmpty)
       nameText = slotData.saveName || `Empty Slot ${slotData.slotId + 1}`;
     if (slotData.isCorrupted)
       nameText =
         (slotData.saveName || `Slot ${slotData.slotId + 1}`) + ' (Corrupted)';
-
-    const slotNameEl = this.domElementFactory.span('slot-name', nameText);
-    slotInfoDiv.appendChild(slotNameEl);
 
     let timestampText = '';
     if (
@@ -343,29 +325,33 @@ export class SaveGameUI extends SlotModalBase {
     } else if (slotData.isCorrupted) {
       timestampText = 'Timestamp: N/A';
     }
-    const slotTimestampEl = this.domElementFactory.span(
-      'slot-timestamp',
-      timestampText
+
+    const playtimeText =
+      !slotData.isEmpty && !slotData.isCorrupted
+        ? `Playtime: ${formatPlaytime(slotData.playtimeSeconds || 0)}`
+        : '';
+
+    const slotDiv = renderSlotItem(
+      this.domElementFactory,
+      'slotId',
+      slotData.slotId,
+      {
+        name: nameText,
+        timestamp: timestampText,
+        playtime: playtimeText,
+        isEmpty: slotData.isEmpty,
+        isCorrupted: slotData.isCorrupted,
+      },
+      (evt) => {
+        this._handleSlotSelection(
+          /** @type {HTMLElement} */ (evt.currentTarget),
+          slotData
+        );
+      }
     );
-    slotInfoDiv.appendChild(slotTimestampEl);
-    slotDiv.appendChild(slotInfoDiv);
+    if (!slotDiv) return null;
 
-    if (!slotData.isEmpty && !slotData.isCorrupted) {
-      const playtimeText = `Playtime: ${formatPlaytime(slotData.playtimeSeconds || 0)}`;
-      const slotPlaytimeEl = this.domElementFactory.span(
-        'slot-playtime',
-        playtimeText
-      );
-      if (slotPlaytimeEl) slotDiv.appendChild(slotPlaytimeEl);
-    }
-
-    // Use _addDomListener for managed event listener
-    this._addDomListener(slotDiv, 'click', () => {
-      // isSavingInProgress is checked by _setOperationInProgress which disables elements.
-      // No need for direct check here if UI elements are correctly disabled.
-      this._handleSlotSelection(slotDiv, slotData);
-    });
-
+    slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
     return slotDiv;
   }
 

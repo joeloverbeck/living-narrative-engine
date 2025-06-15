@@ -1,6 +1,7 @@
 import { JSDOM } from 'jsdom';
 import { LoadGameUI } from '../../src/domUI/index.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
+import * as renderSlotItemModule from '../../src/domUI/helpers/renderSlotItem.js';
 import {
   beforeEach,
   afterEach,
@@ -20,6 +21,8 @@ let domElementFactory;
 let mockVED;
 let mockSaveLoadService;
 let loadGameUI;
+/** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderSlotItem>} */
+let renderSlotItemSpy;
 
 beforeEach(() => {
   const html = `<!DOCTYPE html><html><body>
@@ -67,6 +70,7 @@ beforeEach(() => {
     saveLoadService: mockSaveLoadService,
     validatedEventDispatcher: mockVED,
   });
+  renderSlotItemSpy = jest.spyOn(renderSlotItemModule, 'renderSlotItem');
 });
 
 afterEach(() => {
@@ -118,6 +122,7 @@ describe('LoadGameUI basic behaviors', () => {
       isCorrupted: false,
     };
     const el = loadGameUI._renderLoadSlotItem(slotData, 0);
+    expect(renderSlotItemSpy).toHaveBeenCalledTimes(1);
     expect(el).not.toBeNull();
     if (!el) return;
     expect(el.classList.contains('save-slot')).toBe(true);
@@ -144,6 +149,7 @@ describe('LoadGameUI basic behaviors', () => {
     ]);
 
     await loadGameUI._populateLoadSlotsList();
+    expect(renderSlotItemSpy).toHaveBeenCalledTimes(1);
 
     const slots = document
       .getElementById('load-slots-container')
@@ -170,6 +176,7 @@ describe('LoadGameUI basic behaviors', () => {
     };
     const slot1 = loadGameUI._renderLoadSlotItem(slotData1, 0);
     const slot2 = loadGameUI._renderLoadSlotItem(slotData2, 1);
+    expect(renderSlotItemSpy).toHaveBeenCalledTimes(2);
     container.appendChild(slot1);
     container.appendChild(slot2);
 
