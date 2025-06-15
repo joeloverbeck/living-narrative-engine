@@ -9,7 +9,7 @@ import { ITurnOrderService } from '../interfaces/ITurnOrderService.js';
 import { ITurnOrderQueue } from '../interfaces/ITurnOrderQueue.js';
 import { SimpleRoundRobinQueue } from './queues/simpleRoundRobinQueue.js'; // Added import
 import { InitiativePriorityQueue } from './queues/initiativePriorityQueue.js';
-import { freeze } from '../../utils/objectUtils'; // Added import
+import { freeze } from '../../utils/objectUtils.js'; // Added import
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/ITurnOrderQueue.js').Entity} Entity */

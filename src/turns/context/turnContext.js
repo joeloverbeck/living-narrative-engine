@@ -30,7 +30,7 @@
  */
 
 import { ITurnContext } from '../interfaces/ITurnContext.js';
-import { POSITION_COMPONENT_ID } from '../../constants/componentIds'; // ⬅ only import needed
+import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js'; // ⬅ only import needed
 
 /**
  * Concrete implementation of ITurnContext.

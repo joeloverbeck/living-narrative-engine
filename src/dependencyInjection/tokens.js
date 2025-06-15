@@ -3,7 +3,7 @@
  * Using tokens instead of raw strings prevents typos and aids refactoring.
  */
 
-import { freeze } from '../utils/objectUtils';
+import { freeze } from '../utils/objectUtils.js';
 
 /**
  * A frozen object containing all unique keys used for registering and resolving

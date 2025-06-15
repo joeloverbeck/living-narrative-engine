@@ -4,7 +4,7 @@
  */
 
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
-import { freeze } from '../../utils/objectUtils';
+import { freeze } from '../../utils/objectUtils.js';
 
 /**
  * @typedef {object} ActionComposite

@@ -16,7 +16,7 @@ import { tokens } from '../../dependencyInjection/tokens.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
-import { ACTION_DECIDED_ID } from '../../constants/eventIds';
+import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
