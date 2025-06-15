@@ -234,6 +234,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,
+      promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
     });

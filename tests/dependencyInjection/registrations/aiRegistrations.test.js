@@ -106,6 +106,7 @@ describe('registerAI', () => {
     container.register(tokens.ICommandOutcomeInterpreter, {});
     container.register(tokens.AIStrategyFactory, {});
     container.register(tokens.ITurnContextFactory, {});
+    container.register(tokens.PromptTextLoader, { loadPromptText: jest.fn() });
   });
 
   it('should log start and end messages', () => {

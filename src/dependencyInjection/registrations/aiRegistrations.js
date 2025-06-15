@@ -162,7 +162,11 @@ export function registerAI(container) {
 
   r.singletonFactory(
     tokens.IPromptStaticContentService,
-    (c) => new PromptStaticContentService({ logger: c.resolve(tokens.ILogger) })
+    (c) =>
+      new PromptStaticContentService({
+        logger: c.resolve(tokens.ILogger),
+        promptTextLoader: c.resolve(tokens.PromptTextLoader),
+      })
   );
   r.singletonFactory(
     tokens.IPerceptionLogFormatter,

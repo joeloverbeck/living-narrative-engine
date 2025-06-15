@@ -437,6 +437,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,
+      promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
     });
