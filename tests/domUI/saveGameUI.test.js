@@ -4,6 +4,7 @@
 import { JSDOM } from 'jsdom';
 import { SaveGameUI } from '../../src/domUI/index.js'; // Adjust path if necessary
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
+import * as renderSlotItemModule from '../../src/domUI/helpers/renderSlotItem.js';
 
 import {
   afterEach,
@@ -32,6 +33,9 @@ describe('SaveGameUI', () => {
   let mockDomElementFactory;
   let mockValidatedEventDispatcher;
   let mockGameEngine;
+
+  /** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderSlotItem>} */
+  let renderSlotItemSpy;
 
   let mockSaveLoadService;
   let saveGameUI;
@@ -124,6 +128,7 @@ describe('SaveGameUI', () => {
       validatedEventDispatcher: mockValidatedEventDispatcher,
     });
     saveGameUI.init(mockGameEngine);
+    renderSlotItemSpy = jest.spyOn(renderSlotItemModule, 'renderSlotItem');
 
     jest.useFakeTimers();
   });
@@ -191,6 +196,8 @@ describe('SaveGameUI', () => {
 
       await saveGameUI._populateSaveSlotsList();
       await awaitMockCall(mockSaveLoadService.listManualSaveSlots, 0);
+
+      expect(renderSlotItemSpy).toHaveBeenCalledTimes(MAX_SAVE_SLOTS);
 
       const slots = listContainerElement.querySelectorAll('.save-slot');
       expect(slots.length).toBe(10);

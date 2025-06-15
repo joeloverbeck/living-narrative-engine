@@ -3,7 +3,7 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatPlaytime, formatTimestamp } from '../utils/textUtils.js';
-import { createSelectableItem } from './helpers/createSelectableItem.js';
+import { renderSlotItem } from './helpers/renderSlotItem.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -292,24 +292,8 @@ class LoadGameUI extends SlotModalBase {
       return null;
     }
 
-    const slotDiv = createSelectableItem(
-      this.domElementFactory,
-      'div',
-      'slotIdentifier',
-      slotData.identifier,
-      '',
-      false,
-      slotData.isCorrupted
-    );
-    if (!slotDiv) return null;
-    slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
-
-    const slotInfoDiv = this.domElementFactory.div('slot-info');
-    if (!slotInfoDiv) return slotDiv;
-
     let nameText = slotData.saveName || 'Unnamed Save';
     if (slotData.isCorrupted) nameText += ' (Corrupted)';
-    const slotNameEl = this.domElementFactory.span('slot-name', nameText);
 
     let timestampText = 'Timestamp: N/A';
     if (
@@ -325,29 +309,32 @@ class LoadGameUI extends SlotModalBase {
       }
       timestampText = `Saved: ${formatted}`;
     }
-    const slotTimestampEl = this.domElementFactory.span(
-      'slot-timestamp',
-      timestampText
+
+    const playtimeText = !slotData.isCorrupted
+      ? `Playtime: ${formatPlaytime(slotData.playtimeSeconds)}`
+      : '';
+
+    const slotDiv = renderSlotItem(
+      this.domElementFactory,
+      'slotIdentifier',
+      slotData.identifier,
+      {
+        name: nameText,
+        timestamp: timestampText,
+        playtime: playtimeText,
+        isEmpty: false,
+        isCorrupted: slotData.isCorrupted,
+      },
+      (evt) => {
+        this._handleSlotSelection(
+          /** @type {HTMLElement} */ (evt.currentTarget),
+          slotData
+        );
+      }
     );
+    if (!slotDiv) return null;
 
-    slotInfoDiv.appendChild(slotNameEl);
-    slotInfoDiv.appendChild(slotTimestampEl);
-    slotDiv.appendChild(slotInfoDiv);
-
-    if (!slotData.isCorrupted) {
-      const playtimeText = `Playtime: ${formatPlaytime(slotData.playtimeSeconds)}`;
-      const slotPlaytimeEl = this.domElementFactory.span(
-        'slot-playtime',
-        playtimeText
-      );
-      if (slotPlaytimeEl) slotDiv.appendChild(slotPlaytimeEl);
-    }
-
-    this._addDomListener(slotDiv, 'click', () => {
-      // isOperationInProgress is handled by _setOperationInProgress disabling elements
-      this._handleSlotSelection(slotDiv, slotData);
-    });
-
+    slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
     return slotDiv;
   }
 

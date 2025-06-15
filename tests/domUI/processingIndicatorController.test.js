@@ -88,7 +88,9 @@ describe('ProcessingIndicatorController', () => {
     const indicator = document.querySelector('#processing-indicator');
     expect(startHandler).toBeInstanceOf(Function);
     expect(endHandler).toBeInstanceOf(Function);
+    const scrollSpy = jest.spyOn(controller, 'scrollToBottom');
     startHandler();
+    expect(scrollSpy).toHaveBeenCalledWith('outputDiv', 'outputDiv');
     expect(indicator?.classList.contains('visible')).toBe(true);
     endHandler();
     expect(indicator?.classList.contains('visible')).toBe(false);
