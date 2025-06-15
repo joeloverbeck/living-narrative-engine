@@ -3,77 +3,50 @@
  * ITurnDecisionProvider interface.
  */
 
-import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
-import { assertValidActionIndex } from '../../utils/validationUtils.js';
+import { AbstractDecisionProvider } from './abstractDecisionProvider.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /**
  * @class HumanDecisionProvider
- * @augments ITurnDecisionProvider
+ * @augments AbstractDecisionProvider
  * @description
  * Orchestrates a human prompt to select an action and returns the chosen
  * index and any associated metadata (speech, thoughts).
  */
-export class HumanDecisionProvider extends ITurnDecisionProvider {
+export class HumanDecisionProvider extends AbstractDecisionProvider {
   /**
-   * @param {object} deps
-   * @param {import('../../interfaces/IPromptCoordinator').IPromptCoordinator} deps.promptCoordinator
-   * @param {import('../../interfaces/coreServices').ILogger} deps.logger
-   * @param {ISafeEventDispatcher} deps.safeEventDispatcher
+   * Creates a new HumanDecisionProvider.
+   *
+   * @param {object} deps - Constructor dependencies
+   * @param {import('../../interfaces/IPromptCoordinator').IPromptCoordinator} deps.promptCoordinator - Coordinator used to prompt the player
+   * @param {import('../../interfaces/coreServices').ILogger} deps.logger - Logger for debug output
+   * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for error reporting
    */
   constructor({ promptCoordinator, logger, safeEventDispatcher }) {
-    super();
+    super({ logger, safeEventDispatcher });
     this.promptCoordinator = promptCoordinator;
-    this.logger = logger;
-    /** @type {ISafeEventDispatcher} */
-    this.safeEventDispatcher = safeEventDispatcher;
   }
 
   /**
    * Prompts the human player for a turn decision.
    *
-   * The core responsibility of this method is to invoke the prompt system
-   * and then reliably return the `chosenIndex` and other metadata it receives.
-   * The `PromptCoordinator` and `PromptSession` are responsible for the complex
-   * logic of discovering actions, indexing them, and resolving the player's
-   * input (e.g., a button click) back to a valid index. This provider trusts
-   * that the index returned by the prompt system is valid for the `actions`
-   * list that was originally generated and passed to the `decideAction` method
-   * in the turn strategy.
-   *
    * @async
+   * @protected
    * @override
-   * @param {import('../../entities/entity.js').default} actor - The actor making the decision.
-   * @param {import('../interfaces/ITurnContext.js').ITurnContext} context - The current turn's context.
-   * @param {import('../dtos/actionComposite.js').ActionComposite[]} actions - The list of available actions. This is passed by the caller but not used directly here, as the prompt system has its own reference.
-   * @param {AbortSignal} [abortSignal] - A signal to cancel the operation.
-   * @returns {Promise<import('../interfaces/ITurnDecisionProvider').ITurnDecisionResult>}
+   * @param {import('../../entities/entity.js').default} actor - Acting entity
+   * @param {import('../interfaces/ITurnContext.js').ITurnContext} context - Turn context
+   * @param {import('../dtos/actionComposite.js').ActionComposite[]} actions - Indexed action list
+   * @param {AbortSignal} [abortSignal] - Optional cancellation signal
+   * @returns {Promise<{ index: number, speech?: string|null, thoughts?: string|null, notes?: string[]|null }>} Result from the prompt
    */
-  async decide(actor, context, actions, abortSignal) {
-    // Hand the *already-indexed* list to the prompt system
+  async choose(actor, context, actions, abortSignal) {
     const promptRes = await this.promptCoordinator.prompt(actor, {
       indexedComposites: actions,
       cancellationSignal: abortSignal,
     });
 
     const { chosenIndex, speech, thoughts, notes } = promptRes;
-
-    assertValidActionIndex(
-      chosenIndex,
-      actions.length,
-      'HumanDecisionProvider',
-      actor.id,
-      this.safeEventDispatcher,
-      this.logger,
-      { promptResult: promptRes }
-    );
-
-    return {
-      chosenIndex,
-      speech: speech ?? null,
-      thoughts: thoughts ?? null,
-      notes: notes ?? null,
-    };
+    return { index: chosenIndex, speech, thoughts, notes };
   }
 }
