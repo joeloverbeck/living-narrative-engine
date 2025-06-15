@@ -2,7 +2,6 @@
 
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import { encode } from '@msgpack/msgpack';
-import { deepClone } from '../utils/objectUtils.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import {
   buildManualFileName,
@@ -428,25 +427,22 @@ class SaveLoadService extends ISaveLoadService {
         }
       }
 
-      let mutableGameState;
-      try {
-        mutableGameState = deepClone(gameStateObject);
-      } catch (e) {
-        this.#logger.error('DeepClone failed:', e);
-        throw new PersistenceError(
-          PersistenceErrorCodes.DEEP_CLONE_FAILED,
-          'Failed to deep clone object for saving.'
-        );
-      }
-
-      if (!mutableGameState.metadata) mutableGameState.metadata = {};
-      mutableGameState.metadata.saveName = saveName;
-
-      if (!mutableGameState.integrityChecks)
-        mutableGameState.integrityChecks = {};
+      // Avoid mutating the provided state object. serializeAndCompress
+      // performs a deep clone internally, so only a shallow copy is
+      // needed here to attach save metadata before serialization.
+      const objectForSave = {
+        ...gameStateObject,
+        metadata: {
+          ...(gameStateObject.metadata || {}),
+          saveName,
+        },
+        integrityChecks: {
+          ...(gameStateObject.integrityChecks || {}),
+        },
+      };
 
       const { compressedData } =
-        await this.#serializer.serializeAndCompress(mutableGameState);
+        await this.#serializer.serializeAndCompress(objectForSave);
 
       const writeResult = await this.#storageProvider.writeFileAtomically(
         filePath,
