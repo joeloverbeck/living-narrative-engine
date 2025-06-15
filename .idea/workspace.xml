@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Made changes to the mod manifest schema.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Returning the app to normal.">
+      <change afterPath="$PROJECT_DIR$/tests/dependencyInjection/containerConfig.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,6 +58,7 @@
     "Jest.buildSpeechMeta.test.js.executor": "Run",
     "Jest.closeness.schema.test.js.executor": "Run",
     "Jest.closenessCircleService.test.js.executor": "Run",
+    "Jest.containerConfig.test.js.executor": "Run",
     "Jest.decisionResult.test.js.executor": "Run",
     "Jest.entityMoved.schema.test.js.executor": "Run",
     "Jest.genericTurnHandler.passingThis.test.js.executor": "Run",
@@ -112,7 +115,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.getCloseRule.integration.test.js">
+  <component name="RunManager" selected="Jest.containerConfig.test.js">
     <configuration name="closenessCircleService.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -129,6 +132,15 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="containerConfig.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/dependencyInjection/containerConfig.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="getCloseRule.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -149,22 +161,13 @@
       <test-file value="$PROJECT_DIR$/tests/modding/modManifestLoader.validation.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="modifyArrayFieldHandler.pushUnique.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/logic/operationHandlers/modifyArrayFieldHandler.pushUnique.test.js" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.containerConfig.test.js" />
         <item itemvalue="Jest.getCloseRule.integration.test.js" />
         <item itemvalue="Jest.modManifestLoader.validation.test.js" />
         <item itemvalue="Jest.closenessCircleService.test.js" />
         <item itemvalue="Jest.closeness.schema.test.js" />
-        <item itemvalue="Jest.modifyArrayFieldHandler.pushUnique.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -186,15 +189,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="25219000" />
-    </task>
-    <task id="LOCAL-00074" summary="Unified human and AI paths regarding decision-making.">
-      <option name="closed" value="true" />
-      <created>1749926174946</created>
-      <option name="number" value="00074" />
-      <option name="presentableId" value="LOCAL-00074" />
-      <option name="project" value="LOCAL" />
-      <updated>1749926174946</updated>
+      <workItem from="1749963238113" duration="26169000" />
     </task>
     <task id="LOCAL-00075" summary="Unified human and AI paths regarding decision-making.">
       <option name="closed" value="true" />
@@ -580,14 +575,21 @@
       <option name="project" value="LOCAL" />
       <updated>1749992376841</updated>
     </task>
-    <option name="localTasksCounter" value="123" />
+    <task id="LOCAL-00123" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749992632111</created>
+      <option name="number" value="00123" />
+      <option name="presentableId" value="LOCAL-00123" />
+      <option name="project" value="LOCAL" />
+      <updated>1749992632111</updated>
+    </task>
+    <option name="localTasksCounter" value="124" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Unifying action decision." />
     <MESSAGE value="Ensured playerTurnSubmitted doesn't break." />
     <MESSAGE value="Unified action decision across existing actors." />
     <MESSAGE value="Ensuring the app works." />
@@ -612,6 +614,7 @@
     <MESSAGE value="Formatting." />
     <MESSAGE value="Implementing base intimacy system." />
     <MESSAGE value="Made changes to the mod manifest schema." />
-    <option name="LAST_COMMIT_MESSAGE" value="Made changes to the mod manifest schema." />
+    <MESSAGE value="Returning the app to normal." />
+    <option name="LAST_COMMIT_MESSAGE" value="Returning the app to normal." />
   </component>
 </project>

@@ -63,7 +63,41 @@ export function configureContainer(container, uiElements) {
     `[ContainerConfig] Initial logger registered with level: ${initialLogLevel}. Attempting to load remote logger configuration...`
   );
 
+  logger.debug(
+    '[ContainerConfig] Starting synchronous bundle registration while logger dependencyInjection continues loading in background (if not already done).'
+  );
+
+  // --- Registration Order ---
+  // The order is critical to ensure dependencies are available when needed.
+  // 1. Foundational loaders and infrastructure.
+  // 2. Core domain services, broken into logical areas.
+  // 3. High-level systems (AI, turns) that depend on the core services.
+  // 4. UI and application orchestration services at the top.
+
+  registerLoaders(container);
+  registerInfrastructure(container);
+  registerPersistence(container);
+  registerWorldAndEntity(container);
+  registerCommandAndAction(container);
+  registerInterpreters(container);
+  registerAI(container);
+  registerTurnLifecycle(container);
+  registerEventBusAdapters(container);
+  registerUI(container, {
+    outputDiv,
+    inputElement,
+    titleElement,
+    document: doc,
+  });
+  registerInitializers(container);
+  registerRuntime(container);
+  registerOrchestration(container);
+
+  logger.debug('[ContainerConfig] All core bundles registered.');
+
   // --- Asynchronously load logger configuration and update level ---
+  // This block is placed at the end to ensure all services, including ISafeEventDispatcher,
+  // have been registered before it attempts to resolve them.
   (async () => {
     try {
       const loggerConfigLoader = new LoggerConfigLoader({
@@ -110,38 +144,6 @@ export function configureContainer(container, uiElements) {
       );
     }
   })();
-
-  logger.debug(
-    '[ContainerConfig] Starting synchronous bundle registration while logger dependencyInjection continues loading in background (if not already done).'
-  );
-
-  // --- Registration Order ---
-  // The order is critical to ensure dependencies are available when needed.
-  // 1. Foundational loaders and infrastructure.
-  // 2. Core domain services, broken into logical areas.
-  // 3. High-level systems (AI, turns) that depend on the core services.
-  // 4. UI and application orchestration services at the top.
-
-  registerLoaders(container);
-  registerInfrastructure(container);
-  registerPersistence(container);
-  registerWorldAndEntity(container);
-  registerCommandAndAction(container);
-  registerInterpreters(container);
-  registerAI(container);
-  registerTurnLifecycle(container);
-  registerEventBusAdapters(container);
-  registerUI(container, {
-    outputDiv,
-    inputElement,
-    titleElement,
-    document: doc,
-  });
-  registerInitializers(container);
-  registerRuntime(container);
-  registerOrchestration(container);
-
-  logger.debug('[ContainerConfig] All core bundles registered.');
 
   logger.debug(
     '[ContainerConfig] Configuration and registry population complete.'
