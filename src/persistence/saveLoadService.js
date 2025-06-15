@@ -205,6 +205,97 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
+   * Validates that a loaded save object contains required sections and that the
+   * stored checksum matches the recalculated checksum.
+   *
+   * @param {SaveGameStructure} obj - The deserialized save object.
+   * @param {string} identifier - Identifier used for logging.
+   * @returns {Promise<{success: boolean, error?: PersistenceError}>} Result.
+   * @private
+   */
+  async #validateLoadedSaveObject(obj, identifier) {
+    const requiredSections = [
+      'metadata',
+      'modManifest',
+      'gameState',
+      'integrityChecks',
+    ];
+    for (const section of requiredSections) {
+      if (
+        !(section in obj) ||
+        typeof obj[section] !== 'object' ||
+        obj[section] === null
+      ) {
+        const devMsg = `Save file ${identifier} is missing or has invalid section: '${section}'.`;
+        const userMsg =
+          'The save file is incomplete or has an unknown format. It might be corrupted or from an incompatible game version.';
+        this.#logger.error(devMsg + ` User message: "${userMsg}"`);
+        return {
+          success: false,
+          error: new PersistenceError(
+            PersistenceErrorCodes.INVALID_GAME_STATE,
+            userMsg
+          ),
+        };
+      }
+    }
+    this.#logger.debug(
+      `Basic structure validation passed for ${identifier}. All required sections present.`
+    );
+
+    const storedChecksum = obj.integrityChecks.gameStateChecksum;
+    if (!storedChecksum || typeof storedChecksum !== 'string') {
+      const devMsg = `Save file ${identifier} is missing gameStateChecksum.`;
+      const userMsg =
+        'The save file is missing integrity information and cannot be safely loaded. It might be corrupted or from an incompatible older version.';
+      this.#logger.error(devMsg + ` User message: "${userMsg}"`);
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_GAME_STATE,
+          userMsg
+        ),
+      };
+    }
+
+    let recalculatedChecksum;
+    try {
+      const gameStateMessagePack = encode(obj.gameState);
+      recalculatedChecksum =
+        await this.#serializer.generateChecksum(gameStateMessagePack);
+    } catch (checksumError) {
+      const devMsg = `Error calculating checksum for gameState in ${identifier}: ${checksumError.message}.`;
+      const userMsg =
+        'Could not verify the integrity of the save file due to an internal error. The file might be corrupted.';
+      this.#logger.error(devMsg + ` User message: "${userMsg}"`, checksumError);
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR,
+          userMsg
+        ),
+      };
+    }
+
+    if (storedChecksum !== recalculatedChecksum) {
+      const devMsg = `Checksum mismatch for ${identifier}. Stored: ${storedChecksum}, Calculated: ${recalculatedChecksum}.`;
+      const userMsg =
+        'The save file appears to be corrupted (integrity check failed). Please try another save or a backup.';
+      this.#logger.error(devMsg + ` User message: "${userMsg}"`);
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.CHECKSUM_MISMATCH,
+          userMsg
+        ),
+      };
+    }
+    this.#logger.debug(`Checksum VERIFIED for ${identifier}.`);
+
+    return { success: true };
+  }
+
+  /**
    * @inheritdoc
    * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
    */
@@ -348,87 +439,13 @@ class SaveLoadService extends ISaveLoadService {
       deserializationResult.data
     );
 
-    const requiredSections = [
-      'metadata',
-      'modManifest',
-      'gameState',
-      'integrityChecks',
-    ];
-    for (const section of requiredSections) {
-      if (
-        !(section in loadedObject) ||
-        typeof loadedObject[section] !== 'object' ||
-        loadedObject[section] === null
-      ) {
-        const devMsg = `Save file ${saveIdentifier} is missing or has invalid section: '${section}'.`;
-        const userMsg =
-          'The save file is incomplete or has an unknown format. It might be corrupted or from an incompatible game version.';
-        this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-        return {
-          success: false,
-          error: new PersistenceError(
-            PersistenceErrorCodes.INVALID_GAME_STATE,
-            userMsg
-          ),
-          data: null,
-        };
-      }
-    }
-    this.#logger.debug(
-      `Basic structure validation passed for ${saveIdentifier}. All required sections present.`
+    const validationResult = await this.#validateLoadedSaveObject(
+      loadedObject,
+      saveIdentifier
     );
-
-    const storedChecksum = loadedObject.integrityChecks.gameStateChecksum;
-    if (!storedChecksum || typeof storedChecksum !== 'string') {
-      const devMsg = `Save file ${saveIdentifier} is missing gameStateChecksum.`;
-      const userMsg =
-        'The save file is missing integrity information and cannot be safely loaded. It might be corrupted or from an incompatible older version.';
-      this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_GAME_STATE,
-          userMsg
-        ),
-        data: null,
-      };
+    if (!validationResult.success) {
+      return { success: false, error: validationResult.error, data: null };
     }
-
-    let recalculatedChecksum;
-    try {
-      const gameStateMessagePack = encode(loadedObject.gameState);
-      recalculatedChecksum =
-        await this.#serializer.generateChecksum(gameStateMessagePack);
-    } catch (checksumError) {
-      const devMsg = `Error calculating checksum for gameState in ${saveIdentifier}: ${checksumError.message}.`;
-      const userMsg =
-        'Could not verify the integrity of the save file due to an internal error. The file might be corrupted.';
-      this.#logger.error(devMsg + ` User message: "${userMsg}"`, checksumError);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR,
-          userMsg
-        ),
-        data: null,
-      };
-    }
-
-    if (storedChecksum !== recalculatedChecksum) {
-      const devMsg = `Checksum mismatch for ${saveIdentifier}. Stored: ${storedChecksum}, Calculated: ${recalculatedChecksum}.`;
-      const userMsg =
-        'The save file appears to be corrupted (integrity check failed). Please try another save or a backup.';
-      this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.CHECKSUM_MISMATCH,
-          userMsg
-        ),
-        data: null,
-      };
-    }
-    this.#logger.debug(`Checksum VERIFIED for ${saveIdentifier}.`);
 
     this.#logger.debug(
       `Game data loaded and validated successfully from: "${saveIdentifier}"`
