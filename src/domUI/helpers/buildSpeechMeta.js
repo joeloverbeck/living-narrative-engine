@@ -6,7 +6,7 @@ import { THOUGHT_SVG, NOTES_SVG } from '../icons.js';
 
 /**
  * @typedef {import('../domElementFactory.js').default} DomElementFactory
- * @typedef {import('../../../interfaces/IDocumentContext.js').IDocumentContext['document']} Document
+ * @typedef {import('../../interfaces/IDocumentContext.js').IDocumentContext['document']} Document
  */
 
 /**
