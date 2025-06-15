@@ -14,6 +14,7 @@ import {
   initLogger,
   validateServiceDeps,
 } from '../utils/serviceInitializer.js';
+import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 
 /** @typedef {string | number | null | undefined} EntityId */
 
@@ -222,11 +223,7 @@ export function createJsonLogicContext(
   validateServiceDeps('createJsonLogicContext', effectiveLogger, {
     entityManager: {
       value: entityManager,
-      requiredMethods: [
-        'getComponentData',
-        'getEntityInstance',
-        'hasComponent',
-      ],
+      requiredMethods: REQUIRED_ENTITY_MANAGER_METHODS,
     },
   });
 
