@@ -1,4 +1,5 @@
 {
+  "$schema": "http://example.com/schemas/action-definition.schema.json",
   "id": "core:go",
   "commandVerb": "go",
   "name": "Go",

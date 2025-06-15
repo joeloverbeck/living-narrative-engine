@@ -1,4 +1,5 @@
 {
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
   "id": "core:player",
   "description": "A tag component indicating that the entity represents a player. Used by systems and conditions to identify player-controlled entities.",
   "dataSchema": {

@@ -1,4 +1,5 @@
 {
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
   "id": "core:current_actor",
   "description": "Marker component identifying the entity whose turn it currently is in a turn-based system. Only one entity should have this component at any given time.",
   "dataSchema": {
