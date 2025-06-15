@@ -57,11 +57,7 @@ function _getExitsComponentData(
           !!entityManager &&
           typeof entityManager.getEntityInstance === 'function',
       };
-      if (dispatcher) {
-        safeDispatchError(dispatcher, message, details);
-      } else {
-        log.error(message, details);
-      }
+      safeDispatchError(dispatcher, message, details);
 
       return null;
     }
