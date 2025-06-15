@@ -83,109 +83,14 @@
             }
           },
           {
-            "type": "IF",
-            "comment": "Check if hidden metadata (thoughts OR notes) is present and dispatch core:display_speech accordingly.",
+            "type": "DISPATCH_SPEECH",
+            "comment": "Dispatch core:display_speech event.",
             "parameters": {
-              "condition": {
-                "or": [
-                  {
-                    "!!": {
-                      "var": "event.payload.thoughts"
-                    }
-                  },
-                  {
-                    "!!": {
-                      "var": "event.payload.notes"
-                    }
-                  }
-                ]
-              },
-              "then_actions": [
-                {
-                  "type": "IF",
-                  "comment": "Branch logic based on which fields (thoughts, notes) are present to avoid placeholder warnings.",
-                  "parameters": {
-                    "condition": {
-                      "!!": {
-                        "var": "event.payload.thoughts"
-                      }
-                    },
-                    "then_actions": [
-                      {
-                        "type": "IF",
-                        "comment": "Thoughts exist, now check for notes.",
-                        "parameters": {
-                          "condition": {
-                            "!!": {
-                              "var": "event.payload.notes"
-                            }
-                          },
-                          "then_actions": [
-                            {
-                              "type": "DISPATCH_EVENT",
-                              "comment": "Dispatch with BOTH thoughts and notes.",
-                              "parameters": {
-                                "eventType": "core:display_speech",
-                                "payload": {
-                                  "entityId": "{event.payload.entityId}",
-                                  "speechContent": "{event.payload.speechContent}",
-                                  "thoughts": "{event.payload.thoughts}",
-                                  "notes": "{event.payload.notes}",
-                                  "allowHtml": false
-                                }
-                              }
-                            }
-                          ],
-                          "else_actions": [
-                            {
-                              "type": "DISPATCH_EVENT",
-                              "comment": "Dispatch with ONLY thoughts.",
-                              "parameters": {
-                                "eventType": "core:display_speech",
-                                "payload": {
-                                  "entityId": "{event.payload.entityId}",
-                                  "speechContent": "{event.payload.speechContent}",
-                                  "thoughts": "{event.payload.thoughts}",
-                                  "allowHtml": false
-                                }
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    ],
-                    "else_actions": [
-                      {
-                        "type": "DISPATCH_EVENT",
-                        "comment": "Dispatch with ONLY notes (since the parent condition requires either thoughts or notes to be present).",
-                        "parameters": {
-                          "eventType": "core:display_speech",
-                          "payload": {
-                            "entityId": "{event.payload.entityId}",
-                            "speechContent": "{event.payload.speechContent}",
-                            "notes": "{event.payload.notes}",
-                            "allowHtml": false
-                          }
-                        }
-                      }
-                    ]
-                  }
-                }
-              ],
-              "else_actions": [
-                {
-                  "type": "DISPATCH_EVENT",
-                  "comment": "Dispatch speech WITHOUT thoughts and notes.",
-                  "parameters": {
-                    "eventType": "core:display_speech",
-                    "payload": {
-                      "entityId": "{event.payload.entityId}",
-                      "speechContent": "{event.payload.speechContent}",
-                      "allowHtml": false
-                    }
-                  }
-                }
-              ]
+              "entity_id": "{event.payload.entityId}",
+              "speech_content": "{event.payload.speechContent}",
+              "thoughts": "{event.payload.thoughts}",
+              "notes": "{event.payload.notes}",
+              "allow_html": false
             }
           }
         ]
