@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { assertParamsObject } from '../../src/utils/handlerUtils.js';
+import { assertParamsObject } from '../../src/utils/handlerUtils/params.js';
 import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 describe('assertParamsObject', () => {
