@@ -285,5 +285,13 @@
     </div>
 
     <script src="bundle.js"></script>
+    <script>
+      window.bootstrapApp().then(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('start') !== 'false') {
+          window.beginGame(params.get('load') === 'true');
+        }
+      });
+    </script>
   </body>
 </html>

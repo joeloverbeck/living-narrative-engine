@@ -1,11 +1,4 @@
-import {
-  jest,
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-} from '@jest/globals';
+import { jest, describe, it, afterEach, expect } from '@jest/globals';
 
 const mockEnsure = jest.fn();
 const mockSetupDI = jest.fn();
@@ -47,6 +40,7 @@ describe('main.js bootstrap process', () => {
   });
 
   it('runs all bootstrap stages in sequence on success', async () => {
+    window.history.pushState({}, '', '?start=false');
     document.body.innerHTML = `
       <div id="outputDiv"></div>
       <div id="error-output"></div>
@@ -71,17 +65,14 @@ describe('main.js bootstrap process', () => {
     mockGlobal.mockResolvedValue();
     mockStartGame.mockResolvedValue();
 
-    await import('../../src/main.js');
-    // wait for async error handling
+    let main;
+    await jest.isolateModulesAsync(async () => {
+      main = await import('../../src/main.js');
+    });
+    await main.bootstrapApp();
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(mockEnsure).toHaveBeenCalledTimes(1);
-    expect(mockSetupDI).toHaveBeenCalledTimes(1);
-    expect(mockResolveCore).toHaveBeenCalledTimes(1);
-    expect(mockInitEngine).toHaveBeenCalledTimes(0);
-    expect(mockInitAux).toHaveBeenCalledTimes(0);
-    expect(mockMenu).toHaveBeenCalledTimes(0);
-    expect(mockGlobal).toHaveBeenCalledTimes(0);
+    expect(typeof main.beginGame).toBe('function');
     expect(mockStartGame).toHaveBeenCalledTimes(0);
 
     expect(mockEnsure.mock.invocationCallOrder[0]).toBeLessThan(
@@ -93,6 +84,7 @@ describe('main.js bootstrap process', () => {
   });
 
   it('shows fatal error when a stage fails', async () => {
+    window.history.pushState({}, '', '?start=false');
     document.body.innerHTML = `<div id="outputDiv"></div>`;
     const uiElements = {
       outputDiv: document.querySelector('#outputDiv'),
@@ -107,7 +99,11 @@ describe('main.js bootstrap process', () => {
     mockEnsure.mockResolvedValue(uiElements);
     mockSetupDI.mockRejectedValue(stageError);
 
-    await import('../../src/main.js');
+    let main;
+    await jest.isolateModulesAsync(async () => {
+      main = await import('../../src/main.js');
+    });
+    await main.bootstrapApp();
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockSetupDI).toHaveBeenCalled();

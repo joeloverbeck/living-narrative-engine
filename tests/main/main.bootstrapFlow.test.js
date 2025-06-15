@@ -40,6 +40,7 @@ describe('main.js bootstrap extended coverage', () => {
   });
 
   it('executes all bootstrap stages successfully', async () => {
+    window.history.pushState({}, '', '?start=false');
     document.body.innerHTML = `
       <div id="outputDiv"></div>
       <div id="error-output"></div>
@@ -64,7 +65,10 @@ describe('main.js bootstrap extended coverage', () => {
     mockGlobal.mockResolvedValue();
     mockStartGame.mockResolvedValue();
 
-    await import('../../src/main.js');
+    const main = await import('../../src/main.js');
+    await main.bootstrapApp();
+    await new Promise((r) => setTimeout(r, 0));
+    await window.beginGame();
     await new Promise((r) => setTimeout(r, 0));
 
     expect(mockEnsure).toHaveBeenCalledTimes(1);
@@ -92,6 +96,7 @@ describe('main.js bootstrap extended coverage', () => {
   });
 
   it('displays fatal error when game engine fails to initialize', async () => {
+    window.history.pushState({}, '', '?start=false');
     document.body.innerHTML = `<div id="outputDiv"></div>`;
     const uiElements = {
       outputDiv: document.querySelector('#outputDiv'),
@@ -107,7 +112,10 @@ describe('main.js bootstrap extended coverage', () => {
     mockResolveCore.mockResolvedValue({ logger });
     mockInitEngine.mockResolvedValue(null);
 
-    await import('../../src/main.js');
+    const main = await import('../../src/main.js');
+    await main.bootstrapApp();
+    await new Promise((r) => setTimeout(r, 0));
+    await expect(window.beginGame()).rejects.toThrow();
     await new Promise((r) => setTimeout(r, 0));
 
     expect(mockStartGame).not.toHaveBeenCalled();
