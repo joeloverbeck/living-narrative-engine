@@ -174,7 +174,11 @@ export function registerAI(container) {
   );
   r.singletonFactory(
     tokens.IConfigurationProvider,
-    (c) => new HttpConfigurationProvider({ logger: c.resolve(tokens.ILogger) })
+    (c) =>
+      new HttpConfigurationProvider({
+        logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      })
   );
 
   r.singletonFactory(tokens.LLMConfigService, (c) => {
