@@ -1,6 +1,9 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
-import { initLogger } from '../utils/loggerUtils.js';
+import {
+  initLogger,
+  validateServiceDeps,
+} from '../utils/serviceInitializer.js';
 
 // -----------------------------------------------------------------------------
 // Ensure the alias "not" behaves the same as the built‑in "!" operator.
@@ -48,6 +51,7 @@ class JsonLogicEvaluationService {
    */
   constructor({ logger }) {
     this.#logger = initLogger('JsonLogicEvaluationService', logger);
+    validateServiceDeps('JsonLogicEvaluationService', this.#logger);
     this.#logger.debug('JsonLogicEvaluationService initialized.');
   }
 

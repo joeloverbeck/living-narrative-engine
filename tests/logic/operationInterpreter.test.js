@@ -136,13 +136,13 @@ describe('OperationInterpreter', () => {
 
   test('constructor should throw if registry is missing or invalid', () => {
     expect(() => new OperationInterpreter({ logger: mockLogger })).toThrow(
-      'Missing required dependency: operationRegistry.'
+      'Missing required dependency: OperationInterpreter: operationRegistry.'
     );
     expect(
       () =>
         new OperationInterpreter({ logger: mockLogger, operationRegistry: {} })
     ).toThrow(
-      "Invalid or missing method 'getHandler' on dependency 'operationRegistry'."
+      "Invalid or missing method 'getHandler' on dependency 'OperationInterpreter: operationRegistry'."
     );
   });
 
@@ -180,7 +180,7 @@ describe('OperationInterpreter', () => {
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Executing handler for operation type "LOG"…'
+      'OperationInterpreter: Executing handler for operation type "LOG"…'
     );
   });
 
@@ -210,7 +210,7 @@ describe('OperationInterpreter', () => {
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Executing handler for operation type "SET_VARIABLE"…'
+      'OperationInterpreter: Executing handler for operation type "SET_VARIABLE"…'
     );
   });
 
@@ -224,7 +224,7 @@ describe('OperationInterpreter', () => {
     ).not.toThrow();
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP');
     expect(mockLogger.error).toHaveBeenCalledWith(
-      '---> HANDLER NOT FOUND for operation type: "UNKNOWN_OP".'
+      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "UNKNOWN_OP".'
     );
   });
 
@@ -272,7 +272,7 @@ describe('OperationInterpreter', () => {
       expect.stringContaining('Error resolving placeholders')
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Executing handler for operation type "LOG"…'
+      'OperationInterpreter: Executing handler for operation type "LOG"…'
     );
   });
 
@@ -284,7 +284,7 @@ describe('OperationInterpreter', () => {
     interpreter.execute(ifOperation, mockExecutionContext);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('IF');
     expect(mockLogger.error).toHaveBeenCalledWith(
-      '---> HANDLER NOT FOUND for operation type: "IF".'
+      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "IF".'
     );
   });
 
@@ -305,7 +305,7 @@ describe('OperationInterpreter', () => {
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('ERROR_OP');
     expect(mockHandlerWithError).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Handler for operation "ERROR_OP" threw – re-throwing to caller.'
+      'OperationInterpreter: Handler for operation "ERROR_OP" threw – re-throwing to caller.'
     );
   });
 });

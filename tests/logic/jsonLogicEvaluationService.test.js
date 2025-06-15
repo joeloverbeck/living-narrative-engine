@@ -153,10 +153,10 @@ describe('JsonLogicEvaluationService', () => {
       // --- MODIFIED DEBUG CHECK ---
       // Check for the actual debug messages logged
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
+        `JsonLogicEvaluationService: Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'Rule evaluation raw result: true, Final boolean: true' // Check actual log message
+        'JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true'
       );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -170,10 +170,10 @@ describe('JsonLogicEvaluationService', () => {
 
       // --- MODIFIED DEBUG CHECK ---
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
+        `JsonLogicEvaluationService: Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'Rule evaluation raw result: false, Final boolean: false' // Check actual log message
+        'JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false'
       );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -211,10 +211,10 @@ describe('JsonLogicEvaluationService', () => {
 
       // Check debug logs (optional but good practice)
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
+        `JsonLogicEvaluationService: Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Rule evaluation raw result: ${JSON.stringify(nonBooleanValue)}, Final boolean: true`
+        `JsonLogicEvaluationService: Rule evaluation raw result: ${JSON.stringify(nonBooleanValue)}, Final boolean: true`
       );
     });
 
@@ -233,10 +233,10 @@ describe('JsonLogicEvaluationService', () => {
 
       // Check debug logs
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
+        `JsonLogicEvaluationService: Evaluating rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeys}`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Rule evaluation raw result: ${JSON.stringify(nonBooleanValue)}, Final boolean: false`
+        `JsonLogicEvaluationService: Rule evaluation raw result: ${JSON.stringify(nonBooleanValue)}, Final boolean: false`
       );
     });
   }); // End describe evaluate() (Unit Tests)
@@ -934,7 +934,7 @@ describe('JsonLogicEvaluationService', () => {
       expect(addOpSpy).toHaveBeenCalledTimes(1);
       expect(addOpSpy).toHaveBeenCalledWith(operationName, operationFunc);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Custom JSON Logic operation "${operationName}" added successfully.`
+        `JsonLogicEvaluationService: Custom JSON Logic operation "${operationName}" added successfully.`
       );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -952,7 +952,7 @@ describe('JsonLogicEvaluationService', () => {
       expect(addOpSpy).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Failed to add custom JSON Logic operation "${operationName}":`,
+        `JsonLogicEvaluationService: Failed to add custom JSON Logic operation "${operationName}":`,
         mockError
       );
     });

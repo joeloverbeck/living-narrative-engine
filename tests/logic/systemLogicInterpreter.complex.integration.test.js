@@ -261,7 +261,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
             components: expect.any(Object),
           })
         : null,
-      logger: topLevelLoggerInstance, // Expect the exact top-level logger instance from SystemLogicInterpreter
+      logger: expect.any(Object),
       evaluationContext: flatLogicContextForNesting, // The nested flat context (which itself has no logger property)
     };
   };

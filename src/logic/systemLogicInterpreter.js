@@ -7,8 +7,10 @@
 import { createJsonLogicContext } from './contextAssembler.js';
 import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
-import { initLogger } from '../utils/loggerUtils.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import {
+  initLogger,
+  validateServiceDeps,
+} from '../utils/serviceInitializer.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -47,35 +49,32 @@ class SystemLogicInterpreter {
     operationInterpreter,
   }) {
     this.#logger = initLogger('SystemLogicInterpreter', logger);
-    validateDependency(eventBus, 'eventBus', this.#logger, {
-      requiredMethods: ['subscribe', 'unsubscribe'],
-    });
-    validateDependency(dataRegistry, 'dataRegistry', this.#logger, {
-      requiredMethods: ['getAllSystemRules'],
-    });
-    validateDependency(
-      jsonLogicEvaluationService,
-      'jsonLogicEvaluationService',
-      this.#logger,
-      {
+    validateServiceDeps('SystemLogicInterpreter', this.#logger, {
+      eventBus: {
+        value: eventBus,
+        requiredMethods: ['subscribe', 'unsubscribe'],
+      },
+      dataRegistry: {
+        value: dataRegistry,
+        requiredMethods: ['getAllSystemRules'],
+      },
+      jsonLogicEvaluationService: {
+        value: jsonLogicEvaluationService,
         requiredMethods: ['evaluate'],
-      }
-    );
-    validateDependency(entityManager, 'entityManager', this.#logger, {
-      requiredMethods: [
-        'getEntityInstance',
-        'getComponentData',
-        'hasComponent',
-      ],
-    });
-    validateDependency(
-      operationInterpreter,
-      'operationInterpreter',
-      this.#logger,
-      {
+      },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: [
+          'getEntityInstance',
+          'getComponentData',
+          'hasComponent',
+        ],
+      },
+      operationInterpreter: {
+        value: operationInterpreter,
         requiredMethods: ['execute'],
-      }
-    );
+      },
+    });
 
     this.#eventBus = eventBus;
     this.#dataRegistry = dataRegistry;

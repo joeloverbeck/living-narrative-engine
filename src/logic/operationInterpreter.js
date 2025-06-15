@@ -4,8 +4,10 @@
 // -----------------------------------------------------------------------------
 
 import { resolvePlaceholders } from './contextUtils.js';
-import { initLogger } from '../utils/loggerUtils.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import {
+  initLogger,
+  validateServiceDeps,
+} from '../utils/serviceInitializer.js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').ExecutionContext}                               ExecutionContext */
@@ -20,8 +22,11 @@ class OperationInterpreter {
 
   constructor({ logger, operationRegistry }) {
     this.#logger = initLogger('OperationInterpreter', logger);
-    validateDependency(operationRegistry, 'operationRegistry', this.#logger, {
-      requiredMethods: ['getHandler'],
+    validateServiceDeps('OperationInterpreter', this.#logger, {
+      operationRegistry: {
+        value: operationRegistry,
+        requiredMethods: ['getHandler'],
+      },
     });
     this.#registry = operationRegistry;
 

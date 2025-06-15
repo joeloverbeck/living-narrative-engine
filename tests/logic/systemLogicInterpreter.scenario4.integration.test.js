@@ -264,7 +264,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 4: Invalid Condi
       expect(errorLog.args[0]).toBe(evaluationError); // Check if the actual error object was passed
 
       // AC: Error Logged (Related) - Verify info log message for skipping due to error
-      const expectedSkipLogMessage = `Rule '${rule.rule_id}' actions skipped for event '${event.type}' due to error during condition evaluation.`;
+      const expectedSkipLogMessage = `SystemLogicInterpreter: Rule '${rule.rule_id}' actions skipped for event '${event.type}' due to error during condition evaluation.`;
       const skipLog = logs.find(
         (log) => log.level === 'debug' && log.message === expectedSkipLogMessage
       );

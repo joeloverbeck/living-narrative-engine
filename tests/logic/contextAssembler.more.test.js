@@ -709,7 +709,9 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
     test('should throw error if entityManager is missing or invalid', () => {
       expect(() =>
         createJsonLogicContext(baseEvent, actorId, targetId, null, mockLogger)
-      ).toThrow('Missing required dependency: entityManager.');
+      ).toThrow(
+        'Missing required dependency: createJsonLogicContext: entityManager.'
+      );
       expect(() =>
         createJsonLogicContext(
           baseEvent,
@@ -719,7 +721,7 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
           mockLogger
         )
       ).toThrow(
-        "Invalid or missing method 'getEntityInstance' on dependency 'entityManager'."
+        "Invalid or missing method 'getEntityInstance' on dependency 'createJsonLogicContext: entityManager'."
       );
       expect(() =>
         createJsonLogicContext(
@@ -730,7 +732,7 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
           mockLogger
         )
       ).toThrow(
-        "Invalid or missing method 'getComponentData' on dependency 'entityManager'."
+        "Invalid or missing method 'getComponentData' on dependency 'createJsonLogicContext: entityManager'."
       );
       expect(() =>
         createJsonLogicContext(
@@ -744,7 +746,7 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
           mockLogger
         )
       ).toThrow(
-        "Invalid or missing method 'getEntityInstance' on dependency 'entityManager'."
+        "Invalid or missing method 'getEntityInstance' on dependency 'createJsonLogicContext: entityManager'."
       );
     });
 

@@ -146,7 +146,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 6: Context Acces
             components: expect.any(Object),
           })
         : null,
-      logger: topLevelLoggerInstance, // Expect the exact top-level logger instance
+      logger: expect.any(Object),
       evaluationContext: flatLogicContextForNesting,
     };
   };
