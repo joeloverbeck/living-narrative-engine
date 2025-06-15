@@ -94,7 +94,6 @@
       "parameters": {
         "eventType": "core:display_successful_action_result",
         "payload": {
-          "entityId": "{event.payload.actorId}",
           "message": "{context.actorName} dismisses {context.targetName}."
         }
       }

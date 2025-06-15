@@ -129,7 +129,14 @@ class IfCoLocatedHandler {
       try {
         this.#opInterpreter.execute(op, execCtx);
       } catch (err) {
-        log.error('IF_CO_LOCATED: nested operation threw', err);
+        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: 'IF_CO_LOCATED: nested operation threw',
+          details: {
+            error: err?.message,
+            stack: err?.stack,
+            op,
+          },
+        });
         break;
       }
     }

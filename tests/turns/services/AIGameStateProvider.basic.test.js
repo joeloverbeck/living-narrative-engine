@@ -7,6 +7,7 @@ describe('AIGameStateProvider', () => {
   let mockActorDataExtractor;
   let mockLocationSummaryProvider;
   let mockPerceptionLogProvider;
+  let mockSafeEventDispatcher;
   let provider;
   let mockActor;
   let mockTurnContext;
@@ -18,6 +19,7 @@ describe('AIGameStateProvider', () => {
     mockActorDataExtractor = { extractPromptData: jest.fn() };
     mockLocationSummaryProvider = { build: jest.fn() };
     mockPerceptionLogProvider = { get: jest.fn() };
+    mockSafeEventDispatcher = { dispatch: jest.fn() };
 
     // Instantiate the provider with mocked dependencies
     provider = new AIGameStateProvider({
@@ -25,6 +27,7 @@ describe('AIGameStateProvider', () => {
       actorDataExtractor: mockActorDataExtractor,
       locationSummaryProvider: mockLocationSummaryProvider,
       perceptionLogProvider: mockPerceptionLogProvider,
+      safeEventDispatcher: mockSafeEventDispatcher,
     });
 
     // Setup common test data
@@ -73,7 +76,8 @@ describe('AIGameStateProvider', () => {
     );
     expect(mockPerceptionLogProvider.get).toHaveBeenCalledWith(
       mockActor,
-      mockLogger
+      mockLogger,
+      mockSafeEventDispatcher
     );
   });
 

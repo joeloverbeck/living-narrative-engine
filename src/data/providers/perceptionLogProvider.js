@@ -6,6 +6,7 @@
 import { IPerceptionLogProvider } from '../../interfaces/IPerceptionLogProvider.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW } from '../../constants/textDefaults.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -14,8 +15,11 @@ import { DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW } from '../../constants/textDefa
 export class PerceptionLogProvider extends IPerceptionLogProvider {
   /**
    * @override
+   * @param {Entity} actor
+   * @param {ILogger} logger
+   * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher
    */
-  async get(actor, logger) {
+  async get(actor, logger, dispatcher) {
     logger.debug(
       `PerceptionLogProvider: Retrieving perception log for actor ${actor.id}`
     );
@@ -39,10 +43,10 @@ export class PerceptionLogProvider extends IPerceptionLogProvider {
         }
       }
     } catch (perceptionError) {
-      logger.error(
-        `PerceptionLogProvider: Error retrieving perception log for ${actor.id}: ${perceptionError.message}`,
-        { error: perceptionError }
-      );
+      dispatcher?.dispatch(DISPLAY_ERROR_ID, {
+        message: `PerceptionLogProvider: Error retrieving perception log for ${actor.id}: ${perceptionError.message}`,
+        details: { error: perceptionError },
+      });
     }
     return perceptionLogDto;
   }

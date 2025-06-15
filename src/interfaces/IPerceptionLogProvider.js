@@ -17,9 +17,13 @@ export class IPerceptionLogProvider {
    *
    * @param {Entity} actor - The AI-controlled entity.
    * @param {ILogger} logger - An instance of the logger.
+   * @param {import('./ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
+   * Safe dispatcher for DISPLAY_ERROR_ID events.
    * @returns {Promise<AIPerceptionLogEntryDTO[]>} A promise that resolves to an array of perception log entries.
    */
-  async get(actor, logger) {
-    throw new Error("Method 'get(actor, logger)' must be implemented.");
+  async get(actor, logger, dispatcher) {
+    throw new Error(
+      "Method 'get(actor, logger, dispatcher)' must be implemented."
+    );
   }
 }

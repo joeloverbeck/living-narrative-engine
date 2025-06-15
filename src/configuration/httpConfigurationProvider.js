@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { IConfigurationProvider } from '../interfaces/IConfigurationProvider.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -28,14 +29,26 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
   #logger;
 
   /**
+   * @private
+   * @type {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher}
+   */
+  #dispatcher;
+
+  /**
    * Creates an instance of HttpConfigurationProvider.
    *
    * @param {object} [options] - Configuration options.
    * @param {ILogger} [options.logger] - An ILogger instance for logging. Defaults to the global console.
    */
   constructor(options = {}) {
-    super(); // Call superclass constructor
+    super();
     this.#logger = options.logger || console;
+    if (!options.safeEventDispatcher?.dispatch) {
+      throw new Error(
+        'HttpConfigurationProvider requires ISafeEventDispatcher'
+      );
+    }
+    this.#dispatcher = options.safeEventDispatcher;
   }
 
   /**
@@ -60,7 +73,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
     ) {
       const errorMessage =
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.';
-      this.#logger.error(errorMessage);
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, { message: errorMessage });
       throw new Error(errorMessage);
     }
 
@@ -74,9 +87,10 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
       if (!response.ok) {
         const errorStatusText =
           response.statusText || `HTTP status ${response.status}`;
-        this.#logger.error(
-          `HttpConfigurationProvider: Failed to fetch configuration from ${sourceUrl}. Status: ${response.status} ${errorStatusText}`
-        );
+        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `HttpConfigurationProvider: Failed to fetch configuration from ${sourceUrl}. Status: ${response.status} ${errorStatusText}`,
+          details: { status: response.status, statusText: errorStatusText },
+        });
         throw new Error(
           `Failed to fetch configuration file from ${sourceUrl}: ${errorStatusText}`
         );
@@ -87,15 +101,16 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
       try {
         jsonData = await response.json();
       } catch (parseError) {
-        this.#logger.error(
-          `HttpConfigurationProvider: Failed to parse JSON response from ${sourceUrl}.`,
-          {
+        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: `HttpConfigurationProvider: Failed to parse JSON response from ${sourceUrl}.`,
+          details: {
             error:
               parseError instanceof Error
                 ? parseError.message
                 : String(parseError),
-          }
-        );
+            stack: parseError instanceof Error ? parseError.stack : undefined,
+          },
+        });
         // @ts-ignore
         throw new Error(
           `Failed to parse configuration data from ${sourceUrl} as JSON: ${parseError.message}`
@@ -121,10 +136,13 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
 
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      this.#logger.error(
-        `HttpConfigurationProvider: Error loading or parsing configuration from ${sourceUrl}. Detail: ${errorMessage}`,
-        { error }
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `HttpConfigurationProvider: Error loading or parsing configuration from ${sourceUrl}. Detail: ${errorMessage}`,
+        details: {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+      });
       throw new Error(
         `Could not load configuration from ${sourceUrl}: ${errorMessage}`
       );

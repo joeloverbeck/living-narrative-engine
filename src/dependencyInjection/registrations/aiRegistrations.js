@@ -174,7 +174,11 @@ export function registerAI(container) {
   );
   r.singletonFactory(
     tokens.IConfigurationProvider,
-    (c) => new HttpConfigurationProvider({ logger: c.resolve(tokens.ILogger) })
+    (c) =>
+      new HttpConfigurationProvider({
+        logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      })
   );
 
   r.singletonFactory(tokens.LLMConfigService, (c) => {
@@ -316,6 +320,7 @@ export function registerAI(container) {
       actorDataExtractor: c.resolve(tokens.IActorDataExtractor),
       locationSummaryProvider: c.resolve(tokens.ILocationSummaryProvider),
       perceptionLogProvider: c.resolve(tokens.IPerceptionLogProvider),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });
   });
   logger.debug(

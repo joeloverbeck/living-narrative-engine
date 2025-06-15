@@ -5,9 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting.">
-      <change afterPath="$PROJECT_DIR$/tests/integration/nestedPlaceholderResolution.integration.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/operationInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationInterpreter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,7 +109,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.nestedPlaceholderResolution.integration.test.js">
+  <component name="RunManager" selected="Jest.Tests in tests\">
     <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -157,8 +157,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Jest.nestedPlaceholderResolution.integration.test.js" />
         <item itemvalue="Jest.Tests in tests\" />
+        <item itemvalue="Jest.nestedPlaceholderResolution.integration.test.js" />
         <item itemvalue="Jest.buildSpeechMeta.test.js" />
         <item itemvalue="Jest.promptBuilder.integration.test.js" />
         <item itemvalue="Jest.genericTurnHandler.passingThis.test.js" />
@@ -183,15 +183,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="7189000" />
-    </task>
-    <task id="LOCAL-00049" summary="Trying to return the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749904234023</created>
-      <option name="number" value="00049" />
-      <option name="presentableId" value="LOCAL-00049" />
-      <option name="project" value="LOCAL" />
-      <updated>1749904234023</updated>
+      <workItem from="1749963238113" duration="8158000" />
     </task>
     <task id="LOCAL-00050" summary="Trying to return the app to normal.">
       <option name="closed" value="true" />
@@ -577,7 +569,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749970538261</updated>
     </task>
-    <option name="localTasksCounter" value="98" />
+    <task id="LOCAL-00098" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1749971138174</created>
+      <option name="number" value="00098" />
+      <option name="presentableId" value="LOCAL-00098" />
+      <option name="project" value="LOCAL" />
+      <updated>1749971138174</updated>
+    </task>
+    <option name="localTasksCounter" value="99" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

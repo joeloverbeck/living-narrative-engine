@@ -1,4 +1,4 @@
-// src/tests/logic/operationInterpreter.test.js
+// tests/logic/operationInterpreter.test.js
 
 /**
  * @jest-environment node
@@ -8,8 +8,8 @@ import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 
 /**
  * -----------------------------------------------------------------------
- *  Mock registry and logger
- *  ---------------------------------------------------------------------
+ * Mock registry and logger
+ * ---------------------------------------------------------------------
  */
 const mockRegistry = { getHandler: jest.fn() };
 const mockLogger = {
@@ -21,8 +21,8 @@ const mockLogger = {
 
 /**
  * -----------------------------------------------------------------------
- *  Mock handlers
- *  ---------------------------------------------------------------------
+ * Mock handlers
+ * ---------------------------------------------------------------------
  */
 const mockLogHandler = jest.fn();
 const mockModifyHandler = jest.fn();
@@ -33,8 +33,8 @@ const mockHandlerWithError = jest.fn(() => {
 
 /**
  * -----------------------------------------------------------------------
- *  Sample operations
- *  ---------------------------------------------------------------------
+ * Sample operations
+ * ---------------------------------------------------------------------
  */
 const logOperation = {
   type: 'LOG',
@@ -89,8 +89,8 @@ const opInvalidPlaceholder = {
 
 /**
  * -----------------------------------------------------------------------
- *  Sample execution context
- *  ---------------------------------------------------------------------
+ * Sample execution context
+ * ---------------------------------------------------------------------
  */
 const mockExecutionContext = {
   event: { type: 'TEST_EVENT', payload: { someValue: 'payloadValue' } },
@@ -103,8 +103,8 @@ const mockExecutionContext = {
 
 /**
  * -----------------------------------------------------------------------
- *  Test suite
- *  ---------------------------------------------------------------------
+ * Test suite
+ * ---------------------------------------------------------------------
  */
 describe('OperationInterpreter', () => {
   let interpreter;
@@ -233,7 +233,9 @@ describe('OperationInterpreter', () => {
     interpreter.execute(null, mockExecutionContext);
     expect(mockRegistry.getHandler).not.toHaveBeenCalled();
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('invalid operation object'),
+      expect.stringContaining(
+        'OperationInterpreter received invalid operation object'
+      ),
       expect.objectContaining({ operation: null })
     );
   });

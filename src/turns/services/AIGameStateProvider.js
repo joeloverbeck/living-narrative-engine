@@ -24,6 +24,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
   #actorDataExtractor;
   #locationSummaryProvider;
   #perceptionLogProvider;
+  #safeEventDispatcher;
 
   /**
    * @param {object} dependencies
@@ -31,18 +32,21 @@ export class AIGameStateProvider extends IAIGameStateProvider {
    * @param {IActorDataExtractor} dependencies.actorDataExtractor
    * @param {ILocationSummaryProvider} dependencies.locationSummaryProvider
    * @param {IPerceptionLogProvider} dependencies.perceptionLogProvider
+   * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dependencies.safeEventDispatcher
    */
   constructor({
     actorStateProvider,
     actorDataExtractor,
     locationSummaryProvider,
     perceptionLogProvider,
+    safeEventDispatcher,
   }) {
     super();
     this.#actorStateProvider = actorStateProvider;
     this.#actorDataExtractor = actorDataExtractor;
     this.#locationSummaryProvider = locationSummaryProvider;
     this.#perceptionLogProvider = perceptionLogProvider;
+    this.#safeEventDispatcher = safeEventDispatcher;
   }
 
   /**
@@ -66,7 +70,11 @@ export class AIGameStateProvider extends IAIGameStateProvider {
     const actorState = this.#actorStateProvider.build(actor, logger);
     const actorPromptData =
       this.#actorDataExtractor.extractPromptData(actorState);
-    const perceptionLog = await this.#perceptionLogProvider.get(actor, logger);
+    const perceptionLog = await this.#perceptionLogProvider.get(
+      actor,
+      logger,
+      this.#safeEventDispatcher
+    );
     const locationSummary = await this.#locationSummaryProvider.build(
       actor,
       logger

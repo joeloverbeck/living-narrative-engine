@@ -49,6 +49,17 @@ class OperationInterpreter {
     }
 
     const opType = operation.type.trim();
+
+    // FIX: Add a check for an empty string after trimming. This prevents
+    // the registry from being called with an empty type.
+    if (!opType) {
+      this.#logger.error(
+        'OperationInterpreter received an operation with a missing or empty type.',
+        { operation }
+      );
+      return;
+    }
+
     const handler = this.#registry.getHandler(opType);
 
     if (!handler) {

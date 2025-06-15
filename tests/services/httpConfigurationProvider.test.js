@@ -10,13 +10,16 @@ import {
 } from '@jest/globals';
 import { HttpConfigurationProvider } from '../../src/configuration/httpConfigurationProvider.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Path updated as per your usage
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 describe('HttpConfigurationProvider', () => {
   let mockLogger;
+  let mockDispatcher;
   let originalFetch;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
+    mockDispatcher = { dispatch: jest.fn() };
     originalFetch = global.fetch; // Store original fetch
     // Default mock for global.fetch in case a test doesn't override it but still wants to spy.
     // Tests that provide their own mock (e.g., for specific return values) will override this.
@@ -31,12 +34,17 @@ describe('HttpConfigurationProvider', () => {
   describe('Constructor', () => {
     it('should use provided logger', () => {
       const customLogger = createMockLogger();
-      new HttpConfigurationProvider({ logger: customLogger });
+      new HttpConfigurationProvider({
+        logger: customLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
       // No direct assertion here as logger usage is in fetchData
     });
 
     it('should default to console if no logger is provided', () => {
-      const provider = new HttpConfigurationProvider();
+      const provider = new HttpConfigurationProvider({
+        safeEventDispatcher: mockDispatcher,
+      });
       expect(provider).toBeInstanceOf(HttpConfigurationProvider);
     });
   });
@@ -54,7 +62,10 @@ describe('HttpConfigurationProvider', () => {
         })
       );
 
-      const provider = new HttpConfigurationProvider({ logger: mockLogger });
+      const provider = new HttpConfigurationProvider({
+        logger: mockLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
       const url = 'http://example.com/config.json';
       const result = await provider.fetchData(url);
 
@@ -67,32 +78,46 @@ describe('HttpConfigurationProvider', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `HttpConfigurationProvider: Successfully fetched and parsed configuration from ${url}.`
       );
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should throw an error and log if sourceUrl is invalid (empty string)', async () => {
       // global.fetch is already jest.fn() from beforeEach
-      const provider = new HttpConfigurationProvider({ logger: mockLogger });
+      const provider = new HttpConfigurationProvider({
+        logger: mockLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
       const url = '';
       await expect(provider.fetchData(url)).rejects.toThrow(
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.'
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'HttpConfigurationProvider: sourceUrl must be a non-empty string.'
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message:
+            'HttpConfigurationProvider: sourceUrl must be a non-empty string.',
+        })
       );
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
     it('should throw an error and log if sourceUrl is not a string (null)', async () => {
       // global.fetch is already jest.fn() from beforeEach
-      const provider = new HttpConfigurationProvider({ logger: mockLogger });
+      const provider = new HttpConfigurationProvider({
+        logger: mockLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
       const url = null;
       // @ts-ignore // Testing invalid input
       await expect(provider.fetchData(url)).rejects.toThrow(
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.'
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'HttpConfigurationProvider: sourceUrl must be a non-empty string.'
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message:
+            'HttpConfigurationProvider: sourceUrl must be a non-empty string.',
+        })
       );
       expect(global.fetch).not.toHaveBeenCalled();
     });
@@ -107,13 +132,19 @@ describe('HttpConfigurationProvider', () => {
         })
       );
 
-      const provider = new HttpConfigurationProvider({ logger: mockLogger });
+      const provider = new HttpConfigurationProvider({
+        logger: mockLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
       const url = 'http://example.com/nonexistent.json';
       await expect(provider.fetchData(url)).rejects.toThrow(
         'Failed to fetch configuration file from http://example.com/nonexistent.json: Not Found'
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `HttpConfigurationProvider: Failed to fetch configuration from ${url}. Status: 404 Not Found`
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: `HttpConfigurationProvider: Failed to fetch configuration from ${url}. Status: 404 Not Found`,
+        })
       );
       expect(global.fetch).toHaveBeenCalledTimes(1); // Ensure fetch was actually called
     });
@@ -127,14 +158,20 @@ describe('HttpConfigurationProvider', () => {
           statusText: 'Internal Server Error',
         })
       );
-      const provider = new HttpConfigurationProvider({ logger: mockLogger });
+      const provider = new HttpConfigurationProvider({
+        logger: mockLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
       const url = 'http://example.com/server-error.json';
 
       await expect(provider.fetchData(url)).rejects.toThrow(
         `Failed to fetch configuration file from ${url}: Internal Server Error`
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `HttpConfigurationProvider: Failed to fetch configuration from ${url}. Status: 500 Internal Server Error`
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: `HttpConfigurationProvider: Failed to fetch configuration from ${url}. Status: 500 Internal Server Error`,
+        })
       );
       expect(global.fetch).toHaveBeenCalledTimes(1);
     });
@@ -151,14 +188,19 @@ describe('HttpConfigurationProvider', () => {
         })
       );
 
-      const provider = new HttpConfigurationProvider({ logger: mockLogger });
+      const provider = new HttpConfigurationProvider({
+        logger: mockLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
       const url = 'http://example.com/invalid.json';
       await expect(provider.fetchData(url)).rejects.toThrow(
         `Failed to parse configuration data from ${url} as JSON: ${parseError.message}`
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `HttpConfigurationProvider: Failed to parse JSON response from ${url}.`,
-        { error: parseError.message }
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: `HttpConfigurationProvider: Failed to parse JSON response from ${url}.`,
+        })
       );
       expect(global.fetch).toHaveBeenCalledTimes(1);
     });
@@ -168,14 +210,19 @@ describe('HttpConfigurationProvider', () => {
       // Override the default global.fetch mock
       global.fetch = jest.fn(() => Promise.reject(networkError));
 
-      const provider = new HttpConfigurationProvider({ logger: mockLogger });
+      const provider = new HttpConfigurationProvider({
+        logger: mockLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
       const url = 'http://example.com/network-issue.json';
       await expect(provider.fetchData(url)).rejects.toThrow(
         `Could not load configuration from ${url}: ${networkError.message}`
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `HttpConfigurationProvider: Error loading or parsing configuration from ${url}. Detail: ${networkError.message}`,
-        { error: networkError }
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: `HttpConfigurationProvider: Error loading or parsing configuration from ${url}. Detail: ${networkError.message}`,
+        })
       );
       expect(global.fetch).toHaveBeenCalledTimes(1);
     });
