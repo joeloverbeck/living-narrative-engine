@@ -25,6 +25,7 @@ const mockLogger = {
 };
 
 const mockDomElementFactory = {
+  create: jest.fn((tag) => document.createElement(tag)),
   li: jest.fn(),
 };
 

@@ -328,8 +328,7 @@ describe('ActionButtonsRenderer', () => {
     ).toThrow(/Logger dependency is missing or invalid/);
   });
 
-  it('should throw error if domElementFactory is missing', () => {
-    const errPattern = /'domElementFactory' dependency is missing/;
+  it('should construct even if domElementFactory is missing', () => {
     const validDocContext = {
       query: jest.fn((selector) => {
         if (selector === '#valid-selector') return mockContainer;
@@ -347,7 +346,7 @@ describe('ActionButtonsRenderer', () => {
           domElementFactory: null,
           actionButtonsContainerSelector: '#valid-selector',
         })
-    ).toThrow(errPattern);
+    ).not.toThrow();
   });
 
   it('should throw if actionButtonsContainerSelector is missing or not a string', () => {

@@ -50,7 +50,6 @@ const LOAD_GAME_UI_ELEMENTS_CONFIG = {
 class LoadGameUI extends SlotModalBase {
   saveLoadService;
   gameEngine = null;
-  domElementFactory; // Kept for direct use in _renderLoadSlotItem
 
   // isOperationInProgress is managed by BaseModalRenderer's _setOperationInProgress
 
@@ -81,12 +80,6 @@ class LoadGameUI extends SlotModalBase {
       confirmButtonKey: 'confirmLoadButtonEl',
       deleteButtonKey: 'deleteSaveButtonEl',
     });
-
-    if (!domElementFactory || typeof domElementFactory.create !== 'function') {
-      throw new Error(
-        `${this._logPrefix} DomElementFactory dependency is missing or invalid.`
-      );
-    }
     if (
       !saveLoadService ||
       typeof saveLoadService.listManualSaveSlots !== 'function' ||
@@ -98,7 +91,6 @@ class LoadGameUI extends SlotModalBase {
     }
 
     this.saveLoadService = saveLoadService;
-    this.domElementFactory = domElementFactory; // Already available via super if passed, but can be aliased.
 
     // _bindUiElements is handled by BoundDomRendererBase (via BaseModalRenderer)
 

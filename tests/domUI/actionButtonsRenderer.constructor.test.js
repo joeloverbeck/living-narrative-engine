@@ -200,26 +200,9 @@ describe('ActionButtonsRenderer', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
     });
 
-    it('should throw if domElementFactory is missing or invalid', () => {
-      const expectedErrorMessage =
-        "[ActionButtonsRenderer] 'domElementFactory' dependency is missing or invalid (must have create and button methods).";
-
-      // Test passing null directly as the factory dependency
-      expect(() => createRenderer({ domElementFactory: null })).toThrow(
-        expectedErrorMessage
-      );
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage, {
-        receivedFactory: null,
-      });
-      mockLogger.error.mockClear();
-
-      // Test passing an empty object directly (which lacks the 'create' and 'button' methods)
-      expect(() => createRenderer({ domElementFactory: {} })).toThrow(
-        expectedErrorMessage
-      );
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessage, {
-        receivedFactory: {},
-      });
+    it('should not throw if domElementFactory is missing or invalid', () => {
+      expect(() => createRenderer({ domElementFactory: null })).not.toThrow();
+      expect(() => createRenderer({ domElementFactory: {} })).not.toThrow();
     });
 
     it('should subscribe to VED event core:update_available_actions', () => {

@@ -47,7 +47,6 @@ const LLM_SELECTION_MODAL_ELEMENTS_CONFIG = {
  */
 export class LlmSelectionModal extends SlotModalBase {
   #llmAdapter;
-  #domElementFactory; // Keep for direct use in _renderListItem
   #changeLlmButton = null; // External button, managed here for its event listener
   /** @type {string | null} */
   currentActiveLlmId = null;
@@ -75,10 +74,6 @@ export class LlmSelectionModal extends SlotModalBase {
       throw new Error(
         'LlmSelectionModal: DocumentContext dependency is required.'
       );
-    if (!domElementFactory)
-      throw new Error(
-        'LlmSelectionModal: DomElementFactory dependency is required.'
-      );
     if (!llmAdapter)
       throw new Error('LlmSelectionModal: LLMAdapter dependency is required.');
     if (!validatedEventDispatcher)
@@ -96,7 +91,6 @@ export class LlmSelectionModal extends SlotModalBase {
     });
 
     this.#llmAdapter = llmAdapter;
-    this.#domElementFactory = domElementFactory; // Store for list item rendering
 
     this.logger.debug(`${this._logPrefix} Initializing...`);
 
@@ -230,7 +224,7 @@ export class LlmSelectionModal extends SlotModalBase {
     const nameForDisplay = displayName || configId; // Fallback to configId if displayName is missing
 
     const listItemElement = createSelectableItem(
-      this.#domElementFactory,
+      this.domElementFactory,
       'li',
       'llmId',
       configId,
@@ -275,12 +269,12 @@ export class LlmSelectionModal extends SlotModalBase {
     errorMessage = 'Error loading LLM list. Please try again later.'
   ) {
     if (errorOccurred) {
-      return this.#domElementFactory.create('li', {
+      return this.domElementFactory.create('li', {
         text: errorMessage,
         cls: 'llm-item-message llm-error-message', // Standardized class names
       });
     }
-    return this.#domElementFactory.create('li', {
+    return this.domElementFactory.create('li', {
       text: 'No Language Models are currently configured.',
       cls: 'llm-item-message llm-empty-message',
     });

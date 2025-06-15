@@ -57,7 +57,6 @@ import {
  */
 export class LocationRenderer extends BoundDomRendererBase {
   baseContainerElement;
-  domElementFactory;
   entityManager;
   entityDisplayDataProvider;
   dataRegistry;
@@ -111,18 +110,10 @@ export class LocationRenderer extends BoundDomRendererBase {
       documentContext,
       validatedEventDispatcher: safeEventDispatcher,
       elementsConfig,
+      domElementFactory,
     });
 
     this.safeEventDispatcher = safeEventDispatcher;
-
-    if (!domElementFactory || typeof domElementFactory.create !== 'function') {
-      const errMsg = `${this._logPrefix} 'domElementFactory' dependency is missing or invalid.`;
-      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: errMsg,
-      });
-      throw new Error(errMsg);
-    }
-    this.domElementFactory = domElementFactory;
 
     if (
       !entityManager ||

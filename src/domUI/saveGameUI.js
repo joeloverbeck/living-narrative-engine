@@ -56,7 +56,6 @@ const SAVE_GAME_UI_ELEMENTS_CONFIG = {
 export class SaveGameUI extends SlotModalBase {
   saveLoadService;
   gameEngine = null;
-  domElementFactory; // Keep for direct use in _renderSaveSlotItem
   // isSavingInProgress is managed by BaseModalRenderer's _setOperationInProgress
 
   /**
@@ -103,7 +102,6 @@ export class SaveGameUI extends SlotModalBase {
       );
     }
     this.saveLoadService = saveLoadService;
-    this.domElementFactory = domElementFactory; // Already available via super, but can be aliased if preferred
 
     // Elements are now in this.elements, e.g., this.elements.saveNameInputEl
     // _bindUiElements is handled by BoundDomRendererBase

@@ -25,7 +25,6 @@ import { DEFAULT_SPEAKER_NAME } from './uiDefaults.js';
 
 export class SpeechBubbleRenderer extends BoundDomRendererBase {
   #entityManager;
-  #domElementFactory;
   #entityDisplayDataProvider;
 
   /**
@@ -65,6 +64,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       documentContext,
       validatedEventDispatcher,
       elementsConfig,
+      domElementFactory,
       scrollContainerKey: 'outputDivElement',
       contentContainerKey: 'speechContainer',
     });
@@ -73,17 +73,12 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       throw new Error(
         `${this._logPrefix} EntityManager dependency is required.`
       );
-    if (!domElementFactory)
-      throw new Error(
-        `${this._logPrefix} DomElementFactory dependency is required.`
-      );
     if (!entityDisplayDataProvider)
       throw new Error(
         `${this._logPrefix} EntityDisplayDataProvider dependency is required.`
       );
 
     this.#entityManager = entityManager;
-    this.#domElementFactory = domElementFactory;
     this.#entityDisplayDataProvider = entityDisplayDataProvider;
 
     if (this.elements.speechContainer) {
@@ -143,7 +138,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
   renderSpeech(payload) {
     if (
       !this.effectiveSpeechContainer ||
-      !this.#domElementFactory ||
+      !this.domElementFactory ||
       !this.#entityManager
     ) {
       this.logger.error(
@@ -167,10 +162,10 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     const portraitPath =
       this.#entityDisplayDataProvider.getEntityPortraitPath(entityId);
 
-    const speechEntryDiv = this.#domElementFactory.create('div', {
+    const speechEntryDiv = this.domElementFactory.create('div', {
       cls: 'speech-entry',
     });
-    const speechBubbleDiv = this.#domElementFactory.create('div', {
+    const speechBubbleDiv = this.domElementFactory.create('div', {
       cls: 'speech-bubble',
     });
 
@@ -196,7 +191,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       speechEntryDiv.classList.add('player-speech');
     }
 
-    const speakerIntroSpan = this.#domElementFactory.span(
+    const speakerIntroSpan = this.domElementFactory.span(
       'speech-speaker-intro'
     );
     if (speakerIntroSpan) {
@@ -204,7 +199,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       speechBubbleDiv.appendChild(speakerIntroSpan);
     }
 
-    const quotedSpeechSpan = this.#domElementFactory.span('speech-quoted-text');
+    const quotedSpeechSpan = this.domElementFactory.span('speech-quoted-text');
     if (quotedSpeechSpan) {
       if (speechContent && typeof speechContent === 'string') {
         const parts = speechContent
@@ -216,14 +211,14 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
         parts.forEach((part) => {
           if (part.startsWith('*') && part.endsWith('*')) {
             const actionSpan =
-              this.#domElementFactory.span('speech-action-text');
+              this.domElementFactory.span('speech-action-text');
             if (actionSpan) {
               actionSpan.textContent = part;
               quotedSpeechSpan.appendChild(actionSpan);
             }
           } else {
             if (allowHtml) {
-              const tempSpan = this.#domElementFactory.span();
+              const tempSpan = this.domElementFactory.span();
               if (tempSpan) {
                 tempSpan.innerHTML = part;
                 while (tempSpan.firstChild) {
@@ -252,7 +247,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
     const speechMetaFragment = buildSpeechMeta(
       this.documentContext.document,
-      this.#domElementFactory,
+      this.domElementFactory,
       {
         thoughts,
         notes,
@@ -265,7 +260,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
     let hasPortrait = false;
     if (portraitPath) {
-      const portraitImg = this.#domElementFactory.img(
+      const portraitImg = this.domElementFactory.img(
         portraitPath,
         `Portrait of ${speakerName}`,
         'speech-portrait'
