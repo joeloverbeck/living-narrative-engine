@@ -4,6 +4,17 @@ import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import { encode } from '@msgpack/msgpack';
 import { deepClone } from '../utils/objectUtils.js';
 import GameStateSerializer from './gameStateSerializer.js';
+import {
+  buildManualFileName,
+  manualSavePath,
+  extractSaveName,
+  FULL_MANUAL_SAVE_DIRECTORY_PATH,
+} from './savePathUtils.js';
+import {
+  readSaveFile,
+  deserializeAndDecompress,
+  parseManualSaveFile,
+} from './saveFileIO.js';
 import { setupService } from '../utils/serviceInitializer.js';
 import {
   PersistenceError,
@@ -25,9 +36,7 @@ import {
 
 // --- Constants ---
 // const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic
-const BASE_SAVE_DIRECTORY = 'saves'; // New root directory for all saves
-const MANUAL_SAVES_SUBDIRECTORY = 'manual_saves'; // Subdirectory for manual saves
-const FULL_MANUAL_SAVE_DIRECTORY_PATH = `${BASE_SAVE_DIRECTORY}/${MANUAL_SAVES_SUBDIRECTORY}`; // Combined path
+// Constants defining the manual save directory live in savePathUtils
 const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/; // Pattern to identify potential manual save files
 // const TEMP_SAVE_SUFFIX = '.tmp'; // // Defined in writeFileAtomically in IStorageProvider context
 
@@ -75,168 +84,12 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
-   * Reads the save file from storage provider.
-   *
-   * @param {string} filePath - Path to the save file.
-   * @returns {Promise<{success: boolean, data?: Uint8Array, error?: PersistenceError, userFriendlyError?: string}>} Outcome of the read.
-   * @private
-   */
-  async #readSaveFile(filePath) {
-    try {
-      const fileContent = await this.#storageProvider.readFile(filePath);
-      if (!fileContent || fileContent.byteLength === 0) {
-        const userMsg =
-          'The selected save file is empty or cannot be read. It might be corrupted or inaccessible.';
-        this.#logger.warn(
-          `File is empty or could not be read: ${filePath}. User message: "${userMsg}"`
-        );
-        return {
-          success: false,
-          error: new PersistenceError(
-            PersistenceErrorCodes.EMPTY_FILE,
-            userMsg
-          ),
-          userFriendlyError: userMsg,
-        };
-      }
-      return { success: true, data: fileContent };
-    } catch (error) {
-      const userMsg =
-        'Could not access or read the selected save file. Please check file permissions or try another save.';
-      this.#logger.error(`Error reading file ${filePath}:`, error);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.FILE_READ_ERROR,
-          userMsg
-        ),
-        userFriendlyError: userMsg,
-      };
-    }
-  }
-
-  /**
-   * Reads a save file, decompresses Gzip, and deserializes from MessagePack.
-   * Implements basic failure handling as per SL-T2.4.
-   *
-   * @param {string} filePath - The path to the save file.
-   * @returns {Promise<{success: boolean, data?: object, error?: PersistenceError, userFriendlyError?: string}>} Resulting object or error info.
-   * @private
-   */
-  async #deserializeAndDecompress(filePath) {
-    this.#logger.debug(`Attempting to read and deserialize file: ${filePath}`);
-
-    const readRes = await this.#readSaveFile(filePath);
-    if (!readRes.success) return readRes;
-
-    const decompressRes = this.#serializer.decompress(readRes.data);
-    if (!decompressRes.success) return decompressRes;
-
-    const deserializeRes = this.#serializer.deserialize(decompressRes.data);
-    if (!deserializeRes.success) return deserializeRes;
-
-    return { success: true, data: deserializeRes.data };
-  }
-
-  /**
    * Builds a sanitized manual save filename.
    *
    * @param {string} saveName - Raw save name input.
    * @returns {string} Sanitized filename including prefix and extension.
    * @private
    */
-  #buildManualFileName(saveName) {
-    const sanitized = saveName.replace(/[^a-zA-Z0-9_-]/g, '_');
-    return `manual_save_${sanitized}.sav`;
-  }
-
-  /**
-   * Removes manual save prefix and suffix from a filename.
-   *
-   * @param {string} fileName - File name to clean.
-   * @returns {string} Extracted save name.
-   * @private
-   */
-  #extractSaveName(fileName) {
-    return fileName.replace(/^manual_save_/, '').replace(/\.sav$/, '');
-  }
-
-  /**
-   * Builds the full path for a manual save file.
-   *
-   * @param {string} fileName - File name inside the manual saves directory.
-   * @returns {string} The fully-qualified path for the file.
-   * @private
-   */
-  #manualSavePath(fileName) {
-    return `${FULL_MANUAL_SAVE_DIRECTORY_PATH}/${fileName}`;
-  }
-
-  /**
-   * Attempts to parse a manual save file and extract its metadata.
-   *
-   * @param {string} fileName - The file name within the manual saves directory.
-   * @returns {Promise<{success: boolean, metadata: SaveFileMetadata}>}
-   *   Parsing outcome and extracted (or fallback) metadata.
-   * @private
-   */
-  async #parseManualSaveFile(fileName) {
-    const filePath = this.#manualSavePath(fileName);
-    this.#logger.debug(`Processing file: ${filePath}`);
-
-    const deserializationResult =
-      await this.#deserializeAndDecompress(filePath);
-
-    if (!deserializationResult.success) {
-      this.#logger.warn(
-        `Failed to deserialize ${filePath}: ${deserializationResult.error}. Flagging as corrupted for listing.`
-      );
-      return {
-        success: false,
-        metadata: {
-          identifier: filePath,
-          saveName: this.#extractSaveName(fileName) + ' (Corrupted)',
-          timestamp: 'N/A',
-          playtimeSeconds: 0,
-          isCorrupted: true,
-        },
-      };
-    }
-
-    const saveObject = /** @type {SaveGameStructure | undefined} */ (
-      deserializationResult.data
-    );
-
-    if (
-      !saveObject ||
-      typeof saveObject.metadata !== 'object' ||
-      saveObject.metadata === null
-    ) {
-      this.#logger.warn(
-        `No metadata section found in ${filePath}. Flagging as corrupted for listing.`
-      );
-      return {
-        success: false,
-        metadata: {
-          identifier: filePath,
-          saveName: this.#extractSaveName(fileName) + ' (No Metadata)',
-          timestamp: 'N/A',
-          playtimeSeconds: 0,
-          isCorrupted: true,
-        },
-      };
-    }
-
-    return {
-      success: true,
-      metadata: {
-        identifier: filePath,
-        saveName: saveObject.metadata.saveName,
-        timestamp: saveObject.metadata.timestamp,
-        playtimeSeconds: saveObject.metadata.playtimeSeconds,
-      },
-    };
-  }
 
   /**
    * Verifies that the loaded save object contains all required sections.
@@ -401,7 +254,12 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     for (const fileName of files) {
-      const { success, metadata } = await this.#parseManualSaveFile(fileName);
+      const { success, metadata } = await parseManualSaveFile(
+        fileName,
+        this.#storageProvider,
+        this.#serializer,
+        this.#logger
+      );
 
       if (!success) {
         collectedMetadata.push(metadata);
@@ -475,8 +333,12 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     // saveIdentifier is expected to be the full path including "saves/manual_saves/"
-    const deserializationResult =
-      await this.#deserializeAndDecompress(saveIdentifier);
+    const deserializationResult = await deserializeAndDecompress(
+      this.#storageProvider,
+      this.#serializer,
+      saveIdentifier,
+      this.#logger
+    );
 
     if (!deserializationResult.success || !deserializationResult.data) {
       this.#logger.warn(
@@ -532,12 +394,12 @@ class SaveLoadService extends ISaveLoadService {
       };
     }
 
-    const fileName = this.#buildManualFileName(saveName);
+    const fileName = buildManualFileName(saveName);
     // Ensure the directory structure exists before writing.
     // Some IStorageProvider implementations might handle this in writeFileAtomically,
     // others might need an explicit ensureDirectoryExists call.
     // Example: await this.#storageProvider.ensureDirectoryExists(FULL_MANUAL_SAVE_DIRECTORY_PATH);
-    const filePath = this.#manualSavePath(fileName);
+    const filePath = manualSavePath(fileName);
 
     try {
       // Potentially create the directory if it doesn't exist.
