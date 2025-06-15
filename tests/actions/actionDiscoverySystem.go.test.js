@@ -246,6 +246,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(mockGetAvailableExits).toHaveBeenCalledWith(
       mockAdventurersGuildLocation,
       mockEntityManager,
+      mockSafeEventDispatcher,
       expect.objectContaining({
         debug: expect.any(Function),
         info: expect.any(Function),

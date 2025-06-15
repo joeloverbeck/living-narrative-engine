@@ -159,6 +159,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           const exits = getAvailableExits(
             currentLocation,
             this.#entityManager,
+            this.#safeEventDispatcher,
             this.#logger
           );
           this.#logger.debug(
