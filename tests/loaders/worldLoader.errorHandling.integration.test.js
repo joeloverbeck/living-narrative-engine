@@ -341,6 +341,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
       entityLoader: mockEntityLoader,
+      uiAssetsLoader: { loadItemsForMod: jest.fn() },
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,

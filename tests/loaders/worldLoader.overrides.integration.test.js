@@ -366,6 +366,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
       entityLoader: mockEntityLoader, // Pass the mocked EntityLoader
+      uiAssetsLoader: { loadItemsForMod: jest.fn() },
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,

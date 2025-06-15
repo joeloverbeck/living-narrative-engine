@@ -16,6 +16,7 @@
 /** @typedef {import('../modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('./entityLoader.js').default} EntityLoader */
 /** @typedef {import('./promptTextLoader.js').default} PromptTextLoader */
+/** @typedef {import('./uiAssetsLoader.js').default} UiAssetsLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -76,6 +77,7 @@ class WorldLoader extends AbstractLoader {
   /** @type {ActionLoader}   */ #actionLoader;
   /** @type {EventLoader}    */ #eventLoader;
   /** @type {EntityLoader}   */ #entityDefinitionLoader;
+  /** @type {UiAssetsLoader} */ #uiAssetsLoader;
   /** @type {GameConfigLoader}*/ #gameConfigLoader;
   /** @type {PromptTextLoader}*/ #promptTextLoader;
   /** @type {ModManifestLoader}*/ #modManifestLoader;
@@ -104,6 +106,7 @@ class WorldLoader extends AbstractLoader {
    * @param {ActionLoader} dependencies.actionLoader - Loader for action definitions.
    * @param {EventLoader} dependencies.eventLoader - Loader for event definitions.
    * @param {EntityLoader} dependencies.entityLoader - Loader for entity definitions.
+   * @param {UiAssetsLoader} dependencies.uiAssetsLoader - Loader for UI assets.
    * @param {ISchemaValidator} dependencies.validator - Service for schema validation.
    * @param {IConfiguration} dependencies.configuration - Service for configuration access.
    * @param {GameConfigLoader} dependencies.gameConfigLoader - Loader for game configuration.
@@ -122,6 +125,7 @@ class WorldLoader extends AbstractLoader {
     actionLoader,
     eventLoader,
     entityLoader,
+    uiAssetsLoader,
     validator,
     configuration,
     gameConfigLoader,
@@ -163,6 +167,11 @@ class WorldLoader extends AbstractLoader {
       {
         dependency: entityLoader,
         name: 'EntityLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: uiAssetsLoader,
+        name: 'UiAssetsLoader',
         methods: ['loadItemsForMod'],
       },
       {
@@ -210,6 +219,7 @@ class WorldLoader extends AbstractLoader {
     this.#actionLoader = actionLoader;
     this.#eventLoader = eventLoader;
     this.#entityDefinitionLoader = entityLoader;
+    this.#uiAssetsLoader = uiAssetsLoader;
     this.#validator = validator;
     this.#configuration = configuration;
     this.#gameConfigLoader = gameConfigLoader;
@@ -224,6 +234,12 @@ class WorldLoader extends AbstractLoader {
         contentKey: 'components',
         contentTypeDir: 'components',
         typeName: 'components',
+      },
+      {
+        loader: this.#uiAssetsLoader,
+        contentKey: 'ui',
+        contentTypeDir: 'ui',
+        typeName: 'ui',
       },
       {
         loader: this.#eventLoader,

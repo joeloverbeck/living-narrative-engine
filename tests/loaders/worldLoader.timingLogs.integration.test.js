@@ -231,6 +231,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
       entityLoader: mockEntityLoader,
+      uiAssetsLoader: { loadItemsForMod: jest.fn() },
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,

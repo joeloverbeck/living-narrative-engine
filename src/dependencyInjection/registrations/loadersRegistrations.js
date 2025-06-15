@@ -43,6 +43,7 @@ import ActionLoader from '../../loaders/actionLoader.js';
 import EventLoader from '../../loaders/eventLoader.js';
 import MacroLoader from '../../loaders/macroLoader.js';
 import EntityLoader from '../../loaders/entityLoader.js';
+import UiAssetsLoader from '../../loaders/uiAssetsLoader.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -226,6 +227,20 @@ export function registerLoaders(container) {
       )
   );
   logger.debug(`Loaders Registration: Registered ${tokens.MacroLoader}.`);
+
+  registrar.singletonFactory(
+    tokens.UiAssetsLoader,
+    (c) =>
+      new UiAssetsLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+      )
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.UiAssetsLoader}.`);
 
   // === ADDED: LOADER-004-F ===
   registrar.singletonFactory(

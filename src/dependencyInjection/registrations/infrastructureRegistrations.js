@@ -4,6 +4,7 @@ import EventBus from '../../events/eventBus.js';
 import SpatialIndexManager from '../../entities/spatialIndexManager.js';
 import WorldLoader from '../../loaders/worldLoader.js';
 import PromptTextLoader from '../../loaders/promptTextLoader.js';
+import UiAssetsLoader from '../../loaders/uiAssetsLoader.js';
 import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concrete class
 import EntityManager from '../../entities/entityManager.js'; // Concrete class
 import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js'; // Concrete Class Import
@@ -25,6 +26,7 @@ import { ActionIndexingService } from '../../turns/services/actionIndexingServic
  * @typedef {import('../../loaders/eventLoader.js').default} EventLoader
  * @typedef {import('../../loaders/macroLoader.js').default} MacroLoader
  * @typedef {import('../../loaders/entityLoader.js').default} EntityLoader
+ * @typedef {import('../../loaders/uiAssetsLoader.js').default} UiAssetsLoader
  * @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader
  * @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader
  * @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader
@@ -99,6 +101,7 @@ export function registerInfrastructure(container) {
         actionLoader: c.resolve(tokens.ActionLoader),
         eventLoader: c.resolve(tokens.EventLoader),
         entityLoader: c.resolve(tokens.EntityLoader),
+        uiAssetsLoader: c.resolve(tokens.UiAssetsLoader),
         validator: c.resolve(tokens.ISchemaValidator),
         configuration: c.resolve(tokens.IConfiguration),
         gameConfigLoader: c.resolve(tokens.GameConfigLoader),

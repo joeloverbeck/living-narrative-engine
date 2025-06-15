@@ -254,6 +254,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
       entityLoader: mockEntityLoader,
+      uiAssetsLoader: { loadItemsForMod: jest.fn() },
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,

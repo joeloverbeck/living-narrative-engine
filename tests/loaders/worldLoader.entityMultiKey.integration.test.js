@@ -334,6 +334,7 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
       entityLoader: mockEntityLoader, // Pass the specific mock
+      uiAssetsLoader: { loadItemsForMod: jest.fn() },
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,

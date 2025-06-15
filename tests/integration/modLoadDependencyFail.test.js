@@ -392,6 +392,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       actionLoader, // Property name matches variable name
       eventLoader, // Property name matches variable name
       entityLoader, // Property name matches variable name
+      uiAssetsLoader: { loadItemsForMod: jest.fn() },
       validator, // Property name matches variable name
       configuration, // Property name matches variable name
       gameConfigLoader, // Property name matches variable name

@@ -386,6 +386,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
       entityLoader: mockEntityLoader,
+      uiAssetsLoader: { loadItemsForMod: jest.fn() },
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,

@@ -268,10 +268,11 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.EventLoader,
       tokens.MacroLoader,
       tokens.EntityLoader,
+      tokens.UiAssetsLoader,
     ];
-    const expectedRegistrationCount = expectedTokens.length; // 15
+    const expectedRegistrationCount = expectedTokens.length; // 16
 
-    // Expect 1 (ILogger from beforeEach) + 15 (from registerLoaders) = 16 calls
+    // Expect 1 (ILogger from beforeEach) + 16 (from registerLoaders) = 17 calls
     expect(mockContainer.register).toHaveBeenCalledTimes(
       expectedRegistrationCount + 1
     );

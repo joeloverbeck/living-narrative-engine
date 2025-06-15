@@ -54,6 +54,7 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} ActionLoader - Token for the action loading service.
  * @property {DiToken} EventLoader - Token for the event loading service.
  * @property {DiToken} MacroLoader - Token for the macro loading service.
+ * @property {DiToken} UiAssetsLoader - Token for the UI assets loading service.
  * @property {DiToken} EntityLoader - Token for loading entity definitions.
  * @property {DiToken} WorldLoader - Token for orchestrating world data loading.
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
@@ -184,6 +185,7 @@ export const tokens = freeze({
   ActionLoader: 'ActionLoader',
   EventLoader: 'EventLoader',
   MacroLoader: 'MacroLoader',
+  UiAssetsLoader: 'UiAssetsLoader',
   EntityLoader: 'EntityLoader',
   WorldLoader: 'WorldLoader',
   GameConfigLoader: 'GameConfigLoader',

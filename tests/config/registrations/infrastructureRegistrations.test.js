@@ -93,6 +93,9 @@ describe('registerInfrastructure', () => {
       loadItemsForMod: jest.fn(),
     }));
     container.register(tokens.EntityLoader, () => mockEntityLoader);
+    container.register(tokens.UiAssetsLoader, () => ({
+      loadItemsForMod: jest.fn(),
+    }));
     container.register(tokens.IConfiguration, () => mockConfiguration);
     container.register(tokens.GameConfigLoader, () => mockGameConfigLoader);
     container.register(tokens.PromptTextLoader, () => ({
