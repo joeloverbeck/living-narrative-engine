@@ -382,21 +382,14 @@ class SystemLogicInterpreter {
 
       // delegate -----------------------------------------------------------
       try {
-        if (opType === 'FOR_EACH') {
+        if (opType === 'IF') {
+          this.#handleIf(op, nestedCtx, `${scopeLabel} IF#${opIndex}`);
+        } else if (opType === 'FOR_EACH') {
           this.#handleForEach(
             op,
             nestedCtx,
             `${scopeLabel} FOR_EACH#${opIndex}`
           );
-        } else if (opType === 'IF') {
-          const actionsToRun =
-            this.#operationInterpreter.execute(op, nestedCtx) || [];
-          if (Array.isArray(actionsToRun) && actionsToRun.length)
-            this._executeActions(
-              actionsToRun,
-              nestedCtx,
-              `${scopeLabel} IF#${opIndex}`
-            );
         } else {
           this.#operationInterpreter.execute(op, nestedCtx);
         }
@@ -417,6 +410,24 @@ class SystemLogicInterpreter {
   /* --------------------------------------------------------------------- */
 
   /* Built-in flow-control helpers                                         */
+
+  #handleIf(node, nestedCtx, label) {
+    const {
+      condition,
+      then_actions: thenActs = [],
+      else_actions: elseActs = [],
+    } = node.parameters || {};
+
+    let result = false;
+    try {
+      result = this.#jsonLogic.evaluate(condition, nestedCtx.evaluationContext);
+    } catch (e) {
+      this.#logger.error(`${label}: condition error`, e);
+      return;
+    }
+
+    this._executeActions(result ? thenActs : elseActs, nestedCtx, label);
+  }
 
   #handleForEach(node, nestedCtx, label) {
     const {

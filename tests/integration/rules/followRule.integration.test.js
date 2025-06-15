@@ -22,7 +22,6 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
-import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -118,13 +117,6 @@ describe('core_handle_follow rule integration', () => {
       }),
     };
 
-    jsonLogic = new JsonLogicEvaluationService({ logger });
-
-    operationInterpreter = new OperationInterpreter({
-      logger,
-      operationRegistry,
-    });
-
     const handlers = {
       CHECK_FOLLOW_CYCLE: new CheckFollowCycleHandler({
         logger,
@@ -153,16 +145,18 @@ describe('core_handle_follow rule integration', () => {
       }),
       END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-      IF: new IfHandler({
-        logger,
-        jsonLogicEvaluationService: jsonLogic,
-        operationInterpreter,
-      }),
     };
 
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
+
+    operationInterpreter = new OperationInterpreter({
+      logger,
+      operationRegistry,
+    });
+
+    jsonLogic = new JsonLogicEvaluationService({ logger });
 
     interpreter = new SystemLogicInterpreter({
       logger,
