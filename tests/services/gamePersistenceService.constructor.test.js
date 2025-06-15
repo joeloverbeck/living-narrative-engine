@@ -9,10 +9,8 @@ function makeDeps() {
     logger: { debug: jest.fn(), error: jest.fn() },
     saveLoadService: {},
     entityManager: {},
-    dataRegistry: {},
     playtimeTracker: {},
-    componentCleaningService: { clean: jest.fn() },
-    metadataBuilder: { build: jest.fn() },
+    gameStateCaptureService: {},
   };
 }
 
@@ -21,10 +19,8 @@ describe('GamePersistenceService constructor validation', () => {
     'logger',
     'saveLoadService',
     'entityManager',
-    'dataRegistry',
     'playtimeTracker',
-    'componentCleaningService',
-    'metadataBuilder',
+    'gameStateCaptureService',
   ];
 
   test.each(required)('throws if %s is missing', (prop) => {

@@ -16,12 +16,11 @@ describe('DefaultPathResolver', () => {
 
   // Base paths for mocking
   const MOCK_SCHEMA_BASE = 'schemas'; // Relative path as returned by StaticConfig
-  const MOCK_WORLD_BASE = 'worlds'; // Relative path
-  const MOCK_CONTENT_BASE_FN = (typeName) => typeName; // Relative path matching StaticConfig
   const MOCK_BASE_DATA_PATH = './data'; // Relative path matching StaticConfig
   const MOCK_GAME_CONFIG_FILENAME = 'game.json'; // Matching StaticConfig
   const MOCK_MODS_BASE = 'mods'; // <<< ADDED for MODLOADER-003
   const MOCK_MOD_MANIFEST_FILENAME = 'mod.manifest.json'; // <<< ADDED for MODLOADER-003
+  const MOCK_CONTENT_BASE_FN = (typeName) => typeName; // Relative path matching StaticConfig
 
   beforeEach(() => {
     // Create a fresh mock configuration before each test
@@ -29,7 +28,6 @@ describe('DefaultPathResolver', () => {
       // Mock all methods REQUIRED by the DefaultPathResolver constructor
       getBaseDataPath: jest.fn(),
       getSchemaBasePath: jest.fn(),
-      getWorldBasePath: jest.fn(),
       getContentBasePath: jest.fn(),
       getGameConfigFilename: jest.fn(),
       getModsBasePath: jest.fn(), // <<< ADDED for MODLOADER-003
@@ -44,7 +42,6 @@ describe('DefaultPathResolver', () => {
     // Default successful mock implementations
     mockConfig.getBaseDataPath.mockReturnValue(MOCK_BASE_DATA_PATH);
     mockConfig.getSchemaBasePath.mockReturnValue(MOCK_SCHEMA_BASE);
-    mockConfig.getWorldBasePath.mockReturnValue(MOCK_WORLD_BASE);
     mockConfig.getContentBasePath.mockImplementation(MOCK_CONTENT_BASE_FN);
     mockConfig.getGameConfigFilename.mockReturnValue(MOCK_GAME_CONFIG_FILENAME);
     mockConfig.getModsBasePath.mockReturnValue(MOCK_MODS_BASE); // <<< ADDED for MODLOADER-003
@@ -76,7 +73,6 @@ describe('DefaultPathResolver', () => {
     it.each([
       ['getBaseDataPath'],
       ['getSchemaBasePath'],
-      ['getWorldBasePath'],
       ['getContentBasePath'],
       ['getGameConfigFilename'],
       ['getModsBasePath'], // <<< ADDED for MODLOADER-003
@@ -177,76 +173,6 @@ describe('DefaultPathResolver', () => {
       expect(() => resolver.resolveSchemaPath(123)).toThrow(expectedErrorMsg);
       expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
       expect(mockConfig.getSchemaBasePath).not.toHaveBeenCalled();
-    });
-  });
-
-  // --- Task 5: Test resolveManifestPath ---
-  describe('resolveManifestPath', () => {
-    beforeEach(() => {
-      resolver = new DefaultPathResolver(mockConfig);
-    });
-
-    it('should return the correct manifest path for a valid world name', () => {
-      const worldName = 'demo';
-      const expectedFilename = `${worldName}.world.json`;
-      const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_WORLD_BASE}/${expectedFilename}`;
-      const actualPath = resolver.resolveManifestPath(worldName);
-
-      expect(actualPath).toBe(expectedPath);
-      expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
-      expect(mockConfig.getWorldBasePath).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle world names with spaces (passed through by join)', () => {
-      const worldName = ' my world ';
-      const expectedFilename = `${worldName}.world.json`;
-      const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_WORLD_BASE}/${expectedFilename}`;
-      expect(resolver.resolveManifestPath(worldName)).toBe(expectedPath);
-      expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
-      expect(mockConfig.getWorldBasePath).toHaveBeenCalledTimes(1);
-    });
-
-    it('should throw an Error for an empty string worldName', () => {
-      const expectedErrorMsg = /Invalid or empty worldName provided/;
-      expect(() => resolver.resolveManifestPath('')).toThrow(expectedErrorMsg);
-      expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
-      expect(mockConfig.getWorldBasePath).not.toHaveBeenCalled();
-    });
-
-    it('should throw an Error for a worldName containing only spaces', () => {
-      const expectedErrorMsg = /Invalid or empty worldName provided/;
-      expect(() => resolver.resolveManifestPath('  ')).toThrow(
-        expectedErrorMsg
-      );
-      expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
-      expect(mockConfig.getWorldBasePath).not.toHaveBeenCalled();
-    });
-
-    it('should throw an Error for a null worldName', () => {
-      const expectedErrorMsg = /Invalid or empty worldName provided/;
-      expect(() => resolver.resolveManifestPath(null)).toThrow(
-        expectedErrorMsg
-      );
-      expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
-      expect(mockConfig.getWorldBasePath).not.toHaveBeenCalled();
-    });
-
-    it('should throw an Error for an undefined worldName', () => {
-      const expectedErrorMsg = /Invalid or empty worldName provided/;
-      expect(() => resolver.resolveManifestPath(undefined)).toThrow(
-        expectedErrorMsg
-      );
-      expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
-      expect(mockConfig.getWorldBasePath).not.toHaveBeenCalled();
-    });
-
-    it('should throw an Error for a non-string worldName', () => {
-      const expectedErrorMsg = /Invalid or empty worldName provided/;
-      expect(() => resolver.resolveManifestPath({ name: 'world' })).toThrow(
-        expectedErrorMsg
-      );
-      expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
-      expect(mockConfig.getWorldBasePath).not.toHaveBeenCalled();
     });
   });
 
@@ -453,7 +379,6 @@ describe('DefaultPathResolver.resolveModManifestPath', () => {
   const makeConfig = () => ({
     getBaseDataPath: () => './data',
     getSchemaBasePath: () => 'schemas',
-    getWorldBasePath: () => 'worlds',
     getContentBasePath: (type) => type,
     getGameConfigFilename: () => 'game.json',
     getModsBasePath: () => 'mods',

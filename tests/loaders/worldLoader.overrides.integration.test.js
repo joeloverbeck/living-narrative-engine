@@ -200,7 +200,6 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       getSchemaFiles: jest.fn(() => []),
       getSchemaBasePath: jest.fn(() => 'schemas'),
       getContentBasePath: jest.fn(() => 'content'),
-      getWorldBasePath: jest.fn(() => 'worlds'),
       getGameConfigFilename: jest.fn(() => 'game.json'),
       getModsBasePath: jest.fn(() => 'mods'),
       getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
