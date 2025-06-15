@@ -20,7 +20,6 @@ describe('GamePersistenceService error paths', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
-  let container;
   let service;
 
   beforeEach(() => {
@@ -36,14 +35,12 @@ describe('GamePersistenceService error paths', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
-    container = {};
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
-      container,
     });
   });
 
@@ -58,7 +55,7 @@ describe('GamePersistenceService error paths', () => {
         'Failed to deep clone object data.'
       );
       expect(logger.error).toHaveBeenCalledWith(
-        'GamePersistenceService.#deepClone failed:',
+        'GamePersistenceService.#cleanComponentData deepClone failed:',
         expect.any(Error),
         cyc
       );

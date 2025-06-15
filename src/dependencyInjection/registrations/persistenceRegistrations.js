@@ -65,7 +65,6 @@ export function registerPersistence(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       dataRegistry: c.resolve(tokens.IDataRegistry),
       playtimeTracker: c.resolve(tokens.PlaytimeTracker),
-      container: c,
     });
   });
   logger.debug(

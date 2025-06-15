@@ -27,7 +27,6 @@ describe('GamePersistenceService edge cases', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
-  let container;
   let service;
 
   beforeEach(() => {
@@ -43,14 +42,12 @@ describe('GamePersistenceService edge cases', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
-    container = {};
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
-      container,
     });
   });
 

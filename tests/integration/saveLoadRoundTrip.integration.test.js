@@ -100,7 +100,6 @@ describe('Persistence round-trip', () => {
       entityManager,
       dataRegistry,
       playtimeTracker,
-      container: {},
     });
   });
 
@@ -134,5 +133,11 @@ describe('Persistence round-trip', () => {
     );
     const restoredComponents = Object.fromEntries(restored.componentEntries);
     expect(restoredComponents).toEqual(expectedComponents);
+
+    expect(loadResult.data.metadata.gameTitle).toBe('TestWorld');
+    expect(loadResult.data.metadata.playtimeSeconds).toBe(0);
+    expect(loadResult.data.modManifest.activeMods).toEqual([
+      { modId: 'core', version: '1.0.0' },
+    ]);
   });
 });
