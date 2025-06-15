@@ -1,0 +1,38 @@
+{
+  "$schema": "http://example.com/schemas/macro.schema.json",
+  "macro_id": "core:logSuccessAndEndTurn",
+  "actions": [
+    {
+      "type": "GET_TIMESTAMP",
+      "parameters": {
+        "result_variable": "nowIso"
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "parameters": {
+        "location_id": "{context.locationId}",
+        "description_text": "{context.logMessage}",
+        "perception_type": "{context.perceptionType}",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{context.targetId}"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.logMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}
