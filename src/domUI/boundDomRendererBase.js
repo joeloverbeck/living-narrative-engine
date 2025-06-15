@@ -47,6 +47,23 @@ export class BoundDomRendererBase extends RendererBase {
   elements;
 
   /**
+   * Stores the default keys used when calling {@link BoundDomRendererBase#scrollToBottom}.
+   * These may be omitted if a subclass never needs the auto-scroll helper.
+   *
+   * @protected
+   * @type {string | null}
+   */
+  _defaultScrollContainerKey = null;
+
+  /**
+   * Stores the default content container key used when scrolling.
+   *
+   * @protected
+   * @type {string | null}
+   */
+  _defaultContentContainerKey = null;
+
+  /**
    * Initializes the base renderer and binds DOM elements.
    *
    * @param {object} params - The parameters object.
@@ -54,6 +71,8 @@ export class BoundDomRendererBase extends RendererBase {
    * @param {IDocumentContext} params.documentContext - The document context abstraction.
    * @param {IValidatedEventDispatcher} params.validatedEventDispatcher - The validated event dispatcher.
    * @param {ElementsConfig} params.elementsConfig - Configuration for binding DOM elements.
+   * @param {string} [params.scrollContainerKey] - Default key in `elementsConfig` used when scrolling.
+   * @param {string} [params.contentContainerKey] - Default content container key used when scrolling.
    * @throws {Error} If `elementsConfig` is not provided or is not an object.
    */
   constructor({
@@ -61,6 +80,8 @@ export class BoundDomRendererBase extends RendererBase {
     documentContext,
     validatedEventDispatcher,
     elementsConfig,
+    scrollContainerKey = null,
+    contentContainerKey = null,
   }) {
     super({ logger, documentContext, validatedEventDispatcher });
 
@@ -72,6 +93,8 @@ export class BoundDomRendererBase extends RendererBase {
 
     this.elements = {};
     this._bindElements(elementsConfig);
+    this._defaultScrollContainerKey = scrollContainerKey;
+    this._defaultContentContainerKey = contentContainerKey;
   }
 
   /**
@@ -207,7 +230,16 @@ export class BoundDomRendererBase extends RendererBase {
    * @param {string} scrollKey - Key for the scroll container in `this.elements`.
    * @param {string} contentKey - Key for the content container for fallback scrolling.
    */
-  scrollToBottom(scrollKey, contentKey) {
+  scrollToBottom(
+    scrollKey = this._defaultScrollContainerKey,
+    contentKey = this._defaultContentContainerKey
+  ) {
+    if (!scrollKey || !contentKey) {
+      this.logger.warn(
+        `${this._logPrefix} scrollToBottom called without valid keys.`
+      );
+      return;
+    }
     this._scrollToPanelBottom(scrollKey, contentKey);
   }
 

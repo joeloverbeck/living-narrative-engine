@@ -65,6 +65,8 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       documentContext,
       validatedEventDispatcher,
       elementsConfig,
+      scrollContainerKey: 'outputDivElement',
+      contentContainerKey: 'speechContainer',
     });
 
     if (!entityManager)
@@ -278,12 +280,9 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
         // Wait for the image to load before scrolling to ensure the scroll height is correct.
         // Use a one-time listener for this.
-        this._addDomListener(
-          portraitImg,
-          'load',
-          () => this.#scrollToBottom(),
-          { once: true }
-        );
+        this._addDomListener(portraitImg, 'load', () => this.scrollToBottom(), {
+          once: true,
+        });
         this._addDomListener(
           portraitImg,
           'error',
@@ -291,7 +290,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
             this.logger.warn(
               `${this._logPrefix} Portrait image failed to load for ${speakerName}. Scrolling anyway.`
             );
-            this.#scrollToBottom();
+            this.scrollToBottom();
           },
           { once: true }
         );
@@ -314,22 +313,12 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     // If there's no portrait, the layout is stable, so we can scroll immediately.
     // If there is a portrait, the 'onload' or 'onerror' handler will trigger the scroll.
     if (!hasPortrait) {
-      this.#scrollToBottom();
+      this.scrollToBottom();
     }
 
     this.logger.debug(
       `${this._logPrefix} Rendered speech for ${speakerName}${isPlayer ? ' (Player)' : ''}.`
     );
-  }
-
-  /**
-   * Scrolls the output/chat panel to the bottom.
-   * Uses the centralized method from BoundDomRendererBase.
-   *
-   * @private
-   */
-  #scrollToBottom() {
-    this.scrollToBottom('outputDivElement', 'speechContainer');
   }
 
   /**

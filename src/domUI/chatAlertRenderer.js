@@ -73,6 +73,8 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
         scrollContainer: { selector: '#outputDiv', required: true },
         chatPanel: { selector: '#message-list', required: false },
       },
+      scrollContainerKey: 'scrollContainer',
+      contentContainerKey: 'chatPanel',
     });
 
     // --- Dependency Validation ---
@@ -135,15 +137,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     );
 
     this.logger.debug(`${this._logPrefix} Initialized.`);
-  }
-
-  /**
-   * Scrolls the chat panel to the bottom to ensure the latest message is visible.
-   *
-   * @private
-   */
-  #scrollToBottom() {
-    this.scrollToBottom('scrollContainer', 'chatPanel');
   }
 
   /**
@@ -330,7 +323,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
 
     bubbleElement.appendChild(contentWrapper);
     this.elements.chatPanel.appendChild(bubbleElement);
-    this.#scrollToBottom();
+    this.scrollToBottom();
   }
 
   /**
