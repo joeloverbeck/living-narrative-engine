@@ -5,7 +5,7 @@
 
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { getExitByDirection } from '../../utils/locationUtils.js';
-import { createComponentAccessor } from '../../logic/contextAssembler.js';
+import { createComponentAccessor } from '../../logic/componentAccessor.js';
 
 /**
  * @description Build the actor portion of an action validation context.
