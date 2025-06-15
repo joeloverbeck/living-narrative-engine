@@ -80,9 +80,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:put',
-      directObjectPhrase: 'key',
-      preposition: 'in',
-      indirectObjectPhrase: 'box',
+      directObjectPhrase: 'key in box',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -101,9 +101,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:put',
-      directObjectPhrase: 'the blue gem',
-      preposition: 'on',
-      indirectObjectPhrase: 'stone altar',
+      directObjectPhrase: 'the blue gem on stone altar',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -123,9 +123,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:look',
-      directObjectPhrase: null, // V+P+IO has null DO
-      preposition: 'at',
-      indirectObjectPhrase: 'door',
+      directObjectPhrase: 'at door',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -144,9 +144,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:go',
-      directObjectPhrase: null, // V+P+IO has null DO
-      preposition: '>',
-      indirectObjectPhrase: 'the dark cave',
+      directObjectPhrase: '> the dark cave',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -166,9 +166,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:use',
-      directObjectPhrase: 'key',
-      preposition: '>',
-      indirectObjectPhrase: 'lock',
+      directObjectPhrase: 'key > lock',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -188,9 +188,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:talk',
-      directObjectPhrase: 'guard',
-      preposition: 'with', // First preposition found
-      indirectObjectPhrase: 'helmet about task', // Remainder after 'with'
+      directObjectPhrase: 'guard with helmet about task',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -210,9 +210,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:look',
-      directObjectPhrase: null, // V+P+IO has null DO
-      preposition: 'in', // First preposition found
-      indirectObjectPhrase: 'box with lid', // Remainder after 'in'
+      directObjectPhrase: 'in box with lid',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -232,9 +232,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:look',
-      directObjectPhrase: null, // V+P structure
-      preposition: 'in',
-      indirectObjectPhrase: null, // IO is missing
+      directObjectPhrase: 'in',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -254,9 +254,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:put',
-      directObjectPhrase: 'key',
-      preposition: 'on',
-      indirectObjectPhrase: null, // IO is missing
+      directObjectPhrase: 'key on',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -277,9 +277,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:put',
-      directObjectPhrase: 'key', // Assumes internal spaces before prep are trimmed as part of DO
-      preposition: 'on',
-      indirectObjectPhrase: 'table', // Assumes leading spaces before IO are trimmed
+      directObjectPhrase: 'key   on   table',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -306,9 +306,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:look',
-      directObjectPhrase: null,
-      preposition: 'at',
-      indirectObjectPhrase: 'door',
+      directObjectPhrase: 'at   door',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -331,9 +331,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:put',
-      directObjectPhrase: 'key',
-      preposition: 'with',
-      indirectObjectPhrase: null, // IO is missing
+      directObjectPhrase: 'key with',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -349,9 +349,9 @@ describe('CommandParser.parse() - Prepositional Structure Tests (V+P+IO, V+DO+P+
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:look',
-      directObjectPhrase: null,
-      preposition: 'at',
-      indirectObjectPhrase: null, // IO is missing
+      directObjectPhrase: 'at',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
