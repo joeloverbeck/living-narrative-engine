@@ -139,6 +139,29 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
+   * Builds a sanitized manual save filename.
+   *
+   * @param {string} saveName - Raw save name input.
+   * @returns {string} Sanitized filename including prefix and extension.
+   * @private
+   */
+  #buildManualFileName(saveName) {
+    const sanitized = saveName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    return `manual_save_${sanitized}.sav`;
+  }
+
+  /**
+   * Removes manual save prefix and suffix from a filename.
+   *
+   * @param {string} fileName - File name to clean.
+   * @returns {string} Extracted save name.
+   * @private
+   */
+  #extractSaveName(fileName) {
+    return fileName.replace(/^manual_save_/, '').replace(/\.sav$/, '');
+  }
+
+  /**
    * Builds the full path for a manual save file.
    *
    * @param {string} fileName - File name inside the manual saves directory.
@@ -172,9 +195,7 @@ class SaveLoadService extends ISaveLoadService {
         success: false,
         metadata: {
           identifier: filePath,
-          saveName:
-            fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
-            ' (Corrupted)',
+          saveName: this.#extractSaveName(fileName) + ' (Corrupted)',
           timestamp: 'N/A',
           playtimeSeconds: 0,
           isCorrupted: true,
@@ -198,9 +219,7 @@ class SaveLoadService extends ISaveLoadService {
         success: false,
         metadata: {
           identifier: filePath,
-          saveName:
-            fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
-            ' (No Metadata)',
+          saveName: this.#extractSaveName(fileName) + ' (No Metadata)',
           timestamp: 'N/A',
           playtimeSeconds: 0,
           isCorrupted: true,
@@ -486,7 +505,7 @@ class SaveLoadService extends ISaveLoadService {
       };
     }
 
-    const fileName = `manual_save_${saveName.replace(/[^a-zA-Z0-9_-]/g, '_')}.sav`;
+    const fileName = this.#buildManualFileName(saveName);
     // Ensure the directory structure exists before writing.
     // Some IStorageProvider implementations might handle this in writeFileAtomically,
     // others might need an explicit ensureDirectoryExists call.

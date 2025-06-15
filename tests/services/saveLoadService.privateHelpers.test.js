@@ -90,3 +90,35 @@ describe('SaveLoadService private helper error propagation', () => {
     expect(res.error.message).toMatch(/could not understand/);
   });
 });
+
+describe('SaveLoadService helper functions', () => {
+  let logger;
+  let storageProvider;
+  let service;
+
+  beforeEach(() => {
+    ({ logger, storageProvider } = makeDeps());
+    service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
+  });
+
+  it('sanitizes manual save file names', async () => {
+    storageProvider.ensureDirectoryExists.mockResolvedValue();
+    storageProvider.writeFileAtomically.mockResolvedValue({ success: true });
+    await service.saveManualGame('Bad Name*?', { gameState: {} });
+    expect(storageProvider.writeFileAtomically).toHaveBeenCalledWith(
+      'saves/manual_saves/manual_save_Bad_Name__.sav',
+      expect.anything()
+    );
+  });
+
+  it('extracts save name for corrupted files', async () => {
+    storageProvider.listFiles.mockResolvedValue(['manual_save_TestFile.sav']);
+    storageProvider.readFile.mockResolvedValue(new Uint8Array([1, 2, 3]));
+    const slots = await service.listManualSaveSlots();
+    expect(slots[0].saveName).toBe('TestFile (Corrupted)');
+  });
+});
