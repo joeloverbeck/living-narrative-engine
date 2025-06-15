@@ -77,3 +77,5 @@ Example snippet:
   }
 }
 ```
+
+The UiLoader validates these files against their schemas and merges the results across all mods. When multiple mods provide the same icon or label key, the version from the mod loaded last overrides earlier ones.
