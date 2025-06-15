@@ -7,7 +7,7 @@
 
 // --- Base Class Import ---
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
-import { extractBaseId } from '../utils/idUtils.js';
+import { parseAndValidateId } from '../utils/idUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -187,38 +187,14 @@ class EntityLoader extends BaseManifestItemLoader {
     // Primary validation happens in BaseManifestItemLoader._processFileWrapper
 
     // --- Step 1: ID Extraction & Validation ---
-    const idFromFile = data?.id;
-    if (typeof idFromFile !== 'string' || idFromFile.trim() === '') {
-      this._logger.error(
-        `EntityLoader [${modId}]: Invalid or missing 'id' in ${typeName} file '${filename}'.`,
-        { modId, filename, resolvedPath, receivedId: idFromFile }
-      );
-      throw new Error(
-        `Invalid or missing 'id' in ${typeName} file '${filename}' for mod '${modId}'.`
-      );
-    }
-    const trimmedId = idFromFile.trim();
-    const extracted = extractBaseId(trimmedId);
-    let baseEntityId;
-    if (extracted) {
-      baseEntityId = extracted;
-    } else {
-      baseEntityId = trimmedId;
-      if (trimmedId.includes(':')) {
-        this._logger.warn(
-          `EntityLoader [${modId}]: ID '${trimmedId}' in ${filename} has an unusual format. Using full ID as base ID.`
-        );
-      }
-    }
-
-    if (!baseEntityId) {
-      this._logger.error(
-        `EntityLoader [${modId}]: Could not derive a non-empty base ID from '${trimmedId}' in file '${filename}'.`
-      );
-      throw new Error(
-        `Could not derive a valid base ID from '${trimmedId}' in ${filename}`
-      );
-    }
+    const { fullId: trimmedId, baseId: baseEntityId } = parseAndValidateId(
+      data,
+      'id',
+      modId,
+      filename,
+      this._logger,
+      { allowFallback: true }
+    );
     this._logger.debug(
       `EntityLoader [${modId}]: Extracted full ID '${trimmedId}' and derived base ID '${baseEntityId}' from ${filename}.`
     );

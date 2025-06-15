@@ -17,7 +17,7 @@
 
 // --- Base Class Import ---
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Correct path assumed based on sibling loaders
-import { extractBaseId } from '../utils/idUtils.js';
+import { parseAndValidateId } from '../utils/idUtils.js';
 
 /**
  * Loads action definitions from mods.
@@ -92,34 +92,8 @@ class ActionLoader extends BaseManifestItemLoader {
     // No need to call this._validatePrimarySchema(data, filename, modId, resolvedPath); here
 
     // --- Step 2: ID Extraction & Validation ---
-    const idFromFile = data.id;
-
-    if (typeof idFromFile !== 'string' || idFromFile.trim() === '') {
-      this._logger.error(
-        `ActionLoader [${modId}]: Invalid or missing 'id' in action definition file '${filename}'. ID must be a non-empty string.`,
-        { modId, filename, resolvedPath, receivedId: idFromFile }
-      );
-      throw new Error(
-        `Invalid or missing 'id' in action definition file '${filename}' for mod '${modId}'.`
-      );
-    }
-
-    const trimmedIdFromFile = idFromFile.trim();
-
-    // --- CORRECTED: Refined Base ID Extraction Logic ---
-    const baseActionId = extractBaseId(trimmedIdFromFile);
-
-    // Check if baseActionId was successfully extracted (is not null)
-    if (!baseActionId) {
-      this._logger.error(
-        `ActionLoader [${modId}]: Could not extract valid base ID from ID '${trimmedIdFromFile}' in file '${filename}'. Format requires 'name' or 'namespace:name' with non-empty parts.`
-      );
-      // Throw a more specific error message matching the test expectation update
-      throw new Error(
-        `Could not extract base Action ID from '${trimmedIdFromFile}' in ${filename}. Invalid format.`
-      );
-    }
-    // --- END CORRECTION ---
+    const { fullId: trimmedIdFromFile, baseId: baseActionId } =
+      parseAndValidateId(data, 'id', modId, filename, this._logger);
 
     const finalRegistryKey = `${modId}:${baseActionId}`; // This IS the key used in the registry by the helper
 

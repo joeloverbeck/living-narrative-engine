@@ -631,7 +631,7 @@ describe('ActionLoader', () => {
           ACTION_TYPE_NAME
         )
       ).rejects.toThrow(
-        `Invalid or missing 'id' in action definition file '${filename}' for mod '${TEST_MOD_ID}'.`
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
       );
 
       // --- REMOVED: Asserting the schema spy was called ---
@@ -642,7 +642,7 @@ describe('ActionLoader', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Invalid or missing 'id' in action definition file '${filename}'`
+          `Invalid or missing 'id' in file '${filename}'`
         ),
         expect.objectContaining({ receivedId: undefined })
       );
@@ -711,7 +711,7 @@ describe('ActionLoader', () => {
           ACTION_TYPE_NAME
         )
       ).rejects.toThrow(
-        `Could not extract base Action ID from '${invalidId}' in ${filename}. Invalid format.`
+        `Could not extract base ID from '${invalidId}' in ${filename}. Invalid format.`
       );
 
       // --- REMOVED: Asserting the schema spy was called ---
@@ -721,8 +721,14 @@ describe('ActionLoader', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Could not extract valid base ID from ID '${invalidId}' in file '${filename}'. Format requires 'name' or 'namespace:name' with non-empty parts.`
+          `Could not extract base ID from '${invalidId}' in file '${filename}'. Format requires 'name' or 'namespace:name' with non-empty parts.`
         )
+        ,
+        expect.objectContaining({
+          filename,
+          modId: TEST_MOD_ID,
+          receivedId: invalidId,
+        })
       );
 
       // Assert not stored

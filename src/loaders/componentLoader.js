@@ -1,6 +1,8 @@
 // src/loaders/componentLoader.js
 
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+
+import { parseAndValidateId } from '../utils/idUtils.js';
 import { extractBaseId } from '../utils/idUtils.js';
 import { registerSchema } from '../utils/schemaUtils.js';
 
@@ -80,32 +82,10 @@ class ComponentLoader extends BaseManifestItemLoader {
       `ComponentLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`
     );
 
-    // --- 1. Property Extraction ---
-    const componentIdFromFile = data.id;
+    // --- 1. Property Extraction & Validation ---
+    const { fullId: trimmedComponentIdFromFile, baseId: baseComponentId } =
+      parseAndValidateId(data, 'id', modId, filename, this._logger);
     const dataSchema = data.dataSchema;
-
-    // --- 2. Property Validation ---
-    const trimmedComponentIdFromFile = componentIdFromFile?.toString().trim();
-    if (!trimmedComponentIdFromFile) {
-      const errorMsg = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filename}'. Found: ${JSON.stringify(componentIdFromFile)}`;
-      this._logger.error(errorMsg, {
-        modId,
-        filename,
-        resolvedPath,
-        componentIdValue: componentIdFromFile,
-      });
-      throw new Error(`Invalid Component ID in ${filename}`);
-    }
-
-    const baseComponentId = extractBaseId(trimmedComponentIdFromFile);
-    if (!baseComponentId) {
-      this._logger.error(
-        `ComponentLoader [${modId}]: Could not extract valid base ID from component ID '${trimmedComponentIdFromFile}' in file '${filename}'.`
-      );
-      throw new Error(
-        `Could not extract base Component ID from '${trimmedComponentIdFromFile}' in ${filename}`
-      );
-    }
 
     if (typeof dataSchema !== 'object' || dataSchema === null) {
       const dataType = dataSchema === null ? 'null' : typeof dataSchema;

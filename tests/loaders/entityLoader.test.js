@@ -656,10 +656,10 @@ describe('EntityLoader', () => {
           entityType
         )
       ).rejects.toThrow(
-        `Invalid or missing 'id' in ${entityType} file '${filename}' for mod '${TEST_MOD_ID}'.`
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `EntityLoader [${TEST_MOD_ID}]: Invalid or missing 'id' in ${entityType} file '${filename}'.`,
+        `Invalid or missing 'id' in file '${filename}'.`,
         expect.objectContaining({ receivedId: undefined })
       );
       expect(entityLoader._storeItemInRegistry).not.toHaveBeenCalled();
@@ -680,11 +680,11 @@ describe('EntityLoader', () => {
           entityType
         )
       ).rejects.toThrow(
-        `Invalid or missing 'id' in ${entityType} file '${filename}' for mod '${TEST_MOD_ID}'.`
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Invalid or missing 'id' in ${entityType} file '${filename}'.`
+          `Invalid or missing 'id' in file '${filename}'`
         ),
         expect.objectContaining({ receivedId: 123 })
       );
@@ -702,11 +702,11 @@ describe('EntityLoader', () => {
           entityType
         )
       ).rejects.toThrow(
-        `Invalid or missing 'id' in ${entityType} file '${filename}' for mod '${TEST_MOD_ID}'.`
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Invalid or missing 'id' in ${entityType} file '${filename}'.`
+          `Invalid or missing 'id' in file '${filename}'`
         ),
         expect.objectContaining({ receivedId: '   ' })
       );
@@ -733,8 +733,9 @@ describe('EntityLoader', () => {
       // Check logs and storage call
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          `ID 'core:' in ${filename} has an unusual format. Using full ID as base ID.`
-        )
+          `Could not extract base ID from 'core:' in file '${filename}'. Falling back to full ID.`
+        ),
+        expect.objectContaining({ modId: TEST_MOD_ID })
       );
       expect(mockLogger.error).not.toHaveBeenCalledWith(
         expect.stringContaining('Could not derive base ID')
@@ -890,7 +891,7 @@ describe('EntityLoader', () => {
 
       // Check logs and storage
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining(`unusual format`)
+        expect.stringContaining('Falling back to full ID')
       ); // No warning for this case
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -927,7 +928,7 @@ describe('EntityLoader', () => {
 
       // Check logs and storage
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining(`unusual format`)
+        expect.stringContaining('Falling back to full ID')
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
