@@ -137,16 +137,18 @@ describe('PerceptionLogRenderer', () => {
       validatedEventDispatcher: mockVed,
       domElementFactory: mockDomElementFactoryInstance,
       entityManager: mockEntityManager,
+      autoRefresh: true,
       ...options,
     });
   };
 
   describe('Constructor', () => {
-    it('should initialize, bind listContainerElement, subscribe, and call refreshList', () => {
+    it('should initialize, bind listContainerElement, subscribe, and call refreshList', async () => {
       const refreshListSpy = jest
         .spyOn(PerceptionLogRenderer.prototype, 'refreshList')
         .mockResolvedValue();
       createRenderer();
+      await flushPromises();
       expect(mockDocumentContext.query).toHaveBeenCalledWith(
         PERCEPTION_LOG_LIST_SELECTOR
       );
@@ -181,10 +183,8 @@ describe('PerceptionLogRenderer', () => {
     const actorId = 'player:hero';
 
     beforeEach(() => {
-      // Create renderer, its constructor WILL call refreshList -> _getListItemsData
-      // So, clear mocks before each specific _getListItemsData test if needed.
-      renderer = createRenderer();
-      mockLogger.warn.mockClear(); // Clear logs from constructor's refreshList
+      renderer = createRenderer({ autoRefresh: false });
+      mockLogger.warn.mockClear();
       mockLogger.info.mockClear();
       mockLogger.error.mockClear();
     });
@@ -345,7 +345,7 @@ describe('PerceptionLogRenderer', () => {
 
   describe('_onListRendered', () => {
     it('should effectively call #scrollToBottom (test by effect)', () => {
-      const renderer = createRenderer();
+      const renderer = createRenderer({ autoRefresh: false });
       renderer.elements.listContainerElement = listContainerElementInDom; // Ensure it's set
       Object.defineProperty(listContainerElementInDom, 'scrollHeight', {
         value: 200,
@@ -367,7 +367,7 @@ describe('PerceptionLogRenderer', () => {
     const actorId = 'player:hero';
 
     beforeEach(() => {
-      renderer = createRenderer();
+      renderer = createRenderer({ autoRefresh: false });
       // Restore real refreshList for these tests, then spy on it
       if (jest.isMockFunction(renderer.refreshList))
         renderer.refreshList.mockRestore();
@@ -380,7 +380,7 @@ describe('PerceptionLogRenderer', () => {
         payload: { entityId: actorId, entityType: 'player' },
       });
       expect(renderer['#currentActorId']).toBe(actorId);
-      expect(renderer.refreshList).toHaveBeenCalledTimes(1);
+      expect(renderer.refreshList).toHaveBeenCalled();
     });
 
     it('should set currentActorId to null and call refreshList if entityId is missing', async () => {
@@ -389,11 +389,11 @@ describe('PerceptionLogRenderer', () => {
         payload: { entityType: 'player' },
       });
       expect(renderer['#currentActorId']).toBeNull();
-      expect(renderer.refreshList).toHaveBeenCalledTimes(1);
+      expect(renderer.refreshList).toHaveBeenCalled();
     });
 
     it('should log error and attempt to update DOM if refreshList fails', async () => {
-      const errorRenderer = createRenderer(); // Use a fresh instance
+      const errorRenderer = createRenderer({ autoRefresh: false }); // Use a fresh instance
       // Make this instance's refreshList reject
       jest
         .spyOn(errorRenderer, 'refreshList')

@@ -45,6 +45,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * @param {ElementsConfig} params.elementsConfig - Configuration for binding DOM elements.
    * Must include a `listContainerElement` key mapping to a selector for the list container.
    * @param {DomElementFactory} [params.domElementFactory] - Optional. Instance of DomElementFactory for creating elements.
+   * @param {boolean} [params.autoRefresh] - Whether to automatically call `refreshList()` during construction.
    * @param {...any} params.otherDeps - Other dependencies passed to BoundDomRendererBase or stored by the subclass.
    * @throws {Error} If `elementsConfig` does not lead to a resolved `listContainerElement`.
    */
@@ -54,6 +55,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
     validatedEventDispatcher,
     elementsConfig,
     domElementFactory,
+    autoRefresh = true,
     ...otherDeps
   }) {
     super({
@@ -80,6 +82,17 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
       `${this._logPrefix} List container element successfully bound:`,
       this.elements.listContainerElement
     );
+
+    if (autoRefresh) {
+      Promise.resolve()
+        .then(() => this.refreshList())
+        .catch((error) => {
+          this.logger.error(
+            `${this._logPrefix} Error during initial list refresh:`,
+            error
+          );
+        });
+    }
   }
 
   /**
