@@ -4,6 +4,10 @@ import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import { encode } from '@msgpack/msgpack';
 import { deepClone } from '../utils/objectUtils.js';
 import GameStateSerializer from './gameStateSerializer.js';
+import {
+  validateSaveName,
+  validateSaveIdentifier,
+} from './saveInputValidators.js';
 // REMOVED: import {createHash} from 'crypto';
 
 // --- Type Imports ---
@@ -266,11 +270,7 @@ class SaveLoadService extends ISaveLoadService {
       `Attempting to load game data from: "${saveIdentifier}"`
     );
 
-    if (
-      !saveIdentifier ||
-      typeof saveIdentifier !== 'string' ||
-      saveIdentifier.trim() === ''
-    ) {
+    if (!validateSaveIdentifier(saveIdentifier)) {
       const errorMsg = 'Invalid saveIdentifier provided for loading.';
       const userMsg = 'Cannot load game: No save file was specified.';
       this.#logger.error(errorMsg);
@@ -364,7 +364,7 @@ class SaveLoadService extends ISaveLoadService {
   async saveManualGame(saveName, gameStateObject) {
     this.#logger.debug(`Attempting to save manual game: "${saveName}"`);
 
-    if (!saveName || typeof saveName !== 'string' || saveName.trim() === '') {
+    if (!validateSaveName(saveName)) {
       const userMsg = 'Invalid save name provided. Please enter a valid name.';
       this.#logger.error('Invalid saveName provided for manual save.');
       return { success: false, error: userMsg };
@@ -463,11 +463,7 @@ class SaveLoadService extends ISaveLoadService {
    */
   async deleteManualSave(saveIdentifier) {
     this.#logger.debug(`Attempting to delete manual save: "${saveIdentifier}"`);
-    if (
-      !saveIdentifier ||
-      typeof saveIdentifier !== 'string' ||
-      saveIdentifier.trim() === ''
-    ) {
+    if (!validateSaveIdentifier(saveIdentifier)) {
       const msg = 'Invalid saveIdentifier provided for deletion.';
       const userMsg = 'Cannot delete: No save file specified.';
       this.#logger.error(msg);
