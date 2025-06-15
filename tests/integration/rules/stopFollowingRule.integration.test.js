@@ -288,7 +288,7 @@ describe('core_handle_stop_following rule integration', () => {
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
     );
-    const valid = ajv.validate(ruleSchema, expandedRule);
+    const valid = ajv.validate(ruleSchema, stopFollowingRule);
     if (!valid) console.error(ajv.errors);
     expect(valid).toBe(true);
   });
