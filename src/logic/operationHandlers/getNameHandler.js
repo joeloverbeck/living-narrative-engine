@@ -19,6 +19,7 @@ import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 
 /**
  * @typedef {object} GetNameOperationParams
@@ -30,24 +31,24 @@ import { safeDispatchError } from '../../utils/safeDispatchError.js';
  *   Optional fallback name if the component or text is not available.
  */
 
-class GetNameHandler {
+class GetNameHandler extends BaseOperationHandler {
   #entityManager;
-  #logger;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
   #dispatcher;
 
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    if (!entityManager?.getComponentData) {
-      throw new Error('GetNameHandler requires a valid EntityManager.');
-    }
-    if (!logger?.debug || !logger?.warn || !logger?.error) {
-      throw new Error('GetNameHandler requires a valid ILogger instance.');
-    }
-    if (!safeEventDispatcher?.dispatch) {
-      throw new Error('GetNameHandler requires an ISafeEventDispatcher.');
-    }
+    super('GetNameHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
-    this.#logger = logger;
     this.#dispatcher = safeEventDispatcher;
   }
 
@@ -58,7 +59,7 @@ class GetNameHandler {
    * @param {ExecutionContext} executionContext
    */
   execute(params, executionContext) {
-    const log = executionContext?.logger ?? this.#logger;
+    const log = this.getLogger(executionContext);
 
     if (!assertParamsObject(params, this.#dispatcher, 'GET_NAME')) {
       return;
