@@ -116,6 +116,7 @@ function init(entities) {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
       logger,
+      safeEventDispatcher: safeDispatcher,
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
     MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
