@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/macro.schema.json",
+  "title": "Macro Definition",
+  "description": "Encapsulates a reusable sequence of operations that can be inserted into System Rules.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional schema reference for tooling."
+    },
+    "macro_id": {
+      "type": "string",
+      "description": "Unique identifier for this macro."
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered list of Operation objects to expand when the macro is used.",
+      "items": {
+        "$ref": "operation.schema.json#/$defs/Operation"
+      }
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional note for modders. Ignored at runtime."
+    }
+  },
+  "required": ["macro_id", "actions"],
+  "additionalProperties": false
+}
