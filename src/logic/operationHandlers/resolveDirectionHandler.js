@@ -4,7 +4,7 @@
  */
 
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils';
 
 class ResolveDirectionHandler {
   #worldContext;

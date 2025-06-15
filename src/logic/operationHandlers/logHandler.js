@@ -17,7 +17,7 @@
 
 const VALID_LOG_LEVELS = ['info', 'warn', 'error', 'debug'];
 const DEFAULT_LOG_LEVEL = 'info';
-import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils';
 
 class LogHandler /* implements OperationHandler */ {
   #logger;

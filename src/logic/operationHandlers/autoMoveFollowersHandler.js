@@ -17,7 +17,7 @@ import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import SystemMoveEntityHandler from './systemMoveEntityHandler.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils';
 
 class AutoMoveFollowersHandler extends BaseOperationHandler {
   /** @type {EntityManager} */ #entityManager;

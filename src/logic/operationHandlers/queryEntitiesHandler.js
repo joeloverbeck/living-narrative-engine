@@ -13,7 +13,7 @@ import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils';
 
 /**
  * @class QueryEntitiesHandler

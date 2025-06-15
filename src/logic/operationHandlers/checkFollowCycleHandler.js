@@ -14,7 +14,7 @@ import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 import { wouldCreateCycle } from '../../utils/followUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils';
 
 /**
  * @typedef {object} CheckFollowCycleParams

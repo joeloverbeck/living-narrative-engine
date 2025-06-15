@@ -14,7 +14,7 @@ import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { FOLLOWING_COMPONENT_ID } from '../../constants/componentIds.js';
 import { wouldCreateCycle } from '../../utils/followUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils';
 
 class EstablishFollowRelationHandler {
   /** @type {ILogger} */

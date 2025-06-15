@@ -13,10 +13,9 @@
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
-import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils';
 
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
-
 
 class SystemMoveEntityHandler {
   /** @type {ILogger} */ #logger;
