@@ -1,0 +1,49 @@
+{
+  "$schema": "http://example.com/schemas/macro.schema.json",
+  "macro_id": "core:autoMoveFollower",
+  "actions": [
+    {
+      "type": "SYSTEM_MOVE_ENTITY",
+      "comment": "Move the follower directly without using a turn-based action.",
+      "parameters": {
+        "entity_ref": { "entityId": "{context.followerId}" },
+        "target_location_id": "{event.payload.currentLocationId}"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get the follower's name for event messages.",
+      "parameters": {
+        "entity_ref": { "entityId": "{context.followerId}" },
+        "component_type": "core:name",
+        "result_variable": "followerName"
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Send a perceptible event to the new location.",
+      "parameters": {
+        "location_id": "{event.payload.currentLocationId}",
+        "description_text": "{context.followerName.text} follows {context.leaderName.text} to {context.newLocationName.text}.",
+        "perception_type": "character_enter",
+        "actor_id": "{context.followerId}",
+        "target_id": "{event.payload.entityId}",
+        "involved_entities": [],
+        "contextual_data": {
+          "leaderId": "{event.payload.entityId}",
+          "originLocationId": "{event.payload.previousLocationId}"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Inform the follower's UI that they automatically moved.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.followerName.text} follows {context.leaderName.text} to {context.newLocationName.text}."
+        }
+      }
+    }
+  ]
+}
