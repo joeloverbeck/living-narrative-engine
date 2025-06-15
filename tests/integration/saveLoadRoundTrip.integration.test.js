@@ -101,7 +101,16 @@ describe('Persistence round-trip', () => {
       setAccumulatedPlaytime: jest.fn(),
     };
     componentCleaningService = new ComponentCleaningService({ logger });
-    metadataBuilder = { build: jest.fn((n,p)=>({ saveFormatVersion:'1', engineVersion:'x', gameTitle:n||'Unknown Game', timestamp:'t', playtimeSeconds:p, saveName:'' })) };
+    metadataBuilder = {
+      build: jest.fn((n, p) => ({
+        saveFormatVersion: '1',
+        engineVersion: 'x',
+        gameTitle: n || 'Unknown Game',
+        timestamp: 't',
+        playtimeSeconds: p,
+        saveName: '',
+      })),
+    };
 
     persistence = new GamePersistenceService({
       logger,
