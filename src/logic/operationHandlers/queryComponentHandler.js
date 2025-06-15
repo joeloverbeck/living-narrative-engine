@@ -9,6 +9,7 @@
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject
@@ -63,12 +64,9 @@ class QueryComponentHandler {
   execute(params, executionContext) {
     const logger = executionContext?.logger ?? this.#logger;
 
-    if (!params || typeof params !== 'object') {
-      safeDispatchError(
-        this.#dispatcher,
-        'QueryComponentHandler: Missing or invalid parameters object.',
-        { params }
-      );
+    if (
+      !assertParamsObject(params, this.#dispatcher, 'QueryComponentHandler')
+    ) {
       return;
     }
 

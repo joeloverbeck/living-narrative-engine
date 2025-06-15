@@ -14,6 +14,13 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import {
+  initHandlerLogger,
+  validateDeps,
+  getExecLogger,
+} from './handlerUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
+
 
 /**
  * Parameters accepted by {@link AddComponentHandler#execute}.
@@ -42,30 +49,18 @@ class AddComponentHandler {
    * @throws {Error} If required dependencies are missing or invalid.
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    // Validate logger FIRST (consistent with ModifyComponentHandler)
-    if (
-      !logger ||
-      ['info', 'warn', 'error', 'debug'].some(
-        (m) => typeof logger[m] !== 'function'
-      )
-    ) {
-      throw new Error('AddComponentHandler requires a valid ILogger instance.');
-    }
-    if (!entityManager || typeof entityManager.addComponent !== 'function') {
-      throw new Error(
-        'AddComponentHandler requires a valid EntityManager instance with an addComponent method.'
-      );
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      throw new Error(
-        'AddComponentHandler requires a valid ISafeEventDispatcher instance.'
-      );
-    }
+    this.#logger = initHandlerLogger('AddComponentHandler', logger);
+    validateDeps('AddComponentHandler', this.#logger, {
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['addComponent'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#dispatcher = safeEventDispatcher;
-    this.#logger = logger;
     this.#entityManager = entityManager;
   }
 
@@ -79,11 +74,10 @@ class AddComponentHandler {
    * @implements {OperationHandler}
    */
   execute(params, executionContext) {
-    const log = executionContext?.logger ?? this.#logger;
+    const log = getExecLogger(this.#logger, executionContext);
 
     // 1. Validate Parameters
-    if (!params || typeof params !== 'object') {
-      log.warn('ADD_COMPONENT: params missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'ADD_COMPONENT')) {
       return;
     }
 

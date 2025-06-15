@@ -5,6 +5,7 @@
 
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 const DEFAULT_MAX_LOG_ENTRIES = 50;
 
@@ -41,11 +42,9 @@ class AddPerceptionLogEntryHandler {
     const log = this.#logger;
 
     /* ── validation ─────────────────────────────────────────────── */
-    if (!params || typeof params !== 'object') {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'ADD_PERCEPTION_LOG_ENTRY: params missing/invalid',
-        details: { params },
-      });
+    if (
+      !assertParamsObject(params, this.#dispatcher, 'ADD_PERCEPTION_LOG_ENTRY')
+    ) {
       return;
     }
     const { location_id, entry } = params;

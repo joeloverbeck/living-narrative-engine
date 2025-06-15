@@ -9,6 +9,10 @@ import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { createMockLogger } from '../testUtils.js';
 
+/**
+ * @typedef {import('../../src/persistence/persistenceTypes.js').PersistenceResult<any>} PersistenceResult
+ */
+
 beforeAll(() => {
   if (typeof window !== 'undefined') {
     Object.defineProperty(window, 'crypto', {
@@ -35,15 +39,18 @@ describe('GameStateSerializer', () => {
     const obj = { a: 1, nested: { b: 'c' } };
     const compressed = pako.gzip(encode(obj));
 
+    /** @type {PersistenceResult<Uint8Array>} */
     const decResult = serializer.decompress(compressed);
     expect(decResult.success).toBe(true);
 
+    /** @type {PersistenceResult<object>} */
     const deserResult = serializer.deserialize(decResult.data);
     expect(deserResult.success).toBe(true);
     expect(deserResult.data).toEqual(obj);
   });
 
   it('decompress fails on invalid gzip data', () => {
+    /** @type {PersistenceResult<Uint8Array>} */
     const result = serializer.decompress(new Uint8Array([1, 2, 3]));
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.DECOMPRESSION_ERROR);
@@ -51,9 +58,11 @@ describe('GameStateSerializer', () => {
 
   it('deserialize fails on malformed MessagePack', () => {
     const malformed = pako.gzip(new Uint8Array([1, 2, 3]));
+    /** @type {PersistenceResult<Uint8Array>} */
     const dec = serializer.decompress(malformed);
     expect(dec.success).toBe(true);
 
+    /** @type {PersistenceResult<object>} */
     const desRes = serializer.deserialize(dec.data);
     expect(desRes.success).toBe(false);
     expect(desRes.error.code).toBe(PersistenceErrorCodes.DESERIALIZATION_ERROR);

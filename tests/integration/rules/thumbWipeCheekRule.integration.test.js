@@ -9,7 +9,6 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import thumbWipeCheekRule from '../../../data/mods/intimacy/rules/thumb_wipe_cheek.rule.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';

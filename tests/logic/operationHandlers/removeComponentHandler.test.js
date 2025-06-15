@@ -85,7 +85,7 @@ describe('RemoveComponentHandler', () => {
           logger: mockLogger,
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/EntityManager/);
+    ).toThrow(/RemoveComponentHandler: entityManager/);
     // Check for specific method required by this handler
     expect(
       () =>
@@ -94,21 +94,21 @@ describe('RemoveComponentHandler', () => {
           logger: mockLogger,
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/removeComponent method/);
+    ).toThrow(/removeComponent/);
     expect(
       () =>
         new RemoveComponentHandler({
           entityManager: mockEntityManager,
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/ILogger/);
+    ).toThrow(/logger/);
     expect(
       () =>
         new RemoveComponentHandler({
           entityManager: mockEntityManager,
           logger: mockLogger,
         })
-    ).toThrow(/ISafeEventDispatcher/);
+    ).toThrow(/safeEventDispatcher/);
   });
 
   test('constructor initializes successfully with valid dependencies', () => {

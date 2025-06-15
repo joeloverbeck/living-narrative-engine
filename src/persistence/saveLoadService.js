@@ -96,7 +96,7 @@ class SaveLoadService extends ISaveLoadService {
    *
    * @param {SaveGameStructure} obj - The deserialized save object.
    * @param {string} identifier - Identifier used for logging.
-   * @returns {{success: boolean, error?: PersistenceError}} Result.
+   * @returns {import('./persistenceTypes.js').PersistenceResult<null>} Result.
    * @private
    */
   #validateStructure(obj, identifier) {
@@ -136,7 +136,7 @@ class SaveLoadService extends ISaveLoadService {
    *
    * @param {SaveGameStructure} obj - The deserialized save object.
    * @param {string} identifier - Identifier used for logging.
-   * @returns {Promise<{success: boolean, error?: PersistenceError}>} Result.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result.
    * @private
    */
   async #verifyChecksum(obj, identifier) {
@@ -197,7 +197,7 @@ class SaveLoadService extends ISaveLoadService {
    *
    * @param {SaveGameStructure} obj - The deserialized save object.
    * @param {string} identifier - Identifier used for logging.
-   * @returns {Promise<{success: boolean, error?: PersistenceError}>} Result.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result.
    * @private
    */
   async #validateLoadedSaveObject(obj, identifier) {

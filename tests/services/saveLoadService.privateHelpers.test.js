@@ -10,6 +10,10 @@ import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 
+/**
+ * @typedef {import('../../src/persistence/persistenceTypes.js').PersistenceResult<any>} PersistenceResult
+ */
+
 beforeAll(() => {
   if (typeof window !== 'undefined') {
     Object.defineProperty(window, 'crypto', {
@@ -63,6 +67,7 @@ describe('SaveLoadService private helper error propagation', () => {
 
   it('propagates readSaveFile errors', async () => {
     storageProvider.readFile.mockRejectedValue(new Error('read fail'));
+    /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
     expect(res.error.message).toMatch(/Could not access/);
@@ -70,6 +75,7 @@ describe('SaveLoadService private helper error propagation', () => {
 
   it('propagates empty file error', async () => {
     storageProvider.readFile.mockResolvedValue(new Uint8Array());
+    /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
     expect(res.error.message).toMatch(/empty or cannot be read/);
@@ -77,6 +83,7 @@ describe('SaveLoadService private helper error propagation', () => {
 
   it('propagates decompression errors', async () => {
     storageProvider.readFile.mockResolvedValue(new Uint8Array([1, 2, 3]));
+    /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
     expect(res.error.message).toMatch(/could not decompress/);
@@ -85,6 +92,7 @@ describe('SaveLoadService private helper error propagation', () => {
   it('propagates deserialization errors', async () => {
     const badGzip = pako.gzip(new Uint8Array([1, 2, 3]));
     storageProvider.readFile.mockResolvedValue(badGzip);
+    /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
     expect(res.error.message).toMatch(/could not understand/);

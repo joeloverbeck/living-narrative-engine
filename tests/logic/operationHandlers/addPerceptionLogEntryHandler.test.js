@@ -142,7 +142,7 @@ describe('AddPerceptionLogEntryHandler', () => {
         expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
           DISPLAY_ERROR_ID,
           expect.objectContaining({
-            message: 'ADD_PERCEPTION_LOG_ENTRY: params missing/invalid',
+            message: 'ADD_PERCEPTION_LOG_ENTRY: params missing or invalid.',
           })
         );
       });

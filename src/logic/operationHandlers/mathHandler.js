@@ -5,6 +5,8 @@
 import jsonLogic from 'json-logic-js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
+import storeResult from '../../utils/contextVariableUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -54,8 +56,7 @@ class MathHandler {
    */
   execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
-    if (!params || typeof params !== 'object') {
-      log.warn('MATH: parameters object missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'MATH')) {
       return;
     }
     const { result_variable, expression } = params;

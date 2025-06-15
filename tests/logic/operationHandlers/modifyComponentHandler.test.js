@@ -89,7 +89,7 @@ describe('ModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   test('throws without valid dependencies', () => {
     expect(() => new ModifyComponentHandler({ logger: mockLogger })).toThrow(
-      /EntityManager/
+      /entityManager/
     );
     expect(
       () =>
@@ -102,14 +102,14 @@ describe('ModifyComponentHandler', () => {
     ).toThrow(/getComponentData/);
     expect(
       () => new ModifyComponentHandler({ entityManager: mockEntityManager })
-    ).toThrow(/ILogger/);
+    ).toThrow(/logger/);
     expect(
       () =>
         new ModifyComponentHandler({
           entityManager: mockEntityManager,
           logger: mockLogger,
         })
-    ).toThrow(/ISafeEventDispatcher/);
+    ).toThrow(/safeEventDispatcher/);
   });
 
   // ---------------------------------------------------------------------------
