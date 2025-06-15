@@ -350,6 +350,75 @@ class EntityManager extends IEntityManager {
     }
   }
 
+  /**
+   * Reconstruct an entity from serialized save data.
+   *
+   * @param {{instanceId: string, definitionId: string, components: Record<string, any>}} serialized
+   *   Serialized entity structure.
+   * @returns {?Entity} The reconstructed Entity instance or null if creation fails.
+   */
+  reconstructEntity(serialized) {
+    if (
+      !serialized ||
+      typeof serialized.instanceId !== 'string' ||
+      typeof serialized.definitionId !== 'string'
+    ) {
+      this.#logger.error(
+        'EntityManager.reconstructEntity: Invalid serialized data.'
+      );
+      return null;
+    }
+
+    const { instanceId, definitionId, components = {} } = serialized;
+
+    let entity;
+    try {
+      entity = new Entity(instanceId, definitionId);
+
+      for (const [componentTypeId, componentData] of Object.entries(
+        components
+      )) {
+        const clonedData = this.#validateAndClone(
+          componentTypeId,
+          componentData,
+          `reconstructEntity: validation failed for '${componentTypeId}' on entity '${instanceId}'.`
+        );
+        entity.addComponent(componentTypeId, clonedData);
+      }
+
+      this.#injectDefaultComponents(entity, instanceId);
+      this.#commitEntity(entity, definitionId, instanceId);
+
+      const posData = entity.getComponentData(POSITION_COMPONENT_ID);
+      if (
+        posData &&
+        typeof posData.locationId === 'string' &&
+        posData.locationId.trim() !== ''
+      ) {
+        if (posData.locationId.includes(':')) {
+          this.#logger.warn(
+            `reconstructEntity: Entity ${instanceId}'s position locationId '${posData.locationId}' looks like a definitionId.`
+          );
+        }
+        this.#spatialIndexManager.addEntity(instanceId, posData.locationId);
+      }
+
+      this.#logger.debug(
+        `EntityManager.reconstructEntity: Reconstructed entity '${instanceId}'.`
+      );
+      return entity;
+    } catch (err) {
+      this.#logger.error(
+        `EntityManager.reconstructEntity: Failed to reconstruct entity '${instanceId}'.`,
+        err
+      );
+      if (entity && this.#mapManager.get(instanceId) === entity) {
+        this.#mapManager.remove(instanceId);
+      }
+      return null;
+    }
+  }
+
   /* ---------------------------------------------------------------------- */
   /* Component-level Mutations                                               */
 

@@ -36,6 +36,17 @@ export class IEntityManager {
   }
 
   /**
+   * Reconstructs an entity instance from serialized persistence data.
+   *
+   * @param {{instanceId: string, definitionId: string, components: Record<string, any>}} serialized
+   *   Serialized representation produced by the save system.
+   * @returns {Entity | null} The reconstructed Entity instance or null on failure.
+   */
+  reconstructEntity(serialized) {
+    throw new Error('IEntityManager.reconstructEntity not implemented.');
+  }
+
+  /**
    * Retrieves the raw data object for a specific component type from an entity.
    *
    * @param {string} instanceId - The ID (UUID) of the entity.
