@@ -105,11 +105,12 @@ describe('AIGameStateProvider', () => {
     const actorDataExtractor = new ActorDataExtractor();
     const perceptionLogProvider = new PerceptionLogProvider();
     const entitySummaryProvider = new EntitySummaryProvider();
+    const safeEventDispatcher = { dispatch: jest.fn() };
     const locationSummaryProvider = new LocationSummaryProvider({
       entityManager,
       summaryProvider: entitySummaryProvider,
+      safeEventDispatcher,
     });
-    const safeEventDispatcher = { dispatch: jest.fn() };
 
     provider = new AIGameStateProvider({
       actorStateProvider,

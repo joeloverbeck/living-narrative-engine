@@ -309,14 +309,13 @@ export function registerAI(container) {
         entityManager: c.resolve(tokens.IEntityManager),
       })
   );
-  r.singletonFactory(
-    tokens.ILocationSummaryProvider,
-    (c) =>
-      new LocationSummaryProvider({
-        entityManager: c.resolve(tokens.IEntityManager),
-        summaryProvider: c.resolve(tokens.IEntitySummaryProvider),
-      })
-  );
+  r.singletonFactory(tokens.ILocationSummaryProvider, (c) => {
+    return new LocationSummaryProvider({
+      entityManager: c.resolve(tokens.IEntityManager),
+      summaryProvider: c.resolve(tokens.IEntitySummaryProvider),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
 
   r.singletonFactory(tokens.IAIGameStateProvider, (c) => {
     return new AIGameStateProvider({
