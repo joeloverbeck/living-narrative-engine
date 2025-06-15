@@ -7,22 +7,29 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": ["closeness.component.json"],
+    "components": [
+      "closeness.component.json"
+    ],
     "characters": [],
     "items": [],
     "locations": [],
     "actions": [
       "get_close.action.json",
       "step_back.action.json",
-      "thumb_wipe_cheek.action.json"
+      "thumb_wipe_cheek.action.json",
+      "adjust_clothing.action.json"
     ],
     "rules": [
       "get_close.rule.json",
       "step_back.rule.json",
       "intimacy_show_onlookers.rule.json",
-      "thumb_wipe_cheek.rule.json"
+      "thumb_wipe_cheek.rule.json",
+      "adjust_clothing.rule.json"
     ],
     "events": [],
-    "ui": ["icons.json", "labels.json"]
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ]
   }
 }

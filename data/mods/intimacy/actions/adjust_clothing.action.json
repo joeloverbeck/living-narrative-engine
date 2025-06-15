@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "id": "intimacy:adjust_clothing",
+  "commandVerb": "adjust-clothing",
+  "name": "Adjust Clothing",
+  "description": "Smooth their collar or adjust a displaced garment with possessive care.",
+  "target_domain": "environment",
+  "template": "adjust {target}'s clothing",
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            "comment": "Actor must be in a state of closeness, established by the 'get_close' action.",
+            "!!": {
+              "var": "actor.components['intimacy:closeness']"
+            }
+          },
+          {
+            "comment": "The target of the action must be a partner in the current closeness circle.",
+            "in": [
+              {
+                "var": "target.id"
+              },
+              {
+                "var": "actor.components['intimacy:closeness'].partners"
+              }
+            ]
+          }
+        ]
+      },
+      "failure_message": "You can only do that with the person you are currently close to."
+    }
+  ]
+}
