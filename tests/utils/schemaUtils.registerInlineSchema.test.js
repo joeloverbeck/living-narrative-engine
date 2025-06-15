@@ -51,4 +51,34 @@ describe('registerInlineSchema', () => {
       err
     );
   });
+
+  it('rethrows original error and derives context from function', async () => {
+    const err = new Error('boom');
+    validator.addSchema.mockRejectedValue(err);
+    const ctxFn = jest.fn().mockReturnValue({ foo: 'bar' });
+    await expect(
+      registerInlineSchema(validator, { type: 'object' }, 'id', logger, {
+        errorLogMessage: 'failed',
+        errorContext: ctxFn,
+      })
+    ).rejects.toThrow(err);
+    expect(ctxFn).toHaveBeenCalledWith(err);
+    expect(logger.error).toHaveBeenCalledWith(
+      'failed',
+      { foo: 'bar', error: err.message },
+      err
+    );
+  });
+  it('omits debug logging when successDebugMessage is missing', async () => {
+    await registerInlineSchema(validator, { type: 'object' }, 'id', logger);
+    expect(logger.debug).not.toHaveBeenCalled();
+  });
+
+  it('rethrows error without logging when logger is missing', async () => {
+    const err = new Error('oops');
+    validator.addSchema.mockRejectedValue(err);
+    await expect(
+      registerInlineSchema(validator, { type: 'object' }, 'id')
+    ).rejects.toThrow(err);
+  });
 });
