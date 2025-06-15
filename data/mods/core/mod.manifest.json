@@ -56,7 +56,8 @@
     ],
     "macros": [
       "logSuccessAndEndTurn.macro.json",
-      "logFailureAndEndTurn.macro.json"
+      "logFailureAndEndTurn.macro.json",
+      "autoMoveFollower.macro.json"
     ],
     "events": [
       "action_decided.event.json",
