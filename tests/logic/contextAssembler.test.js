@@ -535,9 +535,7 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
     test('should throw error if entityManager is missing or invalid', () => {
       expect(() =>
         createJsonLogicContext(baseEvent, actorId, targetId, null, mockLogger)
-      ).toThrow(
-        "createJsonLogicContext: Missing or invalid 'entityManager' instance."
-      );
+      ).toThrow('Missing required dependency: entityManager.');
       expect(() =>
         createJsonLogicContext(
           baseEvent,
@@ -547,7 +545,7 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
           mockLogger
         )
       ).toThrow(
-        "createJsonLogicContext: Missing or invalid 'entityManager' instance."
+        "Invalid or missing method 'getEntityInstance' on dependency 'entityManager'."
       );
       expect(() =>
         createJsonLogicContext(
@@ -558,7 +556,7 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
           mockLogger
         )
       ).toThrow(
-        "createJsonLogicContext: Missing or invalid 'entityManager' instance."
+        "Invalid or missing method 'getComponentData' on dependency 'entityManager'."
       );
     });
 
@@ -571,9 +569,7 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
           mockEntityManager,
           null
         )
-      ).toThrow(
-        "createJsonLogicContext: Missing or invalid 'logger' instance."
-      );
+      ).toThrow('Missing required dependency: logger.');
       expect(() =>
         createJsonLogicContext(
           baseEvent,
@@ -582,9 +578,7 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
           mockEntityManager,
           { warn: jest.fn() }
         )
-      ).toThrow(
-        "createJsonLogicContext: Missing or invalid 'logger' instance."
-      );
+      ).toThrow("Invalid or missing method 'debug' on dependency 'logger'.");
     });
   });
 });
