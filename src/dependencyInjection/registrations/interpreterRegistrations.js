@@ -162,7 +162,7 @@ export function registerInterpreters(container) {
       EndTurnHandler,
       (c, Handler) =>
         new Handler({
-          dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           logger: c.resolve(tokens.ILogger),
         }),
     ],

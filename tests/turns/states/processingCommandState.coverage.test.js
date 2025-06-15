@@ -335,6 +335,59 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     // Verify the internal processing was still called
     expect(processInternalSpy).toHaveBeenCalled();
   });
+
+  test('should include joined notes when decision meta contains notes array', async () => {
+    processingState['_isProcessing'] = false;
+    const actor = new MockActor('actorE');
+    const turnActionWithSpeech = {
+      actionDefinitionId: 'actionSpeak',
+      commandString: 'speakCmd',
+      speech: 'ignored speech',
+    };
+    const mockEventDispatcher = {
+      dispatch: jest.fn().mockResolvedValue(undefined),
+    };
+    const mockTurnContext = {
+      getLogger: () => mockLogger,
+      getActor: () => actor,
+      getChosenAction: () => turnActionWithSpeech,
+      getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
+      endTurn: jest.fn().mockResolvedValue(undefined),
+      getDecisionMeta: jest.fn().mockReturnValue({
+        speech: 'Hello notes',
+        thoughts: null,
+        notes: ['first note', 'second note'],
+      }),
+      getCommandProcessor: () => ({
+        dispatchAction: jest.fn().mockResolvedValue({ success: true }),
+      }),
+      getCommandOutcomeInterpreter: () => ({
+        interpret: jest.fn().mockReturnValue(TurnDirective.WAIT_FOR_EVENT),
+      }),
+    };
+    mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
+
+    jest
+      .spyOn(TurnDirectiveStrategyResolver, 'resolveStrategy')
+      .mockReturnValue({
+        execute: jest.fn().mockResolvedValue(undefined),
+      });
+
+    const stateWithNotes = new ProcessingCommandState(mockHandler, null, null);
+    stateWithNotes['_isProcessing'] = false;
+    mockHandler._currentState = stateWithNotes;
+
+    await stateWithNotes.enterState(mockHandler, null);
+
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      ENTITY_SPOKE_ID,
+      expect.objectContaining({
+        entityId: actor.id,
+        speechContent: 'Hello notes',
+        notes: 'first note\nsecond note',
+      })
+    );
+  });
 });
 
 describe('ProcessingCommandState._getServiceFromContext – error branches', () => {

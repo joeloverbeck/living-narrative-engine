@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Uploading with errors for Codex to fix." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -189,23 +187,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="33874000" />
-    </task>
-    <task id="LOCAL-00088" summary="Implemented thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749939344719</created>
-      <option name="number" value="00088" />
-      <option name="presentableId" value="LOCAL-00088" />
-      <option name="project" value="LOCAL" />
-      <updated>1749939344719</updated>
-    </task>
-    <task id="LOCAL-00089" summary="Implemented thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749940523195</created>
-      <option name="number" value="00089" />
-      <option name="presentableId" value="LOCAL-00089" />
-      <option name="project" value="LOCAL" />
-      <updated>1749940523195</updated>
+      <workItem from="1749963238113" duration="35563000" />
     </task>
     <task id="LOCAL-00090" summary="Fixed issue with the dismiss rule.">
       <option name="closed" value="true" />
@@ -583,7 +565,23 @@
       <option name="project" value="LOCAL" />
       <updated>1750000854579</updated>
     </task>
-    <option name="localTasksCounter" value="137" />
+    <task id="LOCAL-00137" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1750002105564</created>
+      <option name="number" value="00137" />
+      <option name="presentableId" value="LOCAL-00137" />
+      <option name="project" value="LOCAL" />
+      <updated>1750002105564</updated>
+    </task>
+    <task id="LOCAL-00138" summary="Uploading with errors for Codex to fix.">
+      <option name="closed" value="true" />
+      <created>1750003164018</created>
+      <option name="number" value="00138" />
+      <option name="presentableId" value="LOCAL-00138" />
+      <option name="project" value="LOCAL" />
+      <updated>1750003164018</updated>
+    </task>
+    <option name="localTasksCounter" value="139" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -595,7 +593,6 @@
     <MESSAGE value="Trying to return the app to normality." />
     <MESSAGE value="Fixed nasty bug in PromptCoordinator." />
     <MESSAGE value="Trying to return the app to normal." />
-    <MESSAGE value="Uploading with errors for Codex to fix." />
     <MESSAGE value="Implemented awaitTurnEndState.js." />
     <MESSAGE value="Fixed HumanTurnHandler's dependencies." />
     <MESSAGE value="Refactoring HumanTurnHandler." />
@@ -615,6 +612,7 @@
     <MESSAGE value="Implemented base of intimacy system." />
     <MESSAGE value="Implemented focused handlers to deal with follower-related issues." />
     <MESSAGE value="Formatting." />
-    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
+    <MESSAGE value="Uploading with errors for Codex to fix." />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploading with errors for Codex to fix." />
   </component>
 </project>
