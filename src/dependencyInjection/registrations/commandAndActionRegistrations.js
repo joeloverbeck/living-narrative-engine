@@ -12,7 +12,6 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
 /** @typedef {import('../../actions/validation/actionValidationService.js').ActionValidationService} ActionValidationService_Interface */
-/** @typedef {import('../../commands/interfaces/ICommandParser.js').ICommandParser} ICommandParser */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 
@@ -27,7 +26,6 @@ import { ActionValidationContextBuilder } from '../../actions/validation/actionV
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
 import { DomainContextCompatibilityChecker } from '../../validation/domainContextCompatibilityChecker.js';
 import { ActionValidationService } from '../../actions/validation/actionValidationService.js';
-import CommandParser from '../../commands/commandParser.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 
 // --- Helper Function Imports ---
@@ -93,15 +91,7 @@ export function registerCommandAndAction(container) {
     `Command and Action Registration: Registered Action Validation services.`
   );
 
-  // --- Command Parsing and Processing ---
-
-  r.singletonFactory(
-    tokens.ICommandParser,
-    (c) => new CommandParser(c.resolve(tokens.IGameDataRepository))
-  );
-  logger.debug(
-    `Command and Action Registration: Registered ${String(tokens.ICommandParser)}.`
-  );
+  // --- Command Processing ---
 
   r.singletonFactory(tokens.ICommandProcessor, (c) => {
     return new CommandProcessor({

@@ -10,7 +10,6 @@ import { Registrar } from '../registrarHelpers.js';
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').IWorldContext} IGameStateManager */
 // REMOVED: IInputHandler (Not directly used by GameLoop or other registrations here)
-// REMOVED: ICommandParser (Delegated to CommandProcessor)
 // REMOVED: IActionExecutor (Delegated to CommandProcessor via TurnHandlers) // <<< REMOVED
 /** @typedef {import('../../events/eventBus.js').default} EventBus */ // Assuming EventBus is concrete (Needed? Check if InputSetup needs it) -> No, uses VED
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */ // Assuming EntityManager is concrete

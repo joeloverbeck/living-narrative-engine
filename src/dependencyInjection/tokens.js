@@ -88,7 +88,6 @@ import { freeze } from '../utils/objectUtils';
  * @property {DiToken} IValidatedEventDispatcher - Token for dispatching validated events interface.
  * @property {DiToken} IActionExecutor - Token for executing game actions interface.
  * @property {DiToken} IWorldContext - Token for managing the overall world context interface.
- * @property {DiToken} ICommandParser - Token for parsing player commands interface.
  * @property {DiToken} ICommandProcessor - Token for the command processing service interface.
  * @property {DiToken} IActionDiscoveryService - Token for the action discovery system interface.
  * @property {DiToken} IInputHandler - Token for handling player input interface.
@@ -214,7 +213,6 @@ export const tokens = freeze({
   ISafeEventDispatcher: 'ISafeEventDispatcher',
   IValidatedEventDispatcher: 'IValidatedEventDispatcher',
   IWorldContext: 'IWorldContext',
-  ICommandParser: 'ICommandParser',
   ICommandProcessor: 'ICommandProcessor',
   IActionDiscoveryService: 'IActionDiscoveryService',
   IInputHandler: 'IInputHandler',
