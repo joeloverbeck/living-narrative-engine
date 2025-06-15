@@ -143,7 +143,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
    * @private
    */
   #scrollToBottom() {
-    this._scrollToPanelBottom('scrollContainer', 'chatPanel');
+    this.scrollToBottom('scrollContainer', 'chatPanel');
   }
 
   /**

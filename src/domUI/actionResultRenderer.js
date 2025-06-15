@@ -207,6 +207,6 @@ export class ActionResultRenderer extends BoundDomRendererBase {
    * @private
    */
   #scrollToBottom() {
-    this._scrollToPanelBottom('scrollContainer', 'listContainerElement');
+    this.scrollToBottom('scrollContainer', 'listContainerElement');
   }
 }

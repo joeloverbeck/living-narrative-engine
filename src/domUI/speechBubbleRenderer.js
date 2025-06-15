@@ -330,7 +330,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
    * @private
    */
   #scrollToBottom() {
-    this._scrollToPanelBottom('outputDivElement', 'speechContainer');
+    this.scrollToBottom('outputDivElement', 'speechContainer');
   }
 
   /**
