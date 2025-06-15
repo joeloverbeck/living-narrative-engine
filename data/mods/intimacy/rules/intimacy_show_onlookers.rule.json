@@ -1,0 +1,105 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "intimacy_show_onlookers",
+  "comment": "Listens for any entity movement. If an entity enters a room where two or more OTHER entities are kissing, it dispatches a special perceptible event for the onlooker.",
+  "event_type": "core:entity_moved",
+  "actions": [
+    {
+      "type": "QUERY_ENTITIES",
+      "comment": "Step 1: Find all entities in the new location that are currently kissing.",
+      "parameters": {
+        "result_variable": "kissingEntities",
+        "filters": [
+          {
+            "by_location": "{event.payload.currentLocationId}"
+          },
+          {
+            "with_component": "intimacy:kissing"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Step 2: Proceed only if there are at least two kissers AND the entity that just moved is not one of them.",
+      "parameters": {
+        "condition": {
+          "and": [
+            {
+              ">=": [
+                {
+                  "var": "context.kissingEntities.length"
+                },
+                2
+              ]
+            },
+            {
+              "!": {
+                "in": [
+                  {
+                    "var": "event.payload.entityId"
+                  },
+                  {
+                    "var": "context.kissingEntities"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "GET_NAME",
+            "comment": "Step 3: Get the names of the onlooker and the first two kissers found.",
+            "parameters": {
+              "entity_ref": "actor",
+              "result_variable": "onlookerName"
+            }
+          },
+          {
+            "type": "GET_NAME",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.kissingEntities[0]}"
+              },
+              "result_variable": "kisserAName"
+            }
+          },
+          {
+            "type": "GET_NAME",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.kissingEntities[1]}"
+              },
+              "result_variable": "kisserBName"
+            }
+          },
+          {
+            "type": "GET_TIMESTAMP",
+            "parameters": {
+              "result_variable": "now"
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Step 4: Dispatch the condensed perceptible event to the onlooker's log.",
+            "parameters": {
+              "eventType": "core:perceptible_event",
+              "payload": {
+                "locationId": "{event.payload.currentLocationId}",
+                "descriptionText": "{context.onlookerName} walks in on {context.kisserAName} and {context.kisserBName} kissing.",
+                "timestamp": "{context.now}",
+                "perceptionType": "character_enter",
+                "actorId": "{event.payload.entityId}",
+                "involvedEntities": [
+                  "{context.kissingEntities[0]}",
+                  "{context.kissingEntities[1]}"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
