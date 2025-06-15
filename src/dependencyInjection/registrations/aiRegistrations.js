@@ -348,6 +348,7 @@ export function registerAI(container) {
       new LLMResponseProcessor({
         schemaValidator: c.resolve(tokens.ISchemaValidator),
         logger: c.resolve(tokens.ILogger), // <-- INJECT LOGGER HERE
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
   r.singletonFactory(

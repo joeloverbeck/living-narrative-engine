@@ -8,6 +8,7 @@ import {
   LLMResponseProcessor,
   LLMProcessingError,
 } from '../../src/turns/services/LLMResponseProcessor.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 // Mocked logger for capturing logs
 const makeLogger = () => ({
@@ -28,15 +29,21 @@ const makeSchemaValidator = (isValid = true) => ({
 
 describe('LLMResponseProcessor', () => {
   let logger;
+  let safeEventDispatcher;
   const actorId = 'actor-123';
 
   beforeEach(() => {
     logger = makeLogger();
+    safeEventDispatcher = { dispatch: jest.fn() };
   });
 
   test('should return success and extracted data for a valid JSON response', async () => {
     const schemaValidator = makeSchemaValidator(true);
-    const processor = new LLMResponseProcessor({ schemaValidator, logger });
+    const processor = new LLMResponseProcessor({
+      schemaValidator,
+      logger,
+      safeEventDispatcher,
+    });
     const llmJsonResponse = JSON.stringify({
       chosenIndex: 4,
       speech: 'Hello Bob!',
@@ -61,12 +68,16 @@ describe('LLMResponseProcessor', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: 4`
     );
-    expect(logger.error).not.toHaveBeenCalled();
+    expect(safeEventDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   test('should preserve chosenIndex as a number in the action object', async () => {
     const schemaValidator = makeSchemaValidator(true);
-    const processor = new LLMResponseProcessor({ schemaValidator, logger });
+    const processor = new LLMResponseProcessor({
+      schemaValidator,
+      logger,
+      safeEventDispatcher,
+    });
     const llmJsonResponse = JSON.stringify({
       chosenIndex: 7,
       speech: 'Just waiting.',
@@ -90,7 +101,11 @@ describe('LLMResponseProcessor', () => {
         .mockReturnValue({ isValid: false, errors: mockErrors }),
       isSchemaLoaded: jest.fn().mockReturnValue(true),
     };
-    const processor = new LLMResponseProcessor({ schemaValidator, logger });
+    const processor = new LLMResponseProcessor({
+      schemaValidator,
+      logger,
+      safeEventDispatcher,
+    });
     const invalidJson = JSON.stringify({
       speech: 'Invalid structure',
       thoughts: 'Missing chosenIndex',
@@ -106,15 +121,22 @@ describe('LLMResponseProcessor', () => {
       details: { validationErrors: mockErrors },
     });
 
-    expect(logger.error).toHaveBeenCalledWith(
-      `LLMResponseProcessor: schema invalid for actor ${actorId}`,
-      { errors: mockErrors, parsed: JSON.parse(invalidJson) }
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      {
+        message: `LLMResponseProcessor: schema invalid for actor ${actorId}`,
+        details: { errors: mockErrors, parsed: JSON.parse(invalidJson) },
+      }
     );
   });
 
   test('should throw a detailed error for a non-JSON string', async () => {
     const schemaValidator = makeSchemaValidator(true);
-    const processor = new LLMResponseProcessor({ schemaValidator, logger });
+    const processor = new LLMResponseProcessor({
+      schemaValidator,
+      logger,
+      safeEventDispatcher,
+    });
     const nonJson = 'Not JSON';
 
     await expect(processor.processResponse(nonJson, actorId)).rejects.toThrow(
@@ -127,11 +149,13 @@ describe('LLMResponseProcessor', () => {
     // Run again to check the logger without the test failing due to the throw
     await processor.processResponse(nonJson, actorId).catch(() => {});
 
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}`
-      ),
-      expect.any(Object)
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}`
+        ),
+      })
     );
   });
 
@@ -139,7 +163,11 @@ describe('LLMResponseProcessor', () => {
     // This test assumes schema validation is mocked to pass, even with extra properties.
     // A real schema validator with `additionalProperties: false` would fail.
     const schemaValidator = makeSchemaValidator(true);
-    const processor = new LLMResponseProcessor({ schemaValidator, logger });
+    const processor = new LLMResponseProcessor({
+      schemaValidator,
+      logger,
+      safeEventDispatcher,
+    });
     const llmJsonResponse = JSON.stringify({
       chosenIndex: 3,
       speech: '',
