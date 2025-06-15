@@ -350,7 +350,11 @@ class WorldLoader {
       // Run validations - these may throw ModDependencyError
       ModDependencyValidator.validate(manifestsForValidation, this.#logger);
       try {
-        validateModEngineVersions(manifestsForValidation, this.#logger);
+        validateModEngineVersions(
+          manifestsForValidation,
+          this.#logger,
+          this.#validatedEventDispatcher
+        );
       } catch (e) {
         // Capture engine version specific errors for summary, but re-throw
         if (e instanceof ModDependencyError) {
