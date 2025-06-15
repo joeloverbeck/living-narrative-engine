@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/rebuildLeaderListCache.schema.json",
+  "title": "REBUILD_LEADER_LIST_CACHE Operation",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "REBUILD_LEADER_LIST_CACHE"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
+    },
+    "condition": {
+      "$ref": "../json-logic.schema.json#",
+      "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+    },
+    "parameters": {
+      "$ref": "#/$defs/Parameters"
+    }
+  },
+  "required": ["type", "parameters"],
+  "additionalProperties": false,
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Rebuilds the core:leading cache for specified leader IDs.",
+      "properties": {
+        "leaderIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Array of leader entity IDs."
+        }
+      },
+      "required": ["leaderIds"],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/checkFollowCycle.schema.json",
+  "title": "CHECK_FOLLOW_CYCLE Operation",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "CHECK_FOLLOW_CYCLE"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
+    },
+    "condition": {
+      "$ref": "../json-logic.schema.json#",
+      "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+    },
+    "parameters": {
+      "$ref": "#/$defs/Parameters"
+    }
+  },
+  "required": ["type", "parameters"],
+  "additionalProperties": false,
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the CHECK_FOLLOW_CYCLE operation. Checks if following would create a cycle.",
+      "properties": {
+        "follower_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "leader_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$"
+        }
+      },
+      "required": ["follower_id", "leader_id", "result_variable"],
+      "additionalProperties": false
+    }
+  }
+}

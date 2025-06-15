@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/addPerceptionLogEntry.schema.json",
+  "title": "ADD_PERCEPTION_LOG_ENTRY Operation",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "ADD_PERCEPTION_LOG_ENTRY"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
+    },
+    "condition": {
+      "$ref": "../json-logic.schema.json#",
+      "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+    },
+    "parameters": {
+      "$ref": "#/$defs/Parameters"
+    }
+  },
+  "required": ["type", "parameters"],
+  "additionalProperties": false,
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "properties": {
+        "location_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entry": {
+          "type": "object",
+          "minProperties": 1
+        },
+        "originating_actor_id": {
+          "type": "string"
+        }
+      },
+      "required": ["location_id", "entry"],
+      "additionalProperties": false
+    }
+  }
+}

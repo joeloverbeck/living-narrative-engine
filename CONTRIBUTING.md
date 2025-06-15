@@ -80,6 +80,8 @@ Familiarize yourself with the main project directories:
 - `data/`: Crucial for the data-driven nature of the engine. Contains:
   - Mods (game content, rules, entities, etc., in subdirectories).
   - Schemas (JSON schemas for validating mod files and other data structures).
+    Operation schemas live in `data/schemas/operations/` with one file per
+    operation type.
   - Core game configuration like `game.json`.
 - `docs/`: Contains documentation, including guides on JSON Logic usage and other engine systems.
 - `llm-proxy-server/`: A separate Node.js sub-project. This acts as an API server to proxy requests to various LLM

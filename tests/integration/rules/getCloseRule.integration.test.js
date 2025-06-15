@@ -8,6 +8,7 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
@@ -230,6 +231,7 @@ describe('intimacy_handle_get_close rule integration', () => {
       operationSchema,
       'http://example.com/schemas/operation.schema.json'
     );
+    loadOperationSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
