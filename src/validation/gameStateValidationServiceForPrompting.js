@@ -2,10 +2,12 @@
 // --- FILE START ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting_Interface */
 
 import { ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING } from '../constants/textDefaults.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import { IGameStateValidationServiceForPrompting } from '../interfaces/IGameStateValidationServiceForPrompting.js';
 
 /**
@@ -16,12 +18,15 @@ import { IGameStateValidationServiceForPrompting } from '../interfaces/IGameStat
 export class GameStateValidationServiceForPrompting extends IGameStateValidationServiceForPrompting {
   /** @type {ILogger} */
   #logger;
+  /** @type {ISafeEventDispatcher} */
+  #dispatcher;
 
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger
+   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
    */
-  constructor({ logger }) {
+  constructor({ logger, safeEventDispatcher }) {
     super();
 
     if (!logger) {
@@ -30,6 +35,15 @@ export class GameStateValidationServiceForPrompting extends IGameStateValidation
       );
     }
     this.#logger = logger;
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error(
+        'GameStateValidationServiceForPrompting: safeEventDispatcher with dispatch method is required.'
+      );
+    }
+    this.#dispatcher = safeEventDispatcher;
     this.#logger.debug('GameStateValidationServiceForPrompting initialized.');
   }
 
@@ -43,9 +57,11 @@ export class GameStateValidationServiceForPrompting extends IGameStateValidation
    */
   validate(gameStateDto) {
     if (!gameStateDto) {
-      this.#logger.error(
-        'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.'
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message:
+          'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
+        details: {},
+      });
       return {
         isValid: false,
         errorContent: ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING,
