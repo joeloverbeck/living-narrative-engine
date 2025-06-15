@@ -11,6 +11,10 @@ import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
 
+/**
+ * @typedef {import('../../src/persistence/persistenceTypes.js').PersistenceResult<any>} PersistenceResult
+ */
+
 jest.mock('@msgpack/msgpack', () => {
   global.encodeMock = jest.fn();
   global.decodeMock = jest.fn();
@@ -81,6 +85,7 @@ describe('SaveLoadService error paths', () => {
   it('handles deleteFile throwing exception', async () => {
     storageProvider.fileExists.mockResolvedValue(true);
     storageProvider.deleteFile.mockRejectedValue(new Error('fs failure'));
+    /** @type {PersistenceResult<any>} */
     const res = await service.deleteManualSave('saves/manual_saves/bad.sav');
     expect(res.success).toBe(false);
     expect(res.error.message).toMatch(/unexpected error/i);
@@ -111,6 +116,7 @@ describe('SaveLoadService error paths', () => {
       gameState: { isGameState: true },
       integrityChecks: {},
     };
+    /** @type {PersistenceResult<any>} */
     const result = await service.saveManualGame('Slot', obj);
     expect(result.success).toBe(true);
 
@@ -135,6 +141,7 @@ describe('SaveLoadService error paths', () => {
       integrityChecks: {},
     };
     cyc.self = cyc;
+    /** @type {PersistenceResult<any>} */
     const res = await service.saveManualGame('Loop', cyc);
     expect(res.success).toBe(false);
     expect(res.error.message).toMatch(/deep clone/i);
