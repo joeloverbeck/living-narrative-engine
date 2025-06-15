@@ -394,8 +394,7 @@ export class SaveGameUI extends SlotModalBase {
    */
   async _populateSaveSlotsList() {
     this.logger.debug(`${this._logPrefix} Populating save slots list...`);
-    const listContainer = this.elements.listContainerElement;
-    if (!listContainer) {
+    if (!this.elements.listContainerElement) {
       this.logger.error(`${this._logPrefix} List container element not found.`);
       this._displayStatusMessage(
         'Error: UI component for slots missing.',
@@ -404,38 +403,12 @@ export class SaveGameUI extends SlotModalBase {
       return;
     }
 
-    this._setOperationInProgress(true); // Disable interactions while loading list
-    this._displayStatusMessage('Loading save slots...', 'info');
-
-    DomUtils.clearElement(listContainer); // Clear previous items
-
-    const slotsData = await this._getSaveSlotsData();
-
-    if (slotsData.length === 0) {
-      const emptyMessage = this._getEmptySaveSlotsMessage();
-      if (typeof emptyMessage === 'string') {
-        if (this.domElementFactory) {
-          listContainer.appendChild(
-            this.domElementFactory.p(undefined, emptyMessage) ||
-              this.documentContext.document.createTextNode(emptyMessage)
-          );
-        } else {
-          listContainer.textContent = emptyMessage;
-        }
-      } else {
-        listContainer.appendChild(emptyMessage);
-      }
-    } else {
-      slotsData.forEach((slotData, index) => {
-        const listItemElement = this._renderSaveSlotItem(slotData, index);
-        if (listItemElement) {
-          listContainer.appendChild(listItemElement);
-        }
-      });
-    }
-
-    this._clearStatusMessage(); // Clear "Loading save slots..."
-    this._setOperationInProgress(false); // Re-enable interactions
+    await this.populateSlotsList(
+      () => this._getSaveSlotsData(),
+      (slotData, index) => this._renderSaveSlotItem(slotData, index),
+      () => this._getEmptySaveSlotsMessage(),
+      'Loading save slots...'
+    );
 
     // Ensure buttons are correctly disabled if no selection or no valid input
     this._handleSaveNameInput();

@@ -376,8 +376,7 @@ class LoadGameUI extends SlotModalBase {
    */
   async _populateLoadSlotsList() {
     this.logger.debug(`${this._logPrefix} Populating load slots list...`);
-    const listContainer = this.elements.listContainerElement;
-    if (!listContainer) {
+    if (!this.elements.listContainerElement) {
       this.logger.error(
         `${this._logPrefix} List container element not found in this.elements.`
       );
@@ -388,34 +387,12 @@ class LoadGameUI extends SlotModalBase {
       return;
     }
 
-    this._setOperationInProgress(true); // Disables interactions, shows "Loading..."
-    this._displayStatusMessage('Loading saved games...', 'info');
-
-    DomUtils.clearElement(listContainer);
-    this.currentSlotsDisplayData = [];
-
-    const slotsData = await this._getLoadSlotsData();
-
-    if (slotsData.length === 0) {
-      const emptyMessageElement = this._getEmptyLoadSlotsMessage();
-      listContainer.appendChild(
-        emptyMessageElement instanceof HTMLElement
-          ? emptyMessageElement
-          : this.documentContext.document.createTextNode(
-              String(emptyMessageElement)
-            )
-      );
-    } else {
-      slotsData.forEach((slotData, index) => {
-        const listItemElement = this._renderLoadSlotItem(slotData, index);
-        if (listItemElement) {
-          listContainer.appendChild(listItemElement);
-        }
-      });
-    }
-
-    this._clearStatusMessage(); // Clear "Loading saved games..."
-    this._setOperationInProgress(false); // Re-enable interactions
+    await this.populateSlotsList(
+      () => this._getLoadSlotsData(),
+      (slotData, index) => this._renderLoadSlotItem(slotData, index),
+      () => this._getEmptyLoadSlotsMessage(),
+      'Loading saved games...'
+    );
 
     this._handleSlotSelection(null, null); // Update button states
     this.logger.debug(`${this._logPrefix} Load slots list populated.`);

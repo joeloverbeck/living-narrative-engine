@@ -129,6 +129,26 @@ describe('LoadGameUI basic behaviors', () => {
     );
   });
 
+  it('should populate the load slots list using the shared method', async () => {
+    mockSaveLoadService.listManualSaveSlots.mockResolvedValueOnce([
+      {
+        identifier: 'slotA',
+        saveName: 'Save A',
+        timestamp: '2023-09-01T00:00:00Z',
+        playtimeSeconds: 3,
+        isCorrupted: false,
+      },
+    ]);
+
+    await loadGameUI._populateLoadSlotsList();
+
+    const slots = document
+      .getElementById('load-slots-container')
+      .querySelectorAll('.save-slot');
+    expect(slots.length).toBe(1);
+    expect(slots[0].dataset.slotIdentifier).toBe('slotA');
+  });
+
   it('should update selection and button states', () => {
     const container = document.getElementById('load-slots-container');
     const slotData1 = {
