@@ -11,6 +11,7 @@ function makeDeps() {
     entityManager: {},
     dataRegistry: {},
     playtimeTracker: {},
+    componentCleaningService: { clean: jest.fn() },
   };
 }
 
@@ -21,6 +22,7 @@ describe('GamePersistenceService constructor validation', () => {
     'entityManager',
     'dataRegistry',
     'playtimeTracker',
+    'componentCleaningService',
   ];
 
   test.each(required)('throws if %s is missing', (prop) => {

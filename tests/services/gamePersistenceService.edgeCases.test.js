@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 import {
   NOTES_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -27,6 +28,7 @@ describe('GamePersistenceService edge cases', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
+  let componentCleaningService;
   let service;
 
   beforeEach(() => {
@@ -42,12 +44,14 @@ describe('GamePersistenceService edge cases', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
+    componentCleaningService = new ComponentCleaningService({ logger });
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
+      componentCleaningService,
     });
   });
 

@@ -22,6 +22,7 @@ describe('GamePersistenceService additional coverage', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
+  let componentCleaningService;
   let service;
 
   beforeEach(() => {
@@ -37,12 +38,14 @@ describe('GamePersistenceService additional coverage', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(42),
       setAccumulatedPlaytime: jest.fn(),
     };
+    componentCleaningService = { clean: jest.fn((id, data) => data) };
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
+      componentCleaningService,
     });
   });
 

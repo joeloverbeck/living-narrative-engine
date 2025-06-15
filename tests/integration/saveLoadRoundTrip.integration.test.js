@@ -1,6 +1,7 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 import receptionistDef from '../../data/mods/isekai/characters/receptionist.character.json';
 import { webcrypto } from 'crypto';
 
@@ -60,6 +61,7 @@ describe('Persistence round-trip', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
+  let componentCleaningService;
   let persistence;
   let entity;
   const saveName = 'RoundTripTest';
@@ -97,6 +99,7 @@ describe('Persistence round-trip', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
+    componentCleaningService = new ComponentCleaningService({ logger });
 
     persistence = new GamePersistenceService({
       logger,
@@ -104,6 +107,7 @@ describe('Persistence round-trip', () => {
       entityManager,
       dataRegistry,
       playtimeTracker,
+      componentCleaningService,
     });
   });
 
