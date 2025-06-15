@@ -413,6 +413,10 @@ describe('registerInterpreters', () => {
       expect.any(Function)
     );
     expect(mockInstance.register).toHaveBeenCalledWith(
+      'QUERY_COMPONENTS',
+      expect.any(Function)
+    );
+    expect(mockInstance.register).toHaveBeenCalledWith(
       'SET_VARIABLE',
       expect.any(Function)
     );
