@@ -11,6 +11,7 @@ import {
   afterEach,
   test,
 } from '@jest/globals';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 import { BrowserStorageProvider } from '../../src/storage/browserStorageProvider'; // Adjust path as needed
 
 // --- Mock ILogger ---
@@ -98,7 +99,12 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
   let rootDirHandleMockInstance;
 
   beforeEach(async () => {
-    storageProvider = new BrowserStorageProvider({ logger: mockLogger });
+    const dispatcherMock = { dispatch: jest.fn().mockResolvedValue(true) };
+    storageProvider = new BrowserStorageProvider({
+      logger: mockLogger,
+      safeEventDispatcher: dispatcherMock,
+    });
+    storageProvider._testDispatcher = dispatcherMock; // attach for tests
     rootDirHandleMockInstance = await global.window.showDirectoryPicker();
     // Ensure subsequent calls in #getRootDirectoryHandle within a single test execution
     // don't re-trigger showDirectoryPicker if not intended.
@@ -306,11 +312,16 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
     expect(result.error).toBe(
       'Failed to write to temporary file: Failed to create temp writable'
     );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Error writing to temporary file ${tempFilePath}`
-      ),
-      expect.objectContaining({ message: 'Failed to create temp writable' })
+    expect(storageProvider._testDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          `Error writing to temporary file ${tempFilePath}`
+        ),
+        details: expect.objectContaining({
+          error: 'Failed to create temp writable',
+        }),
+      })
     );
     expect(rootDirHandleMockInstance.removeEntry).toHaveBeenCalledWith(
       tempFilePath
@@ -356,11 +367,16 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
       'Failed to write to temporary file: Temp disk quota exceeded'
     );
     expect(mockTempStreamWithError.write).toHaveBeenCalledWith(data);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Error writing to temporary file ${tempFilePath}`
-      ),
-      expect.objectContaining({ message: 'Temp disk quota exceeded' })
+    expect(storageProvider._testDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          `Error writing to temporary file ${tempFilePath}`
+        ),
+        details: expect.objectContaining({
+          error: 'Temp disk quota exceeded',
+        }),
+      })
     );
     expect(rootDirHandleMockInstance.removeEntry).toHaveBeenCalledWith(
       tempFilePath
@@ -424,11 +440,14 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
       tempFilePath
     ); // Crucial check
 
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Error writing to final file ${filePath} (replacing original): Final write failed`
-      ),
-      expect.objectContaining({ message: 'Final write failed' })
+    expect(storageProvider._testDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          `Error writing to final file ${filePath} (replacing original): Final write failed`
+        ),
+        details: expect.objectContaining({ error: 'Final write failed' }),
+      })
     );
   });
 
