@@ -14,6 +14,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * Parameters accepted by {@link AddComponentHandler#execute}.
@@ -82,8 +83,7 @@ class AddComponentHandler {
     const log = executionContext?.logger ?? this.#logger;
 
     // 1. Validate Parameters
-    if (!params || typeof params !== 'object') {
-      log.warn('ADD_COMPONENT: params missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'ADD_COMPONENT')) {
       return;
     }
 

@@ -17,6 +17,7 @@ import { DEFAULT_FALLBACK_CHARACTER_NAME } from '../../constants/textDefaults.js
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 /**
@@ -59,14 +60,7 @@ class GetNameHandler {
   execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
 
-    if (!params || typeof params !== 'object') {
-      safeDispatchError(
-        this.#dispatcher,
-        'GET_NAME: Missing or invalid parameters.',
-        {
-          params,
-        }
-      );
+    if (!assertParamsObject(params, this.#dispatcher, 'GET_NAME')) {
       return;
     }
 

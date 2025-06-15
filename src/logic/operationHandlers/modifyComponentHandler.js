@@ -12,6 +12,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * @typedef {object} EntityRefObject
@@ -92,8 +93,7 @@ class ModifyComponentHandler {
     const log = execCtx?.logger ?? this.#logger;
 
     // ── validate base params ───────────────────────────────────────
-    if (!params || typeof params !== 'object') {
-      log.warn('MODIFY_COMPONENT: params missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'MODIFY_COMPONENT')) {
       return;
     }
     const { entity_ref, component_type, field, mode = 'set', value } = params;
