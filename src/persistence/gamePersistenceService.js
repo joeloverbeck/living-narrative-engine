@@ -1,5 +1,4 @@
 import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.js';
-import GameStateCaptureService from './gameStateCaptureService.js';
 import { setupService } from '../utils/serviceInitializer.js';
 
 // --- JSDoc Type Imports ---
