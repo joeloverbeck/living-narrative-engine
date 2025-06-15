@@ -93,6 +93,26 @@ describe('serviceInitializer utilities', () => {
         { requiredMethods: ['x'], isFunction: undefined }
       );
     });
+
+    it('does nothing when deps is falsy', () => {
+      validateServiceDeps('Svc', baseLogger, null);
+      expect(validateDependency).not.toHaveBeenCalled();
+    });
+
+    it('skips entries with falsy spec objects', () => {
+      const deps = {
+        a: null,
+        b: { value: {} },
+      };
+      validateServiceDeps('Svc', baseLogger, deps);
+      expect(validateDependency).toHaveBeenCalledTimes(1);
+      expect(validateDependency).toHaveBeenCalledWith(
+        deps.b.value,
+        'Svc: b',
+        baseLogger,
+        { requiredMethods: undefined, isFunction: undefined }
+      );
+    });
   });
 
   describe('setupService', () => {
