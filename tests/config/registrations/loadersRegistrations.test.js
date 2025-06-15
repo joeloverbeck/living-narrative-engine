@@ -77,7 +77,6 @@ const mockConfiguration = {
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('./data/schemas'),
   getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
-  getWorldBasePath: jest.fn().mockReturnValue('./data/worlds'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModsBasePath: jest.fn().mockReturnValue('mods'), // Needed for ModManifestLoader etc.
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'), // Needed

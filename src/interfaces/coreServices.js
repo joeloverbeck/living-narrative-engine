@@ -121,7 +121,6 @@
  * Returns the path where schema files are stored.
  * @property {(typeName: string) => string} getContentBasePath
  * Returns the path where content definition files for a specific type are stored.
- * @property {() => string} getWorldBasePath
  * Returns the path where world manifest files are stored.
  * @property {() => string} getGameConfigFilename
  * Returns the filename for the main game configuration file.

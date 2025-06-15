@@ -178,7 +178,6 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
       getSchemaFiles: jest.fn(() => []),
       getSchemaBasePath: jest.fn(() => 'schemas'),
       getContentBasePath: jest.fn(() => 'content'),
-      getWorldBasePath: jest.fn(() => 'worlds'),
       getGameConfigFilename: jest.fn(() => 'game.json'),
       getModsBasePath: jest.fn(() => 'mods'),
       getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
