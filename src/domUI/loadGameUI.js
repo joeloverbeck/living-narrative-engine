@@ -4,6 +4,7 @@ import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatSaveFileMetadata } from './helpers/slotDataFormatter.js';
 import { renderSlotItem } from './helpers/renderSlotItem.js';
+import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -21,26 +22,6 @@ import { renderSlotItem } from './helpers/renderSlotItem.js';
  *
  * @typedef {SaveFileMetadata & { isCorrupted?: boolean }} LoadSlotDisplayData
  */
-
-const LOAD_GAME_UI_ELEMENTS_CONFIG = {
-  modalElement: { selector: '#load-game-screen', required: true },
-  closeButton: { selector: '#cancel-load-button', required: true },
-  listContainerElement: { selector: '#load-slots-container', required: true },
-  confirmLoadButtonEl: {
-    selector: '#confirm-load-button',
-    required: true,
-    expectedType: HTMLButtonElement,
-  },
-  deleteSaveButtonEl: {
-    selector: '#delete-save-button',
-    required: true,
-    expectedType: HTMLButtonElement,
-  },
-  statusMessageElement: {
-    selector: '#load-game-status-message',
-    required: true,
-  },
-};
 
 /**
  * @class LoadGameUI
@@ -70,11 +51,19 @@ class LoadGameUI extends SlotModalBase {
     saveLoadService,
     validatedEventDispatcher,
   }) {
+    const elementsConfig = buildModalElementsConfig({
+      modalElement: '#load-game-screen',
+      closeButton: '#cancel-load-button',
+      listContainerElement: '#load-slots-container',
+      confirmLoadButtonEl: ['#confirm-load-button', HTMLButtonElement],
+      deleteSaveButtonEl: ['#delete-save-button', HTMLButtonElement],
+      statusMessageElement: '#load-game-status-message',
+    });
     super({
       logger,
       documentContext,
       validatedEventDispatcher,
-      elementsConfig: LOAD_GAME_UI_ELEMENTS_CONFIG,
+      elementsConfig,
       domElementFactory,
       datasetKey: 'slotIdentifier',
       confirmButtonKey: 'confirmLoadButtonEl',
