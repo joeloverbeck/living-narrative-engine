@@ -30,6 +30,7 @@ describe('GamePersistenceService edge cases', () => {
   let playtimeTracker;
   let componentCleaningService;
   let metadataBuilder;
+  let safeEventDispatcher;
   let service;
 
   beforeEach(() => {
@@ -45,7 +46,11 @@ describe('GamePersistenceService edge cases', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
-    componentCleaningService = new ComponentCleaningService({ logger });
+    safeEventDispatcher = { dispatch: jest.fn() };
+    componentCleaningService = new ComponentCleaningService({
+      logger,
+      safeEventDispatcher,
+    });
     metadataBuilder = {
       build: jest.fn((n, p) => ({
         saveFormatVersion: '1',

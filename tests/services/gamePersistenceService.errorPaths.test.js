@@ -23,6 +23,7 @@ describe('GamePersistenceService error paths', () => {
   let playtimeTracker;
   let componentCleaningService;
   let metadataBuilder;
+  let safeEventDispatcher;
   let service;
 
   beforeEach(() => {
@@ -38,7 +39,11 @@ describe('GamePersistenceService error paths', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
-    componentCleaningService = new ComponentCleaningService({ logger });
+    safeEventDispatcher = { dispatch: jest.fn() };
+    componentCleaningService = new ComponentCleaningService({
+      logger,
+      safeEventDispatcher,
+    });
     metadataBuilder = {
       build: jest.fn((n, p) => ({
         saveFormatVersion: '1',
@@ -70,10 +75,12 @@ describe('GamePersistenceService error paths', () => {
       expect(() => service.captureCurrentGameState('World')).toThrow(
         'Failed to deep clone object data.'
       );
-      expect(logger.error).toHaveBeenCalledWith(
-        'ComponentCleaningService.clean deepClone failed:',
-        expect.any(Error),
-        cyc
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:display_error',
+        expect.objectContaining({
+          message: 'ComponentCleaningService.clean deepClone failed',
+          details: expect.objectContaining({ componentId: 'loop' }),
+        })
       );
     });
   });

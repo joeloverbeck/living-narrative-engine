@@ -62,6 +62,7 @@ export function registerPersistence(container) {
 
   r.single(tokens.ComponentCleaningService, ComponentCleaningService, [
     tokens.ILogger,
+    tokens.ISafeEventDispatcher,
   ]);
   logger.debug(
     `Persistence Registration: Registered ${String(tokens.ComponentCleaningService)}.`

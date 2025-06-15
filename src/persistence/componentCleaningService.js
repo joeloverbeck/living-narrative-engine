@@ -6,6 +6,7 @@ import {
   SHORT_TERM_MEMORY_COMPONENT_ID,
   PERCEPTION_LOG_COMPONENT_ID,
 } from '../constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 
 /**
  * @class ComponentCleaningService
@@ -18,18 +19,32 @@ class ComponentCleaningService {
   /** @type {import('../interfaces/coreServices.js').ILogger} */
   #logger;
 
+  /** @type {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #safeEventDispatcher;
+
   /**
    * Creates a new ComponentCleaningService.
    *
    * @param {object} dependencies - The dependencies for the service.
    * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger - Logging service.
+   * @param dependencies.safeEventDispatcher
    */
-  constructor({ logger }) {
+  constructor({ logger, safeEventDispatcher }) {
     if (!logger) {
       console.error('ComponentCleaningService: logger dependency missing.');
       throw new Error('ComponentCleaningService requires a logger.');
     }
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      const errMsg =
+        'ComponentCleaningService: Missing or invalid safeEventDispatcher.';
+      console.error(errMsg);
+      throw new Error(errMsg);
+    }
     this.#logger = logger;
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#cleaners = new Map();
 
     this.registerCleaner(
@@ -71,11 +86,14 @@ class ComponentCleaningService {
     try {
       dataToSave = deepClone(componentData);
     } catch (e) {
-      this.#logger.error(
-        'ComponentCleaningService.clean deepClone failed:',
-        e,
-        componentData
-      );
+      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'ComponentCleaningService.clean deepClone failed',
+        details: {
+          componentId,
+          error: e.message,
+          stack: e.stack,
+        },
+      });
       throw new Error('Failed to deep clone object data.');
     }
 
