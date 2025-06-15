@@ -2,6 +2,7 @@
 
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CORE_MOD_ID } from '../constants/core.js';
+import { setupService } from '../utils/serviceInitializer.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -50,25 +51,19 @@ class GameStateCaptureService {
     componentCleaningService,
     metadataBuilder,
   }) {
-    const missing = [];
-    if (!logger) missing.push('logger');
-    if (!entityManager) missing.push('entityManager');
-    if (!dataRegistry) missing.push('dataRegistry');
-    if (!playtimeTracker) missing.push('playtimeTracker');
-    if (!componentCleaningService) missing.push('componentCleaningService');
-    if (!metadataBuilder) missing.push('metadataBuilder');
-
-    if (missing.length > 0) {
-      const msg = `GameStateCaptureService: Missing required dependencies: ${missing.join(', ')}`;
-      if (logger && typeof logger.error === 'function') {
-        logger.error(msg);
-      } else {
-        console.error(msg);
-      }
-      throw new Error(msg);
-    }
-
-    this.#logger = logger;
+    this.#logger = setupService('GameStateCaptureService', logger, {
+      entityManager: { value: entityManager },
+      dataRegistry: { value: dataRegistry, requiredMethods: ['getAll'] },
+      playtimeTracker: {
+        value: playtimeTracker,
+        requiredMethods: ['getTotalPlaytime'],
+      },
+      componentCleaningService: {
+        value: componentCleaningService,
+        requiredMethods: ['clean'],
+      },
+      metadataBuilder: { value: metadataBuilder, requiredMethods: ['build'] },
+    });
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#playtimeTracker = playtimeTracker;

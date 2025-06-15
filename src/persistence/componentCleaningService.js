@@ -1,6 +1,7 @@
 // src/persistence/componentCleaningService.js
 
 import { deepClone } from '../utils/objectUtils.js';
+import { setupService } from '../utils/serviceInitializer.js';
 import {
   NOTES_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -30,20 +31,12 @@ class ComponentCleaningService {
    * @param dependencies.safeEventDispatcher
    */
   constructor({ logger, safeEventDispatcher }) {
-    if (!logger) {
-      console.error('ComponentCleaningService: logger dependency missing.');
-      throw new Error('ComponentCleaningService requires a logger.');
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      const errMsg =
-        'ComponentCleaningService: Missing or invalid safeEventDispatcher.';
-      console.error(errMsg);
-      throw new Error(errMsg);
-    }
-    this.#logger = logger;
+    this.#logger = setupService('ComponentCleaningService', logger, {
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#cleaners = new Map();
 

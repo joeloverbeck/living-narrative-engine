@@ -30,7 +30,12 @@ beforeAll(() => {
  */
 function makeDeps() {
   return {
-    logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
+    logger: {
+      info: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    },
     storageProvider: {
       listFiles: jest.fn(),
       readFile: jest.fn(),

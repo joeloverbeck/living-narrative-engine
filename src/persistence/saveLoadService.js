@@ -4,6 +4,7 @@ import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import { encode } from '@msgpack/msgpack';
 import { deepClone } from '../utils/objectUtils.js';
 import GameStateSerializer from './gameStateSerializer.js';
+import { setupService } from '../utils/serviceInitializer.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -55,15 +56,18 @@ class SaveLoadService extends ISaveLoadService {
   }) {
     // <<< MODIFIED SIGNATURE with destructuring
     super();
-    if (!logger)
-      throw new Error(
-        'SaveLoadService requires a valid ILogger instance (after destructuring).'
-      );
-    if (!storageProvider)
-      throw new Error(
-        'SaveLoadService requires a valid IStorageProvider instance (after destructuring).'
-      );
-    this.#logger = logger;
+    this.#logger = setupService('SaveLoadService', logger, {
+      storageProvider: {
+        value: storageProvider,
+        requiredMethods: [
+          'writeFileAtomically',
+          'listFiles',
+          'readFile',
+          'deleteFile',
+          'fileExists',
+        ],
+      },
+    });
     this.#storageProvider = storageProvider;
     this.#serializer =
       gameStateSerializer || new GameStateSerializer({ logger, crypto });
