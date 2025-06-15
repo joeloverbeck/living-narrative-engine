@@ -4,10 +4,7 @@
 
 /** @typedef {import('./defs.js').OperationHandler}           OperationHandler */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-import {
-  initLogger,
-  validateServiceDeps,
-} from '../utils/serviceInitializer.js';
+import { initLogger } from '../utils/serviceInitializer.js';
 import { initLogger as baseInitLogger } from '../utils/loggerUtils.js';
 
 class OperationRegistry {
@@ -28,7 +25,7 @@ class OperationRegistry {
       optional: true,
     });
     this.#logger = initLogger('OperationRegistry', validated);
-    this.#log('info', 'OperationRegistry initialized.');
+    this.#logger.info('OperationRegistry initialized.');
   }
 
   // ---------------------------------------------------------------------------
@@ -44,7 +41,7 @@ class OperationRegistry {
     if (typeof operationType !== 'string' || !operationType.trim()) {
       const msg =
         'OperationRegistry.register: operationType must be a non-empty string.';
-      this.#log('error', msg);
+      this.#logger.error(msg);
       throw new Error(msg);
     }
 
@@ -52,22 +49,20 @@ class OperationRegistry {
 
     if (typeof handler !== 'function') {
       const msg = `OperationRegistry.register: handler for type "${trimmed}" must be a function.`;
-      this.#log('error', msg);
+      this.#logger.error(msg);
       throw new Error(msg);
     }
 
     // --- overwrite warning ---------------------------------------------------
     if (this.#registry.has(trimmed)) {
-      this.#log(
-        'warn',
+      this.#logger.warn(
         `OperationRegistry: Overwriting existing handler for operation type "${trimmed}".`
       );
     }
 
     // --- store & debug-log ---------------------------------------------------
     this.#registry.set(trimmed, handler);
-    this.#log(
-      'debug',
+    this.#logger.debug(
       `OperationRegistry: Registered handler for operation type "${trimmed}".`
     );
   }
@@ -82,8 +77,7 @@ class OperationRegistry {
    */
   getHandler(operationType) {
     if (typeof operationType !== 'string') {
-      this.#log(
-        'warn',
+      this.#logger.warn(
         `OperationRegistry.getHandler: Received non-string operationType: ${typeof operationType}. Returning undefined.`
       );
       return undefined;
@@ -93,64 +87,12 @@ class OperationRegistry {
     const handler = this.#registry.get(trimmed);
 
     if (!handler) {
-      this.#log(
-        'debug',
+      this.#logger.debug(
         `OperationRegistry: No handler found for operation type "${trimmed}".`
       );
     }
 
     return handler;
-  }
-
-  // ---------------------------------------------------------------------------
-  //  Internal logging helper – resilient to faulty or missing loggers
-  // ---------------------------------------------------------------------------
-
-  /**
-   * @param {'info'|'warn'|'error'|'debug'} level
-   * @param message
-   * @param {...any} rest
-   */
-  #log(level, message, ...rest) {
-    const loggerFn =
-      this.#logger && typeof this.#logger[level] === 'function'
-        ? this.#logger[level]
-        : null;
-
-    if (loggerFn) {
-      try {
-        loggerFn.call(this.#logger, message, ...rest);
-        return;
-      } catch (err) {
-        // Logger itself mis-behaved – fall through to console fallback
-        try {
-          console.error(
-            `Error occurred in logging utility (faulty logger method for level '${level}') trying to log message: "${message}"`,
-            err
-          );
-        } catch {
-          /* no-op */
-        }
-        // continue to fallback
-      }
-    }
-
-    // --- console fallback ----------------------------------------------------
-    const upper = level.toUpperCase();
-
-    // Prefer the matching console method if it exists (keeps test expectations)
-    if (typeof console[level] === 'function') {
-      // info/warn/error/debug flow straight through (no [LEVEL] prefix)
-      console[level](message, ...rest);
-      return;
-    }
-
-    // Last-ditch: console.log with [LEVEL] prefix (used by the “faulty logger” tests)
-    try {
-      console.log(`[${upper}] ${message}`, ...rest);
-    } catch {
-      /* no-op */
-    }
   }
 }
 
