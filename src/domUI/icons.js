@@ -7,18 +7,29 @@
 
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 
-/**
- * SVG icon for "thoughts" bubble. Sized 20x20.
- *
- * @type {string}
- */
-export const THOUGHT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M16.417 10.333c0-2.347-1.9-4.25-4.25-4.25h-.354a.354.354 0 0 1-.353-.354c0-1.76-1.433-3.196-3.196-3.196S5.07 4.023 5.07 5.783c0 .162.013.32.036.477a.354.354 0 0 1-.29.388C2.96 7.02.833 8.942.833 11.283c0 2.457 1.993 4.45 4.45 4.45.24 0 .474-.014.704-.042a.354.354 0 0 1 .343.23c.44 1.133 1.512 1.946 2.793 1.946h.14c1.556 0 2.82-1.263 2.82-2.82v-.526a.354.354 0 0 1 .354-.354h2.147c1.045 0 1.92-.764 2.07-1.767.1-.64-.103-1.27-.52-1.763z"/></svg>`;
 
 /**
- * SVG icon for "notes" (document/page). Sized 20x20.
+ * Sets the data registry used by {@link getIcon} to look up icon markup.
  *
- * @type {string}
+ * @param {import('../interfaces/coreServices.js').IDataRegistry} registry - The
+ * registry instance that stores UI icon definitions under the `ui-icons` type.
  */
+export function setIconRegistry(registry) {
+  iconRegistry = registry;
+}
+
+/**
+ * Retrieves SVG markup for a named icon.
+ *
+ * The function first attempts to obtain the icon from the provided
+ * {@link IDataRegistry} instance. If the lookup fails or no registry has been
+ * set, a built-in fallback icon is returned.
+ *
+ * @param {string} name - The icon name to retrieve.
+ * @returns {string} The SVG markup for the icon. Returns an empty string if no
+ * icon is found.
+ */
+
 export const NOTES_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.828a2 2 0 0 0-.586-1.414l-4.414-4.414A2 2 0 0 0 11.172 2H4zm5.5 2.5a.5.5 0 0 0-.5-.5H5a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V9.5a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5V11H6V9h3.5V6.5zM11 5H6V4h5v1z" clip-rule="evenodd"/></svg>`;
 
 const DEFAULT_ICONS = {
@@ -55,5 +66,6 @@ export function getIcon(name) {
       return custom.markup;
     }
   }
+
   return DEFAULT_ICONS[name] || '';
 }
