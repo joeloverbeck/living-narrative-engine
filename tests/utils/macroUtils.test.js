@@ -42,4 +42,44 @@ describe('expandMacros', () => {
       { type: 'END_TURN', parameters: {} },
     ]);
   });
+
+  it('expands macros inside IF parameters', () => {
+    const macros = {
+      'core:log': { actions: [{ type: 'LOG', parameters: { msg: 'X' } }] },
+    };
+    const actions = [
+      {
+        type: 'IF',
+        parameters: {
+          condition: { '==': [1, 1] },
+          then_actions: [{ macro: 'core:log' }],
+          else_actions: [],
+        },
+      },
+    ];
+    const result = expandMacros(actions, createRegistry(macros), logger);
+    expect(result[0].parameters.then_actions).toEqual([
+      { type: 'LOG', parameters: { msg: 'X' } },
+    ]);
+  });
+
+  it('expands macros inside FOR_EACH actions', () => {
+    const macros = {
+      'core:log': { actions: [{ type: 'LOG', parameters: { msg: 'item' } }] },
+    };
+    const actions = [
+      {
+        type: 'FOR_EACH',
+        parameters: {
+          collection: 'context.items',
+          item_variable: 'i',
+          actions: [{ macro: 'core:log' }],
+        },
+      },
+    ];
+    const result = expandMacros(actions, createRegistry(macros), logger);
+    expect(result[0].parameters.actions).toEqual([
+      { type: 'LOG', parameters: { msg: 'item' } },
+    ]);
+  });
 });

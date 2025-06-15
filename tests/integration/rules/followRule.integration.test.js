@@ -151,14 +151,14 @@ describe('core_handle_follow rule integration', () => {
         logger,
       }),
       END_TURN: new EndTurnHandler({
-        safeEventDispatcher: eventBus,
+        safeEventDispatcher: safeDispatcher,
         logger,
       }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
       GET_NAME: new GetNameHandler({
         entityManager,
         logger,
-        safeEventDispatcher: eventBus,
+        safeEventDispatcher: safeDispatcher,
       }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
     };
@@ -216,7 +216,10 @@ describe('core_handle_follow rule integration', () => {
     };
     const expandedRule = {
       ...followRule,
-      actions: expandMacros(followRule.actions, macroRegistry),
+      actions: expandMacros(
+        JSON.parse(JSON.stringify(followRule.actions)),
+        macroRegistry
+      ),
     };
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
