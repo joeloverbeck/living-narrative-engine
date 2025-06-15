@@ -154,6 +154,7 @@ function init(entities) {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
       logger,
+      safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     SET_VARIABLE: new SetVariableHandler({ logger }),

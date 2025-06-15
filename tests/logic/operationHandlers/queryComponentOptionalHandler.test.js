@@ -43,29 +43,40 @@ const ctx = (overrides = {}) => ({
 describe('QueryComponentOptionalHandler', () => {
   /** @type {QueryComponentOptionalHandler} */
   let handler;
+  let safeDispatcher;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    safeDispatcher = { dispatch: jest.fn() };
     handler = new QueryComponentOptionalHandler({
       entityManager: mockEntityManager,
       logger: mockLogger,
+      safeEventDispatcher: safeDispatcher,
     });
   });
 
   test('constructor throws with invalid deps', () => {
     expect(
-      () => new QueryComponentOptionalHandler({ logger: mockLogger })
+      () =>
+        new QueryComponentOptionalHandler({
+          logger: mockLogger,
+          safeEventDispatcher: { dispatch: jest.fn() },
+        })
     ).toThrow(/EntityManager/);
     expect(
       () =>
         new QueryComponentOptionalHandler({
           entityManager: {},
           logger: mockLogger,
+          safeEventDispatcher: { dispatch: jest.fn() },
         })
     ).toThrow(/getComponentData/);
     expect(
       () =>
-        new QueryComponentOptionalHandler({ entityManager: mockEntityManager })
+        new QueryComponentOptionalHandler({
+          entityManager: mockEntityManager,
+          safeEventDispatcher: { dispatch: jest.fn() },
+        })
     ).toThrow(/ILogger/);
   });
 
@@ -85,6 +96,7 @@ describe('QueryComponentOptionalHandler', () => {
     );
     expect(c.evaluationContext.context.data).toEqual(result);
     expect(mockLogger.error).not.toHaveBeenCalled();
+    expect(safeDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   test('stores null when component missing', () => {
@@ -100,6 +112,7 @@ describe('QueryComponentOptionalHandler', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining("Stored 'null'")
     );
+    expect(safeDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   test('uses execution context logger if provided', () => {
@@ -119,5 +132,6 @@ describe('QueryComponentOptionalHandler', () => {
     handler.execute(params, c);
     expect(customLogger.debug).toHaveBeenCalled();
     expect(mockLogger.debug).not.toHaveBeenCalled();
+    expect(safeDispatcher.dispatch).not.toHaveBeenCalled();
   });
 });
