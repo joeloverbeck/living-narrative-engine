@@ -91,34 +91,20 @@ class ActionLoader extends BaseManifestItemLoader {
     // Primary validation happens in BaseManifestItemLoader._processFileWrapper now
     // No need to call this._validatePrimarySchema(data, filename, modId, resolvedPath); here
 
-    // --- Step 2: ID Extraction & Validation ---
-    const { fullId: trimmedIdFromFile, baseId: baseActionId } =
-      parseAndValidateId(data, 'id', modId, filename, this._logger);
-
-    const finalRegistryKey = `${modId}:${baseActionId}`; // This IS the key used in the registry by the helper
-
-    this._logger.debug(
-      `ActionLoader [${modId}]: Extracted full ID '${trimmedIdFromFile}' and base ID '${baseActionId}' from ${filename}. Final registry key will be '${finalRegistryKey}'.`
-    );
-
-    // --- Step 3: Data Storage (Using Base Helper) ---
-    this._logger.debug(
-      `ActionLoader [${modId}]: Delegating storage for action (base ID: '${baseActionId}') from ${filename} to base helper.`
-    );
-    const didOverride = this._storeItemInRegistry(
+    // --- Step 2 & 3: ID Handling and Storage via Helper ---
+    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+      data,
+      'id',
       'actions',
       modId,
-      baseActionId,
-      data,
       filename
     );
 
     // --- Step 4: Return Value ---
     this._logger.debug(
-      `ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
+      `ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
     );
-    // Return the object as required by the base class contract
-    return { qualifiedId: finalRegistryKey, didOverride: didOverride }; // <<< MODIFIED Return Value
+    return { qualifiedId, didOverride };
   }
 }
 

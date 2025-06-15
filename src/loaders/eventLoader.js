@@ -149,20 +149,18 @@ class EventLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `EventLoader [${modId}]: Delegating storage for event (base ID: '${baseEventId}') from ${filename} to base helper.`
     );
-    const didOverride = this._storeItemInRegistry(
+    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+      data,
+      'id',
       typeName,
       modId,
-      baseEventId,
-      data,
       filename
     );
 
-    const finalRegistryKey = `${modId}:${baseEventId}`;
     this._logger.debug(
-      `EventLoader [${modId}]: Successfully processed event definition from ${filename}. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
+      `EventLoader [${modId}]: Successfully processed event definition from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
     );
-    // Return the object as required by the base class contract
-    return { qualifiedId: finalRegistryKey, didOverride: didOverride }; // <<< MODIFIED Return Value
+    return { qualifiedId, didOverride };
   }
 }
 
