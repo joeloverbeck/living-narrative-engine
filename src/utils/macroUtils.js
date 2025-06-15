@@ -19,23 +19,40 @@ export function expandMacros(actions, registry, logger) {
   /** @type {object[]} */
   const result = [];
   for (const action of actions) {
-    if (
-      action &&
-      typeof action === 'object' &&
-      typeof action.macro === 'string'
-    ) {
-      const macro = registry.get('macros', action.macro);
-      if (!macro || !Array.isArray(macro.actions)) {
-        logger &&
-          logger.warn &&
-          logger.warn(`expandMacros: macro '${action.macro}' not found.`);
+    if (action && typeof action === 'object') {
+      if (typeof action.macro === 'string') {
+        const macro = registry.get('macros', action.macro);
+        if (!macro || !Array.isArray(macro.actions)) {
+          logger?.warn?.(`expandMacros: macro '${action.macro}' not found.`);
+          continue;
+        }
+        const expanded = expandMacros(macro.actions, registry, logger);
+        result.push(...expanded);
         continue;
       }
-      const expanded = expandMacros(macro.actions, registry, logger);
-      result.push(...expanded);
-    } else {
-      result.push(action);
+
+      const params = action.parameters;
+      if (params && typeof params === 'object') {
+        if (Array.isArray(params.then_actions)) {
+          params.then_actions = expandMacros(
+            params.then_actions,
+            registry,
+            logger
+          );
+        }
+        if (Array.isArray(params.else_actions)) {
+          params.else_actions = expandMacros(
+            params.else_actions,
+            registry,
+            logger
+          );
+        }
+        if (Array.isArray(params.actions)) {
+          params.actions = expandMacros(params.actions, registry, logger);
+        }
+      }
     }
+    result.push(action);
   }
   return result;
 }
