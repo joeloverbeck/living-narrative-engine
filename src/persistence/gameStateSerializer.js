@@ -150,7 +150,7 @@ class GameStateSerializer {
    * Decompresses Gzip-compressed data.
    *
    * @param {Uint8Array} data - Compressed data.
-   * @returns {{success: boolean, data?: Uint8Array, error?: string, userFriendlyError?: string}} Outcome of decompression.
+   * @returns {{success: boolean, data?: Uint8Array, error?: PersistenceError, userFriendlyError?: string}} Outcome of decompression.
    */
   decompress(data) {
     try {
@@ -178,7 +178,7 @@ class GameStateSerializer {
    * Deserializes MessagePack data.
    *
    * @param {Uint8Array} buffer - Data to deserialize.
-   * @returns {{success: boolean, data?: object, error?: string, userFriendlyError?: string}} Outcome of deserialization.
+   * @returns {{success: boolean, data?: object, error?: PersistenceError, userFriendlyError?: string}} Outcome of deserialization.
    */
   deserialize(buffer) {
     try {
