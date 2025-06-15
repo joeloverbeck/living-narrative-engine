@@ -5,11 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing base intimacy system.">
-      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/get_close.rule.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/intimacy_show_onlookers.rule.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/step_back.rule.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/loadGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/loadGameUI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/saveGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/saveGameUI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/contextVariableUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/contextVariableUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/textUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/textUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/loadGameUI.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/loadGameUI.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/saveGameUI.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/saveGameUI.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/rules/stepBackRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/stepBackRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/contextVariableUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/contextVariableUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/textUtils.formatTimestamp.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/textUtils.formatTimestamp.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +120,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.closenessCircleService.test.js">
+  <component name="RunManager" selected="Jest.modManifestLoader.validation.test.js">
     <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -142,6 +148,15 @@
       <test-file value="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="modManifestLoader.validation.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/modding/modManifestLoader.validation.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="modifyArrayFieldHandler.pushUnique.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -151,22 +166,13 @@
       <test-file value="$PROJECT_DIR$/tests/logic/operationHandlers/modifyArrayFieldHandler.pushUnique.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="nestedPlaceholderResolution.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/integration/nestedPlaceholderResolution.integration.test.js" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.modManifestLoader.validation.test.js" />
         <item itemvalue="Jest.closenessCircleService.test.js" />
         <item itemvalue="Jest.closeness.schema.test.js" />
         <item itemvalue="Jest.modifyArrayFieldHandler.pushUnique.test.js" />
         <item itemvalue="Jest.Tests in tests\" />
-        <item itemvalue="Jest.nestedPlaceholderResolution.integration.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -188,23 +194,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="23822000" />
-    </task>
-    <task id="LOCAL-00070" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749923884930</created>
-      <option name="number" value="00070" />
-      <option name="presentableId" value="LOCAL-00070" />
-      <option name="project" value="LOCAL" />
-      <updated>1749923884930</updated>
-    </task>
-    <task id="LOCAL-00071" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749924588382</created>
-      <option name="number" value="00071" />
-      <option name="presentableId" value="LOCAL-00071" />
-      <option name="project" value="LOCAL" />
-      <updated>1749924588382</updated>
+      <workItem from="1749963238113" duration="24919000" />
     </task>
     <task id="LOCAL-00072" summary="Unifying paths.">
       <option name="closed" value="true" />
@@ -582,7 +572,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749990020994</updated>
     </task>
-    <option name="localTasksCounter" value="119" />
+    <task id="LOCAL-00119" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749991048746</created>
+      <option name="number" value="00119" />
+      <option name="presentableId" value="LOCAL-00119" />
+      <option name="project" value="LOCAL" />
+      <updated>1749991048746</updated>
+    </task>
+    <task id="LOCAL-00120" summary="Implementing base intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749991448781</created>
+      <option name="number" value="00120" />
+      <option name="presentableId" value="LOCAL-00120" />
+      <option name="project" value="LOCAL" />
+      <updated>1749991448781</updated>
+    </task>
+    <option name="localTasksCounter" value="121" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

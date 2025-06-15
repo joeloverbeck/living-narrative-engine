@@ -6,6 +6,11 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "$schema": {
+      "description": "Reference to the JSON Schema file that defines the structure of this document.",
+      "type": "string",
+      "format": "uri"
+    },
     "id": {
       "description": "Unique identifier for the mod (must match its folder name under mods/). Case-insensitive for lookups, but preserved casing stored.",
       "type": "string",
@@ -88,7 +93,11 @@
       }
     }
   },
-  "required": ["id", "version", "name"],
+  "required": [
+    "id",
+    "version",
+    "name"
+  ],
   "definitions": {
     "contentFileList": {
       "description": "Array of relative paths (using forward slashes '/') to .json definition files for a specific content type. Paths must not start with '/' or contain '..'.",
@@ -116,7 +125,10 @@
           "minLength": 1
         }
       },
-      "required": ["id", "version"]
+      "required": [
+        "id",
+        "version"
+      ]
     }
   }
 }
