@@ -114,7 +114,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
    * Handles the DISPLAY_SPEECH_ID event.
    *
    * @private
-   * @param {import('../events/event.js').IEvent<DisplaySpeechPayload>} eventObject - The event object.
+   * @param {{type: string, payload: DisplaySpeechPayload}} eventObject - The event object.
    */
   #onDisplaySpeech(eventObject) {
     if (!eventObject || !eventObject.payload) {

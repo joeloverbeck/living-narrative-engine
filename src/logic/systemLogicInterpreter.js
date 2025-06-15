@@ -6,6 +6,8 @@
 import { createJsonLogicContext } from './contextAssembler.js';
 import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -42,21 +44,40 @@ class SystemLogicInterpreter {
     entityManager,
     operationInterpreter,
   }) {
-    if (!logger) throw new Error('SystemLogicInterpreter: logger required');
-    if (!eventBus?.subscribe)
-      throw new Error('SystemLogicInterpreter: eventBus invalid');
-    if (!dataRegistry)
-      throw new Error('SystemLogicInterpreter: dataRegistry invalid');
-    if (!jsonLogicEvaluationService)
-      throw new Error(
-        'SystemLogicInterpreter: jsonLogicEvaluationService invalid'
-      );
-    if (!entityManager)
-      throw new Error('SystemLogicInterpreter: entityManager invalid');
-    if (!operationInterpreter)
-      throw new Error('SystemLogicInterpreter: operationInterpreter invalid');
+    validateDependency(logger, 'logger', console, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+    const effectiveLogger = ensureValidLogger(logger, 'SystemLogicInterpreter');
 
-    this.#logger = logger;
+    validateDependency(eventBus, 'eventBus', effectiveLogger, {
+      requiredMethods: ['subscribe'],
+    });
+    validateDependency(dataRegistry, 'dataRegistry', effectiveLogger, {
+      requiredMethods: ['getAllSystemRules'],
+    });
+    validateDependency(
+      jsonLogicEvaluationService,
+      'jsonLogicEvaluationService',
+      effectiveLogger,
+      { requiredMethods: ['evaluate'] }
+    );
+    validateDependency(entityManager, 'entityManager', effectiveLogger, {
+      requiredMethods: [
+        'getComponentData',
+        'getEntityInstance',
+        'hasComponent',
+      ],
+    });
+    validateDependency(
+      operationInterpreter,
+      'operationInterpreter',
+      effectiveLogger,
+      {
+        requiredMethods: ['execute'],
+      }
+    );
+
+    this.#logger = effectiveLogger;
     this.#eventBus = eventBus;
     this.#dataRegistry = dataRegistry;
     this.#jsonLogic = jsonLogicEvaluationService;

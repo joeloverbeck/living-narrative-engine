@@ -102,8 +102,7 @@ describe('JsonLogicEvaluationService', () => {
     });
 
     test('should throw an error if logger dependency is missing or invalid', () => {
-      const expectedErrorMsg =
-        'JsonLogicEvaluationService requires a valid ILogger instance.';
+      const expectedErrorMsg = 'Missing required dependency: logger.';
       expect(() => new JsonLogicEvaluationService({})).toThrow(
         expectedErrorMsg
       );

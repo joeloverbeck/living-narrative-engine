@@ -240,7 +240,10 @@ describe('OperationRegistry', () => {
       );
       // #log calls console.error internally before throwing
       expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'OperationRegistry: ',
+        expectedErrorMsg
+      );
       expect(mockLogger.error).not.toHaveBeenCalled(); // Ensure mock logger wasn't used
     });
 
@@ -261,11 +264,13 @@ describe('OperationRegistry', () => {
       // #log calls console.warn internally
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'OperationRegistry: ',
         `OperationRegistry: Overwriting existing handler for operation type "${operationType}".`
       );
       // #log also calls console.debug (or log fallback) for the registration itself
       expect(consoleDebugSpy).toHaveBeenCalledTimes(1);
       expect(consoleDebugSpy).toHaveBeenCalledWith(
+        'OperationRegistry: ',
         `OperationRegistry: Registered handler for operation type "${operationType}".`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled(); // Ensure mock logger wasn't used
@@ -379,6 +384,7 @@ describe('OperationRegistry', () => {
       // Check the appropriate console spy (debug or log fallback)
       expect(consoleDebugSpy).toHaveBeenCalledTimes(1);
       expect(consoleDebugSpy).toHaveBeenCalledWith(
+        'OperationRegistry: ',
         `OperationRegistry: No handler found for operation type "${unregisteredType}".`
       );
       expect(mockLogger.debug).not.toHaveBeenCalled();
@@ -395,6 +401,7 @@ describe('OperationRegistry', () => {
 
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'OperationRegistry: ',
         `OperationRegistry.getHandler: Received non-string operationType: ${typeof false}. Returning undefined.`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();

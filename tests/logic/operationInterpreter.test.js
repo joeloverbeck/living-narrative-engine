@@ -124,24 +124,26 @@ describe('OperationInterpreter', () => {
   test('constructor should throw if logger is missing or invalid', () => {
     expect(
       () => new OperationInterpreter({ operationRegistry: mockRegistry })
-    ).toThrow('ILogger');
+    ).toThrow('Missing required dependency: logger.');
     expect(
       () =>
         new OperationInterpreter({
           logger: {},
           operationRegistry: mockRegistry,
         })
-    ).toThrow('ILogger');
+    ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
   });
 
   test('constructor should throw if registry is missing or invalid', () => {
     expect(() => new OperationInterpreter({ logger: mockLogger })).toThrow(
-      'OperationRegistry'
+      'Missing required dependency: operationRegistry.'
     );
     expect(
       () =>
         new OperationInterpreter({ logger: mockLogger, operationRegistry: {} })
-    ).toThrow('OperationRegistry');
+    ).toThrow(
+      "Invalid or missing method 'getHandler' on dependency 'operationRegistry'."
+    );
   });
 
   test('constructor should initialize successfully with valid dependencies', () => {
