@@ -150,11 +150,11 @@ class ComponentLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `ComponentLoader [${modId}]: Delegating storage of component definition metadata using BASE ID '${baseComponentId}' to base class helper.`
     );
-    const didOverride = this._storeItemInRegistry(
+    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+      data,
+      'id',
       'components',
       modId,
-      baseComponentId,
-      data,
       filename
     );
 
@@ -162,7 +162,7 @@ class ComponentLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
     );
-    return { qualifiedId: finalRegistryKey, didOverride: didOverride };
+    return { qualifiedId, didOverride };
   }
 }
 

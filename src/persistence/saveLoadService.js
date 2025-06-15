@@ -3,6 +3,7 @@
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import { encode, decode } from '@msgpack/msgpack'; //
 import pako from 'pako'; //
+import { deepClone } from '../utils/objectUtils.js';
 // REMOVED: import {createHash} from 'crypto';
 
 // --- Type Imports ---
@@ -100,26 +101,6 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
-   * Deep clones an object using JSON stringify/parse.
-   * Suitable for POJOs as used in the save game structure.
-   *
-   * @param {object} obj - The object to clone.
-   * @returns {object} The cloned object.
-   * @private
-   */
-  #deepClone(obj) {
-    if (obj === null || typeof obj !== 'object') {
-      return obj;
-    }
-    try {
-      return JSON.parse(JSON.stringify(obj));
-    } catch (e) {
-      this.#logger.error('DeepClone failed:', e);
-      throw new Error('Failed to deep clone object for saving.');
-    }
-  }
-
-  /**
    * Serializes the game state to MessagePack and then compresses it with Gzip.
    * Calculates and embeds the gameStateChecksum before full serialization.
    * This method is now asynchronous due to #generateChecksum being async.
@@ -129,7 +110,13 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   async #serializeAndCompress(gameStateObject) {
-    const finalSaveObject = this.#deepClone(gameStateObject);
+    let finalSaveObject;
+    try {
+      finalSaveObject = deepClone(gameStateObject);
+    } catch (e) {
+      this.#logger.error('DeepClone failed:', e);
+      throw new Error('Failed to deep clone object for saving.');
+    }
 
     if (
       !finalSaveObject.gameState ||
@@ -522,7 +509,13 @@ class SaveLoadService extends ISaveLoadService {
         }
       }
 
-      const mutableGameState = this.#deepClone(gameStateObject);
+      let mutableGameState;
+      try {
+        mutableGameState = deepClone(gameStateObject);
+      } catch (e) {
+        this.#logger.error('DeepClone failed:', e);
+        throw new Error('Failed to deep clone object for saving.');
+      }
 
       if (!mutableGameState.metadata) mutableGameState.metadata = {};
       mutableGameState.metadata.saveName = saveName;

@@ -68,4 +68,25 @@ export function freeze(o) {
   return Object.freeze(o);
 }
 
+/**
+ * Creates a deep clone of a plain object or array using JSON
+ * serialization.
+ *
+ * @description
+ * Suitable for cloning simple data structures that do not contain
+ * functions or circular references. Non-serializable values will be
+ * dropped during cloning.
+ * @template T
+ * @param {T} value - The value to clone.
+ * @returns {T} The cloned value or the original primitive.
+ * @throws {Error} If the value cannot be stringified (e.g. circular structure).
+ */
+export function deepClone(value) {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+
+  return JSON.parse(JSON.stringify(value));
+}
+
 // Add other generic object utilities here in the future if needed.

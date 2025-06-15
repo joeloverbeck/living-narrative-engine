@@ -127,7 +127,7 @@ describe('SaveLoadService additional coverage', () => {
     expect(res.success).toBe(true);
   });
 
-  it('#deepClone returns primitive values unchanged', async () => {
+  it('deepClone returns primitive values unchanged', async () => {
     storageProvider.ensureDirectoryExists.mockResolvedValue();
     let written;
     storageProvider.writeFileAtomically.mockImplementation((path, data) => {

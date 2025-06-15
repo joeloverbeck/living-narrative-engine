@@ -16,6 +16,7 @@ import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.j
 
 // --- Import Tokens ---
 import { tokens } from '../dependencyInjection/tokens.js';
+import { deepClone } from '../utils/objectUtils.js';
 // --- MODIFICATION START: Import component IDs for cleaning logic ---
 import {
   CURRENT_ACTOR_COMPONENT_ID,
@@ -71,22 +72,6 @@ class GamePersistenceService extends IGamePersistenceService {
   }
 
   /**
-   * @param obj
-   * @private
-   */
-  #deepClone(obj) {
-    if (obj === null || typeof obj !== 'object') {
-      return obj;
-    }
-    try {
-      return JSON.parse(JSON.stringify(obj));
-    } catch (e) {
-      this.#logger.error('GamePersistenceService.#deepClone failed:', e, obj);
-      throw new Error('Failed to deep clone object data.');
-    }
-  }
-
-  /**
    * Captures the current game state.
    *
    * @param {string | null | undefined} activeWorldName - The name of the currently active world, passed from GameEngine.
@@ -118,7 +103,17 @@ class GamePersistenceService extends IGamePersistenceService {
         }
 
         // --- TKT-008 MODIFICATION START: Clean component data before saving ---
-        const dataToSave = this.#deepClone(componentData);
+        let dataToSave;
+        try {
+          dataToSave = deepClone(componentData);
+        } catch (e) {
+          this.#logger.error(
+            'GamePersistenceService.#deepClone failed:',
+            e,
+            componentData
+          );
+          throw new Error('Failed to deep clone object data.');
+        }
 
         // This switch handles cleaning for specific, known component structures.
         // This is more robust than checking for properties on every single component.
