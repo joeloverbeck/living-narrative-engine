@@ -22,6 +22,35 @@ const EXPECTED_SCHEMA_FILES = [
   'rule.schema.json',
   'llm-configs.schema.json',
   'prompt-text.schema.json',
+  'macro.schema.json',
+  'addComponent.schema.json',
+  'addPerceptionLogEntry.schema.json',
+  'autoMoveFollowers.schema.json',
+  'breakFollowRelation.schema.json',
+  'checkFollowCycle.schema.json',
+  'dispatchEvent.schema.json',
+  'dispatchPerceptibleEvent.schema.json',
+  'dispatchSpeech.schema.json',
+  'endTurn.schema.json',
+  'establishFollowRelation.schema.json',
+  'forEach.schema.json',
+  'getName.schema.json',
+  'getTimestamp.schema.json',
+  'hasComponent.schema.json',
+  'if.schema.json',
+  'ifCoLocated.schema.json',
+  'log.schema.json',
+  'math.schema.json',
+  'modifyArrayField.schema.json',
+  'modifyComponent.schema.json',
+  'modifyContextArray.schema.json',
+  'queryComponent.schema.json',
+  'queryEntities.schema.json',
+  'rebuildLeaderListCache.schema.json',
+  'removeComponent.schema.json',
+  'resolveDirection.schema.json',
+  'setVariable.schema.json',
+  'systemMoveEntity.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -34,15 +63,18 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
   events: 'http://example.com/schemas/event-definition.schema.json',
   items: 'http://example.com/schemas/entity.schema.json',
   locations: 'http://example.com/schemas/entity.schema.json',
+  macros: 'http://example.com/schemas/macro.schema.json',
   operations: 'http://example.com/schemas/operation.schema.json',
   rules: 'http://example.com/schemas/rule.schema.json',
   'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
 };
 
 // Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
+// eslint-disable-next-line no-unused-vars
 const EXPECTED_MANIFEST_SCHEMA_ID = EXPECTED_CONTENT_TYPE_SCHEMAS.manifest;
 
 // Expected derived paths
+// eslint-disable-next-line no-unused-vars
 const EXPECTED_SCHEMA_BASE_PATH = `${EXPECTED_BASE_DATA_PATH}/schemas`; // ./data/schemas
 
 // --- Test Suite ---
@@ -74,7 +106,7 @@ describe('StaticConfiguration', () => {
       expect(files).toEqual(EXPECTED_SCHEMA_FILES);
       // Verify order as well (toEqual checks order for arrays)
       expect(files[0]).toBe('common.schema.json');
-      expect(files[files.length - 1]).toBe('prompt-text.schema.json');
+      expect(files[files.length - 1]).toBe('systemMoveEntity.schema.json');
     });
 
     it('should return a *copy* of the internal schema files array', () => {

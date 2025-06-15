@@ -9,6 +9,37 @@
  *
  * @implements {IConfiguration}
  */
+const OPERATION_SCHEMA_FILES = [
+  'addComponent.schema.json',
+  'addPerceptionLogEntry.schema.json',
+  'autoMoveFollowers.schema.json',
+  'breakFollowRelation.schema.json',
+  'checkFollowCycle.schema.json',
+  'dispatchEvent.schema.json',
+  'dispatchPerceptibleEvent.schema.json',
+  'dispatchSpeech.schema.json',
+  'endTurn.schema.json',
+  'establishFollowRelation.schema.json',
+  'forEach.schema.json',
+  'getName.schema.json',
+  'getTimestamp.schema.json',
+  'hasComponent.schema.json',
+  'if.schema.json',
+  'ifCoLocated.schema.json',
+  'log.schema.json',
+  'math.schema.json',
+  'modifyArrayField.schema.json',
+  'modifyComponent.schema.json',
+  'modifyContextArray.schema.json',
+  'queryComponent.schema.json',
+  'queryEntities.schema.json',
+  'rebuildLeaderListCache.schema.json',
+  'removeComponent.schema.json',
+  'resolveDirection.schema.json',
+  'setVariable.schema.json',
+  'systemMoveEntity.schema.json',
+];
+
 class StaticConfiguration {
   #baseDataPath = './data'; // Base path relative to execution
 
@@ -75,6 +106,8 @@ class StaticConfiguration {
       'rule.schema.json',
       'llm-configs.schema.json',
       'prompt-text.schema.json',
+      'macro.schema.json',
+      ...OPERATION_SCHEMA_FILES,
     ];
   }
 
@@ -96,6 +129,7 @@ class StaticConfiguration {
       items: 'http://example.com/schemas/entity.schema.json',
       locations: 'http://example.com/schemas/entity.schema.json',
       'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
+      macros: 'http://example.com/schemas/macro.schema.json',
       operations: 'http://example.com/schemas/operation.schema.json',
       rules: 'http://example.com/schemas/rule.schema.json',
       'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
