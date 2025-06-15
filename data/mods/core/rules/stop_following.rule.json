@@ -116,23 +116,13 @@
         ],
         "else_actions": [
           {
-            "type": "DISPATCH_EVENT",
-            "comment": "Inform the UI that the action failed because the actor wasn't following anyone.",
+            "type": "SET_VARIABLE",
             "parameters": {
-              "eventType": "core:display_failed_action_result",
-              "payload": {
-                "message": "You are not following anyone."
-              }
+              "variable_name": "logMessage",
+              "value": "You are not following anyone."
             }
           },
-          {
-            "type": "END_TURN",
-            "comment": "End the turn unsuccessfully.",
-            "parameters": {
-              "entityId": "{event.payload.actorId}",
-              "success": false
-            }
-          }
+          { "macro": "core:logFailureAndEndTurn" }
         ]
       }
     }
