@@ -40,7 +40,10 @@ export function registerPersistence(container) {
   const logger = container.resolve(tokens.ILogger);
   logger.debug('Persistence Registration: Starting...');
 
-  r.single(tokens.IStorageProvider, BrowserStorageProvider, [tokens.ILogger]);
+  r.single(tokens.IStorageProvider, BrowserStorageProvider, [
+    tokens.ILogger,
+    tokens.ISafeEventDispatcher,
+  ]);
   logger.debug(
     `Persistence Registration: Registered ${String(tokens.IStorageProvider)}.`
   );
