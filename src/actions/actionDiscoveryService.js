@@ -230,14 +230,10 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           }
         }
       } catch (err) {
-        this.#logger.error(
-          `Error processing action ${actionDef.id} for actor ${actorEntity.id}:`,
-          err
-        );
         safeDispatchError(
           this.#safeEventDispatcher,
           `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
-          { error: err.message }
+          { error: err.message, stack: err.stack }
         );
       }
     }
