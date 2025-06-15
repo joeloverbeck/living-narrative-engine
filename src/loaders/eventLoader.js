@@ -7,11 +7,9 @@
 
 // --- Base Class Import ---
 // Adjust path relative to this file's location if needed
-import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Assuming it's in loaders sibling dir
+import { BaseInlineSchemaLoader } from './baseInlineSchemaLoader.js';
 
 import { parseAndValidateId } from '../utils/idUtils.js';
-import { extractBaseId } from '../utils/idUtils.js';
-import { registerInlineSchema } from '../utils/schemaUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -30,9 +28,9 @@ import { registerInlineSchema } from '../utils/schemaUtils.js';
  * particularly payload schema registration, is implemented in this class.
  *
  * @class EventLoader
- * @augments BaseManifestItemLoader
+ * @augments BaseInlineSchemaLoader
  */
-class EventLoader extends BaseManifestItemLoader {
+class EventLoader extends BaseInlineSchemaLoader {
   /**
    * Creates an instance of EventLoader.
    * Passes dependencies and the specific content type 'events' to the base class constructor.
@@ -117,23 +115,17 @@ class EventLoader extends BaseManifestItemLoader {
         `EventLoader [${modId}]: Generated payload schema ID: ${payloadSchemaId}`
       );
 
-      await registerInlineSchema(
-        this._schemaValidator,
-        payloadSchema,
-        payloadSchemaId,
-        this._logger,
-        {
-          warnMessage: `EventLoader [${modId}]: Payload schema ID '${payloadSchemaId}' for event '${trimmedFullEventId}' was already loaded. Overwriting/duplicate.`,
-          successDebugMessage: `EventLoader [${modId}]: Successfully registered payload schema '${payloadSchemaId}'.`,
-          errorLogMessage: `EventLoader [${modId}]: CRITICAL - Failed to register payload schema '${payloadSchemaId}' for event '${trimmedFullEventId}'.`,
-          throwErrorMessage: `CRITICAL: Failed to register payload schema '${payloadSchemaId}'.`,
-          errorContext: () => ({
-            modId,
-            filename,
-            eventId: trimmedFullEventId,
-          }),
-        }
-      );
+      await this._registerItemSchema(data, 'payloadSchema', payloadSchemaId, {
+        warnMessage: `EventLoader [${modId}]: Payload schema ID '${payloadSchemaId}' for event '${trimmedFullEventId}' was already loaded. Overwriting/duplicate.`,
+        successDebugMessage: `EventLoader [${modId}]: Successfully registered payload schema '${payloadSchemaId}'.`,
+        errorLogMessage: `EventLoader [${modId}]: CRITICAL - Failed to register payload schema '${payloadSchemaId}' for event '${trimmedFullEventId}'.`,
+        throwErrorMessage: `CRITICAL: Failed to register payload schema '${payloadSchemaId}'.`,
+        errorContext: () => ({
+          modId,
+          filename,
+          eventId: trimmedFullEventId,
+        }),
+      });
     } else {
       this._logger.debug(
         `EventLoader [${modId}]: No valid payloadSchema found for event '${trimmedFullEventId}'. Skipping registration.`
