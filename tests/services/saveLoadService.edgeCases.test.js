@@ -275,6 +275,23 @@ describe('SaveLoadService edge cases', () => {
       expect(res.error).toMatch(/Not enough disk space/);
       expect(logger.error).toHaveBeenCalled();
     });
+
+    it('handles write failure rejection', async () => {
+      storageProvider.ensureDirectoryExists.mockResolvedValue();
+      storageProvider.writeFileAtomically.mockRejectedValue(
+        new Error('fs fail')
+      );
+      const obj = {
+        metadata: {},
+        modManifest: {},
+        gameState: {},
+        integrityChecks: {},
+      };
+      const res = await service.saveManualGame('Reject', obj);
+      expect(res.success).toBe(false);
+      expect(res.error).toMatch(/unexpected error/i);
+      expect(logger.error).toHaveBeenCalled();
+    });
   });
 
   describe('deleteManualSave branches', () => {
