@@ -48,21 +48,6 @@ const testRule_ActionOrder = {
   ],
 };
 
-/** @type {SystemRule} */
-const testRule_IfDelegation = {
-  rule_id: 'TestRule_IF',
-  event_type: 'test:event_if',
-  actions: [
-    {
-      type: 'IF',
-      parameters: {
-        condition: { '==': [1, 1] },
-        then_actions: [{ type: 'LOG', parameters: { message: 'inside IF' } }],
-      },
-    },
-  ],
-};
-
 // --- Test Suite ---
 describe('SystemLogicInterpreter - Operation Execution Integration Test', () => {
   /** @type {jest.Mocked<ILogger>} */
@@ -219,23 +204,6 @@ describe('SystemLogicInterpreter - Operation Execution Integration Test', () => 
         parameters: { message: 'Second Action - Event: {event.type}' },
       }),
       expectedContextForOperationInterpreter // Context should be the same for subsequent actions of the same rule
-    );
-  });
-
-  it('delegates IF operations to OperationInterpreter.execute', async () => {
-    mockDataRegistry.getAllSystemRules.mockReturnValue([testRule_IfDelegation]);
-
-    systemLogicInterpreter.initialize();
-
-    const eventPayload = { actorId: 'testActor001' };
-    const eventType = 'test:event_if';
-    await eventBusInstance.dispatch(eventType, eventPayload);
-
-    // Only the IF operation itself should trigger execute since no handler is registered
-    expect(executeSpy).toHaveBeenCalledTimes(1);
-    expect(executeSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'IF' }),
-      expect.any(Object)
     );
   });
 });

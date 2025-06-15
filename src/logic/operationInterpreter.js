@@ -104,7 +104,7 @@ class OperationInterpreter {
     // -----------------------------------------------------------------------
     try {
       this.#logger.debug(`Executing handler for operation type "${opType}"…`);
-      return handler(paramsForHandler, executionContext);
+      handler(paramsForHandler, executionContext);
     } catch (handlerErr) {
       // Bubble up – SystemLogicInterpreter will handle halting the sequence
       this.#logger.debug(

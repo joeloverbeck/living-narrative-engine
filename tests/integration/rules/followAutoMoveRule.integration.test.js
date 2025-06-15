@@ -20,7 +20,6 @@ import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimesta
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
-import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -160,11 +159,6 @@ function init(entities) {
   operationRegistry = new OperationRegistry({ logger });
   entityManager = new SimpleEntityManager(entities);
 
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
   const handlers = {
     REBUILD_LEADER_LIST_CACHE: new RebuildLeaderListCacheHandler({
       logger,
@@ -194,16 +188,16 @@ function init(entities) {
       safeEventDispatcher: eventBus,
       logger,
     }),
-    IF: new IfHandler({
-      logger,
-      jsonLogicEvaluationService: jsonLogic,
-      operationInterpreter,
-    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
     operationRegistry.register(type, handler.execute.bind(handler));
   }
+
+  operationInterpreter = new OperationInterpreter({
+    logger,
+    operationRegistry,
+  });
 
   interpreter = new SystemLogicInterpreter({
     logger,
