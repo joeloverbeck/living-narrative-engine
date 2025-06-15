@@ -100,12 +100,12 @@ describe('AIGameStateProvider Integration Tests', () => {
     actorDataExtractor = new ActorDataExtractor();
     perceptionLogProvider = new PerceptionLogProvider();
     entitySummaryProvider = new EntitySummaryProvider();
+    safeEventDispatcher = { dispatch: jest.fn() };
     locationSummaryProvider = new LocationSummaryProvider({
       entityManager: deps.entityManager,
       summaryProvider: entitySummaryProvider,
+      safeEventDispatcher,
     });
-
-    safeEventDispatcher = { dispatch: jest.fn() };
 
     return new AIGameStateProvider({
       actorStateProvider,
@@ -224,7 +224,10 @@ describe('AIGameStateProvider Integration Tests', () => {
           logger
         );
         expect(currentLocation).toBeNull();
-        expect(logger.error).toHaveBeenCalled();
+        expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.any(Object)
+        );
       });
 
       test('should return null for location if location entity not found', async () => {
