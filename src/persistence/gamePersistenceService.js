@@ -173,6 +173,130 @@ class GamePersistenceService extends IGamePersistenceService {
   }
 
   /**
+   * @description Validates restore data and required dependencies.
+   * @param {SaveGameStructure | any} data - Parsed save data object.
+   * @returns {{success: false, error: PersistenceError} | null} Failure object or null if validation passes.
+   * @private
+   */
+  #validateRestoreData(data) {
+    if (!data?.gameState) {
+      const errorMsg =
+        'Invalid save data structure provided (missing gameState).';
+      this.#logger.error(
+        `GamePersistenceService.restoreGameState: ${errorMsg}`
+      );
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_GAME_STATE,
+          errorMsg
+        ),
+      };
+    }
+    if (!this.#entityManager)
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          'EntityManager not available.'
+        ),
+      };
+    if (!this.#playtimeTracker)
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          'PlaytimeTracker not available.'
+        ),
+      };
+    return null;
+  }
+
+  /**
+   * @description Clears existing entities before restoration.
+   * @returns {{success: false, error: PersistenceError} | null} Failure object or null on success.
+   * @private
+   */
+  #clearExistingEntities() {
+    try {
+      this.#entityManager.clearAll();
+      this.#logger.debug(
+        'GamePersistenceService.restoreGameState: Existing entity state cleared.'
+      );
+      return null;
+    } catch (error) {
+      const errorMsg = `Failed to clear existing entity state: ${error.message}`;
+      this.#logger.error(
+        `GamePersistenceService.restoreGameState: ${errorMsg}`,
+        error
+      );
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          `Critical error during state clearing: ${errorMsg}`
+        ),
+      };
+    }
+  }
+
+  /**
+   * @description Restores all serialized entities from save data.
+   * @param {any[]} entitiesArray - Array of serialized entity records.
+   * @returns {void}
+   * @private
+   */
+  #restoreEntities(entitiesArray) {
+    const entitiesToRestore = entitiesArray;
+    if (!Array.isArray(entitiesToRestore)) {
+      this.#logger.warn(
+        'GamePersistenceService.restoreGameState: entitiesToRestore is not an array. No entities will be restored.'
+      );
+      return;
+    }
+    for (const savedEntityData of entitiesToRestore) {
+      if (!savedEntityData?.instanceId || !savedEntityData?.definitionId) {
+        this.#logger.warn(
+          `GamePersistenceService.restoreGameState: Invalid entity data in save (missing instanceId or definitionId). Skipping. Data: ${JSON.stringify(savedEntityData)}`
+        );
+        continue;
+      }
+      this.#restoreEntity(savedEntityData);
+    }
+    this.#logger.debug(
+      'GamePersistenceService.restoreGameState: Entity restoration complete.'
+    );
+  }
+
+  /**
+   * @description Restores accumulated playtime via PlaytimeTracker.
+   * @param {number | undefined} playtimeSeconds - Total playtime from metadata.
+   * @returns {void}
+   * @private
+   */
+  #restorePlaytime(playtimeSeconds) {
+    if (typeof playtimeSeconds === 'number') {
+      try {
+        this.#playtimeTracker.setAccumulatedPlaytime(playtimeSeconds);
+        this.#logger.debug(
+          `GamePersistenceService.restoreGameState: Restored accumulated playtime: ${playtimeSeconds}s.`
+        );
+      } catch (playtimeError) {
+        this.#logger.error(
+          `GamePersistenceService.restoreGameState: Error setting accumulated playtime: ${playtimeError.message}. Resetting.`,
+          playtimeError
+        );
+        this.#playtimeTracker.setAccumulatedPlaytime(0);
+      }
+    } else {
+      this.#logger.warn(
+        'GamePersistenceService.restoreGameState: Playtime data not found/invalid. Resetting playtime.'
+      );
+      this.#playtimeTracker.setAccumulatedPlaytime(0);
+    }
+  }
+
+  /**
    * Builds the active mods manifest section for the save data.
    *
    * @returns {{modId: string, version: string}[]} Array of active mod info.
@@ -373,106 +497,18 @@ class GamePersistenceService extends IGamePersistenceService {
       'GamePersistenceService.restoreGameState: Starting game state restoration...'
     );
 
-    if (!deserializedSaveData?.gameState) {
-      const errorMsg =
-        'Invalid save data structure provided (missing gameState).';
-      this.#logger.error(
-        `GamePersistenceService.restoreGameState: ${errorMsg}`
-      );
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_GAME_STATE,
-          errorMsg
-        ),
-      };
-    }
-    if (!this.#entityManager)
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          'EntityManager not available.'
-        ),
-      };
-    if (!this.#playtimeTracker)
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          'PlaytimeTracker not available.'
-        ),
-      };
+    const validationError = this.#validateRestoreData(deserializedSaveData);
+    if (validationError) return validationError;
 
-    try {
-      this.#entityManager.clearAll();
-      this.#logger.debug(
-        'GamePersistenceService.restoreGameState: Existing entity state cleared.'
-      );
-    } catch (error) {
-      const errorMsg = `Failed to clear existing entity state: ${error.message}`;
-      this.#logger.error(
-        `GamePersistenceService.restoreGameState: ${errorMsg}`,
-        error
-      );
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          `Critical error during state clearing: ${errorMsg}`
-        ),
-      };
-    }
+    const clearingResult = this.#clearExistingEntities();
+    if (clearingResult) return clearingResult;
 
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Restoring entities...'
     );
-    const entitiesToRestore = deserializedSaveData.gameState.entities;
 
-    if (!Array.isArray(entitiesToRestore)) {
-      this.#logger.warn(
-        'GamePersistenceService.restoreGameState: entitiesToRestore is not an array. No entities will be restored.'
-      );
-    } else {
-      for (const savedEntityData of entitiesToRestore) {
-        if (!savedEntityData?.instanceId || !savedEntityData?.definitionId) {
-          this.#logger.warn(
-            `GamePersistenceService.restoreGameState: Invalid entity data in save (missing instanceId or definitionId). Skipping. Data: ${JSON.stringify(savedEntityData)}`
-          );
-          continue;
-        }
-        // Tolerate missing optional keys in savedEntityData
-        this.#restoreEntity(savedEntityData);
-      }
-    }
-    this.#logger.debug(
-      'GamePersistenceService.restoreGameState: Entity restoration complete.'
-    );
-
-    if (
-      deserializedSaveData.metadata &&
-      typeof deserializedSaveData.metadata.playtimeSeconds === 'number'
-    ) {
-      try {
-        this.#playtimeTracker.setAccumulatedPlaytime(
-          deserializedSaveData.metadata.playtimeSeconds
-        );
-        this.#logger.debug(
-          `GamePersistenceService.restoreGameState: Restored accumulated playtime: ${deserializedSaveData.metadata.playtimeSeconds}s.`
-        );
-      } catch (playtimeError) {
-        this.#logger.error(
-          `GamePersistenceService.restoreGameState: Error setting accumulated playtime: ${playtimeError.message}. Resetting.`,
-          playtimeError
-        );
-        this.#playtimeTracker.setAccumulatedPlaytime(0);
-      }
-    } else {
-      this.#logger.warn(
-        'GamePersistenceService.restoreGameState: Playtime data not found/invalid. Resetting playtime.'
-      );
-      this.#playtimeTracker.setAccumulatedPlaytime(0);
-    }
+    this.#restoreEntities(deserializedSaveData.gameState.entities);
+    this.#restorePlaytime(deserializedSaveData.metadata?.playtimeSeconds);
 
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.'
