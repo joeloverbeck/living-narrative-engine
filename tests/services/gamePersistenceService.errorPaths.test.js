@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 
 const makeLogger = () => ({
@@ -19,12 +20,12 @@ describe('GamePersistenceService error paths', () => {
   let logger;
   let saveLoadService;
   let entityManager;
-  let dataRegistry;
   let playtimeTracker;
   let componentCleaningService;
   let metadataBuilder;
   let safeEventDispatcher;
   let service;
+  let captureService;
 
   beforeEach(() => {
     logger = makeLogger();
@@ -34,7 +35,7 @@ describe('GamePersistenceService error paths', () => {
       clearAll: jest.fn(),
       reconstructEntity: jest.fn().mockReturnValue({}),
     };
-    dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
+    const dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
     playtimeTracker = {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
@@ -54,14 +55,20 @@ describe('GamePersistenceService error paths', () => {
         saveName: '',
       })),
     };
-    service = new GamePersistenceService({
+    captureService = new GameStateCaptureService({
       logger,
-      saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
       componentCleaningService,
       metadataBuilder,
+    });
+    service = new GamePersistenceService({
+      logger,
+      saveLoadService,
+      entityManager,
+      playtimeTracker,
+      gameStateCaptureService: captureService,
     });
   });
 
@@ -72,7 +79,7 @@ describe('GamePersistenceService error paths', () => {
       const entity = makeEntity('e1', 'core:player', { loop: cyc });
       entityManager.activeEntities.set('e1', entity);
 
-      expect(() => service.captureCurrentGameState('World')).toThrow(
+      expect(() => captureService.captureCurrentGameState('World')).toThrow(
         'Failed to deep clone object data.'
       );
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
