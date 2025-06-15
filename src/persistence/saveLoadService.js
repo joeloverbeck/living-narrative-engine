@@ -1,9 +1,9 @@
 // src/services/saveLoadService.js
 
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
-import { encode, decode } from '@msgpack/msgpack'; //
-import pako from 'pako'; //
+import { encode } from '@msgpack/msgpack';
 import { deepClone } from '../utils/objectUtils.js';
+import GameStateSerializer from './gameStateSerializer.js';
 // REMOVED: import {createHash} from 'crypto';
 
 // --- Type Imports ---
@@ -12,6 +12,7 @@ import { deepClone } from '../utils/objectUtils.js';
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata */
 /** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
+/** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
 
 // --- Constants ---
 // const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic
@@ -27,7 +28,7 @@ const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/; // Pattern to identify pote
 class SaveLoadService extends ISaveLoadService {
   #logger;
   #storageProvider;
-  #crypto;
+  #serializer;
 
   /**
    * Creates a new SaveLoadService instance.
@@ -36,8 +37,14 @@ class SaveLoadService extends ISaveLoadService {
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {IStorageProvider} dependencies.storageProvider - The storage provider service.
    * @param {Crypto} [dependencies.crypto] - Web Crypto implementation.
+   * @param {GameStateSerializer} [dependencies.gameStateSerializer] - Optional serializer instance.
    */
-  constructor({ logger, storageProvider, crypto = globalThis.crypto }) {
+  constructor({
+    logger,
+    storageProvider,
+    crypto = globalThis.crypto,
+    gameStateSerializer = null,
+  }) {
     // <<< MODIFIED SIGNATURE with destructuring
     super();
     if (!logger)
@@ -50,112 +57,16 @@ class SaveLoadService extends ISaveLoadService {
       );
     this.#logger = logger;
     this.#storageProvider = storageProvider;
-    this.#crypto = crypto;
+    this.#serializer =
+      gameStateSerializer || new GameStateSerializer({ logger, crypto });
     this.#logger.debug('SaveLoadService initialized.');
-  }
-
-  /**
-   * Converts an ArrayBuffer to a hexadecimal string.
-   *
-   * @param {ArrayBuffer} buffer - The buffer to convert.
-   * @returns {string} The hexadecimal string.
-   * @private
-   */
-  #arrayBufferToHex(buffer) {
-    return Array.from(new Uint8Array(buffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
-
-  /**
-   * Generates an SHA256 checksum for the given data using Web Crypto API.
-   * For Uint8Array, it hashes directly. Otherwise, it stringifies to JSON then encodes to UTF-8.
-   *
-   * @param {any} data - The data to hash.
-   * @returns {Promise<string>} The SHA256 hash as a hex string.
-   * @private
-   */
-  async #generateChecksum(data) {
-    let dataToHash;
-    if (data instanceof Uint8Array) {
-      dataToHash = data;
-    } else {
-      // For consistency with how it's likely generated if not Uint8Array
-      // (e.g. if gameState was JSON before MessagePack)
-      // However, for gameStateChecksum, it's specifically calculated on the MessagePack bytes of gameState.
-      const stringToHash =
-        typeof data === 'string' ? data : JSON.stringify(data);
-      dataToHash = new TextEncoder().encode(stringToHash);
-    }
-
-    try {
-      const hashBuffer = await this.#crypto.subtle.digest(
-        'SHA-256',
-        dataToHash
-      );
-      return this.#arrayBufferToHex(hashBuffer);
-    } catch (error) {
-      this.#logger.error(
-        'Error generating checksum using Web Crypto API:',
-        error
-      );
-      throw new Error(`Checksum generation failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Serializes the game state to MessagePack and then compresses it with Gzip.
-   * Calculates and embeds the gameStateChecksum before full serialization.
-   * This method is now asynchronous due to #generateChecksum being async.
-   *
-   * @param {object} gameStateObject - The full game state object to process.
-   * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>}
-   * @private
-   */
-  async #serializeAndCompress(gameStateObject) {
-    let finalSaveObject;
-    try {
-      finalSaveObject = deepClone(gameStateObject);
-    } catch (e) {
-      this.#logger.error('DeepClone failed:', e);
-      throw new Error('Failed to deep clone object for saving.');
-    }
-
-    if (
-      !finalSaveObject.gameState ||
-      typeof finalSaveObject.gameState !== 'object'
-    ) {
-      this.#logger.error(
-        'Invalid or missing gameState property in save object for checksum calculation.'
-      );
-      throw new Error('Invalid gameState for checksum calculation.');
-    }
-    // Calculate checksum on the MessagePack representation of ONLY the gameState section
-    const gameStateMessagePack = encode(finalSaveObject.gameState);
-    finalSaveObject.integrityChecks.gameStateChecksum =
-      await this.#generateChecksum(gameStateMessagePack); //
-    this.#logger.debug(
-      `Calculated gameStateChecksum: ${finalSaveObject.integrityChecks.gameStateChecksum}`
-    );
-
-    this.#logger.debug('Serializing full game state object to MessagePack...');
-    const messagePackData = encode(finalSaveObject); //
-    this.#logger.debug(
-      `MessagePack Raw Size: ${messagePackData.byteLength} bytes`
-    );
-
-    this.#logger.debug('Compressing MessagePack data with Gzip...');
-    const compressedData = pako.gzip(messagePackData); //
-    this.#logger.debug(`Gzipped Size: ${compressedData.byteLength} bytes`);
-
-    return { compressedData, finalSaveObject };
   }
 
   /**
    * Reads the save file from storage provider.
    *
    * @param {string} filePath - Path to the save file.
-   * @returns {Promise<{success: boolean, data?: Uint8Array, error?: string, userFriendlyError?: string}>}
+   * @returns {Promise<{success: boolean, data?: Uint8Array, error?: string, userFriendlyError?: string}>} Outcome of the read.
    * @private
    */
   async #readSaveFile(filePath) {
@@ -187,61 +98,11 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
-   * Decompresses Gzip-compressed data.
-   *
-   * @param {Uint8Array} data - The compressed data.
-   * @returns {{success: boolean, data?: Uint8Array, error?: string, userFriendlyError?: string}}
-   * @private
-   */
-  #decompress(data) {
-    try {
-      const decompressed = pako.ungzip(data);
-      this.#logger.debug(
-        `Decompressed data size: ${decompressed.byteLength} bytes`
-      );
-      return { success: true, data: decompressed };
-    } catch (error) {
-      const userMsg =
-        'The save file appears to be corrupted (could not decompress). Please try another save.';
-      this.#logger.error('Gzip decompression failed:', error);
-      return {
-        success: false,
-        error: `Gzip decompression error: ${error.message}`,
-        userFriendlyError: userMsg,
-      };
-    }
-  }
-
-  /**
-   * Deserializes MessagePack data.
-   *
-   * @param {Uint8Array} buffer - The buffer to deserialize.
-   * @returns {{success: boolean, data?: object, error?: string, userFriendlyError?: string}}
-   * @private
-   */
-  #deserialize(buffer) {
-    try {
-      const obj = decode(buffer);
-      this.#logger.debug('Successfully deserialized MessagePack');
-      return { success: true, data: obj };
-    } catch (error) {
-      const userMsg =
-        'The save file appears to be corrupted (could not understand file content). Please try another save.';
-      this.#logger.error('MessagePack deserialization failed:', error);
-      return {
-        success: false,
-        error: `MessagePack deserialization error: ${error.message}`,
-        userFriendlyError: userMsg,
-      };
-    }
-  }
-
-  /**
    * Reads a save file, decompresses Gzip, and deserializes from MessagePack.
    * Implements basic failure handling as per SL-T2.4.
    *
    * @param {string} filePath - The path to the save file.
-   * @returns {Promise<{success: boolean, data?: object, error?: string, userFriendlyError?: string}>}
+   * @returns {Promise<{success: boolean, data?: object, error?: string, userFriendlyError?: string}>} Resulting object or error info.
    * @private
    */
   async #deserializeAndDecompress(filePath) {
@@ -250,10 +111,10 @@ class SaveLoadService extends ISaveLoadService {
     const readRes = await this.#readSaveFile(filePath);
     if (!readRes.success) return readRes;
 
-    const decompressRes = this.#decompress(readRes.data);
+    const decompressRes = this.#serializer.decompress(readRes.data);
     if (!decompressRes.success) return decompressRes;
 
-    const deserializeRes = this.#deserialize(decompressRes.data);
+    const deserializeRes = this.#serializer.deserialize(decompressRes.data);
     if (!deserializeRes.success) return deserializeRes;
 
     return { success: true, data: deserializeRes.data };
@@ -261,7 +122,7 @@ class SaveLoadService extends ISaveLoadService {
 
   /**
    * @inheritdoc
-   * @returns {Promise<Array<SaveFileMetadata>>}
+   * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
    */
   async listManualSaveSlots() {
     this.#logger.debug(
@@ -397,7 +258,7 @@ class SaveLoadService extends ISaveLoadService {
   /**
    * @inheritdoc
    * @param {string} saveIdentifier - The full path or unique ID of the save file to load (e.g., "saves/manual_saves/my_save.sav").
-   * @returns {Promise<LoadGameResult>}
+   * @returns {Promise<LoadGameResult>} Loaded game data or error info.
    */
   async loadGameData(saveIdentifier) {
     //
@@ -472,7 +333,8 @@ class SaveLoadService extends ISaveLoadService {
     let recalculatedChecksum;
     try {
       const gameStateMessagePack = encode(loadedObject.gameState);
-      recalculatedChecksum = await this.#generateChecksum(gameStateMessagePack);
+      recalculatedChecksum =
+        await this.#serializer.generateChecksum(gameStateMessagePack);
     } catch (checksumError) {
       const devMsg = `Error calculating checksum for gameState in ${saveIdentifier}: ${checksumError.message}.`;
       const userMsg =
@@ -554,7 +416,7 @@ class SaveLoadService extends ISaveLoadService {
         mutableGameState.integrityChecks = {};
 
       const { compressedData } =
-        await this.#serializeAndCompress(mutableGameState);
+        await this.#serializer.serializeAndCompress(mutableGameState);
 
       const writeResult = await this.#storageProvider.writeFileAtomically(
         filePath,
