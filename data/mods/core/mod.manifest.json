@@ -80,7 +80,6 @@
       "set_title.event.json",
       "update_available_actions.event.json",
       "entity_moved.event.json"
-    ],
-    "operations": []
+    ]
   }
 }
