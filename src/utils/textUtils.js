@@ -90,4 +90,23 @@ export function formatPlaytime(totalSeconds) {
   );
 }
 
+/**
+ * Formats an ISO timestamp string to a locale-specific string.
+ *
+ * @param {string} timestamp - ISO timestamp to format.
+ * @param {string} [fallback] - Text to return on parse failure.
+ * @returns {string} Formatted timestamp or fallback on error.
+ */
+export function formatTimestamp(timestamp, fallback = 'Invalid Date') {
+  try {
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) {
+      return fallback;
+    }
+    return date.toLocaleString();
+  } catch {
+    return fallback;
+  }
+}
+
 // --- FILE END ---

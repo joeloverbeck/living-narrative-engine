@@ -2,7 +2,7 @@
 
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
-import { formatPlaytime } from '../utils/textUtils.js';
+import { formatPlaytime, formatTimestamp } from '../utils/textUtils.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -315,14 +315,13 @@ class LoadGameUI extends SlotModalBase {
       slotData.timestamp &&
       slotData.timestamp !== 'N/A'
     ) {
-      try {
-        timestampText = `Saved: ${new Date(slotData.timestamp).toLocaleString()}`;
-      } catch {
+      const formatted = formatTimestamp(slotData.timestamp);
+      if (formatted === 'Invalid Date') {
         this.logger.warn(
           `${this._logPrefix} Invalid timestamp for slot ${slotData.identifier}: ${slotData.timestamp}`
         );
-        timestampText = 'Saved: Invalid Date';
       }
+      timestampText = `Saved: ${formatted}`;
     }
     const slotTimestampEl = this.domElementFactory.span(
       'slot-timestamp',
