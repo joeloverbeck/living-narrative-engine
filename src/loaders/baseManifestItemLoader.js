@@ -13,6 +13,7 @@
 
 import { validateLoaderDeps } from '../utils/validationUtils.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
+import { validateAgainstSchema } from '../utils/schemaValidation.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
@@ -194,41 +195,21 @@ export class BaseManifestItemLoader {
       return { isValid: true, errors: null };
     }
 
-    if (!this._schemaValidator.isSchemaLoaded(schemaId)) {
-      // Log a WARNING, not an error, and allow processing to continue
-      const warningMsg = `${loaderName} [${modId}]: Rule schema '${schemaId}' is configured but not loaded. Skipping validation for ${filename}.`;
-      this._logger.warn(warningMsg); // Changed from error to warn
-      // Return as if valid to skip validation but continue processing
-      return { isValid: true, errors: null }; // Changed from throwing error
-    }
-
-    this._logger.debug(
-      `${loaderName} [${modId}]: Validating '${filename}' against primary schema '${schemaId}'.`
+    return validateAgainstSchema(
+      this._schemaValidator,
+      schemaId,
+      data,
+      this._logger,
+      {
+        validationDebugMessage: `${loaderName} [${modId}]: Validating '${filename}' against primary schema '${schemaId}'.`,
+        notLoadedMessage: `${loaderName} [${modId}]: Rule schema '${schemaId}' is configured but not loaded. Skipping validation for ${filename}.`,
+        notLoadedLogLevel: 'warn',
+        skipIfSchemaNotLoaded: true,
+        failureMessage: `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`,
+        failureContext: { modId, filename, resolvedPath },
+        failureThrowMessage: `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`,
+      }
     );
-    const validationResult = this._schemaValidator.validate(schemaId, data);
-
-    if (!validationResult.isValid) {
-      const errorMsg = `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`;
-      this._logger.error(errorMsg, {
-        modId,
-        filename,
-        resolvedPath,
-        schemaId,
-        validationErrors: validationResult.errors,
-      });
-      const errorDetails = validationResult.errors
-        ?.map(
-          (e) =>
-            `  - Path: ${e.instancePath || '/'} | Message: ${e.message} | Params: ${JSON.stringify(e.params)}`
-        )
-        .join('\n');
-      throw new Error(
-        `${errorMsg}\nDetails:\n${errorDetails || 'No specific error details provided.'}`
-      );
-    }
-
-    // Validation successful
-    return validationResult;
   }
 
   /**
