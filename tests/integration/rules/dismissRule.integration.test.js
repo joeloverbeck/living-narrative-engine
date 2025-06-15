@@ -165,7 +165,10 @@ function init(entities) {
       safeEventDispatcher: eventBus,
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({
+      safeEventDispatcher: safeDispatcher,
+      logger,
+    }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     GET_NAME: new GetNameHandler({
       entityManager,
@@ -233,7 +236,12 @@ describe('core_handle_dismiss rule integration', () => {
       listenerCount: jest.fn().mockReturnValue(1),
     };
 
-    safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        events.push({ eventType, payload });
+        return Promise.resolve(true);
+      }),
+    };
 
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([dismissRule]),

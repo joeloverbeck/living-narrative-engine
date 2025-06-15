@@ -5,10 +5,9 @@
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
-/** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../events/eventBus.js').default} EventBus */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { TURN_ENDED_ID } from '../../constants/eventIds.js';
+import { TURN_ENDED_ID, DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /**
  * Parameters for {@link EndTurnHandler#execute}.
@@ -20,26 +19,29 @@ import { TURN_ENDED_ID } from '../../constants/eventIds.js';
  */
 
 class EndTurnHandler {
-  /** @type {ValidatedEventDispatcher|EventBus} */
-  #dispatcher;
+  /** @type {ISafeEventDispatcher} */
+  #safeEventDispatcher;
   /** @type {ILogger} */
   #logger;
 
   /**
    * @param {object} deps
-   * @param {ValidatedEventDispatcher|EventBus} deps.dispatcher - Event dispatcher.
+   * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Safe event dispatcher.
    * @param {ILogger} deps.logger - Logger instance.
    */
-  constructor({ dispatcher, logger }) {
-    if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
+  constructor({ safeEventDispatcher, logger }) {
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
       throw new Error(
-        'EndTurnHandler requires a dispatcher with a dispatch method.'
+        'EndTurnHandler requires a valid ISafeEventDispatcher instance.'
       );
     }
     if (!logger || typeof logger.debug !== 'function') {
       throw new Error('EndTurnHandler requires a valid ILogger instance.');
     }
-    this.#dispatcher = dispatcher;
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger = logger;
   }
 
@@ -55,7 +57,10 @@ class EndTurnHandler {
       typeof params.entityId !== 'string' ||
       !params.entityId.trim()
     ) {
-      this.#logger.error('END_TURN: Invalid or missing "entityId" parameter.');
+      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'END_TURN: Invalid or missing "entityId" parameter.',
+        details: { params },
+      });
       return;
     }
 
@@ -73,10 +78,24 @@ class EndTurnHandler {
       { payload }
     );
 
-    try {
-      this.#dispatcher.dispatch(TURN_ENDED_ID, payload);
-    } catch (err) {
-      this.#logger.error('END_TURN: Error dispatching turn ended event.', err);
+    const dispatchResult = this.#safeEventDispatcher.dispatch(
+      TURN_ENDED_ID,
+      payload
+    );
+    if (dispatchResult && typeof dispatchResult.then === 'function') {
+      dispatchResult.then((success) => {
+        if (!success) {
+          this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+            message: 'END_TURN: Failed to dispatch turn ended event.',
+            details: { payload },
+          });
+        }
+      });
+    } else if (dispatchResult === false) {
+      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'END_TURN: Failed to dispatch turn ended event.',
+        details: { payload },
+      });
     }
   }
 }
