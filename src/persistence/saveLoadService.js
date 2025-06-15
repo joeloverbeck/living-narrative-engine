@@ -149,6 +149,91 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
+   * Reads the save file from storage provider.
+   *
+   * @param {string} filePath - Path to the save file.
+   * @returns {Promise<{success: boolean, data?: Uint8Array, error?: string, userFriendlyError?: string}>}
+   * @private
+   */
+  async #readSaveFile(filePath) {
+    try {
+      const fileContent = await this.#storageProvider.readFile(filePath);
+      if (!fileContent || fileContent.byteLength === 0) {
+        const userMsg =
+          'The selected save file is empty or cannot be read. It might be corrupted or inaccessible.';
+        this.#logger.warn(
+          `File is empty or could not be read: ${filePath}. User message: "${userMsg}"`
+        );
+        return {
+          success: false,
+          error: 'File is empty or unreadable.',
+          userFriendlyError: userMsg,
+        };
+      }
+      return { success: true, data: fileContent };
+    } catch (error) {
+      const userMsg =
+        'Could not access or read the selected save file. Please check file permissions or try another save.';
+      this.#logger.error(`Error reading file ${filePath}:`, error);
+      return {
+        success: false,
+        error: `File read error: ${error.message}`,
+        userFriendlyError: userMsg,
+      };
+    }
+  }
+
+  /**
+   * Decompresses Gzip-compressed data.
+   *
+   * @param {Uint8Array} data - The compressed data.
+   * @returns {{success: boolean, data?: Uint8Array, error?: string, userFriendlyError?: string}}
+   * @private
+   */
+  #decompress(data) {
+    try {
+      const decompressed = pako.ungzip(data);
+      this.#logger.debug(
+        `Decompressed data size: ${decompressed.byteLength} bytes`
+      );
+      return { success: true, data: decompressed };
+    } catch (error) {
+      const userMsg =
+        'The save file appears to be corrupted (could not decompress). Please try another save.';
+      this.#logger.error('Gzip decompression failed:', error);
+      return {
+        success: false,
+        error: `Gzip decompression error: ${error.message}`,
+        userFriendlyError: userMsg,
+      };
+    }
+  }
+
+  /**
+   * Deserializes MessagePack data.
+   *
+   * @param {Uint8Array} buffer - The buffer to deserialize.
+   * @returns {{success: boolean, data?: object, error?: string, userFriendlyError?: string}}
+   * @private
+   */
+  #deserialize(buffer) {
+    try {
+      const obj = decode(buffer);
+      this.#logger.debug('Successfully deserialized MessagePack');
+      return { success: true, data: obj };
+    } catch (error) {
+      const userMsg =
+        'The save file appears to be corrupted (could not understand file content). Please try another save.';
+      this.#logger.error('MessagePack deserialization failed:', error);
+      return {
+        success: false,
+        error: `MessagePack deserialization error: ${error.message}`,
+        userFriendlyError: userMsg,
+      };
+    }
+  }
+
+  /**
    * Reads a save file, decompresses Gzip, and deserializes from MessagePack.
    * Implements basic failure handling as per SL-T2.4.
    *
@@ -157,76 +242,18 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   async #deserializeAndDecompress(filePath) {
-    //
     this.#logger.debug(`Attempting to read and deserialize file: ${filePath}`);
-    let fileContent;
-    try {
-      fileContent = await this.#storageProvider.readFile(filePath); //
-      if (!fileContent || fileContent.byteLength === 0) {
-        // Basic integrity check: file size too small
-        const userMsg =
-          'The selected save file is empty or cannot be read. It might be corrupted or inaccessible.'; //
-        this.#logger.warn(
-          `File is empty or could not be read: ${filePath}. User message: "${userMsg}"`
-        );
-        return {
-          success: false,
-          error: 'File is empty or unreadable.',
-          userFriendlyError: userMsg,
-        }; //
-      }
-    } catch (readError) {
-      const userMsg =
-        'Could not access or read the selected save file. Please check file permissions or try another save.'; //
-      this.#logger.error(`Error reading file ${filePath}:`, readError);
-      return {
-        success: false,
-        error: `File read error: ${readError.message}`,
-        userFriendlyError: userMsg,
-      }; //
-    }
 
-    let decompressedData;
-    try {
-      decompressedData = pako.ungzip(fileContent); //
-      this.#logger.debug(
-        `Decompressed data size for ${filePath}: ${decompressedData.byteLength} bytes`
-      );
-    } catch (gzipError) {
-      const userMsg =
-        'The save file appears to be corrupted (could not decompress). Please try another save.'; //
-      this.#logger.error(
-        `Gzip decompression failed for ${filePath}:`,
-        gzipError
-      );
-      return {
-        success: false,
-        error: `Gzip decompression error: ${gzipError.message}`,
-        userFriendlyError: userMsg,
-      };
-    }
+    const readRes = await this.#readSaveFile(filePath);
+    if (!readRes.success) return readRes;
 
-    let deserializedObject;
-    try {
-      deserializedObject = decode(decompressedData); //
-      this.#logger.debug(
-        `Successfully deserialized MessagePack for ${filePath}`
-      );
-    } catch (msgpackError) {
-      const userMsg =
-        'The save file appears to be corrupted (could not understand file content). Please try another save.'; //
-      this.#logger.error(
-        `MessagePack deserialization failed for ${filePath}:`,
-        msgpackError
-      );
-      return {
-        success: false,
-        error: `MessagePack deserialization error: ${msgpackError.message}`,
-        userFriendlyError: userMsg,
-      };
-    }
+    const decompressRes = this.#decompress(readRes.data);
+    if (!decompressRes.success) return decompressRes;
 
-    return { success: true, data: deserializedObject };
+    const deserializeRes = this.#deserialize(decompressRes.data);
+    if (!deserializeRes.success) return deserializeRes;
+
+    return { success: true, data: deserializeRes.data };
   }
 
   /**
