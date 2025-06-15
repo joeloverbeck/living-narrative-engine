@@ -1,0 +1,185 @@
+// src/persistence/gameStateSerializer.js
+
+import { encode, decode } from '@msgpack/msgpack';
+import pako from 'pako';
+import { deepClone } from '../utils/objectUtils.js';
+
+/**
+ * @class GameStateSerializer
+ * @description Utility for converting game state objects to and from a
+ * MessagePack + Gzip representation. Handles checksum generation using
+ * the Web Crypto API.
+ */
+class GameStateSerializer {
+  /** @type {import('../interfaces/coreServices.js').ILogger} */
+  #logger;
+
+  /** @type {Crypto} */
+  #crypto;
+
+  /**
+   * Creates a new GameStateSerializer.
+   *
+   * @param {object} dependencies - Constructor dependencies.
+   * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger - Logging service.
+   * @param {Crypto} [dependencies.crypto] - Web Crypto implementation.
+   */
+  constructor({ logger, crypto = globalThis.crypto }) {
+    if (!logger) {
+      throw new Error('GameStateSerializer requires a logger.');
+    }
+    this.#logger = logger;
+    this.#crypto = crypto;
+  }
+
+  /**
+   * Converts an ArrayBuffer to a hexadecimal string.
+   *
+   * @param {ArrayBuffer} buffer - The buffer to convert.
+   * @returns {string} Hexadecimal representation.
+   * @private
+   */
+  #arrayBufferToHex(buffer) {
+    return Array.from(new Uint8Array(buffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  /**
+   * Generates an SHA256 checksum for the given data using Web Crypto API.
+   *
+   * @param {any} data - Data to hash.
+   * @returns {Promise<string>} Hexadecimal checksum.
+   * @private
+   */
+  async #generateChecksum(data) {
+    let dataToHash;
+    if (data instanceof Uint8Array) {
+      dataToHash = data;
+    } else {
+      const stringToHash =
+        typeof data === 'string' ? data : JSON.stringify(data);
+      dataToHash = new TextEncoder().encode(stringToHash);
+    }
+
+    try {
+      const hashBuffer = await this.#crypto.subtle.digest(
+        'SHA-256',
+        dataToHash
+      );
+      return this.#arrayBufferToHex(hashBuffer);
+    } catch (error) {
+      this.#logger.error(
+        'Error generating checksum using Web Crypto API:',
+        error
+      );
+      throw new Error(`Checksum generation failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Public wrapper for checksum generation.
+   *
+   * @param {any} data - Data to hash.
+   * @returns {Promise<string>} Hexadecimal checksum.
+   */
+  async generateChecksum(data) {
+    return this.#generateChecksum(data);
+  }
+
+  /**
+   * Serializes the game state to MessagePack and compresses it with Gzip.
+   * Embeds a checksum of the gameState section.
+   *
+   * @param {object} gameStateObject - Game state object to serialize.
+   * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>} Resulting data and mutated object.
+   */
+  async serializeAndCompress(gameStateObject) {
+    let finalSaveObject;
+    try {
+      finalSaveObject = deepClone(gameStateObject);
+    } catch (e) {
+      this.#logger.error('DeepClone failed:', e);
+      throw new Error('Failed to deep clone object for saving.');
+    }
+
+    if (
+      !finalSaveObject.gameState ||
+      typeof finalSaveObject.gameState !== 'object'
+    ) {
+      this.#logger.error(
+        'Invalid or missing gameState property in save object for checksum calculation.'
+      );
+      throw new Error('Invalid gameState for checksum calculation.');
+    }
+
+    const gameStateMessagePack = encode(finalSaveObject.gameState);
+    finalSaveObject.integrityChecks.gameStateChecksum =
+      await this.#generateChecksum(gameStateMessagePack);
+    this.#logger.debug(
+      `Calculated gameStateChecksum: ${finalSaveObject.integrityChecks.gameStateChecksum}`
+    );
+
+    this.#logger.debug('Serializing full game state object to MessagePack...');
+    const messagePackData = encode(finalSaveObject);
+    this.#logger.debug(
+      `MessagePack Raw Size: ${messagePackData.byteLength} bytes`
+    );
+
+    this.#logger.debug('Compressing MessagePack data with Gzip...');
+    const compressedData = pako.gzip(messagePackData);
+    this.#logger.debug(`Gzipped Size: ${compressedData.byteLength} bytes`);
+
+    return { compressedData, finalSaveObject };
+  }
+
+  /**
+   * Decompresses Gzip-compressed data.
+   *
+   * @param {Uint8Array} data - Compressed data.
+   * @returns {{success: boolean, data?: Uint8Array, error?: string, userFriendlyError?: string}} Outcome of decompression.
+   */
+  decompress(data) {
+    try {
+      const decompressed = pako.ungzip(data);
+      this.#logger.debug(
+        `Decompressed data size: ${decompressed.byteLength} bytes`
+      );
+      return { success: true, data: decompressed };
+    } catch (error) {
+      const userMsg =
+        'The save file appears to be corrupted (could not decompress). Please try another save.';
+      this.#logger.error('Gzip decompression failed:', error);
+      return {
+        success: false,
+        error: `Gzip decompression error: ${error.message}`,
+        userFriendlyError: userMsg,
+      };
+    }
+  }
+
+  /**
+   * Deserializes MessagePack data.
+   *
+   * @param {Uint8Array} buffer - Data to deserialize.
+   * @returns {{success: boolean, data?: object, error?: string, userFriendlyError?: string}} Outcome of deserialization.
+   */
+  deserialize(buffer) {
+    try {
+      const obj = decode(buffer);
+      this.#logger.debug('Successfully deserialized MessagePack');
+      return { success: true, data: obj };
+    } catch (error) {
+      const userMsg =
+        'The save file appears to be corrupted (could not understand file content). Please try another save.';
+      this.#logger.error('MessagePack deserialization failed:', error);
+      return {
+        success: false,
+        error: `MessagePack deserialization error: ${error.message}`,
+        userFriendlyError: userMsg,
+      };
+    }
+  }
+}
+
+export default GameStateSerializer;
