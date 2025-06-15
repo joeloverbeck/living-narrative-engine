@@ -12,14 +12,6 @@
 /** @typedef {import('../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 
 import { ICommandParser } from './interfaces/ICommandParser.js';
-import { freeze } from '../utils/objectUtils';
-
-/**
- * Defines the list of prepositions recognized by the parser. (No changes needed)
- *
- * @type {ReadonlyArray<string>}
- */
-const SUPPORTED_PREPOSITIONS = freeze(['on', 'at', 'with', 'in', 'to', '>']);
 
 class CommandParser extends ICommandParser {
   /**
@@ -54,7 +46,7 @@ class CommandParser extends ICommandParser {
   }
 
   /**
-   * Parses a command string to identify action, objects, and preposition
+   * Parses a command string to identify the action and direct object phrase
    * based on matching the first word against ActionDefinition.commandVerb.
    * // *** [REFACTOR-014-SUB-11] Updated to use GameDataRepository ***
    * // *** Task 2.1: Refactored parse method ***
@@ -115,85 +107,12 @@ class CommandParser extends ICommandParser {
       const textAfterCommand = remainingText.trimStart();
 
       if (textAfterCommand) {
-        // --- MODIFICATION START: Conditional Preposition Parsing ---
-        const actionDefinition = allActionDefinitions.find(
-          (def) => def.id === matchedActionId
-        );
-
-        if (
-          actionDefinition &&
-          actionDefinition.target_domain === 'direction'
-        ) {
-          // If the action's target domain is 'direction' (e.g., for "go"),
-          // treat the entire remaining text as the direct object phrase.
-          parsedCommand.directObjectPhrase = textAfterCommand.trimEnd();
-          parsedCommand.preposition = null;
-          parsedCommand.indirectObjectPhrase = null;
-        } else {
-          // --- ORIGINAL PREPOSITION FINDING LOGIC (for other actions) ---
-          // This logic will now only run if the action's target_domain is not 'direction'
-          // or if the action definition couldn't be found (which shouldn't happen if matchedActionId is valid).
-
-          // --- REVISED PREPOSITION FINDING LOGIC V3 --- (Kept as-is from your original code)
-          let firstMatchIndex = -1;
-          let firstMatchPrep = null;
-          let firstMatchLength = 0;
-          const words = textAfterCommand.split(/\s+/).filter(Boolean);
-
-          for (const word of words) {
-            const lowerWord = word.toLowerCase();
-            if (SUPPORTED_PREPOSITIONS.includes(lowerWord)) {
-              const wordBoundaryPattern = new RegExp(
-                `(?:^|\\s)${word}(?:\\s|$)`,
-                'i'
-              );
-              const match = wordBoundaryPattern.exec(textAfterCommand);
-              if (match) {
-                const prepStartIndex =
-                  match.index + match[0].toLowerCase().indexOf(lowerWord);
-                if (
-                  firstMatchIndex === -1 ||
-                  prepStartIndex < firstMatchIndex
-                ) {
-                  firstMatchIndex = prepStartIndex;
-                  firstMatchPrep = lowerWord;
-                  firstMatchLength = word.length;
-                }
-              }
-            }
-          }
-          // --- END REVISED PREPOSITION FINDING LOGIC V3 ---
-
-          if (firstMatchPrep !== null) {
-            const prepositionIndexInText = firstMatchIndex;
-            const foundPreposition = firstMatchPrep;
-            const textBeforePrep = textAfterCommand
-              .substring(0, prepositionIndexInText)
-              .trimEnd();
-            const textAfterPrep = textAfterCommand
-              .substring(prepositionIndexInText + firstMatchLength)
-              .trimStart();
-
-            parsedCommand.preposition = foundPreposition;
-            parsedCommand.directObjectPhrase =
-              textBeforePrep === '' ? null : textBeforePrep;
-            parsedCommand.indirectObjectPhrase =
-              textAfterPrep === '' ? null : textAfterPrep;
-          } else {
-            // No preposition found, the entire remaining text is the direct object
-            parsedCommand.directObjectPhrase = textAfterCommand.trimEnd();
-            parsedCommand.preposition = null;
-            parsedCommand.indirectObjectPhrase = null;
-          }
-          // --- END ORIGINAL PREPOSITION FINDING LOGIC ---
-        }
-        // --- MODIFICATION END ---
+        parsedCommand.directObjectPhrase = textAfterCommand.trimEnd();
       } else {
-        // textAfterCommand is empty (e.g., just "look" or "inventory")
         parsedCommand.directObjectPhrase = null;
-        parsedCommand.preposition = null;
-        parsedCommand.indirectObjectPhrase = null;
       }
+      parsedCommand.preposition = null;
+      parsedCommand.indirectObjectPhrase = null;
     } else {
       // --- Update Error Handling ---
       if (inputTrimmedStart !== '') {

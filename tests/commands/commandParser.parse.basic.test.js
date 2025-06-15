@@ -194,9 +194,9 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:put',
-      directObjectPhrase: 'key',
-      preposition: 'on',
-      indirectObjectPhrase: 'table',
+      directObjectPhrase: 'key on table',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -213,9 +213,9 @@ describe('CommandParser.parse() - Basic & Whitespace Tests', () => {
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:go',
-      directObjectPhrase: null, // No DO before preposition
-      preposition: '>',
-      indirectObjectPhrase: 'north',
+      directObjectPhrase: '> north',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };

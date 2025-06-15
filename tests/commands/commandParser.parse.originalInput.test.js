@@ -109,9 +109,9 @@ describe('CommandParser.parse() - Original Input Preservation Tests (Ticket 8)',
 
     // Optional: Verify the rest of the parsing for context
     expect(result.actionId).toBe('core:put'); // Verb matched case-insensitively
-    expect(result.directObjectPhrase).toBe('Key'); // DO preserves original case
-    expect(result.preposition).toBe('on'); // Preposition stored lowercase
-    expect(result.indirectObjectPhrase).toBe('Table'); // IO preserves original case
+    expect(result.directObjectPhrase).toBe('Key ON Table');
+    expect(result.preposition).toBeNull();
+    expect(result.indirectObjectPhrase).toBeNull();
     expect(result.error).toBeNull();
     expect(mockGetAllActionDefinitions).toHaveBeenCalledTimes(1);
   });

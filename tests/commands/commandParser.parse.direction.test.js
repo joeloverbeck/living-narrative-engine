@@ -155,9 +155,9 @@ describe('CommandParser.parse() - Direction Handling Tests', () => {
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:put',
-      directObjectPhrase: 'book',
-      preposition: 'on',
-      indirectObjectPhrase: 'table',
+      directObjectPhrase: 'book on table',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
@@ -187,9 +187,9 @@ describe('CommandParser.parse() - Direction Handling Tests', () => {
     /** @type {ParsedCommand} */
     const expectedOutput = {
       actionId: 'core:take',
-      directObjectPhrase: 'note',
-      preposition: 'with',
-      indirectObjectPhrase: 'feather',
+      directObjectPhrase: 'note with feather',
+      preposition: null,
+      indirectObjectPhrase: null,
       originalInput: input,
       error: null,
     };
