@@ -6,7 +6,7 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-import { ACTION_DECIDED_ID } from '../../constants/eventIds';
+import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 
 /**
  * State in which the engine waits for the current actor’s turn-strategy to

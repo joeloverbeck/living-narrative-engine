@@ -4,7 +4,7 @@
  * @file Defines constants for turn directives used by CommandOutcomeInterpreter.
  */
 
-import { freeze } from '../../utils/objectUtils';
+import { freeze } from '../../utils/objectUtils.js';
 
 /**
  * @enum {string}

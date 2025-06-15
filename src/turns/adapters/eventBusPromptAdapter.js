@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import { IPromptOutputPort } from '../ports/IPromptOutputPort.js';
-import { PLAYER_TURN_PROMPT_ID } from '../../constants/eventIds';
+import { PLAYER_TURN_PROMPT_ID } from '../../constants/eventIds.js';
 /* eslint-disable no-console */
 
 // --- Type Imports for JSDoc ---
