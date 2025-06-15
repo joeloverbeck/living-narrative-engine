@@ -137,6 +137,61 @@ export function createComponentAccessor(entityId, entityManager, logger) {
 }
 
 /**
+ * Populates either the `actor` or `target` field on the provided evaluation
+ * context by retrieving the entity and creating a component accessor.
+ *
+ * @param {'actor' | 'target'} fieldName - Which field to populate on the
+ *   evaluation context.
+ * @param {EntityId} entityId - Identifier of the entity to retrieve.
+ * @param {JsonLogicEvaluationContext} evaluationContext - Context object being
+ *   assembled.
+ * @param {EntityManager} entityManager - Entity manager used for lookups.
+ * @param {ILogger} logger - Logger instance for diagnostics.
+ * @returns {void}
+ */
+export function populateParticipant(
+  fieldName,
+  entityId,
+  evaluationContext,
+  entityManager,
+  logger
+) {
+  if (
+    entityId &&
+    (typeof entityId === 'string' || typeof entityId === 'number')
+  ) {
+    try {
+      const entity = entityManager.getEntityInstance(entityId);
+      if (entity) {
+        logger.debug(
+          `Found ${fieldName} entity [${entityId}]. Creating context entry.`
+        );
+        evaluationContext[fieldName] = {
+          id: entityId,
+          components: createComponentAccessor(entity.id, entityManager, logger),
+        };
+      } else {
+        logger.warn(
+          `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} entity not found for ID [${entityId}]. Setting ${fieldName} context to null.`
+        );
+      }
+    } catch (error) {
+      logger.error(
+        `Error processing ${fieldName} ID [${entityId}] in createJsonLogicContext:`,
+        error
+      );
+      throw error;
+    }
+  } else if (entityId) {
+    logger.warn(
+      `Invalid ${fieldName}Id type provided: [${typeof entityId}]. Setting ${fieldName} context to null.`
+    );
+  } else if (fieldName === 'target') {
+    logger.debug('No targetId provided, target context remains null.');
+  }
+}
+
+/**
  * Assembles the data context object (`JsonLogicEvaluationContext`) needed for
  * evaluating JSON Logic rules within the system.
  *
@@ -193,83 +248,22 @@ export function createJsonLogicContext(
   };
 
   // --- Populate Actor --- (AC.4, AC.5, AC.9)
-  if (actorId && (typeof actorId === 'string' || typeof actorId === 'number')) {
-    try {
-      const actorEntity = entityManager.getEntityInstance(actorId);
-      if (actorEntity) {
-        logger.debug(
-          `Found actor entity [${actorId}]. Creating context entry.`
-        );
-        evaluationContext.actor = {
-          id: actorId,
-          components: createComponentAccessor(
-            actorEntity.id,
-            entityManager,
-            logger
-          ),
-        };
-      } else {
-        logger.warn(
-          `Actor entity not found for ID [${actorId}]. Setting actor context to null.`
-        );
-      }
-    } catch (error) {
-      // Log specific error during actor lookup? Or let it propagate?
-      logger.error(
-        `Error processing actor ID [${actorId}] in createJsonLogicContext:`,
-        error
-      );
-      throw error; // Re-throw for now
-    }
-  } else if (actorId) {
-    logger.warn(
-      `Invalid actorId type provided: [${typeof actorId}]. Setting actor context to null.`
-    );
-  }
+  populateParticipant(
+    'actor',
+    actorId,
+    evaluationContext,
+    entityManager,
+    logger
+  );
 
   // --- Populate Target --- (AC.4, AC.5, AC.9)
-  if (
-    targetId &&
-    (typeof targetId === 'string' || typeof targetId === 'number')
-  ) {
-    try {
-      const targetEntity = entityManager.getEntityInstance(targetId);
-
-      if (targetEntity) {
-        logger.debug(
-          `Found target entity [${targetId}]. Creating context entry.`
-        );
-        const componentsProxy = createComponentAccessor(
-          targetEntity.id,
-          entityManager,
-          logger
-        );
-        evaluationContext.target = {
-          id: targetEntity.id,
-          components: componentsProxy, // Assign the proxy
-        };
-      } else {
-        logger.warn(
-          `Target entity not found for ID [${targetId}]. Setting target context to null.`
-        );
-        // evaluationContext.target remains null
-      }
-    } catch (error) {
-      logger.error(
-        `Error processing target ID [${targetId}] in createJsonLogicContext:`,
-        error
-      );
-      throw error; // Re-throw for now
-    }
-  } else if (targetId) {
-    logger.warn(
-      `Invalid targetId type provided: [${typeof targetId}]. Setting target context to null.`
-    );
-    // evaluationContext.target remains null
-  } else {
-    // No targetId provided, target context remains null (this is normal)
-    logger.debug('No targetId provided, target context remains null.');
-  }
+  populateParticipant(
+    'target',
+    targetId,
+    evaluationContext,
+    entityManager,
+    logger
+  );
 
   return evaluationContext;
 }
