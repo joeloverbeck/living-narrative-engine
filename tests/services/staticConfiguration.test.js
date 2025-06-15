@@ -42,7 +42,6 @@ const EXPECTED_MANIFEST_SCHEMA_ID = EXPECTED_CONTENT_TYPE_SCHEMAS.manifest;
 
 // Expected derived paths
 const EXPECTED_SCHEMA_BASE_PATH = `${EXPECTED_BASE_DATA_PATH}/schemas`; // ./data/schemas
-const EXPECTED_WORLD_BASE_PATH = `${EXPECTED_BASE_DATA_PATH}/worlds`; // ./data/worlds
 
 // --- Test Suite ---
 
@@ -161,13 +160,6 @@ describe('StaticConfiguration', () => {
     it('should construct path using string conversion for null/undefined input', () => {
       expect(config.getContentBasePath(null)).toBe(null);
       expect(config.getContentBasePath(undefined)).toBe(undefined);
-    });
-  });
-
-  // --- Test getWorldBasePath() ---
-  describe('getWorldBasePath()', () => {
-    it('should return the correctly constructed world base path', () => {
-      expect(config.getWorldBasePath()).toBe('worlds');
     });
   });
 });

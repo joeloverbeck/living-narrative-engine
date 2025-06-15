@@ -30,11 +30,6 @@ class StaticConfiguration {
   }
 
   /** @returns {string} */
-  getWorldBasePath() {
-    return 'worlds';
-  }
-
-  /** @returns {string} */
   getRuleBasePath() {
     return 'rules';
   }

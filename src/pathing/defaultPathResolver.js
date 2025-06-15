@@ -30,7 +30,6 @@ class DefaultPathResolver extends IPathResolver {
     const requiredMethods = [
       'getBaseDataPath',
       'getSchemaBasePath',
-      'getWorldBasePath',
       'getContentBasePath',
       'getGameConfigFilename',
       'getModsBasePath',
@@ -96,20 +95,6 @@ class DefaultPathResolver extends IPathResolver {
       this.#config.getBaseDataPath(),
       this.#config.getSchemaBasePath(),
       filename
-    );
-  }
-
-  resolveManifestPath(worldName) {
-    if (typeof worldName !== 'string' || worldName.trim() === '') {
-      throw new Error(
-        'Invalid or empty worldName provided to resolveManifestPath.'
-      );
-    }
-    const manifestFilename = `${worldName}.world.json`;
-    return this.#join(
-      this.#config.getBaseDataPath(),
-      this.#config.getWorldBasePath(),
-      manifestFilename
     );
   }
 

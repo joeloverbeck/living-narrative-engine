@@ -32,7 +32,6 @@ const mockConfigurationInstance = () => ({
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getContentBasePath: jest.fn().mockReturnValue('content_type'),
-  getWorldBasePath: jest.fn().mockReturnValue('worlds'),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),

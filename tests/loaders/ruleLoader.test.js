@@ -74,9 +74,6 @@ const createMockPathResolver = (overrides = {}) => ({
   resolveGameConfigPath: jest.fn(() => './data/game.json'),
   // resolveRulePath might be used if loading non-mod rules, ensure it's mocked
   resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
-  resolveManifestPath: jest.fn(
-    (worldName) => `./data/worlds/${worldName}.world.json`
-  ),
   ...overrides,
 });
 

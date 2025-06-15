@@ -70,6 +70,10 @@ class SimpleEntityManager {
   }
 }
 
+/**
+ *
+ * @param em
+ */
 function makeStubRebuild(em) {
   return {
     execute({ leaderIds }) {

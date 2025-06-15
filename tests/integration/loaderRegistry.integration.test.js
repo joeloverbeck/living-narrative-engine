@@ -60,9 +60,6 @@ const createMockPathResolver = (overrides = {}) => ({
   ),
   resolveGameConfigPath: jest.fn(() => './data/game.json'),
   resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
-  resolveManifestPath: jest.fn(
-    (worldName) => `./data/worlds/${worldName}.world.json`
-  ),
   ...overrides,
 });
 

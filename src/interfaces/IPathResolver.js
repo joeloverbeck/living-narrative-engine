@@ -14,14 +14,6 @@ export class IPathResolver {
   }
 
   /**
-   * @param worldName
-   * @returns {string}
-   */
-  resolveManifestPath(worldName) {
-    throw new Error('Not implemented');
-  }
-
-  /**
    * @param typeName
    * @param filename
    * @returns {string}
