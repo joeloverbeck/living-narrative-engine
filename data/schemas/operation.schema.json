@@ -120,7 +120,7 @@
           "$ref": "./operations/autoMoveFollowers.schema.json"
         },
         {
-           "$ref": "./operations/removeFromClosenessCircle.schema.json"
+          "$ref": "./operations/removeFromClosenessCircle.schema.json"
         },
         {
           "$ref": "./operations/mergeClosenessCircle.schema.json"
