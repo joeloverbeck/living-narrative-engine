@@ -4,7 +4,6 @@
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import Ajv from 'ajv';
 import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
