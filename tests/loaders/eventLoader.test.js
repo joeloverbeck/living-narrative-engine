@@ -742,7 +742,11 @@ describe('EventLoader', () => {
           `Payload schema ID '${payloadSchemaId}' for event '${fullEventIdFromFile}' was already loaded.`
         )
       );
-      expect(mockValidator.addSchema).not.toHaveBeenCalled();
+      expect(mockValidator.removeSchema).toHaveBeenCalledWith(payloadSchemaId);
+      expect(mockValidator.addSchema).toHaveBeenCalledWith(
+        fetchedData.payloadSchema,
+        payloadSchemaId
+      );
       expect(storeItemInRegistrySpy).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).not.toHaveBeenCalled();
     });

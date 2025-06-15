@@ -8,7 +8,10 @@
 // --- Base Class Import ---
 // Adjust path relative to this file's location if needed
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Assuming it's in loaders sibling dir
+
 import { parseAndValidateId } from '../utils/idUtils.js';
+import { extractBaseId } from '../utils/idUtils.js';
+import { registerSchema } from '../utils/schemaUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -114,29 +117,26 @@ class EventLoader extends BaseManifestItemLoader {
         `EventLoader [${modId}]: Generated payload schema ID: ${payloadSchemaId}`
       );
 
-      if (!this._schemaValidator.isSchemaLoaded(payloadSchemaId)) {
-        this._logger.debug(
-          `EventLoader [${modId}]: Payload schema '${payloadSchemaId}' not loaded. Attempting registration...`
-        );
-        try {
-          await this._schemaValidator.addSchema(payloadSchema, payloadSchemaId);
-          this._logger.debug(
-            `EventLoader [${modId}]: Successfully registered payload schema '${payloadSchemaId}'.`
-          );
-        } catch (addSchemaError) {
-          const errorMsg = `EventLoader [${modId}]: CRITICAL - Failed to register payload schema '${payloadSchemaId}' for event '${trimmedFullEventId}'.`;
-          this._logger.error(
-            errorMsg,
-            { error: addSchemaError?.message || addSchemaError },
-            addSchemaError
-          );
-          throw new Error(
-            `CRITICAL: Failed to register payload schema '${payloadSchemaId}'.`
-          );
-        }
-      } else {
-        this._logger.warn(
+      try {
+        await registerSchema(
+          this._schemaValidator,
+          payloadSchema,
+          payloadSchemaId,
+          this._logger,
           `EventLoader [${modId}]: Payload schema ID '${payloadSchemaId}' for event '${trimmedFullEventId}' was already loaded. Overwriting/duplicate.`
+        );
+        this._logger.debug(
+          `EventLoader [${modId}]: Successfully registered payload schema '${payloadSchemaId}'.`
+        );
+      } catch (addSchemaError) {
+        const errorMsg = `EventLoader [${modId}]: CRITICAL - Failed to register payload schema '${payloadSchemaId}' for event '${trimmedFullEventId}'.`;
+        this._logger.error(
+          errorMsg,
+          { error: addSchemaError?.message || addSchemaError },
+          addSchemaError
+        );
+        throw new Error(
+          `CRITICAL: Failed to register payload schema '${payloadSchemaId}'.`
         );
       }
     } else {

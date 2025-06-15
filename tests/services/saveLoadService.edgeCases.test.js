@@ -153,6 +153,14 @@ describe('SaveLoadService edge cases', () => {
       expect(slots[0].isCorrupted).toBe(true);
       expect(slots[0].saveName).toMatch(/Bad Metadata/);
     });
+
+    it('marks slot corrupted when deserialization fails', async () => {
+      storageProvider.listFiles.mockResolvedValue(['manual_save_bad.sav']);
+      storageProvider.readFile.mockRejectedValue(new Error('read fail'));
+      const slots = await service.listManualSaveSlots();
+      expect(slots[0].isCorrupted).toBe(true);
+      expect(slots[0].saveName).toMatch(/Corrupted/);
+    });
   });
 
   describe('loadGameData validation branches', () => {

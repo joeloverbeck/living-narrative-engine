@@ -11,6 +11,7 @@
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /**
  * Handles TurnDirective.RE_PROMPT by requesting a transition to AwaitingActorDecisionState.
@@ -36,10 +37,14 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
   ) {
     const className = this.constructor.name;
     const logger = turnContext.getLogger();
+    const safeEventDispatcher = turnContext.getSafeEventDispatcher();
 
     if (directive !== TurnDirective.RE_PROMPT) {
       const errorMsg = `${className}: Received non-RE_PROMPT directive (${directive}). Aborting.`;
-      logger.error(errorMsg);
+      safeEventDispatcher?.dispatch(DISPLAY_ERROR_ID, {
+        message: errorMsg,
+        details: { directive },
+      });
       // Throwing an error allows the calling state (e.g., ProcessingCommandState)
       // to handle this appropriately, potentially by ending the turn with this error.
       throw new Error(errorMsg);
@@ -49,7 +54,10 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
 
     if (!contextActor) {
       const errorMsg = `${className}: No actor found in ITurnContext. Cannot re-prompt.`;
-      logger.error(errorMsg);
+      safeEventDispatcher?.dispatch(DISPLAY_ERROR_ID, {
+        message: errorMsg,
+        details: { directive },
+      });
       // End the turn with an error because re-prompting requires an actor.
       // The turnContext.endTurn() method will signal the handler to transition
       // to an appropriate end state (e.g., TurnEndingState, then TurnIdleState).
@@ -75,7 +83,14 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
       );
     } catch (transitionError) {
       const errorMsg = `${className}: Failed to request transition to AwaitingActorDecisionState for actor ${contextActor.id}. Error: ${transitionError.message}`;
-      logger.error(errorMsg, transitionError);
+      safeEventDispatcher?.dispatch(DISPLAY_ERROR_ID, {
+        message: errorMsg,
+        details: {
+          actorId: contextActor.id,
+          error: transitionError.message,
+          stack: transitionError.stack,
+        },
+      });
       // If the transition fails, end the turn with an error.
       turnContext.endTurn(new Error(errorMsg));
     }
