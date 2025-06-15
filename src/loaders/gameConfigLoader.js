@@ -73,8 +73,6 @@ class GameConfigLoader extends AbstractLoader {
     this.#dataFetcher = dataFetcher;
     this.#schemaValidator = schemaValidator;
     this.#logger = this._logger;
-
-    this.#logger.debug('GameConfigLoader: Instance created.');
   }
 
   /**

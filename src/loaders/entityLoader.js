@@ -76,8 +76,6 @@ class EntityLoader extends BaseManifestItemLoader {
     //     this._logger.warn(`EntityLoader: Schema ID for 'entities' is missing. Entity validation will be skipped or may fail.`);
     // }
     // --- [LOADER-REFACTOR-04 Change END] ---
-
-    this._logger.debug(`EntityLoader: Initialized.`);
   }
 
   /**

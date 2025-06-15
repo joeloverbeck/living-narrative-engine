@@ -59,7 +59,6 @@ class ActionLoader extends BaseManifestItemLoader {
       dataRegistry,
       logger
     );
-    this._logger.debug(`ActionLoader: Initialized.`);
   }
 
   /**

@@ -54,7 +54,6 @@ class ComponentLoader extends BaseInlineSchemaLoader {
       dataRegistry,
       logger
     );
-    this._logger.debug(`ComponentLoader: Initialized.`);
   }
 
   /**
