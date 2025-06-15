@@ -2,27 +2,31 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/operation.schema.json",
   "title": "Operation Schema",
-  "description": "Defines the structure for a single Operation object, representing a discrete step within a SystemRule's action sequence. Operations interact with the ECS framework (querying/modifying components, dispatching events), control the flow of execution (conditional logic), manage variables, query external system data, or interact with the UI. Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
-  "oneOf": [{ "$ref": "#/$defs/Operation" }, { "$ref": "#/$defs/MacroReference" }],
+  "description": "Defines the structure for a single Action, which can be either a concrete Operation or a reference to a Macro. Operations interact with the ECS framework, control execution flow, manage variables, or interact with the UI. Based on the 'type' field, the 'parameters' object must conform to a specific structure.",
+  "$ref": "#/$defs/Action",
   "$defs": {
     "Action": {
-      "description": "Represents either a concrete operation or a macro reference.",
+      "description": "Represents either a concrete operation or a macro reference. This is the canonical definition for any item in an action sequence.",
       "oneOf": [
-        { "$ref": "#/$defs/Operation" },
-        { "$ref": "#/$defs/MacroReference" }
+        {
+          "$ref": "#/$defs/Operation"
+        },
+        {
+          "$ref": "#/$defs/MacroReference"
+        }
       ]
     },
     "MacroReference": {
       "type": "object",
-      "description": "Reference to a macro to be expanded at load time.",
+      "description": "A reference to a macro. The macro's 'actions' will be expanded in place of this reference at load time.",
       "properties": {
         "macro": {
           "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Namespaced macro identifier"
+          "description": "The namespaced identifier of the macro to execute."
         },
         "comment": {
           "type": "string",
-          "description": "Optional note for modders"
+          "description": "Optional note for modders. Ignored at runtime."
         }
       },
       "required": ["macro"],
@@ -30,7 +34,7 @@
     },
     "Operation": {
       "type": "object",
-      "description": "A single operation within an action sequence.",
+      "description": "A single, discrete operation within an action sequence.",
       "properties": {
         "type": {
           "type": "string",
@@ -424,7 +428,11 @@
         },
         {
           "if": {
-            "properties": { "type": { "const": "ESTABLISH_FOLLOW_RELATION" } },
+            "properties": {
+              "type": {
+                "const": "ESTABLISH_FOLLOW_RELATION"
+              }
+            },
             "required": ["type"]
           },
           "then": {
@@ -438,12 +446,18 @@
         },
         {
           "if": {
-            "properties": { "type": { "const": "BREAK_FOLLOW_RELATION" } },
+            "properties": {
+              "type": {
+                "const": "BREAK_FOLLOW_RELATION"
+              }
+            },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/BreakFollowRelationParameters" }
+              "parameters": {
+                "$ref": "#/$defs/BreakFollowRelationParameters"
+              }
             },
             "required": ["parameters"]
           }
@@ -547,17 +561,6 @@
           }
         }
       ]
-    },
-    "MacroCall": {
-      "type": "object",
-      "properties": {
-        "macro": {
-          "type": "string",
-          "minLength": 1
-        }
-      },
-      "required": ["macro"],
-      "additionalProperties": false
     },
     "ModifyContextArrayParameters": {
       "type": "object",
@@ -804,20 +807,14 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "oneOf": [
-              { "$ref": "#/$defs/Operation" },
-              { "$ref": "#/$defs/MacroReference" }
-            ]
+            "$ref": "#/$defs/Action"
           }
         },
         "else_actions": {
           "type": "array",
           "default": [],
           "items": {
-            "oneOf": [
-              { "$ref": "#/$defs/Operation" },
-              { "$ref": "#/$defs/MacroReference" }
-            ]
+            "$ref": "#/$defs/Action"
           }
         }
       },
@@ -838,19 +835,13 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "oneOf": [
-              { "$ref": "#/$defs/Operation" },
-              { "$ref": "#/$defs/MacroReference" }
-            ]
+            "$ref": "#/$defs/Action"
           }
         },
         "else_actions": {
           "type": "array",
           "items": {
-            "oneOf": [
-              { "$ref": "#/$defs/Operation" },
-              { "$ref": "#/$defs/MacroReference" }
-            ]
+            "$ref": "#/$defs/Action"
           },
           "default": []
         }
@@ -903,10 +894,7 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "oneOf": [
-              { "$ref": "#/$defs/Operation" },
-              { "$ref": "#/$defs/MacroReference" }
-            ]
+            "$ref": "#/$defs/Action"
           }
         }
       },
@@ -1001,8 +989,14 @@
       "type": "object",
       "description": "Parameters for the ESTABLISH_FOLLOW_RELATION operation.",
       "properties": {
-        "follower_id": { "type": "string", "minLength": 1 },
-        "leader_id": { "type": "string", "minLength": 1 }
+        "follower_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "leader_id": {
+          "type": "string",
+          "minLength": 1
+        }
       },
       "required": ["follower_id", "leader_id"],
       "additionalProperties": false
@@ -1011,7 +1005,10 @@
       "type": "object",
       "description": "Parameters for the BREAK_FOLLOW_RELATION operation.",
       "properties": {
-        "follower_id": { "type": "string", "minLength": 1 }
+        "follower_id": {
+          "type": "string",
+          "minLength": 1
+        }
       },
       "required": ["follower_id"],
       "additionalProperties": false
@@ -1286,16 +1283,6 @@
         }
       },
       "required": ["operator", "operands"]
-    },
-    "MacroReference": {
-      "type": "object",
-      "properties": {
-        "macro": {
-          "$ref": "./common.schema.json#/definitions/namespacedId"
-        }
-      },
-      "required": ["macro"],
-      "additionalProperties": false
     }
   }
 }

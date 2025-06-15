@@ -26,19 +26,11 @@
     },
     "actions": {
       "type": "array",
-      "description": "Required. Ordered list of Operation objects to execute sequentially if the rule's event_type matches and its condition (if any) evaluates to true. Operations define interactions like querying/modifying components or dispatching new events.",
+      "description": "Required. Ordered list of actions (Operations or Macro References) to execute sequentially if the rule's event_type matches and its condition (if any) evaluates to true.",
       "minItems": 1,
       "items": {
-        "oneOf": [
-          {
-            "$ref": "operation.schema.json#/$defs/Operation",
-            "description": "A single Operation object conforming to the structure defined in operation.schema.json."
-          },
-          {
-            "$ref": "#/$defs/MacroReference",
-            "description": "Reference to a macro that will be expanded during loading."
-          }
-        ]
+        "$ref": "operation.schema.json#/$defs/Action",
+        "description": "An Action object, which can be a concrete Operation or a Macro Reference, conforming to the structure defined in operation.schema.json."
       }
     },
     "comment": {
@@ -47,17 +39,5 @@
     }
   },
   "required": ["event_type", "actions"],
-  "additionalProperties": false,
-  "$defs": {
-    "MacroReference": {
-      "type": "object",
-      "properties": {
-        "macro": {
-          "$ref": "./common.schema.json#/definitions/namespacedId"
-        }
-      },
-      "required": ["macro"],
-      "additionalProperties": false
-    }
-  }
+  "additionalProperties": false
 }
