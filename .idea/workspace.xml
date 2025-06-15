@@ -4,18 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implementing base intimacy system.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Made changes to the mod manifest schema.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/loadGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/loadGameUI.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/saveGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/saveGameUI.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/contextVariableUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/contextVariableUtils.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/textUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/textUtils.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/domUI/loadGameUI.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/loadGameUI.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/domUI/saveGameUI.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/saveGameUI.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/rules/stepBackRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/stepBackRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/contextVariableUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/contextVariableUtils.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/utils/textUtils.formatTimestamp.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/textUtils.formatTimestamp.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,6 +62,7 @@
     "Jest.genericTurnHandler.test.js.executor": "Run",
     "Jest.genericTurnStrategy.test.js.executor": "Run",
     "Jest.genericTurnStrategyFactory.test.js.executor": "Run",
+    "Jest.getCloseRule.integration.test.js.executor": "Run",
     "Jest.humanDecisionProvider.indexUse.test.js.executor": "Run",
     "Jest.humanDecisionProvider.test.js.executor": "Run",
     "Jest.humanTurnHandler.awaitTurnEndPromise.test.js.executor": "Run",
@@ -81,6 +72,7 @@
     "Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor": "Run",
     "Jest.interpreterRegistrations.handlers.test.js.executor": "Run",
     "Jest.llmDecisionProvider.test.js.executor": "Run",
+    "Jest.modManifestLoader.validation.test.js.executor": "Run",
     "Jest.modifyArrayFieldHandler.pushUnique.test.js.executor": "Run",
     "Jest.nestedPlaceholderResolution.integration.test.js.executor": "Run",
     "Jest.playerTurnHandler.fixes.test.js.executor": "Run",
@@ -120,16 +112,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.modManifestLoader.validation.test.js">
-    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="DIRECTORY" />
-      <test-directory value="$PROJECT_DIR$/tests" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Jest.getCloseRule.integration.test.js">
     <configuration name="closenessCircleService.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -146,6 +129,15 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="getCloseRule.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/integration/rules/getCloseRule.integration.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="modManifestLoader.validation.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -168,11 +160,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.getCloseRule.integration.test.js" />
         <item itemvalue="Jest.modManifestLoader.validation.test.js" />
         <item itemvalue="Jest.closenessCircleService.test.js" />
         <item itemvalue="Jest.closeness.schema.test.js" />
         <item itemvalue="Jest.modifyArrayFieldHandler.pushUnique.test.js" />
-        <item itemvalue="Jest.Tests in tests\" />
       </list>
     </recent_temporary>
   </component>
@@ -194,23 +186,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="24919000" />
-    </task>
-    <task id="LOCAL-00072" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749924765153</created>
-      <option name="number" value="00072" />
-      <option name="presentableId" value="LOCAL-00072" />
-      <option name="project" value="LOCAL" />
-      <updated>1749924765153</updated>
-    </task>
-    <task id="LOCAL-00073" summary="Unifying paths.">
-      <option name="closed" value="true" />
-      <created>1749925369713</created>
-      <option name="number" value="00073" />
-      <option name="presentableId" value="LOCAL-00073" />
-      <option name="project" value="LOCAL" />
-      <updated>1749925369713</updated>
+      <workItem from="1749963238113" duration="25219000" />
     </task>
     <task id="LOCAL-00074" summary="Unified human and AI paths regarding decision-making.">
       <option name="closed" value="true" />
@@ -588,14 +564,29 @@
       <option name="project" value="LOCAL" />
       <updated>1749991448781</updated>
     </task>
-    <option name="localTasksCounter" value="121" />
+    <task id="LOCAL-00121" summary="Made changes to the mod manifest schema.">
+      <option name="closed" value="true" />
+      <created>1749992233384</created>
+      <option name="number" value="00121" />
+      <option name="presentableId" value="LOCAL-00121" />
+      <option name="project" value="LOCAL" />
+      <updated>1749992233384</updated>
+    </task>
+    <task id="LOCAL-00122" summary="Made changes to the mod manifest schema.">
+      <option name="closed" value="true" />
+      <created>1749992376841</created>
+      <option name="number" value="00122" />
+      <option name="presentableId" value="LOCAL-00122" />
+      <option name="project" value="LOCAL" />
+      <updated>1749992376841</updated>
+    </task>
+    <option name="localTasksCounter" value="123" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fixing dependency cycles." />
     <MESSAGE value="Unifying action decision." />
     <MESSAGE value="Ensured playerTurnSubmitted doesn't break." />
     <MESSAGE value="Unified action decision across existing actors." />
@@ -620,6 +611,7 @@
     <MESSAGE value="Minor changes." />
     <MESSAGE value="Formatting." />
     <MESSAGE value="Implementing base intimacy system." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implementing base intimacy system." />
+    <MESSAGE value="Made changes to the mod manifest schema." />
+    <option name="LAST_COMMIT_MESSAGE" value="Made changes to the mod manifest schema." />
   </component>
 </project>
