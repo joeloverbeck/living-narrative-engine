@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented base of intimacy system." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented focused handlers to deal with follower-related issues." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -187,15 +187,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="31171000" />
-    </task>
-    <task id="LOCAL-00083" summary="Implementing thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749936498199</created>
-      <option name="number" value="00083" />
-      <option name="presentableId" value="LOCAL-00083" />
-      <option name="project" value="LOCAL" />
-      <updated>1749936498199</updated>
+      <workItem from="1749963238113" duration="31483000" />
     </task>
     <task id="LOCAL-00084" summary="Implementing thoughts and notes tooltips.">
       <option name="closed" value="true" />
@@ -581,14 +573,21 @@
       <option name="project" value="LOCAL" />
       <updated>1749998439438</updated>
     </task>
-    <option name="localTasksCounter" value="132" />
+    <task id="LOCAL-00132" summary="Implemented focused handlers to deal with follower-related issues.">
+      <option name="closed" value="true" />
+      <created>1749998676692</created>
+      <option name="number" value="00132" />
+      <option name="presentableId" value="LOCAL-00132" />
+      <option name="project" value="LOCAL" />
+      <updated>1749998676692</updated>
+    </task>
+    <option name="localTasksCounter" value="133" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Unified action decision across existing actors." />
     <MESSAGE value="Ensuring the app works." />
     <MESSAGE value="Ensuring that chosenActionId doesn't get used anymore." />
     <MESSAGE value="Trying to return the app to normality." />
@@ -613,6 +612,7 @@
     <MESSAGE value="Made changes to the mod manifest schema." />
     <MESSAGE value="Returning the app to normal." />
     <MESSAGE value="Implemented base of intimacy system." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented base of intimacy system." />
+    <MESSAGE value="Implemented focused handlers to deal with follower-related issues." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented focused handlers to deal with follower-related issues." />
   </component>
 </project>
