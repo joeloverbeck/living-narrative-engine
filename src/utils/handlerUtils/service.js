@@ -1,4 +1,4 @@
-// src/logic/operationHandlers/handlerUtils.js
+// src/utils/handlerUtils/service.js
 
 /**
  * @module HandlerUtils
@@ -7,10 +7,7 @@
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
-import {
-  setupService,
-  validateServiceDeps,
-} from '../../utils/serviceInitializer.js';
+import { setupService, validateServiceDeps } from '../serviceInitializer.js';
 
 /**
  * @description Initialize a handler logger using the standard service
@@ -29,7 +26,7 @@ export function initHandlerLogger(name, logger) {
  * dependency validator.
  * @param {string} name - Name used for validation messages.
  * @param {ILogger} logger - Logger for validation output.
- * @param {Record<string, import('../../utils/serviceInitializer.js').DependencySpec>} deps
+ * @param {Record<string, import('../serviceInitializer.js').DependencySpec>} deps
  *   - Map of dependency specs.
  * @returns {void}
  */

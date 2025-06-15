@@ -1,6 +1,6 @@
-// src/utils/handlerUtils.js
+// src/utils/handlerUtils/params.js
 
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 /**
  * @description Ensures an operation handler received a valid parameters object.

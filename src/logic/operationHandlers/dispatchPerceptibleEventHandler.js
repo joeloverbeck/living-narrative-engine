@@ -10,8 +10,8 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils/params.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
-import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 const EVENT_ID = 'core:perceptible_event';
 

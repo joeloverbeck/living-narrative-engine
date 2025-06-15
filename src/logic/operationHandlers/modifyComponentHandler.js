@@ -17,8 +17,8 @@ import {
   initHandlerLogger,
   validateDeps,
   getExecLogger,
-} from './handlerUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils.js';
+} from '../../utils/handlerUtils/service.js';
+import { assertParamsObject } from '../../utils/handlerUtils/params.js';
 
 /**
  * @typedef {object} EntityRefObject
