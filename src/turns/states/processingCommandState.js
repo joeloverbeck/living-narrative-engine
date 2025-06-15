@@ -183,11 +183,21 @@ export class ProcessingCommandState extends AbstractTurnState {
             speechContent: speech,
           };
 
-          // Conditionally add thoughts and notes if they are valid strings
+          // Conditionally add thoughts if it is a valid string
           if (typeof thoughtsRaw === 'string' && thoughtsRaw.trim()) {
             payload.thoughts = thoughtsRaw.trim();
           }
-          if (typeof notesRaw === 'string' && notesRaw.trim()) {
+
+          // Normalize notes which may be an array from the LLM output
+          if (Array.isArray(notesRaw)) {
+            const joined = notesRaw
+              .map((n) => (typeof n === 'string' ? n.trim() : ''))
+              .filter(Boolean)
+              .join('\n');
+            if (joined) {
+              payload.notes = joined;
+            }
+          } else if (typeof notesRaw === 'string' && notesRaw.trim()) {
             payload.notes = notesRaw.trim();
           }
 
