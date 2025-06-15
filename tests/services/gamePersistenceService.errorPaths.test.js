@@ -114,6 +114,16 @@ describe('GamePersistenceService error paths', () => {
       expect(logger.error).toHaveBeenCalled();
       expect(playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(0);
     });
+
+    it('resets playtime when metadata is missing', async () => {
+      const data = {
+        gameState: { entities: [] },
+        metadata: {},
+      };
+      await service.restoreGameState(data);
+      expect(playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(0);
+      expect(logger.warn).toHaveBeenCalled();
+    });
   });
 
   describe('loadAndRestoreGame failures', () => {

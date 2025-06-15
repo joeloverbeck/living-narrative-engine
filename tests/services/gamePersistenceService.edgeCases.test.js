@@ -131,6 +131,8 @@ describe('GamePersistenceService edge cases', () => {
       const res = await service.restoreGameState({});
       expect(res.success).toBe(false);
       expect(logger.error).toHaveBeenCalled();
+      expect(entityManager.clearAll).not.toHaveBeenCalled();
+      expect(playtimeTracker.setAccumulatedPlaytime).not.toHaveBeenCalled();
     });
 
     it('handles reconstructEntity throwing and null return', async () => {
