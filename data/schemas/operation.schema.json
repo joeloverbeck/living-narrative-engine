@@ -118,6 +118,9 @@
         },
         {
           "$ref": "./operations/autoMoveFollowers.schema.json"
+        },
+        {
+          "$ref": "./operations/mergeClosenessCircle.schema.json"
         }
       ]
     }
