@@ -26,15 +26,18 @@ describe('LLMResponseProcessor', () => {
   let processor;
   let logger;
   let schemaValidatorMock;
+  let safeEventDispatcher;
   const actorId = 'testActor123';
 
   beforeEach(() => {
     jest.clearAllMocks();
     logger = mockLogger();
     schemaValidatorMock = mockSchemaValidator();
+    safeEventDispatcher = { dispatch: jest.fn() };
     processor = new LLMResponseProcessor({
       schemaValidator: schemaValidatorMock,
       logger,
+      safeEventDispatcher,
     });
   });
 
@@ -47,10 +50,15 @@ describe('LLMResponseProcessor', () => {
 
     test('throws if invalid dependencies are provided', () => {
       const aLogger = mockLogger();
+      const dispatcher = { dispatch: jest.fn() };
       // Test with missing schemaValidator
-      expect(() => new LLMResponseProcessor({ logger: aLogger })).toThrow(
-        'LLMResponseProcessor needs a valid ISchemaValidator'
-      );
+      expect(
+        () =>
+          new LLMResponseProcessor({
+            logger: aLogger,
+            safeEventDispatcher: dispatcher,
+          })
+      ).toThrow('LLMResponseProcessor needs a valid ISchemaValidator');
 
       // Test with partially implemented schemaValidator (missing isSchemaLoaded)
       expect(
@@ -58,13 +66,27 @@ describe('LLMResponseProcessor', () => {
           new LLMResponseProcessor({
             schemaValidator: { validate: () => {} },
             logger: aLogger,
+            safeEventDispatcher: dispatcher,
           })
       ).toThrow('LLMResponseProcessor needs a valid ISchemaValidator');
 
       // Test with missing logger
       expect(
-        () => new LLMResponseProcessor({ schemaValidator: schemaValidatorMock })
+        () =>
+          new LLMResponseProcessor({
+            schemaValidator: schemaValidatorMock,
+            safeEventDispatcher: dispatcher,
+          })
       ).toThrow('LLMResponseProcessor needs a valid ILogger');
+
+      // Test with missing safeEventDispatcher
+      expect(
+        () =>
+          new LLMResponseProcessor({
+            schemaValidator: schemaValidatorMock,
+            logger: aLogger,
+          })
+      ).toThrow('LLMResponseProcessor requires a valid ISafeEventDispatcher');
     });
   });
 
