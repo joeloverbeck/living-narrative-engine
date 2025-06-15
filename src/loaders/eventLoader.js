@@ -64,9 +64,6 @@ class EventLoader extends BaseInlineSchemaLoader {
       dataRegistry,
       logger
     );
-
-    // AC: Log initialization message.
-    this._logger.debug(`EventLoader: Initialized.`);
   }
 
   /**

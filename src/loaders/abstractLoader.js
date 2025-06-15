@@ -21,7 +21,7 @@ export class AbstractLoader {
   constructor(logger, checks = []) {
     validateLoaderDeps(logger, checks);
     this._logger = ensureValidLogger(logger, this.constructor.name);
-    this._logger.debug(`${this.constructor.name}: Base loader initialized.`);
+    this._logger.debug(`${this.constructor.name}: Initialized.`);
   }
 }
 

@@ -68,8 +68,7 @@ class SchemaLoader extends AbstractLoader {
     this.#validator = validator;
     this.#logger = this._logger;
 
-    // --- Changed log level from info to debug for instance creation ---
-    this.#logger.debug('SchemaLoader: Instance created and services injected.');
+    // --- Dependencies stored; initialization complete ---
   }
 
   /**

@@ -46,7 +46,6 @@ class MacroLoader extends BaseManifestItemLoader {
       dataRegistry,
       logger
     );
-    this._logger.debug('MacroLoader: Initialized.');
   }
 
   /**

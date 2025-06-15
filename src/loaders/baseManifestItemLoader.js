@@ -155,9 +155,6 @@ export class BaseManifestItemLoader extends AbstractLoader {
       );
       this._primarySchemaId = null;
     }
-    this._logger.debug(
-      `${this.constructor.name}: Initialized successfully for content type '${trimmedContentType}'.`
-    );
   }
 
   /**

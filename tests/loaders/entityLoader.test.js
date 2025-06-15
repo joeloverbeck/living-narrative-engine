@@ -326,12 +326,11 @@ describe('EntityLoader', () => {
       );
       // --- [LOADER-REFACTOR-04 Test Change END] ---
 
-      // Debug logs should still happen (base class init + entityloader init)
-      // EntityLoader init log:
+      // Debug log from AbstractLoader should still happen
       expect(warnLogger.debug).toHaveBeenCalledWith(
         'EntityLoader: Initialized.'
       );
-      expect(warnLogger.debug).toHaveBeenCalledTimes(3); // Base loader init + base init + entity loader init
+      expect(warnLogger.debug).toHaveBeenCalledTimes(1); // Only AbstractLoader logs initialization now
     });
   });
 
