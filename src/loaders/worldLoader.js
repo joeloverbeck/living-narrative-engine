@@ -10,6 +10,7 @@
 /** @typedef {import('./eventLoader.js').default} EventLoader */
 /** @typedef {import('./componentLoader.js').default} ComponentLoader */
 /** @typedef {import('./ruleLoader.js').default} RuleLoader */
+/** @typedef {import('./macroLoader.js').default} MacroLoader */
 /** @typedef {import('./schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('./gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../modding/modManifestLoader.js').default} ModManifestLoader */
@@ -69,6 +70,7 @@ class WorldLoader {
   /** @type {SchemaLoader}   */ #schemaLoader;
   /** @type {ComponentLoader}*/ #componentDefinitionLoader;
   /** @type {RuleLoader}     */ #ruleLoader;
+  /** @type {MacroLoader}    */ #macroLoader;
   /** @type {ActionLoader}   */ #actionLoader;
   /** @type {EventLoader}    */ #eventLoader;
   /** @type {EntityLoader}   */ #entityDefinitionLoader;
@@ -95,6 +97,7 @@ class WorldLoader {
    * @param {SchemaLoader} dependencies.schemaLoader - Loader for JSON schemas.
    * @param {ComponentLoader} dependencies.componentLoader - Loader for component definitions.
    * @param {RuleLoader} dependencies.ruleLoader - Loader for system rules.
+   * @param {MacroLoader} [dependencies.macroLoader] - Loader for macro definitions.
    * @param {ActionLoader} dependencies.actionLoader - Loader for action definitions.
    * @param {EventLoader} dependencies.eventLoader - Loader for event definitions.
    * @param {EntityLoader} dependencies.entityLoader - Loader for entity definitions.
@@ -111,6 +114,7 @@ class WorldLoader {
     schemaLoader,
     componentLoader,
     ruleLoader,
+    macroLoader,
     actionLoader,
     eventLoader,
     entityLoader,
@@ -154,6 +158,10 @@ class WorldLoader {
     this.#schemaLoader = schemaLoader;
     this.#componentDefinitionLoader = componentLoader;
     this.#ruleLoader = ruleLoader;
+    this.#macroLoader =
+      macroLoader || {
+        loadItemsForMod: async () => ({ count: 0, overrides: 0, errors: 0 }),
+      };
     this.#actionLoader = actionLoader;
     this.#eventLoader = eventLoader;
     this.#entityDefinitionLoader = entityLoader;
@@ -176,6 +184,12 @@ class WorldLoader {
         contentKey: 'events',
         contentTypeDir: 'events',
         typeName: 'events',
+      },
+      {
+        loader: this.#macroLoader,
+        contentKey: 'macros',
+        contentTypeDir: 'macros',
+        typeName: 'macros',
       },
       {
         loader: this.#actionLoader,
@@ -597,17 +611,6 @@ class WorldLoader {
     }
   }
 
-  // ── Helper: per-mod summary logger (OLD - Replaced by inline logic above) ──
-  /**
-   * @private
-   * @deprecated Use inline summary logging logic after the mod processing loop instead.
-   */
-  #logModLoadSummary /* modId, modResults, durationMs */() {
-    // This method is intentionally left empty as the logic is now inline above.
-    this.#logger.warn(
-      'WorldLoader: #logModLoadSummary is deprecated and should not be called.'
-    );
-  }
 
   // ── Helper: final summary logger ────────────────────────────────────────
   /**

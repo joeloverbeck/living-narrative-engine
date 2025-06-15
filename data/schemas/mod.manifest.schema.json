@@ -81,6 +81,9 @@
         },
         "rules": {
           "$ref": "#/definitions/contentFileList"
+        },
+        "macros": {
+          "$ref": "#/definitions/contentFileList"
         }
       },
       "additionalProperties": {

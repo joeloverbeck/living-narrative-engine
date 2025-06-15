@@ -2,6 +2,7 @@
 
 // Import BaseManifestItemLoader
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { expandMacros } from '../utils/macroUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -148,24 +149,26 @@ class RuleLoader extends BaseManifestItemLoader {
     );
     // --- End Rule ID Determination ---
 
+    // --- Macro Expansion ---
+    if (Array.isArray(data.actions)) {
+      data.actions = expandMacros(
+        data.actions,
+        this._dataRegistry,
+        this._logger
+      );
+    }
+
     // --- Storage ---
     this._logger.debug(
       `RuleLoader [${modId}]: Delegating storage for rule (base ID: '${baseRuleId}') from ${filename} to base helper.`
     );
-    let didOverride = false; // <<< Initialize override flag
-    try {
-      // Capture the boolean return value from the helper
-      didOverride = this._storeItemInRegistry(
-        'rules',
-        modId,
-        baseRuleId,
-        data,
-        filename
-      ); // <<< CAPTURE result
-    } catch (storageError) {
-      // Error logging happens in helper, re-throw
-      throw storageError;
-    }
+    const didOverride = this._storeItemInRegistry(
+      'rules',
+      modId,
+      baseRuleId,
+      data,
+      filename
+    );
     // --- End Storage ---
 
     // --- Return Value ---
