@@ -5,7 +5,10 @@
  */
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+
 import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
+
 
 /**
  * @class RebuildLeaderListCacheHandler
@@ -119,10 +122,11 @@ class RebuildLeaderListCacheHandler {
         }
         updated++;
       } catch (err) {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-          message: `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for '${leaderId}': ${err.message || err}`,
-          details: { stack: err.stack, leaderId },
-        });
+        safeDispatchError(
+          this.#dispatcher,
+          `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for '${leaderId}': ${err.message || err}`,
+          { stack: err.stack, leaderId }
+        );
       }
     }
 

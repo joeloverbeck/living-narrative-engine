@@ -84,7 +84,10 @@ describe('End-to-End Short-Term Memory Flow', () => {
 
     provider = new AIPromptContentProvider({
       logger,
-      promptStaticContentService: new PromptStaticContentService({ logger }),
+      promptStaticContentService: new PromptStaticContentService({
+        logger,
+        promptTextLoader: { loadPromptText: jest.fn() },
+      }),
       perceptionLogFormatter: { format: jest.fn().mockReturnValue([]) },
       gameStateValidationService: {
         validate: jest

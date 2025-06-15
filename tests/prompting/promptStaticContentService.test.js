@@ -50,6 +50,7 @@ const mockLogger = {
 
 describe('PromptStaticContentService', () => {
   let service;
+  let mockPromptTextLoader;
 
   beforeEach(() => {
     // Reset mocks before each test
@@ -57,7 +58,11 @@ describe('PromptStaticContentService', () => {
     mockLogger.info.mockClear();
     mockLogger.warn.mockClear();
     mockLogger.error.mockClear();
-    service = new PromptStaticContentService({ logger: mockLogger });
+    mockPromptTextLoader = { loadPromptText: jest.fn() };
+    service = new PromptStaticContentService({
+      logger: mockLogger,
+      promptTextLoader: mockPromptTextLoader,
+    });
   });
 
   describe('constructor', () => {
@@ -69,15 +74,24 @@ describe('PromptStaticContentService', () => {
     });
 
     it('should throw an error if logger is not provided', () => {
-      expect(() => new PromptStaticContentService({})).toThrow(
-        'PromptStaticContentService: Logger dependency is required.'
-      );
-      expect(() => new PromptStaticContentService({ logger: null })).toThrow(
+      const deps = { promptTextLoader: mockPromptTextLoader };
+      expect(() => new PromptStaticContentService(deps)).toThrow(
         'PromptStaticContentService: Logger dependency is required.'
       );
       expect(
-        () => new PromptStaticContentService({ logger: undefined })
+        () => new PromptStaticContentService({ ...deps, logger: null })
       ).toThrow('PromptStaticContentService: Logger dependency is required.');
+      expect(
+        () => new PromptStaticContentService({ ...deps, logger: undefined })
+      ).toThrow('PromptStaticContentService: Logger dependency is required.');
+    });
+
+    it('should throw an error if promptTextLoader is not provided', () => {
+      expect(
+        () => new PromptStaticContentService({ logger: mockLogger })
+      ).toThrow(
+        'PromptStaticContentService: PromptTextLoader dependency is required.'
+      );
     });
   });
 

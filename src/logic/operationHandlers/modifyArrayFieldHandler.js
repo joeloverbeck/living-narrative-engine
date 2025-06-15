@@ -12,6 +12,7 @@
 import { resolvePath } from '../../utils/objectUtils.js';
 import { cloneDeep } from 'lodash';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
@@ -229,15 +230,15 @@ class ModifyArrayFieldHandler {
         `MODIFY_ARRAY_FIELD: Successfully committed changes to component '${component_type}' on entity '${entityId}'.`
       );
     } catch (error) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message:
-          'MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent.',
-        details: {
+      safeDispatchError(
+        this.#dispatcher,
+        'MODIFY_ARRAY_FIELD: Failed to commit changes via addComponent.',
+        {
           error: error.message,
           entityId,
           componentType: component_type,
-        },
-      });
+        }
+      );
       return; // Abort if the update fails
     }
 

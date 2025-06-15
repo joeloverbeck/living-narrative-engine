@@ -107,6 +107,8 @@ class StaticConfiguration {
       'llm-configs.schema.json',
       'prompt-text.schema.json',
       'macro.schema.json',
+      'ui-icons.schema.json',
+      'ui-labels.schema.json',
       ...OPERATION_SCHEMA_FILES,
     ];
   }
@@ -134,6 +136,8 @@ class StaticConfiguration {
       rules: 'http://example.com/schemas/rule.schema.json',
       'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
       'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
+      'ui-icons': 'http://example.com/schemas/ui-icons.schema.json',
+      'ui-labels': 'http://example.com/schemas/ui-labels.schema.json',
     };
     return map[typeName];
   }

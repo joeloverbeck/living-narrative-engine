@@ -99,7 +99,10 @@ describe('End-to-End Notes Persistence Flow', () => {
 
     provider = new AIPromptContentProvider({
       logger,
-      promptStaticContentService: new PromptStaticContentService({ logger }),
+      promptStaticContentService: new PromptStaticContentService({
+        logger,
+        promptTextLoader: { loadPromptText: jest.fn() },
+      }),
       perceptionLogFormatter: { format: jest.fn().mockReturnValue([]) },
       gameStateValidationService: {
         validate: jest

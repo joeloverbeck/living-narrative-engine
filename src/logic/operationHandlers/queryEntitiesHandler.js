@@ -10,6 +10,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
@@ -233,11 +234,11 @@ class QueryEntitiesHandler extends BaseOperationHandler {
         `QUERY_ENTITIES: Stored ${finalIds.length} entity IDs in context variable "${resultVariable}".`
       );
     } else {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message:
-          'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.',
-        details: { resultVariable },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'QUERY_ENTITIES: Cannot store result. `executionContext.evaluationContext.context` is not available.',
+        { resultVariable }
+      );
     }
   }
 }

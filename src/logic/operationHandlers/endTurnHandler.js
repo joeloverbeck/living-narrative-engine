@@ -8,7 +8,10 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { TURN_ENDED_ID, DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+
 import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
+
 
 /**
  * Parameters for {@link EndTurnHandler#execute}.
@@ -53,6 +56,7 @@ class EndTurnHandler {
    * @param {ExecutionContext} _executionContext - Execution context (unused).
    */
   execute(params, _executionContext) {
+
     const logger = _executionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'END_TURN')) return;
 
@@ -61,6 +65,18 @@ class EndTurnHandler {
         message: 'END_TURN: Invalid or missing "entityId" parameter.',
         details: { params },
       });
+
+    if (
+      !params ||
+      typeof params.entityId !== 'string' ||
+      !params.entityId.trim()
+    ) {
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        'END_TURN: Invalid or missing "entityId" parameter.',
+        { params }
+      );
+
       return;
     }
 
@@ -85,17 +101,19 @@ class EndTurnHandler {
     if (dispatchResult && typeof dispatchResult.then === 'function') {
       dispatchResult.then((success) => {
         if (!success) {
-          this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
-            message: 'END_TURN: Failed to dispatch turn ended event.',
-            details: { payload },
-          });
+          safeDispatchError(
+            this.#safeEventDispatcher,
+            'END_TURN: Failed to dispatch turn ended event.',
+            { payload }
+          );
         }
       });
     } else if (dispatchResult === false) {
-      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'END_TURN: Failed to dispatch turn ended event.',
-        details: { payload },
-      });
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        'END_TURN: Failed to dispatch turn ended event.',
+        { payload }
+      );
     }
   }
 }

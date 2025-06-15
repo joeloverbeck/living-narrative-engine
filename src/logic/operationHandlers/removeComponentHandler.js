@@ -15,6 +15,7 @@
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import {
   initHandlerLogger,
   validateDeps,
@@ -142,15 +143,16 @@ class RemoveComponentHandler {
       }
     } catch (e) {
       // Catch potential errors from removeComponent (e.g., entity not found by EntityManager)
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: `REMOVE_COMPONENT: Failed to remove component "${trimmedComponentType}" from entity "${entityId}". Error: ${e.message}`,
-        details: {
+      safeDispatchError(
+        this.#dispatcher,
+        `REMOVE_COMPONENT: Failed to remove component "${trimmedComponentType}" from entity "${entityId}". Error: ${e.message}`,
+        {
           error: e.message,
           stack: e.stack,
           entityId,
           componentType: trimmedComponentType,
-        },
-      });
+        }
+      );
     }
   }
 }

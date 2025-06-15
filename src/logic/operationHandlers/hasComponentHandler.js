@@ -12,6 +12,7 @@
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
@@ -139,16 +140,17 @@ class HasComponentHandler {
           } component "${trimmedComponentType}". Storing result in "${trimmedResultVar}".`
         );
       } catch (e) {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-          message: `HAS_COMPONENT: An error occurred while checking for component "${trimmedComponentType}" on entity "${entityId}". Storing 'false'.`,
-          details: {
+        safeDispatchError(
+          this.#dispatcher,
+          `HAS_COMPONENT: An error occurred while checking for component "${trimmedComponentType}" on entity "${entityId}". Storing 'false'.`,
+          {
             error: e.message,
             stack: e.stack,
             entityId,
             componentType: trimmedComponentType,
             resultVariable: trimmedResultVar,
-          },
-        });
+          }
+        );
         result = false; // Ensure result is false on error
       }
     }

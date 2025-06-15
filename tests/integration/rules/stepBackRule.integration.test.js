@@ -26,6 +26,7 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import RemoveFromClosenessCircleHandler from '../../../src/logic/operationHandlers/removeFromClosenessCircleHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -166,6 +167,11 @@ function init(entities) {
     END_TURN: new EndTurnHandler({
       safeEventDispatcher: safeDispatcher,
       logger,
+    }),
+    REMOVE_FROM_CLOSENESS_CIRCLE: new RemoveFromClosenessCircleHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
     }),
   };
 

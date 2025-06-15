@@ -95,7 +95,11 @@ describe('registerInfrastructure', () => {
     container.register(tokens.EntityLoader, () => mockEntityLoader);
     container.register(tokens.IConfiguration, () => mockConfiguration);
     container.register(tokens.GameConfigLoader, () => mockGameConfigLoader);
+    container.register(tokens.PromptTextLoader, () => ({
+      loadPromptText: jest.fn(),
+    }));
     container.register(tokens.ModManifestLoader, () => mockModManifestLoader);
+    container.register(tokens.IDataFetcher, () => ({ fetch: jest.fn() }));
     container.register(tokens.IPathResolver, () => mockPathResolver);
   });
 

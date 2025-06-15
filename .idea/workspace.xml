@@ -4,8 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Making implementations.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/onee/characters/jon.character.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/onee/characters/oneesan.character.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/onee/locations/living_room.location.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/onee/mod.manifest.json" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,6 +114,7 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="G:\Projects\programming\javascript\living-narrative-engine\data\mods" />
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\tests\integration" />
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\tests\integration\rules" />
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src\turns\providers" />
@@ -190,15 +195,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="45409000" />
-    </task>
-    <task id="LOCAL-00102" summary="Minor changes.">
-      <option name="closed" value="true" />
-      <created>1749974263933</created>
-      <option name="number" value="00102" />
-      <option name="presentableId" value="LOCAL-00102" />
-      <option name="project" value="LOCAL" />
-      <updated>1749974263933</updated>
+      <workItem from="1749963238113" duration="47669000" />
     </task>
     <task id="LOCAL-00103" summary="Minor changes.">
       <option name="closed" value="true" />
@@ -584,14 +581,21 @@
       <option name="project" value="LOCAL" />
       <updated>1750013129528</updated>
     </task>
-    <option name="localTasksCounter" value="151" />
+    <task id="LOCAL-00151" summary="Making implementations.">
+      <option name="closed" value="true" />
+      <created>1750014178335</created>
+      <option name="number" value="00151" />
+      <option name="presentableId" value="LOCAL-00151" />
+      <option name="project" value="LOCAL" />
+      <updated>1750014178335</updated>
+    </task>
+    <option name="localTasksCounter" value="152" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Trying to return the app to normal." />
     <MESSAGE value="Implemented awaitTurnEndState.js." />
     <MESSAGE value="Fixed HumanTurnHandler's dependencies." />
     <MESSAGE value="Refactoring HumanTurnHandler." />
@@ -616,6 +620,7 @@
     <MESSAGE value="Uploaded for Codex to fix." />
     <MESSAGE value="Fixed integration suite for wiping thumb on someone's cheek." />
     <MESSAGE value="Formatting." />
-    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
+    <MESSAGE value="Making implementations." />
+    <option name="LAST_COMMIT_MESSAGE" value="Making implementations." />
   </component>
 </project>

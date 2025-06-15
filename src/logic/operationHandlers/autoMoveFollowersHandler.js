@@ -14,6 +14,7 @@ import {
   LEADING_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import SystemMoveEntityHandler from './systemMoveEntityHandler.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
@@ -75,17 +76,19 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
 
     const { leader_id, destination_id } = params;
     if (typeof leader_id !== 'string' || !leader_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'AUTO_MOVE_FOLLOWERS: Invalid "leader_id" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'AUTO_MOVE_FOLLOWERS: Invalid "leader_id" parameter',
+        { params }
+      );
       return;
     }
     if (typeof destination_id !== 'string' || !destination_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'AUTO_MOVE_FOLLOWERS: Invalid "destination_id" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'AUTO_MOVE_FOLLOWERS: Invalid "destination_id" parameter',
+        { params }
+      );
       return;
     }
 
@@ -144,10 +147,11 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
           message,
         });
       } catch (err) {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-          message: 'AUTO_MOVE_FOLLOWERS: Error moving follower',
-          details: { error: err.message, stack: err.stack, followerId: fid },
-        });
+        safeDispatchError(
+          this.#dispatcher,
+          'AUTO_MOVE_FOLLOWERS: Error moving follower',
+          { error: err.message, stack: err.stack, followerId: fid }
+        );
       }
     }
     this.logger.debug(

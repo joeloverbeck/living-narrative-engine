@@ -112,10 +112,11 @@ class GetNameHandler extends BaseOperationHandler {
       }
       log.debug(`GET_NAME: Resolved name for '${entityId}' -> '${name}'.`);
     } catch (e) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: `GET_NAME: Error retrieving '${NAME_COMPONENT_ID}' from '${entityId}'. Using fallback.`,
-        details: { error: e.message, stack: e.stack },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        `GET_NAME: Error retrieving '${NAME_COMPONENT_ID}' from '${entityId}'. Using fallback.`,
+        { error: e.message, stack: e.stack }
+      );
     }
 
     setContextValue(resultVar, name, executionContext, undefined, log);
