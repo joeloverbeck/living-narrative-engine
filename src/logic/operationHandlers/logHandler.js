@@ -17,6 +17,7 @@
 
 const VALID_LOG_LEVELS = ['info', 'warn', 'error', 'debug'];
 const DEFAULT_LOG_LEVEL = 'info';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class LogHandler /* implements OperationHandler */ {
   #logger;
@@ -51,10 +52,13 @@ class LogHandler /* implements OperationHandler */ {
    * @returns {void}
    */
   execute(params, context) {
+    const logger = context?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'LOG')) return;
+
     // --- MODIFIED: Validate Parameters FIRST ---
     // Check if params exist and contain a non-null, non-undefined message.
-    if (!params || params.message === undefined || params.message === null) {
-      this.#logger.error(
+    if (params.message === undefined || params.message === null) {
+      logger.error(
         'LogHandler: Invalid or missing "message" parameter in LOG operation after resolution.',
         { paramsReceived: params }
       );

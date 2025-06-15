@@ -10,7 +10,10 @@ import {
   DISPLAY_SPEECH_ID,
   DISPLAY_ERROR_ID,
 } from '../../constants/eventIds.js';
+
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
+
 
 /**
  * Parameters accepted by {@link DispatchSpeechHandler#execute}.
@@ -56,8 +59,10 @@ class DispatchSpeechHandler {
    * @param {ExecutionContext} _ctx - Execution context (unused).
    */
   execute(params, _ctx) {
+    const logger = _ctx?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'DISPATCH_SPEECH')) return;
+
     if (
-      !params ||
       typeof params.entity_id !== 'string' ||
       !params.entity_id.trim() ||
       typeof params.speech_content !== 'string'

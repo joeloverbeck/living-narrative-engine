@@ -14,6 +14,7 @@ import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 import { wouldCreateCycle } from '../../utils/followUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * @typedef {object} CheckFollowCycleParams
@@ -54,7 +55,9 @@ class CheckFollowCycleHandler {
    */
   execute(params, execCtx) {
     const log = this.#logger;
-    const { follower_id, leader_id, result_variable } = params || {};
+    if (!assertParamsObject(params, log, 'CHECK_FOLLOW_CYCLE')) return;
+
+    const { follower_id, leader_id, result_variable } = params;
 
     if (typeof follower_id !== 'string' || !follower_id.trim()) {
       safeDispatchError(

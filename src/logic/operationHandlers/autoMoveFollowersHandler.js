@@ -17,6 +17,7 @@ import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import SystemMoveEntityHandler from './systemMoveEntityHandler.js';
 import BaseOperationHandler from './baseOperationHandler.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class AutoMoveFollowersHandler extends BaseOperationHandler {
   /** @type {EntityManager} */ #entityManager;
@@ -70,7 +71,10 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
    * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
-    const { leader_id, destination_id } = params || {};
+    const logger = execCtx?.logger ?? this.logger;
+    if (!assertParamsObject(params, logger, 'AUTO_MOVE_FOLLOWERS')) return;
+
+    const { leader_id, destination_id } = params;
     if (typeof leader_id !== 'string' || !leader_id.trim()) {
       safeDispatchError(
         this.#dispatcher,

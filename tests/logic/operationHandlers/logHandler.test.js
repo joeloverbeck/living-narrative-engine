@@ -128,15 +128,15 @@ describe('LogHandler', () => {
   });
 
   // --- execute() Tests - Invalid Parameters --- (Keep As Is - These Passed Before)
-  test('execute should log error and not call log methods if params is null', () => {
+  test('execute should log warn and not call log methods if params is null', () => {
     logHandler.execute(null, baseMockContext);
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid or missing "message" parameter'),
-      expect.anything()
+    expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'LOG: params missing or invalid.',
+      { params: null }
     );
     expect(mockLogger.info).not.toHaveBeenCalled();
-    expect(mockLogger.warn).not.toHaveBeenCalled();
+    expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.debug).not.toHaveBeenCalled();
   });
   test('execute should log error and not call log methods if params is empty object', () => {

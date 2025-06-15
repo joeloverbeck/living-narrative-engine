@@ -114,13 +114,18 @@ describe('ResolveDirectionHandler', () => {
       ['params with empty string result_variable', { result_variable: '' }],
       ['params with whitespace result_variable', { result_variable: '   ' }],
     ])('should log a warning and abort given %s', (caseName, params) => {
-      // Act
       handler.execute(params, mockExecCtx);
 
-      // Assert
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'RESOLVE_DIRECTION: Invalid or missing "result_variable" parameter. Operation aborted.'
-      );
+      if (params === null || params === undefined) {
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'RESOLVE_DIRECTION: params missing or invalid.',
+          { params }
+        );
+      } else {
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'RESOLVE_DIRECTION: Invalid or missing "result_variable" parameter. Operation aborted.'
+        );
+      }
       expect(
         mockWorldContext.getTargetLocationForDirection
       ).not.toHaveBeenCalled();

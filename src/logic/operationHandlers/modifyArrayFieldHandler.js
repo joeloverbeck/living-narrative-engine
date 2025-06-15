@@ -15,6 +15,7 @@ import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * @class ModifyArrayFieldHandler
@@ -75,6 +76,9 @@ class ModifyArrayFieldHandler {
    */
   execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
+    if (!assertParamsObject(params, log, 'MODIFY_ARRAY_FIELD')) {
+      return;
+    }
     // 1. Resolve Entity ID
     const entityId = resolveEntityId(params.entity_ref, executionContext);
     if (!entityId) {
@@ -134,7 +138,7 @@ class ModifyArrayFieldHandler {
         result = targetArray;
         break;
 
-      case 'push_unique':
+      case 'push_unique': {
         if (params.value === undefined) {
           log.warn(
             `MODIFY_ARRAY_FIELD: 'push_unique' mode requires a 'value' parameter.`
@@ -164,6 +168,7 @@ class ModifyArrayFieldHandler {
         }
         result = targetArray;
         break;
+      }
 
       case 'pop':
         if (targetArray.length > 0) {
@@ -176,7 +181,7 @@ class ModifyArrayFieldHandler {
         }
         break;
 
-      case 'remove_by_value':
+      case 'remove_by_value': {
         if (params.value === undefined) {
           log.warn(
             `MODIFY_ARRAY_FIELD: 'remove_by_value' mode requires a 'value' parameter.`
@@ -207,6 +212,7 @@ class ModifyArrayFieldHandler {
         }
         result = targetArray;
         break;
+      }
 
       default:
         log.warn(`MODIFY_ARRAY_FIELD: Unknown mode '${mode}'.`);
