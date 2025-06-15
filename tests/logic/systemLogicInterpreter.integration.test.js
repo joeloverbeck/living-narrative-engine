@@ -136,7 +136,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
             components: expect.any(Object),
           })
         : null,
-      logger: topLevelLoggerInstance,
+      logger: expect.any(Object),
       evaluationContext: flatLogicContextForNesting,
     };
   };
@@ -231,7 +231,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringMatching(
         new RegExp(
-          `^Received event: ${eventType}\\. Found \\d+ potential rule\\(s\\)\\.$`
+          `^SystemLogicInterpreter: Received event: ${eventType}\\. Found \\d+ potential rule\\(s\\)\\.$`
         )
       ),
       { payload: eventPayload }
@@ -295,7 +295,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringMatching(
         new RegExp(
-          `^Received event: ${eventType}\\. Found \\d+ potential rule\\(s\\)\\.$`
+          `^SystemLogicInterpreter: Received event: ${eventType}\\. Found \\d+ potential rule\\(s\\)\\.$`
         )
       ),
       { payload: eventPayload }
@@ -368,7 +368,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringMatching(
         new RegExp(
-          `^Received event: ${eventType}\\. Found \\d+ potential rule\\(s\\)\\.$`
+          `^SystemLogicInterpreter: Received event: ${eventType}\\. Found \\d+ potential rule\\(s\\)\\.$`
         )
       ),
       { payload: eventPayload }

@@ -88,7 +88,7 @@ describe('OperationRegistry', () => {
       const registry = new OperationRegistry({ logger: mockLogger });
       expect(registry).toBeInstanceOf(OperationRegistry);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'OperationRegistry initialized.'
+        'OperationRegistry: OperationRegistry initialized.'
       );
       // Ensure console was NOT used for the primary init message
       expect(consoleInfoSpy).not.toHaveBeenCalledWith(
@@ -151,13 +151,13 @@ describe('OperationRegistry', () => {
       // Check warning log
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `OperationRegistry: Overwriting existing handler for operation type "${operationType}".`
+        `OperationRegistry: OperationRegistry: Overwriting existing handler for operation type "${operationType}".`
       );
 
       // Check debug log for the second registration
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `OperationRegistry: Registered handler for operation type "${operationType}".`
+        `OperationRegistry: OperationRegistry: Registered handler for operation type "${operationType}".`
       );
 
       // Verify the new handler is active
@@ -172,7 +172,9 @@ describe('OperationRegistry', () => {
         expectedErrorMsg
       );
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `OperationRegistry: ${expectedErrorMsg}`
+      );
       expect(mockLogger.debug).not.toHaveBeenCalled();
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
@@ -184,7 +186,9 @@ describe('OperationRegistry', () => {
         expectedErrorMsg
       );
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `OperationRegistry: ${expectedErrorMsg}`
+      );
     });
 
     test('should throw error and log error if operationType is only whitespace', () => {
@@ -194,7 +198,9 @@ describe('OperationRegistry', () => {
         expectedErrorMsg
       );
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `OperationRegistry: ${expectedErrorMsg}`
+      );
     });
 
     test('should throw error and log error if operationType is null', () => {
@@ -204,7 +210,9 @@ describe('OperationRegistry', () => {
         expectedErrorMsg
       );
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `OperationRegistry: ${expectedErrorMsg}`
+      );
     });
 
     test('should throw error and log error if handler is not a function', () => {
@@ -214,7 +222,9 @@ describe('OperationRegistry', () => {
         registry.register(operationTypeForError, 'not a function')
       ).toThrow(expectedErrorMsg);
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `OperationRegistry: ${expectedErrorMsg}`
+      );
     });
 
     test('should throw error and log error if handler is null', () => {
@@ -224,7 +234,9 @@ describe('OperationRegistry', () => {
         expectedErrorMsg
       );
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `OperationRegistry: ${expectedErrorMsg}`
+      );
     });
 
     test('should use console.error when throwing without a logger', () => {
@@ -242,7 +254,7 @@ describe('OperationRegistry', () => {
       expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'OperationRegistry: ',
-        expectedErrorMsg
+        `OperationRegistry: ${expectedErrorMsg}`
       );
       expect(mockLogger.error).not.toHaveBeenCalled(); // Ensure mock logger wasn't used
     });
@@ -265,13 +277,13 @@ describe('OperationRegistry', () => {
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         'OperationRegistry: ',
-        `OperationRegistry: Overwriting existing handler for operation type "${operationType}".`
+        `OperationRegistry: OperationRegistry: Overwriting existing handler for operation type "${operationType}".`
       );
       // #log also calls console.debug (or log fallback) for the registration itself
       expect(consoleDebugSpy).toHaveBeenCalledTimes(1);
       expect(consoleDebugSpy).toHaveBeenCalledWith(
         'OperationRegistry: ',
-        `OperationRegistry: Registered handler for operation type "${operationType}".`
+        `OperationRegistry: OperationRegistry: Registered handler for operation type "${operationType}".`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled(); // Ensure mock logger wasn't used
     });
@@ -336,7 +348,7 @@ describe('OperationRegistry', () => {
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       // Debug log should show the type it looked for (which is trimmed)
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `OperationRegistry: No handler found for operation type "${unregisteredType}".`
+        `OperationRegistry: OperationRegistry: No handler found for operation type "${unregisteredType}".`
       );
     });
 
@@ -348,7 +360,7 @@ describe('OperationRegistry', () => {
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       // Debug log should show the *trimmed* type it looked for
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `OperationRegistry: No handler found for operation type "${trimmedUnregistered}".`
+        `OperationRegistry: OperationRegistry: No handler found for operation type "${trimmedUnregistered}".`
       );
     });
 
@@ -357,7 +369,7 @@ describe('OperationRegistry', () => {
       expect(handler).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `OperationRegistry.getHandler: Received non-string operationType: ${typeof 12345}. Returning undefined.`
+        `OperationRegistry: OperationRegistry.getHandler: Received non-string operationType: ${typeof 12345}. Returning undefined.`
       );
       expect(mockLogger.debug).not.toHaveBeenCalled(); // Should not log debug if type is invalid
     });
@@ -367,7 +379,7 @@ describe('OperationRegistry', () => {
       expect(handler).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'OperationRegistry.getHandler: Received non-string operationType: object. Returning undefined.'
+        'OperationRegistry: OperationRegistry.getHandler: Received non-string operationType: object. Returning undefined.'
       ); // typeof null is 'object'
     });
 
@@ -385,7 +397,7 @@ describe('OperationRegistry', () => {
       expect(consoleDebugSpy).toHaveBeenCalledTimes(1);
       expect(consoleDebugSpy).toHaveBeenCalledWith(
         'OperationRegistry: ',
-        `OperationRegistry: No handler found for operation type "${unregisteredType}".`
+        `OperationRegistry: OperationRegistry: No handler found for operation type "${unregisteredType}".`
       );
       expect(mockLogger.debug).not.toHaveBeenCalled();
     });
@@ -402,7 +414,7 @@ describe('OperationRegistry', () => {
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         'OperationRegistry: ',
-        `OperationRegistry.getHandler: Received non-string operationType: ${typeof false}. Returning undefined.`
+        `OperationRegistry: OperationRegistry.getHandler: Received non-string operationType: ${typeof false}. Returning undefined.`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });

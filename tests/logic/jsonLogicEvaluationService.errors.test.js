@@ -88,20 +88,7 @@ describe('JsonLogicEvaluationService - Error Handling & Non-Boolean Results ([PA
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       // Verify the error message structure and the logged error object
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Error evaluating JSON Logic rule: ${ruleSummary}`
-        ),
-        evaluationError // Check that the original error object is passed
-      );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Context keys: ${Object.keys(dummyContext || {}).join(', ')}`
-        ),
-        evaluationError
-      );
-      // More specific check combining parts:
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `Error evaluating JSON Logic rule: ${ruleSummary}. Context keys: ${Object.keys(dummyContext || {}).join(', ')}`,
+        `JsonLogicEvaluationService: Error evaluating JSON Logic rule: ${ruleSummary}. Context keys: ${Object.keys(dummyContext || {}).join(', ')}`,
         evaluationError
       );
     });

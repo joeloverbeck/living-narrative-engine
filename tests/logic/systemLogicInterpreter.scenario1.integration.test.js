@@ -338,7 +338,7 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
 
     // Scenario 7: Verify Logging (Parent AC7)
     const logs = mockLogger.loggedMessages;
-    const expectedLogMessage = `Rule '${rule.rule_id}' actions skipped for event '${event.type}' due to condition evaluating to false.`;
+    const expectedLogMessage = `SystemLogicInterpreter: Rule '${rule.rule_id}' actions skipped for event '${event.type}' due to condition evaluating to false.`;
     const skipLog = logs.find(
       (log) => log.level === 'debug' && log.message === expectedLogMessage
     );

@@ -121,7 +121,7 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
       service.evaluate(dummyRule, dummyContext);
       expect(mockLogger.error).toHaveBeenCalledTimes(1); // Correct: catch block logs error
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Error evaluating JSON Logic rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeysStr}`,
+        `JsonLogicEvaluationService: Error evaluating JSON Logic rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeysStr}`,
         evaluationError // Correct: catch block logs the error object
       );
     });
@@ -227,7 +227,7 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
       expect(applySpy).toHaveBeenCalledWith(invalidRule, dummyContext);
       expect(mockLogger.error).toHaveBeenCalledTimes(1); // Correct: catch block logs error
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Error evaluating JSON Logic rule: ${invalidRuleSummary}. Context keys: ${expectedContextKeysStr}`,
+        `JsonLogicEvaluationService: Error evaluating JSON Logic rule: ${invalidRuleSummary}. Context keys: ${expectedContextKeysStr}`,
         capturedError // Correct: catch block logs the error
       );
     });
@@ -254,7 +254,7 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
       expect(applySpy).toHaveBeenCalledWith(invalidRule, dummyContext);
       expect(mockLogger.error).toHaveBeenCalledTimes(1); // Correct: catch block logs error
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Error evaluating JSON Logic rule: ${invalidRuleSummary}. Context keys: ${expectedContextKeysStr}`,
+        `JsonLogicEvaluationService: Error evaluating JSON Logic rule: ${invalidRuleSummary}. Context keys: ${expectedContextKeysStr}`,
         capturedError
       );
     });
@@ -279,7 +279,7 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
       expect(applySpy).toHaveBeenCalledWith(dummyRule, invalidContext);
       expect(mockLogger.error).toHaveBeenCalledTimes(1); // Correct: catch block logs error
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Error evaluating JSON Logic rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeysStr}`,
+        `JsonLogicEvaluationService: Error evaluating JSON Logic rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeysStr}`,
         capturedError
       );
     });
@@ -306,7 +306,7 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
       expect(applySpy).toHaveBeenCalledWith(dummyRule, invalidContext);
       expect(mockLogger.error).toHaveBeenCalledTimes(1); // Correct: catch block logs error
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `Error evaluating JSON Logic rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeysStr}`,
+        `JsonLogicEvaluationService: Error evaluating JSON Logic rule: ${expectedRuleSummary}. Context keys: ${expectedContextKeysStr}`,
         capturedError
       );
     });

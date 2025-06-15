@@ -17,21 +17,26 @@ const mockLogger = {
 function setup(modulePath, ctorArgs, expectedName, expectOptional = false) {
   jest.resetModules();
   const initLogger = jest.fn(() => mockLogger);
+  const baseInitLogger = jest.fn(() => mockLogger);
+  jest.doMock('../../src/utils/serviceInitializer.js', () => {
+    const actual = jest.requireActual('../../src/utils/serviceInitializer.js');
+    return { ...actual, initLogger };
+  });
   jest.doMock('../../src/utils/loggerUtils.js', () => {
     const actual = jest.requireActual('../../src/utils/loggerUtils.js');
-    return { ...actual, initLogger };
+    return { ...actual, initLogger: baseInitLogger };
   });
 
   const Mod = require(modulePath).default || require(modulePath);
   new Mod(ctorArgs);
   if (expectOptional) {
-    expect(initLogger).toHaveBeenCalledWith(expectedName, mockLogger, {
+    expect(baseInitLogger).toHaveBeenCalledWith(expectedName, mockLogger, {
       optional: true,
     });
-  } else {
-    expect(initLogger).toHaveBeenCalledWith(expectedName, mockLogger);
   }
+  expect(initLogger).toHaveBeenCalledWith(expectedName, mockLogger);
   jest.dontMock('../../src/utils/loggerUtils.js');
+  jest.dontMock('../../src/utils/serviceInitializer.js');
 }
 
 describe('initLogger usage in constructors', () => {
@@ -63,9 +68,15 @@ describe('initLogger usage in constructors', () => {
   it('createJsonLogicContext uses initLogger', () => {
     jest.resetModules();
     const initLogger = jest.fn(() => mockLogger);
+    jest.doMock('../../src/utils/serviceInitializer.js', () => {
+      const actual = jest.requireActual(
+        '../../src/utils/serviceInitializer.js'
+      );
+      return { ...actual, initLogger };
+    });
     jest.doMock('../../src/utils/loggerUtils.js', () => {
       const actual = jest.requireActual('../../src/utils/loggerUtils.js');
-      return { ...actual, initLogger };
+      return { ...actual, initLogger: jest.fn(() => mockLogger) };
     });
     const {
       createJsonLogicContext,
@@ -86,5 +97,6 @@ describe('initLogger usage in constructors', () => {
       mockLogger
     );
     jest.dontMock('../../src/utils/loggerUtils.js');
+    jest.dontMock('../../src/utils/serviceInitializer.js');
   });
 });

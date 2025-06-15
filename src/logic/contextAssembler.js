@@ -10,8 +10,10 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 
-import { initLogger } from '../utils/loggerUtils.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import {
+  initLogger,
+  validateServiceDeps,
+} from '../utils/serviceInitializer.js';
 
 /** @typedef {string | number | null | undefined} EntityId */
 
@@ -217,8 +219,15 @@ export function createJsonLogicContext(
     );
   }
   const effectiveLogger = initLogger('createJsonLogicContext', logger);
-  validateDependency(entityManager, 'entityManager', effectiveLogger, {
-    requiredMethods: ['getComponentData', 'getEntityInstance', 'hasComponent'],
+  validateServiceDeps('createJsonLogicContext', effectiveLogger, {
+    entityManager: {
+      value: entityManager,
+      requiredMethods: [
+        'getComponentData',
+        'getEntityInstance',
+        'hasComponent',
+      ],
+    },
   });
 
   logger = effectiveLogger;
