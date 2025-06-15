@@ -17,11 +17,16 @@ describe('LoggerConfigLoader', () => {
   let loader;
   /** @type {ReturnType<typeof mockLogger>} */
   let logger;
+  let dispatcherMock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     logger = mockLogger();
-    loader = new LoggerConfigLoader({ logger });
+    dispatcherMock = { dispatch: jest.fn().mockResolvedValue(true) };
+    loader = new LoggerConfigLoader({
+      logger,
+      safeEventDispatcher: dispatcherMock,
+    });
   });
 
   it('loads configuration using default path', async () => {
@@ -36,6 +41,7 @@ describe('LoggerConfigLoader', () => {
       expect.any(Number),
       expect.any(Number),
       expect.any(Number),
+      dispatcherMock,
       logger
     );
   });

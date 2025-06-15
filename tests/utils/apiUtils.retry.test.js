@@ -3,6 +3,8 @@ import { Workspace_retry } from '../../src/utils/apiUtils.js';
 
 jest.useFakeTimers();
 
+let dispatcher;
+
 const mockResponse = (
   status,
   body,
@@ -31,6 +33,7 @@ const mockResponse = (
 beforeEach(() => {
   global.fetch = jest.fn();
   jest.clearAllMocks();
+  dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 });
 
 describe('Workspace_retry', () => {
@@ -45,7 +48,7 @@ describe('Workspace_retry', () => {
 
     let caught;
     try {
-      await Workspace_retry(url, opts, 1, 1, 1);
+      await Workspace_retry(url, opts, 1, 1, 1, dispatcher);
     } catch (e) {
       caught = e;
     }
@@ -60,7 +63,9 @@ describe('Workspace_retry', () => {
     resp.text.mockResolvedValue('bad text');
     fetch.mockResolvedValueOnce(resp);
 
-    const err = await Workspace_retry(url, opts, 1, 1, 1).catch((e) => e);
+    const err = await Workspace_retry(url, opts, 1, 1, 1, dispatcher).catch(
+      (e) => e
+    );
     expect(err.body).toBe('bad text');
   });
 
@@ -78,7 +83,7 @@ describe('Workspace_retry', () => {
     fetch.mockResolvedValueOnce(first).mockResolvedValueOnce(okResp);
 
     const timeoutSpy = jest.spyOn(global, 'setTimeout');
-    const promise = Workspace_retry(url, opts, 2, 100, 1000);
+    const promise = Workspace_retry(url, opts, 2, 100, 1000, dispatcher);
     await jest.runOnlyPendingTimersAsync();
     await promise;
     expect(timeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2000);
@@ -98,7 +103,9 @@ describe('Workspace_retry', () => {
     };
     fetch.mockResolvedValueOnce(resp);
 
-    const err = await Workspace_retry(url, opts, 1, 1, 1).catch((e) => e);
+    const err = await Workspace_retry(url, opts, 1, 1, 1, dispatcher).catch(
+      (e) => e
+    );
 
     expect(resp.clone).toHaveBeenCalled();
     expect(cloneText).toHaveBeenCalled();

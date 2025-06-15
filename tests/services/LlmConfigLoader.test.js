@@ -152,17 +152,20 @@ describe('LlmConfigLoader', () => {
   let schemaValidatorMock;
   /** @type {ReturnType<typeof mockConfigurationInstance>} */
   let configurationMock;
+  let dispatcherMock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     loggerMock = mockLoggerInstance();
     schemaValidatorMock = mockSchemaValidatorInstance();
     configurationMock = mockConfigurationInstance();
+    dispatcherMock = { dispatch: jest.fn().mockResolvedValue(true) };
 
     loader = new LlmConfigLoader({
       logger: loggerMock,
       schemaValidator: schemaValidatorMock,
       configuration: configurationMock,
+      safeEventDispatcher: dispatcherMock,
     });
     Workspace_retry.mockReset();
   });
@@ -177,6 +180,7 @@ describe('LlmConfigLoader', () => {
         logger: specificLogger,
         schemaValidator: schemaValidatorMock,
         configuration: configurationMock,
+        safeEventDispatcher: dispatcherMock,
       });
       specificLoader.loadConfigs(); // Call loadConfigs to trigger logger usage
       expect(specificLogger.debug).toHaveBeenCalledWith(
@@ -207,6 +211,7 @@ describe('LlmConfigLoader', () => {
         logger: console, // Using actual console
         schemaValidator: schemaValidatorMock,
         configuration: configurationMock,
+        safeEventDispatcher: dispatcherMock,
       });
       Workspace_retry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
@@ -225,6 +230,7 @@ describe('LlmConfigLoader', () => {
         expect.any(Number),
         expect.any(Number),
         expect.any(Number),
+        dispatcherMock,
         loggerMock
       );
     });
@@ -236,6 +242,7 @@ describe('LlmConfigLoader', () => {
         schemaValidator: schemaValidatorMock,
         configuration: configurationMock,
         defaultConfigPath: customPath,
+        safeEventDispatcher: dispatcherMock,
       });
       Workspace_retry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
@@ -247,6 +254,7 @@ describe('LlmConfigLoader', () => {
         expect.any(Number),
         expect.any(Number),
         expect.any(Number),
+        dispatcherMock,
         loggerMock
       );
     });
@@ -298,6 +306,7 @@ describe('LlmConfigLoader', () => {
         3,
         500,
         5000,
+        dispatcherMock,
         loggerMock
       );
       expect(configurationMock.getContentTypeSchemaId).toHaveBeenCalledWith(
@@ -504,6 +513,7 @@ describe('LlmConfigLoader', () => {
         expect.any(Number),
         expect.any(Number),
         expect.any(Number),
+        dispatcherMock,
         loggerMock
       );
     });
@@ -519,6 +529,7 @@ describe('LlmConfigLoader', () => {
         expect.any(Number),
         expect.any(Number),
         expect.any(Number),
+        dispatcherMock,
         loggerMock
       );
     });

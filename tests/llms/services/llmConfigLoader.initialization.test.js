@@ -75,12 +75,14 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
   let schemaValidatorMock;
   /** @type {ReturnType<typeof mockConfigurationInstance>} */
   let configurationMock;
+  let dispatcherMock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     loggerMock = mockLoggerInstance();
     schemaValidatorMock = mockSchemaValidatorInstance();
     configurationMock = mockConfigurationInstance();
+    dispatcherMock = { dispatch: jest.fn().mockResolvedValue(true) };
 
     // Default successful fetch for most tests
     Workspace_retry.mockResolvedValue(
@@ -94,6 +96,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
       logger: loggerMock,
       schemaValidator: schemaValidatorMock,
       configuration: configurationMock,
+      safeEventDispatcher: dispatcherMock,
     });
   });
 
@@ -121,6 +124,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
       expect.any(Number),
       expect.any(Number),
       expect.any(Number),
+      dispatcherMock,
       loggerMock
     );
     expect(configurationMock.getContentTypeSchemaId).toHaveBeenCalledWith(

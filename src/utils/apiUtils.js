@@ -1,6 +1,8 @@
 // src/utils/apiUtils.js
 // --- FILE START ---
 import { getPrefixedLogger } from './loggerUtils.js';
+import { safeDispatchError } from './safeDispatchError.js';
+import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 
 const RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504];
 
@@ -33,6 +35,7 @@ function _calculateRetryDelay(currentAttempt, baseDelayMs, maxDelayMs) {
  * @param {number} maxRetries Maximum number of retry attempts before failing.
  * @param {number} baseDelayMs Initial delay in milliseconds for the first retry.
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries, capping the exponential backoff.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for DISPLAY_ERROR_ID events.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] Optional logger instance.
  * @returns {Promise<any>} A promise that resolves with the parsed JSON response on success.
  * @throws {Error} Throws an error if all retries fail, a non-retryable HTTP error occurs,
@@ -55,6 +58,7 @@ export async function Workspace_retry(
   maxRetries,
   baseDelayMs,
   maxDelayMs,
+  safeEventDispatcher,
   logger
 ) {
   const log = getPrefixedLogger(logger, '[Workspace_retry] ');
@@ -115,9 +119,13 @@ export async function Workspace_retry(
         } else {
           // Non-retryable HTTP error or max retries reached for an HTTP error
           const errorMessage = `API request to ${url} failed after ${currentAttempt} attempt(s) with status ${response.status}: ${errorBodyText}`;
-          log.error(
-            `Workspace_retry: ${errorMessage} (Attempt ${currentAttempt}/${maxRetries}, Non-retryable or max retries reached)`
-          );
+          await safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+            message: `Workspace_retry: ${errorMessage} (Attempt ${currentAttempt}/${maxRetries}, Non-retryable or max retries reached)`,
+            details: {
+              status: response.status,
+              body: parsedErrorBody !== null ? parsedErrorBody : errorBodyText,
+            },
+          });
           const err = new Error(errorMessage);
           err.status = response.status;
           err.body = parsedErrorBody !== null ? parsedErrorBody : errorBodyText;
@@ -162,18 +170,18 @@ export async function Workspace_retry(
         let finalErrorMessage;
         if (isNetworkError) {
           finalErrorMessage = `Workspace_retry: Failed for ${url} after ${currentAttempt} attempt(s) due to persistent network error: ${error.message}`;
-          log.error(finalErrorMessage, {
-            originalErrorName: error.name,
-            originalErrorMessage: error.message,
-          });
         } else {
           finalErrorMessage = `Workspace_retry: Failed for ${url} after ${currentAttempt} attempt(s). Unexpected error: ${error.message}`;
-          log.error(finalErrorMessage, {
+        }
+        await safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: finalErrorMessage,
+          details: {
             originalErrorName: error.name,
             originalErrorMessage: error.message,
             stack: error.stack,
-          });
-        }
+            status: error.status,
+          },
+        });
         const finalError = new Error(finalErrorMessage);
         finalError.status = error.status;
         throw finalError;
