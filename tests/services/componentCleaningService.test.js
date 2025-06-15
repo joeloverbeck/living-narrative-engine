@@ -11,13 +11,22 @@ const makeLogger = () => ({
   error: jest.fn(),
 });
 
+const makeDispatcher = () => ({
+  dispatch: jest.fn(),
+});
+
 describe('ComponentCleaningService', () => {
   let logger;
+  let dispatcher;
   let service;
 
   beforeEach(() => {
     logger = makeLogger();
-    service = new ComponentCleaningService({ logger });
+    dispatcher = makeDispatcher();
+    service = new ComponentCleaningService({
+      logger,
+      safeEventDispatcher: dispatcher,
+    });
   });
 
   it('allows registering and executing custom cleaners', () => {
@@ -45,10 +54,12 @@ describe('ComponentCleaningService', () => {
     expect(() => service.clean('loop', cyc)).toThrow(
       'Failed to deep clone object data.'
     );
-    expect(logger.error).toHaveBeenCalledWith(
-      'ComponentCleaningService.clean deepClone failed:',
-      expect.any(Error),
-      cyc
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:display_error',
+      expect.objectContaining({
+        message: 'ComponentCleaningService.clean deepClone failed',
+        details: expect.objectContaining({ componentId: 'loop' }),
+      })
     );
   });
 });

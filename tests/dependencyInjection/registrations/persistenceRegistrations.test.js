@@ -111,7 +111,7 @@ describe('registerPersistence', () => {
         token: tokens.ComponentCleaningService,
         Class: ComponentCleaningService,
         lifecycle: 'singleton',
-        deps: [tokens.ILogger],
+        deps: [tokens.ILogger, tokens.ISafeEventDispatcher],
       },
       {
         token: tokens.SaveMetadataBuilder,
