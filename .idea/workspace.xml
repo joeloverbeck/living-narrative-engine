@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Improved OperationInterpreter." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Minor changes.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -179,23 +181,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="8629000" />
-    </task>
-    <task id="LOCAL-00051" summary="Trying to return the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749904861336</created>
-      <option name="number" value="00051" />
-      <option name="presentableId" value="LOCAL-00051" />
-      <option name="project" value="LOCAL" />
-      <updated>1749904861336</updated>
-    </task>
-    <task id="LOCAL-00052" summary="Trying to return the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749905862961</created>
-      <option name="number" value="00052" />
-      <option name="presentableId" value="LOCAL-00052" />
-      <option name="project" value="LOCAL" />
-      <updated>1749905862961</updated>
+      <workItem from="1749963238113" duration="9537000" />
     </task>
     <task id="LOCAL-00053" summary="Uploading with errors for Codex to fix.">
       <option name="closed" value="true" />
@@ -573,14 +559,29 @@
       <option name="project" value="LOCAL" />
       <updated>1749972180070</updated>
     </task>
-    <option name="localTasksCounter" value="100" />
+    <task id="LOCAL-00100" summary="Minor changes.">
+      <option name="closed" value="true" />
+      <created>1749972647305</created>
+      <option name="number" value="00100" />
+      <option name="presentableId" value="LOCAL-00100" />
+      <option name="project" value="LOCAL" />
+      <updated>1749972647305</updated>
+    </task>
+    <task id="LOCAL-00101" summary="Minor changes.">
+      <option name="closed" value="true" />
+      <created>1749972724147</created>
+      <option name="number" value="00101" />
+      <option name="presentableId" value="LOCAL-00101" />
+      <option name="project" value="LOCAL" />
+      <updated>1749972724147</updated>
+    </task>
+    <option name="localTasksCounter" value="102" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Trying to unfuck the turn system." />
     <MESSAGE value="Added test suite for TurnIdleState." />
     <MESSAGE value="Fixing dependency cycles." />
     <MESSAGE value="Unifying action decision." />
@@ -605,6 +606,7 @@
     <MESSAGE value="Fixed issue with the dismiss rule." />
     <MESSAGE value="Formatting." />
     <MESSAGE value="Improved OperationInterpreter." />
-    <option name="LAST_COMMIT_MESSAGE" value="Improved OperationInterpreter." />
+    <MESSAGE value="Minor changes." />
+    <option name="LAST_COMMIT_MESSAGE" value="Minor changes." />
   </component>
 </project>
