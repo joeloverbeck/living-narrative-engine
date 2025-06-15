@@ -1,0 +1,40 @@
+/* css/pages/_landing-page.css */
+
+/* Layout and button styles for the index landing page */
+
+#landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-lg);
+}
+
+#landing-page-title {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Base button styles come from components/_buttons.css */
+.menu-button {
+  font-size: var(--font-size-large);
+  padding: var(--spacing-md) var(--spacing-xl);
+  margin: var(--spacing-sm);
+}
+
+/* Larger variant for prominent actions */
+.button-large {
+  font-size: 1.5rem;
+  padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+/* Utility classes for icon placement */
+.button-icon-left {
+  margin-right: var(--spacing-sm);
+}
+
+.button-icon-right {
+  margin-left: var(--spacing-sm);
+}
