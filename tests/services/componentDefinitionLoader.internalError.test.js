@@ -382,12 +382,11 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
 
     // --- File 1: invalid_null_id.component.json ---
     // 1a. Specific internal error log (_processFetchedItem check for ID)
-    const expectedSpecificErrorMsg1 = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filenameNullId}'. Found: ${JSON.stringify(invalidDataNullId.id)}`;
+    const expectedSpecificErrorMsg1 = `Invalid or missing 'id' in file '${filenameNullId}'.`;
     const expectedSpecificErrorDetails1 = expect.objectContaining({
-      resolvedPath: filePathNullId,
-      componentIdValue: invalidDataNullId.id,
       modId: modId,
       filename: filenameNullId,
+      receivedId: invalidDataNullId.id,
     });
     expect(mockLogger.error).toHaveBeenCalledWith(
       expectedSpecificErrorMsg1,
@@ -397,14 +396,14 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
     // 1b. Wrapper error log (_processFileWrapper catch)
     const expectedWrapperMsgBase = `Error processing file:`; // Base class logs this prefix
     const idError1 = expect.objectContaining({
-      message: `Invalid Component ID in ${filenameNullId}`,
+      message: `Invalid or missing 'id' in ${filenameNullId} for mod '${modId}'.`,
     });
     const expectedWrapperDetails1 = expect.objectContaining({
       filename: filenameNullId,
       path: filePathNullId,
       modId: modId,
       typeName: 'components', // Check typeName is included
-      error: `Invalid Component ID in ${filenameNullId}`, // The specific error thrown
+      error: `Invalid or missing 'id' in ${filenameNullId} for mod '${modId}'.`, // The specific error thrown
     });
     // Check if either base or specific loader logs the wrapper error
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -415,12 +414,11 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
 
     // --- File 2: invalid_empty_id.component.json ---
     // 2a. Specific internal error log (_processFetchedItem check for ID)
-    const expectedSpecificErrorMsg2 = `ComponentLoader [${modId}]: Missing or invalid 'id' field in component definition file '${filenameEmptyId}'. Found: ${JSON.stringify(invalidDataEmptyId.id)}`;
+    const expectedSpecificErrorMsg2 = `Invalid or missing 'id' in file '${filenameEmptyId}'.`;
     const expectedSpecificErrorDetails2 = expect.objectContaining({
-      resolvedPath: filePathEmptyId,
-      componentIdValue: invalidDataEmptyId.id,
       modId: modId,
       filename: filenameEmptyId,
+      receivedId: invalidDataEmptyId.id,
     });
     expect(mockLogger.error).toHaveBeenCalledWith(
       expectedSpecificErrorMsg2,
@@ -429,14 +427,14 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
 
     // 2b. Wrapper error log (_processFileWrapper catch)
     const idError2 = expect.objectContaining({
-      message: `Invalid Component ID in ${filenameEmptyId}`,
+      message: `Invalid or missing 'id' in ${filenameEmptyId} for mod '${modId}'.`,
     });
     const expectedWrapperDetails2 = expect.objectContaining({
       filename: filenameEmptyId,
       path: filePathEmptyId,
       modId: modId,
       typeName: 'components', // Check typeName is included
-      error: `Invalid Component ID in ${filenameEmptyId}`, // Specific error
+      error: `Invalid or missing 'id' in ${filenameEmptyId} for mod '${modId}'.`, // Specific error
     });
     expect(mockLogger.error).toHaveBeenCalledWith(
       expectedWrapperMsgBase, // Check for the base prefix

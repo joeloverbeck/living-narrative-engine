@@ -8,7 +8,7 @@
 // --- Base Class Import ---
 // Adjust path relative to this file's location if needed
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Assuming it's in loaders sibling dir
-import { extractBaseId } from '../utils/idUtils.js';
+import { parseAndValidateId } from '../utils/idUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -93,37 +93,8 @@ class EventLoader extends BaseManifestItemLoader {
     // Primary validation happens in BaseManifestItemLoader._processFileWrapper
 
     // --- Event ID Extraction & Validation ---
-    const fullEventIdFromFile = data.id;
-    if (
-      typeof fullEventIdFromFile !== 'string' ||
-      fullEventIdFromFile.trim() === ''
-    ) {
-      const errorMsg = `EventLoader [${modId}]: Invalid or missing 'id' in event definition file '${filename}'.`;
-      this._logger.error(errorMsg, {
-        modId,
-        filename,
-        resolvedPath,
-        receivedId: fullEventIdFromFile,
-      });
-      throw new Error(
-        `Invalid or missing 'id' in event definition file '${filename}' for mod '${modId}'.`
-      );
-    }
-
-    const trimmedFullEventId = fullEventIdFromFile.trim();
-    const baseEventId = extractBaseId(trimmedFullEventId);
-
-    if (!baseEventId) {
-      const errorMsg = `EventLoader [${modId}]: Could not extract valid base event ID from full ID '${trimmedFullEventId}' in file '${filename}'.`;
-      this._logger.error(errorMsg, {
-        modId,
-        filename,
-        fullEventIdFromFile: trimmedFullEventId,
-      });
-      throw new Error(
-        `Could not extract valid base event ID from '${trimmedFullEventId}' in ${filename}`
-      );
-    }
+    const { fullId: trimmedFullEventId, baseId: baseEventId } =
+      parseAndValidateId(data, 'id', modId, filename, this._logger);
     this._logger.debug(
       `EventLoader [${modId}]: Extracted full event ID '${trimmedFullEventId}' and base event ID '${baseEventId}' from ${filename}.`
     );

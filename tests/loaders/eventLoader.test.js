@@ -583,16 +583,15 @@ describe('EventLoader', () => {
           EVENT_TYPE_NAME
         )
       ).rejects.toThrow(
-        `Invalid or missing 'id' in event definition file '${filename}' for mod '${TEST_MOD_ID}'.`
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Invalid or missing 'id' in event definition file '${filename}'.`
+          `Invalid or missing 'id' in file '${filename}'`
         ),
         expect.objectContaining({
           modId: TEST_MOD_ID,
           filename,
-          resolvedPath,
           receivedId: undefined,
         })
       );
@@ -611,16 +610,15 @@ describe('EventLoader', () => {
           EVENT_TYPE_NAME
         )
       ).rejects.toThrow(
-        `Invalid or missing 'id' in event definition file '${filename}' for mod '${TEST_MOD_ID}'.`
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Invalid or missing 'id' in event definition file '${filename}'`
+          `Invalid or missing 'id' in file '${filename}'`
         ),
         expect.objectContaining({
           modId: TEST_MOD_ID,
           filename,
-          resolvedPath,
           receivedId: undefined,
         })
       );
@@ -639,11 +637,11 @@ describe('EventLoader', () => {
           EVENT_TYPE_NAME
         )
       ).rejects.toThrow(
-        `Invalid or missing 'id' in event definition file '${filename}' for mod '${TEST_MOD_ID}'.`
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Invalid or missing 'id' in event definition file '${filename}'`
+          `Invalid or missing 'id' in file '${filename}'`
         ),
         expect.objectContaining({ receivedId: 123 })
       );
@@ -662,16 +660,16 @@ describe('EventLoader', () => {
           EVENT_TYPE_NAME
         )
       ).rejects.toThrow(
-        `Could not extract valid base event ID from ':' in ${filename}`
+        `Could not extract base ID from ':' in ${filename}. Invalid format.`
       );
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Could not extract valid base event ID from full ID ':' in file '${filename}'`
+          `Could not extract base ID from ':' in file '${filename}'. Format requires 'name' or 'namespace:name' with non-empty parts.`
         ),
         expect.objectContaining({
           modId: TEST_MOD_ID,
           filename,
-          fullEventIdFromFile: ':',
+          receivedId: ':',
         })
       );
       expect(mockValidator.addSchema).not.toHaveBeenCalled();
