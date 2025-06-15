@@ -275,8 +275,6 @@ describe('core_handle_follow rule integration', () => {
     expect(entityManager.getComponentData('l1', LEADING_COMPONENT_ID)).toEqual({
       followers: ['f1'],
     });
-    // Events are dispatched through the configured dispatcher. Component
-    // updates verify the rule executed successfully.
   });
 
   it('cycle detection branch dispatches error and no mutations', async () => {

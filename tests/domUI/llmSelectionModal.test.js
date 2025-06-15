@@ -346,27 +346,25 @@ describe('LlmSelectionModal Refactored', () => {
     });
 
     describe('_getListItemsData', () => {
-      it('should fetch and return LLM options and active ID', async () => {
+      it('should fetch and return LLM options and store active ID', async () => {
         const mockOpts = [{ configId: 'id1', displayName: 'Name1' }];
         const mockActiveId = 'id1';
         mockLlmAdapter.getAvailableLlmOptions.mockResolvedValue(mockOpts);
         mockLlmAdapter.getCurrentActiveLlmId.mockResolvedValue(mockActiveId);
 
         const data = await modal._getListItemsData();
-        expect(data).toEqual({
-          llmOptions: mockOpts,
-          currentActiveLlmId: mockActiveId,
-        });
+        expect(data).toEqual(mockOpts);
+        expect(modal.currentActiveLlmId).toBe(mockActiveId);
         expect(mockLlmAdapter.getAvailableLlmOptions).toHaveBeenCalledTimes(1);
         expect(mockLlmAdapter.getCurrentActiveLlmId).toHaveBeenCalledTimes(1);
       });
 
-      it('should return null and log error if getAvailableLlmOptions fails', async () => {
+      it('should return empty array and log error if getAvailableLlmOptions fails', async () => {
         mockLlmAdapter.getAvailableLlmOptions.mockRejectedValue(
           new Error('Fetch failed')
         );
         const data = await modal._getListItemsData();
-        expect(data).toBeNull();
+        expect(data).toEqual([]);
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Error fetching LLM data'),
           expect.any(Object)
@@ -375,14 +373,16 @@ describe('LlmSelectionModal Refactored', () => {
     });
 
     describe('_renderListItem', () => {
-      const allData = { llmOptions: [], currentActiveLlmId: 'activeId' };
+      beforeEach(() => {
+        modal.currentActiveLlmId = 'activeId';
+      });
 
       it('should create an <li> with correct attributes and text', () => {
         const option = { configId: 'id1', displayName: 'LLM Display Name' };
-        const li = modal._renderListItem(option, 0, allData);
+        const li = modal._renderListItem(option, 0);
 
         expect(mockDomElementFactory.create).toHaveBeenCalledWith('li', {
-          cls: 'llm-item',
+          cls: 'llm-item save-slot',
           text: 'LLM Display Name',
         });
         expect(li.dataset.llmId).toBe('id1');
@@ -398,20 +398,20 @@ describe('LlmSelectionModal Refactored', () => {
 
       it('should mark as selected if configId matches currentActiveLlmId', () => {
         const option = { configId: 'activeId', displayName: 'Active LLM' };
-        const li = modal._renderListItem(option, 0, allData);
+        const li = modal._renderListItem(option, 0);
         expect(li.classList.contains('selected')).toBe(true);
         expect(li.getAttribute('aria-checked')).toBe('true');
       });
 
       it('should use configId as text if displayName is missing', () => {
         const option = { configId: 'id-only', displayName: null };
-        const li = modal._renderListItem(option, 0, allData);
+        const li = modal._renderListItem(option, 0);
         expect(li.textContent).toBe('id-only');
       });
 
       it('should log warning and return null if configId is missing', () => {
         const option = { displayName: 'No ID LLM' };
-        const li = modal._renderListItem(option, 0, allData);
+        const li = modal._renderListItem(option, 0);
         expect(li).toBeNull();
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('missing configId'),
@@ -494,19 +494,19 @@ describe('LlmSelectionModal Refactored', () => {
         mockLlmAdapter.getCurrentActiveLlmId.mockResolvedValue(null);
         const getEmptySpy = jest.spyOn(modal, '_getEmptyListMessage');
         await modal.renderLlmList();
-        expect(getEmptySpy).toHaveBeenCalledWith(false, expect.any(String));
+        expect(getEmptySpy).toHaveBeenCalledWith();
         expect(
           llmListElement.querySelector('li.llm-empty-message')
         ).not.toBeNull();
       });
 
-      it('should display error message if _getListItemsData returns null (error)', async () => {
-        jest.spyOn(modal, '_getListItemsData').mockResolvedValue(null);
+      it('should display empty message if _getListItemsData returns empty array', async () => {
+        jest.spyOn(modal, '_getListItemsData').mockResolvedValue([]);
         const getEmptySpy = jest.spyOn(modal, '_getEmptyListMessage');
         await modal.renderLlmList();
-        expect(getEmptySpy).toHaveBeenCalledWith(true, expect.any(String));
+        expect(getEmptySpy).toHaveBeenCalledWith();
         expect(
-          llmListElement.querySelector('li.llm-error-message')
+          llmListElement.querySelector('li.llm-empty-message')
         ).not.toBeNull();
       });
 
