@@ -35,7 +35,10 @@
       "comment": "Step 3: Begin building the master list of all involved entities, starting with the actor and target.",
       "parameters": {
         "variable_name": "allInvolved",
-        "value": ["{event.payload.actorId}", "{event.payload.targetId}"]
+        "value": [
+          "{event.payload.actorId}",
+          "{event.payload.targetId}"
+        ]
       }
     },
     {
@@ -208,7 +211,7 @@
       "comment": "Step 8: Dispatch events for perception and UI.",
       "parameters": {
         "location_id": "{context.actorPos.locationId}",
-        "description_text": "{context.actorName} and {context.targetName} draw close.",
+        "description_text": "{context.actorName} draws close to {context.targetName}.",
         "perception_type": "state_change_observable",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}"
