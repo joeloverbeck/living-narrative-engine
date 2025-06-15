@@ -22,6 +22,7 @@ import { ActionIndexingService } from '../../turns/services/actionIndexingServic
  * @typedef {import('../../loaders/ruleLoader.js').default} RuleLoader
  * @typedef {import('../../loaders/actionLoader.js').default} ActionLoader
  * @typedef {import('../../loaders/eventLoader.js').default} EventLoader
+ * @typedef {import('../../loaders/macroLoader.js').default} MacroLoader
  * @typedef {import('../../loaders/entityLoader.js').default} EntityLoader
  * @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader
  * @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader
@@ -75,6 +76,7 @@ export function registerInfrastructure(container) {
         logger: c.resolve(tokens.ILogger),
         schemaLoader: c.resolve(tokens.SchemaLoader),
         componentLoader: c.resolve(tokens.ComponentDefinitionLoader),
+        macroLoader: c.resolve(tokens.MacroLoader),
         ruleLoader: c.resolve(tokens.RuleLoader),
         actionLoader: c.resolve(tokens.ActionLoader),
         eventLoader: c.resolve(tokens.EventLoader),
