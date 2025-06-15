@@ -95,6 +95,16 @@ describe('GamePersistenceService additional coverage', () => {
       ]);
       expect(logger.warn).toHaveBeenCalled();
     });
+
+    it('preserves primitive component data', () => {
+      const entity = makeEntity('e2', 'core:item', { count: 7 });
+      entityManager.activeEntities.set('e2', entity);
+      dataRegistry.getAll.mockReturnValue([]);
+
+      const result = service.captureCurrentGameState('World');
+      const components = result.gameState.entities[0].components;
+      expect(components.count).toBe(7);
+    });
   });
 
   describe('saveGame', () => {
