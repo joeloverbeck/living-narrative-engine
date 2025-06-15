@@ -3,6 +3,7 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatPlaytime, formatTimestamp } from '../utils/textUtils.js';
+import { createSelectableItem } from './helpers/createSelectableItem.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -300,17 +301,17 @@ export class SaveGameUI extends SlotModalBase {
   _renderSaveSlotItem(slotData, itemIndex) {
     if (!this.domElementFactory) return null;
 
-    const slotClasses = ['save-slot'];
-    if (slotData.isEmpty) slotClasses.push('empty');
-    if (slotData.isCorrupted) slotClasses.push('corrupted');
-
-    const slotDiv = this.domElementFactory.div(slotClasses);
+    const slotDiv = createSelectableItem(
+      this.domElementFactory,
+      'div',
+      'slotId',
+      slotData.slotId,
+      '',
+      slotData.isEmpty,
+      slotData.isCorrupted
+    );
     if (!slotDiv) return null;
-
-    slotDiv.setAttribute('role', 'radio');
-    slotDiv.setAttribute('aria-checked', 'false');
-    slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1'); // First item focusable by default
-    slotDiv.dataset.slotId = String(slotData.slotId);
+    slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
 
     const slotInfoDiv = this.domElementFactory.div('slot-info');
     if (!slotInfoDiv) return slotDiv; // Return partially constructed div

@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { SlotModalBase } from './slotModalBase.js';
+import { createSelectableItem } from './helpers/createSelectableItem.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -228,10 +229,16 @@ export class LlmSelectionModal extends SlotModalBase {
 
     const nameForDisplay = displayName || configId; // Fallback to configId if displayName is missing
 
-    const listItemElement = this.#domElementFactory.create('li', {
-      cls: 'llm-item save-slot',
-      text: nameForDisplay,
-    });
+    const listItemElement = createSelectableItem(
+      this.#domElementFactory,
+      'li',
+      'llmId',
+      configId,
+      nameForDisplay,
+      false,
+      false,
+      'llm-item'
+    );
 
     if (!listItemElement) {
       this.logger.error(
@@ -239,9 +246,6 @@ export class LlmSelectionModal extends SlotModalBase {
       );
       return null;
     }
-
-    listItemElement.dataset.llmId = configId;
-    listItemElement.setAttribute('role', 'radio');
     // Tabindex will be managed by _onListRendered
 
     const isActive = configId === currentActiveLlmId;

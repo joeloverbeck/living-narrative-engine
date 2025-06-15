@@ -3,6 +3,7 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatPlaytime, formatTimestamp } from '../utils/textUtils.js';
+import { createSelectableItem } from './helpers/createSelectableItem.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -291,16 +292,17 @@ class LoadGameUI extends SlotModalBase {
       return null;
     }
 
-    const slotClasses = ['save-slot'];
-    if (slotData.isCorrupted) slotClasses.push('corrupted');
-
-    const slotDiv = this.domElementFactory.div(slotClasses);
+    const slotDiv = createSelectableItem(
+      this.domElementFactory,
+      'div',
+      'slotIdentifier',
+      slotData.identifier,
+      '',
+      false,
+      slotData.isCorrupted
+    );
     if (!slotDiv) return null;
-
-    slotDiv.setAttribute('role', 'radio');
-    slotDiv.setAttribute('aria-checked', 'false');
     slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
-    slotDiv.dataset.slotIdentifier = slotData.identifier;
 
     const slotInfoDiv = this.domElementFactory.div('slot-info');
     if (!slotInfoDiv) return slotDiv;
