@@ -1,11 +1,7 @@
 // src/engine/engineVersion.js
-/* eslint-env node */
-/* global process */
+/* eslint-env browser */
 
-import { readFileSync } from 'fs';
-import path from 'path';
-const pkgPath = path.resolve(process.cwd(), 'package.json');
-const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+import pkg from '../../package.json';
 import semver from 'semver';
 import { freeze } from '../utils/objectUtils.js';
 
