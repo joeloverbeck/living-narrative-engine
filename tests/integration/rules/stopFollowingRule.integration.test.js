@@ -10,6 +10,8 @@ import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import stopFollowingRule from '../../../data/mods/core/rules/stop_following.rule.json';
+import logFailureAndEndTurn from '../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
+import { expandMacros } from '../../../src/utils/macroUtils.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -215,6 +217,7 @@ let interpreter;
 let events;
 let listener;
 let safeDispatcher;
+let expandedRule;
 
 describe('core_handle_stop_following rule integration', () => {
   beforeEach(() => {
@@ -240,8 +243,32 @@ describe('core_handle_stop_following rule integration', () => {
 
     safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
+    const macroRegistry = {
+      get: (type, id) =>
+        type === 'macros'
+          ? { 'core:logFailureAndEndTurn': logFailureAndEndTurn }[id]
+          : undefined,
+    };
+
+    expandedRule = {
+      ...stopFollowingRule,
+      actions: expandMacros(stopFollowingRule.actions, macroRegistry),
+    };
+    // Manually expand macros inside conditional branches
+    const ifAction = expandedRule.actions.find((a) => a.type === 'IF');
+    if (ifAction) {
+      ifAction.parameters.then_actions = expandMacros(
+        ifAction.parameters.then_actions,
+        macroRegistry
+      );
+      ifAction.parameters.else_actions = expandMacros(
+        ifAction.parameters.else_actions,
+        macroRegistry
+      );
+    }
+
     dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([stopFollowingRule]),
+      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
     };
 
     init([]);
