@@ -2,6 +2,7 @@
 
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 import { extractBaseId } from '../utils/idUtils.js';
+import { registerSchema } from '../utils/schemaUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -133,47 +134,21 @@ class ComponentLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `ComponentLoader [${modId}]: Attempting to register/manage data schema using FULL ID '${trimmedComponentIdFromFile}'.`
     );
-    const alreadyLoaded = this._schemaValidator.isSchemaLoaded(
-      trimmedComponentIdFromFile
-    );
-    if (alreadyLoaded) {
-      this._logger.warn(
-        `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentIdFromFile}'.`
-      );
-      try {
-        // Attempt removal FIRST
-        this._schemaValidator.removeSchema(trimmedComponentIdFromFile);
-      } catch (removalError) {
-        // *** MODIFICATION START ***
-        // Log the removal error AND re-throw it to halt processing for this file
-        const removeLogMsg = `ComponentLoader [${modId}]: Error during removeSchema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
-        this._logger.error(
-          removeLogMsg,
-          {
-            modId,
-            filename,
-            componentId: trimmedComponentIdFromFile,
-            error: removalError,
-          },
-          removalError
-        );
-        throw removalError; // <<< RE-THROW the error
-        // *** MODIFICATION END ***
-      }
-    }
-    // --- If removeSchema succeeded (or wasn't needed), proceed to addSchema ---
     try {
-      await this._schemaValidator.addSchema(
+      await registerSchema(
+        this._schemaValidator,
         dataSchema,
-        trimmedComponentIdFromFile
+        trimmedComponentIdFromFile,
+        this._logger,
+        `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentIdFromFile}'.`
       );
       this._logger.debug(
         `ComponentLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentIdFromFile}' from file '${filename}'.`
       );
     } catch (error) {
-      const addLogMsg = `ComponentLoader [${modId}]: Error during addSchema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
+      const registerLogMsg = `ComponentLoader [${modId}]: Error registering data schema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
       this._logger.error(
-        addLogMsg,
+        registerLogMsg,
         {
           modId,
           filename,
@@ -182,7 +157,7 @@ class ComponentLoader extends BaseManifestItemLoader {
         },
         error
       );
-      throw error; // Re-throw addSchema errors as they are critical
+      throw error;
     }
 
     // --- 4. Construct Final Item ID ---
