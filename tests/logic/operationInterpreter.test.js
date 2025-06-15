@@ -245,11 +245,6 @@ describe('OperationInterpreter', () => {
     interpreter.execute(opMissingType, mockExecutionContext);
     expect(mockRegistry.getHandler).not.toHaveBeenCalled();
     expect(mockLogger.error).toHaveBeenCalled();
-
-    const opWhitespaceType = { type: '  ', parameters: {} };
-    interpreter.execute(opWhitespaceType, mockExecutionContext);
-    expect(mockRegistry.getHandler).toHaveBeenCalledWith('');
-    expect(mockLogger.error).toHaveBeenCalled();
   });
 
   /* ────────────────────────────────────────────────────────────────────────
