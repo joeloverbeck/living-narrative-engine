@@ -60,3 +60,20 @@ Object mapping content categories to arrays of JSON definition files. Paths are 
   }
 }
 ```
+
+### `ui` Category
+
+Mods may supply user-interface resources using a `ui` content category. Typical files include:
+
+- `icons.json` – conforms to `ui-icons.schema.json` and maps icon names to SVG markup or image paths.
+- `labels.json` – conforms to `ui-labels.schema.json` and maps label keys to display text.
+
+Example snippet:
+
+```json
+{
+  "content": {
+    "ui": ["icons.json", "labels.json"]
+  }
+}
+```

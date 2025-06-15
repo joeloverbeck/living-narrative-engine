@@ -13,6 +13,7 @@
     "locations": ["adventurers_guild.location.json", "town.location.json"],
     "actions": [],
     "rules": [],
-    "events": []
+    "events": [],
+    "ui": ["icons.json", "labels.json"]
   }
 }
