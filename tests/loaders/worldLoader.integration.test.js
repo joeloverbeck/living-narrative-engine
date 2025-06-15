@@ -26,6 +26,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../../src/loaders/actionLoader.js').default} ActionLoader */
 /** @typedef {import('../../src/loaders/eventLoader.js').default} EventLoader */
+/** @typedef {import('../../src/loaders/macroLoader.js').default} MacroLoader */
 /** @typedef {import('../../src/loaders/componentLoader.js').default} ComponentLoader */
 /** @typedef {import('../../src/loaders/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
@@ -54,6 +55,8 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
   let mockActionLoader;
   /** @type {jest.Mocked<EventLoader>} */
   let mockEventLoader;
+  /** @type {jest.Mocked<MacroLoader>} */
+  let mockMacroLoader;
   /** @type {jest.Mocked<EntityLoader>} */
   let mockEntityLoader;
   /** @type {jest.Mocked<ISchemaValidator>} */
@@ -146,6 +149,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     mockActionLoader = { loadItemsForMod: jest.fn() };
     mockComponentLoader = { loadItemsForMod: jest.fn() };
     mockEventLoader = { loadItemsForMod: jest.fn() };
+    mockMacroLoader = { loadItemsForMod: jest.fn() };
     mockRuleLoader = { loadItemsForMod: jest.fn() };
     mockEntityLoader = { loadItemsForMod: jest.fn() };
 
@@ -163,6 +167,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         actions: ['core/action_move.json', 'core/action_look.json'],
         components: ['core/comp_position.json'],
         characters: ['core/entity_player_base.json'],
+        macros: ['core/logSuccess.macro.json'],
       },
     };
     mockManifestMap = new Map();
@@ -270,6 +275,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
 
     setupContentLoaderMock(mockActionLoader, 'actions', 2);
     setupContentLoaderMock(mockComponentLoader, 'components', 1);
+    setupContentLoaderMock(mockMacroLoader, 'macros', 2);
     setupContentLoaderMock(mockEntityLoader, 'characters', 1); // Use 'characters' as typeName
 
     // --- 4. Instantiate SUT ---
@@ -278,6 +284,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      macroLoader: mockMacroLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
@@ -390,6 +397,15 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       'components',
       'components',
       'components'
+    );
+
+    expect(mockMacroLoader.loadItemsForMod).toHaveBeenCalledTimes(1);
+    expect(mockMacroLoader.loadItemsForMod).toHaveBeenCalledWith(
+      CORE_MOD_ID,
+      mockCoreManifest,
+      'macros',
+      'macros',
+      'macros'
     );
 
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledTimes(1);

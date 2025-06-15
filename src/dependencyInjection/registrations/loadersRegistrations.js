@@ -41,6 +41,7 @@ import GameConfigLoader from '../../loaders/gameConfigLoader.js';
 import ModManifestLoader from '../../modding/modManifestLoader.js';
 import ActionLoader from '../../loaders/actionLoader.js';
 import EventLoader from '../../loaders/eventLoader.js';
+import MacroLoader from '../../loaders/macroLoader.js';
 import EntityLoader from '../../loaders/entityLoader.js';
 
 // --- DI & Helper Imports ---
@@ -211,6 +212,20 @@ export function registerLoaders(container) {
   );
   logger.debug(`Loaders Registration: Registered ${tokens.EventLoader}.`);
   // === END LOADER-003 ===
+
+  registrar.singletonFactory(
+    tokens.MacroLoader,
+    (c) =>
+      new MacroLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+      )
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.MacroLoader}.`);
 
   // === ADDED: LOADER-004-F ===
   registrar.singletonFactory(
