@@ -5,7 +5,7 @@ import {
   buildEntityTargetContext,
 } from '../../src/actions/validation/contextBuilders.js';
 
-jest.mock('../../src/logic/contextAssembler.js', () => ({
+jest.mock('../../src/logic/componentAccessor.js', () => ({
   createComponentAccessor: jest.fn((id) => ({ accessorFor: id })),
 }));
 
@@ -13,7 +13,7 @@ jest.mock('../../src/utils/locationUtils.js', () => ({
   getExitByDirection: jest.fn(),
 }));
 
-import { createComponentAccessor } from '../../src/logic/contextAssembler.js';
+import { createComponentAccessor } from '../../src/logic/componentAccessor.js';
 import { getExitByDirection } from '../../src/utils/locationUtils.js';
 
 const mockEntityManager = {
