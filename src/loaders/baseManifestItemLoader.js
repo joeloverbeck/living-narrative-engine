@@ -499,7 +499,7 @@ export class BaseManifestItemLoader {
    * @param {string} baseItemId - The item's **un-prefixed** base ID (extracted from the item data or filename).
    * @param {object} dataToStore - The original data object fetched and validated for the item.
    * @param {string} sourceFilename - The original filename from which the data was loaded (for logging).
-   * @returns {boolean} Returns `true` if an existing item was overwritten, `false` otherwise.
+   * @returns {{qualifiedId: string, didOverride: boolean}} Object containing the fully qualified ID and override flag.
    * @throws {Error} Re-throws any error encountered during interaction with the data registry (`get` or `store`).
    */
   _storeItemInRegistry(
@@ -509,9 +509,8 @@ export class BaseManifestItemLoader {
     dataToStore,
     sourceFilename
   ) {
-    // <<< MODIFIED RETURN TYPE
     const finalRegistryKey = `${modId}:${baseItemId}`;
-    let didOverwrite = false; // <<< ADDED flag
+    let didOverwrite = false;
     try {
       const existingDefinition = this._dataRegistry.get(
         category,
@@ -534,7 +533,7 @@ export class BaseManifestItemLoader {
       this._logger.debug(
         `${this.constructor.name} [${modId}]: Successfully stored ${category} item '${finalRegistryKey}' from file '${sourceFilename}'.`
       );
-      return didOverwrite; // <<< RETURN the flag
+      return { qualifiedId: finalRegistryKey, didOverride: didOverwrite };
     } catch (error) {
       this._logger.error(
         `${this.constructor.name} [${modId}]: Failed to store ${category} item with key '${finalRegistryKey}' from file '${sourceFilename}' in data registry.`,
@@ -574,14 +573,14 @@ export class BaseManifestItemLoader {
       this._logger,
       options
     );
-    const didOverride = this._storeItemInRegistry(
+    const { qualifiedId, didOverride } = this._storeItemInRegistry(
       category,
       modId,
       baseId,
       data,
       filename
     );
-    return { qualifiedId: `${modId}:${baseId}`, didOverride };
+    return { qualifiedId, didOverride };
   }
 
   /**

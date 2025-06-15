@@ -435,7 +435,9 @@ describe('ActionLoader', () => {
       // It's usually better to spy on the *dependency* (registry.store)
       // but since the logic for overwriting check and return value is *in* the helper,
       // let's mock the helper itself for these specific unit tests.
-      jest.spyOn(actionLoader, '_storeItemInRegistry').mockReturnValue(false); // Default: no override
+      jest
+        .spyOn(actionLoader, '_storeItemInRegistry')
+        .mockReturnValue({ qualifiedId: finalRegistryKey, didOverride: false });
     });
 
     it('Success Path: should check registry, store, log, and return ID with override=false', async () => {
@@ -446,7 +448,7 @@ describe('ActionLoader', () => {
       // Mock the helper to return false (no override)
       const storeItemSpy = jest
         .spyOn(actionLoader, '_storeItemInRegistry')
-        .mockReturnValue(false);
+        .mockReturnValue({ qualifiedId: finalRegistryKey, didOverride: false });
 
       const result = await actionLoader._processFetchedItem(
         TEST_MOD_ID,
@@ -506,7 +508,7 @@ describe('ActionLoader', () => {
       // Mock the helper to return true (override occurred)
       const storeItemSpy = jest
         .spyOn(actionLoader, '_storeItemInRegistry')
-        .mockReturnValue(true);
+        .mockReturnValue({ qualifiedId: finalRegistryKey, didOverride: true });
 
       const result = await actionLoader._processFetchedItem(
         TEST_MOD_ID,
@@ -560,7 +562,7 @@ describe('ActionLoader', () => {
       // Spy on the helper, ensure it's NOT called if _processFetchedItem throws early (which it shouldn't now)
       const storeItemSpy = jest
         .spyOn(actionLoader, '_storeItemInRegistry')
-        .mockReturnValue(false);
+        .mockReturnValue({ qualifiedId: finalRegistryKey, didOverride: false });
 
       // --- REMOVED: Mocking the spy to throw ---
       // validatePrimarySchemaSpy.mockImplementation(() => { throw validationError; });
