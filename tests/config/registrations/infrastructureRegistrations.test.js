@@ -89,6 +89,9 @@ describe('registerInfrastructure', () => {
     container.register(tokens.RuleLoader, () => mockRuleLoader);
     container.register(tokens.ActionLoader, () => mockActionLoader);
     container.register(tokens.EventLoader, () => mockEventLoader);
+    container.register(tokens.MacroLoader, () => ({
+      loadItemsForMod: jest.fn(),
+    }));
     container.register(tokens.EntityLoader, () => mockEntityLoader);
     container.register(tokens.IConfiguration, () => mockConfiguration);
     container.register(tokens.GameConfigLoader, () => mockGameConfigLoader);
@@ -122,6 +125,13 @@ describe('registerInfrastructure', () => {
     const worldLoader = container.resolve(tokens.WorldLoader);
     expect(worldLoader).toBeDefined();
     // expect(worldLoader).toBeInstanceOf(ActualWorldLoader); // If you import it
+  });
+
+  test('should register MacroLoader correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.MacroLoader)).not.toThrow();
+    const macroLoader = container.resolve(tokens.MacroLoader);
+    expect(macroLoader).toBeDefined();
   });
 
   test('should register GameDataRepository correctly (against IGameDataRepository)', () => {
