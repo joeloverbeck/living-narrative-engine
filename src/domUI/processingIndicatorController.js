@@ -249,8 +249,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
       // Scroll #outputDiv to bottom so indicator is visible if content is long
       if (this.elements.outputDiv) {
-        this.elements.outputDiv.scrollTop =
-          this.elements.outputDiv.scrollHeight;
+        this.scrollToBottom('outputDiv', 'outputDiv');
       }
     } else {
       this.logger.warn(
