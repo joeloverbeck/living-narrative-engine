@@ -293,6 +293,7 @@ describe('SystemLogicInterpreter - Integration Tests - Conditional Execution Set
       subscribe: jest.fn((eventName, listener) => {
         if (eventName === '*') capturedEventListener = listener;
       }),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
       listenerCount: jest.fn().mockReturnValue(1),
     };

@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import { resolvePlaceholders } from './contextUtils.js';
-import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { initLogger } from '../utils/loggerUtils.js';
 import { validateDependency } from '../utils/validationUtils.js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
@@ -19,14 +19,10 @@ class OperationInterpreter {
   /** @type {OperationRegistry} */ #registry;
 
   constructor({ logger, operationRegistry }) {
-    validateDependency(logger, 'logger', console, {
-      requiredMethods: ['info', 'warn', 'error', 'debug'],
-    });
-    validateDependency(operationRegistry, 'operationRegistry', logger, {
+    this.#logger = initLogger('OperationInterpreter', logger);
+    validateDependency(operationRegistry, 'operationRegistry', this.#logger, {
       requiredMethods: ['getHandler'],
     });
-
-    this.#logger = ensureValidLogger(logger, 'OperationInterpreter');
     this.#registry = operationRegistry;
 
     this.#logger.debug(
@@ -36,6 +32,7 @@ class OperationInterpreter {
 
   /**
    * Executes one operation.
+   *
    * @param {Operation}      operation
    * @param {ExecutionContext} executionContext
    */

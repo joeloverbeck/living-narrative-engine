@@ -4,7 +4,7 @@
 
 /** @typedef {import('./defs.js').OperationHandler}           OperationHandler */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { initLogger } from '../utils/loggerUtils.js';
 import { validateDependency } from '../utils/validationUtils.js';
 
 class OperationRegistry {
@@ -21,12 +21,9 @@ class OperationRegistry {
   constructor(arg = null) {
     const maybeLogger =
       arg && typeof arg === 'object' && 'logger' in arg ? arg.logger : arg;
-    if (maybeLogger) {
-      validateDependency(maybeLogger, 'logger', console, {
-        requiredMethods: ['info', 'warn', 'error', 'debug'],
-      });
-    }
-    this.#logger = ensureValidLogger(maybeLogger, 'OperationRegistry');
+    this.#logger = initLogger('OperationRegistry', maybeLogger, {
+      optional: true,
+    });
     this.#log('info', 'OperationRegistry initialized.');
   }
 
@@ -127,7 +124,9 @@ class OperationRegistry {
             `Error occurred in logging utility (faulty logger method for level '${level}') trying to log message: "${message}"`,
             err
           );
-        } catch {}
+        } catch {
+          /* no-op */
+        }
         // continue to fallback
       }
     }
@@ -145,7 +144,9 @@ class OperationRegistry {
     // Last-ditch: console.log with [LEVEL] prefix (used by the “faulty logger” tests)
     try {
       console.log(`[${upper}] ${message}`, ...rest);
-    } catch {}
+    } catch {
+      /* no-op */
+    }
   }
 }
 

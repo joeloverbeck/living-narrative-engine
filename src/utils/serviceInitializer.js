@@ -7,7 +7,10 @@
  * @property {boolean} [isFunction] - Whether the dependency should be a function.
  */
 
-import { ensureValidLogger, createPrefixedLogger } from './loggerUtils.js';
+import {
+  createPrefixedLogger,
+  initLogger as baseInitLogger,
+} from './loggerUtils.js';
 import { validateDependency } from './validationUtils.js';
 
 /**
@@ -18,8 +21,8 @@ import { validateDependency } from './validationUtils.js';
  * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger.
  */
 export function initLogger(serviceName, logger) {
-  const validLogger = ensureValidLogger(logger, serviceName);
-  return createPrefixedLogger(validLogger, `${serviceName}: `);
+  const validated = baseInitLogger(serviceName, logger);
+  return createPrefixedLogger(validated, `${serviceName}: `);
 }
 
 /**

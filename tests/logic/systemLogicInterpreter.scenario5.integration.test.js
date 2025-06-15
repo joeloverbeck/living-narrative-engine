@@ -177,6 +177,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 5: Multiple Rule
           capturedEventListener = listener;
         }
       }),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
       listenerCount: jest.fn().mockReturnValue(1),
     };

@@ -769,7 +769,7 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
             error: jest.fn(),
           }
         )
-      ).toThrow("Invalid or missing method 'debug' on dependency 'logger'.");
+      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
       expect(() =>
         createJsonLogicContext(
           baseEvent,
@@ -782,7 +782,7 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
             error: jest.fn(),
           }
         )
-      ).toThrow("Invalid or missing method 'debug' on dependency 'logger'.");
+      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
     });
   });
 });

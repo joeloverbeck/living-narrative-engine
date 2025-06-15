@@ -161,6 +161,7 @@ describe('SystemLogicInterpreter - Scenario 1: Invisibility Buff & Scenario 7: L
           capturedEventListener = listener;
         }
       }),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
       listenerCount: jest.fn().mockReturnValue(1),
     };

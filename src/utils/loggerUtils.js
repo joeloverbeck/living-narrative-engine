@@ -2,6 +2,8 @@
 // --- FILE START ---
 /* eslint-disable no-console */
 
+import { validateDependency } from './validationUtils.js';
+
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  */
@@ -79,6 +81,27 @@ export function getPrefixedLogger(logger, prefix) {
   const validLogger = ensureValidLogger(logger, prefix);
   const effectivePrefix = prefix || '';
   return createPrefixedLogger(validLogger, effectivePrefix);
+}
+
+/**
+ * @description Validates a logger using {@link validateDependency} and returns
+ * a safe logger instance via {@link ensureValidLogger}. When `optional` is
+ * true, missing loggers are allowed and will result in a console-based
+ * fallback.
+ * @param {string} serviceName - Name used for fallback prefix and error
+ *   messages.
+ * @param {ILogger | undefined | null} logger - Logger instance to validate.
+ * @param {object} [options]
+ * @param {boolean} [options.optional] - Whether the logger is optional.
+ * @returns {ILogger} A valid logger instance.
+ */
+export function initLogger(serviceName, logger, { optional = false } = {}) {
+  if (!optional || logger) {
+    validateDependency(logger, 'logger', console, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+  }
+  return ensureValidLogger(logger, serviceName);
 }
 
 // --- FILE END ---

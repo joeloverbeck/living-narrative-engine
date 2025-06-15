@@ -7,6 +7,8 @@
 import { createJsonLogicContext } from './contextAssembler.js';
 import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
+import { initLogger } from '../utils/loggerUtils.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -44,21 +46,37 @@ class SystemLogicInterpreter {
     entityManager,
     operationInterpreter,
   }) {
-    if (!logger) throw new Error('SystemLogicInterpreter: logger required');
-    if (!eventBus?.subscribe)
-      throw new Error('SystemLogicInterpreter: eventBus invalid');
-    if (!dataRegistry)
-      throw new Error('SystemLogicInterpreter: dataRegistry invalid');
-    if (!jsonLogicEvaluationService)
-      throw new Error(
-        'SystemLogicInterpreter: jsonLogicEvaluationService invalid'
-      );
-    if (!entityManager)
-      throw new Error('SystemLogicInterpreter: entityManager invalid');
-    if (!operationInterpreter)
-      throw new Error('SystemLogicInterpreter: operationInterpreter invalid');
+    this.#logger = initLogger('SystemLogicInterpreter', logger);
+    validateDependency(eventBus, 'eventBus', this.#logger, {
+      requiredMethods: ['subscribe', 'unsubscribe'],
+    });
+    validateDependency(dataRegistry, 'dataRegistry', this.#logger, {
+      requiredMethods: ['getAllSystemRules'],
+    });
+    validateDependency(
+      jsonLogicEvaluationService,
+      'jsonLogicEvaluationService',
+      this.#logger,
+      {
+        requiredMethods: ['evaluate'],
+      }
+    );
+    validateDependency(entityManager, 'entityManager', this.#logger, {
+      requiredMethods: [
+        'getEntityInstance',
+        'getComponentData',
+        'hasComponent',
+      ],
+    });
+    validateDependency(
+      operationInterpreter,
+      'operationInterpreter',
+      this.#logger,
+      {
+        requiredMethods: ['execute'],
+      }
+    );
 
-    this.#logger = logger;
     this.#eventBus = eventBus;
     this.#dataRegistry = dataRegistry;
     this.#jsonLogic = jsonLogicEvaluationService;

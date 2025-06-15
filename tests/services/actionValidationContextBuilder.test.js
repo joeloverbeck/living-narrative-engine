@@ -87,7 +87,7 @@ describe('ActionValidationContextBuilder', () => {
     );
   });
 
-  it('should fallback to console logger if ILogger dependency is invalid', () => {
+  it('should throw if ILogger dependency is invalid', () => {
     const validEntityManager = {
       getEntityInstance: jest.fn(),
       getComponentData: jest.fn(),
@@ -98,7 +98,7 @@ describe('ActionValidationContextBuilder', () => {
           entityManager: validEntityManager,
           logger: null,
         })
-    ).not.toThrow();
+    ).toThrow('Invalid or missing ILogger instance');
   });
 
   it('should successfully create an instance with valid dependencies', () => {
