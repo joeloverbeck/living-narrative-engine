@@ -135,6 +135,76 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
+   * Attempts to parse a manual save file and extract its metadata.
+   *
+   * @param {string} fileName - The file name within the manual saves directory.
+   * @returns {Promise<{success: boolean, metadata: SaveFileMetadata}>}
+   *   Parsing outcome and extracted (or fallback) metadata.
+   * @private
+   */
+  async #parseManualSaveFile(fileName) {
+    const filePath = `${FULL_MANUAL_SAVE_DIRECTORY_PATH}/${fileName}`;
+    this.#logger.debug(`Processing file: ${filePath}`);
+
+    const deserializationResult =
+      await this.#deserializeAndDecompress(filePath);
+
+    if (!deserializationResult.success) {
+      this.#logger.warn(
+        `Failed to deserialize ${filePath}: ${deserializationResult.error}. Flagging as corrupted for listing.`
+      );
+      return {
+        success: false,
+        metadata: {
+          identifier: filePath,
+          saveName:
+            fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
+            ' (Corrupted)',
+          timestamp: 'N/A',
+          playtimeSeconds: 0,
+          isCorrupted: true,
+        },
+      };
+    }
+
+    const saveObject = /** @type {SaveGameStructure | undefined} */ (
+      deserializationResult.data
+    );
+
+    if (
+      !saveObject ||
+      typeof saveObject.metadata !== 'object' ||
+      saveObject.metadata === null
+    ) {
+      this.#logger.warn(
+        `No metadata section found in ${filePath}. Flagging as corrupted for listing.`
+      );
+      return {
+        success: false,
+        metadata: {
+          identifier: filePath,
+          saveName:
+            fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
+            ' (No Metadata)',
+          timestamp: 'N/A',
+          playtimeSeconds: 0,
+          isCorrupted: true,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      metadata: {
+        identifier: filePath,
+        saveName: saveObject.metadata.saveName,
+        timestamp: saveObject.metadata.timestamp,
+        playtimeSeconds: saveObject.metadata.playtimeSeconds,
+      },
+    };
+  }
+
+  /**
    * @inheritdoc
    * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
    */
@@ -179,53 +249,14 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     for (const fileName of files) {
-      const filePath = `${FULL_MANUAL_SAVE_DIRECTORY_PATH}/${fileName}`;
-      this.#logger.debug(`Processing file: ${filePath}`);
+      const { success, metadata } = await this.#parseManualSaveFile(fileName);
 
-      const deserializationResult =
-        await this.#deserializeAndDecompress(filePath);
-
-      if (!deserializationResult.success) {
-        this.#logger.warn(
-          `Failed to deserialize ${filePath}: ${deserializationResult.error}. Flagging as corrupted for listing.`
-        );
-        collectedMetadata.push({
-          identifier: filePath, // identifier is now the full path
-          saveName:
-            fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
-            ' (Corrupted)',
-          timestamp: 'N/A',
-          playtimeSeconds: 0,
-          isCorrupted: true,
-        });
+      if (!success) {
+        collectedMetadata.push(metadata);
         continue;
       }
 
-      const saveObject = /** @type {SaveGameStructure | undefined} */ (
-        deserializationResult.data
-      );
-
-      if (
-        !saveObject ||
-        typeof saveObject.metadata !== 'object' ||
-        saveObject.metadata === null
-      ) {
-        this.#logger.warn(
-          `No metadata section found in ${filePath}. Flagging as corrupted for listing.`
-        );
-        collectedMetadata.push({
-          identifier: filePath, // identifier is now the full path
-          saveName:
-            fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
-            ' (No Metadata)',
-          timestamp: 'N/A',
-          playtimeSeconds: 0,
-          isCorrupted: true,
-        });
-        continue;
-      }
-
-      const { saveName, timestamp, playtimeSeconds } = saveObject.metadata;
+      const { identifier, saveName, timestamp, playtimeSeconds } = metadata;
 
       if (
         typeof saveName !== 'string' ||
@@ -236,10 +267,12 @@ class SaveLoadService extends ISaveLoadService {
         isNaN(playtimeSeconds)
       ) {
         this.#logger.warn(
-          `Essential metadata missing or malformed in ${filePath}. Contents: ${JSON.stringify(saveObject.metadata)}. Flagging as corrupted for listing.`
+          `Essential metadata missing or malformed in ${identifier}. Contents: ${JSON.stringify(
+            metadata
+          )}. Flagging as corrupted for listing.`
         );
         collectedMetadata.push({
-          identifier: filePath, // identifier is now the full path
+          identifier,
           saveName:
             saveName ||
             fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
@@ -252,14 +285,9 @@ class SaveLoadService extends ISaveLoadService {
         continue;
       }
 
-      collectedMetadata.push({
-        identifier: filePath, // identifier is now the full path
-        saveName: saveName,
-        timestamp: timestamp,
-        playtimeSeconds: playtimeSeconds,
-      });
+      collectedMetadata.push(metadata);
       this.#logger.debug(
-        `Successfully parsed metadata for ${filePath}: Name="${saveName}", Timestamp="${timestamp}"`
+        `Successfully parsed metadata for ${identifier}: Name="${saveName}", Timestamp="${timestamp}"`
       );
     }
 
