@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { GameStateValidationServiceForPrompting } from '../../src/validation/gameStateValidationServiceForPrompting.js';
 import { ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING } from '../../src/constants/textDefaults.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 // Mock ILogger dependency
 const mockLogger = {
@@ -11,6 +12,11 @@ const mockLogger = {
   warn: jest.fn(),
   error: jest.fn(),
 };
+
+// Mock SafeEventDispatcher
+const makeMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
 
 // Mock AIGameStateDTO structure for tests
 // Helper function to create mock AIGameStateDTO objects
@@ -32,11 +38,14 @@ const createMockGameStateDto = ({
 
 describe('GameStateValidationServiceForPrompting', () => {
   let service;
+  let mockDispatcher;
 
   beforeEach(() => {
     jest.clearAllMocks(); // Clear mocks before each test
+    mockDispatcher = makeMockSafeEventDispatcher();
     service = new GameStateValidationServiceForPrompting({
       logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
     });
   });
 
@@ -68,9 +77,11 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(result.errorContent).toBe(
         ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.'
-      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
+        message:
+          'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
+        details: {},
+      });
     });
 
     it('should return invalid if gameStateDto is undefined', () => {
@@ -79,9 +90,11 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(result.errorContent).toBe(
         ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.'
-      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
+        message:
+          'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
+        details: {},
+      });
     });
 
     it('should return valid and warn if actorState is missing', () => {

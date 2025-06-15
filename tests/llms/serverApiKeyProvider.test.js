@@ -4,6 +4,7 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { ServerApiKeyProvider } from '../../src/llms/serverApiKeyProvider.js';
 import { EnvironmentContext } from '../../src/llms/environmentContext.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 // Import the actual interfaces to ensure mocks align if needed, though not strictly used for type in JS tests
 // import { IFileSystemReader, IEnvironmentVariableReader } from '../../src/llms/interfaces/IServerUtils.js';
 
@@ -54,6 +55,7 @@ describe('ServerApiKeyProvider', () => {
   let fileSystemReader;
   /** @type {ReturnType<typeof mockEnvironmentVariableReader>} */
   let environmentVariableReader;
+  let dispatcher;
   /** @type {ServerApiKeyProvider} */
   let provider;
 
@@ -62,10 +64,12 @@ describe('ServerApiKeyProvider', () => {
     logger = mockLogger();
     fileSystemReader = mockFileSystemReader();
     environmentVariableReader = mockEnvironmentVariableReader();
+    dispatcher = { dispatch: jest.fn() };
     provider = new ServerApiKeyProvider({
       logger,
       fileSystemReader,
       environmentVariableReader,
+      safeEventDispatcher: dispatcher,
     });
   });
 
@@ -84,6 +88,7 @@ describe('ServerApiKeyProvider', () => {
             logger: null,
             fileSystemReader,
             environmentVariableReader,
+            safeEventDispatcher: dispatcher,
           })
       ).toThrow(
         'ServerApiKeyProvider: Constructor requires a valid logger instance.'
@@ -99,6 +104,7 @@ describe('ServerApiKeyProvider', () => {
             logger,
             fileSystemReader: null,
             environmentVariableReader,
+            safeEventDispatcher: dispatcher,
           })
       ).toThrow(expectedErrorMsg);
       expect(
@@ -107,6 +113,7 @@ describe('ServerApiKeyProvider', () => {
             logger,
             fileSystemReader: {},
             environmentVariableReader,
+            safeEventDispatcher: dispatcher,
           })
       ).toThrow(expectedErrorMsg);
     });
@@ -120,6 +127,7 @@ describe('ServerApiKeyProvider', () => {
             logger,
             fileSystemReader,
             environmentVariableReader: null,
+            safeEventDispatcher: dispatcher,
           })
       ).toThrow(expectedErrorMsg);
       expect(
@@ -128,6 +136,7 @@ describe('ServerApiKeyProvider', () => {
             logger,
             fileSystemReader,
             environmentVariableReader: {},
+            safeEventDispatcher: dispatcher,
           })
       ).toThrow(expectedErrorMsg);
     });
@@ -185,8 +194,12 @@ describe('ServerApiKeyProvider', () => {
     test('should return null and log if environmentContext is invalid', async () => {
       const key = await provider.getKey(llmConfig, null);
       expect(key).toBeNull();
-      expect(logger.error).toHaveBeenCalledWith(
-        'ServerApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.'
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message:
+            'ServerApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
+        })
       );
     });
 
@@ -266,9 +279,12 @@ describe('ServerApiKeyProvider', () => {
         const key = await provider.getKey(llmConfig, environmentContext);
 
         expect(key).toBe('file_key_after_env_error');
-        expect(logger.error).toHaveBeenCalledWith(
-          "ServerApiKeyProvider.getKey (test-llm): Error while reading environment variable 'ERROR_KEY_ENV'. Error: Hypothetical permission denied reading env",
-          { error: envError }
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.objectContaining({
+            message:
+              "ServerApiKeyProvider.getKey (test-llm): Error while reading environment variable 'ERROR_KEY_ENV'. Error: Hypothetical permission denied reading env",
+          })
         );
         expect(fileSystemReader.readFile).toHaveBeenCalledWith(
           '/project/root/api_key_file.txt',
@@ -321,8 +337,12 @@ describe('ServerApiKeyProvider', () => {
         const key = await provider.getKey(llmConfig, invalidEc);
 
         expect(key).toBeNull();
-        expect(logger.error).toHaveBeenCalledWith(
-          "ServerApiKeyProvider.getKey (test-llm): Cannot retrieve key from file 'keyfile.txt' because projectRootPath is missing or invalid in EnvironmentContext."
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.objectContaining({
+            message:
+              "ServerApiKeyProvider.getKey (test-llm): Cannot retrieve key from file 'keyfile.txt' because projectRootPath is missing or invalid in EnvironmentContext.",
+          })
         );
         expect(fileSystemReader.readFile).not.toHaveBeenCalled();
       });
@@ -382,9 +402,12 @@ describe('ServerApiKeyProvider', () => {
         const key = await provider.getKey(llmConfig, environmentContext);
 
         expect(key).toBeNull();
-        expect(logger.error).toHaveBeenCalledWith(
-          "ServerApiKeyProvider.getKey (test-llm): Unexpected error while reading API key file '/project/root/error_file.txt'. Error: Disk read error (unexpected)",
-          { errorCode: undefined, errorDetails: fileError } // Check structure for unexpected error
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.objectContaining({
+            message:
+              "ServerApiKeyProvider.getKey (test-llm): Unexpected error while reading API key file '/project/root/error_file.txt'. Error: Disk read error (unexpected)",
+          })
         );
       });
 

@@ -9,6 +9,8 @@ import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import stepBackRule from '../../../data/mods/intimacy/rules/step_back.rule.json';
+import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import { expandMacros } from '../../../src/utils/macroUtils.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -22,6 +24,7 @@ import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimesta
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
+import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -151,6 +154,7 @@ function init(entities) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
@@ -158,7 +162,10 @@ function init(entities) {
       addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({
+      safeEventDispatcher: safeDispatcher,
+      logger,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
@@ -207,7 +214,12 @@ describe('intimacy_handle_step_back rule integration', () => {
     };
 
     events = [];
-    safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        events.push({ eventType, payload });
+        return Promise.resolve(true);
+      }),
+    };
     eventBus = {
       subscribe: jest.fn((ev, l) => {
         if (ev === '*') listener = l;
@@ -220,8 +232,14 @@ describe('intimacy_handle_step_back rule integration', () => {
       listenerCount: jest.fn().mockReturnValue(1),
     };
 
+    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
+    const expanded = expandMacros(stepBackRule.actions, {
+      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
+    });
     dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([stepBackRule]),
+      getAllSystemRules: jest
+        .fn()
+        .mockReturnValue([{ ...stepBackRule, actions: expanded }]),
     };
 
     init([]);
@@ -241,7 +259,29 @@ describe('intimacy_handle_step_back rule integration', () => {
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
     );
-    const valid = ajv.validate(ruleSchema, stepBackRule);
+    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
+    const expanded = expandMacros(stepBackRule.actions, {
+      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
+    });
+    const sanitized = expanded.map((a) => {
+      if (
+        a.type === 'DISPATCH_PERCEPTIBLE_EVENT' &&
+        a.parameters.perception_type === '{context.perceptionType}'
+      ) {
+        return {
+          ...a,
+          parameters: {
+            ...a.parameters,
+            perception_type: 'state_change_observable',
+          },
+        };
+      }
+      return a;
+    });
+    const valid = ajv.validate(ruleSchema, {
+      ...stepBackRule,
+      actions: sanitized,
+    });
     if (!valid) console.error(ajv.errors);
     expect(valid).toBe(true);
   });

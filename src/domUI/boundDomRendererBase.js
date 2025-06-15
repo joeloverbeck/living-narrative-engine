@@ -201,6 +201,17 @@ export class BoundDomRendererBase extends RendererBase {
   }
 
   /**
+   * Convenience wrapper that delegates to `_scrollToPanelBottom`.
+   *
+   * @protected
+   * @param {string} scrollKey - Key for the scroll container in `this.elements`.
+   * @param {string} contentKey - Key for the content container for fallback scrolling.
+   */
+  scrollToBottom(scrollKey, contentKey) {
+    this._scrollToPanelBottom(scrollKey, contentKey);
+  }
+
+  /**
    * Dispose method. Calls super.dispose() for base class cleanup.
    * Derived classes can override this to add their own specific disposal logic,
    * ensuring they also call super.dispose().

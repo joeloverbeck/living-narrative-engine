@@ -3,7 +3,10 @@
  */
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
-import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
+import {
+  TURN_ENDED_ID,
+  DISPLAY_ERROR_ID,
+} from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -12,7 +15,7 @@ const makeLogger = () => ({
   warn: jest.fn(),
 });
 
-const makeDispatcher = () => ({ dispatch: jest.fn() });
+const makeSafeDispatcher = () => ({ dispatch: jest.fn() });
 
 describe('EndTurnHandler', () => {
   let logger;
@@ -21,13 +24,15 @@ describe('EndTurnHandler', () => {
 
   beforeEach(() => {
     logger = makeLogger();
-    dispatcher = makeDispatcher();
-    handler = new EndTurnHandler({ dispatcher, logger });
+    dispatcher = makeSafeDispatcher();
+    handler = new EndTurnHandler({ safeEventDispatcher: dispatcher, logger });
   });
 
   test('constructor throws with invalid dependencies', () => {
     expect(() => new EndTurnHandler({ logger })).toThrow();
-    expect(() => new EndTurnHandler({ dispatcher })).toThrow();
+    expect(
+      () => new EndTurnHandler({ safeEventDispatcher: dispatcher })
+    ).toThrow();
   });
 
   test('execute dispatches core:turn_ended with provided payload', () => {
@@ -44,9 +49,9 @@ describe('EndTurnHandler', () => {
 
   test('execute logs error and does not dispatch when entityId is invalid', () => {
     handler.execute({ entityId: '   ', success: true }, {});
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalledWith(
-      'END_TURN: Invalid or missing "entityId" parameter.'
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
+      message: 'END_TURN: Invalid or missing "entityId" parameter.',
+      details: { params: { entityId: '   ', success: true } },
+    });
   });
 });

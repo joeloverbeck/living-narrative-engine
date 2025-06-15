@@ -19,12 +19,10 @@ const mockConfiguration = {
   getBaseDataPath: jest.fn(),
   getSchemaBasePath: jest.fn(),
   getContentBasePath: jest.fn(),
-  getWorldBasePath: jest.fn(),
 };
 
 const mockPathResolver = {
   resolveSchemaPath: jest.fn(), // Add other methods if needed by other parts (not needed for this test)
-  resolveManifestPath: jest.fn(),
   resolveContentPath: jest.fn(),
 };
 

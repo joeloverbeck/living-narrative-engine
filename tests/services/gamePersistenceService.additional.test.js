@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import { CURRENT_ACTOR_COMPONENT_ID } from '../../src/constants/componentIds.js';
 
 // Helpers to create minimal mocks
@@ -25,6 +26,7 @@ describe('GamePersistenceService additional coverage', () => {
   let componentCleaningService;
   let metadataBuilder;
   let service;
+  let captureService;
 
   beforeEach(() => {
     logger = makeLogger();
@@ -50,14 +52,20 @@ describe('GamePersistenceService additional coverage', () => {
         saveName: '',
       })),
     };
-    service = new GamePersistenceService({
+    captureService = new GameStateCaptureService({
       logger,
-      saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
       componentCleaningService,
       metadataBuilder,
+    });
+    service = new GamePersistenceService({
+      logger,
+      saveLoadService,
+      entityManager,
+      playtimeTracker,
+      gameStateCaptureService: captureService,
     });
   });
 
@@ -70,7 +78,7 @@ describe('GamePersistenceService additional coverage', () => {
       entityManager.activeEntities.set('e1', entity);
       dataRegistry.getAll.mockReturnValue([{ id: 'core', version: '1.0.0' }]);
 
-      const result = service.captureCurrentGameState('World');
+      const result = captureService.captureCurrentGameState('World');
 
       expect(result.gameState.entities).toHaveLength(1);
       const components = result.gameState.entities[0].components;
@@ -85,7 +93,7 @@ describe('GamePersistenceService additional coverage', () => {
 
     it('captures core mod version when present', () => {
       dataRegistry.getAll.mockReturnValue([{ id: 'core', version: '1.2.3' }]);
-      const result = service.captureCurrentGameState('World');
+      const result = captureService.captureCurrentGameState('World');
       expect(result.modManifest.activeMods).toEqual([
         { modId: 'core', version: '1.2.3' },
       ]);
@@ -94,14 +102,14 @@ describe('GamePersistenceService additional coverage', () => {
 
     it('warns and defaults title when world name missing', () => {
       dataRegistry.getAll.mockReturnValue([]);
-      const result = service.captureCurrentGameState();
+      const result = captureService.captureCurrentGameState();
       expect(logger.warn).toHaveBeenCalled();
       expect(result.metadata.gameTitle).toBe('Unknown Game');
     });
 
     it('falls back to unknown version when manifest undefined', () => {
       dataRegistry.getAll.mockReturnValue(undefined);
-      const result = service.captureCurrentGameState('World');
+      const result = captureService.captureCurrentGameState('World');
       expect(result.modManifest.activeMods).toEqual([
         { modId: 'core', version: 'unknown_fallback' },
       ]);
@@ -113,7 +121,7 @@ describe('GamePersistenceService additional coverage', () => {
       entityManager.activeEntities.set('e2', entity);
       dataRegistry.getAll.mockReturnValue([]);
 
-      const result = service.captureCurrentGameState('World');
+      const result = captureService.captureCurrentGameState('World');
       const components = result.gameState.entities[0].components;
       expect(components.count).toBe(7);
     });
@@ -128,10 +136,14 @@ describe('GamePersistenceService additional coverage', () => {
 
     it('saves using SaveLoadService when allowed', async () => {
       const state = { metadata: {}, gameState: {}, modManifest: {} };
-      jest.spyOn(service, 'captureCurrentGameState').mockReturnValue(state);
+      jest
+        .spyOn(captureService, 'captureCurrentGameState')
+        .mockReturnValue(state);
       saveLoadService.saveManualGame.mockResolvedValue({ success: true });
       const res = await service.saveGame('Save1', true, 'World');
-      expect(service.captureCurrentGameState).toHaveBeenCalledWith('World');
+      expect(captureService.captureCurrentGameState).toHaveBeenCalledWith(
+        'World'
+      );
       expect(saveLoadService.saveManualGame).toHaveBeenCalledWith(
         'Save1',
         state

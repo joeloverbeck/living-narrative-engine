@@ -39,7 +39,6 @@ const createMockConfiguration = (overrides = {}) => ({
   ]), // Basic schemas for test
   getSchemaBasePath: jest.fn(() => 'schemas'),
   getContentBasePath: jest.fn((typeName) => typeName),
-  getWorldBasePath: jest.fn(() => 'worlds'),
   getGameConfigFilename: jest.fn(() => 'game.json'),
   getModsBasePath: jest.fn(() => 'mods'),
   getModManifestFilename: jest.fn(() => 'mod.manifest.json'),

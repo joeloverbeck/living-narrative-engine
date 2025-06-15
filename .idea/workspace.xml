@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented focused handlers to deal with follower-related issues." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixed test issues." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -187,47 +187,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="32373000" />
-    </task>
-    <task id="LOCAL-00086" summary="Implementing thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749937747400</created>
-      <option name="number" value="00086" />
-      <option name="presentableId" value="LOCAL-00086" />
-      <option name="project" value="LOCAL" />
-      <updated>1749937747400</updated>
-    </task>
-    <task id="LOCAL-00087" summary="Implemented thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749938095089</created>
-      <option name="number" value="00087" />
-      <option name="presentableId" value="LOCAL-00087" />
-      <option name="project" value="LOCAL" />
-      <updated>1749938095089</updated>
-    </task>
-    <task id="LOCAL-00088" summary="Implemented thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749939344719</created>
-      <option name="number" value="00088" />
-      <option name="presentableId" value="LOCAL-00088" />
-      <option name="project" value="LOCAL" />
-      <updated>1749939344719</updated>
-    </task>
-    <task id="LOCAL-00089" summary="Implemented thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749940523195</created>
-      <option name="number" value="00089" />
-      <option name="presentableId" value="LOCAL-00089" />
-      <option name="project" value="LOCAL" />
-      <updated>1749940523195</updated>
-    </task>
-    <task id="LOCAL-00090" summary="Fixed issue with the dismiss rule.">
-      <option name="closed" value="true" />
-      <created>1749963622265</created>
-      <option name="number" value="00090" />
-      <option name="presentableId" value="LOCAL-00090" />
-      <option name="project" value="LOCAL" />
-      <updated>1749963622265</updated>
+      <workItem from="1749963238113" duration="36360000" />
     </task>
     <task id="LOCAL-00091" summary="Fixed issue with the dismiss rule.">
       <option name="closed" value="true" />
@@ -581,19 +541,57 @@
       <option name="project" value="LOCAL" />
       <updated>1749999655383</updated>
     </task>
-    <option name="localTasksCounter" value="135" />
+    <task id="LOCAL-00135" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1749999733362</created>
+      <option name="number" value="00135" />
+      <option name="presentableId" value="LOCAL-00135" />
+      <option name="project" value="LOCAL" />
+      <updated>1749999733362</updated>
+    </task>
+    <task id="LOCAL-00136" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1750000854579</created>
+      <option name="number" value="00136" />
+      <option name="presentableId" value="LOCAL-00136" />
+      <option name="project" value="LOCAL" />
+      <updated>1750000854579</updated>
+    </task>
+    <task id="LOCAL-00137" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1750002105564</created>
+      <option name="number" value="00137" />
+      <option name="presentableId" value="LOCAL-00137" />
+      <option name="project" value="LOCAL" />
+      <updated>1750002105564</updated>
+    </task>
+    <task id="LOCAL-00138" summary="Uploading with errors for Codex to fix.">
+      <option name="closed" value="true" />
+      <created>1750003164018</created>
+      <option name="number" value="00138" />
+      <option name="presentableId" value="LOCAL-00138" />
+      <option name="project" value="LOCAL" />
+      <updated>1750003164018</updated>
+    </task>
+    <task id="LOCAL-00139" summary="Uploading with errors for Codex to fix.">
+      <option name="closed" value="true" />
+      <created>1750003363956</created>
+      <option name="number" value="00139" />
+      <option name="presentableId" value="LOCAL-00139" />
+      <option name="project" value="LOCAL" />
+      <updated>1750003363956</updated>
+    </task>
+    <option name="localTasksCounter" value="140" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Ensuring the app works." />
     <MESSAGE value="Ensuring that chosenActionId doesn't get used anymore." />
     <MESSAGE value="Trying to return the app to normality." />
     <MESSAGE value="Fixed nasty bug in PromptCoordinator." />
     <MESSAGE value="Trying to return the app to normal." />
-    <MESSAGE value="Uploading with errors for Codex to fix." />
     <MESSAGE value="Implemented awaitTurnEndState.js." />
     <MESSAGE value="Fixed HumanTurnHandler's dependencies." />
     <MESSAGE value="Refactoring HumanTurnHandler." />
@@ -607,12 +605,14 @@
     <MESSAGE value="Fixed issue with the dismiss rule." />
     <MESSAGE value="Improved OperationInterpreter." />
     <MESSAGE value="Minor changes." />
-    <MESSAGE value="Formatting." />
     <MESSAGE value="Implementing base intimacy system." />
     <MESSAGE value="Made changes to the mod manifest schema." />
     <MESSAGE value="Returning the app to normal." />
     <MESSAGE value="Implemented base of intimacy system." />
     <MESSAGE value="Implemented focused handlers to deal with follower-related issues." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented focused handlers to deal with follower-related issues." />
+    <MESSAGE value="Formatting." />
+    <MESSAGE value="Uploading with errors for Codex to fix." />
+    <MESSAGE value="Fixed test issues." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed test issues." />
   </component>
 </project>

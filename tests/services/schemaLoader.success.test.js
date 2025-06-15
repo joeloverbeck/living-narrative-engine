@@ -91,11 +91,9 @@ describe('SchemaLoader Success Case', () => {
       getBaseDataPath: jest.fn(),
       getSchemaBasePath: jest.fn(),
       getContentBasePath: jest.fn(),
-      getWorldBasePath: jest.fn(),
     };
     mockPathResolver = {
       resolveSchemaPath: jest.fn(),
-      resolveManifestPath: jest.fn(),
       resolveContentPath: jest.fn(),
     };
     mockDataFetcher = {

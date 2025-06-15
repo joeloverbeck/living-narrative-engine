@@ -7,19 +7,28 @@ import {
   IFileSystemReader,
   IEnvironmentVariableReader,
 } from '../../llm-proxy-server/src/interfaces/IServerUtils.js';
+import { safeDispatchError } from '../utils/safeDispatchError.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
  * @typedef {import('./services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
+ * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
 export class ServerApiKeyProvider extends IApiKeyProvider {
   #logger;
   #fileSystemReader;
   #environmentVariableReader;
+  /** @type {ISafeEventDispatcher} */
+  #dispatcher;
 
-  constructor({ logger, fileSystemReader, environmentVariableReader }) {
+  constructor({
+    logger,
+    fileSystemReader,
+    environmentVariableReader,
+    safeEventDispatcher,
+  }) {
     super();
     if (
       !logger ||
@@ -35,10 +44,20 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
       throw new Error(errorMsg);
     }
     this.#logger = logger;
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      const errorMsg =
+        'ServerApiKeyProvider: Constructor requires a valid ISafeEventDispatcher.';
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    this.#dispatcher = safeEventDispatcher;
     if (!fileSystemReader || typeof fileSystemReader.readFile !== 'function') {
       const errorMsg =
         'ServerApiKeyProvider: Constructor requires a valid fileSystemReader instance that implements IFileSystemReader (must have an async readFile method).';
-      this.#logger.error(errorMsg);
+      safeDispatchError(this.#dispatcher, errorMsg);
       throw new Error(errorMsg);
     }
     this.#fileSystemReader = fileSystemReader;
@@ -48,7 +67,7 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
     ) {
       const errorMsg =
         'ServerApiKeyProvider: Constructor requires a valid environmentVariableReader instance that implements IEnvironmentVariableReader (must have a getEnv method).';
-      this.#logger.error(errorMsg);
+      safeDispatchError(this.#dispatcher, errorMsg);
       throw new Error(errorMsg);
     }
     this.#environmentVariableReader = environmentVariableReader;
@@ -65,8 +84,10 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
       typeof environmentContext.isServer !== 'function' ||
       typeof environmentContext.getProjectRootPath !== 'function'
     ) {
-      this.#logger.error(
-        `ServerApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`
+      safeDispatchError(
+        this.#dispatcher,
+        `ServerApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`,
+        { providedValue: environmentContext }
       );
       return null;
     }
@@ -112,7 +133,8 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
           );
         }
       } catch (error) {
-        this.#logger.error(
+        safeDispatchError(
+          this.#dispatcher,
           `ServerApiKeyProvider.getKey (${llmId}): Error while reading environment variable '${envVarName}'. Error: ${error.message}`,
           { error }
         );
@@ -136,7 +158,8 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
         typeof projectRootPath !== 'string' ||
         projectRootPath.trim() === ''
       ) {
-        this.#logger.error(
+        safeDispatchError(
+          this.#dispatcher,
           `ServerApiKeyProvider.getKey (${llmId}): Cannot retrieve key from file '${fileName}' because projectRootPath is missing or invalid in EnvironmentContext.`
         );
         // This is a critical setup error for file retrieval, so an early exit here is okay.
@@ -178,7 +201,8 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
               `ServerApiKeyProvider.getKey (${llmId}): API key file '${fullPath}' not readable due to permissions. Error: ${error.message}`
             );
           } else {
-            this.#logger.error(
+            safeDispatchError(
+              this.#dispatcher,
               `ServerApiKeyProvider.getKey (${llmId}): Unexpected error while reading API key file '${fullPath}'. Error: ${error.message}`,
               {
                 errorCode: error.code,

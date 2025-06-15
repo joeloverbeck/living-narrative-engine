@@ -93,41 +93,35 @@
             }
           },
           {
-            "type": "GET_TIMESTAMP",
-            "comment": "Get the current ISO timestamp for perception logging.",
+            "type": "SET_VARIABLE",
             "parameters": {
-              "result_variable": "nowIso"
+              "variable_name": "logMessage",
+              "value": "{context.followerName} is now following {context.leaderName}."
             }
           },
           {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "Human-visible log: “<Follower> has decided to follow <Leader>”.",
+            "type": "SET_VARIABLE",
             "parameters": {
-              "location_id": "{context.actorPos.locationId}",
-              "description_text": "{context.followerName} has decided to follow {context.leaderName}.",
-              "perception_type": "action_target_general",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}",
-              "involved_entities": []
+              "variable_name": "locationId",
+              "value": "{context.actorPos.locationId}"
             }
           },
           {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch a decoupled event to the UI indicating the successful follow action.",
+            "type": "SET_VARIABLE",
             "parameters": {
-              "eventType": "core:display_successful_action_result",
-              "payload": {
-                "message": "{context.followerName} is now following {context.leaderName}."
-              }
+              "variable_name": "perceptionType",
+              "value": "action_target_general"
             }
           },
           {
-            "type": "END_TURN",
-            "comment": "Dispatch an event to indicate the actor's turn has ended after successful follow attempt.",
+            "type": "SET_VARIABLE",
             "parameters": {
-              "entityId": "{event.payload.actorId}",
-              "success": true
+              "variable_name": "targetId",
+              "value": "{event.payload.targetId}"
             }
+          },
+          {
+            "macro": "core:logSuccessAndEndTurn"
           }
         ]
       }

@@ -22,6 +22,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import PlaytimeTracker from '../../../src/engine/playtimeTracker.js';
 import ComponentCleaningService from '../../../src/persistence/componentCleaningService.js';
 import GamePersistenceService from '../../../src/persistence/gamePersistenceService.js';
+import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
 import ReferenceResolver from '../../../src/initializers/services/referenceResolver.js';
 import SaveMetadataBuilder from '../../../src/persistence/saveMetadataBuilder.js';
 import SaveLoadService from '../../../src/persistence/saveLoadService.js';
@@ -79,6 +80,9 @@ describe('registerPersistence', () => {
       `Persistence Registration: Registered ${String(tokens.SaveMetadataBuilder)}.`
     );
     expect(logs).toContain(
+      `Persistence Registration: Registered ${String(tokens.GameStateCaptureService)}.`
+    );
+    expect(logs).toContain(
       `Persistence Registration: Registered ${String(tokens.GamePersistenceService)}.`
     );
     expect(logs).toContain(
@@ -118,6 +122,11 @@ describe('registerPersistence', () => {
         Class: SaveMetadataBuilder,
         lifecycle: 'singleton',
         deps: [tokens.ILogger],
+      },
+      {
+        token: tokens.GameStateCaptureService,
+        Class: GameStateCaptureService,
+        lifecycle: 'singletonFactory',
       },
       {
         token: tokens.GamePersistenceService,

@@ -89,7 +89,12 @@ function init(entities) {
   operationRegistry = new OperationRegistry({ logger });
   entityManager = new SimpleEntityManager(entities);
 
-  const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+  const safeDispatcher = {
+    dispatch: jest.fn((eventType, payload) => {
+      events.push({ eventType, payload });
+      return Promise.resolve(true);
+    }),
+  };
 
   // Register all necessary handlers for the rule to run
   const handlers = {
@@ -131,7 +136,10 @@ function init(entities) {
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({
+      safeEventDispatcher: safeDispatcher,
+      logger,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
