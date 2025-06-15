@@ -239,15 +239,14 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
-   * Validates that a loaded save object contains required sections and that the
-   * stored checksum matches the recalculated checksum.
+   * Verifies that the loaded save object contains all required sections.
    *
    * @param {SaveGameStructure} obj - The deserialized save object.
    * @param {string} identifier - Identifier used for logging.
-   * @returns {Promise<{success: boolean, error?: PersistenceError}>} Result.
+   * @returns {{success: boolean, error?: PersistenceError}} Result.
    * @private
    */
-  async #validateLoadedSaveObject(obj, identifier) {
+  #validateStructure(obj, identifier) {
     const requiredSections = [
       'metadata',
       'modManifest',
@@ -276,7 +275,18 @@ class SaveLoadService extends ISaveLoadService {
     this.#logger.debug(
       `Basic structure validation passed for ${identifier}. All required sections present.`
     );
+    return { success: true };
+  }
 
+  /**
+   * Recalculates and compares the checksum against the stored value.
+   *
+   * @param {SaveGameStructure} obj - The deserialized save object.
+   * @param {string} identifier - Identifier used for logging.
+   * @returns {Promise<{success: boolean, error?: PersistenceError}>} Result.
+   * @private
+   */
+  async #verifyChecksum(obj, identifier) {
     const storedChecksum = obj.integrityChecks.gameStateChecksum;
     if (!storedChecksum || typeof storedChecksum !== 'string') {
       const devMsg = `Save file ${identifier} is missing gameStateChecksum.`;
@@ -325,8 +335,25 @@ class SaveLoadService extends ISaveLoadService {
       };
     }
     this.#logger.debug(`Checksum VERIFIED for ${identifier}.`);
-
     return { success: true };
+  }
+
+  /**
+   * Validates that a loaded save object contains required sections and that the
+   * stored checksum matches the recalculated checksum.
+   *
+   * @param {SaveGameStructure} obj - The deserialized save object.
+   * @param {string} identifier - Identifier used for logging.
+   * @returns {Promise<{success: boolean, error?: PersistenceError}>} Result.
+   * @private
+   */
+  async #validateLoadedSaveObject(obj, identifier) {
+    const structureResult = this.#validateStructure(obj, identifier);
+    if (!structureResult.success) {
+      return structureResult;
+    }
+
+    return this.#verifyChecksum(obj, identifier);
   }
 
   /**
