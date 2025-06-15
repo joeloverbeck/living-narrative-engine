@@ -5,6 +5,8 @@
  */
 
 import {
+  DISPLAY_ERROR_ID,
+  DISPLAY_WARNING_ID,
   SYSTEM_ERROR_OCCURRED_ID,
   SYSTEM_WARNING_OCCURRED_ID,
 } from '../constants/eventIds.js';
@@ -174,8 +176,8 @@ export default class AlertRouter {
     try {
       const uiEvent =
         name === SYSTEM_WARNING_OCCURRED_ID
-          ? 'core:display_warning'
-          : 'core:display_error';
+          ? DISPLAY_WARNING_ID
+          : DISPLAY_ERROR_ID;
       this.dispatcher.dispatch(uiEvent, payload);
     } catch (err) {
       console.error('AlertRouter dispatch error:', err);
