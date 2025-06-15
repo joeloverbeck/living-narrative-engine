@@ -17,6 +17,7 @@ import CommandOutcomeInterpreter from '../../commands/interpreters/commandOutcom
 
 // operation handlers
 import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHandler.js';
+import DispatchSpeechHandler from '../../logic/operationHandlers/dispatchSpeechHandler.js';
 import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
@@ -64,6 +65,15 @@ export function registerInterpreters(container) {
     [
       tokens.DispatchEventHandler,
       DispatchEventHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DispatchSpeechHandler,
+      DispatchSpeechHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),
@@ -270,6 +280,7 @@ export function registerInterpreters(container) {
         c.resolve(tkn).execute(...args);
 
     registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
+    registry.register('DISPATCH_SPEECH', bind(tokens.DispatchSpeechHandler));
     registry.register('LOG', bind(tokens.LogHandler));
     registry.register('MODIFY_COMPONENT', bind(tokens.ModifyComponentHandler));
     registry.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));
