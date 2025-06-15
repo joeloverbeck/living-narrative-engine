@@ -1,0 +1,35 @@
+{
+  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "id": "intimacy:thumb_wipe_cheek",
+  "commandVerb": "thumb-wipe-cheek",
+  "name": "Caress Cheek",
+  "description": "Brush your thumb across another's cheekbone in a soothing, intimate gesture.",
+  "target_domain": "environment",
+  "template": "wipe {target}'s cheek with thumb",
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            "comment": "Actor must be in a state of closeness, established by the 'get_close' action.",
+            "!!": {
+              "var": "actor.components['intimacy:closeness']"
+            }
+          },
+          {
+            "comment": "The target of the caress must be a partner in the current closeness circle.",
+            "in": [
+              {
+                "var": "target.id"
+              },
+              {
+                "var": "actor.components['intimacy:closeness'].partners"
+              }
+            ]
+          }
+        ]
+      },
+      "failure_message": "You can only do that with the person you are currently close to."
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "intimacy:handle_thumb_wipe_cheek",
+  "comment": "Handles the 'intimacy:thumb_wipe_cheek' action. This rule generates descriptive text for the event, dispatches it for others to see and for the actor's UI, and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "intimacy:thumb_wipe_cheek"
+    ]
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get the actor's name for the observer message.",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get the target's name for all messages.",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get the actor's position component data.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Extract locationId to a simple context variable for robustness.",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Construct the descriptive message before dispatching.",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} gently brushes their thumb across {context.targetName}'s cheek."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch an event for other characters to observe.",
+      "parameters": {
+        "location_id": "{context.locationId}",
+        "description_text": "{context.logMessage}",
+        "perception_type": "action_target_general",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Notify the actor's client with a third-person success message.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.logMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "Signal to the Turn Manager that the actor's turn is over.",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

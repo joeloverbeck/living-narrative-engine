@@ -5,7 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Trying to integrate macros.">
+      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/thumb_wipe_cheek.action.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/thumb_wipe_cheek.rule.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/integration/rules/thumbWipeCheekRule.integration.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,6 +91,7 @@
     "Jest.promptSession.test.js.executor": "Run",
     "Jest.scope.integration.test.js.executor": "Run",
     "Jest.stopFollowingRule.integration.test.js.executor": "Run",
+    "Jest.thumbWipeCheekRule.integration.test.js.executor": "Run",
     "Jest.turnActionChoicePipeline.test.js.executor": "Run",
     "Jest.turnIdleState.test.js.executor": "Run",
     "Jest.updateAvailableActions.schema.test.js.executor": "Run",
@@ -115,7 +121,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.stopFollowingRule.integration.test.js">
+  <component name="RunManager" selected="Jest.thumbWipeCheekRule.integration.test.js">
     <configuration name="containerConfig.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -143,15 +149,6 @@
       <test-file value="$PROJECT_DIR$/tests/integration/rules/getCloseRule.integration.test.js" />
       <method v="2" />
     </configuration>
-    <configuration name="modManifestLoader.validation.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/modding/modManifestLoader.validation.test.js" />
-      <method v="2" />
-    </configuration>
     <configuration name="stopFollowingRule.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -161,13 +158,22 @@
       <test-file value="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="thumbWipeCheekRule.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/integration/rules/thumbWipeCheekRule.integration.test.js" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.thumbWipeCheekRule.integration.test.js" />
         <item itemvalue="Jest.stopFollowingRule.integration.test.js" />
         <item itemvalue="Jest.entity.schema.test.js" />
         <item itemvalue="Jest.containerConfig.test.js" />
         <item itemvalue="Jest.getCloseRule.integration.test.js" />
-        <item itemvalue="Jest.modManifestLoader.validation.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -189,15 +195,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="37999000" />
-    </task>
-    <task id="LOCAL-00093" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1749966595486</created>
-      <option name="number" value="00093" />
-      <option name="presentableId" value="LOCAL-00093" />
-      <option name="project" value="LOCAL" />
-      <updated>1749966595486</updated>
+      <workItem from="1749963238113" duration="40411000" />
     </task>
     <task id="LOCAL-00094" summary="Formatting.">
       <option name="closed" value="true" />
@@ -583,7 +581,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750005742348</updated>
     </task>
-    <option name="localTasksCounter" value="142" />
+    <task id="LOCAL-00142" summary="Trying to integrate macros.">
+      <option name="closed" value="true" />
+      <created>1750006995417</created>
+      <option name="number" value="00142" />
+      <option name="presentableId" value="LOCAL-00142" />
+      <option name="project" value="LOCAL" />
+      <updated>1750006995417</updated>
+    </task>
+    <option name="localTasksCounter" value="143" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

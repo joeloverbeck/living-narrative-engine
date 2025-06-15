@@ -17,7 +17,6 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import BreakFollowRelationHandler from '../../../src/logic/operationHandlers/breakFollowRelationHandler.js';
-import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
