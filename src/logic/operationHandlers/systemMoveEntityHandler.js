@@ -12,6 +12,7 @@
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class SystemMoveEntityHandler {
   /** @type {ILogger} */ #logger;
@@ -56,11 +57,17 @@ class SystemMoveEntityHandler {
     const log = executionContext?.logger ?? this.#logger;
     const opName = 'SYSTEM_MOVE_ENTITY'; // Use a constant for the name
 
+    if (!assertParamsObject(params, log, opName)) return;
+
     // 1. Validate parameters
     const { entity_ref, target_location_id } = params;
     // **CORRECTED**: Check specifically for null/undefined instead of any falsy value for entity_ref.
     // An empty string is an invalid *value* (handled later), not a *missing parameter*.
-    if (entity_ref == null || !target_location_id) {
+    if (
+      entity_ref === null ||
+      entity_ref === undefined ||
+      !target_location_id
+    ) {
       log.warn(
         `${opName}: "entity_ref" and "target_location_id" are required.`
       );

@@ -10,6 +10,7 @@
 import { resolvePath } from '../../utils/objectUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * Safely sets a value on a nested object using a dot-notation path.
@@ -76,6 +77,10 @@ class ModifyContextArrayHandler {
   execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
 
+    if (!assertParamsObject(params, log, 'MODIFY_CONTEXT_ARRAY')) {
+      return;
+    }
+
     const { variable_path, mode, value, result_variable } = params;
     if (!variable_path || !mode) {
       log.warn(
@@ -117,7 +122,7 @@ class ModifyContextArrayHandler {
         operationResult = clonedArray;
         break;
 
-      case 'push_unique':
+      case 'push_unique': {
         if (value === undefined) {
           log.warn(`'push_unique' mode requires a 'value' parameter.`);
           return;
@@ -136,6 +141,7 @@ class ModifyContextArrayHandler {
         }
         operationResult = clonedArray;
         break;
+      }
 
       case 'pop':
         if (clonedArray.length > 0) {
@@ -145,7 +151,7 @@ class ModifyContextArrayHandler {
         }
         break;
 
-      case 'remove_by_value':
+      case 'remove_by_value': {
         if (value === undefined) {
           log.warn(`'remove_by_value' mode requires a 'value' parameter.`);
           return;
@@ -164,6 +170,7 @@ class ModifyContextArrayHandler {
         }
         operationResult = clonedArray;
         break;
+      }
 
       default:
         log.warn(`MODIFY_CONTEXT_ARRAY: Unknown mode '${mode}'.`);

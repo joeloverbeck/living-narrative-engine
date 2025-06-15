@@ -4,6 +4,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */ // ** Corrected type for 2nd arg **
 /** @typedef {import('../../events/eventBus.js').default} EventBus */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 // --- Handler Implementation ---
 /**
@@ -53,6 +54,7 @@ class DispatchEventHandler {
    */
   execute(params, _executionContext) {
     const logger = this.#logger; // Use the injected logger
+    if (!assertParamsObject(params, logger, 'DISPATCH_EVENT')) return;
 
     // 1. Validate resolved params and Trim eventType
     // Ensure params exists and eventType is a non-blank string *after* trimming.

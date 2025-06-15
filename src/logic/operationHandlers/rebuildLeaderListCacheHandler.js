@@ -5,6 +5,7 @@
  */
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * @class RebuildLeaderListCacheHandler
@@ -62,7 +63,11 @@ class RebuildLeaderListCacheHandler {
    * @param {import('../defs.js').ExecutionContext} nestedExecutionContext
    */
   execute(params, nestedExecutionContext) {
-    const { leaderIds } = params || {};
+    const logger = nestedExecutionContext?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'REBUILD_LEADER_LIST_CACHE'))
+      return;
+
+    const { leaderIds } = params;
     if (!Array.isArray(leaderIds) || leaderIds.length === 0) {
       this.#logger.debug(
         '[RebuildLeaderListCacheHandler] No leaderIds provided; skipping.'

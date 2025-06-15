@@ -12,6 +12,7 @@
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * @class QueryEntitiesHandler
@@ -84,6 +85,10 @@ class QueryEntitiesHandler extends BaseOperationHandler {
    */
   execute(params, executionContext) {
     const log = this.getLogger(executionContext);
+
+    if (!assertParamsObject(params, log, 'QUERY_ENTITIES')) {
+      return;
+    }
 
     // 1. Parameter Validation
     if (

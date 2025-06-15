@@ -141,11 +141,11 @@ describe('GetTimestampHandler', () => {
   // 3. Error Handling and Edge Cases
   // -----------------------------------------------------------------------------
   describe('Error Handling and Edge Cases', () => {
-    test('should throw a TypeError if the params object is null', () => {
-      // The handler doesn't have explicit validation, so it relies on native JS behavior.
-      // This test captures that expected behavior.
-      expect(() => handler.execute(null, mockExecutionContext)).toThrow(
-        "Cannot read properties of null (reading 'result_variable')"
+    test('should warn and return if the params object is null', () => {
+      handler.execute(null, mockExecutionContext);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'GET_TIMESTAMP: params missing or invalid.',
+        { params: null }
       );
     });
 

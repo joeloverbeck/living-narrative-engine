@@ -184,11 +184,9 @@ describe('CheckFollowCycleHandler', () => {
 
     test('should dispatch an error and return if params object itself is missing', () => {
       handler.execute(null, mockExecutionContext);
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
-        expect.objectContaining({
-          message: 'CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter',
-        })
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'CHECK_FOLLOW_CYCLE: params missing or invalid.',
+        { params: null }
       );
     });
   });

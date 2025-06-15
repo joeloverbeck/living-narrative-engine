@@ -237,12 +237,12 @@ describe('DispatchEventHandler', () => {
   });
 
   // --- execute() Tests - Invalid Parameters ---
-  test('execute should log error and not dispatch if params is null', () => {
+  test('execute should log warn and not dispatch if params is null', () => {
     handler.execute(null, mockEvaluationContext);
-    expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid or missing "eventType" parameter'),
-      expect.anything()
+    expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'DISPATCH_EVENT: params missing or invalid.',
+      { params: null }
     );
     expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
   });

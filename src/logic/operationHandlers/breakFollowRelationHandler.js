@@ -12,6 +12,7 @@
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { FOLLOWING_COMPONENT_ID } from '../../constants/componentIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class BreakFollowRelationHandler {
   /** @type {ILogger} */
@@ -72,7 +73,10 @@ class BreakFollowRelationHandler {
    * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
-    const { follower_id } = params || {};
+    const logger = execCtx?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'BREAK_FOLLOW_RELATION')) return;
+
+    const { follower_id } = params;
     if (typeof follower_id !== 'string' || !follower_id.trim()) {
       this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
         message: 'BREAK_FOLLOW_RELATION: Invalid "follower_id" parameter',

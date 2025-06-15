@@ -4,6 +4,7 @@
  */
 
 import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class ResolveDirectionHandler {
   #worldContext;
@@ -19,6 +20,9 @@ class ResolveDirectionHandler {
   }
 
   execute(params, execCtx) {
+    const logger = execCtx?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'RESOLVE_DIRECTION')) return;
+
     // Safely destructure params, providing a default empty object to avoid errors if params is null/undefined.
     const { current_location_id, direction, result_variable } = params || {};
 
