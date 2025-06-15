@@ -16,6 +16,7 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
@@ -135,6 +136,11 @@ function init(entities) {
       safeEventDispatcher: safeDispatcher,
     }),
     MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
+    QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
