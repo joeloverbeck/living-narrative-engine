@@ -19,7 +19,6 @@ import {
 } from './handlerUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
 
-
 /**
  * @typedef {object} EntityRefObject
  * @property {string} entityId

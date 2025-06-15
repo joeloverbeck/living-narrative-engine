@@ -22,7 +22,6 @@ import {
 } from './handlerUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
 
-
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.
  *
