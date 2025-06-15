@@ -8,6 +8,7 @@ import { createJsonLogicContext } from './contextAssembler.js';
 import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
+import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
 import { setupService } from '../utils/serviceInitializer.js';
 
 /* ---------------------------------------------------------------------------
@@ -267,26 +268,13 @@ class SystemLogicInterpreter {
    * of the evaluation and any thrown error.
    */
   _evaluateCondition(condition, ctx, label) {
-    let rawResult;
-    let result = false;
-    try {
-      rawResult = this.#jsonLogic.evaluate(condition, ctx);
-      this.#logger.debug(
-        `${label} Condition evaluation raw result: ${rawResult}`
-      );
-      result = !!rawResult;
-    } catch (error) {
-      this.#logger.error(
-        `${label} Error during condition evaluation. Treating condition as FALSE.`,
-        error
-      );
-      return { result: false, errored: true, error };
-    }
-
-    this.#logger.debug(
-      `${label} Condition evaluation final boolean result: ${result}`
+    return evaluateConditionWithLogging(
+      this.#jsonLogic,
+      condition,
+      ctx,
+      this.#logger,
+      label
     );
-    return { result, errored: false, error: undefined };
   }
 
   #evaluateRuleCondition(rule, flatCtx) {
@@ -418,11 +406,15 @@ class SystemLogicInterpreter {
       else_actions: elseActs = [],
     } = node.parameters || {};
 
-    let result = false;
-    try {
-      result = this.#jsonLogic.evaluate(condition, nestedCtx.evaluationContext);
-    } catch (e) {
-      this.#logger.error(`${label}: condition error`, e);
+    const { result, errored } = evaluateConditionWithLogging(
+      this.#jsonLogic,
+      condition,
+      nestedCtx.evaluationContext,
+      this.#logger,
+      label
+    );
+
+    if (errored) {
       return;
     }
 
