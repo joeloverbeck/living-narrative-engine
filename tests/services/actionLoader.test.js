@@ -464,16 +464,6 @@ describe('ActionLoader', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(`Processing fetched item: ${filename}`)
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Extracted full ID '${namespacedActionIdFromFile}' and base ID '${baseActionIdExtracted}'`
-        )
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Delegating storage for action (base ID: '${baseActionIdExtracted}')`
-        )
-      );
       // Assert the helper was called correctly
       expect(storeItemSpy).toHaveBeenCalledTimes(1);
       expect(storeItemSpy).toHaveBeenCalledWith(
@@ -542,16 +532,6 @@ describe('ActionLoader', () => {
       // Assert logging (final success log comes from _processFetchedItem)
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(`Processing fetched item: ${filename}`)
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Extracted full ID '${namespacedActionIdFromFile}' and base ID '${baseActionIdExtracted}'`
-        )
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Delegating storage for action (base ID: '${baseActionIdExtracted}')`
-        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -722,8 +702,7 @@ describe('ActionLoader', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Could not extract base ID from '${invalidId}' in file '${filename}'. Format requires 'name' or 'namespace:name' with non-empty parts.`
-        )
-        ,
+        ),
         expect.objectContaining({
           filename,
           modId: TEST_MOD_ID,

@@ -217,23 +217,23 @@ class EntityLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `EntityLoader [${modId}]: Delegating storage for original type '${typeName}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entities' category.`
     );
-    const didOverride = this._storeItemInRegistry(
+    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+      data,
+      'id',
       'entities',
       modId,
-      baseEntityId,
-      data,
-      filename
+      filename,
+      { allowFallback: true }
     );
 
-    // Construct the final fully qualified ID that was used as the registry key.
-    const finalRegistryKey = `${modId}:${baseEntityId}`;
+    const finalRegistryKey = qualifiedId;
 
     // --- Step 4: Return Result Object ---
     this._logger.debug(
       `EntityLoader [${modId}]: Successfully processed ${typeName} file '${filename}'. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
     );
     // Return the object as required by the base class contract
-    return { qualifiedId: finalRegistryKey, didOverride: didOverride }; // <<< MODIFIED Return Value
+    return { qualifiedId, didOverride }; // <<< MODIFIED Return Value
   }
 }
 

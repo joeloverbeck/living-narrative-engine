@@ -10,6 +10,7 @@
  * @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest
  * @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult
  */
+import { parseAndValidateId } from '../utils/idUtils.js';
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
  * @typedef {object} LoadItemsResult
@@ -644,6 +645,38 @@ export class BaseManifestItemLoader {
       );
       throw error;
     }
+  }
+
+  /**
+   * Parses an item's ID using {@link parseAndValidateId} and stores the item in
+   * the data registry.
+   *
+   * @protected
+   * @param {object} data - The raw item data containing the ID property.
+   * @param {string} idProp - The property name of the ID within `data`.
+   * @param {string} category - Registry category for storage.
+   * @param {string} modId - ID of the mod providing the item.
+   * @param {string} filename - Original filename for context in logs.
+   * @param {{ allowFallback?: boolean }} [options] - Optional parse options.
+   * @returns {{qualifiedId: string, didOverride: boolean}} Result info.
+   */
+  _parseIdAndStoreItem(data, idProp, category, modId, filename, options = {}) {
+    const { baseId } = parseAndValidateId(
+      data,
+      idProp,
+      modId,
+      filename,
+      this._logger,
+      options
+    );
+    const didOverride = this._storeItemInRegistry(
+      category,
+      modId,
+      baseId,
+      data,
+      filename
+    );
+    return { qualifiedId: `${modId}:${baseId}`, didOverride };
   }
 
   /**
