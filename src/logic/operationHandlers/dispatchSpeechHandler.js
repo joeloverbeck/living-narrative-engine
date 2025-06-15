@@ -4,10 +4,12 @@
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
-/** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../events/eventBus.js').default} EventBus */
+/** @typedef {import('../../events/safeEventDispatcher.js').SafeEventDispatcher} SafeEventDispatcher */
 
-import { DISPLAY_SPEECH_ID } from '../../constants/eventIds.js';
+import {
+  DISPLAY_SPEECH_ID,
+  DISPLAY_ERROR_ID,
+} from '../../constants/eventIds.js';
 
 /**
  * Parameters accepted by {@link DispatchSpeechHandler#execute}.
@@ -21,14 +23,14 @@ import { DISPLAY_SPEECH_ID } from '../../constants/eventIds.js';
  */
 
 class DispatchSpeechHandler {
-  /** @type {ValidatedEventDispatcher | EventBus} */
+  /** @type {SafeEventDispatcher} */
   #dispatcher;
   /** @type {ILogger} */
   #logger;
 
   /**
    * @param {object} deps
-   * @param {ValidatedEventDispatcher|EventBus} deps.dispatcher - Dispatcher used to emit the event.
+   * @param {SafeEventDispatcher} deps.dispatcher - Dispatcher used to emit the event.
    * @param {ILogger} deps.logger - Logger instance.
    */
   constructor({ dispatcher, logger }) {
@@ -59,7 +61,10 @@ class DispatchSpeechHandler {
       !params.entity_id.trim() ||
       typeof params.speech_content !== 'string'
     ) {
-      this.#logger.error('DISPATCH_SPEECH: invalid parameters.', { params });
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'DISPATCH_SPEECH: invalid parameters.',
+        details: { params },
+      });
       return;
     }
 
@@ -84,10 +89,10 @@ class DispatchSpeechHandler {
     try {
       this.#dispatcher.dispatch(DISPLAY_SPEECH_ID, payload);
     } catch (err) {
-      this.#logger.error(
-        'DISPATCH_SPEECH: Error dispatching display_speech.',
-        err
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: 'DISPATCH_SPEECH: Error dispatching display_speech.',
+        details: { errorMessage: err.message, stack: err.stack },
+      });
     }
   }
 }
