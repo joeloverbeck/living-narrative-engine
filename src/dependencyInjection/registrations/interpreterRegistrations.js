@@ -39,6 +39,7 @@ import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandl
 import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFieldHandler';
 import MathHandler from '../../logic/operationHandlers/mathHandler.js';
 import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler.js';
+import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyContextArrayHandler.js';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -257,10 +258,16 @@ export function registerInterpreters(container) {
         new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
-          // --- FIX START ---
-          // The handler's constructor requires an ISafeEventDispatcher, which was missing.
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-          // --- FIX END ---
+        }),
+    ],
+    [
+      tokens.ModifyContextArrayHandler,
+      ModifyContextArrayHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [
@@ -348,6 +355,10 @@ export function registerInterpreters(container) {
     registry.register(
       'MODIFY_ARRAY_FIELD',
       bind(tokens.ModifyArrayFieldHandler)
+    );
+    registry.register(
+      'MODIFY_CONTEXT_ARRAY',
+      bind(tokens.ModifyContextArrayHandler)
     );
     registry.register('IF_CO_LOCATED', bind(tokens.IfCoLocatedHandler));
     registry.register('MATH', bind(tokens.MathHandler));

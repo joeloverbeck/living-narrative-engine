@@ -53,14 +53,10 @@
               "item_variable": "partnerId",
               "actions": [
                 {
-                  "type": "MODIFY_ARRAY_FIELD",
+                  "type": "MODIFY_CONTEXT_ARRAY",
                   "comment": "Use push_unique to add partners without creating duplicates.",
                   "parameters": {
-                    "entity_ref": {
-                      "entityId": "context_variable_holder"
-                    },
-                    "component_type": "context_variables",
-                    "field": "allInvolved",
+                    "variable_path": "allInvolved",
                     "mode": "push_unique",
                     "value": "{context.partnerId}"
                   }
@@ -86,13 +82,9 @@
               "item_variable": "partnerId",
               "actions": [
                 {
-                  "type": "MODIFY_ARRAY_FIELD",
+                  "type": "MODIFY_CONTEXT_ARRAY",
                   "parameters": {
-                    "entity_ref": {
-                      "entityId": "context_variable_holder"
-                    },
-                    "component_type": "context_variables",
-                    "field": "allInvolved",
+                    "variable_path": "allInvolved",
                     "mode": "push_unique",
                     "value": "{context.partnerId}"
                   }
@@ -139,13 +131,9 @@
                     },
                     "then_actions": [
                       {
-                        "type": "MODIFY_ARRAY_FIELD",
+                        "type": "MODIFY_CONTEXT_ARRAY",
                         "parameters": {
-                          "entity_ref": {
-                            "entityId": "context_variable_holder"
-                          },
-                          "component_type": "context_variables",
-                          "field": "newPartnerList",
+                          "variable_path": "newPartnerList",
                           "mode": "push",
                           "value": "{context.otherMemberId}"
                         }

@@ -1,4 +1,3 @@
-// src/di/tokens.js
 /**
  * @file Centralized repository for Dependency Injection (DI) keys/tokens.
  * Using tokens instead of raw strings prevents typos and aids refactoring.
@@ -127,6 +126,7 @@ import { freeze } from '../utils/objectUtils';
  * @property {DiToken} QueryComponentOptionalHandler - Token for the 'QUERY_COMPONENT_OPTIONAL' operation handler.
  * @property {DiToken} SetVariableHandler - Token for the 'SET_VARIABLE' operation handler.
  * @property {DiToken} EndTurnHandler - Token for the 'END_TURN' operation handler.
+ * @property {DiToken} ModifyContextArrayHandler - Token for the 'MODIFY_CONTEXT_ARRAY' operation handler.
  *
  * // ***** ADDITIONS FOR PROMPTBUILDER REFACTORING START *****
  * @property {DiToken} IConfigurationProvider - Token for the LLM configuration provider interface.
@@ -235,48 +235,6 @@ export const tokens = freeze({
   IActionIndexer: 'IActionIndexer',
   ITurnActionFactory: 'ITurnActionFactory',
 
-  // Initialization & Orchestration
-  WorldInitializer: 'WorldInitializer',
-  SystemInitializer: 'SystemInitializer',
-  ShutdownService: 'ShutdownService',
-  GameLoop: 'GameLoop',
-
-  // Logic/Interpretation Layer
-  OperationRegistry: 'OperationRegistry',
-  OperationInterpreter: 'OperationInterpreter',
-  SystemLogicInterpreter: 'SystemLogicInterpreter',
-
-  // Operation Handlers (Registered within Interpreter bundle)
-  DispatchEventHandler: 'DispatchEventHandler',
-  DispatchPerceptibleEventHandler: 'DispatchPerceptibleEventHandler',
-  DispatchSpeechHandler: 'DispatchSpeechHandler',
-  LogHandler: 'LogHandler',
-  ModifyComponentHandler: 'ModifyComponentHandler',
-  AddComponentHandler: 'AddComponentHandler',
-  RemoveComponentHandler: 'RemoveComponentHandler',
-  QueryComponentHandler: 'QueryComponentHandler',
-  QueryComponentOptionalHandler: 'QueryComponentOptionalHandler',
-  SetVariableHandler: 'SetVariableHandler',
-  EndTurnHandler: 'EndTurnHandler',
-  SystemMoveEntityHandler: 'SystemMoveEntityHandler',
-  GetTimestampHandler: 'GetTimestampHandler',
-  GetNameHandler: 'GetNameHandler',
-  ResolveDirectionHandler: 'ResolveDirectionHandler',
-  RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
-  CheckFollowCycleHandler: 'CheckFollowCycleHandler',
-  AddPerceptionLogEntryHandler: 'AddPerceptionLogEntryHandler',
-  QueryEntitiesHandler: 'QueryEntitiesHandler',
-  HasComponentHandler: 'HasComponentHandler',
-  ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
-  IfCoLocatedHandler: 'IfCoLocatedHandler',
-  MathHandler: 'MathHandler',
-
-  // --- Actions ---
-  TurnActionChoicePipeline: 'TurnActionChoicePipeline',
-  ITurnDecisionProvider: 'ITurnDecisionProvider',
-  ILLMDecisionProvider: 'ILLMDecisionProvider',
-  IHumanDecisionProvider: 'IHumanDecisionProvider',
-
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',
   AIStrategyFactory: 'AIStrategyFactory',
@@ -328,4 +286,47 @@ export const tokens = freeze({
   // Core Builders
   ActionContextBuilder: 'ActionContextBuilder',
   TurnContextBuilder: 'TurnContextBuilder',
+
+  // Initialization & Orchestration
+  WorldInitializer: 'WorldInitializer',
+  SystemInitializer: 'SystemInitializer',
+  ShutdownService: 'ShutdownService',
+  GameLoop: 'GameLoop',
+
+  // Logic/Interpretation Layer
+  OperationRegistry: 'OperationRegistry',
+  OperationInterpreter: 'OperationInterpreter',
+  SystemLogicInterpreter: 'SystemLogicInterpreter',
+
+  // Operation Handlers (Registered within Interpreter bundle)
+  DispatchEventHandler: 'DispatchEventHandler',
+  DispatchSpeechHandler: 'DispatchSpeechHandler',
+  DispatchPerceptibleEventHandler: 'DispatchPerceptibleEventHandler',
+  LogHandler: 'LogHandler',
+  ModifyComponentHandler: 'ModifyComponentHandler',
+  AddComponentHandler: 'AddComponentHandler',
+  RemoveComponentHandler: 'RemoveComponentHandler',
+  QueryComponentHandler: 'QueryComponentHandler',
+  QueryComponentOptionalHandler: 'QueryComponentOptionalHandler',
+  SetVariableHandler: 'SetVariableHandler',
+  EndTurnHandler: 'EndTurnHandler',
+  SystemMoveEntityHandler: 'SystemMoveEntityHandler',
+  GetTimestampHandler: 'GetTimestampHandler',
+  GetNameHandler: 'GetNameHandler',
+  ResolveDirectionHandler: 'ResolveDirectionHandler',
+  RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
+  CheckFollowCycleHandler: 'CheckFollowCycleHandler',
+  AddPerceptionLogEntryHandler: 'AddPerceptionLogEntryHandler',
+  QueryEntitiesHandler: 'QueryEntitiesHandler',
+  HasComponentHandler: 'HasComponentHandler',
+  ModifyArrayFieldHandler: 'ModifyArrayFieldHandler',
+  ModifyContextArrayHandler: 'ModifyContextArrayHandler',
+  IfCoLocatedHandler: 'IfCoLocatedHandler',
+  MathHandler: 'MathHandler',
+
+  // --- Actions ---
+  TurnActionChoicePipeline: 'TurnActionChoicePipeline',
+  ITurnDecisionProvider: 'ITurnDecisionProvider',
+  ILLMDecisionProvider: 'ILLMDecisionProvider',
+  IHumanDecisionProvider: 'IHumanDecisionProvider',
 });
