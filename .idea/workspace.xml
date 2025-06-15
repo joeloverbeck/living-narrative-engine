@@ -4,40 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Returning the app to normal.">
-      <change afterPath="$PROJECT_DIR$/tests/schemas/entity.schema.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/game.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/game.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/actions/step_back.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/step_back.action.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/hero.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/hero.character.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/ninja.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/ninja.character.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/receptionist.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/receptionist.character.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/sidekick.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/sidekick.character.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/schemas/entity.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/entity.schema.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchSpeechHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchSpeechHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/persistence/gameStateSerializer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gameStateSerializer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/persistence/persistenceErrors.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/persistenceErrors.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/persistence/saveLoadService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveLoadService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/rules/entitySpeechRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/entitySpeechRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/operationHandlers/dispatchSpeechHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationHandlers/dispatchSpeechHandler.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/gamePersistenceService.additional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.additional.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/gamePersistenceService.edgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.edgeCases.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/gamePersistenceService.errorPaths.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.errorPaths.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.errorPaths.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.errorPaths.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.privateHelpers.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.privateHelpers.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.goals.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.goals.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.notesGuards.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.notesGuards.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Returning the app to normal." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -220,23 +187,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="27589000" />
-    </task>
-    <task id="LOCAL-00076" summary="Unified human and AI paths regarding decision-making.">
-      <option name="closed" value="true" />
-      <created>1749927718704</created>
-      <option name="number" value="00076" />
-      <option name="presentableId" value="LOCAL-00076" />
-      <option name="project" value="LOCAL" />
-      <updated>1749927718704</updated>
-    </task>
-    <task id="LOCAL-00077" summary="Ensuring that the king returns.">
-      <option name="closed" value="true" />
-      <created>1749930104979</created>
-      <option name="number" value="00077" />
-      <option name="presentableId" value="LOCAL-00077" />
-      <option name="project" value="LOCAL" />
-      <updated>1749930104979</updated>
+      <workItem from="1749963238113" duration="27920000" />
     </task>
     <task id="LOCAL-00078" summary="The Return of the King.">
       <option name="closed" value="true" />
@@ -614,7 +565,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749993596075</updated>
     </task>
-    <option name="localTasksCounter" value="125" />
+    <task id="LOCAL-00125" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749994989649</created>
+      <option name="number" value="00125" />
+      <option name="presentableId" value="LOCAL-00125" />
+      <option name="project" value="LOCAL" />
+      <updated>1749994989649</updated>
+    </task>
+    <task id="LOCAL-00126" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749995079496</created>
+      <option name="number" value="00126" />
+      <option name="presentableId" value="LOCAL-00126" />
+      <option name="project" value="LOCAL" />
+      <updated>1749995079496</updated>
+    </task>
+    <option name="localTasksCounter" value="127" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
