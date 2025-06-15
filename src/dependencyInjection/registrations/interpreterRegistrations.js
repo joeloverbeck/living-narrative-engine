@@ -41,6 +41,7 @@ import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandl
 import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFieldHandler';
 import MathHandler from '../../logic/operationHandlers/mathHandler.js';
 import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler.js';
+import IfHandler from '../../logic/operationHandlers/ifHandler.js';
 import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyContextArrayHandler.js';
 
 /**
@@ -299,6 +300,18 @@ export function registerInterpreters(container) {
         }),
     ],
     [
+      tokens.IfHandler,
+      IfHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          jsonLogicEvaluationService: c.resolve(
+            tokens.JsonLogicEvaluationService
+          ),
+          operationInterpreter: c.resolve(tokens.OperationInterpreter),
+        }),
+    ],
+    [
       tokens.IfCoLocatedHandler,
       IfCoLocatedHandler,
       (c, Handler) =>
@@ -392,10 +405,14 @@ export function registerInterpreters(container) {
       'MODIFY_ARRAY_FIELD',
       bind(tokens.ModifyArrayFieldHandler)
     );
+    
+    registry.register('IF', bind(tokens.IfHandler));
+
     registry.register(
       'MODIFY_CONTEXT_ARRAY',
       bind(tokens.ModifyContextArrayHandler)
     );
+
     registry.register('IF_CO_LOCATED', bind(tokens.IfCoLocatedHandler));
     registry.register('MATH', bind(tokens.MathHandler));
 

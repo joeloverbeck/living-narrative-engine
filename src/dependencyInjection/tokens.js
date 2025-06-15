@@ -299,6 +299,7 @@ export const tokens = freeze({
   SystemLogicInterpreter: 'SystemLogicInterpreter',
 
   // Operation Handlers (Registered within Interpreter bundle)
+  IfHandler: 'IfHandler',
   DispatchEventHandler: 'DispatchEventHandler',
   DispatchSpeechHandler: 'DispatchSpeechHandler',
   DispatchPerceptibleEventHandler: 'DispatchPerceptibleEventHandler',
