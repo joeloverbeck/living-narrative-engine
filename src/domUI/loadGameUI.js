@@ -415,16 +415,6 @@ class LoadGameUI extends SlotModalBase {
   }
 
   /**
-   * Keyboard navigation handler for the save slot list.
-   *
-   * @param {KeyboardEvent} event - The key event.
-   * @private
-   */
-  _handleSlotNavigation(event) {
-    super._handleSlotNavigation(event);
-  }
-
-  /**
    * Handles the "Load" button click.
    *
    * @private
