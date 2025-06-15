@@ -146,7 +146,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Placeholder path "context.nonExistentVar" (interpreted as "nonExistentVar") from {context.nonExistentVar} could not be resolved.'
+          'Placeholder path "context.nonExistentVar" from {context.nonExistentVar} could not be resolved.'
         )
       );
     });
@@ -157,7 +157,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Placeholder path "event.nonExistentKey" (interpreted as "event.nonExistentKey") from {event.nonExistentKey} could not be resolved.'
+          'Placeholder path "event.nonExistentKey" from {event.nonExistentKey} could not be resolved.'
         )
       );
     });
@@ -267,7 +267,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Embedded placeholder path "context.nonExistent" (interpreted as "nonExistent") from {context.nonExistent} could not be resolved.'
+          'Embedded placeholder path "context.nonExistent" from {context.nonExistent} could not be resolved.'
         )
       );
     });
@@ -285,10 +285,10 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
 
       expect(mockLogger.warn).toHaveBeenCalledTimes(2); // Ensure exactly two warnings
       expect(mockLogger.warn.mock.calls[0][0]).toBe(
-        `Embedded placeholder "context.varA" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${fullLogPathForEmbedded}`
+        `Placeholder "context.varA" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${fullLogPathForEmbedded}`
       );
       expect(mockLogger.warn.mock.calls[1][0]).toBe(
-        `Embedded placeholder path "context.varA" (interpreted as "context.varA") from ${placeholderSyntaxInLog} could not be resolved. Path: ${fullLogPathForEmbedded}`
+        `Embedded placeholder path "context.varA" from ${placeholderSyntaxInLog} could not be resolved. Path: ${fullLogPathForEmbedded}`
       );
     });
 
