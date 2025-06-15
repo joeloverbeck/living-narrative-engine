@@ -74,6 +74,7 @@ class StaticConfiguration {
       'operation.schema.json',
       'rule.schema.json',
       'llm-configs.schema.json',
+      'prompt-text.schema.json',
     ];
   }
 
@@ -98,6 +99,7 @@ class StaticConfiguration {
       operations: 'http://example.com/schemas/operation.schema.json',
       rules: 'http://example.com/schemas/rule.schema.json',
       'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
+      'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
     };
     return map[typeName];
   }
