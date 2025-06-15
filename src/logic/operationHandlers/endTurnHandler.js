@@ -12,7 +12,6 @@ import { TURN_ENDED_ID, DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
-
 /**
  * Parameters for {@link EndTurnHandler#execute}.
  *
@@ -56,7 +55,6 @@ class EndTurnHandler {
    * @param {ExecutionContext} _executionContext - Execution context (unused).
    */
   execute(params, _executionContext) {
-
     const logger = _executionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'END_TURN')) return;
 
@@ -66,54 +64,55 @@ class EndTurnHandler {
         details: { params },
       });
 
-    if (
-      !params ||
-      typeof params.entityId !== 'string' ||
-      !params.entityId.trim()
-    ) {
-      safeDispatchError(
-        this.#safeEventDispatcher,
-        'END_TURN: Invalid or missing "entityId" parameter.',
-        { params }
-      );
+      if (
+        !params ||
+        typeof params.entityId !== 'string' ||
+        !params.entityId.trim()
+      ) {
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          'END_TURN: Invalid or missing "entityId" parameter.',
+          { params }
+        );
 
-      return;
-    }
+        return;
+      }
 
-    const payload = {
-      entityId: params.entityId.trim(),
-      success: Boolean(params.success),
-    };
+      const payload = {
+        entityId: params.entityId.trim(),
+        success: Boolean(params.success),
+      };
 
-    if (params.error !== undefined) {
-      payload.error = params.error;
-    }
+      if (params.error !== undefined) {
+        payload.error = params.error;
+      }
 
-    this.#logger.debug(
-      `END_TURN: dispatching ${TURN_ENDED_ID} for ${payload.entityId} with success=${payload.success}`,
-      { payload }
-    );
-
-    const dispatchResult = this.#safeEventDispatcher.dispatch(
-      TURN_ENDED_ID,
-      payload
-    );
-    if (dispatchResult && typeof dispatchResult.then === 'function') {
-      dispatchResult.then((success) => {
-        if (!success) {
-          safeDispatchError(
-            this.#safeEventDispatcher,
-            'END_TURN: Failed to dispatch turn ended event.',
-            { payload }
-          );
-        }
-      });
-    } else if (dispatchResult === false) {
-      safeDispatchError(
-        this.#safeEventDispatcher,
-        'END_TURN: Failed to dispatch turn ended event.',
+      this.#logger.debug(
+        `END_TURN: dispatching ${TURN_ENDED_ID} for ${payload.entityId} with success=${payload.success}`,
         { payload }
       );
+
+      const dispatchResult = this.#safeEventDispatcher.dispatch(
+        TURN_ENDED_ID,
+        payload
+      );
+      if (dispatchResult && typeof dispatchResult.then === 'function') {
+        dispatchResult.then((success) => {
+          if (!success) {
+            safeDispatchError(
+              this.#safeEventDispatcher,
+              'END_TURN: Failed to dispatch turn ended event.',
+              { payload }
+            );
+          }
+        });
+      } else if (dispatchResult === false) {
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          'END_TURN: Failed to dispatch turn ended event.',
+          { payload }
+        );
+      }
     }
   }
 }
