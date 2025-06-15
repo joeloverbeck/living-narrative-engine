@@ -22,6 +22,8 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
+import { expandMacros } from '../../../src/utils/macroUtils.js';
+import logSuccessAndEndTurn from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -149,6 +151,8 @@ describe('core_handle_follow rule integration', () => {
       }),
       END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+      GET_NAME: { execute: jest.fn() },
+      SET_VARIABLE: { execute: jest.fn() },
     };
 
     for (const [type, handler] of Object.entries(handlers)) {
@@ -196,8 +200,18 @@ describe('core_handle_follow rule integration', () => {
       listenerCount: jest.fn().mockReturnValue(1),
     };
 
+    const macroRegistry = {
+      get: (type, id) =>
+        type === 'macros' && id === 'core:logSuccessAndEndTurn'
+          ? logSuccessAndEndTurn
+          : undefined,
+    };
+    const expandedRule = {
+      ...followRule,
+      actions: expandMacros(followRule.actions, macroRegistry),
+    };
     dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([followRule]),
+      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
     };
 
     init([]); // start with empty manager by default
