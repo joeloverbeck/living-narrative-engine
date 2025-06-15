@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/removeFromClosenessCircle.schema.json",
+  "title": "REMOVE_FROM_CLOSENESS_CIRCLE Operation",
+  "type": "object",
+  "properties": {
+    "type": { "const": "REMOVE_FROM_CLOSENESS_CIRCLE" },
+    "comment": {
+      "type": "string",
+      "description": "Optional developer note; ignored at runtime."
+    },
+    "condition": {
+      "$ref": "../json-logic.schema.json#",
+      "description": "Optional JSON Logic condition controlling execution."
+    },
+    "parameters": { "$ref": "#/$defs/Parameters" }
+  },
+  "required": ["type", "parameters"],
+  "additionalProperties": false,
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the REMOVE_FROM_CLOSENESS_CIRCLE operation.",
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["actor_id"],
+      "additionalProperties": false
+    }
+  }
+}

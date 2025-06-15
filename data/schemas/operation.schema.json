@@ -118,6 +118,9 @@
         },
         {
           "$ref": "./operations/autoMoveFollowers.schema.json"
+        },
+        {
+          "$ref": "./operations/removeFromClosenessCircle.schema.json"
         }
       ]
     }
