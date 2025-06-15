@@ -27,6 +27,7 @@ class ModifyArrayFieldHandler {
   #logger;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
+
   /**
    * @param {object} deps
    * @param {IEntityManager} deps.entityManager - The entity management service.
@@ -66,8 +67,8 @@ class ModifyArrayFieldHandler {
    * @param {string|object} params.entity_ref - Reference to the target entity.
    * @param {string} params.component_type - The namespaced ID of the component.
    * @param {string} params.field - Dot-separated path to the array field.
-   * @param {'push'|'pop'|'remove_by_value'} params.mode - The operation to perform.
-   * @param {*} [params.value] - The value for 'push' or 'remove_by_value'.
+   * @param {'push'|'push_unique'|'pop'|'remove_by_value'} params.mode - The operation to perform.
+   * @param {*} [params.value] - The value for 'push', 'push_unique', or 'remove_by_value'.
    * @param {string} [params.result_variable] - Optional variable to store the result.
    * @param {ExecutionContext} executionContext - The current execution context.
    */
@@ -129,6 +130,37 @@ class ModifyArrayFieldHandler {
           return;
         }
         targetArray.push(params.value);
+        result = targetArray;
+        break;
+
+      case 'push_unique':
+        if (params.value === undefined) {
+          log.warn(
+            `MODIFY_ARRAY_FIELD: 'push_unique' mode requires a 'value' parameter.`
+          );
+          return;
+        }
+
+        let exists = false;
+        // For primitives, `includes` is correct and efficient.
+        if (typeof params.value !== 'object' || params.value === null) {
+          exists = targetArray.includes(params.value);
+        } else {
+          // For objects, `includes` fails. We must find by value, not reference.
+          // Using JSON.stringify is a practical way to compare simple data objects.
+          const valueAsJson = JSON.stringify(params.value);
+          exists = targetArray.some(
+            (item) => JSON.stringify(item) === valueAsJson
+          );
+        }
+
+        if (!exists) {
+          targetArray.push(params.value);
+        } else {
+          log.debug(
+            `MODIFY_ARRAY_FIELD: Value for 'push_unique' already exists in array on field '${field}'.`
+          );
+        }
         result = targetArray;
         break;
 

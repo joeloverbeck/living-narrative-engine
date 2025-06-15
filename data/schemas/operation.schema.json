@@ -77,7 +77,9 @@
         {
           "if": {
             "properties": {
-              "type": { "const": "QUERY_COMPONENT_OPTIONAL" }
+              "type": {
+                "const": "QUERY_COMPONENT_OPTIONAL"
+              }
             },
             "required": ["type"]
           },
@@ -165,13 +167,17 @@
         {
           "if": {
             "properties": {
-              "type": { "const": "DISPATCH_SPEECH" }
+              "type": {
+                "const": "DISPATCH_SPEECH"
+              }
             },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/DispatchSpeechParameters" }
+              "parameters": {
+                "$ref": "#/$defs/DispatchSpeechParameters"
+              }
             },
             "required": ["parameters"]
           }
@@ -179,13 +185,17 @@
         {
           "if": {
             "properties": {
-              "type": { "const": "END_TURN" }
+              "type": {
+                "const": "END_TURN"
+              }
             },
             "required": ["type"]
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/EndTurnParameters" }
+              "parameters": {
+                "$ref": "#/$defs/EndTurnParameters"
+              }
             },
             "required": ["parameters"]
           }
@@ -300,12 +310,16 @@
         {
           "if": {
             "properties": {
-              "type": { "const": "GET_NAME" }
+              "type": {
+                "const": "GET_NAME"
+              }
             }
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/GetNameParameters" }
+              "parameters": {
+                "$ref": "#/$defs/GetNameParameters"
+              }
             },
             "required": ["parameters"]
           }
@@ -432,12 +446,16 @@
         {
           "if": {
             "properties": {
-              "type": { "const": "IF_CO_LOCATED" }
+              "type": {
+                "const": "IF_CO_LOCATED"
+              }
             }
           },
           "then": {
             "properties": {
-              "parameters": { "$ref": "#/$defs/IfCoLocatedParameters" }
+              "parameters": {
+                "$ref": "#/$defs/IfCoLocatedParameters"
+              }
             },
             "required": ["parameters"]
           }
@@ -668,11 +686,15 @@
         "then_actions": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/$defs/Operation" }
+          "items": {
+            "$ref": "#/$defs/Operation"
+          }
         },
         "else_actions": {
           "type": "array",
-          "items": { "$ref": "#/$defs/Operation" },
+          "items": {
+            "$ref": "#/$defs/Operation"
+          },
           "default": []
         }
       },
@@ -921,11 +943,11 @@
         },
         "mode": {
           "type": "string",
-          "description": "The operation to perform: 'push' adds a value, 'remove_by_value' removes the first matching value, 'pop' removes the last value.",
-          "enum": ["push", "remove_by_value", "pop"]
+          "description": "The operation to perform: 'push' adds a value, 'push_unique' adds a value if it's not already present, 'remove_by_value' removes the first matching value, 'pop' removes the last value.",
+          "enum": ["push", "push_unique", "remove_by_value", "pop"]
         },
         "value": {
-          "description": "The value to add or remove. Required for 'push' and 'remove_by_value'."
+          "description": "The value to add or remove. Required for 'push', 'push_unique' and 'remove_by_value'."
         },
         "result_variable": {
           "type": "string",
@@ -941,6 +963,18 @@
             "properties": {
               "mode": {
                 "const": "push"
+              }
+            }
+          },
+          "then": {
+            "required": ["value"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "push_unique"
               }
             }
           },
