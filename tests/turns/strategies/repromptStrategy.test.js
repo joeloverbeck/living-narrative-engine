@@ -2,6 +2,7 @@
 
 import RepromptStrategy from '../../../src/turns/strategies/repromptStrategy.js';
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 import { AwaitingActorDecisionState } from '../../../src/turns/states/awaitingActorDecisionState.js';
 import {
   afterEach,
@@ -32,9 +33,12 @@ class MockTurnContext {
     this._actor = actor;
     this._logger = logger || new MockLogger();
 
+    this._safeEventDispatcher = { dispatch: jest.fn() };
+
     this.endTurn = jest.fn();
     this.getActor = jest.fn(() => this._actor);
     this.getLogger = jest.fn(() => this._logger);
+    this.getSafeEventDispatcher = jest.fn(() => this._safeEventDispatcher);
     this.requestTransition = jest.fn(() => Promise.resolve()); // Default to successful transition
   }
 
@@ -46,6 +50,11 @@ class MockTurnContext {
     this.requestTransition
       .mockClear()
       .mockImplementation(() => Promise.resolve()); // Reset impl to original
+
+    this.getSafeEventDispatcher
+      .mockClear()
+      .mockImplementation(() => this._safeEventDispatcher);
+    this._safeEventDispatcher.dispatch.mockClear();
 
     if (
       this._logger &&
@@ -108,8 +117,14 @@ describe('RepromptStrategy', () => {
     );
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'RepromptStrategy: Received non-RE_PROMPT directive (END_TURN_SUCCESS). Aborting.'
+    expect(mockTurnContext.getSafeEventDispatcher).toHaveBeenCalledTimes(1);
+    expect(mockTurnContext._safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      {
+        message:
+          'RepromptStrategy: Received non-RE_PROMPT directive (END_TURN_SUCCESS). Aborting.',
+        details: { directive },
+      }
     );
     expect(mockTurnContext.requestTransition).not.toHaveBeenCalled();
     expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
@@ -125,8 +140,14 @@ describe('RepromptStrategy', () => {
 
     expect(mockTurnContext.getLogger).toHaveBeenCalledTimes(1);
     expect(mockTurnContext.getActor).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'RepromptStrategy: No actor found in ITurnContext. Cannot re-prompt.'
+    expect(mockTurnContext.getSafeEventDispatcher).toHaveBeenCalledTimes(1);
+    expect(mockTurnContext._safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      {
+        message:
+          'RepromptStrategy: No actor found in ITurnContext. Cannot re-prompt.',
+        details: { directive },
+      }
     );
     expect(mockTurnContext.requestTransition).not.toHaveBeenCalled();
     expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
@@ -157,9 +178,17 @@ describe('RepromptStrategy', () => {
     expect(mockTurnContext.requestTransition).toHaveBeenCalledTimes(1);
 
     const expectedOverallErrorMessage = `RepromptStrategy: Failed to request transition to AwaitingActorDecisionState for actor ${mockActor.id}. Error: ${transitionErrorMessage}`;
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expectedOverallErrorMessage,
-      expect.any(Error) // The original error from requestTransition
+    expect(mockTurnContext.getSafeEventDispatcher).toHaveBeenCalledTimes(1);
+    expect(mockTurnContext._safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      {
+        message: expectedOverallErrorMessage,
+        details: {
+          actorId: mockActor.id,
+          error: transitionErrorMessage,
+          stack: expect.any(String),
+        },
+      }
     );
 
     expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
@@ -175,8 +204,14 @@ describe('RepromptStrategy', () => {
     await strategy.execute(mockTurnContext, directive, {});
 
     expect(mockTurnContext.getLogger).toHaveBeenCalled(); // Should be called to get the logger
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'RepromptStrategy: No actor found in ITurnContext. Cannot re-prompt.'
+    expect(mockTurnContext.getSafeEventDispatcher).toHaveBeenCalledTimes(1);
+    expect(mockTurnContext._safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      {
+        message:
+          'RepromptStrategy: No actor found in ITurnContext. Cannot re-prompt.',
+        details: { directive },
+      }
     );
     expect(mockTurnContext.endTurn).toHaveBeenCalled();
   });
