@@ -136,3 +136,40 @@ class JsonLogicEvaluationService {
 }
 
 export default JsonLogicEvaluationService;
+
+/**
+ * Evaluate a JSON Logic condition using the provided service with additional
+ * logging and error handling.
+ *
+ * @param {JsonLogicEvaluationService} service - Service used to evaluate the condition.
+ * @param {object} condition - JSON Logic rule to evaluate.
+ * @param {JsonLogicEvaluationContext} ctx - Data context for evaluation.
+ * @param {ILogger} logger - Logger for debug/error messages.
+ * @param {string} label - Prefix for log statements.
+ * @returns {{result: boolean, errored: boolean, error: Error|undefined}} Outcome
+ *          of the evaluation.
+ */
+export function evaluateConditionWithLogging(
+  service,
+  condition,
+  ctx,
+  logger,
+  label
+) {
+  let rawResult;
+  let result = false;
+  try {
+    rawResult = service.evaluate(condition, ctx);
+    logger.debug(`${label} Condition evaluation raw result: ${rawResult}`);
+    result = !!rawResult;
+  } catch (error) {
+    logger.error(
+      `${label} Error during condition evaluation. Treating condition as FALSE.`,
+      error
+    );
+    return { result: false, errored: true, error };
+  }
+
+  logger.debug(`${label} Condition evaluation final boolean result: ${result}`);
+  return { result, errored: false, error: undefined };
+}
