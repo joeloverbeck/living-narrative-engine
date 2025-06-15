@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Returning the app to normal.">
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented base of intimacy system." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -189,15 +187,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="30644000" />
-    </task>
-    <task id="LOCAL-00082" summary="Implementing thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749936383188</created>
-      <option name="number" value="00082" />
-      <option name="presentableId" value="LOCAL-00082" />
-      <option name="project" value="LOCAL" />
-      <updated>1749936383188</updated>
+      <workItem from="1749963238113" duration="31171000" />
     </task>
     <task id="LOCAL-00083" summary="Implementing thoughts and notes tooltips.">
       <option name="closed" value="true" />
@@ -583,14 +573,21 @@
       <option name="project" value="LOCAL" />
       <updated>1749997627083</updated>
     </task>
-    <option name="localTasksCounter" value="131" />
+    <task id="LOCAL-00131" summary="Implemented base of intimacy system.">
+      <option name="closed" value="true" />
+      <created>1749998439438</created>
+      <option name="number" value="00131" />
+      <option name="presentableId" value="LOCAL-00131" />
+      <option name="project" value="LOCAL" />
+      <updated>1749998439438</updated>
+    </task>
+    <option name="localTasksCounter" value="132" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Ensured playerTurnSubmitted doesn't break." />
     <MESSAGE value="Unified action decision across existing actors." />
     <MESSAGE value="Ensuring the app works." />
     <MESSAGE value="Ensuring that chosenActionId doesn't get used anymore." />
@@ -615,6 +612,7 @@
     <MESSAGE value="Implementing base intimacy system." />
     <MESSAGE value="Made changes to the mod manifest schema." />
     <MESSAGE value="Returning the app to normal." />
-    <option name="LAST_COMMIT_MESSAGE" value="Returning the app to normal." />
+    <MESSAGE value="Implemented base of intimacy system." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented base of intimacy system." />
   </component>
 </project>

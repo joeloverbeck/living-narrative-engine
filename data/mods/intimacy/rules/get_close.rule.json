@@ -35,10 +35,7 @@
       "comment": "Step 3: Begin building the master list of all involved entities, starting with the actor and target.",
       "parameters": {
         "variable_name": "allInvolved",
-        "value": [
-          "{event.payload.actorId}",
-          "{event.payload.targetId}"
-        ]
+        "value": ["{event.payload.actorId}", "{event.payload.targetId}"]
       }
     },
     {

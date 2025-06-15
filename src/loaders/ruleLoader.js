@@ -179,7 +179,7 @@ class RuleLoader extends BaseManifestItemLoader {
       // Error logging happens in helper, re-throw
       throw storageError;
     }
-    
+
     // --- End Storage ---
 
     // --- Return Value ---

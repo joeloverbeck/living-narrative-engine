@@ -195,10 +195,9 @@ class WorldLoader extends AbstractLoader {
     this.#schemaLoader = schemaLoader;
     this.#componentDefinitionLoader = componentLoader;
     this.#ruleLoader = ruleLoader;
-    this.#macroLoader =
-      macroLoader || {
-        loadItemsForMod: async () => ({ count: 0, overrides: 0, errors: 0 }),
-      };
+    this.#macroLoader = macroLoader || {
+      loadItemsForMod: async () => ({ count: 0, overrides: 0, errors: 0 }),
+    };
     this.#actionLoader = actionLoader;
     this.#eventLoader = eventLoader;
     this.#entityDefinitionLoader = entityLoader;
@@ -664,7 +663,6 @@ class WorldLoader extends AbstractLoader {
       'WorldLoader: #logModLoadSummary is deprecated and should not be called.'
     );
   }
-  
 
   // ── Helper: final summary logger ────────────────────────────────────────
   /**
