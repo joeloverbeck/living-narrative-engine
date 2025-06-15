@@ -4,7 +4,7 @@ This document details aspects of how the Living Narrative Engine loads mods.
 
 ## Mod Manifests
 
-(Future content about `mod.manifest.json` structure and discovery might go here).
+See [Mod Manifest Format](mod_manifest_format.md) for details on every allowed field and an example manifest. The engine automatically discovers each `mod.manifest.json` within a mod's directory during startup.
 
 ## Dependency & Conflict Validation
 

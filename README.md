@@ -364,6 +364,9 @@ Complete operator list, context explanation, and many ready-made patterns.
 **Mod Manifest Loader Usage ➜ docs/mods/modManifestLoader.md**
 How to use the ModManifestLoader service and handle potential errors.
 
+**Mod Manifest Format ➜ docs/mods/mod_manifest_format.md**
+Details of every allowed field with a sample manifest.
+
 **Display Error Event Payload ➜ docs/events/display_error_payload.md**
 Overview of the payload structure emitted when dispatching `core:display_error` events.
 
