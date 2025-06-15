@@ -41,6 +41,7 @@ export class ActionIndexerAdapter extends IActionIndexer {
   /**
    * Signals the beginning of an actor's turn, delegating to the underlying service
    * to clear its cache for that actor.
+   *
    * @param {string} actorId - The ID of the actor starting their turn.
    */
   beginTurn(actorId) {

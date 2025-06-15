@@ -1,7 +1,7 @@
 /**
  * @description Base error class for actor-related issues.
  * @class ActorError
- * @extends {Error}
+ * @augments {Error}
  */
 export class ActorError extends Error {
   /**

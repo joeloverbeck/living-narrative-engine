@@ -16,7 +16,7 @@ import { freeze } from './objectUtils.js';
  * Builds a normalized turn decision envelope and freezes it to ensure immutability.
  *
  * @param {*} action - The action object or identifier for this turn decision.
- * @param {object} [meta={}] - Optional metadata.
+ * @param {object} [meta] - Optional metadata.
  * @param {string} [meta.speech]   - Speech text, if any.
  * @param {string} [meta.thoughts] - Thoughts text, if any.
  * @param {string} [meta.notes]    - Notes text, if any.

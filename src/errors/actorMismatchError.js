@@ -4,7 +4,7 @@ import { ActorError } from './actorError';
  * @description Error thrown when an operation expects a specific actor but receives a different one,
  * or when an actor context is missing entirely.
  * @class ActorMismatchError
- * @extends {ActorError}
+ * @augments {ActorError}
  */
 export class ActorMismatchError extends ActorError {
   /**

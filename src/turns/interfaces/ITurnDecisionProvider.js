@@ -2,7 +2,6 @@
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('./ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../dtos/actionComposite.js').ActionComposite} ActionComposite
- *
  * @typedef {object} ITurnDecisionResult
  * @property {number}        chosenIndex  - 1-based selection index
  * @property {string|null}   speech       - Optional speech the actor utters
@@ -26,6 +25,7 @@ export class ITurnDecisionProvider {
    * @param {ITurnContext}         context      - Turn context providing services
    * @param {ActionComposite[]}    actions      - Indexed list of possible actions
    * @param {AbortSignal}          [abortSignal]- Optional cancellation signal
+   * @param abortSignal
    * @returns {Promise<ITurnDecisionResult>}
    */
   async decide(actor, context, actions, abortSignal) {

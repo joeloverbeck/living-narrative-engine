@@ -28,6 +28,7 @@ export class AwaitTurnEndState {
 
   /**
    * Represents the idle state where no event is being awaited.
+   *
    * @private
    * @type {AwaitTurnEndState}
    */
@@ -35,6 +36,7 @@ export class AwaitTurnEndState {
 
   /**
    * Factory method for the idle (non-waiting) state.
+   *
    * @returns {AwaitTurnEndState} The singleton idle instance.
    */
   static idle() {
@@ -43,6 +45,7 @@ export class AwaitTurnEndState {
 
   /**
    * Factory method for the state of waiting for a specific actor's turn to end.
+   *
    * @param {string|null} actorId - The ID of the actor being waited for.
    * @returns {AwaitTurnEndState} A new, frozen instance representing the waiting state.
    */
@@ -56,6 +59,7 @@ export class AwaitTurnEndState {
 
   /**
    * Checks if this state represents an active wait.
+   *
    * @returns {boolean} True if waiting, false otherwise.
    */
   isWaiting() {
@@ -64,6 +68,7 @@ export class AwaitTurnEndState {
 
   /**
    * Gets the ID of the actor being waited for.
+   *
    * @returns {string|null} The actor's ID, or null if not waiting or if the actor is unknown.
    */
   getActorId() {
@@ -72,6 +77,7 @@ export class AwaitTurnEndState {
 
   /**
    * Provides a string representation for logging purposes.
+   *
    * @returns {string}
    */
   toString() {

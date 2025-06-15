@@ -12,6 +12,7 @@
  * @param {object} schema
  * @param {string} schemaId
  * @param {import('../interfaces/coreServices.js').ILogger} logger
+ * @param warnMessage
  * @returns {Promise<void>}
  */
 export async function registerSchema(

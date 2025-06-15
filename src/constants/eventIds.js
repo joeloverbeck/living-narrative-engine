@@ -28,6 +28,7 @@ export const ENTITY_SPOKE_ID = 'core:entity_spoke';
 
 /**
  * Fired when an entity's speech should be displayed in the UI.
+ *
  * @type {string}
  * @constant
  * @see {DisplaySpeechPayload}

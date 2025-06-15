@@ -83,7 +83,7 @@ export class AbstractTurnState extends ITurnState {
   }
 
   /**
-
+   
    * Resets turn-specific resources and requests a transition to the idle state.
    *
    * @protected

@@ -12,6 +12,7 @@ export class IActionIndexer {
    * Signals the beginning of an actor's turn, allowing the indexer to clear
    * any prior-turn state for that actor.
    * This method is optional; calling code should use optional chaining: `indexer.beginTurn?.(actorId)`.
+   *
    * @param {string} actorId The ID of the actor whose turn is beginning.
    * @returns {void}
    */

@@ -6,6 +6,7 @@
 export class ISpatialIndexManager {
   /**
    * Adds or updates an entity's presence in the index for a given location.
+   *
    * @param {string} entityId
    * @param {string|null|undefined} locationId
    */
@@ -15,6 +16,7 @@ export class ISpatialIndexManager {
 
   /**
    * Removes an entity from the index.
+   *
    * @param {string} entityId
    * @param {string|null|undefined} locationId
    */
@@ -24,6 +26,7 @@ export class ISpatialIndexManager {
 
   /**
    * Updates an entity's location from an old location to a new one.
+   *
    * @param {string} entityId
    * @param {string|null|undefined} oldLocationId
    * @param {string|null|undefined} newLocationId
@@ -36,6 +39,7 @@ export class ISpatialIndexManager {
 
   /**
    * Retrieves a set of all entity IDs currently registered in the specified location.
+   *
    * @param {string} locationId
    * @returns {Set<string>}
    */
@@ -47,6 +51,7 @@ export class ISpatialIndexManager {
 
   /**
    * Builds or rebuilds the entire spatial index based on the current state of entities.
+   *
    * @param {object} entityManager  – An object with an `activeEntities` iterable.
    */
   buildIndex(entityManager) {

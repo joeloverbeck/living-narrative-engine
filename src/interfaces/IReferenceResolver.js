@@ -16,7 +16,7 @@ export class IReferenceResolver {
    * @returns {{resolvedValue: any, valueChanged: boolean}}
    * An object describing the resolved value and whether any change occurred.
    */
-  // eslint-disable-next-line class-methods-use-this
+
   resolve(componentDataInstance, spec, entityId, componentTypeId) {
     throw new Error('IReferenceResolver.resolve not implemented');
   }
