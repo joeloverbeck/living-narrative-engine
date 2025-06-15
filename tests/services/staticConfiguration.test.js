@@ -22,6 +22,34 @@ const EXPECTED_SCHEMA_FILES = [
   'rule.schema.json',
   'llm-configs.schema.json',
   'prompt-text.schema.json',
+  'operations/addComponent.schema.json',
+  'operations/addPerceptionLogEntry.schema.json',
+  'operations/autoMoveFollowers.schema.json',
+  'operations/breakFollowRelation.schema.json',
+  'operations/checkFollowCycle.schema.json',
+  'operations/dispatchEvent.schema.json',
+  'operations/dispatchPerceptibleEvent.schema.json',
+  'operations/dispatchSpeech.schema.json',
+  'operations/endTurn.schema.json',
+  'operations/establishFollowRelation.schema.json',
+  'operations/forEach.schema.json',
+  'operations/getName.schema.json',
+  'operations/getTimestamp.schema.json',
+  'operations/hasComponent.schema.json',
+  'operations/if.schema.json',
+  'operations/ifCoLocated.schema.json',
+  'operations/log.schema.json',
+  'operations/math.schema.json',
+  'operations/modifyArrayField.schema.json',
+  'operations/modifyComponent.schema.json',
+  'operations/modifyContextArray.schema.json',
+  'operations/queryComponent.schema.json',
+  'operations/queryEntities.schema.json',
+  'operations/rebuildLeaderListCache.schema.json',
+  'operations/removeComponent.schema.json',
+  'operations/resolveDirection.schema.json',
+  'operations/setVariable.schema.json',
+  'operations/systemMoveEntity.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -39,11 +67,6 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
   'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
 };
 
-// Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
-const EXPECTED_MANIFEST_SCHEMA_ID = EXPECTED_CONTENT_TYPE_SCHEMAS.manifest;
-
-// Expected derived paths
-const EXPECTED_SCHEMA_BASE_PATH = `${EXPECTED_BASE_DATA_PATH}/schemas`; // ./data/schemas
 
 // --- Test Suite ---
 
@@ -74,7 +97,7 @@ describe('StaticConfiguration', () => {
       expect(files).toEqual(EXPECTED_SCHEMA_FILES);
       // Verify order as well (toEqual checks order for arrays)
       expect(files[0]).toBe('common.schema.json');
-      expect(files[files.length - 1]).toBe('prompt-text.schema.json');
+      expect(files[files.length - 1]).toBe('operations/systemMoveEntity.schema.json');
     });
 
     it('should return a *copy* of the internal schema files array', () => {
