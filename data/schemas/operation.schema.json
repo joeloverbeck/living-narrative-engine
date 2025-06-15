@@ -33,6 +33,8 @@
             "SYSTEM_MOVE_ENTITY",
             "REBUILD_LEADER_LIST_CACHE",
             "CHECK_FOLLOW_CYCLE",
+            "ESTABLISH_FOLLOW_RELATION",
+            "BREAK_FOLLOW_RELATION",
             "ADD_PERCEPTION_LOG_ENTRY",
             "HAS_COMPONENT",
             "QUERY_ENTITIES",
@@ -394,6 +396,32 @@
               "parameters": {
                 "$ref": "#/$defs/CheckFollowCycleParameters"
               }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "ESTABLISH_FOLLOW_RELATION" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/EstablishFollowRelationParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "BREAK_FOLLOW_RELATION" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": { "$ref": "#/$defs/BreakFollowRelationParameters" }
             },
             "required": ["parameters"]
           }
@@ -919,6 +947,25 @@
         }
       },
       "required": ["follower_id", "leader_id", "result_variable"],
+      "additionalProperties": false
+    },
+    "EstablishFollowRelationParameters": {
+      "type": "object",
+      "description": "Parameters for the ESTABLISH_FOLLOW_RELATION operation.",
+      "properties": {
+        "follower_id": { "type": "string", "minLength": 1 },
+        "leader_id": { "type": "string", "minLength": 1 }
+      },
+      "required": ["follower_id", "leader_id"],
+      "additionalProperties": false
+    },
+    "BreakFollowRelationParameters": {
+      "type": "object",
+      "description": "Parameters for the BREAK_FOLLOW_RELATION operation.",
+      "properties": {
+        "follower_id": { "type": "string", "minLength": 1 }
+      },
+      "required": ["follower_id"],
       "additionalProperties": false
     },
     "AddPerceptionLogEntryParameters": {

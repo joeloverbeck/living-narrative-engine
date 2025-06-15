@@ -316,6 +316,8 @@ export const tokens = freeze({
   ResolveDirectionHandler: 'ResolveDirectionHandler',
   RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
   CheckFollowCycleHandler: 'CheckFollowCycleHandler',
+  EstablishFollowRelationHandler: 'EstablishFollowRelationHandler',
+  BreakFollowRelationHandler: 'BreakFollowRelationHandler',
   AddPerceptionLogEntryHandler: 'AddPerceptionLogEntryHandler',
   QueryEntitiesHandler: 'QueryEntitiesHandler',
   HasComponentHandler: 'HasComponentHandler',

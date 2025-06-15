@@ -33,6 +33,8 @@ import GetNameHandler from '../../logic/operationHandlers/getNameHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
 import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler';
+import EstablishFollowRelationHandler from '../../logic/operationHandlers/establishFollowRelationHandler.js';
+import BreakFollowRelationHandler from '../../logic/operationHandlers/breakFollowRelationHandler.js';
 import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler';
 import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
 import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler';
@@ -219,6 +221,32 @@ export function registerInterpreters(container) {
         }),
     ],
     [
+      tokens.EstablishFollowRelationHandler,
+      EstablishFollowRelationHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          rebuildLeaderListCacheHandler: c.resolve(
+            tokens.RebuildLeaderListCacheHandler
+          ),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.BreakFollowRelationHandler,
+      BreakFollowRelationHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          rebuildLeaderListCacheHandler: c.resolve(
+            tokens.RebuildLeaderListCacheHandler
+          ),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
       tokens.AddPerceptionLogEntryHandler,
       AddPerceptionLogEntryHandler,
       (c, H) =>
@@ -346,6 +374,14 @@ export function registerInterpreters(container) {
     registry.register(
       'CHECK_FOLLOW_CYCLE',
       bind(tokens.CheckFollowCycleHandler)
+    );
+    registry.register(
+      'ESTABLISH_FOLLOW_RELATION',
+      bind(tokens.EstablishFollowRelationHandler)
+    );
+    registry.register(
+      'BREAK_FOLLOW_RELATION',
+      bind(tokens.BreakFollowRelationHandler)
     );
     registry.register(
       'ADD_PERCEPTION_LOG_ENTRY',
