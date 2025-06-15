@@ -16,6 +16,8 @@ import { NAME_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DEFAULT_FALLBACK_CHARACTER_NAME } from '../../constants/textDefaults.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 /**
  * @typedef {object} GetNameOperationParams
@@ -30,16 +32,22 @@ import storeResult from '../../utils/contextVariableUtils.js';
 class GetNameHandler {
   #entityManager;
   #logger;
+  /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #dispatcher;
 
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     if (!entityManager?.getComponentData) {
       throw new Error('GetNameHandler requires a valid EntityManager.');
     }
     if (!logger?.debug || !logger?.warn || !logger?.error) {
       throw new Error('GetNameHandler requires a valid ILogger instance.');
     }
+    if (!safeEventDispatcher?.dispatch) {
+      throw new Error('GetNameHandler requires an ISafeEventDispatcher.');
+    }
     this.#entityManager = entityManager;
     this.#logger = logger;
+    this.#dispatcher = safeEventDispatcher;
   }
 
   /**
@@ -52,18 +60,34 @@ class GetNameHandler {
     const log = executionContext?.logger ?? this.#logger;
 
     if (!params || typeof params !== 'object') {
-      log.error('GET_NAME: Missing or invalid parameters.', { params });
+      safeDispatchError(
+        this.#dispatcher,
+        'GET_NAME: Missing or invalid parameters.',
+        {
+          params,
+        }
+      );
       return;
     }
 
     const { entity_ref, result_variable, default_value } = params;
 
     if (!entity_ref) {
-      log.error('GET_NAME: "entity_ref" parameter is required.');
+      safeDispatchError(
+        this.#dispatcher,
+        'GET_NAME: "entity_ref" parameter is required.',
+        {
+          params,
+        }
+      );
       return;
     }
     if (typeof result_variable !== 'string' || !result_variable.trim()) {
-      log.error('GET_NAME: "result_variable" must be a non-empty string.');
+      safeDispatchError(
+        this.#dispatcher,
+        'GET_NAME: "result_variable" must be a non-empty string.',
+        { params }
+      );
       return;
     }
     const resultVar = result_variable.trim();
@@ -93,10 +117,10 @@ class GetNameHandler {
       }
       log.debug(`GET_NAME: Resolved name for '${entityId}' -> '${name}'.`);
     } catch (e) {
-      log.error(
-        `GET_NAME: Error retrieving '${NAME_COMPONENT_ID}' from '${entityId}'. Using fallback.`,
-        { error: e.message }
-      );
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `GET_NAME: Error retrieving '${NAME_COMPONENT_ID}' from '${entityId}'. Using fallback.`,
+        details: { error: e.message, stack: e.stack },
+      });
     }
 
     storeResult(resultVar, name, executionContext, undefined, log);
