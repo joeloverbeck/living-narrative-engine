@@ -107,7 +107,7 @@ describe('GamePersistenceService edge cases', () => {
 
       const res = await service.saveGame('Save1', true, 'World');
       expect(res.success).toBe(false);
-      expect(res.error).toMatch('boom');
+      expect(res.error.message).toMatch('boom');
       expect(logger.error).toHaveBeenCalled();
     });
 
@@ -161,7 +161,7 @@ describe('GamePersistenceService edge cases', () => {
       });
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
-      expect(res.error).toBe('no');
+      expect(res.error.message).toBe('no');
     });
 
     it('returns failure when restoreGameState fails', async () => {
@@ -172,7 +172,7 @@ describe('GamePersistenceService edge cases', () => {
         .mockResolvedValue({ success: false, error: 'bad' });
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
-      expect(res.error).toBe('bad');
+      expect(res.error.message).toBe('bad');
     });
   });
 });

@@ -22,6 +22,10 @@ import SaveMetadataBuilder from './saveMetadataBuilder.js';
 // --- MODIFICATION START: Import component IDs for cleaning logic ---
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CORE_MOD_ID } from '../constants/core';
+import {
+  PersistenceError,
+  PersistenceErrorCodes,
+} from './persistenceErrors.js';
 // --- MODIFICATION END ---
 
 /**
@@ -292,7 +296,13 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!this.#saveLoadService) {
       const errorMsg = 'SaveLoadService is not available. Cannot save game.';
       this.#logger.error(`GamePersistenceService.saveGame: ${errorMsg}`);
-      return { success: false, error: errorMsg };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          errorMsg
+        ),
+      };
     }
 
     if (!this.isSavingAllowed(isEngineInitialized)) {
@@ -300,7 +310,13 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.warn(
         `GamePersistenceService.saveGame: Saving is not currently allowed.`
       );
-      return { success: false, error: errorMsg };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          errorMsg
+        ),
+      };
     }
 
     try {
@@ -341,7 +357,13 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: `Unexpected error during save: ${errorMessage}`,
+        error:
+          error instanceof PersistenceError
+            ? error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                `Unexpected error during save: ${errorMessage}`
+              ),
       };
     }
   }
@@ -357,12 +379,30 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.error(
         `GamePersistenceService.restoreGameState: ${errorMsg}`
       );
-      return { success: false, error: errorMsg };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_GAME_STATE,
+          errorMsg
+        ),
+      };
     }
     if (!this.#entityManager)
-      return { success: false, error: 'EntityManager not available.' };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          'EntityManager not available.'
+        ),
+      };
     if (!this.#playtimeTracker)
-      return { success: false, error: 'PlaytimeTracker not available.' };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          'PlaytimeTracker not available.'
+        ),
+      };
 
     try {
       this.#entityManager.clearAll();
@@ -377,7 +417,10 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: `Critical error during state clearing: ${errorMsg}`,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          `Critical error during state clearing: ${errorMsg}`
+        ),
       };
     }
 
@@ -451,7 +494,10 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!this.#saveLoadService) {
       return {
         success: false,
-        error: 'SaveLoadService is not available.',
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          'SaveLoadService is not available.'
+        ),
         data: null,
       };
     }
@@ -467,7 +513,10 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: `Unexpected error during data loading: ${serviceError.message}`,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          `Unexpected error during data loading: ${serviceError.message}`
+        ),
         data: null,
       };
     }
@@ -479,7 +528,13 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: loadResult?.error || 'Failed to load raw game data.',
+        error:
+          loadResult?.error instanceof PersistenceError
+            ? loadResult.error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                loadResult?.error || 'Failed to load raw game data.'
+              ),
         data: null,
       };
     }
@@ -503,7 +558,13 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: restoreResult.error || 'Failed to restore game state.',
+        error:
+          restoreResult.error instanceof PersistenceError
+            ? restoreResult.error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                restoreResult.error || 'Failed to restore game state.'
+              ),
         data: null,
       };
     }

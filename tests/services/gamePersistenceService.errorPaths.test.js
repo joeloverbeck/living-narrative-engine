@@ -94,7 +94,7 @@ describe('GamePersistenceService error paths', () => {
         gameState: { entities: [] },
       });
       expect(result.success).toBe(false);
-      expect(result.error).toMatch('Critical error');
+      expect(result.error.message).toMatch('Critical error');
       expect(logger.error).toHaveBeenCalled();
     });
   });
@@ -121,7 +121,7 @@ describe('GamePersistenceService error paths', () => {
       saveLoadService.loadGameData.mockRejectedValue(new Error('load fail'));
       const result = await service.loadAndRestoreGame('slot');
       expect(result.success).toBe(false);
-      expect(result.error).toMatch('Unexpected error');
+      expect(result.error.message).toMatch('Unexpected error');
       expect(logger.error).toHaveBeenCalled();
     });
   });
