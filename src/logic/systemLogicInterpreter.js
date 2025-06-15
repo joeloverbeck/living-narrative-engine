@@ -257,26 +257,6 @@ class SystemLogicInterpreter {
 
   /* Rule processing                                                       */
 
-  /**
-   * Helper for evaluating JSON Logic conditions with consistent logging and
-   * error handling.
-   *
-   * @param {object} condition - JSON Logic rule to evaluate.
-   * @param {JsonLogicEvaluationContext} ctx - Context used for evaluation.
-   * @param {string} label - Prefix for log messages identifying the condition.
-   * @returns {{result:boolean, errored:boolean, error:Error|undefined}} Outcome
-   * of the evaluation and any thrown error.
-   */
-  _evaluateCondition(condition, ctx, label) {
-    return evaluateConditionWithLogging(
-      this.#jsonLogic,
-      condition,
-      ctx,
-      this.#logger,
-      label
-    );
-  }
-
   #evaluateRuleCondition(rule, flatCtx) {
     const ruleId = rule.rule_id || 'NO_ID';
 
@@ -297,9 +277,11 @@ class SystemLogicInterpreter {
       `[Rule ${ruleId}] Condition found. Evaluating using jsonLogicDataForEval...`
     );
 
-    const { result: passed, errored } = this._evaluateCondition(
+    const { result: passed, errored } = evaluateConditionWithLogging(
+      this.#jsonLogic,
       rule.condition,
       flatCtx,
+      this.#logger,
       `[Rule ${ruleId}]`
     );
     return { passed, errored };
@@ -350,9 +332,11 @@ class SystemLogicInterpreter {
 
       // universal per-operation condition ----------------------------------
       if (op.condition) {
-        const { result, errored, error } = this._evaluateCondition(
+        const { result, errored, error } = evaluateConditionWithLogging(
+          this.#jsonLogic,
           op.condition,
           nestedCtx.evaluationContext,
+          this.#logger,
           tag
         );
         if (errored) {
