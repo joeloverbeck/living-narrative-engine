@@ -20,6 +20,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 // Concrete Implementations
 import PlaytimeTracker from '../../../src/engine/playtimeTracker.js';
+import ComponentCleaningService from '../../../src/persistence/componentCleaningService.js';
 import GamePersistenceService from '../../../src/persistence/gamePersistenceService.js';
 import ReferenceResolver from '../../../src/initializers/services/referenceResolver.js';
 import SaveLoadService from '../../../src/persistence/saveLoadService.js';
@@ -71,6 +72,9 @@ describe('registerPersistence', () => {
       `Persistence Registration: Registered ${String(tokens.PlaytimeTracker)}.`
     );
     expect(logs).toContain(
+      `Persistence Registration: Registered ${String(tokens.ComponentCleaningService)}.`
+    );
+    expect(logs).toContain(
       `Persistence Registration: Registered ${String(tokens.GamePersistenceService)}.`
     );
     expect(logs).toContain(
@@ -98,6 +102,12 @@ describe('registerPersistence', () => {
         Class: PlaytimeTracker,
         lifecycle: 'singleton',
         deps: [tokens.ILogger, tokens.ISafeEventDispatcher],
+      },
+      {
+        token: tokens.ComponentCleaningService,
+        Class: ComponentCleaningService,
+        lifecycle: 'singleton',
+        deps: [tokens.ILogger],
       },
       {
         token: tokens.GamePersistenceService,

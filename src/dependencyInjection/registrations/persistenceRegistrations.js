@@ -21,6 +21,7 @@ import { Registrar } from '../registrarHelpers.js';
 
 // --- Service Imports ---
 import PlaytimeTracker from '../../engine/playtimeTracker.js';
+import ComponentCleaningService from '../../persistence/componentCleaningService.js';
 import GamePersistenceService from '../../persistence/gamePersistenceService.js';
 import ReferenceResolver from '../../initializers/services/referenceResolver.js';
 import SaveLoadService from '../../persistence/saveLoadService.js';
@@ -58,6 +59,13 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.PlaytimeTracker)}.`
   );
 
+  r.single(tokens.ComponentCleaningService, ComponentCleaningService, [
+    tokens.ILogger,
+  ]);
+  logger.debug(
+    `Persistence Registration: Registered ${String(tokens.ComponentCleaningService)}.`
+  );
+
   r.singletonFactory(tokens.GamePersistenceService, (c) => {
     return new GamePersistenceService({
       logger: c.resolve(tokens.ILogger),
@@ -65,6 +73,7 @@ export function registerPersistence(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       dataRegistry: c.resolve(tokens.IDataRegistry),
       playtimeTracker: c.resolve(tokens.PlaytimeTracker),
+      componentCleaningService: c.resolve(tokens.ComponentCleaningService),
     });
   });
   logger.debug(

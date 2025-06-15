@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -20,6 +21,7 @@ describe('GamePersistenceService error paths', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
+  let componentCleaningService;
   let service;
 
   beforeEach(() => {
@@ -35,12 +37,14 @@ describe('GamePersistenceService error paths', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
+    componentCleaningService = new ComponentCleaningService({ logger });
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
+      componentCleaningService,
     });
   });
 
@@ -55,7 +59,7 @@ describe('GamePersistenceService error paths', () => {
         'Failed to deep clone object data.'
       );
       expect(logger.error).toHaveBeenCalledWith(
-        'GamePersistenceService.#cleanComponentData deepClone failed:',
+        'ComponentCleaningService.clean deepClone failed:',
         expect.any(Error),
         cyc
       );

@@ -9,6 +9,7 @@ import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.j
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../engine/playtimeTracker.js').default} PlaytimeTracker */
+/** @typedef {import('../interfaces/IComponentCleaningService.js').IComponentCleaningService} IComponentCleaningService */
 /** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../loaders/worldLoader.js').default} WorldLoader */
@@ -16,31 +17,43 @@ import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.j
 
 // --- Import Tokens ---
 // tokens import removed as not used after refactor
-import { deepClone } from '../utils/objectUtils.js';
+
 // --- MODIFICATION START: Import component IDs for cleaning logic ---
-import {
-  CURRENT_ACTOR_COMPONENT_ID,
-  NOTES_COMPONENT_ID,
-  PERCEPTION_LOG_COMPONENT_ID,
-  SHORT_TERM_MEMORY_COMPONENT_ID,
-} from '../constants/componentIds.js';
+import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CORE_MOD_ID } from '../constants/core';
 // --- MODIFICATION END ---
 
+/**
+ * @class GamePersistenceService
+ * @description Handles capturing, saving, and restoring game state.
+ * @implements {IGamePersistenceService}
+ */
 class GamePersistenceService extends IGamePersistenceService {
   #logger;
   #saveLoadService;
   #entityManager;
   #dataRegistry;
   #playtimeTracker;
-  #componentCleaners;
+  #componentCleaningService;
 
+  /**
+   * Creates a new GamePersistenceService instance.
+   *
+   * @param {object} dependencies - Service dependencies.
+   * @param {ILogger} dependencies.logger - Logging service.
+   * @param {ISaveLoadService} dependencies.saveLoadService - Save/load service.
+   * @param {EntityManager} dependencies.entityManager - Entity manager.
+   * @param {IDataRegistry} dependencies.dataRegistry - Data registry.
+   * @param {PlaytimeTracker} dependencies.playtimeTracker - Playtime tracker.
+   * @param {IComponentCleaningService} dependencies.componentCleaningService - Component cleaning service.
+   */
   constructor({
     logger,
     saveLoadService,
     entityManager,
     dataRegistry,
     playtimeTracker,
+    componentCleaningService,
   }) {
     super();
     const missingDependencies = [];
@@ -49,6 +62,8 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!entityManager) missingDependencies.push('entityManager');
     if (!dataRegistry) missingDependencies.push('dataRegistry');
     if (!playtimeTracker) missingDependencies.push('playtimeTracker');
+    if (!componentCleaningService)
+      missingDependencies.push('componentCleaningService');
 
     if (missingDependencies.length > 0) {
       const errorMessage = `GamePersistenceService: Fatal - Missing required dependencies: ${missingDependencies.join(', ')}.`;
@@ -65,109 +80,8 @@ class GamePersistenceService extends IGamePersistenceService {
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#playtimeTracker = playtimeTracker;
-    this.#componentCleaners = new Map([
-      [NOTES_COMPONENT_ID, this.#cleanNotesComponent.bind(this)],
-      [
-        SHORT_TERM_MEMORY_COMPONENT_ID,
-        this.#cleanShortTermMemoryComponent.bind(this),
-      ],
-      [
-        PERCEPTION_LOG_COMPONENT_ID,
-        this.#cleanPerceptionLogComponent.bind(this),
-      ],
-    ]);
+    this.#componentCleaningService = componentCleaningService;
     this.#logger.debug('GamePersistenceService: Instance created.');
-  }
-
-  /**
-   * Deep clones and cleans component data based on configured cleaners.
-   *
-   * @param {string} componentId - The component identifier.
-   * @param {any} componentData - The raw component data.
-   * @returns {any} The cleaned clone of the component data.
-   * @private
-   */
-  #cleanComponentData(componentId, componentData) {
-    let dataToSave;
-    try {
-      dataToSave = deepClone(componentData);
-    } catch (e) {
-      this.#logger.error(
-        'GamePersistenceService.#cleanComponentData deepClone failed:',
-        e,
-        componentData
-      );
-      throw new Error('Failed to deep clone object data.');
-    }
-
-    const cleaner = this.#componentCleaners.get(componentId);
-    if (cleaner) {
-      dataToSave = cleaner(dataToSave);
-    }
-    return dataToSave;
-  }
-
-  /**
-   * Removes empty `notes` arrays from notes components.
-   *
-   * @param {any} data - Component data to clean.
-   * @returns {any} Cleaned component data.
-   * @private
-   */
-  #cleanNotesComponent(data) {
-    if (data.notes && Array.isArray(data.notes) && data.notes.length === 0) {
-      this.#logger.debug(
-        `Omitting empty 'notes' array from component '${NOTES_COMPONENT_ID}'.`
-      );
-      delete data.notes;
-    }
-    return data;
-  }
-
-  /**
-   * Removes blank `thoughts` strings from short-term memory components.
-   *
-   * @param {any} data - Component data to clean.
-   * @returns {any} Cleaned component data.
-   * @private
-   */
-  #cleanShortTermMemoryComponent(data) {
-    if (
-      data.thoughts &&
-      typeof data.thoughts === 'string' &&
-      !data.thoughts.trim()
-    ) {
-      this.#logger.debug(
-        `Omitting blank 'thoughts' from component '${SHORT_TERM_MEMORY_COMPONENT_ID}'.`
-      );
-      delete data.thoughts;
-    }
-    return data;
-  }
-
-  /**
-   * Cleans perception log entries of empty speech fields.
-   *
-   * @param {any} data - Component data to clean.
-   * @returns {any} Cleaned component data.
-   * @private
-   */
-  #cleanPerceptionLogComponent(data) {
-    if (data.log && Array.isArray(data.log)) {
-      data.log.forEach((entry) => {
-        if (
-          entry?.action?.speech &&
-          typeof entry.action.speech === 'string' &&
-          !entry.action.speech.trim()
-        ) {
-          this.#logger.debug(
-            "Omitting blank 'speech' from a perception log entry."
-          );
-          delete entry.action.speech;
-        }
-      });
-    }
-    return data;
   }
 
   /**
@@ -267,7 +181,7 @@ class GamePersistenceService extends IGamePersistenceService {
           continue;
         }
 
-        const dataToSave = this.#cleanComponentData(
+        const dataToSave = this.#componentCleaningService.clean(
           componentTypeId,
           componentData
         );
