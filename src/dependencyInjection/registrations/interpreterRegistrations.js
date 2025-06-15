@@ -17,6 +17,7 @@ import CommandOutcomeInterpreter from '../../commands/interpreters/commandOutcom
 
 // operation handlers
 import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../logic/operationHandlers/dispatchSpeechHandler.js';
 import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
@@ -70,6 +71,18 @@ export function registerInterpreters(container) {
         new Handler({
           logger: c.resolve(tokens.ILogger),
           dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DispatchPerceptibleEventHandler,
+      DispatchPerceptibleEventHandler,
+      (c, Handler) =>
+        new Handler({
+          dispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          logger: c.resolve(tokens.ILogger),
+          addPerceptionLogEntryHandler: c.resolve(
+            tokens.AddPerceptionLogEntryHandler
+          ),
         }),
     ],
     [
@@ -292,6 +305,10 @@ export function registerInterpreters(container) {
         c.resolve(tkn).execute(...args);
 
     registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
+    registry.register(
+      'DISPATCH_PERCEPTIBLE_EVENT',
+      bind(tokens.DispatchPerceptibleEventHandler)
+    );
     registry.register('DISPATCH_SPEECH', bind(tokens.DispatchSpeechHandler));
     registry.register('LOG', bind(tokens.LogHandler));
     registry.register('MODIFY_COMPONENT', bind(tokens.ModifyComponentHandler));

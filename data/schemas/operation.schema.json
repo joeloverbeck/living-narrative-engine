@@ -20,6 +20,7 @@
             "ADD_COMPONENT",
             "REMOVE_COMPONENT",
             "DISPATCH_EVENT",
+            "DISPATCH_PERCEPTIBLE_EVENT",
             "DISPATCH_SPEECH",
             "END_TURN",
             "IF",
@@ -159,6 +160,24 @@
             "properties": {
               "parameters": {
                 "$ref": "#/$defs/DispatchEventParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DISPATCH_PERCEPTIBLE_EVENT"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/DispatchPerceptibleEventParameters"
               }
             },
             "required": ["parameters"]
@@ -853,6 +872,63 @@
         }
       },
       "required": ["location_id", "entry"],
+      "additionalProperties": false
+    },
+    "DispatchPerceptibleEventParameters": {
+      "type": "object",
+      "description": "Parameters for the DISPATCH_PERCEPTIBLE_EVENT operation. Builds and dispatches core:perceptible_event.",
+      "properties": {
+        "location_id": {
+          "type": "string"
+        },
+        "description_text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "perception_type": {
+          "type": "string",
+          "enum": [
+            "character_enter",
+            "character_exit",
+            "item_pickup",
+            "item_drop",
+            "item_use",
+            "speech_local",
+            "action_self_general",
+            "action_target_general",
+            "combat_attack",
+            "combat_effect",
+            "state_change_observable"
+          ]
+        },
+        "actor_id": {
+          "type": "string"
+        },
+        "target_id": {
+          "type": ["string", "null"]
+        },
+        "involved_entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "contextual_data": {
+          "type": "object",
+          "default": {}
+        },
+        "log_entry": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "location_id",
+        "description_text",
+        "perception_type",
+        "actor_id"
+      ],
       "additionalProperties": false
     },
     "QueryEntitiesParameters": {
