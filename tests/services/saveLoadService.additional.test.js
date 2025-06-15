@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
-import { encode } from '@msgpack/msgpack';
+import { encode, decode } from '@msgpack/msgpack';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 
@@ -125,6 +125,51 @@ describe('SaveLoadService additional coverage', () => {
     const res = await service.saveManualGame('Test', obj);
     expect(storageProvider.writeFileAtomically).toHaveBeenCalled();
     expect(res.success).toBe(true);
+  });
+
+  it('#deepClone returns primitive values unchanged', async () => {
+    storageProvider.ensureDirectoryExists.mockResolvedValue();
+    let written;
+    storageProvider.writeFileAtomically.mockImplementation((path, data) => {
+      written = data;
+      return { success: true };
+    });
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: { level: 1 },
+      primitive: 42,
+    };
+    const res = await service.saveManualGame('Prim', obj);
+    expect(res.success).toBe(true);
+    const saved = decode(pako.ungzip(written));
+    expect(saved.primitive).toBe(42);
+  });
+
+  it('creates integrityChecks when absent on manual save', async () => {
+    storageProvider.ensureDirectoryExists.mockResolvedValue();
+    let written;
+    storageProvider.writeFileAtomically.mockImplementation((p, d) => {
+      written = d;
+      return { success: true };
+    });
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: { a: 1 },
+    };
+    const res = await service.saveManualGame('NoIntegrity', obj);
+    expect(res.success).toBe(true);
+    const finalObj = decode(pako.ungzip(written));
+    expect(finalObj.integrityChecks).toBeDefined();
+    const buffer = await webcrypto.subtle.digest(
+      'SHA-256',
+      encode(obj.gameState)
+    );
+    const expected = Array.from(new Uint8Array(buffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    expect(finalObj.integrityChecks.gameStateChecksum).toBe(expected);
   });
 
   it('deleteManualSave handles missing file', async () => {
