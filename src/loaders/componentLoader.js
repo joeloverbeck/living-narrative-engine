@@ -4,7 +4,7 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 
 import { parseAndValidateId } from '../utils/idUtils.js';
 import { extractBaseId } from '../utils/idUtils.js';
-import { registerSchema } from '../utils/schemaUtils.js';
+import { registerInlineSchema } from '../utils/schemaUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -114,31 +114,23 @@ class ComponentLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `ComponentLoader [${modId}]: Attempting to register/manage data schema using FULL ID '${trimmedComponentIdFromFile}'.`
     );
-    try {
-      await registerSchema(
-        this._schemaValidator,
-        dataSchema,
-        trimmedComponentIdFromFile,
-        this._logger,
-        `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentIdFromFile}'.`
-      );
-      this._logger.debug(
-        `ComponentLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentIdFromFile}' from file '${filename}'.`
-      );
-    } catch (error) {
-      const registerLogMsg = `ComponentLoader [${modId}]: Error registering data schema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`;
-      this._logger.error(
-        registerLogMsg,
-        {
+    await registerInlineSchema(
+      this._schemaValidator,
+      dataSchema,
+      trimmedComponentIdFromFile,
+      this._logger,
+      {
+        warnMessage: `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentIdFromFile}'.`,
+        successDebugMessage: `ComponentLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentIdFromFile}' from file '${filename}'.`,
+        errorLogMessage: `ComponentLoader [${modId}]: Error registering data schema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`,
+        errorContext: (err) => ({
           modId,
           filename,
           componentId: trimmedComponentIdFromFile,
-          error: error,
-        },
-        error
-      );
-      throw error;
-    }
+          error: err,
+        }),
+      }
+    );
 
     // --- 4. Construct Final Item ID ---
     const finalRegistryKey = `${modId}:${baseComponentId}`; // e.g., "core:health"
