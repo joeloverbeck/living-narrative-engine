@@ -7,6 +7,7 @@
 import { createJsonLogicContext } from './contextAssembler.js';
 import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
+import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import {
   initLogger,
   validateServiceDeps,
@@ -64,11 +65,7 @@ class SystemLogicInterpreter {
       },
       entityManager: {
         value: entityManager,
-        requiredMethods: [
-          'getEntityInstance',
-          'getComponentData',
-          'hasComponent',
-        ],
+        requiredMethods: REQUIRED_ENTITY_MANAGER_METHODS,
       },
       operationInterpreter: {
         value: operationInterpreter,
