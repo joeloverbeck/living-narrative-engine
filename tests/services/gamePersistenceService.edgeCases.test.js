@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 import {
   NOTES_COMPONENT_ID,
@@ -32,6 +33,7 @@ describe('GamePersistenceService edge cases', () => {
   let metadataBuilder;
   let safeEventDispatcher;
   let service;
+  let captureService;
 
   beforeEach(() => {
     logger = makeLogger();
@@ -41,7 +43,7 @@ describe('GamePersistenceService edge cases', () => {
       clearAll: jest.fn(),
       reconstructEntity: jest.fn().mockReturnValue({}),
     };
-    dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
+    const dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
     playtimeTracker = {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
@@ -61,14 +63,20 @@ describe('GamePersistenceService edge cases', () => {
         saveName: '',
       })),
     };
-    service = new GamePersistenceService({
+    captureService = new GameStateCaptureService({
       logger,
-      saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
       componentCleaningService,
       metadataBuilder,
+    });
+    service = new GamePersistenceService({
+      logger,
+      saveLoadService,
+      entityManager,
+      playtimeTracker,
+      gameStateCaptureService: captureService,
     });
   });
 
@@ -83,7 +91,7 @@ describe('GamePersistenceService edge cases', () => {
       entityManager.activeEntities.set('e1', entity);
       // dataRegistry.getAll already returns [] to trigger fallback
 
-      const result = service.captureCurrentGameState('World');
+      const result = captureService.captureCurrentGameState('World');
       const comps = result.gameState.entities[0].components;
       expect(comps).not.toHaveProperty(NOTES_COMPONENT_ID);
       expect(comps).not.toHaveProperty(SHORT_TERM_MEMORY_COMPONENT_ID);
@@ -101,7 +109,7 @@ describe('GamePersistenceService edge cases', () => {
   describe('saveGame error handling', () => {
     it('returns failure when saveManualGame rejects', async () => {
       jest
-        .spyOn(service, 'captureCurrentGameState')
+        .spyOn(captureService, 'captureCurrentGameState')
         .mockReturnValue({ metadata: {}, gameState: {}, modManifest: {} });
       saveLoadService.saveManualGame.mockRejectedValue(new Error('boom'));
 
@@ -113,7 +121,7 @@ describe('GamePersistenceService edge cases', () => {
 
     it('returns failure when saveManualGame resolves unsuccessfully', async () => {
       jest
-        .spyOn(service, 'captureCurrentGameState')
+        .spyOn(captureService, 'captureCurrentGameState')
         .mockReturnValue({ metadata: {}, gameState: {}, modManifest: {} });
       saveLoadService.saveManualGame.mockResolvedValue({
         success: false,

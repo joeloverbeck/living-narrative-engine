@@ -23,6 +23,7 @@ import { Registrar } from '../registrarHelpers.js';
 import PlaytimeTracker from '../../engine/playtimeTracker.js';
 import ComponentCleaningService from '../../persistence/componentCleaningService.js';
 import GamePersistenceService from '../../persistence/gamePersistenceService.js';
+import GameStateCaptureService from '../../persistence/gameStateCaptureService.js';
 import SaveMetadataBuilder from '../../persistence/saveMetadataBuilder.js';
 import ReferenceResolver from '../../initializers/services/referenceResolver.js';
 import SaveLoadService from '../../persistence/saveLoadService.js';
@@ -73,15 +74,27 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.SaveMetadataBuilder)}.`
   );
 
-  r.singletonFactory(tokens.GamePersistenceService, (c) => {
-    return new GamePersistenceService({
+  r.singletonFactory(tokens.GameStateCaptureService, (c) => {
+    return new GameStateCaptureService({
       logger: c.resolve(tokens.ILogger),
-      saveLoadService: c.resolve(tokens.ISaveLoadService),
       entityManager: c.resolve(tokens.IEntityManager),
       dataRegistry: c.resolve(tokens.IDataRegistry),
       playtimeTracker: c.resolve(tokens.PlaytimeTracker),
       componentCleaningService: c.resolve(tokens.ComponentCleaningService),
       metadataBuilder: c.resolve(tokens.SaveMetadataBuilder),
+    });
+  });
+  logger.debug(
+    `Persistence Registration: Registered ${String(tokens.GameStateCaptureService)}.`
+  );
+
+  r.singletonFactory(tokens.GamePersistenceService, (c) => {
+    return new GamePersistenceService({
+      logger: c.resolve(tokens.ILogger),
+      saveLoadService: c.resolve(tokens.ISaveLoadService),
+      entityManager: c.resolve(tokens.IEntityManager),
+      playtimeTracker: c.resolve(tokens.PlaytimeTracker),
+      gameStateCaptureService: c.resolve(tokens.GameStateCaptureService),
     });
   });
   logger.debug(

@@ -77,6 +77,7 @@ import { freeze } from '../utils/objectUtils';
  * @property {DiToken} CommandOutcomeInterpreter - Token for the service interpreting command outcomes (implementation).
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
  * @property {DiToken} ComponentCleaningService - Token for the service cleaning component data.
+ * @property {DiToken} GameStateCaptureService - Token for the service capturing game state.
  * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
  * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data.
  * @property {DiToken} AlertRouter - Token for the service that routes alerts to the UI or console.
@@ -203,6 +204,7 @@ export const tokens = freeze({
   PlaytimeTracker: 'PlaytimeTracker',
   ComponentCleaningService: 'ComponentCleaningService',
   SaveMetadataBuilder: 'SaveMetadataBuilder',
+  GameStateCaptureService: 'GameStateCaptureService',
   GamePersistenceService: 'GamePersistenceService',
   EntityDisplayDataProvider: 'EntityDisplayDataProvider',
   AlertRouter: 'AlertRouter',

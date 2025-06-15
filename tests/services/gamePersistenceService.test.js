@@ -3,12 +3,12 @@
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../core/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('./playtimeTracker.js').default} PlaytimeTracker */
 /** @typedef {import('../config/appContainer.js').default} AppContainer */
 
@@ -28,12 +28,8 @@ const mockLogger = {
 const mockSaveLoadService = {};
 /** @type {jest.Mocked<EntityManager>} */
 const mockEntityManager = {};
-/** @type {jest.Mocked<IDataRegistry>} */
-const mockDataRegistry = {};
 /** @type {jest.Mocked<PlaytimeTracker>} */
 const mockPlaytimeTracker = {};
-const mockComponentCleaningService = { clean: jest.fn() };
-const mockMetadataBuilder = { build: jest.fn() };
 /** @type {jest.Mocked<AppContainer>} */
 const mockAppContainer = {
   resolve: jest.fn(), // Mock resolve as it might be used in the TODO part in the future
@@ -46,14 +42,15 @@ describe('GamePersistenceService', () => {
   beforeEach(() => {
     jest.clearAllMocks(); // Clear mocks before each test
 
+    const captureService = {
+      captureCurrentGameState: jest.fn(),
+    };
     service = new GamePersistenceService({
       logger: mockLogger,
       saveLoadService: mockSaveLoadService,
       entityManager: mockEntityManager,
-      dataRegistry: mockDataRegistry,
       playtimeTracker: mockPlaytimeTracker,
-      componentCleaningService: mockComponentCleaningService,
-      metadataBuilder: mockMetadataBuilder,
+      gameStateCaptureService: captureService,
     });
     // Clear the logger.info/debug calls made by the constructor, if any,
     // to not interfere with test-specific logger assertions.
