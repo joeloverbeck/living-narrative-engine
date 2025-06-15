@@ -19,6 +19,8 @@
  * and compilation of JSON schemas specified in the application's configuration.
  * It focuses solely on processing the schemas listed in the configuration's `schemaFiles`.
  */
+import { validateLoaderDeps } from '../utils/validationUtils.js';
+
 class SchemaLoader {
   #config;
   #resolver;
@@ -37,43 +39,28 @@ class SchemaLoader {
    * @throws {Error} If any required dependency is not provided or invalid.
    */
   constructor(configuration, pathResolver, fetcher, validator, logger) {
-    // Basic validation
-    // --- MODIFIED LINE: Updated error message ---
-    if (!configuration || typeof configuration.getSchemaFiles !== 'function') {
-      throw new Error(
-        "SchemaLoader: Missing or invalid 'configuration' dependency (IConfiguration - requires getSchemaFiles)."
-      );
-    }
-    // --- NOTE: pathResolver needs resolveSchemaPath, fetcher needs fetch, validator needs addSchema/isSchemaLoaded ---
-    // These checks correctly reflect the methods used within this class.
-    if (!pathResolver || typeof pathResolver.resolveSchemaPath !== 'function') {
-      throw new Error(
-        "SchemaLoader: Missing or invalid 'pathResolver' dependency (IPathResolver - requires resolveSchemaPath)."
-      );
-    }
-    if (!fetcher || typeof fetcher.fetch !== 'function') {
-      throw new Error(
-        "SchemaLoader: Missing or invalid 'fetcher' dependency (IDataFetcher - requires fetch)."
-      );
-    }
-    if (
-      !validator ||
-      typeof validator.addSchema !== 'function' ||
-      typeof validator.isSchemaLoaded !== 'function'
-    ) {
-      throw new Error(
-        "SchemaLoader: Missing or invalid 'validator' dependency (ISchemaValidator - requires addSchema, isSchemaLoaded)."
-      );
-    }
-    if (
-      !logger ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      throw new Error(
-        "SchemaLoader: Missing or invalid 'logger' dependency (ILogger - requires info, error, debug)."
-      );
-    }
+    validateLoaderDeps(logger, [
+      {
+        dependency: configuration,
+        name: 'IConfiguration',
+        methods: ['getSchemaFiles'],
+      },
+      {
+        dependency: pathResolver,
+        name: 'IPathResolver',
+        methods: ['resolveSchemaPath'],
+      },
+      {
+        dependency: fetcher,
+        name: 'IDataFetcher',
+        methods: ['fetch'],
+      },
+      {
+        dependency: validator,
+        name: 'ISchemaValidator',
+        methods: ['addSchema', 'isSchemaLoaded'],
+      },
+    ]);
 
     this.#config = configuration;
     this.#resolver = pathResolver;

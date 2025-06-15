@@ -270,7 +270,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             mockLogger
           )
-      ).toThrow(/configuration/);
+      ).toThrow(/configuration/i);
       expect(
         () =>
           new SchemaLoader(
@@ -280,7 +280,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             mockLogger
           )
-      ).toThrow(/configuration/);
+      ).toThrow(/configuration/i);
       // Check specific function existence based on constructor checks
       const invalidConfig = { ...mockConfiguration, getSchemaFiles: undefined };
       expect(
@@ -292,7 +292,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             mockLogger
           )
-      ).toThrow(/configuration/);
+      ).toThrow(/configuration/i);
     });
     it('should throw error if pathResolver is missing or invalid', () => {
       expect(
@@ -304,7 +304,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             mockLogger
           )
-      ).toThrow(/pathResolver/);
+      ).toThrow(/pathResolver/i);
       expect(
         () =>
           new SchemaLoader(
@@ -314,7 +314,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             mockLogger
           )
-      ).toThrow(/pathResolver/);
+      ).toThrow(/pathResolver/i);
     });
     it('should throw error if fetcher is missing or invalid', () => {
       expect(
@@ -326,7 +326,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             mockLogger
           )
-      ).toThrow(/fetcher/);
+      ).toThrow(/fetcher/i);
       expect(
         () =>
           new SchemaLoader(
@@ -336,7 +336,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             mockLogger
           )
-      ).toThrow(/fetcher/);
+      ).toThrow(/fetcher/i);
     });
     it('should throw error if validator is missing or invalid', () => {
       expect(
@@ -348,7 +348,7 @@ describe('SchemaLoader', () => {
             null,
             mockLogger
           )
-      ).toThrow(/validator/);
+      ).toThrow(/validator/i);
       expect(
         () =>
           new SchemaLoader(
@@ -358,7 +358,7 @@ describe('SchemaLoader', () => {
             {},
             mockLogger
           )
-      ).toThrow(/validator/);
+      ).toThrow(/validator/i);
       expect(
         () =>
           new SchemaLoader(
@@ -368,7 +368,7 @@ describe('SchemaLoader', () => {
             { addSchema: jest.fn() },
             mockLogger
           )
-      ).toThrow(/validator/); // Missing isSchemaLoaded
+      ).toThrow(/validator/i); // Missing isSchemaLoaded
       expect(
         () =>
           new SchemaLoader(
@@ -378,7 +378,7 @@ describe('SchemaLoader', () => {
             { isSchemaLoaded: jest.fn() },
             mockLogger
           )
-      ).toThrow(/validator/); // Missing addSchema
+      ).toThrow(/validator/i); // Missing addSchema
     });
     it('should throw error if logger is missing or invalid', () => {
       expect(
@@ -390,7 +390,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             null
           )
-      ).toThrow(/logger/);
+      ).toThrow(/logger/i);
       expect(
         () =>
           new SchemaLoader(
@@ -400,7 +400,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             {}
           )
-      ).toThrow(/logger/);
+      ).toThrow(/logger/i);
       expect(
         () =>
           new SchemaLoader(
@@ -410,7 +410,7 @@ describe('SchemaLoader', () => {
             mockSchemaValidator,
             { info: jest.fn() }
           )
-      ).toThrow(/logger/); // Missing error
+      ).toThrow(/logger/i); // Missing error
     });
   });
 });

@@ -58,6 +58,24 @@ export function validateDependency(
 }
 
 /**
+ * @description Validates a set of loader dependencies using {@link validateDependency}.
+ * The provided logger is validated first and then used for all subsequent checks.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger to record validation errors.
+ * @param {Array<{dependency: *, name: string, methods: string[]}>} checks - Dependencies to validate.
+ * @returns {void}
+ * @throws {Error} If any dependency fails validation.
+ */
+export function validateLoaderDeps(logger, checks) {
+  validateDependency(logger, 'ILogger', console, {
+    requiredMethods: ['info', 'warn', 'error', 'debug'],
+  });
+
+  for (const { dependency, name, methods = [] } of checks) {
+    validateDependency(dependency, name, logger, { requiredMethods: methods });
+  }
+}
+
+/**
  * Validates that a chosen action index is an integer within the
  * bounds of the available actions.
  *
