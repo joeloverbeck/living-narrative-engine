@@ -15,10 +15,9 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import CheckFollowCycleHandler from '../../../src/logic/operationHandlers/checkFollowCycleHandler.js';
-import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
+import EstablishFollowRelationHandler from '../../../src/logic/operationHandlers/establishFollowRelationHandler.js';
+import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
-import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
-import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
@@ -70,6 +69,24 @@ class SimpleEntityManager {
   }
 }
 
+function makeStubRebuild(em) {
+  return {
+    execute({ leaderIds }) {
+      for (const lid of leaderIds) {
+        const followers = [];
+        for (const [id, ent] of em.entities) {
+          const f = ent.components[FOLLOWING_COMPONENT_ID];
+          if (f?.leaderId === lid) followers.push(id);
+        }
+        const leader = em.entities.get(lid);
+        if (leader) {
+          leader.components[LEADING_COMPONENT_ID] = { followers };
+        }
+      }
+    },
+  };
+}
+
 describe('core_handle_follow rule integration', () => {
   let logger;
   let eventBus;
@@ -105,24 +122,15 @@ describe('core_handle_follow rule integration', () => {
         entityManager,
         safeEventDispatcher: safeDispatcher,
       }),
-      HAS_COMPONENT: new HasComponentHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeDispatcher,
-      }),
       QUERY_COMPONENT: new QueryComponentHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
-      ADD_COMPONENT: new AddComponentHandler({
+      ESTABLISH_FOLLOW_RELATION: new EstablishFollowRelationHandler({
         entityManager,
         logger,
-        safeEventDispatcher: safeDispatcher,
-      }),
-      MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
-        entityManager,
-        logger,
+        rebuildLeaderListCacheHandler: makeStubRebuild(entityManager),
         safeEventDispatcher: safeDispatcher,
       }),
       DISPATCH_EVENT: new DispatchEventHandler({

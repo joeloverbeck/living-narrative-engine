@@ -14,8 +14,8 @@ import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
-import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import BreakFollowRelationHandler from '../../../src/logic/operationHandlers/breakFollowRelationHandler.js';
+import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
@@ -115,6 +115,24 @@ class SimpleEntityManager {
   }
 }
 
+function makeStubRebuild(em) {
+  return {
+    execute({ leaderIds }) {
+      for (const lid of leaderIds) {
+        const followers = [];
+        for (const [id, ent] of em.entities) {
+          const f = ent.components[FOLLOWING_COMPONENT_ID];
+          if (f?.leaderId === lid) followers.push(id);
+        }
+        const leader = em.entities.get(lid);
+        if (leader) {
+          leader.components[LEADING_COMPONENT_ID] = { followers };
+        }
+      }
+    },
+  };
+}
+
 /**
  * Helper to (re)initialize the interpreter with a fresh entity manager.
  *
@@ -130,14 +148,10 @@ function init(entities) {
   });
 
   const handlers = {
-    REMOVE_COMPONENT: new RemoveComponentHandler({
+    BREAK_FOLLOW_RELATION: new BreakFollowRelationHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
-      entityManager,
-      logger,
+      rebuildLeaderListCacheHandler: makeStubRebuild(entityManager),
       safeEventDispatcher: safeDispatcher,
     }),
     QUERY_COMPONENT: new QueryComponentHandler({

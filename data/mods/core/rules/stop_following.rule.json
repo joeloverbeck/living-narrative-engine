@@ -30,24 +30,9 @@
         },
         "then_actions": [
           {
-            "type": "REMOVE_COMPONENT",
-            "comment": "Authoritatively remove the following relationship from the actor.",
+            "type": "BREAK_FOLLOW_RELATION",
             "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:following"
-            }
-          },
-          {
-            "type": "MODIFY_ARRAY_FIELD",
-            "comment": "Remove the actor from the old leader's 'core:leading' component followers list.",
-            "parameters": {
-              "entity_ref": {
-                "entityId": "{context.oldFollowingData.leaderId}"
-              },
-              "component_type": "core:leading",
-              "field": "followers",
-              "mode": "remove_by_value",
-              "value": "{event.payload.actorId}"
+              "follower_id": "{event.payload.actorId}"
             }
           },
           {
