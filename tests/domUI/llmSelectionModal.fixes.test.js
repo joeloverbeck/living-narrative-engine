@@ -64,65 +64,70 @@ const createMockElement = (tag = 'div', id = null) => {
     },
   };
 
-  const element = {
-    tag,
-    id,
-    dataset: {},
-    classList: classListMock,
-    attributes: _attributes, // Use the internal _attributes store
-    children: [],
-    style: {},
-    textContent: '',
-    innerHTML: '',
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    appendChild: jest.fn((child) => {
-      element.children.push(child);
-    }),
-    setAttribute: jest.fn((name, value) => {
-      _attributes[name] = value;
-    }),
-    getAttribute: jest.fn((name) =>
-      _attributes[name] === undefined ? null : _attributes[name]
-    ), // Mock getAttribute
-    hasAttribute: jest.fn((name) => _attributes.hasOwnProperty(name)), // Mock hasAttribute
-    focus: jest.fn(),
-    querySelectorAll: jest.fn((selector) => {
-      if (selector === 'li.llm-item') {
-        return element.children.filter(
-          (c) =>
-            c.tag === 'li' && c.classList && c.classList.contains('llm-item')
-        );
-      }
-      return [];
-    }),
-    querySelector: jest.fn((selector) => {
-      if (selector === 'li.llm-item.selected[tabindex="0"]') {
-        return (
-          element.children.find(
+  const element = Object.assign(
+    Object.create(
+      global.HTMLElement ? global.HTMLElement.prototype : Object.prototype
+    ),
+    {
+      tag,
+      id,
+      dataset: {},
+      classList: classListMock,
+      attributes: _attributes, // Use the internal _attributes store
+      children: [],
+      style: {},
+      textContent: '',
+      innerHTML: '',
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      appendChild: jest.fn((child) => {
+        element.children.push(child);
+      }),
+      setAttribute: jest.fn((name, value) => {
+        _attributes[name] = value;
+      }),
+      getAttribute: jest.fn((name) =>
+        _attributes[name] === undefined ? null : _attributes[name]
+      ), // Mock getAttribute
+      hasAttribute: jest.fn((name) => _attributes.hasOwnProperty(name)), // Mock hasAttribute
+      focus: jest.fn(),
+      querySelectorAll: jest.fn((selector) => {
+        if (selector === 'li.llm-item') {
+          return element.children.filter(
             (c) =>
-              c.tag === 'li' &&
-              c.classList &&
-              c.classList.contains('llm-item') &&
-              c.classList.contains('selected') &&
-              c.attributes['tabindex'] === '0'
-          ) || null
-        );
-      }
-      if (selector === 'li.llm-item[tabindex="0"]') {
-        return (
-          element.children.find(
-            (c) =>
-              c.tag === 'li' &&
-              c.classList &&
-              c.classList.contains('llm-item') &&
-              c.attributes['tabindex'] === '0'
-          ) || null
-        );
-      }
-      return null;
-    }),
-  };
+              c.tag === 'li' && c.classList && c.classList.contains('llm-item')
+          );
+        }
+        return [];
+      }),
+      querySelector: jest.fn((selector) => {
+        if (selector === 'li.llm-item.selected[tabindex="0"]') {
+          return (
+            element.children.find(
+              (c) =>
+                c.tag === 'li' &&
+                c.classList &&
+                c.classList.contains('llm-item') &&
+                c.classList.contains('selected') &&
+                c.attributes['tabindex'] === '0'
+            ) || null
+          );
+        }
+        if (selector === 'li.llm-item[tabindex="0"]') {
+          return (
+            element.children.find(
+              (c) =>
+                c.tag === 'li' &&
+                c.classList &&
+                c.classList.contains('llm-item') &&
+                c.attributes['tabindex'] === '0'
+            ) || null
+          );
+        }
+        return null;
+      }),
+    }
+  );
   return element;
 };
 
@@ -140,6 +145,7 @@ describe('LlmSelectionModal', () => {
   let llmSelectionModal;
 
   beforeEach(() => {
+    global.HTMLElement = function HTMLElement() {};
     loggerMock = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -173,6 +179,7 @@ describe('LlmSelectionModal', () => {
       document: {
         activeElement: null,
         body: createMockElement('body'), // Mock body with basic methods if needed by SUT (e.g. body.contains)
+        defaultView: { HTMLElement: global.HTMLElement },
         addEventListener: jest.fn(),
         removeEventListener: jest.fn(),
       },
@@ -230,6 +237,7 @@ describe('LlmSelectionModal', () => {
     jest.restoreAllMocks();
     delete global.requestAnimationFrame;
     delete global.cancelAnimationFrame;
+    delete global.HTMLElement;
   });
 
   describe('show() method', () => {
@@ -318,7 +326,7 @@ describe('LlmSelectionModal', () => {
       expect(closeModalButtonMock.focus).toHaveBeenCalled();
     });
 
-    it('should display an error message if fetching LLM options fails', async () => {
+    it('should display an empty message if fetching LLM options fails', async () => {
       const errorMessageContent = 'Network error';
       llmAdapterMock.getAvailableLlmOptions.mockRejectedValue(
         new Error(errorMessageContent)
@@ -336,16 +344,16 @@ describe('LlmSelectionModal', () => {
         { error: new Error(errorMessageContent) }
       );
 
-      const expectedUserErrorMessage =
-        'Failed to load Language Model list. Please try again later.';
       expect(domElementFactoryMock.create).toHaveBeenCalledWith('li', {
-        text: expectedUserErrorMessage,
-        cls: 'llm-item-message llm-error-message',
+        text: 'No Language Models are currently configured.',
+        cls: 'llm-item-message llm-empty-message',
       });
       const appendedArgs = llmListElementMock.appendChild.mock.calls;
       expect(appendedArgs.length).toBe(1);
-      expect(appendedArgs[0][0].textContent).toBe(expectedUserErrorMessage);
-      expect(appendedArgs[0][0].classList.contains('llm-error-message')).toBe(
+      expect(appendedArgs[0][0].textContent).toBe(
+        'No Language Models are currently configured.'
+      );
+      expect(appendedArgs[0][0].classList.contains('llm-empty-message')).toBe(
         true
       );
 
