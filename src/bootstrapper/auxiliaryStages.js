@@ -5,6 +5,7 @@
  *
  * @module auxiliaryStages
  */
+import { resolveAndInitialize } from './helpers.js';
 
 /**
  * @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer
@@ -30,23 +31,7 @@
  * @returns {void}
  */
 export function initEngineUIManager({ container, logger, tokens }) {
-  const stage = 'EngineUIManager Init';
-  try {
-    logger.debug(`${stage}: Resolving EngineUIManager...`);
-    const eum = container.resolve(tokens.EngineUIManager);
-    if (!eum) {
-      throw new Error(
-        'EngineUIManager instance could not be resolved from container.'
-      );
-    }
-    if (typeof eum.initialize !== 'function') {
-      throw new Error('EngineUIManager does not expose initialize()');
-    }
-    eum.initialize();
-    logger.debug(`${stage}: Initialized successfully.`);
-  } catch (err) {
-    logger.error(`${stage}: Failed to initialize.`, err);
-  }
+  resolveAndInitialize(container, tokens.EngineUIManager, 'initialize', logger);
 }
 
 /**
@@ -56,22 +41,13 @@ export function initEngineUIManager({ container, logger, tokens }) {
  * @returns {void}
  */
 export function initSaveGameUI({ container, gameEngine, logger, tokens }) {
-  const stage = 'SaveGameUI Init';
-  try {
-    logger.debug(`${stage}: Resolving SaveGameUI...`);
-    const ui = container.resolve(tokens.SaveGameUI);
-    if (ui) {
-      if (typeof ui.init !== 'function') {
-        throw new Error('SaveGameUI missing init(gameEngine)');
-      }
-      ui.init(gameEngine);
-      logger.debug(`${stage}: Initialized with GameEngine.`);
-    } else {
-      logger.warn(`${stage}: SaveGameUI could not be resolved.`);
-    }
-  } catch (err) {
-    logger.error(`${stage}: Error during initialization.`, err);
-  }
+  resolveAndInitialize(
+    container,
+    tokens.SaveGameUI,
+    'init',
+    logger,
+    gameEngine
+  );
 }
 
 /**
@@ -81,22 +57,13 @@ export function initSaveGameUI({ container, gameEngine, logger, tokens }) {
  * @returns {void}
  */
 export function initLoadGameUI({ container, gameEngine, logger, tokens }) {
-  const stage = 'LoadGameUI Init';
-  try {
-    logger.debug(`${stage}: Resolving LoadGameUI...`);
-    const ui = container.resolve(tokens.LoadGameUI);
-    if (ui) {
-      if (typeof ui.init !== 'function') {
-        throw new Error('LoadGameUI missing init(gameEngine)');
-      }
-      ui.init(gameEngine);
-      logger.debug(`${stage}: Initialized with GameEngine.`);
-    } else {
-      logger.warn(`${stage}: LoadGameUI could not be resolved.`);
-    }
-  } catch (err) {
-    logger.error(`${stage}: Error during initialization.`, err);
-  }
+  resolveAndInitialize(
+    container,
+    tokens.LoadGameUI,
+    'init',
+    logger,
+    gameEngine
+  );
 }
 
 /**

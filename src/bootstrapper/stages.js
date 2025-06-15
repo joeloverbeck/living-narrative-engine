@@ -6,6 +6,7 @@ import AppContainer from '../dependencyInjection/appContainer.js'; // Corrected 
 import GameEngine from '../engine/gameEngine.js';
 
 import { initializeAuxiliaryServicesStage } from './auxiliaryStages.js';
+import { setupButtonListener } from './helpers.js';
 export { initializeAuxiliaryServicesStage };
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../dependencyInjection/tokens.js'; // Corrected path assuming tokens.js is in ../dependencyInjection/
@@ -204,48 +205,49 @@ export async function setupMenuButtonListenersStage(
   logger.debug(`Bootstrap Stage: Starting ${stageName}...`);
 
   try {
-    const openSaveGameButton = documentRef.getElementById(
-      'open-save-game-button'
-    );
-    if (openSaveGameButton && gameEngine) {
-      openSaveGameButton.addEventListener('click', () => {
-        logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
-        gameEngine.showSaveGameUI();
-      });
-      logger.debug(
-        `${stageName}: Save Game UI button listener attached to #open-save-game-button.`
+    if (gameEngine) {
+      setupButtonListener(
+        documentRef,
+        'open-save-game-button',
+        () => {
+          logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
+          gameEngine.showSaveGameUI();
+        },
+        logger,
+        stageName
       );
-    } else {
-      if (!openSaveGameButton)
-        logger.warn(
-          `${stageName}: Could not find #open-save-game-button. Save listener not attached.`
-        );
-      if (!gameEngine)
-        logger.warn(
-          `${stageName}: GameEngine not available for #open-save-game-button listener.`
-        );
-    }
 
-    const openLoadGameButton = documentRef.getElementById(
-      'open-load-game-button'
-    );
-    if (openLoadGameButton && gameEngine) {
-      openLoadGameButton.addEventListener('click', () => {
-        logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
-        gameEngine.showLoadGameUI();
-      });
-      logger.debug(
-        `${stageName}: Load Game UI button listener attached to #open-load-game-button.`
+      setupButtonListener(
+        documentRef,
+        'open-load-game-button',
+        () => {
+          logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
+          gameEngine.showLoadGameUI();
+        },
+        logger,
+        stageName
       );
     } else {
-      if (!openLoadGameButton)
-        logger.warn(
-          `${stageName}: Could not find #open-load-game-button. Load listener not attached.`
-        );
-      if (!gameEngine)
-        logger.warn(
-          `${stageName}: GameEngine not available for #open-load-game-button listener.`
-        );
+      setupButtonListener(
+        documentRef,
+        'open-save-game-button',
+        () => {},
+        logger,
+        stageName
+      );
+      logger.warn(
+        `${stageName}: GameEngine not available for #open-save-game-button listener.`
+      );
+      setupButtonListener(
+        documentRef,
+        'open-load-game-button',
+        () => {},
+        logger,
+        stageName
+      );
+      logger.warn(
+        `${stageName}: GameEngine not available for #open-load-game-button listener.`
+      );
     }
     logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
   } catch (error) {
