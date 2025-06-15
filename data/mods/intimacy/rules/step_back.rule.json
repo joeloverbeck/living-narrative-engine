@@ -136,31 +136,35 @@
       }
     },
     {
-      "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Step 6: Dispatch UI and perception events.",
+      "type": "SET_VARIABLE",
       "parameters": {
-        "location_id": "{context.actorPos.locationId}",
-        "description_text": "{context.actorName} steps back.",
-        "perception_type": "state_change_observable",
-        "actor_id": "{event.payload.actorId}"
+        "variable_name": "logMessage",
+        "value": "{context.actorName} steps back, the moment of closeness ending."
       }
     },
     {
-      "type": "DISPATCH_EVENT",
+      "type": "SET_VARIABLE",
       "parameters": {
-        "eventType": "core:display_successful_action_result",
-        "payload": {
-          "message": "{context.actorName} steps back, the moment of closeness ending."
-        }
+        "variable_name": "locationId",
+        "value": "{context.actorPos.locationId}"
       }
     },
     {
-      "type": "END_TURN",
-      "comment": "Step 7: End the actor's turn.",
+      "type": "SET_VARIABLE",
       "parameters": {
-        "entityId": "{event.payload.actorId}",
-        "success": true
+        "variable_name": "perceptionType",
+        "value": "state_change_observable"
       }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": null
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
     }
   ]
 }
