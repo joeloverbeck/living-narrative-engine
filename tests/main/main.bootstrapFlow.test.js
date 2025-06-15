@@ -16,10 +16,13 @@ jest.mock('../../src/bootstrapper/stages.js', () => ({
   setupDIContainerStage: (...args) => mockSetupDI(...args),
   resolveCoreServicesStage: (...args) => mockResolveCore(...args),
   initializeGameEngineStage: (...args) => mockInitEngine(...args),
-  initializeAuxiliaryServicesStage: (...args) => mockInitAux(...args),
   setupMenuButtonListenersStage: (...args) => mockMenu(...args),
   setupGlobalEventListenersStage: (...args) => mockGlobal(...args),
   startGameStage: (...args) => mockStartGame(...args),
+}));
+jest.mock('../../src/bootstrapper/auxiliaryStages.js', () => ({
+  __esModule: true,
+  initializeAuxiliaryServicesStage: (...args) => mockInitAux(...args),
 }));
 
 jest.mock('../../src/bootstrapper/errorUtils.js', () => ({

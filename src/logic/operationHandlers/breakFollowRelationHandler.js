@@ -11,7 +11,9 @@
 /** @typedef {import('./rebuildLeaderListCacheHandler.js').default} RebuildLeaderListCacheHandler */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { FOLLOWING_COMPONENT_ID } from '../../constants/componentIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class BreakFollowRelationHandler {
   /** @type {ILogger} */
@@ -72,12 +74,16 @@ class BreakFollowRelationHandler {
    * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
-    const { follower_id } = params || {};
+    const logger = execCtx?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'BREAK_FOLLOW_RELATION')) return;
+
+    const { follower_id } = params;
     if (typeof follower_id !== 'string' || !follower_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'BREAK_FOLLOW_RELATION: Invalid "follower_id" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'BREAK_FOLLOW_RELATION: Invalid "follower_id" parameter',
+        { params }
+      );
       return;
     }
     const fid = follower_id.trim();
@@ -94,10 +100,11 @@ class BreakFollowRelationHandler {
     try {
       this.#entityManager.removeComponent(fid, FOLLOWING_COMPONENT_ID);
     } catch (err) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'BREAK_FOLLOW_RELATION: Failed removing following component',
-        details: { error: err.message, stack: err.stack, follower_id: fid },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'BREAK_FOLLOW_RELATION: Failed removing following component',
+        { error: err.message, stack: err.stack, follower_id: fid }
+      );
       return;
     }
     if (currentData.leaderId) {

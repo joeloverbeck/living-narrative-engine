@@ -81,12 +81,11 @@ describe('DispatchSpeechHandler', () => {
 
   test('dispatches error event on invalid parameters', () => {
     handler.execute(null, {});
-    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
-      expect.objectContaining({
-        message: 'DISPATCH_SPEECH: invalid parameters.',
-      })
+    expect(logger.warn).toHaveBeenCalledWith(
+      'DISPATCH_SPEECH: params missing or invalid.',
+      { params: null }
     );
+    expect(safeDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   test('dispatches error event if underlying dispatch throws', () => {

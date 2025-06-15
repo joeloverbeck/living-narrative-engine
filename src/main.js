@@ -9,11 +9,11 @@ import {
   setupDIContainerStage,
   resolveCoreServicesStage,
   initializeGameEngineStage,
-  initializeAuxiliaryServicesStage,
   setupMenuButtonListenersStage,
   setupGlobalEventListenersStage,
   startGameStage,
 } from './bootstrapper/stages.js';
+import { initializeAuxiliaryServicesStage } from './bootstrapper/auxiliaryStages.js';
 
 const ACTIVE_WORLD = 'demo';
 

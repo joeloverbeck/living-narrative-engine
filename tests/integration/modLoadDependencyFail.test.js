@@ -395,6 +395,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       validator, // Property name matches variable name
       configuration, // Property name matches variable name
       gameConfigLoader, // Property name matches variable name
+      promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader, // Property name matches variable name
       validatedEventDispatcher, // <<< Pass the new mock >>>
     });

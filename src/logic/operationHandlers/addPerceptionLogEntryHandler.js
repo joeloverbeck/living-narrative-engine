@@ -6,6 +6,7 @@
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 const DEFAULT_MAX_LOG_ENTRIES = 50;
 
@@ -49,17 +50,19 @@ class AddPerceptionLogEntryHandler {
     }
     const { location_id, entry } = params;
     if (typeof location_id !== 'string' || !location_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
-        details: { location_id },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
+        { location_id }
+      );
       return;
     }
     if (!entry || typeof entry !== 'object') {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'ADD_PERCEPTION_LOG_ENTRY: entry object is required',
-        details: { entry },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'ADD_PERCEPTION_LOG_ENTRY: entry object is required',
+        { entry }
+      );
       return;
     }
 
@@ -112,10 +115,11 @@ class AddPerceptionLogEntryHandler {
         this.#entityManager.addComponent(id, PERCEPTION_LOG_COMPONENT_ID, next);
         updated++;
       } catch (e) {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-          message: `ADD_PERCEPTION_LOG_ENTRY: failed to update ${id}: ${e.message}`,
-          details: { stack: e.stack, entityId: id },
-        });
+        safeDispatchError(
+          this.#dispatcher,
+          `ADD_PERCEPTION_LOG_ENTRY: failed to update ${id}: ${e.message}`,
+          { stack: e.stack, entityId: id }
+        );
       }
     }
 

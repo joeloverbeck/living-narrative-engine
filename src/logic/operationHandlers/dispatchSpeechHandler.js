@@ -11,6 +11,10 @@ import {
   DISPLAY_ERROR_ID,
 } from '../../constants/eventIds.js';
 
+import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
+
+
 /**
  * Parameters accepted by {@link DispatchSpeechHandler#execute}.
  *
@@ -55,16 +59,19 @@ class DispatchSpeechHandler {
    * @param {ExecutionContext} _ctx - Execution context (unused).
    */
   execute(params, _ctx) {
+    const logger = _ctx?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'DISPATCH_SPEECH')) return;
+
     if (
-      !params ||
       typeof params.entity_id !== 'string' ||
       !params.entity_id.trim() ||
       typeof params.speech_content !== 'string'
     ) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_SPEECH: invalid parameters.',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_SPEECH: invalid parameters.',
+        { params }
+      );
       return;
     }
 
@@ -89,10 +96,11 @@ class DispatchSpeechHandler {
     try {
       this.#dispatcher.dispatch(DISPLAY_SPEECH_ID, payload);
     } catch (err) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_SPEECH: Error dispatching display_speech.',
-        details: { errorMessage: err.message, stack: err.stack },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_SPEECH: Error dispatching display_speech.',
+        { errorMessage: err.message, stack: err.stack }
+      );
     }
   }
 }

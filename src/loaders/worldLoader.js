@@ -15,6 +15,7 @@
 /** @typedef {import('./gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('./entityLoader.js').default} EntityLoader */
+/** @typedef {import('./promptTextLoader.js').default} PromptTextLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -76,6 +77,7 @@ class WorldLoader extends AbstractLoader {
   /** @type {EventLoader}    */ #eventLoader;
   /** @type {EntityLoader}   */ #entityDefinitionLoader;
   /** @type {GameConfigLoader}*/ #gameConfigLoader;
+  /** @type {PromptTextLoader}*/ #promptTextLoader;
   /** @type {ModManifestLoader}*/ #modManifestLoader;
   /** @type {ValidatedEventDispatcher} */ #validatedEventDispatcher;
   /** @type {string[]}       */ #finalOrder = [];
@@ -105,6 +107,7 @@ class WorldLoader extends AbstractLoader {
    * @param {ISchemaValidator} dependencies.validator - Service for schema validation.
    * @param {IConfiguration} dependencies.configuration - Service for configuration access.
    * @param {GameConfigLoader} dependencies.gameConfigLoader - Loader for game configuration.
+   * @param {PromptTextLoader} dependencies.promptTextLoader - Loader for core prompt text.
    * @param {ModManifestLoader} dependencies.modManifestLoader - Loader for mod manifests.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
    * @throws {Error} If any required dependency is missing or invalid.
@@ -122,6 +125,7 @@ class WorldLoader extends AbstractLoader {
     validator,
     configuration,
     gameConfigLoader,
+    promptTextLoader,
     modManifestLoader,
     validatedEventDispatcher,
   }) {
@@ -177,6 +181,11 @@ class WorldLoader extends AbstractLoader {
         methods: ['loadConfig'],
       },
       {
+        dependency: promptTextLoader,
+        name: 'PromptTextLoader',
+        methods: ['loadPromptText'],
+      },
+      {
         dependency: modManifestLoader,
         name: 'ModManifestLoader',
         methods: ['loadRequestedManifests'],
@@ -204,6 +213,7 @@ class WorldLoader extends AbstractLoader {
     this.#validator = validator;
     this.#configuration = configuration;
     this.#gameConfigLoader = gameConfigLoader;
+    this.#promptTextLoader = promptTextLoader;
     this.#modManifestLoader = modManifestLoader;
     this.#validatedEventDispatcher = validatedEventDispatcher;
 
@@ -339,6 +349,21 @@ class WorldLoader extends AbstractLoader {
         );
       }
       this.#logger.debug('WorldLoader: All essential schemas found.');
+
+      // --- Load Core Prompt Text ---
+      try {
+        await this.#promptTextLoader.loadPromptText();
+        this.#logger.debug('WorldLoader: Prompt text loaded successfully.');
+      } catch (e) {
+        if (!totalCounts['prompt_text']) {
+          totalCounts['prompt_text'] = { count: 0, overrides: 0, errors: 0 };
+        }
+        totalCounts['prompt_text'].errors += 1;
+        this.#logger.error(
+          `WorldLoader: Failed to load prompt text: ${e.message}`,
+          e
+        );
+      }
 
       // --- Step 4: Load Game Configuration ---
       requestedModIds = await this.#gameConfigLoader.loadConfig();

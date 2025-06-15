@@ -11,8 +11,10 @@
 /** @typedef {import('./rebuildLeaderListCacheHandler.js').default} RebuildLeaderListCacheHandler */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { FOLLOWING_COMPONENT_ID } from '../../constants/componentIds.js';
 import { wouldCreateCycle } from '../../utils/followUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class EstablishFollowRelationHandler {
   /** @type {ILogger} */
@@ -75,19 +77,25 @@ class EstablishFollowRelationHandler {
    * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
-    const { follower_id, leader_id } = params || {};
+    const logger = execCtx?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'ESTABLISH_FOLLOW_RELATION'))
+      return;
+
+    const { follower_id, leader_id } = params;
     if (typeof follower_id !== 'string' || !follower_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'ESTABLISH_FOLLOW_RELATION: Invalid "follower_id" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'ESTABLISH_FOLLOW_RELATION: Invalid "follower_id" parameter',
+        { params }
+      );
       return;
     }
     if (typeof leader_id !== 'string' || !leader_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'ESTABLISH_FOLLOW_RELATION: Invalid "leader_id" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'ESTABLISH_FOLLOW_RELATION: Invalid "leader_id" parameter',
+        { params }
+      );
       return;
     }
 
@@ -98,10 +106,11 @@ class EstablishFollowRelationHandler {
     );
 
     if (wouldCreateCycle(fid, lid, this.#entityManager)) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'ESTABLISH_FOLLOW_RELATION: Following would create a cycle',
-        details: { follower_id: fid, leader_id: lid },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'ESTABLISH_FOLLOW_RELATION: Following would create a cycle',
+        { follower_id: fid, leader_id: lid }
+      );
       return;
     }
 
@@ -114,16 +123,16 @@ class EstablishFollowRelationHandler {
         leaderId: lid,
       });
     } catch (err) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message:
-          'ESTABLISH_FOLLOW_RELATION: Failed updating follower component',
-        details: {
+      safeDispatchError(
+        this.#dispatcher,
+        'ESTABLISH_FOLLOW_RELATION: Failed updating follower component',
+        {
           error: err.message,
           stack: err.stack,
           follower_id: fid,
           leader_id: lid,
-        },
-      });
+        }
+      );
       return;
     }
 

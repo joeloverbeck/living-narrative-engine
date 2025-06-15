@@ -181,15 +181,16 @@ class QueryComponentHandler {
         );
       }
     } catch (error) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: `QueryComponentHandler: Error during EntityManager.getComponentData for component "${trimmedComponentType}" on entity "${entityId}".`,
-        details: {
+      safeDispatchError(
+        this.#dispatcher,
+        `QueryComponentHandler: Error during EntityManager.getComponentData for component "${trimmedComponentType}" on entity "${entityId}".`,
+        {
           error: error.message,
           stack: error.stack,
           params: params,
           resolvedEntityId: entityId,
-        },
-      });
+        }
+      );
       const stored = setContextValue(
         result_variable,
         missing_value,

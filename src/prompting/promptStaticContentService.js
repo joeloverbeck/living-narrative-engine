@@ -4,6 +4,7 @@
 import { IPromptStaticContentService } from '../interfaces/IPromptStaticContentService.js';
 
 /** @typedef {import('../interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService_Interface */
+/** @typedef {import('../loaders/promptTextLoader.js').default} PromptTextLoader */
 
 // --- CORE PROMPT TEXT CONSTANTS (Moved from AIPromptContentProvider) ---
 const CORE_TASK_DESCRIPTION_TEXT = `Your sole focus is to BE the character detailed below. Live as them, think as them.
@@ -49,12 +50,14 @@ const FINAL_LLM_INSTRUCTION_TEXT =
 export class PromptStaticContentService extends IPromptStaticContentService {
   /** @type {ILogger} */
   #logger;
+  /** @type {PromptTextLoader} */
+  #promptTextLoader;
 
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger
    */
-  constructor({ logger }) {
+  constructor({ logger, promptTextLoader }) {
     super();
 
     if (!logger) {
@@ -62,7 +65,13 @@ export class PromptStaticContentService extends IPromptStaticContentService {
         'PromptStaticContentService: Logger dependency is required.'
       );
     }
+    if (!promptTextLoader) {
+      throw new Error(
+        'PromptStaticContentService: PromptTextLoader dependency is required.'
+      );
+    }
     this.#logger = logger;
+    this.#promptTextLoader = promptTextLoader;
     this.#logger.debug('PromptStaticContentService initialized.');
   }
 

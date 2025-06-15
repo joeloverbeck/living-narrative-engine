@@ -11,6 +11,7 @@
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 const EVENT_ID = 'core:perceptible_event';
 
@@ -92,31 +93,35 @@ class DispatchPerceptibleEventHandler {
     } = params;
 
     if (typeof location_id !== 'string' || !location_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_PERCEPTIBLE_EVENT: location_id required',
-        details: { location_id },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_PERCEPTIBLE_EVENT: location_id required',
+        { location_id }
+      );
       return;
     }
     if (typeof description_text !== 'string' || !description_text.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_PERCEPTIBLE_EVENT: description_text required',
-        details: { description_text },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_PERCEPTIBLE_EVENT: description_text required',
+        { description_text }
+      );
       return;
     }
     if (typeof perception_type !== 'string' || !perception_type.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_PERCEPTIBLE_EVENT: perception_type required',
-        details: { perception_type },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_PERCEPTIBLE_EVENT: perception_type required',
+        { perception_type }
+      );
       return;
     }
     if (typeof actor_id !== 'string' || !actor_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'DISPATCH_PERCEPTIBLE_EVENT: actor_id required',
-        details: { actor_id },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'DISPATCH_PERCEPTIBLE_EVENT: actor_id required',
+        { actor_id }
+      );
       return;
     }
 

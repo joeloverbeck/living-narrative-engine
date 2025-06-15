@@ -11,6 +11,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import {
   initHandlerLogger,
@@ -171,15 +172,16 @@ class ModifyComponentHandler {
         );
       }
     } catch (e) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'MODIFY_COMPONENT: Error during EntityManager.addComponent.',
-        details: {
+      safeDispatchError(
+        this.#dispatcher,
+        'MODIFY_COMPONENT: Error during EntityManager.addComponent.',
+        {
           error: e.message,
           stack: e.stack,
           entityId,
           componentType: compType,
-        },
-      });
+        }
+      );
     }
   }
 }

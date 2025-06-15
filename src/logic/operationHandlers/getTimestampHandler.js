@@ -4,6 +4,7 @@
  */
 
 import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 class GetTimestampHandler {
   #logger;
@@ -14,6 +15,9 @@ class GetTimestampHandler {
   }
 
   execute(params, execCtx) {
+    const logger = execCtx?.logger ?? this.#logger;
+    if (!assertParamsObject(params, logger, 'GET_TIMESTAMP')) return;
+
     const rv = params.result_variable.trim();
     const timestamp = new Date().toISOString();
     const stored = setContextValue(

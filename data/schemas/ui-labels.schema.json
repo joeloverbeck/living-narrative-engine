@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/ui-labels.schema.json",
+  "title": "UI Labels",
+  "description": "Mapping of UI label keys to display strings.",
+  "type": "object",
+  "additionalProperties": { "type": "string" }
+}

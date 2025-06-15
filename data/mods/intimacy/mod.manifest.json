@@ -22,6 +22,7 @@
       "intimacy_show_onlookers.rule.json",
       "thumb_wipe_cheek.rule.json"
     ],
-    "events": []
+    "events": [],
+    "ui": ["icons.json", "labels.json"]
   }
 }

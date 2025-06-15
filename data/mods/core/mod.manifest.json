@@ -56,7 +56,8 @@
     ],
     "macros": [
       "logSuccessAndEndTurn.macro.json",
-      "logFailureAndEndTurn.macro.json"
+      "logFailureAndEndTurn.macro.json",
+      "autoMoveFollower.macro.json"
     ],
     "events": [
       "action_decided.event.json",
@@ -86,6 +87,7 @@
       "set_title.event.json",
       "update_available_actions.event.json",
       "entity_moved.event.json"
-    ]
+    ],
+    "ui": ["icons.json", "labels.json"]
   }
 }

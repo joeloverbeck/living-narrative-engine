@@ -15,9 +15,7 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
-import ModifyContextArrayHandler from '../../../src/logic/operationHandlers/modifyContextArrayHandler.js';
-import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
-import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
+import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
@@ -104,19 +102,9 @@ function init(entities) {
       safeEventDispatcher: safeDispatcher,
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
-    // ADD THE NEW HANDLER
-    MODIFY_CONTEXT_ARRAY: new ModifyContextArrayHandler({
+    MERGE_CLOSENESS_CIRCLE: new MergeClosenessCircleHandler({
       logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    ADD_COMPONENT: new AddComponentHandler({
       entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    MODIFY_COMPONENT: new ModifyComponentHandler({
-      entityManager,
-      logger,
       safeEventDispatcher: safeDispatcher,
     }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({

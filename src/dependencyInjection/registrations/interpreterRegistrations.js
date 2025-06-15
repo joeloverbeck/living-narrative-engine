@@ -42,6 +42,7 @@ import MathHandler from '../../logic/operationHandlers/mathHandler.js';
 import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler.js';
 import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyContextArrayHandler.js';
 import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFollowersHandler.js';
+import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClosenessCircleHandler.js';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -319,6 +320,16 @@ export function registerInterpreters(container) {
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
+    [
+      tokens.MergeClosenessCircleHandler,
+      MergeClosenessCircleHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
   ];
 
   for (const [token, ctor, factory] of handlerFactories) {
@@ -398,7 +409,15 @@ export function registerInterpreters(container) {
       'AUTO_MOVE_FOLLOWERS',
       bind(tokens.AutoMoveFollowersHandler)
     );
+    registry.register(
+      'MERGE_CLOSENESS_CIRCLE',
+      bind(tokens.MergeClosenessCircleHandler)
+    );
     registry.register('MATH', bind(tokens.MathHandler));
+    registry.register(
+      'REMOVE_FROM_CLOSENESS_CIRCLE',
+      bind(tokens.RemoveFromClosenessCircleHandler)
+    );
 
     return registry;
   });

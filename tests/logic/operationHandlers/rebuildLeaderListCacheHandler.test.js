@@ -164,6 +164,16 @@ describe('RebuildLeaderListCacheHandler', () => {
     test.each([
       ['null params', null],
       ['undefined params', undefined],
+    ])('should warn and abort given %s', (caseName, params) => {
+      handler.execute(params, mockExecutionContext);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'REBUILD_LEADER_LIST_CACHE: params missing or invalid.',
+        { params }
+      );
+      expect(mockEntityManager.getEntitiesWithComponent).not.toHaveBeenCalled();
+    });
+
+    test.each([
       ['params with no leaderIds', {}],
       ['params with non-array leaderIds', { leaderIds: 'not-an-array' }],
       ['params with empty leaderIds array', { leaderIds: [] }],

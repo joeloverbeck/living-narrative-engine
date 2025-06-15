@@ -3,6 +3,7 @@
 import EventBus from '../../events/eventBus.js';
 import SpatialIndexManager from '../../entities/spatialIndexManager.js';
 import WorldLoader from '../../loaders/worldLoader.js';
+import PromptTextLoader from '../../loaders/promptTextLoader.js';
 import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concrete class
 import EntityManager from '../../entities/entityManager.js'; // Concrete class
 import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js'; // Concrete Class Import
@@ -25,6 +26,7 @@ import { ActionIndexingService } from '../../turns/services/actionIndexingServic
  * @typedef {import('../../loaders/macroLoader.js').default} MacroLoader
  * @typedef {import('../../loaders/entityLoader.js').default} EntityLoader
  * @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader
+ * @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader
  * @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader
  * @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
  * @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository
@@ -68,6 +70,22 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${tokens.ISpatialIndexManager}.`
   );
 
+  r.singletonFactory(
+    tokens.PromptTextLoader,
+    (c) =>
+      new PromptTextLoader({
+        configuration: c.resolve(tokens.IConfiguration),
+        pathResolver: c.resolve(tokens.IPathResolver),
+        dataFetcher: c.resolve(tokens.IDataFetcher),
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  log.debug(
+    `Infrastructure Registration: Registered ${tokens.PromptTextLoader}.`
+  );
+
   container.register(
     tokens.WorldLoader,
     (c) => {
@@ -84,6 +102,7 @@ export function registerInfrastructure(container) {
         validator: c.resolve(tokens.ISchemaValidator),
         configuration: c.resolve(tokens.IConfiguration),
         gameConfigLoader: c.resolve(tokens.GameConfigLoader),
+        promptTextLoader: c.resolve(tokens.PromptTextLoader),
         modManifestLoader: c.resolve(tokens.ModManifestLoader),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       };
