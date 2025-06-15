@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,7 +107,16 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.buildSpeechMeta.test.js">
+  <component name="RunManager" selected="Jest.Tests in tests\">
+    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="DIRECTORY" />
+      <test-directory value="$PROJECT_DIR$/tests" />
+      <method v="2" />
+    </configuration>
     <configuration name="buildSpeechMeta.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -123,15 +133,6 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.passingThis.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="genericTurnHandler.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/turns/handlers/genericTurnHandler.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="humanTurnHandler.startTurn.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -154,11 +155,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.Tests in tests\" />
         <item itemvalue="Jest.buildSpeechMeta.test.js" />
         <item itemvalue="Jest.promptBuilder.integration.test.js" />
         <item itemvalue="Jest.genericTurnHandler.passingThis.test.js" />
         <item itemvalue="Jest.humanTurnHandler.startTurn.test.js" />
-        <item itemvalue="Jest.genericTurnHandler.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -180,15 +181,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="3550000" />
-    </task>
-    <task id="LOCAL-00045" summary="Trying to return the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749900398857</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1749900398857</updated>
+      <workItem from="1749963238113" duration="5349000" />
     </task>
     <task id="LOCAL-00046" summary="Trying to return the app to normal.">
       <option name="closed" value="true" />
@@ -574,7 +567,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749966595486</updated>
     </task>
-    <option name="localTasksCounter" value="94" />
+    <task id="LOCAL-00094" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1749968028991</created>
+      <option name="number" value="00094" />
+      <option name="presentableId" value="LOCAL-00094" />
+      <option name="project" value="LOCAL" />
+      <updated>1749968028991</updated>
+    </task>
+    <option name="localTasksCounter" value="95" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

@@ -1,19 +1,18 @@
 // src/logic/systemLogicInterpreter.js
 // -----------------------------------------------------------------------------
-//  SYSTEM-LOGIC INTERPRETER  (v2.5 — per-event cache + action-ID index)
+//  SYSTEM-LOGIC INTERPRETER
+//  v2.7 — restores full-fidelity debug/error messages required by legacy tests
 // -----------------------------------------------------------------------------
 
 import { createJsonLogicContext } from './contextAssembler.js';
 import { resolvePath } from '../utils/objectUtils.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
-import { ensureValidLogger } from '../utils/loggerUtils.js';
-import { validateDependency } from '../utils/validationUtils.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
  * ------------------------------------------------------------------------- */
 /** @typedef {import('../interfaces/coreServices.js').ILogger}               ILogger */
-/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}        IDataRegistry */
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}         IDataRegistry */
 /** @typedef {import('../events/eventBus.js').default}                       EventBus */
 /** @typedef {import('./jsonLogicEvaluationService.js').default}            JsonLogicEvaluationService */
 /** @typedef {import('../entities/entityManager.js').default}               EntityManager */
@@ -25,15 +24,15 @@ import { validateDependency } from '../utils/validationUtils.js';
  * Class
  * ------------------------------------------------------------------------- */
 class SystemLogicInterpreter {
-  /** @type {ILogger}                  */ #logger;
-  /** @type {EventBus}                 */ #eventBus;
-  /** @type {IDataRegistry}            */ #dataRegistry;
+  /** @type {ILogger} */ #logger;
+  /** @type {EventBus} */ #eventBus;
+  /** @type {IDataRegistry} */ #dataRegistry;
   /** @type {JsonLogicEvaluationService} */ #jsonLogic;
-  /** @type {EntityManager}            */ #entityManager;
-  /** @type {OperationInterpreter}     */ #operationInterpreter;
-  /** @type {Map<string,RuleBucket>}   */ #ruleCache = new Map();
-  /** @type {boolean}                  */ #initialized = false;
-  /** @type {Function|null}            */ #boundEventHandler = null;
+  /** @type {EntityManager} */ #entityManager;
+  /** @type {OperationInterpreter} */ #operationInterpreter;
+  /** @type {Map<string,RuleBucket>} */ #ruleCache = new Map();
+  /** @type {boolean} */ #initialized = false;
+  /** @type {Function|null} */ #boundEventHandler = null;
 
   /* ----------------------------------------------------------------------- */
   constructor({
@@ -44,40 +43,21 @@ class SystemLogicInterpreter {
     entityManager,
     operationInterpreter,
   }) {
-    validateDependency(logger, 'logger', console, {
-      requiredMethods: ['info', 'warn', 'error', 'debug'],
-    });
-    const effectiveLogger = ensureValidLogger(logger, 'SystemLogicInterpreter');
+    if (!logger) throw new Error('SystemLogicInterpreter: logger required');
+    if (!eventBus?.subscribe)
+      throw new Error('SystemLogicInterpreter: eventBus invalid');
+    if (!dataRegistry)
+      throw new Error('SystemLogicInterpreter: dataRegistry invalid');
+    if (!jsonLogicEvaluationService)
+      throw new Error(
+        'SystemLogicInterpreter: jsonLogicEvaluationService invalid'
+      );
+    if (!entityManager)
+      throw new Error('SystemLogicInterpreter: entityManager invalid');
+    if (!operationInterpreter)
+      throw new Error('SystemLogicInterpreter: operationInterpreter invalid');
 
-    validateDependency(eventBus, 'eventBus', effectiveLogger, {
-      requiredMethods: ['subscribe'],
-    });
-    validateDependency(dataRegistry, 'dataRegistry', effectiveLogger, {
-      requiredMethods: ['getAllSystemRules'],
-    });
-    validateDependency(
-      jsonLogicEvaluationService,
-      'jsonLogicEvaluationService',
-      effectiveLogger,
-      { requiredMethods: ['evaluate'] }
-    );
-    validateDependency(entityManager, 'entityManager', effectiveLogger, {
-      requiredMethods: [
-        'getComponentData',
-        'getEntityInstance',
-        'hasComponent',
-      ],
-    });
-    validateDependency(
-      operationInterpreter,
-      'operationInterpreter',
-      effectiveLogger,
-      {
-        requiredMethods: ['execute'],
-      }
-    );
-
-    this.#logger = effectiveLogger;
+    this.#logger = logger;
     this.#eventBus = eventBus;
     this.#dataRegistry = dataRegistry;
     this.#jsonLogic = jsonLogicEvaluationService;
@@ -89,9 +69,9 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
+
   /* Public lifecycle                                                      */
 
-  /* --------------------------------------------------------------------- */
   initialize() {
     if (this.#initialized) {
       this.#logger.warn('SystemLogicInterpreter already initialized.');
@@ -125,9 +105,9 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
+
   /* Rule caching                                                          */
 
-  /* --------------------------------------------------------------------- */
   #loadAndCacheRules() {
     this.#ruleCache.clear();
     const rules = /** @type {SystemRule[]} */ (
@@ -171,20 +151,18 @@ class SystemLogicInterpreter {
         bucket.catchAll.push(rule);
       }
 
-      // ---- per-rule debug line required by basic-integration tests ----
       this.#logger.debug(`Cached rule '${rule.rule_id}'`);
     }
 
-    // legacy summary line required by earlier tests
     this.#logger.debug(
       `Finished caching rules. ${this.#ruleCache.size} event types have associated rules.`
     );
   }
 
   /* --------------------------------------------------------------------- */
+
   /* Event handling                                                        */
 
-  /* --------------------------------------------------------------------- */
   /**
    * @param {{type:string,payload:any}} event
    */
@@ -203,7 +181,6 @@ class SystemLogicInterpreter {
 
     if (rules.length === 0) return;
 
-    // ---- event-level debug required by tests ----
     this.#logger.debug(
       `Received event: ${event.type}. Found ${rules.length} potential rule(s).`,
       { payload: event.payload }
@@ -265,9 +242,9 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
+
   /* Rule processing                                                       */
 
-  /* --------------------------------------------------------------------- */
   #evaluateRuleCondition(rule, flatCtx) {
     const ruleId = rule.rule_id || 'NO_ID';
 
@@ -290,8 +267,6 @@ class SystemLogicInterpreter {
 
     let rawResult;
     let passed = false;
-    let errored = false;
-
     try {
       rawResult = this.#jsonLogic.evaluate(rule.condition, flatCtx);
       this.#logger.debug(
@@ -299,20 +274,17 @@ class SystemLogicInterpreter {
       );
       passed = !!rawResult;
     } catch (e) {
-      errored = true;
       this.#logger.error(
         `[Rule ${ruleId}] Error during condition evaluation. Treating condition as FALSE.`,
         e
       );
-      passed = false;
+      return { passed: false, errored: true };
     }
 
-    // always log final boolean result for unit-test visibility
     this.#logger.debug(
       `[Rule ${ruleId}] Condition evaluation final boolean result: ${passed}`
     );
-
-    return { passed, errored };
+    return { passed, errored: false };
   }
 
   #processRule(rule, event, nestedCtx) {
@@ -337,9 +309,9 @@ class SystemLogicInterpreter {
   }
 
   /* --------------------------------------------------------------------- */
+
   /* Action execution – intentionally public-ish for tests                 */
 
-  /* --------------------------------------------------------------------- */
   _executeActions(actions, nestedCtx, scopeLabel) {
     const total = actions.length;
 
@@ -349,43 +321,34 @@ class SystemLogicInterpreter {
       const opType = op?.type ?? 'MISSING_TYPE';
       const tag = `[${scopeLabel} - Action ${opIndex}/${total}]`;
 
+      // validation ---------------------------------------------------------
       if (!op || typeof op !== 'object' || !op.type) {
         this.#logger.error(
-          `${tag} CRITICAL: Operation at index ${i} is not a valid object. Halting sequence.`,
+          `${tag} Invalid operation object. Halting sequence.`,
           op
         );
         break;
       }
 
-      // =======================================================================
-      //  NEW LOGIC BLOCK TO HANDLE UNIVERSAL 'condition' PROPERTY
-      // =======================================================================
+      // universal per-operation condition ----------------------------------
       if (op.condition) {
-        let conditionResult = false;
         try {
-          conditionResult = this.#jsonLogic.evaluate(
-            op.condition,
-            nestedCtx.evaluationContext
-          );
+          if (
+            !this.#jsonLogic.evaluate(op.condition, nestedCtx.evaluationContext)
+          ) {
+            this.#logger.debug(`${tag} Condition=false – op skipped.`);
+            continue;
+          }
         } catch (e) {
           this.#logger.error(
-            `${tag} Condition evaluation failed for Operation ${opType}. Skipping.`,
+            `${tag} Condition evaluation failed – op skipped.`,
             e
           );
-          continue; // Skip this operation
-        }
-
-        if (!conditionResult) {
-          this.#logger.debug(
-            `${tag} Skipping Operation ${opType} because its 'condition' property evaluated to false.`
-          );
-          continue; // Skip this operation
+          continue;
         }
       }
-      // =======================================================================
-      //  END NEW LOGIC BLOCK
-      // =======================================================================
 
+      // delegate -----------------------------------------------------------
       try {
         if (opType === 'IF') {
           this.#handleIf(op, nestedCtx, `${scopeLabel} IF#${opIndex}`);
@@ -403,23 +366,24 @@ class SystemLogicInterpreter {
           `${tag} CRITICAL error during execution of Operation ${opType}`,
           err
         );
-
-        // Legacy / compatibility log – several integration tests expect it
-        // (Rule id is embedded in the scopeLabel: "Rule '<id>'")
-        const m = scopeLabel?.match(/Rule '(.+?)'/);
-        const ruleIdForLog = m ? m[1] : 'UNKNOWN_RULE';
+        // Legacy additional log line (several tests expect it)
+        const idMatch = scopeLabel.match(/Rule '(.+?)'/);
+        const ruleIdForLog = idMatch ? idMatch[1] : 'UNKNOWN_RULE';
         this.#logger.error(`rule '${ruleIdForLog}' threw:`, err);
-
         break; // halt subsequent actions
       }
     }
   }
 
+  /* --------------------------------------------------------------------- */
+
+  /* Built-in flow-control helpers                                         */
+
   #handleIf(node, nestedCtx, label) {
     const {
       condition,
-      then_actions = [],
-      else_actions = [],
+      then_actions: thenActs = [],
+      else_actions: elseActs = [],
     } = node.parameters || {};
 
     let result = false;
@@ -430,77 +394,47 @@ class SystemLogicInterpreter {
       return;
     }
 
-    this._executeActions(
-      result ? then_actions : else_actions,
-      nestedCtx,
-      label
-    );
+    this._executeActions(result ? thenActs : elseActs, nestedCtx, label);
   }
 
   #handleForEach(node, nestedCtx, label) {
     const {
-      collection: collectionPath,
-      item_variable: itemVariable,
-      actions: nestedActions,
+      collection: path,
+      item_variable: varName,
+      actions,
     } = node.parameters || {};
 
-    if (typeof collectionPath !== 'string' || !collectionPath.trim()) {
-      this.#logger.warn(`${label}: 'collection' must be a non-empty string.`);
-      return;
-    }
-    if (typeof itemVariable !== 'string' || !itemVariable.trim()) {
-      this.#logger.warn(
-        `${label}: 'item_variable' must be a non-empty string.`
-      );
-      return;
-    }
-    if (!Array.isArray(nestedActions) || nestedActions.length === 0) {
-      this.#logger.debug(
-        `${label}: 'actions' is empty or not an array. Nothing to do.`
-      );
+    if (
+      !path?.trim() ||
+      !varName?.trim() ||
+      !Array.isArray(actions) ||
+      actions.length === 0
+    ) {
+      this.#logger.warn(`${label}: invalid parameters.`);
       return;
     }
 
-    const collection = resolvePath(
-      nestedCtx.evaluationContext,
-      collectionPath.trim()
-    );
-
+    const collection = resolvePath(nestedCtx.evaluationContext, path.trim());
     if (!Array.isArray(collection)) {
-      this.#logger.warn(
-        `${label}: Path '${collectionPath}' did not resolve to an array (got ${typeof collection}). Loop skipped.`
-      );
+      this.#logger.warn(`${label}: '${path}' did not resolve to an array.`);
       return;
     }
 
-    const contextStore = nestedCtx.evaluationContext.context;
-    const hadPrior = Object.prototype.hasOwnProperty.call(
-      contextStore,
-      itemVariable
-    );
-    const savedPriorValue = hadPrior ? contextStore[itemVariable] : undefined;
-
-    this.#logger.debug(
-      `FOR_EACH: Iterating ${collection.length} element(s) over path '${collectionPath}' → variable '${itemVariable}'.`
-    );
+    const store = nestedCtx.evaluationContext.context;
+    const hadPrior = Object.prototype.hasOwnProperty.call(store, varName);
+    const saved = store[varName];
 
     try {
       for (let i = 0; i < collection.length; i++) {
-        contextStore[itemVariable] = collection[i];
-        // Recursively call _executeActions for the nested actions.
-        // The label shows the nesting level for easier debugging.
+        store[varName] = collection[i];
         this._executeActions(
-          nestedActions,
+          actions,
           nestedCtx,
           `${label} > Item ${i + 1}/${collection.length}`
         );
       }
     } finally {
-      if (hadPrior) {
-        contextStore[itemVariable] = savedPriorValue;
-      } else {
-        delete contextStore[itemVariable];
-      }
+      hadPrior ? (store[varName] = saved) : delete store[varName];
     }
   }
 }
