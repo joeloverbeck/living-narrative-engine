@@ -149,7 +149,10 @@ describe('core_handle_follow rule integration', () => {
         dispatcher: eventBus,
         logger,
       }),
-      END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+      END_TURN: new EndTurnHandler({
+        safeEventDispatcher: safeDispatcher,
+        logger,
+      }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
       GET_NAME: { execute: jest.fn() },
       SET_VARIABLE: { execute: jest.fn() },

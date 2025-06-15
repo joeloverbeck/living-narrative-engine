@@ -178,7 +178,10 @@ function init(entities) {
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({
+      safeEventDispatcher: safeDispatcher,
+      logger,
+    }),
     IF_CO_LOCATED: new IfCoLocatedHandler({
       entityManager,
       logger,
@@ -241,7 +244,12 @@ describe('core_handle_stop_following rule integration', () => {
       listenerCount: jest.fn().mockReturnValue(1),
     };
 
-    safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        events.push({ eventType, payload });
+        return Promise.resolve(true);
+      }),
+    };
 
     const macroRegistry = {
       get: (type, id) =>

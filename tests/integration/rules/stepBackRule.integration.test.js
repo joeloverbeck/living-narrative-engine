@@ -158,7 +158,10 @@ function init(entities) {
       addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({
+      safeEventDispatcher: safeDispatcher,
+      logger,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
@@ -207,7 +210,12 @@ describe('intimacy_handle_step_back rule integration', () => {
     };
 
     events = [];
-    safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        events.push({ eventType, payload });
+        return Promise.resolve(true);
+      }),
+    };
     eventBus = {
       subscribe: jest.fn((ev, l) => {
         if (ev === '*') listener = l;
