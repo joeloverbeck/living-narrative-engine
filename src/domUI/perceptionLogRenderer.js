@@ -122,13 +122,6 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       `${this._logPrefix} Subscribed to VED event '${TURN_STARTED_ID}'.`
     );
 
-    this.refreshList().catch((error) => {
-      this.logger.error(
-        `${this._logPrefix} Error during initial refreshList in constructor:`,
-        error
-      );
-    });
-
     this.logger.debug(`${this._logPrefix} Initialized.`);
   }
 

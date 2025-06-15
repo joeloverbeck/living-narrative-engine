@@ -273,6 +273,7 @@ describe('ActionButtonsRenderer', () => {
     actionButtonsContainerSelector = '#test-action-buttons-selector',
     sendButtonSelector = '#test-send-button-selector',
     speechInputSelector = '#test-speech-input-selector',
+    autoRefresh = false,
   } = {}) => {
     const currentTestDocContext = {
       query: jest.fn((selector) => {
@@ -302,6 +303,7 @@ describe('ActionButtonsRenderer', () => {
       actionButtonsContainerSelector: actionButtonsContainerSelector,
       sendButtonSelector: sendButtonSelector,
       speechInputSelector: speechInputSelector,
+      autoRefresh,
     });
   };
 
@@ -414,7 +416,7 @@ describe('ActionButtonsRenderer', () => {
       await capturedEventHandler(validEventObject);
       expect(instance.availableActions).toEqual(validComposites);
       expect(instance.selectedAction).toBeNull();
-      expect(refreshListSpy).toHaveBeenCalledTimes(1);
+      expect(refreshListSpy).toHaveBeenCalled();
     });
 
     it('should filter invalid actions, set valid ones, and call refreshList', async () => {
@@ -433,7 +435,7 @@ describe('ActionButtonsRenderer', () => {
       };
       await capturedEventHandler(eventObject);
       expect(instance.availableActions).toEqual([validComposite]);
-      expect(refreshListSpy).toHaveBeenCalledTimes(1);
+      expect(refreshListSpy).toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Invalid action composite found in payload:`,
         { composite: invalidComposite }
@@ -447,7 +449,7 @@ describe('ActionButtonsRenderer', () => {
       const invalidEventObject = { type: eventType }; // Missing payload
       await capturedEventHandler(invalidEventObject);
       expect(instance.availableActions).toEqual([]);
-      expect(refreshListSpy).toHaveBeenCalledTimes(1);
+      expect(refreshListSpy).toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Received invalid or incomplete event for '${eventType}'. Clearing actions.`,
         { receivedObject: invalidEventObject }

@@ -192,13 +192,6 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     this.logger.debug(
       `${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}' via _addSubscription.`
     );
-
-    this.refreshList().catch((error) => {
-      this.logger.error(
-        `${this._logPrefix} Error during initial list refresh:`,
-        error
-      );
-    });
   }
 
   /**

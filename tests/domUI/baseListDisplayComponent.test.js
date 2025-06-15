@@ -92,7 +92,10 @@ describe('BaseListDisplayComponent', () => {
     // ---- END Global Cleanup ----
   });
 
-  const createInstance = (elementsConfigOverrides = {}) => {
+  const createInstance = (
+    elementsConfigOverrides = {},
+    autoRefresh = false
+  ) => {
     const elementsConfig = {
       listContainerElement: '#list-container',
       ...elementsConfigOverrides,
@@ -103,6 +106,7 @@ describe('BaseListDisplayComponent', () => {
       validatedEventDispatcher: mockValidatedEventDispatcher,
       elementsConfig,
       domElementFactory: mockDomElementFactory,
+      autoRefresh,
     });
   };
 
