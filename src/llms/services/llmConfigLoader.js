@@ -115,6 +115,7 @@ export class LlmConfigLoader {
   #logger;
   #schemaValidator;
   #configuration;
+  #safeEventDispatcher;
   #defaultConfigPath = 'config/llm-configs.json';
   #defaultMaxRetries = 3;
   #defaultBaseDelayMs = 500;
@@ -137,6 +138,16 @@ export class LlmConfigLoader {
         'LlmConfigLoader: Constructor requires a valid IConfiguration instance.'
       );
     this.#configuration = dependencies.configuration;
+
+    if (
+      !dependencies.safeEventDispatcher ||
+      typeof dependencies.safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error(
+        'LlmConfigLoader: Constructor requires a valid ISafeEventDispatcher instance.'
+      );
+    }
+    this.#safeEventDispatcher = dependencies.safeEventDispatcher;
 
     if (
       dependencies.defaultConfigPath &&
@@ -297,6 +308,7 @@ export class LlmConfigLoader {
         this.#defaultMaxRetries,
         this.#defaultBaseDelayMs,
         this.#defaultMaxDelayMs,
+        this.#safeEventDispatcher,
         this.#logger
       );
       this.#logger.debug(

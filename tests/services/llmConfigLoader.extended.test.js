@@ -109,17 +109,20 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
   let schemaValidatorMock;
   /** @type {ReturnType<typeof mockConfigurationInstance>} */
   let configurationMock;
+  let dispatcherMock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     loggerMock = mockLoggerInstance();
     schemaValidatorMock = mockSchemaValidatorInstance();
     configurationMock = mockConfigurationInstance();
+    dispatcherMock = { dispatch: jest.fn().mockResolvedValue(true) };
 
     loader = new LlmConfigLoader({
       logger: loggerMock,
       schemaValidator: schemaValidatorMock,
       configuration: configurationMock,
+      safeEventDispatcher: dispatcherMock,
     });
     Workspace_retry.mockReset();
   });
@@ -144,6 +147,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
         expect.any(Number),
         expect.any(Number),
         expect.any(Number),
+        dispatcherMock,
         loggerMock
       );
       expect(schemaValidatorMock.validate).toHaveBeenCalledWith(

@@ -61,6 +61,9 @@ export class LoggerConfigLoader {
    */
   #defaultMaxDelayMs = 1000;
 
+  /** @type {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #safeEventDispatcher;
+
   /**
    * Creates an instance of LoggerConfigLoader.
    *
@@ -73,6 +76,16 @@ export class LoggerConfigLoader {
     // Use the provided logger, or fallback to the global console object.
     // This is crucial because this loader might run very early in the app lifecycle.
     this.#logger = dependencies.logger || console;
+
+    if (
+      !dependencies.safeEventDispatcher ||
+      typeof dependencies.safeEventDispatcher.dispatch !== 'function'
+    ) {
+      throw new Error(
+        'LoggerConfigLoader requires a valid ISafeEventDispatcher instance.'
+      );
+    }
+    this.#safeEventDispatcher = dependencies.safeEventDispatcher;
     if (
       dependencies.configPath &&
       typeof dependencies.configPath === 'string'
@@ -118,6 +131,7 @@ export class LoggerConfigLoader {
         this.#defaultMaxRetries,
         this.#defaultBaseDelayMs,
         this.#defaultMaxDelayMs,
+        this.#safeEventDispatcher,
         this.#logger
       );
 

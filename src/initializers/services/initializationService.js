@@ -148,6 +148,9 @@ class InitializationService extends IInitializationService {
             logger: this.#container.resolve(tokens.ILogger),
             schemaValidator: this.#container.resolve(tokens.ISchemaValidator),
             configuration: this.#container.resolve(tokens.IConfiguration),
+            safeEventDispatcher: this.#container.resolve(
+              tokens.ISafeEventDispatcher
+            ),
           });
           this.#logger.debug(
             'InitializationService: LlmConfigLoader instance created for adapter initialization.'

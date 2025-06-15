@@ -66,7 +66,10 @@ export function configureContainer(container, uiElements) {
   // --- Asynchronously load logger configuration and update level ---
   (async () => {
     try {
-      const loggerConfigLoader = new LoggerConfigLoader({ logger: logger });
+      const loggerConfigLoader = new LoggerConfigLoader({
+        logger: logger,
+        safeEventDispatcher: container.resolve(tokens.ISafeEventDispatcher),
+      });
       logger.debug(
         '[ContainerConfig] Starting asynchronous load of logger configuration...'
       );
