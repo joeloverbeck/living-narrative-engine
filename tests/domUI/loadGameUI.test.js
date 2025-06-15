@@ -2,6 +2,7 @@ import { JSDOM } from 'jsdom';
 import { LoadGameUI } from '../../src/domUI/index.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import * as renderSlotItemModule from '../../src/domUI/helpers/renderSlotItem.js';
+import { formatSaveFileMetadata } from '../../src/domUI/helpers/slotDataFormatter.js';
 import {
   beforeEach,
   afterEach,
@@ -110,6 +111,7 @@ describe('LoadGameUI basic behaviors', () => {
     const result = await loadGameUI._getLoadSlotsData();
 
     expect(result.map((s) => s.identifier)).toEqual(['b', 'a', 'c']);
+    expect(result[0].slotItemMeta).toEqual(formatSaveFileMetadata(result[0]));
     expect(loadGameUI.currentSlotsDisplayData).toEqual(result);
   });
 

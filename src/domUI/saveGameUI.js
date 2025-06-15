@@ -2,7 +2,10 @@
 
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
-import { formatPlaytime, formatTimestamp } from '../utils/textUtils.js';
+import {
+  formatSaveFileMetadata,
+  formatEmptySlot,
+} from './helpers/slotDataFormatter.js';
 import { renderSlotItem } from './helpers/renderSlotItem.js';
 
 /**
@@ -244,34 +247,27 @@ export class SaveGameUI extends SlotModalBase {
         `${this._logPrefix} Fetched ${actualSaves.length} actual save slots.`
       );
 
-      const actualSavesByIdentifier = new Map(
-        actualSaves.map((s) => [s.identifier, s])
-      );
-
       for (let i = 0; i < MAX_SAVE_SLOTS; i++) {
-        // This logic assumes save slots are somewhat identified by an index or can be mapped.
-        // For robust slot management, ISaveLoadService might need methods like `getSlot(slotId)`.
-        // Here, we'll fill with actual saves first, then empty ones.
-        // Sorting actualSaves by some criteria (e.g., timestamp or name) might be good
-        // if their order from listManualSaveSlots isn't guaranteed or ideal.
-        // For this refactor, we keep it simple: use them as they come, then fill empty.
-
+        // Fill with actual saves first, then empty placeholders.
         if (i < actualSaves.length) {
-          const save = actualSaves[i]; // This assumes actualSaves are in a desired order for slots 1..N
+          const save = actualSaves[i];
           displaySlots.push({
-            slotId: i, // Conceptual UI slot ID
+            slotId: i,
             identifier: save.identifier,
             saveName: save.saveName,
             timestamp: save.timestamp,
             playtimeSeconds: save.playtimeSeconds,
             isCorrupted: save.isCorrupted || false,
             isEmpty: false,
+            slotItemMeta: formatSaveFileMetadata(save),
           });
         } else {
+          const name = `Empty Slot ${i + 1}`;
           displaySlots.push({
             slotId: i,
             isEmpty: true,
-            saveName: `Empty Slot ${i + 1}`,
+            saveName: name,
+            slotItemMeta: formatEmptySlot(name),
           });
         }
       }
@@ -301,47 +297,19 @@ export class SaveGameUI extends SlotModalBase {
   _renderSaveSlotItem(slotData, itemIndex) {
     if (!this.domElementFactory) return null;
 
-    let nameText = slotData.saveName || `Slot ${slotData.slotId + 1}`;
-    if (slotData.isEmpty)
-      nameText = slotData.saveName || `Empty Slot ${slotData.slotId + 1}`;
-    if (slotData.isCorrupted)
-      nameText =
-        (slotData.saveName || `Slot ${slotData.slotId + 1}`) + ' (Corrupted)';
-
-    let timestampText = '';
-    if (
-      !slotData.isEmpty &&
-      !slotData.isCorrupted &&
-      slotData.timestamp &&
-      slotData.timestamp !== 'N/A'
-    ) {
-      const formatted = formatTimestamp(slotData.timestamp);
-      if (formatted === 'Invalid Date') {
-        this.logger.warn(
-          `${this._logPrefix} Invalid timestamp for slot ${slotData.slotId}: ${slotData.timestamp}`
-        );
-      }
-      timestampText = `Saved: ${formatted}`;
-    } else if (slotData.isCorrupted) {
-      timestampText = 'Timestamp: N/A';
-    }
-
-    const playtimeText =
-      !slotData.isEmpty && !slotData.isCorrupted
-        ? `Playtime: ${formatPlaytime(slotData.playtimeSeconds || 0)}`
-        : '';
+    const metadata =
+      slotData.slotItemMeta ||
+      (slotData.isEmpty
+        ? formatEmptySlot(
+            slotData.saveName || `Empty Slot ${slotData.slotId + 1}`
+          )
+        : formatSaveFileMetadata(slotData));
 
     const slotDiv = renderSlotItem(
       this.domElementFactory,
       'slotId',
       slotData.slotId,
-      {
-        name: nameText,
-        timestamp: timestampText,
-        playtime: playtimeText,
-        isEmpty: slotData.isEmpty,
-        isCorrupted: slotData.isCorrupted,
-      },
+      metadata,
       (evt) => {
         this._handleSlotSelection(
           /** @type {HTMLElement} */ (evt.currentTarget),

@@ -2,7 +2,7 @@
 
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
-import { formatPlaytime, formatTimestamp } from '../utils/textUtils.js';
+import { formatSaveFileMetadata } from './helpers/slotDataFormatter.js';
 import { renderSlotItem } from './helpers/renderSlotItem.js';
 
 /**
@@ -263,7 +263,10 @@ class LoadGameUI extends SlotModalBase {
           return 0;
         }
       });
-      displaySlots = manualSaves; // Already LoadSlotDisplayData compatible due to SaveFileMetadata structure
+      displaySlots = manualSaves.map((s) => ({
+        ...s,
+        slotItemMeta: formatSaveFileMetadata(s),
+      }));
     } catch (error) {
       this.logger.error(
         `${this._logPrefix} Error fetching or processing save slots data:`,
@@ -292,39 +295,13 @@ class LoadGameUI extends SlotModalBase {
       return null;
     }
 
-    let nameText = slotData.saveName || 'Unnamed Save';
-    if (slotData.isCorrupted) nameText += ' (Corrupted)';
-
-    let timestampText = 'Timestamp: N/A';
-    if (
-      !slotData.isCorrupted &&
-      slotData.timestamp &&
-      slotData.timestamp !== 'N/A'
-    ) {
-      const formatted = formatTimestamp(slotData.timestamp);
-      if (formatted === 'Invalid Date') {
-        this.logger.warn(
-          `${this._logPrefix} Invalid timestamp for slot ${slotData.identifier}: ${slotData.timestamp}`
-        );
-      }
-      timestampText = `Saved: ${formatted}`;
-    }
-
-    const playtimeText = !slotData.isCorrupted
-      ? `Playtime: ${formatPlaytime(slotData.playtimeSeconds)}`
-      : '';
+    const metadata = slotData.slotItemMeta || formatSaveFileMetadata(slotData);
 
     const slotDiv = renderSlotItem(
       this.domElementFactory,
       'slotIdentifier',
       slotData.identifier,
-      {
-        name: nameText,
-        timestamp: timestampText,
-        playtime: playtimeText,
-        isEmpty: false,
-        isCorrupted: slotData.isCorrupted,
-      },
+      metadata,
       (evt) => {
         this._handleSlotSelection(
           /** @type {HTMLElement} */ (evt.currentTarget),
