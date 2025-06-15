@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import { encode, decode } from '@msgpack/msgpack';
+import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 
@@ -88,6 +89,7 @@ describe('SaveLoadService additional coverage', () => {
   it('loadGameData validates identifier', async () => {
     const res = await service.loadGameData('');
     expect(res.success).toBe(false);
+    expect(res.error.code).toBe(PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER);
     expect(res.data).toBeNull();
     expect(logger.error).toHaveBeenCalled();
   });

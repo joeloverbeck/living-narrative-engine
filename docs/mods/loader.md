@@ -62,3 +62,19 @@ needs a policy to decide which definition takes precedence.
 
 By understanding the `game.json` ordering and the "Last Mod Wins" policy, modders can better predict how their mods will
 interact and override content from core game files or other mods.
+
+## UI Directory Structure
+
+Mods can include a `ui/` folder containing optional `icons.json` and `labels.json` files. These files are simple key/value objects validated against the `ui-icons.schema.json` and `ui-labels.schema.json` schemas.
+
+Reference them in the manifest using a `ui` content category:
+
+```json
+{
+  "content": {
+    "ui": ["icons.json", "labels.json"]
+  }
+}
+```
+
+During loading, the UiLoader merges icon and label definitions from all mods. If multiple mods define the same key, the entry from the mod loaded last overrides earlier ones, following the same "last mod wins" rule used for other content.

@@ -6,6 +6,7 @@ import AppContainer from '../dependencyInjection/appContainer.js'; // Corrected 
 import GameEngine from '../engine/gameEngine.js';
 
 import { initializeAuxiliaryServicesStage } from './auxiliaryStages.js';
+import { setupButtonListener } from './helpers.js';
 export { initializeAuxiliaryServicesStage };
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../dependencyInjection/tokens.js'; // Corrected path assuming tokens.js is in ../dependencyInjection/
@@ -30,12 +31,19 @@ import { tokens } from '../dependencyInjection/tokens.js'; // Corrected path ass
  * This stage catches that error and re-throws it with a specific phase.
  *
  * @async
+ * @param uiBootstrapperOrFactory
  * @param {Document} doc - The global document object.
  * @returns {Promise<EssentialUIElements>} A promise that resolves with an object containing references to the DOM elements if found.
  * @throws {Error} If `gatherEssentialElements` (called internally) fails because elements are missing. The error will have a `phase` property set to 'UI Element Validation'.
  */
-export async function ensureCriticalDOMElementsStage(doc) {
-  const uiBootstrapper = new UIBootstrapper();
+export async function ensureCriticalDOMElementsStage(
+  doc,
+  uiBootstrapperOrFactory = () => new UIBootstrapper()
+) {
+  const uiBootstrapper =
+    typeof uiBootstrapperOrFactory === 'function'
+      ? uiBootstrapperOrFactory()
+      : uiBootstrapperOrFactory;
   try {
     const essentialUIElements = uiBootstrapper.gatherEssentialElements(doc);
     return essentialUIElements;
@@ -59,12 +67,20 @@ export async function ensureCriticalDOMElementsStage(doc) {
  *
  * @async
  * @param {EssentialUIElements} uiReferences - The object containing DOM element references.
+ * @param containerOrFactory
  * @param {ConfigureContainerFunction} containerConfigFunc - A reference to the configureContainer function.
  * @returns {Promise<AppContainer>} A promise that resolves with the configured AppContainer instance.
  * @throws {Error} If DI container configuration fails. The error will have a `phase` property set to 'DI Container Setup'.
  */
-export async function setupDIContainerStage(uiReferences, containerConfigFunc) {
-  const container = new AppContainer();
+export async function setupDIContainerStage(
+  uiReferences,
+  containerConfigFunc,
+  containerOrFactory = () => new AppContainer()
+) {
+  const container =
+    typeof containerOrFactory === 'function'
+      ? containerOrFactory()
+      : containerOrFactory;
 
   try {
     containerConfigFunc(container, uiReferences);
@@ -123,18 +139,31 @@ export async function resolveCoreServicesStage(container, diTokens) {
  *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
+ * @param GameEngineCtorOrFactory
  * @param {ILogger} logger - The resolved ILogger instance.
  * @returns {Promise<GameEngineInstance>} A promise that resolves with the GameEngine instance.
  * @throws {Error} If GameEngine instantiation fails. The error will have a `phase` property set to 'GameEngine Initialization'.
  */
-export async function initializeGameEngineStage(container, logger) {
+export async function initializeGameEngineStage(
+  container,
+  logger,
+  GameEngineCtorOrFactory = GameEngine
+) {
   logger.debug('Bootstrap Stage: Initializing GameEngine...');
   const currentPhase = 'GameEngine Initialization';
   /** @type {GameEngineInstance} */
   let gameEngine;
   try {
     logger.debug('GameEngine Stage: Creating GameEngine instance...');
-    gameEngine = new GameEngine({ container: container });
+    if (
+      GameEngineCtorOrFactory &&
+      GameEngineCtorOrFactory.prototype &&
+      GameEngineCtorOrFactory.prototype.constructor
+    ) {
+      gameEngine = new GameEngineCtorOrFactory({ container });
+    } else {
+      gameEngine = GameEngineCtorOrFactory({ container });
+    }
     if (!gameEngine) {
       throw new Error('GameEngine constructor returned null or undefined.');
     }
@@ -176,48 +205,49 @@ export async function setupMenuButtonListenersStage(
   logger.debug(`Bootstrap Stage: Starting ${stageName}...`);
 
   try {
-    const openSaveGameButton = documentRef.getElementById(
-      'open-save-game-button'
-    );
-    if (openSaveGameButton && gameEngine) {
-      openSaveGameButton.addEventListener('click', () => {
-        logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
-        gameEngine.showSaveGameUI();
-      });
-      logger.debug(
-        `${stageName}: Save Game UI button listener attached to #open-save-game-button.`
+    if (gameEngine) {
+      setupButtonListener(
+        documentRef,
+        'open-save-game-button',
+        () => {
+          logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
+          gameEngine.showSaveGameUI();
+        },
+        logger,
+        stageName
       );
-    } else {
-      if (!openSaveGameButton)
-        logger.warn(
-          `${stageName}: Could not find #open-save-game-button. Save listener not attached.`
-        );
-      if (!gameEngine)
-        logger.warn(
-          `${stageName}: GameEngine not available for #open-save-game-button listener.`
-        );
-    }
 
-    const openLoadGameButton = documentRef.getElementById(
-      'open-load-game-button'
-    );
-    if (openLoadGameButton && gameEngine) {
-      openLoadGameButton.addEventListener('click', () => {
-        logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
-        gameEngine.showLoadGameUI();
-      });
-      logger.debug(
-        `${stageName}: Load Game UI button listener attached to #open-load-game-button.`
+      setupButtonListener(
+        documentRef,
+        'open-load-game-button',
+        () => {
+          logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
+          gameEngine.showLoadGameUI();
+        },
+        logger,
+        stageName
       );
     } else {
-      if (!openLoadGameButton)
-        logger.warn(
-          `${stageName}: Could not find #open-load-game-button. Load listener not attached.`
-        );
-      if (!gameEngine)
-        logger.warn(
-          `${stageName}: GameEngine not available for #open-load-game-button listener.`
-        );
+      setupButtonListener(
+        documentRef,
+        'open-save-game-button',
+        () => {},
+        logger,
+        stageName
+      );
+      logger.warn(
+        `${stageName}: GameEngine not available for #open-save-game-button listener.`
+      );
+      setupButtonListener(
+        documentRef,
+        'open-load-game-button',
+        () => {},
+        logger,
+        stageName
+      );
+      logger.warn(
+        `${stageName}: GameEngine not available for #open-load-game-button listener.`
+      );
     }
     logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
   } catch (error) {

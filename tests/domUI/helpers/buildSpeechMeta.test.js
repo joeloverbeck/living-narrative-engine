@@ -2,6 +2,8 @@ import { buildSpeechMeta } from '../../../src/domUI/helpers/buildSpeechMeta.js';
 import { JSDOM } from 'jsdom';
 import { getByLabelText, getByText, queryByText } from '@testing-library/dom';
 import { describe, beforeEach, it, expect } from '@jest/globals';
+import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
+import { setIconRegistry } from '../../../src/domUI/icons.js';
 
 // A mock DomElementFactory that creates real DOM nodes using the provided document
 const createMockDomFactory = (document) => ({
@@ -125,5 +127,25 @@ describe('buildSpeechMeta', () => {
 
     // JSDOM adds a :focus pseudo-class, which is sufficient for this test
     expect(container.innerHTML).toMatchSnapshot();
+  });
+
+  it('renders custom icons provided via the registry', () => {
+    const registry = new InMemoryDataRegistry();
+    setIconRegistry(registry);
+    registry.store('ui-icons', 'thoughts', { markup: '<svg id="t"></svg>' });
+    registry.store('ui-icons', 'notes', { markup: '<svg id="n"></svg>' });
+
+    const fragment = buildSpeechMeta(doc, mockDomFactory, {
+      thoughts: 'Hi',
+      notes: 'Note',
+    });
+    container.appendChild(fragment.cloneNode(true));
+
+    const thoughtsButton = getByLabelText(container, 'View inner thoughts');
+    const notesButton = getByLabelText(container, 'View private notes');
+    expect(thoughtsButton.querySelector('svg').id).toBe('t');
+    expect(notesButton.querySelector('svg').id).toBe('n');
+
+    setIconRegistry(null);
   });
 });

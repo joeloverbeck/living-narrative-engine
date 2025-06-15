@@ -8,6 +8,7 @@ import {
 } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import { encode } from '@msgpack/msgpack';
+import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 
@@ -178,6 +179,9 @@ describe('SaveLoadService edge cases', () => {
     it('fails on invalid identifier', async () => {
       const res = await service.loadGameData('');
       expect(res.success).toBe(false);
+      expect(res.error.code).toBe(
+        PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER
+      );
       expect(logger.error).toHaveBeenCalled();
     });
 
@@ -317,6 +321,9 @@ describe('SaveLoadService edge cases', () => {
     it('rejects invalid identifier', async () => {
       const res = await service.deleteManualSave('');
       expect(res.success).toBe(false);
+      expect(res.error.code).toBe(
+        PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER
+      );
       expect(logger.error).toHaveBeenCalled();
     });
 

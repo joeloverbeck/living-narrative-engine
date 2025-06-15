@@ -66,6 +66,11 @@ class ComponentCleaningService {
    * @returns {void}
    */
   registerCleaner(componentId, cleanerFn) {
+    if (this.#cleaners.has(componentId)) {
+      this.#logger.warn(
+        `Cleaner for component '${componentId}' already registered. Overwriting.`
+      );
+    }
     this.#cleaners.set(componentId, cleanerFn);
   }
 

@@ -178,6 +178,7 @@ implementation).
 
 The formal structure of this file is defined by the `game.schema.json` schema file. The engine validates `game.json`
 against this schema during startup. You can refer to `data/schemas/game.schema.json` for the precise definition.
+UI icons and labels are validated against `ui-icons.schema.json` and `ui-labels.schema.json` and loaded by the new **UiLoader**. Definitions from later mods override earlier ones.
 
 ## Dependency & Conflict Validation
 
@@ -376,6 +377,8 @@ How to use the ModManifestLoader service and handle potential errors.
 **Mod Manifest Format ➜ docs/mods/mod_manifest_format.md**
 Details of every allowed field with a sample manifest.
 
+**UI Icons & Labels ➜ docs/mods/loader.md#ui-directory-structure**
+Overview of the `ui/` folder and how icons/labels are merged.
 **Display Error Event Payload ➜ docs/events/display_error_payload.md**
 Overview of the payload structure emitted when dispatching `core:display_error` events.
 
