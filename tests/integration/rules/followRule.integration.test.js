@@ -70,6 +70,10 @@ class SimpleEntityManager {
   }
 }
 
+/**
+ *
+ * @param em
+ */
 function makeStubRebuild(em) {
   return {
     execute({ leaderIds }) {
@@ -143,7 +147,10 @@ describe('core_handle_follow rule integration', () => {
         dispatcher: eventBus,
         logger,
       }),
-      END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+      END_TURN: new EndTurnHandler({
+        safeEventDispatcher: safeDispatcher,
+        logger,
+      }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     };
 

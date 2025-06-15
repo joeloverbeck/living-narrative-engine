@@ -151,7 +151,12 @@ function init(entities) {
   entityManager = new SimpleEntityManager(entities);
   worldContext = new SimpleWorldContext(entityManager, logger);
 
-  const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+  const safeDispatcher = {
+    dispatch: jest.fn((eventType, payload) => {
+      events.push({ eventType, payload });
+      return Promise.resolve(true);
+    }),
+  };
 
   const handlers = {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
@@ -176,7 +181,10 @@ function init(entities) {
       addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({
+      safeEventDispatcher: safeDispatcher,
+      logger,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
