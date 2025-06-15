@@ -367,6 +367,9 @@ How to use the ModManifestLoader service and handle potential errors.
 **Display Error Event Payload ➜ docs/events/display_error_payload.md**
 Overview of the payload structure emitted when dispatching `core:display_error` events.
 
+**Namespaced IDs & resolveFields ➜ docs/mods/namespaced_ids_and_resolveFields.md**
+Explains how identifiers are namespaced and how reference resolution works across mods.
+
 ### License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.  
