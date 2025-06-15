@@ -1,9 +1,6 @@
 // src/actions/validation/prerequisiteEvaluationService.js
 
-import {
-  initLogger,
-  validateServiceDeps,
-} from '../../utils/serviceInitializer.js';
+import { setupService } from '../../utils/serviceInitializer.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -47,32 +44,16 @@ export class PrerequisiteEvaluationService {
     jsonLogicEvaluationService,
     actionValidationContextBuilder,
   }) {
-    try {
-      this.#logger = initLogger('PrerequisiteEvaluationService', logger);
-    } catch (e) {
-      const errorMsg = `PrerequisiteEvaluationService Constructor: CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
-      // eslint-disable-next-line no-console
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    try {
-      validateServiceDeps('PrerequisiteEvaluationService', this.#logger, {
-        jsonLogicEvaluationService: {
-          value: jsonLogicEvaluationService,
-          requiredMethods: ['evaluate'],
-        },
-        actionValidationContextBuilder: {
-          value: actionValidationContextBuilder,
-          requiredMethods: ['buildContext'],
-        },
-      });
-    } catch (e) {
-      this.#logger.error(
-        `PrerequisiteEvaluationService Constructor: Dependency validation failed. Error: ${e.message}`
-      );
-      throw e;
-    }
+    this.#logger = setupService('PrerequisiteEvaluationService', logger, {
+      jsonLogicEvaluationService: {
+        value: jsonLogicEvaluationService,
+        requiredMethods: ['evaluate'],
+      },
+      actionValidationContextBuilder: {
+        value: actionValidationContextBuilder,
+        requiredMethods: ['buildContext'],
+      },
+    });
 
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#actionValidationContextBuilder = actionValidationContextBuilder;

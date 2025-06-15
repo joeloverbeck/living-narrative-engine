@@ -14,13 +14,19 @@ const mockLogger = {
  * @param expectedName
  * @param expectOptional
  */
-function setup(modulePath, ctorArgs, expectedName, expectOptional = false) {
+function setup(
+  modulePath,
+  ctorArgs,
+  expectedName,
+  expectOptional = false,
+  useHelper = true
+) {
   jest.resetModules();
-  const initLogger = jest.fn(() => mockLogger);
+  const setupService = jest.fn(() => mockLogger);
   const baseInitLogger = jest.fn(() => mockLogger);
   jest.doMock('../../src/utils/serviceInitializer.js', () => {
     const actual = jest.requireActual('../../src/utils/serviceInitializer.js');
-    return { ...actual, initLogger };
+    return { ...actual, setupService };
   });
   jest.doMock('../../src/utils/loggerUtils.js', () => {
     const actual = jest.requireActual('../../src/utils/loggerUtils.js');
@@ -29,12 +35,18 @@ function setup(modulePath, ctorArgs, expectedName, expectOptional = false) {
 
   const Mod = require(modulePath).default || require(modulePath);
   new Mod(ctorArgs);
-  if (expectOptional) {
-    expect(baseInitLogger).toHaveBeenCalledWith(expectedName, mockLogger, {
-      optional: true,
-    });
+  if (useHelper) {
+    expect(setupService).toHaveBeenCalled();
+    const call = setupService.mock.calls[0];
+    expect(call[0]).toBe(expectedName);
+    expect(call[1]).toBe(mockLogger);
+  } else {
+    expect(baseInitLogger).toHaveBeenCalledWith(
+      expectedName,
+      mockLogger,
+      expect.objectContaining({ optional: expectOptional || false })
+    );
   }
-  expect(initLogger).toHaveBeenCalledWith(expectedName, mockLogger);
   jest.dontMock('../../src/utils/loggerUtils.js');
   jest.dontMock('../../src/utils/serviceInitializer.js');
 }
@@ -53,7 +65,8 @@ describe('initLogger usage in constructors', () => {
       '../../src/logic/operationRegistry.js',
       { logger: mockLogger },
       'OperationRegistry',
-      true
+      true,
+      false
     );
   });
 
@@ -67,12 +80,12 @@ describe('initLogger usage in constructors', () => {
 
   it('createJsonLogicContext uses initLogger', () => {
     jest.resetModules();
-    const initLogger = jest.fn(() => mockLogger);
+    const setupService = jest.fn(() => mockLogger);
     jest.doMock('../../src/utils/serviceInitializer.js', () => {
       const actual = jest.requireActual(
         '../../src/utils/serviceInitializer.js'
       );
-      return { ...actual, initLogger };
+      return { ...actual, setupService };
     });
     jest.doMock('../../src/utils/loggerUtils.js', () => {
       const actual = jest.requireActual('../../src/utils/loggerUtils.js');
@@ -92,10 +105,10 @@ describe('initLogger usage in constructors', () => {
       },
       mockLogger
     );
-    expect(initLogger).toHaveBeenCalledWith(
-      'createJsonLogicContext',
-      mockLogger
-    );
+    expect(setupService).toHaveBeenCalled();
+    const call = setupService.mock.calls[0];
+    expect(call[0]).toBe('createJsonLogicContext');
+    expect(call[1]).toBe(mockLogger);
     jest.dontMock('../../src/utils/loggerUtils.js');
     jest.dontMock('../../src/utils/serviceInitializer.js');
   });

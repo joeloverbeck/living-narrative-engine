@@ -1,9 +1,6 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
-import {
-  initLogger,
-  validateServiceDeps,
-} from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializer.js';
 
 // -----------------------------------------------------------------------------
 // Ensure the alias "not" behaves the same as the built‑in "!" operator.
@@ -50,8 +47,7 @@ class JsonLogicEvaluationService {
    * @throws {Error} If required dependencies are missing or invalid.
    */
   constructor({ logger }) {
-    this.#logger = initLogger('JsonLogicEvaluationService', logger);
-    validateServiceDeps('JsonLogicEvaluationService', this.#logger);
+    this.#logger = setupService('JsonLogicEvaluationService', logger);
     this.#logger.debug('JsonLogicEvaluationService initialized.');
   }
 
