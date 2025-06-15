@@ -110,7 +110,11 @@ describe('core_handle_follow rule integration', () => {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
-      QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
+      QUERY_COMPONENT: new QueryComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
       ADD_COMPONENT: new AddComponentHandler({
         entityManager,
         logger,

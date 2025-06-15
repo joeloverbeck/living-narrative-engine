@@ -170,7 +170,11 @@ function init(entities) {
       jsonLogicEvaluationService: jsonLogic,
       safeEventDispatcher: eventBus,
     }),
-    QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
+    QUERY_COMPONENT: new QueryComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: eventBus,
+    }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     SYSTEM_MOVE_ENTITY: new SystemMoveEntityHandler({

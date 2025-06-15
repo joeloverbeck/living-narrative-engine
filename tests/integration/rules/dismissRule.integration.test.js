@@ -153,7 +153,11 @@ function init(entities) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
-    QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
+    QUERY_COMPONENT: new QueryComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: eventBus,
+    }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),

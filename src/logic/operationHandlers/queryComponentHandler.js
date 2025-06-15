@@ -7,6 +7,8 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 /**
  * @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject
@@ -24,8 +26,10 @@ import storeResult from '../../utils/contextVariableUtils.js';
 class QueryComponentHandler {
   #entityManager;
   #logger;
+  /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #dispatcher;
 
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     if (
       !entityManager ||
       typeof entityManager.getComponentData !== 'function'
@@ -46,13 +50,20 @@ class QueryComponentHandler {
     }
     this.#entityManager = entityManager;
     this.#logger = logger;
+    if (!safeEventDispatcher?.dispatch) {
+      throw new Error(
+        'QueryComponentHandler requires an ISafeEventDispatcher.'
+      );
+    }
+    this.#dispatcher = safeEventDispatcher;
   }
 
   execute(params, executionContext) {
     const logger = executionContext?.logger ?? this.#logger;
 
     if (!params || typeof params !== 'object') {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentHandler: Missing or invalid parameters object.',
         { params }
       );
@@ -64,7 +75,8 @@ class QueryComponentHandler {
       !executionContext?.evaluationContext?.context ||
       typeof executionContext.evaluationContext.context !== 'object'
     ) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentHandler: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
         { executionContext }
       );
@@ -74,14 +86,16 @@ class QueryComponentHandler {
     const { entity_ref, component_type, result_variable } = params;
 
     if (!entity_ref) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentHandler: Missing required "entity_ref" parameter.',
         { params }
       );
       return;
     }
     if (typeof component_type !== 'string' || !component_type.trim()) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentHandler: Missing or invalid required "component_type" parameter (must be non-empty string).',
         { params }
       );
@@ -90,7 +104,8 @@ class QueryComponentHandler {
     const trimmedComponentType = component_type.trim();
 
     if (typeof result_variable !== 'string' || !result_variable.trim()) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentHandler: Missing or invalid required "result_variable" parameter (must be non-empty string).',
         { params }
       );
@@ -100,7 +115,8 @@ class QueryComponentHandler {
 
     const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentHandler: Could not resolve entity id from entity_ref.',
         { entityRef: entity_ref }
       );
@@ -134,7 +150,7 @@ class QueryComponentHandler {
         trimmedResultVariable,
         result,
         executionContext,
-        undefined,
+        this.#dispatcher,
         logger
       );
 
@@ -154,20 +170,20 @@ class QueryComponentHandler {
         );
       }
     } catch (error) {
-      logger.error(
-        `QueryComponentHandler: Error during EntityManager.getComponentData for component "${trimmedComponentType}" on entity "${entityId}".`,
-        {
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `QueryComponentHandler: Error during EntityManager.getComponentData for component "${trimmedComponentType}" on entity "${entityId}".`,
+        details: {
           error: error.message,
           stack: error.stack,
           params: params,
           resolvedEntityId: entityId,
-        }
-      );
+        },
+      });
       const stored = storeResult(
         trimmedResultVariable,
         undefined,
         executionContext,
-        undefined,
+        this.#dispatcher,
         logger
       );
       if (stored) {
