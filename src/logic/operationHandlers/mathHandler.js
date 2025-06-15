@@ -4,6 +4,7 @@
 
 import jsonLogic from 'json-logic-js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
@@ -158,10 +159,11 @@ class MathHandler {
           const num = Number(raw);
           return Number.isNaN(num) ? NaN : num;
         } catch (e) {
-          this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-            message: 'MATH: Error resolving variable operand.',
-            details: { error: e.message, stack: e.stack },
-          });
+          safeDispatchError(
+            this.#dispatcher,
+            'MATH: Error resolving variable operand.',
+            { error: e.message, stack: e.stack }
+          );
           return NaN;
         }
       }

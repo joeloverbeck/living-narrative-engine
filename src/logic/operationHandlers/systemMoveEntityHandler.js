@@ -12,6 +12,7 @@
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 class SystemMoveEntityHandler {
   /** @type {ILogger} */ #logger;
@@ -128,16 +129,17 @@ class SystemMoveEntityHandler {
         originalCommand: 'system:follow', // A sensible default for system-initiated actions
       });
     } catch (e) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: `${opName}: Failed to move entity "${entityId}". Error: ${e.message}`,
-        details: {
+      safeDispatchError(
+        this.#dispatcher,
+        `${opName}: Failed to move entity "${entityId}". Error: ${e.message}`,
+        {
           error: e.message,
           stack: e.stack,
           entityId,
           fromLocationId,
           targetLocationId: target_location_id,
-        },
-      });
+        }
+      );
     }
   }
 }

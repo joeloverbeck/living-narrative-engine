@@ -10,6 +10,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 import { wouldCreateCycle } from '../../utils/followUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
@@ -56,24 +57,27 @@ class CheckFollowCycleHandler {
     const { follower_id, leader_id, result_variable } = params || {};
 
     if (typeof follower_id !== 'string' || !follower_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter',
+        { params }
+      );
       return;
     }
     if (typeof leader_id !== 'string' || !leader_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'CHECK_FOLLOW_CYCLE: Invalid "leader_id" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'CHECK_FOLLOW_CYCLE: Invalid "leader_id" parameter',
+        { params }
+      );
       return;
     }
     if (typeof result_variable !== 'string' || !result_variable.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
-        message: 'CHECK_FOLLOW_CYCLE: Invalid "result_variable" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'CHECK_FOLLOW_CYCLE: Invalid "result_variable" parameter',
+        { params }
+      );
       return;
     }
 
