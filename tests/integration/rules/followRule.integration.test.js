@@ -16,7 +16,6 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import CheckFollowCycleHandler from '../../../src/logic/operationHandlers/checkFollowCycleHandler.js';
 import EstablishFollowRelationHandler from '../../../src/logic/operationHandlers/establishFollowRelationHandler.js';
-import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
@@ -151,9 +150,16 @@ describe('core_handle_follow rule integration', () => {
         dispatcher: eventBus,
         logger,
       }),
-      END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
+      END_TURN: new EndTurnHandler({
+        safeEventDispatcher: safeDispatcher,
+        logger,
+      }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-      GET_NAME: new GetNameHandler({ entityManager, logger }),
+      GET_NAME: new GetNameHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
     };
 
@@ -210,7 +216,10 @@ describe('core_handle_follow rule integration', () => {
     };
     const expandedRule = {
       ...followRule,
-      actions: expandMacros(followRule.actions, macroRegistry),
+      actions: expandMacros(
+        JSON.parse(JSON.stringify(followRule.actions)),
+        macroRegistry
+      ),
     };
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
