@@ -389,6 +389,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,
+      promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher, // Pass the added mock
     });

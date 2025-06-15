@@ -337,6 +337,7 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,
+      promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
     });

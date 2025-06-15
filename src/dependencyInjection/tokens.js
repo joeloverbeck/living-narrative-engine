@@ -57,6 +57,7 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} EntityLoader - Token for loading entity definitions.
  * @property {DiToken} WorldLoader - Token for orchestrating world data loading.
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
+ * @property {DiToken} PromptTextLoader - Token for loading the core prompt text used by the AI system.
  * @property {DiToken} ModManifestLoader - Token for loading mod manifests.
  *
  * --- Core Services & Managers (Implementations - some will be replaced by Interface Tokens below) ---
@@ -185,6 +186,7 @@ export const tokens = freeze({
   EntityLoader: 'EntityLoader',
   WorldLoader: 'WorldLoader',
   GameConfigLoader: 'GameConfigLoader',
+  PromptTextLoader: 'PromptTextLoader',
   ModManifestLoader: 'ModManifestLoader',
 
   // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
