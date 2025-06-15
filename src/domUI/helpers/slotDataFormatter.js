@@ -4,7 +4,7 @@
 
 import { formatPlaytime, formatTimestamp } from '../../utils/textUtils.js';
 
-/** @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata */
+/** @typedef {import('../../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata */
 
 /**
  * @typedef {object} SlotItemMetadata
