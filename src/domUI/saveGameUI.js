@@ -7,6 +7,7 @@ import {
   formatEmptySlot,
 } from './helpers/slotDataFormatter.js';
 import { renderSlotItem } from './helpers/renderSlotItem.js';
+import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -26,27 +27,6 @@ import { renderSlotItem } from './helpers/renderSlotItem.js';
  */
 
 const MAX_SAVE_SLOTS = 10;
-
-const SAVE_GAME_UI_ELEMENTS_CONFIG = {
-  modalElement: { selector: '#save-game-screen', required: true },
-  closeButton: { selector: '#cancel-save-button', required: true }, // Cancel button acts as close
-  listContainerElement: { selector: '#save-slots-container', required: true },
-  saveNameInputEl: {
-    selector: '#save-name-input',
-    required: true,
-    expectedType: HTMLInputElement,
-  },
-  confirmSaveButtonEl: {
-    selector: '#confirm-save-button',
-    required: true,
-    expectedType: HTMLButtonElement,
-  },
-  statusMessageElement: {
-    selector: '#save-game-status-message',
-    required: true,
-  },
-  // openSaveGameButtonEl is external and handled by main.js or equivalent
-};
 
 /**
  * @class SaveGameUI
@@ -83,11 +63,19 @@ export class SaveGameUI extends SlotModalBase {
     saveLoadService,
     validatedEventDispatcher,
   }) {
+    const elementsConfig = buildModalElementsConfig({
+      modalElement: '#save-game-screen',
+      closeButton: '#cancel-save-button',
+      listContainerElement: '#save-slots-container',
+      saveNameInputEl: ['#save-name-input', HTMLInputElement],
+      confirmSaveButtonEl: ['#confirm-save-button', HTMLButtonElement],
+      statusMessageElement: '#save-game-status-message',
+    });
     super({
       logger,
       documentContext,
       validatedEventDispatcher,
-      elementsConfig: SAVE_GAME_UI_ELEMENTS_CONFIG,
+      elementsConfig,
       domElementFactory,
       datasetKey: 'slotId',
       confirmButtonKey: 'confirmSaveButtonEl',

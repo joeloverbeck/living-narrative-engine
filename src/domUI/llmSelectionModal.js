@@ -3,6 +3,7 @@
 
 import { SlotModalBase } from './slotModalBase.js';
 import { createSelectableItem } from './helpers/createSelectableItem.js';
+import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -23,19 +24,6 @@ import { createSelectableItem } from './helpers/createSelectableItem.js';
  * @property {LlmConfigOption[]} llmOptions - Array of LLM configuration options.
  * @property {string | null} currentActiveLlmId - The ID of the currently active LLM.
  */
-
-const LLM_SELECTION_MODAL_ELEMENTS_CONFIG = {
-  modalElement: { selector: '#llm-selection-modal', required: true },
-  closeButton: {
-    selector: '#llm-selection-modal-close-button',
-    required: true,
-  }, // Used by BaseModalRenderer
-  listContainerElement: { selector: '#llm-selection-list', required: true }, // For BaseListDisplayComponent pattern
-  statusMessageElement: {
-    selector: '#llm-selection-status-message',
-    required: false,
-  }, // For BaseModalRenderer status messages
-};
 
 /**
  * @class LlmSelectionModal
@@ -81,12 +69,18 @@ export class LlmSelectionModal extends SlotModalBase {
         'LlmSelectionModal: ValidatedEventDispatcher dependency is required for BaseModalRenderer.'
       );
 
+    const elementsConfig = buildModalElementsConfig({
+      modalElement: '#llm-selection-modal',
+      closeButton: '#llm-selection-modal-close-button',
+      listContainerElement: '#llm-selection-list',
+      statusMessageElement: '#llm-selection-status-message',
+    });
     super({
       datasetKey: 'llmId',
       logger,
       documentContext,
       validatedEventDispatcher,
-      elementsConfig: LLM_SELECTION_MODAL_ELEMENTS_CONFIG,
+      elementsConfig,
       domElementFactory,
     });
 
