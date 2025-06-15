@@ -1,10 +1,8 @@
 // src/loaders/componentLoader.js
 
-import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { BaseInlineSchemaLoader } from './baseInlineSchemaLoader.js';
 
 import { parseAndValidateId } from '../utils/idUtils.js';
-import { extractBaseId } from '../utils/idUtils.js';
-import { registerInlineSchema } from '../utils/schemaUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -25,9 +23,9 @@ import { registerInlineSchema } from '../utils/schemaUtils.js';
  * and implements the component-definition-specific processing logic in `_processFetchedItem`.
  *
  * @class ComponentLoader
- * @augments BaseManifestItemLoader
+ * @augments BaseInlineSchemaLoader
  */
-class ComponentLoader extends BaseManifestItemLoader {
+class ComponentLoader extends BaseInlineSchemaLoader {
   /**
    * Initializes the ComponentLoader by calling the parent constructor with the specific type name 'components'.
    *
@@ -114,11 +112,10 @@ class ComponentLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `ComponentLoader [${modId}]: Attempting to register/manage data schema using FULL ID '${trimmedComponentIdFromFile}'.`
     );
-    await registerInlineSchema(
-      this._schemaValidator,
-      dataSchema,
+    await this._registerItemSchema(
+      data,
+      'dataSchema',
       trimmedComponentIdFromFile,
-      this._logger,
       {
         warnMessage: `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentIdFromFile}'.`,
         successDebugMessage: `ComponentLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentIdFromFile}' from file '${filename}'.`,
