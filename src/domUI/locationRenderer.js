@@ -43,8 +43,10 @@ import {
  * @property {Array<CharacterDisplayData>} characters - List of characters present in the location.
  */
 
-const DEFAULT_LOCATION_NAME = 'Unknown Location';
-const DEFAULT_LOCATION_DESCRIPTION = 'You see nothing remarkable.';
+import {
+  DEFAULT_LOCATION_NAME,
+  DEFAULT_LOCATION_DESCRIPTION,
+} from './uiDefaults.js';
 
 /**
  * Renders details of the current location, including its name, description, exits, and characters.
@@ -100,7 +102,7 @@ export class LocationRenderer extends BoundDomRendererBase {
       !safeEventDispatcher ||
       typeof safeEventDispatcher.dispatch !== 'function'
     ) {
-      const errMsg = `${this._logPrefix} ISafeEventDispatcher dependency is required.`;
+      const errMsg = `[LocationRenderer] ISafeEventDispatcher dependency is required.`;
       throw new Error(errMsg);
     }
 

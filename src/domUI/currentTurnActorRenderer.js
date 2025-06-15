@@ -12,8 +12,7 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js'; // Adjusted pa
 import { TURN_STARTED_ID } from '../constants/eventIds.js';
 // NAME_COMPONENT_ID and PORTRAIT_COMPONENT_ID are no longer directly used here
 // import {NAME_COMPONENT_ID, PORTRAIT_COMPONENT_ID} from "../constants/componentIds.js";
-
-const DEFAULT_ACTOR_NAME = 'N/A';
+import { DEFAULT_ACTOR_NAME } from './uiDefaults.js';
 
 export class CurrentTurnActorRenderer extends BoundDomRendererBase {
   /** @type {EntityDisplayDataProvider} */

@@ -7,6 +7,7 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DISPLAY_SPEECH_ID } from '../constants/eventIds.js';
 import { PLAYER_COMPONENT_ID } from '../constants/componentIds.js';
 import { buildSpeechMeta } from './helpers/buildSpeechMeta.js';
+import { DEFAULT_SPEAKER_NAME } from './uiDefaults.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -21,8 +22,6 @@ import { buildSpeechMeta } from './helpers/buildSpeechMeta.js';
 /**
  * @typedef {import('../constants/eventIds.js').DisplaySpeechPayload} DisplaySpeechPayload
  */
-
-const DEFAULT_SPEAKER_NAME = 'Unknown Speaker';
 
 export class SpeechBubbleRenderer extends BoundDomRendererBase {
   #entityManager;
