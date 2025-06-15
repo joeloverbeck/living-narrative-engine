@@ -12,6 +12,7 @@ const mockLogger = {
  * @param modulePath
  * @param ctorArgs
  * @param expectedName
+ * @param expectOptional
  */
 function setup(modulePath, ctorArgs, expectedName, expectOptional = false) {
   jest.resetModules();
