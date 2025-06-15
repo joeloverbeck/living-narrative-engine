@@ -48,7 +48,11 @@ describe('SaveLoadService edge cases', () => {
 
   beforeEach(() => {
     ({ logger, storageProvider } = makeDeps());
-    service = new SaveLoadService({ logger, storageProvider });
+    service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
   });
 
   describe('private helper failures via saveManualGame', () => {

@@ -27,6 +27,7 @@ const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/; // Pattern to identify pote
 class SaveLoadService extends ISaveLoadService {
   #logger;
   #storageProvider;
+  #crypto;
 
   /**
    * Creates a new SaveLoadService instance.
@@ -34,8 +35,9 @@ class SaveLoadService extends ISaveLoadService {
    * @param {object} dependencies - The dependencies object.
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {IStorageProvider} dependencies.storageProvider - The storage provider service.
+   * @param {Crypto} [dependencies.crypto] - Web Crypto implementation.
    */
-  constructor({ logger, storageProvider }) {
+  constructor({ logger, storageProvider, crypto = globalThis.crypto }) {
     // <<< MODIFIED SIGNATURE with destructuring
     super();
     if (!logger)
@@ -48,6 +50,7 @@ class SaveLoadService extends ISaveLoadService {
       );
     this.#logger = logger;
     this.#storageProvider = storageProvider;
+    this.#crypto = crypto;
     this.#logger.debug('SaveLoadService initialized.');
   }
 
@@ -86,7 +89,7 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     try {
-      const hashBuffer = await window.crypto.subtle.digest(
+      const hashBuffer = await this.#crypto.subtle.digest(
         'SHA-256',
         dataToHash
       );

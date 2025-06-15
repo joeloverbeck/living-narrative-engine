@@ -49,7 +49,11 @@ describe('SaveLoadService private helper error propagation', () => {
 
   beforeEach(() => {
     ({ logger, storageProvider } = makeDeps());
-    service = new SaveLoadService({ logger, storageProvider });
+    service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
   });
 
   it('propagates readSaveFile errors', async () => {
