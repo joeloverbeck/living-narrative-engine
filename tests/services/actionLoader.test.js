@@ -722,8 +722,7 @@ describe('ActionLoader', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Could not extract base ID from '${invalidId}' in file '${filename}'. Format requires 'name' or 'namespace:name' with non-empty parts.`
-        )
-        ,
+        ),
         expect.objectContaining({
           filename,
           modId: TEST_MOD_ID,
