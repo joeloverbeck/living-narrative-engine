@@ -182,7 +182,7 @@ describe('HasComponentHandler', () => {
     // Act & Assert for null params
     handler.execute(null, executionContext);
     expect(mockLogger.warn).toHaveBeenLastCalledWith(
-      'HAS_COMPONENT: Parameters missing or invalid.',
+      'HAS_COMPONENT: params missing or invalid.',
       { params: null }
     );
 

@@ -15,6 +15,7 @@
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { assertParamsObject } from '../../utils/handlerUtils.js';
 
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.
@@ -92,8 +93,7 @@ class RemoveComponentHandler {
     const log = executionContext?.logger ?? this.#logger;
 
     // 1. Validate Parameters
-    if (!params || typeof params !== 'object') {
-      log.warn('REMOVE_COMPONENT: params missing or invalid.', { params });
+    if (!assertParamsObject(params, log, 'REMOVE_COMPONENT')) {
       return;
     }
 
