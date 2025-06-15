@@ -11,6 +11,7 @@
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import BaseOperationHandler from './baseOperationHandler.js';
+import { setContextValue } from '../../utils/contextVariableUtils.js';
 
 /**
  * @class QueryEntitiesHandler
@@ -215,8 +216,14 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     }
 
     const resultVariable = params.result_variable;
-    if (executionContext?.evaluationContext?.context) {
-      executionContext.evaluationContext.context[resultVariable] = finalIds;
+    const stored = setContextValue(
+      resultVariable,
+      finalIds,
+      executionContext,
+      this.#dispatcher,
+      log
+    );
+    if (stored) {
       log.debug(
         `QUERY_ENTITIES: Stored ${finalIds.length} entity IDs in context variable "${resultVariable}".`
       );

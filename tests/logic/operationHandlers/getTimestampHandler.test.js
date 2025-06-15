@@ -159,7 +159,7 @@ describe('GetTimestampHandler', () => {
       );
     });
 
-    test('should throw a TypeError if the execution context is malformed', () => {
+    test('should handle a malformed execution context gracefully', () => {
       // Arrange
       const params = { result_variable: 'any_var' };
       const malformedExecCtx = {
@@ -168,10 +168,11 @@ describe('GetTimestampHandler', () => {
         },
       };
 
-      // Act & Assert
-      expect(() => handler.execute(params, malformedExecCtx)).toThrow(
-        "Cannot set properties of undefined (setting 'any_var')"
-      );
+      // Act
+      expect(() => handler.execute(params, malformedExecCtx)).not.toThrow();
+
+      // Assert
+      expect(mockLogger.debug).not.toHaveBeenCalled();
     });
   });
 });

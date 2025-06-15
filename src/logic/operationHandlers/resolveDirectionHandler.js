@@ -3,6 +3,8 @@
  * @see src/logic/operationHandlers/resolveDirectionHandler.js
  */
 
+import { setContextValue } from '../../utils/contextVariableUtils.js';
+
 class ResolveDirectionHandler {
   #worldContext;
   #logger;
@@ -38,8 +40,16 @@ class ResolveDirectionHandler {
     });
 
     const trimmedVar = result_variable.trim();
-    execCtx.evaluationContext.context[trimmedVar] = target;
-    this.#logger.debug(`RESOLVE_DIRECTION → ${trimmedVar} = ${target}`);
+    const stored = setContextValue(
+      trimmedVar,
+      target,
+      execCtx,
+      undefined,
+      this.#logger
+    );
+    if (stored) {
+      this.#logger.debug(`RESOLVE_DIRECTION → ${trimmedVar} = ${target}`);
+    }
   }
 }
 

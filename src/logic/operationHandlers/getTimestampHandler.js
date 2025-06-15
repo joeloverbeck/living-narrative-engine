@@ -3,6 +3,8 @@
  * @see src/logic/operationHandlers/getTimestampHandler.js
  */
 
+import { setContextValue } from '../../utils/contextVariableUtils.js';
+
 class GetTimestampHandler {
   #logger;
 
@@ -13,10 +15,17 @@ class GetTimestampHandler {
 
   execute(params, execCtx) {
     const rv = params.result_variable.trim();
-    execCtx.evaluationContext.context[rv] = new Date().toISOString();
-    this.#logger.debug(
-      `GET_TIMESTAMP → ${rv} = ${execCtx.evaluationContext.context[rv]}`
+    const timestamp = new Date().toISOString();
+    const stored = setContextValue(
+      rv,
+      timestamp,
+      execCtx,
+      undefined,
+      this.#logger
     );
+    if (stored) {
+      this.#logger.debug(`GET_TIMESTAMP → ${rv} = ${timestamp}`);
+    }
   }
 }
 
