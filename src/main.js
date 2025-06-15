@@ -17,18 +17,23 @@ import {
 
 const ACTIVE_WORLD = 'demo';
 
-// --- Bootstrap the Application ---
-(async () => {
-  /** @type {import('./bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
-  let uiElements;
-  /** @type {import('./dependencyInjection/appContainer.js').default | undefined} */
-  let container;
-  /** @type {import('./interfaces/coreServices.js').ILogger | null} */
-  let logger = null;
-  /** @type {import('./engine/gameEngine.js').default | null} */ // Corrected type to import GameEngine directly
-  let gameEngine = null; // Will be populated by initializeGameEngineStage
+/** @type {import('./bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
+let uiElements;
+/** @type {import('./dependencyInjection/appContainer.js').default | undefined} */
+let container;
+/** @type {import('./interfaces/coreServices.js').ILogger | null} */
+let logger = null;
+/** @type {import('./engine/gameEngine.js').default | null} */
+let gameEngine = null; // Will be populated by initializeGameEngineStage
 
-  let currentPhaseForError = 'Initial Setup'; // Generic phase before stages
+let currentPhaseForError = 'Initial Setup';
+
+/**
+ * @description Runs bootstrap stages 1–7 and stores resulting instances.
+ * @returns {Promise<void>} Resolves when bootstrap stages complete.
+ */
+export async function bootstrapApp() {
+  currentPhaseForError = 'Initial Setup';
 
   try {
     // STAGE 1: Ensure Critical DOM Elements
@@ -79,21 +84,7 @@ const ACTIVE_WORLD = 'demo';
     // The stage itself logs its completion.
     logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
 
-    // STAGE 8: Start Game
-    currentPhaseForError = 'Start Game'; // Updated phase name
-    logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
-    if (!gameEngine) {
-      // This check should be redundant if initializeGameEngineStage is robust
-      const errMsg =
-        'Critical: GameEngine not initialized before attempting Start Game stage.';
-      logger.error(`main.js: ${errMsg}`);
-      throw new Error(errMsg);
-    }
-    await startGameStage(gameEngine, ACTIVE_WORLD, logger);
-    // The startGameStage function logs its own completion or errors.
-    logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
-
-    logger.debug('main.js: Application bootstrap completed successfully.');
+    logger.debug('main.js: Bootstrap stages 1-7 completed successfully.');
   } catch (bootstrapError) {
     // Centralized error handling for all bootstrap stages
     const detectedPhase =
@@ -128,9 +119,50 @@ const ACTIVE_WORLD = 'demo';
         errorDiv: document.getElementById('error-output'),
         titleElement: document.querySelector('h1'),
         inputElement: document.getElementById('speech-input'),
-        document: document, // Ensure document is passed
+        document: document,
       },
       errorDetails
     );
   }
-})();
+}
+
+/**
+ * @description Starts the game if bootstrap completed.
+ * @param {boolean} [showLoadUI] - When true, opens the Load Game UI after starting.
+ * @returns {Promise<void>} Resolves when the game has started.
+ */
+export async function beginGame(showLoadUI = false) {
+  currentPhaseForError = 'Start Game';
+
+  if (!gameEngine) {
+    const errMsg =
+      'Critical: GameEngine not initialized before attempting Start Game stage.';
+    const errorObj = new Error(errMsg);
+    (logger || console).error(`main.js: ${errMsg}`);
+    displayFatalStartupError(uiElements, {
+      userMessage: errMsg,
+      consoleMessage: errMsg,
+      errorObject: errorObj,
+      phase: currentPhaseForError,
+    });
+    throw errorObj;
+  }
+
+  try {
+    await startGameStage(gameEngine, ACTIVE_WORLD, logger);
+    if (showLoadUI && typeof gameEngine.showLoadGameUI === 'function') {
+      gameEngine.showLoadGameUI();
+    }
+  } catch (error) {
+    displayFatalStartupError(uiElements, {
+      userMessage: `Application failed to start due to a critical error: ${error.message}`,
+      consoleMessage: `Critical error during application bootstrap in phase: ${currentPhaseForError}.`,
+      errorObject: error,
+      phase: currentPhaseForError,
+    });
+    throw error;
+  }
+}
+
+window.bootstrapApp = bootstrapApp;
+window.beginGame = beginGame;
