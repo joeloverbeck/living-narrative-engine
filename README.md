@@ -353,6 +353,15 @@ checks declared dependencies and conflicts, and verifies that all content files
 conform to their JSON schemas. If any problems are found they will be printed to
 the console; otherwise you will see **“All mods passed validation.”**
 
+### Creating a New Mod
+
+To scaffold a new mod directory with a starter `mod.manifest.json` run:
+
+    npm run create-mod -- <modId>
+
+Replace `<modId>` with your desired identifier. The script creates
+`data/mods/<modId>/` and populates a minimal manifest you can edit further.
+
 ### Documentation ▶️
 
 **JSON Logic – Composite Operators ➜ docs/json-logic/composite-logical-operators.md**  
@@ -363,6 +372,9 @@ Complete operator list, context explanation, and many ready-made patterns.
 
 **Mod Manifest Loader Usage ➜ docs/mods/modManifestLoader.md**
 How to use the ModManifestLoader service and handle potential errors.
+
+**Mod Manifest Format ➜ docs/mods/mod_manifest_format.md**
+Details of every allowed field with a sample manifest.
 
 **Display Error Event Payload ➜ docs/events/display_error_payload.md**
 Overview of the payload structure emitted when dispatching `core:display_error` events.

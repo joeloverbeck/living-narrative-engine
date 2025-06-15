@@ -21,6 +21,7 @@ const EXPECTED_SCHEMA_FILES = [
   'operation.schema.json',
   'rule.schema.json',
   'llm-configs.schema.json',
+  'prompt-text.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -35,6 +36,7 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
   locations: 'http://example.com/schemas/entity.schema.json',
   operations: 'http://example.com/schemas/operation.schema.json',
   rules: 'http://example.com/schemas/rule.schema.json',
+  'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
 };
 
 // Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
@@ -72,7 +74,7 @@ describe('StaticConfiguration', () => {
       expect(files).toEqual(EXPECTED_SCHEMA_FILES);
       // Verify order as well (toEqual checks order for arrays)
       expect(files[0]).toBe('common.schema.json');
-      expect(files[files.length - 1]).toBe('llm-configs.schema.json');
+      expect(files[files.length - 1]).toBe('prompt-text.schema.json');
     });
 
     it('should return a *copy* of the internal schema files array', () => {
