@@ -28,6 +28,7 @@ import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 
 class SimpleEntityManager {
@@ -49,8 +50,8 @@ class SimpleEntityManager {
     this.entities.set('context_variable_holder', {
       id: 'context_variable_holder',
       components: { context_variables: this.contextRef },
-      getComponentData: (type) => this.contextRef,
-      hasComponent: (type) => type === 'context_variables',
+      getComponentData: () => this.contextRef,
+      hasComponent: (t) => t === 'context_variables',
     });
   }
 
@@ -473,5 +474,45 @@ describe('intimacy_handle_get_close rule integration', () => {
     expect(
       entityManager.getComponentData('p1', 'intimacy:closeness').partners
     ).toEqual(expect.arrayContaining(['t1', 'a1']));
+  });
+
+  it('merges an existing triad with a new member', () => {
+    interpreter.shutdown();
+    const entities = buildABCDWorld();
+    // place D in the same room as the triad
+    entities.find((e) => e.id === 'd1').components[
+      POSITION_COMPONENT_ID
+    ].locationId = 'room1';
+    // establish initial triad A-B-C
+    entities.find((e) => e.id === 'a1').components['intimacy:closeness'] = {
+      partners: ['b1', 'c1'],
+    };
+    entities.find((e) => e.id === 'b1').components['intimacy:closeness'] = {
+      partners: ['a1', 'c1'],
+    };
+    entities.find((e) => e.id === 'c1').components['intimacy:closeness'] = {
+      partners: ['a1', 'b1'],
+    };
+    init(entities);
+
+    listener({
+      type: ATTEMPT_ACTION_ID,
+      payload: {
+        actorId: 'd1',
+        actionId: 'intimacy:get_close',
+        targetId: 'a1',
+      },
+    });
+
+    const ids = ['a1', 'b1', 'c1', 'd1'];
+    for (const id of ids) {
+      const partners = entityManager
+        .getComponentData(id, 'intimacy:closeness')
+        .partners.sort();
+      expect(partners).toEqual(ids.filter((p) => p !== id).sort());
+      expect(entityManager.getComponentData(id, 'core:movement').locked).toBe(
+        true
+      );
+    }
   });
 });

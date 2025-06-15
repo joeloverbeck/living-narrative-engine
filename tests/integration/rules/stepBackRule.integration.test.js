@@ -26,6 +26,7 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
+import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
 
 /**
  * Minimal in-memory entity manager used for integration tests.
@@ -341,6 +342,52 @@ describe('intimacy_handle_step_back rule integration', () => {
     expect(entityManager.getComponentData('b1', 'core:movement')).toEqual({
       locked: false,
     });
+    const types = events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+  });
+
+  it('actor leaves a poly circle leaving remaining triad intact', () => {
+    interpreter.shutdown();
+    const entities = buildABCDWorld();
+    // place all actors in same room and create a poly circle of four
+    for (const id of ['a1', 'b1', 'c1', 'd1']) {
+      const ent = entities.find((e) => e.id === id);
+      ent.components[POSITION_COMPONENT_ID].locationId = 'room1';
+      ent.components['intimacy:closeness'] = {
+        partners: ['a1', 'b1', 'c1', 'd1'].filter((p) => p !== id),
+      };
+      ent.components['core:movement'].locked = true;
+    }
+    init(entities);
+
+    listener({
+      type: ATTEMPT_ACTION_ID,
+      payload: { actorId: 'a1', actionId: 'intimacy:step_back' },
+    });
+
+    expect(
+      entityManager.getComponentData('a1', 'intimacy:closeness')
+    ).toBeNull();
+    expect(entityManager.getComponentData('a1', 'core:movement')).toEqual({
+      locked: false,
+    });
+    for (const id of ['b1', 'c1', 'd1']) {
+      const partners = entityManager
+        .getComponentData(id, 'intimacy:closeness')
+        .partners.sort();
+      expect(partners).toEqual(
+        ['b1', 'c1', 'd1'].filter((p) => p !== id).sort()
+      );
+      expect(entityManager.getComponentData(id, 'core:movement')).toEqual({
+        locked: true,
+      });
+    }
     const types = events.map((e) => e.eventType);
     expect(types).toEqual(
       expect.arrayContaining([
