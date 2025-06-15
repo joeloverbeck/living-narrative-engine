@@ -13,6 +13,7 @@
 
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
+import { setContextValue } from '../../utils/contextVariableUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
 
@@ -153,8 +154,8 @@ class HasComponentHandler {
     }
 
     // 4. Store the final boolean result in the context
-    storeResult(
-      trimmedResultVar,
+    setContextValue(
+      result_variable,
       result,
       executionContext,
       this.#dispatcher,

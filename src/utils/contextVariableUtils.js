@@ -65,4 +65,55 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
   }
 }
 
+/**
+ * Wrapper around {@link storeResult} that trims the variable name and validates
+ * it before storage.
+ *
+ * @param {string|null|undefined} variableName - Target context variable name.
+ * @param {*} value - Value to store.
+ * @param {import('../logic/defs.js').ExecutionContext} execCtx - Execution context.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher]
+ *   Optional dispatcher for error events.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger used when no dispatcher is provided.
+ * @returns {boolean} `true` when the value was successfully stored.
+ */
+export function setContextValue(
+  variableName,
+  value,
+  execCtx,
+  dispatcher,
+  logger
+) {
+  const trimmedName =
+    typeof variableName === 'string' ? variableName.trim() : '';
+  const log = getPrefixedLogger(logger, '[contextVariableUtils] ');
+
+  if (!trimmedName) {
+    let safeDispatcher = dispatcher;
+    if (!safeDispatcher && execCtx?.validatedEventDispatcher) {
+      try {
+        safeDispatcher = new SafeEventDispatcher({
+          validatedEventDispatcher: execCtx.validatedEventDispatcher,
+          logger: log,
+        });
+      } catch {
+        safeDispatcher = null;
+      }
+    }
+
+    if (safeDispatcher) {
+      safeDispatchError(
+        safeDispatcher,
+        'setContextValue: variableName must be a non-empty string.',
+        {
+          variableName,
+        }
+      );
+    }
+    return false;
+  }
+
+  return storeResult(trimmedName, value, execCtx, dispatcher, logger);
+}
+
 export default storeResult;

@@ -24,7 +24,7 @@ import { assertParamsObject } from '../../utils/handlerUtils.js';
  *   missing or an error occurs. Defaults to `undefined` if not provided.
  */
 
-import storeResult from '../../utils/contextVariableUtils.js';
+import { setContextValue } from '../../utils/contextVariableUtils.js';
 
 class QueryComponentHandler {
   #entityManager;
@@ -149,8 +149,8 @@ class QueryComponentHandler {
 
       const valueToStore = result === undefined ? missing_value : result;
 
-      storeResult(
-        trimmedResultVariable,
+      setContextValue(
+        result_variable,
         valueToStore,
         executionContext,
         this.#dispatcher,
@@ -190,8 +190,8 @@ class QueryComponentHandler {
           resolvedEntityId: entityId,
         },
       });
-      const stored = storeResult(
-        trimmedResultVariable,
+      const stored = setContextValue(
+        result_variable,
         missing_value,
         executionContext,
         this.#dispatcher,

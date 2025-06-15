@@ -13,7 +13,7 @@ import { resolvePath } from '../../utils/objectUtils.js';
 import { cloneDeep } from 'lodash';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import storeResult from '../../utils/contextVariableUtils.js';
+import { setContextValue } from '../../utils/contextVariableUtils.js';
 
 /**
  * @class ModifyArrayFieldHandler
@@ -237,7 +237,7 @@ class ModifyArrayFieldHandler {
 
     // 7. Store Result if requested
     if (result_variable) {
-      const stored = storeResult(
+      const stored = setContextValue(
         result_variable,
         result,
         executionContext,

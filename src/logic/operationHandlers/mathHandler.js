@@ -4,6 +4,7 @@
 
 import jsonLogic from 'json-logic-js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { setContextValue } from '../../utils/contextVariableUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
 
@@ -77,8 +78,8 @@ class MathHandler {
     if (finalNumber === null) {
       log.warn('MATH: expression did not resolve to a numeric result.');
     }
-    const stored = storeResult(
-      result_variable.trim(),
+    const stored = setContextValue(
+      result_variable,
       finalNumber,
       executionContext,
       this.#dispatcher,
