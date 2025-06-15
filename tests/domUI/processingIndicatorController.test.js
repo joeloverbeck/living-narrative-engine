@@ -61,7 +61,7 @@ describe('ProcessingIndicatorController', () => {
     controller = new ProcessingIndicatorController({
       logger,
       documentContext: docContext,
-      validatedEventDispatcher: ved,
+      safeEventDispatcher: ved,
       domElementFactory,
     });
   });

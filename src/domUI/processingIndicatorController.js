@@ -6,12 +6,13 @@ import {
   AI_TURN_PROCESSING_ENDED,
   PLAYER_TURN_SUBMITTED_ID,
   // TEXT_UI_DISPLAY_SPEECH_ID // Not directly used for hiding in this version
+  DISPLAY_ERROR_ID,
 } from '../constants/eventIds.js'; // Assuming these constants are correctly named and exported
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
- * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  */
 
@@ -46,19 +47,24 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
   #domElementFactory = null;
 
   /**
+   * @type {ISafeEventDispatcher | null}
+   */
+  safeEventDispatcher = null;
+
+  /**
    * Creates a controller for rendering processing indicators.
    *
    * @param {object} params - The parameters object.
    * @param {ILogger} params.logger - The logger instance.
    * @param {IDocumentContext} params.documentContext - The document context abstraction.
-   * @param {IValidatedEventDispatcher} params.validatedEventDispatcher - The validated event dispatcher.
+   * @param {ISafeEventDispatcher} params.safeEventDispatcher - The event dispatcher.
    * @param {DomElementFactory} params.domElementFactory - Factory for creating DOM elements.
    * @param {string} [params.speechInputSelector] - CSS selector for the speech input for player composing indicator.
    */
   constructor({
     logger,
     documentContext,
-    validatedEventDispatcher,
+    safeEventDispatcher,
     domElementFactory,
     speechInputSelector = '#speech-input',
   }) {
@@ -74,14 +80,15 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
     super({
       logger,
       documentContext,
-      validatedEventDispatcher,
+      validatedEventDispatcher: safeEventDispatcher,
       elementsConfig,
     });
 
+    this.safeEventDispatcher = safeEventDispatcher;
+
     if (!domElementFactory || typeof domElementFactory.create !== 'function') {
-      this.logger.error(
-        `${this._logPrefix} DomElementFactory dependency is missing or invalid.`
-      );
+      const errMsg = `${this._logPrefix} DomElementFactory dependency is missing or invalid.`;
+      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, { message: errMsg });
       // Not throwing, but #indicatorElement creation will fail if it's not in DOM.
     } else {
       this.#domElementFactory = domElementFactory;
@@ -144,14 +151,16 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
             `${this._logPrefix} Processing indicator created and appended to #outputDiv.`
           );
         } else {
-          this.logger.error(
-            `${this._logPrefix} Failed to create #processing-indicator element using DomElementFactory.`
-          );
+          const errMsg = `${this._logPrefix} Failed to create #processing-indicator element using DomElementFactory.`;
+          this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+            message: errMsg,
+          });
         }
       } else {
-        this.logger.error(
-          `${this._logPrefix} Cannot create #processing-indicator: DomElementFactory or #outputDiv element missing.`
-        );
+        const errMsg = `${this._logPrefix} Cannot create #processing-indicator: DomElementFactory or #outputDiv element missing.`;
+        this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+          message: errMsg,
+        });
       }
     } else {
       this.logger.debug(
