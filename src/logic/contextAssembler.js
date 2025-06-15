@@ -17,6 +17,20 @@ import { createComponentAccessor } from './componentAccessor.js';
 /** @typedef {string | number | null | undefined} EntityId */
 
 /**
+ * @description Create a basic context object for an entity.
+ * @param {EntityId} entityId - Identifier of the entity.
+ * @param {EntityManager} entityManager - Manager used to access components.
+ * @param {ILogger} logger - Logger instance for diagnostics.
+ * @returns {JsonLogicEntityContext} Context object with id and component accessor.
+ */
+export function createEntityContext(entityId, entityManager, logger) {
+  return {
+    id: entityId,
+    components: createComponentAccessor(entityId, entityManager, logger),
+  };
+}
+
+/**
  * Populates either the `actor` or `target` field on the provided evaluation
  * context by retrieving the entity and creating a component accessor.
  *
@@ -46,10 +60,11 @@ export function populateParticipant(
         logger.debug(
           `Found ${fieldName} entity [${entityId}]. Creating context entry.`
         );
-        evaluationContext[fieldName] = {
-          id: entityId,
-          components: createComponentAccessor(entity.id, entityManager, logger),
-        };
+        evaluationContext[fieldName] = createEntityContext(
+          entityId,
+          entityManager,
+          logger
+        );
       } else {
         logger.warn(
           `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} entity not found for ID [${entityId}]. Setting ${fieldName} context to null.`
