@@ -29,6 +29,7 @@ describe('GamePersistenceService edge cases', () => {
   let dataRegistry;
   let playtimeTracker;
   let componentCleaningService;
+  let metadataBuilder;
   let service;
 
   beforeEach(() => {
@@ -45,6 +46,16 @@ describe('GamePersistenceService edge cases', () => {
       setAccumulatedPlaytime: jest.fn(),
     };
     componentCleaningService = new ComponentCleaningService({ logger });
+    metadataBuilder = {
+      build: jest.fn((n, p) => ({
+        saveFormatVersion: '1',
+        engineVersion: 'x',
+        gameTitle: n || 'Unknown Game',
+        timestamp: 't',
+        playtimeSeconds: p,
+        saveName: '',
+      })),
+    };
     service = new GamePersistenceService({
       logger,
       saveLoadService,
@@ -52,6 +63,7 @@ describe('GamePersistenceService edge cases', () => {
       dataRegistry,
       playtimeTracker,
       componentCleaningService,
+      metadataBuilder,
     });
   });
 
