@@ -17,6 +17,7 @@ import QueryEntitiesHandler from '../../../src/logic/operationHandlers/queryEnti
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
 
@@ -85,6 +86,11 @@ function init(entities) {
       safeEventDispatcher: eventBus,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
+    }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
   };
 

@@ -204,18 +204,14 @@
       }
     },
     {
-      "type": "DISPATCH_EVENT",
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "comment": "Step 8: Dispatch events for perception and UI.",
       "parameters": {
-        "eventType": "core:perceptible_event",
-        "payload": {
-          "locationId": "{context.actorPos.locationId}",
-          "descriptionText": "{context.actorName} and {context.targetName} draw close.",
-          "timestamp": "{context.now}",
-          "perceptionType": "state_change_observable",
-          "actorId": "{event.payload.actorId}",
-          "targetId": "{event.payload.targetId}"
-        }
+        "location_id": "{context.actorPos.locationId}",
+        "description_text": "{context.actorName} and {context.targetName} draw close.",
+        "perception_type": "state_change_observable",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}"
       }
     },
     {

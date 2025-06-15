@@ -19,6 +19,7 @@ import SetVariableHandler from '../../../src/logic/operationHandlers/setVariable
 import ResolveDirectionHandler from '../../../src/logic/operationHandlers/resolveDirectionHandler.js';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import {
   NAME_COMPONENT_ID,
@@ -168,6 +169,11 @@ function init(entities) {
       entityManager,
       logger,
       safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
+    }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),

@@ -19,6 +19,7 @@ import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modify
 import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
@@ -147,6 +148,11 @@ function init(entities) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+    }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
     HAS_COMPONENT: new HasComponentHandler({
       entityManager,

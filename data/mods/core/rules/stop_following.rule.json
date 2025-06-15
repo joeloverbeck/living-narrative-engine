@@ -96,20 +96,15 @@
               },
               "then_actions": [
                 {
-                  "type": "DISPATCH_EVENT",
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
                   "comment": "This event is for other characters to observe.",
                   "parameters": {
-                    "eventType": "core:perceptible_event",
-                    "payload": {
-                      "eventName": "core:perceptible_event",
-                      "timestamp": "{context.currentTimestamp}",
-                      "locationId": "{context.actorPosition.locationId}",
-                      "descriptionText": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
-                      "perceptionType": "state_change_observable",
-                      "actorId": "{event.payload.actorId}",
-                      "targetId": "{context.oldFollowingData.leaderId}",
-                      "involvedEntities": []
-                    }
+                    "location_id": "{context.actorPosition.locationId}",
+                    "description_text": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
+                    "perception_type": "state_change_observable",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": "{context.oldFollowingData.leaderId}",
+                    "involved_entities": []
                   }
                 }
               ]

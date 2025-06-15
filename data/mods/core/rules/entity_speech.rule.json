@@ -41,22 +41,17 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "comment": "Dispatch a perceptible event for the speech act, to be logged.",
             "parameters": {
-              "eventType": "core:perceptible_event",
-              "payload": {
-                "eventName": "core:perceptible_event",
-                "locationId": "{context.speakerPositionComponent.locationId}",
-                "descriptionText": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
-                "timestamp": "{context.currentTimestamp}",
-                "perceptionType": "speech_local",
-                "actorId": "{event.payload.entityId}",
-                "targetId": null,
-                "involvedEntities": [],
-                "contextualData": {
-                  "speechContent": "{event.payload.speechContent}"
-                }
+              "location_id": "{context.speakerPositionComponent.locationId}",
+              "description_text": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
+              "perception_type": "speech_local",
+              "actor_id": "{event.payload.entityId}",
+              "target_id": null,
+              "involved_entities": [],
+              "contextual_data": {
+                "speechContent": "{event.payload.speechContent}"
               }
             }
           },

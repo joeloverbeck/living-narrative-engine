@@ -20,6 +20,7 @@ import QueryComponentHandler from '../../../src/logic/operationHandlers/queryCom
 import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
 import {
@@ -139,6 +140,11 @@ function init(entities) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+    }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,

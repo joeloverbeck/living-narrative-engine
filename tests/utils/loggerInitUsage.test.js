@@ -13,6 +13,7 @@ const mockLogger = {
  * @param ctorArgs
  * @param expectedName
  * @param expectOptional
+ * @param useHelper
  */
 function setup(
   modulePath,
