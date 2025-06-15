@@ -11,6 +11,7 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 export class TurnEndingState extends AbstractTurnState {
   /** @type {string}     */ #actorToEndId;
@@ -22,8 +23,15 @@ export class TurnEndingState extends AbstractTurnState {
 
     const log = this._resolveLogger(null, handler);
 
+    const dispatcher = handler.getTurnContext?.()?.getSafeEventDispatcher?.();
+
     if (!actorToEndId) {
-      log.error('TurnEndingState Constructor: actorToEndId must be provided.');
+      const message =
+        'TurnEndingState Constructor: actorToEndId must be provided.';
+      dispatcher?.dispatch(DISPLAY_ERROR_ID, {
+        message,
+        details: { providedActorId: actorToEndId ?? null },
+      });
       this.#actorToEndId =
         handler.getCurrentActor()?.id ?? 'UNKNOWN_ACTOR_CONSTRUCTOR_FALLBACK';
       log.warn(
@@ -55,10 +63,14 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.getTurnEndPort().notifyTurnEnded(this.#actorToEndId, success);
       } catch (err) {
-        logger.error(
-          `TurnEndingState: CRITICAL - TurnEndPort.notifyTurnEnded failed for actor ${this.#actorToEndId}: ${err.message}`,
-          err
-        );
+        ctx.getSafeEventDispatcher?.().dispatch(DISPLAY_ERROR_ID, {
+          message: `TurnEndingState: Failed notifying TurnEndPort for actor ${this.#actorToEndId}: ${err.message}`,
+          details: {
+            actorId: this.#actorToEndId,
+            stack: err.stack,
+            error: err.message,
+          },
+        });
       }
     } else {
       const reason = !ctx
@@ -134,10 +146,14 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.requestIdleStateTransition();
       } catch (err) {
-        logger.error(
-          `Failed forced transition to TurnIdleState during destroy for actor ${this.#actorToEndId}: ${err.message}`,
-          err
-        );
+        ctx.getSafeEventDispatcher?.().dispatch(DISPLAY_ERROR_ID, {
+          message: `TurnEndingState: Failed forced transition to TurnIdleState during destroy for actor ${this.#actorToEndId}: ${err.message}`,
+          details: {
+            actorId: this.#actorToEndId,
+            stack: err.stack,
+            error: err.message,
+          },
+        });
       }
     }
 

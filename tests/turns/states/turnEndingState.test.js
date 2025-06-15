@@ -26,6 +26,7 @@ import { TurnEndingState } from '../../../src/turns/states/turnEndingState.js';
 // Dependencies
 import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 import { AbstractTurnState } from '../../../src/turns/states/abstractTurnState.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // --- Mocks & Test Utilities ---
 
@@ -73,6 +74,7 @@ const createMockTurnContext = (
     requestIdleStateTransition: jest.fn(), // Stub idle transition
     setAwaitingExternalEvent: jest.fn(),
     isAwaitingExternalEvent: jest.fn(),
+    getSafeEventDispatcher: jest.fn(() => defaultServices.safeEventDispatcher),
     // ... other services
   };
   return mockContext;
@@ -123,6 +125,7 @@ describe('TurnEndingState', () => {
   let testActor;
   let testTurnContext;
   let turnEndingState;
+  let mockSafeEventDispatcher;
 
   const actorId = 'endingActor123';
   const differentActorId = 'otherActor789';
@@ -136,9 +139,11 @@ describe('TurnEndingState', () => {
 
     testActor = createMockActor(actorId);
     mockHandler = createMockBaseTurnHandler(mockSystemLogger);
+    mockSafeEventDispatcher = { dispatch: jest.fn() };
     testTurnContext = createMockTurnContext(
       testActor,
-      mockContextSpecificLogger
+      mockContextSpecificLogger,
+      { safeEventDispatcher: mockSafeEventDispatcher }
     );
 
     mockHandler._TEST_setCurrentTurnContext(testTurnContext);
@@ -264,7 +269,8 @@ describe('TurnEndingState', () => {
         const mismatchedActor = createMockActor(differentActorId);
         mismatchedContext = createMockTurnContext(
           mismatchedActor,
-          mockContextSpecificLogger
+          mockContextSpecificLogger,
+          { safeEventDispatcher: mockSafeEventDispatcher }
         );
         mockHandler._TEST_setCurrentTurnContext(mismatchedContext);
         mockHandler._TEST_setCurrentActor(mismatchedActor);
@@ -305,9 +311,11 @@ describe('TurnEndingState', () => {
       turnEndingState = createTestState(actorId, null);
       await turnEndingState.enterState(mockHandler, null);
 
-      expect(mockContextSpecificLogger.error).toHaveBeenCalledWith(
-        `TurnEndingState: CRITICAL - TurnEndPort.notifyTurnEnded failed for actor ${actorId}: ${notifyError.message}`,
-        notifyError
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: `TurnEndingState: Failed notifying TurnEndPort for actor ${actorId}: ${notifyError.message}`,
+        })
       );
       expect(mockHandler.signalNormalApparentTermination).toHaveBeenCalled();
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
@@ -389,11 +397,13 @@ describe('TurnEndingState', () => {
 
       await turnEndingState.destroy(mockHandler);
 
-      expect(mockContextSpecificLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Failed forced transition to TurnIdleState during destroy for actor ${actorId}: ${transitionError.message}`
-        ),
-        transitionError
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Failed forced transition to TurnIdleState during destroy for actor ${actorId}: ${transitionError.message}`
+          ),
+        })
       );
     });
   });
