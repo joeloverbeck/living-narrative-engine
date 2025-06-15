@@ -52,12 +52,6 @@ import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
  */
 export class ActionResultRenderer extends BoundDomRendererBase {
   /**
-   * @private
-   * @type {DomElementFactory}
-   */
-  #domElementFactory;
-
-  /**
    * Creates an {@link ActionResultRenderer} instance.
    *
    * @param {object} deps – Constructor dependencies.
@@ -72,12 +66,6 @@ export class ActionResultRenderer extends BoundDomRendererBase {
     safeEventDispatcher,
     domElementFactory,
   }) {
-    if (!domElementFactory) {
-      throw new Error(
-        '[ActionResultRenderer] domElementFactory dependency must be provided.'
-      );
-    }
-
     const elementsConfig = {
       scrollContainer: { selector: '#outputDiv', required: true },
       listContainerElement: { selector: '#message-list', required: true },
@@ -88,11 +76,10 @@ export class ActionResultRenderer extends BoundDomRendererBase {
       documentContext,
       validatedEventDispatcher: safeEventDispatcher,
       elementsConfig,
+      domElementFactory,
       scrollContainerKey: 'scrollContainer',
       contentContainerKey: 'listContainerElement',
     });
-
-    /** @private */ this.#domElementFactory = domElementFactory;
 
     this.logger.debug(
       `${this._logPrefix} Instantiated. listContainerElement =`,
@@ -185,7 +172,7 @@ export class ActionResultRenderer extends BoundDomRendererBase {
       return;
     }
 
-    const li = this.#domElementFactory.li(cssClass);
+    const li = this.domElementFactory?.li(cssClass);
     if (!li) {
       this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
         message: `${this._logPrefix} DomElementFactory.li() returned null – cannot render bubble.`,

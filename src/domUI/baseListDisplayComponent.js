@@ -30,12 +30,6 @@ import { DomUtils } from '../utils/domUtils.js';
  */
 export class BaseListDisplayComponent extends BoundDomRendererBase {
   /**
-   * @protected
-   * @type {DomElementFactory | null} - Optionally, subclasses can request DomElementFactory.
-   */
-  domElementFactory = null;
-
-  /**
    * Constructs a BaseListDisplayComponent instance.
    *
    * @param {object} params - The parameters object.
@@ -44,7 +38,7 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * @param {IValidatedEventDispatcher} params.validatedEventDispatcher - The validated event dispatcher.
    * @param {ElementsConfig} params.elementsConfig - Configuration for binding DOM elements.
    * Must include a `listContainerElement` key mapping to a selector for the list container.
-   * @param {DomElementFactory} [params.domElementFactory] - Optional. Instance of DomElementFactory for creating elements.
+   * @param {DomElementFactory} [params.domElementFactory] - Optional factory passed through to BoundDomRendererBase.
    * @param {boolean} [params.autoRefresh] - Whether to automatically call `refreshList()` during construction.
    * @param {...any} params.otherDeps - Other dependencies passed to BoundDomRendererBase or stored by the subclass.
    * @throws {Error} If `elementsConfig` does not lead to a resolved `listContainerElement`.
@@ -63,12 +57,9 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
       documentContext,
       validatedEventDispatcher,
       elementsConfig,
+      domElementFactory,
       ...otherDeps,
     });
-
-    if (domElementFactory) {
-      this.domElementFactory = domElementFactory;
-    }
 
     if (!this.elements.listContainerElement) {
       const errorMsg = `${this._logPrefix} 'listContainerElement' is not defined or not found in the DOM. This element is required for BaseListDisplayComponent. Ensure it's specified in elementsConfig.`;

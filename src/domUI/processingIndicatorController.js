@@ -44,7 +44,6 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
    * @private
    * @type {DomElementFactory | null}
    */
-  #domElementFactory = null;
 
   /**
    * @type {ISafeEventDispatcher | null}
@@ -82,17 +81,10 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
       documentContext,
       validatedEventDispatcher: safeEventDispatcher,
       elementsConfig,
+      domElementFactory,
     });
 
     this.safeEventDispatcher = safeEventDispatcher;
-
-    if (!domElementFactory || typeof domElementFactory.create !== 'function') {
-      const errMsg = `${this._logPrefix} DomElementFactory dependency is missing or invalid.`;
-      this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, { message: errMsg });
-      // Not throwing, but #indicatorElement creation will fail if it's not in DOM.
-    } else {
-      this.#domElementFactory = domElementFactory;
-    }
 
     this.#initializeIndicatorElement();
 
@@ -125,11 +117,11 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
     );
 
     if (!this.#indicatorElement) {
-      if (this.#domElementFactory && this.elements.outputDiv) {
+      if (this.domElementFactory && this.elements.outputDiv) {
         this.logger.debug(
           `${this._logPrefix} #processing-indicator not found in DOM. Creating dynamically.`
         );
-        this.#indicatorElement = this.#domElementFactory.create('div', {
+        this.#indicatorElement = this.domElementFactory.create('div', {
           id: 'processing-indicator',
           cls: 'processing-indicator', // CSS will handle initial display: none via lack of .visible
           attrs: { 'aria-live': 'polite', 'aria-label': 'Processing turn' },
@@ -137,7 +129,7 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
 
         if (this.#indicatorElement) {
           for (let i = 0; i < 3; i++) {
-            const dot = this.#domElementFactory.span('dot');
+            const dot = this.domElementFactory.span('dot');
             if (dot) {
               this.#indicatorElement.appendChild(dot);
             } else {
@@ -297,7 +289,6 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
     }
     this.#indicatorElement = null;
     this.#speechInputElement = null; // Clear reference
-    this.#domElementFactory = null; // Clear reference
 
     this.logger.debug(
       `${this._logPrefix} ProcessingIndicatorController disposed.`

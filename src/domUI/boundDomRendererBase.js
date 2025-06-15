@@ -6,6 +6,7 @@ import { RendererBase } from './rendererBase.js';
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('./domElementFactory.js').default} DomElementFactory
  */
 
 /**
@@ -64,6 +65,14 @@ export class BoundDomRendererBase extends RendererBase {
   _defaultContentContainerKey = null;
 
   /**
+   * Optional factory for creating DOM elements.
+   *
+   * @protected
+   * @type {DomElementFactory | null}
+   */
+  domElementFactory = null;
+
+  /**
    * Initializes the base renderer and binds DOM elements.
    *
    * @param {object} params - The parameters object.
@@ -73,6 +82,7 @@ export class BoundDomRendererBase extends RendererBase {
    * @param {ElementsConfig} params.elementsConfig - Configuration for binding DOM elements.
    * @param {string} [params.scrollContainerKey] - Default key in `elementsConfig` used when scrolling.
    * @param {string} [params.contentContainerKey] - Default content container key used when scrolling.
+   * @param {DomElementFactory} [params.domElementFactory] - Optional factory for creating DOM elements.
    * @throws {Error} If `elementsConfig` is not provided or is not an object.
    */
   constructor({
@@ -82,6 +92,7 @@ export class BoundDomRendererBase extends RendererBase {
     elementsConfig,
     scrollContainerKey = null,
     contentContainerKey = null,
+    domElementFactory = null,
   }) {
     super({ logger, documentContext, validatedEventDispatcher });
 
@@ -95,6 +106,16 @@ export class BoundDomRendererBase extends RendererBase {
     this._bindElements(elementsConfig);
     this._defaultScrollContainerKey = scrollContainerKey;
     this._defaultContentContainerKey = contentContainerKey;
+
+    if (domElementFactory) {
+      if (typeof domElementFactory.create !== 'function') {
+        this.logger.error(
+          `${this._logPrefix} 'domElementFactory' must expose a create() method.`
+        );
+      } else {
+        this.domElementFactory = domElementFactory;
+      }
+    }
   }
 
   /**

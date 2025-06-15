@@ -29,8 +29,6 @@ import { getUserFriendlyMessage } from '../alerting/statusCodeMapper.js';
 export class ChatAlertRenderer extends BoundDomRendererBase {
   /** @private @type {AlertRouter} */
   #alertRouter;
-  /** @private @type {DomElementFactory} */
-  #domElementFactory;
   /** @private @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
   /** @private @type {Throttler} */
@@ -75,6 +73,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       },
       scrollContainerKey: 'scrollContainer',
       contentContainerKey: 'chatPanel',
+      domElementFactory,
     });
 
     // --- Dependency Validation ---
@@ -86,15 +85,9 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     if (!alertRouter) {
       throw new Error(`${this._logPrefix} AlertRouter dependency is required.`);
     }
-    if (!domElementFactory) {
-      throw new Error(
-        `${this._logPrefix} DomElementFactory dependency is required.`
-      );
-    }
 
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#alertRouter = alertRouter;
-    this.#domElementFactory = domElementFactory;
 
     // --- Throttler Instantiation ---
     this.#warningThrottler = new Throttler(
@@ -224,30 +217,30 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     const role = isError ? 'alert' : 'status';
     const ariaLive = isError ? 'assertive' : 'polite';
 
-    const bubbleElement = this.#domElementFactory.create('li', {
+    const bubbleElement = this.domElementFactory.create('li', {
       cls: `chat-alert ${bubbleClass}`,
       attrs: { role, 'aria-live': ariaLive },
     });
     if (!bubbleElement) return;
 
-    const iconElement = this.#domElementFactory.span('chat-alert-icon', icon);
+    const iconElement = this.domElementFactory.span('chat-alert-icon', icon);
     if (iconElement) {
       iconElement.setAttribute('aria-hidden', 'true');
       bubbleElement.appendChild(iconElement);
-      const srText = this.#domElementFactory.span('visually-hidden', title);
+      const srText = this.domElementFactory.span('visually-hidden', title);
       if (srText) bubbleElement.appendChild(srText);
     }
 
-    const contentWrapper = this.#domElementFactory.div('chat-alert-content');
+    const contentWrapper = this.domElementFactory.div('chat-alert-content');
     if (!contentWrapper) return;
 
-    const titleElement = this.#domElementFactory.create('strong', {
+    const titleElement = this.domElementFactory.create('strong', {
       cls: 'chat-alert-title',
       text: title,
     });
     if (titleElement) contentWrapper.appendChild(titleElement);
 
-    const messageElement = this.#domElementFactory.p('chat-alert-message');
+    const messageElement = this.domElementFactory.p('chat-alert-message');
     if (messageElement) {
       messageElement.id = messageId;
       let isTruncated = false;
@@ -267,7 +260,7 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
       contentWrapper.appendChild(messageElement);
 
       if (isTruncated) {
-        const toggleBtn = this.#domElementFactory.create('button', {
+        const toggleBtn = this.domElementFactory.create('button', {
           text: 'Show more',
           cls: 'chat-alert-toggle',
           attrs: {
@@ -281,10 +274,9 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
 
     if (developerDetails) {
-      const detailsContainer =
-        this.#domElementFactory.div('chat-alert-details');
+      const detailsContainer = this.domElementFactory.div('chat-alert-details');
       if (detailsContainer) {
-        const toggleBtn = this.#domElementFactory.create('button', {
+        const toggleBtn = this.domElementFactory.create('button', {
           text: 'Developer details',
           cls: 'chat-alert-toggle',
           attrs: {
@@ -294,13 +286,13 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
           },
         });
 
-        const preElement = this.#domElementFactory.create('pre', {
+        const preElement = this.domElementFactory.create('pre', {
           cls: 'chat-alert-details-content',
           id: detailsId,
         });
         preElement.hidden = true;
 
-        const codeElement = this.#domElementFactory.create('code', {
+        const codeElement = this.domElementFactory.create('code', {
           text: developerDetails,
         });
         if (codeElement) preElement.appendChild(codeElement);

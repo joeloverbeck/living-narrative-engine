@@ -97,6 +97,7 @@ describe('PerceptionLogRenderer', () => {
     };
 
     mockDomElementFactoryInstance = {
+      create: jest.fn((tag) => document.createElement(tag)),
       li: jest.fn((className, textContent) => {
         const li = document.createElement('li');
         if (textContent !== undefined) li.textContent = textContent;

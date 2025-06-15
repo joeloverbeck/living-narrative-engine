@@ -94,19 +94,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     sendButtonSelector = '#player-confirm-turn-button',
     speechInputSelector = '#speech-input',
   }) {
-    // MODIFIED: Enhanced domElementFactory validation to meet test expectations
-    const factoryErrorMessage =
-      "[ActionButtonsRenderer] 'domElementFactory' dependency is missing or invalid (must have create and button methods).";
-    if (
-      !domElementFactory ||
-      typeof domElementFactory.create !== 'function' ||
-      typeof domElementFactory.button !== 'function'
-    ) {
-      (logger || console).error(factoryErrorMessage, {
-        receivedFactory: domElementFactory,
-      });
-      throw new Error(factoryErrorMessage);
-    }
+    // domElementFactory is optional but recommended for creating button elements.
 
     if (
       !actionButtonsContainerSelector ||
@@ -148,14 +136,6 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     this.availableActions = [];
     this.#currentActorId = null;
     this.#isDisposed = false;
-
-    // This check should ideally not be strictly necessary if the initial validation and super constructor behavior are correct.
-    // It's kept as a defensive measure. BaseListDisplayComponent assigns this.domElementFactory.
-    if (!this.domElementFactory) {
-      const errMsg = `${this._logPrefix} domElementFactory was not set by the super constructor, despite initial validation. This indicates an issue in the constructor chain.`;
-      this.logger.error(errMsg);
-      throw new Error(errMsg); // This would be an unexpected state
-    }
 
     if (this.elements.sendButtonElement) {
       this.elements.sendButtonElement.disabled = true;
