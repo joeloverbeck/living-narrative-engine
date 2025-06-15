@@ -1,0 +1,307 @@
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  jest,
+  beforeAll,
+} from '@jest/globals';
+import SaveLoadService from '../../src/persistence/saveLoadService.js';
+import { encode } from '@msgpack/msgpack';
+import pako from 'pako';
+import { webcrypto } from 'crypto';
+
+beforeAll(() => {
+  if (typeof window !== 'undefined') {
+    Object.defineProperty(window, 'crypto', {
+      value: webcrypto,
+      configurable: true,
+    });
+  }
+  Object.defineProperty(global, 'crypto', {
+    value: webcrypto,
+    configurable: true,
+  });
+});
+
+/**
+ *
+ */
+function makeDeps() {
+  return {
+    logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
+    storageProvider: {
+      listFiles: jest.fn(),
+      readFile: jest.fn(),
+      writeFileAtomically: jest.fn(),
+      deleteFile: jest.fn(),
+      fileExists: jest.fn(),
+      ensureDirectoryExists: jest.fn(),
+    },
+  };
+}
+
+describe('SaveLoadService edge cases', () => {
+  let logger;
+  let storageProvider;
+  let service;
+
+  beforeEach(() => {
+    ({ logger, storageProvider } = makeDeps());
+    service = new SaveLoadService({ logger, storageProvider });
+  });
+
+  describe('private helper failures via saveManualGame', () => {
+    it('propagates checksum generation failure', async () => {
+      storageProvider.ensureDirectoryExists.mockResolvedValue();
+      const digestSpy = jest
+        .spyOn(webcrypto.subtle, 'digest')
+        .mockRejectedValue(new Error('digest fail'));
+      const obj = {
+        metadata: {},
+        modManifest: {},
+        gameState: {},
+        integrityChecks: {},
+      };
+      const result = await service.saveManualGame('Slot', obj);
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Checksum generation failed/);
+      expect(logger.error).toHaveBeenCalled();
+      digestSpy.mockRestore();
+    });
+
+    it('handles deepClone failure', async () => {
+      storageProvider.ensureDirectoryExists.mockResolvedValue();
+      const cyc = {
+        metadata: {},
+        modManifest: {},
+        gameState: {},
+        integrityChecks: {},
+      };
+      cyc.self = cyc;
+      const result = await service.saveManualGame('Loop', cyc);
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/deep clone/);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('throws on invalid gameState during serialization', async () => {
+      storageProvider.ensureDirectoryExists.mockResolvedValue();
+      const obj = { metadata: {}, modManifest: {}, integrityChecks: {} };
+      const result = await service.saveManualGame('Bad', obj);
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Invalid gameState/);
+      expect(logger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('deserializeAndDecompress failure scenarios via loadGameData', () => {
+    const path = 'saves/manual_saves/test.sav';
+
+    it('returns failure when file read fails', async () => {
+      storageProvider.readFile.mockRejectedValue(new Error('read fail'));
+      const res = await service.loadGameData(path);
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('returns failure for empty file', async () => {
+      storageProvider.readFile.mockResolvedValue(new Uint8Array());
+      const res = await service.loadGameData(path);
+      expect(res.success).toBe(false);
+      expect(logger.warn).toHaveBeenCalled();
+    });
+
+    it('returns failure for gzip error', async () => {
+      storageProvider.readFile.mockResolvedValue(new Uint8Array([1, 2, 3]));
+      const res = await service.loadGameData(path);
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('returns failure for msgpack decode error', async () => {
+      const badGzip = pako.gzip(new Uint8Array([1, 2, 3]));
+      storageProvider.readFile.mockResolvedValue(badGzip);
+      const res = await service.loadGameData(path);
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('listManualSaveSlots corrupted files', () => {
+    it('handles missing metadata section', async () => {
+      const obj = { modManifest: {}, gameState: {}, integrityChecks: {} };
+      const compressed = pako.gzip(encode(obj));
+      storageProvider.listFiles.mockResolvedValue(['manual_save_slot1.sav']);
+      storageProvider.readFile.mockResolvedValue(compressed);
+      const slots = await service.listManualSaveSlots();
+      expect(slots[0].isCorrupted).toBe(true);
+      expect(slots[0].saveName).toMatch(/No Metadata/);
+    });
+
+    it('handles malformed metadata fields', async () => {
+      const obj = {
+        metadata: { saveName: '', timestamp: 0, playtimeSeconds: 'x' },
+        modManifest: {},
+        gameState: {},
+        integrityChecks: {},
+      };
+      const compressed = pako.gzip(encode(obj));
+      storageProvider.listFiles.mockResolvedValue(['manual_save_slot2.sav']);
+      storageProvider.readFile.mockResolvedValue(compressed);
+      const slots = await service.listManualSaveSlots();
+      expect(slots[0].isCorrupted).toBe(true);
+      expect(slots[0].saveName).toMatch(/Bad Metadata/);
+    });
+  });
+
+  describe('loadGameData validation branches', () => {
+    const path = 'saves/manual_saves/test.sav';
+
+    it('fails on invalid identifier', async () => {
+      const res = await service.loadGameData('');
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('fails when required section missing', async () => {
+      const obj = { metadata: {}, gameState: {}, integrityChecks: {} };
+      const compressed = pako.gzip(encode(obj));
+      storageProvider.readFile.mockResolvedValue(compressed);
+      const res = await service.loadGameData(path);
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('fails when checksum missing', async () => {
+      const obj = {
+        metadata: {},
+        modManifest: {},
+        gameState: {},
+        integrityChecks: {},
+      };
+      const compressed = pako.gzip(encode(obj));
+      storageProvider.readFile.mockResolvedValue(compressed);
+      const res = await service.loadGameData(path);
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('fails on checksum mismatch', async () => {
+      const obj = {
+        metadata: {},
+        modManifest: {},
+        gameState: { a: 1 },
+        integrityChecks: {},
+      };
+      const checksum = await webcrypto.subtle.digest(
+        'SHA-256',
+        encode(obj.gameState)
+      );
+      obj.integrityChecks.gameStateChecksum = Array.from(
+        new Uint8Array(checksum)
+      )
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+      // tamper checksum
+      obj.integrityChecks.gameStateChecksum =
+        obj.integrityChecks.gameStateChecksum.replace(/^./, '0');
+      const compressed = pako.gzip(encode(obj));
+      storageProvider.readFile.mockResolvedValue(compressed);
+      const res = await service.loadGameData(path);
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('fails when checksum calculation throws', async () => {
+      const obj = {
+        metadata: {},
+        modManifest: {},
+        gameState: { a: 1 },
+        integrityChecks: {},
+      };
+      const checksum = await webcrypto.subtle.digest(
+        'SHA-256',
+        encode(obj.gameState)
+      );
+      obj.integrityChecks.gameStateChecksum = Array.from(
+        new Uint8Array(checksum)
+      )
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+      const compressed = pako.gzip(encode(obj));
+      storageProvider.readFile.mockResolvedValue(compressed);
+      const digestSpy = jest
+        .spyOn(webcrypto.subtle, 'digest')
+        .mockRejectedValue(new Error('calc fail'));
+      const res = await service.loadGameData(path);
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+      digestSpy.mockRestore();
+    });
+  });
+
+  describe('saveManualGame additional branches', () => {
+    it('handles directory creation failure', async () => {
+      storageProvider.ensureDirectoryExists.mockRejectedValue(
+        new Error('mkdir fail')
+      );
+      const obj = {
+        metadata: {},
+        modManifest: {},
+        gameState: {},
+        integrityChecks: {},
+      };
+      const res = await service.saveManualGame('Dir', obj);
+      expect(res.success).toBe(false);
+      expect(res.error).toMatch(/Failed to create save directory/);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('handles disk full error', async () => {
+      storageProvider.ensureDirectoryExists.mockResolvedValue();
+      storageProvider.writeFileAtomically.mockResolvedValue({
+        success: false,
+        error: 'disk full',
+      });
+      const obj = {
+        metadata: {},
+        modManifest: {},
+        gameState: {},
+        integrityChecks: {},
+      };
+      const res = await service.saveManualGame('Disk', obj);
+      expect(res.success).toBe(false);
+      expect(res.error).toMatch(/Not enough disk space/);
+      expect(logger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteManualSave branches', () => {
+    const path = 'saves/manual_saves/test.sav';
+
+    it('rejects invalid identifier', async () => {
+      const res = await service.deleteManualSave('');
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('handles missing file', async () => {
+      storageProvider.fileExists.mockResolvedValue(false);
+      const res = await service.deleteManualSave(path);
+      expect(res.success).toBe(false);
+      expect(logger.warn).toHaveBeenCalled();
+    });
+
+    it('propagates deletion failure', async () => {
+      storageProvider.fileExists.mockResolvedValue(true);
+      storageProvider.deleteFile.mockResolvedValue({
+        success: false,
+        error: 'perm',
+      });
+      const res = await service.deleteManualSave(path);
+      expect(res.success).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+  });
+});
