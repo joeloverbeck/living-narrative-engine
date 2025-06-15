@@ -331,7 +331,7 @@ describe('EntityLoader', () => {
       expect(warnLogger.debug).toHaveBeenCalledWith(
         'EntityLoader: Initialized.'
       );
-      expect(warnLogger.debug).toHaveBeenCalledTimes(2); // Only 2 debug logs when schema isn't found
+      expect(warnLogger.debug).toHaveBeenCalledTimes(3); // Base loader init + base init + entity loader init
     });
   });
 

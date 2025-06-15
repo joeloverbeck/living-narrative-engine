@@ -12,8 +12,7 @@
 /** @typedef {import('../../data/schemas/game.schema.json')} GameConfig */ // Assuming this type exists
 
 import { CORE_MOD_ID } from '../constants/core';
-import { validateLoaderDeps } from '../utils/validationUtils.js';
-import { ensureValidLogger } from '../utils/loggerUtils.js';
+import AbstractLoader from './abstractLoader.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidation.js';
 
@@ -21,7 +20,7 @@ import { validateAgainstSchema } from '../utils/schemaValidation.js';
  * Service responsible for locating, fetching, validating, and parsing the game configuration file (e.g., game.json).
  * After validation, it ensures CORE_MOD_ID is the first mod and returns the list of mod IDs.
  */
-class GameConfigLoader {
+class GameConfigLoader extends AbstractLoader {
   #configuration;
   #pathResolver;
   #dataFetcher;
@@ -46,9 +45,7 @@ class GameConfigLoader {
     schemaValidator,
     logger,
   }) {
-    this.#logger = ensureValidLogger(logger, 'GameConfigLoader');
-
-    validateLoaderDeps(this.#logger, [
+    super(logger, [
       {
         dependency: configuration,
         name: 'IConfiguration',
@@ -75,6 +72,7 @@ class GameConfigLoader {
     this.#pathResolver = pathResolver;
     this.#dataFetcher = dataFetcher;
     this.#schemaValidator = schemaValidator;
+    this.#logger = this._logger;
 
     this.#logger.debug('GameConfigLoader: Instance created.');
   }
