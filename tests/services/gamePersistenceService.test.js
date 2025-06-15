@@ -25,11 +25,20 @@ const mockLogger = {
 // Mock other constructor dependencies. They don't need specific method implementations
 // for these tests unless the constructor or isSavingAllowed calls them.
 /** @type {jest.Mocked<ISaveLoadService>} */
-const mockSaveLoadService = {};
+const mockSaveLoadService = {
+  saveManualGame: jest.fn(),
+  loadGameData: jest.fn(),
+};
 /** @type {jest.Mocked<EntityManager>} */
-const mockEntityManager = {};
+const mockEntityManager = {
+  clearAll: jest.fn(),
+  reconstructEntity: jest.fn(),
+};
 /** @type {jest.Mocked<PlaytimeTracker>} */
-const mockPlaytimeTracker = {};
+const mockPlaytimeTracker = {
+  getTotalPlaytime: jest.fn(),
+  setAccumulatedPlaytime: jest.fn(),
+};
 /** @type {jest.Mocked<AppContainer>} */
 const mockAppContainer = {
   resolve: jest.fn(), // Mock resolve as it might be used in the TODO part in the future
@@ -65,7 +74,9 @@ describe('GamePersistenceService', () => {
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'GamePersistenceService.isSavingAllowed: Save attempt while engine not initialized.'
+        expect.stringContaining(
+          'GamePersistenceService.isSavingAllowed: Save attempt while engine not initialized.'
+        )
       );
       expect(mockLogger.debug).not.toHaveBeenCalled(); // Ensure debug log isn't called
       expect(mockLogger.error).not.toHaveBeenCalled(); // Ensure no errors logged
@@ -77,7 +88,9 @@ describe('GamePersistenceService', () => {
       expect(result).toBe(true);
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'GamePersistenceService.isSavingAllowed: Check returned true (currently a basic stub).'
+        expect.stringContaining(
+          'GamePersistenceService.isSavingAllowed: Check returned true (currently a basic stub).'
+        )
       );
       expect(mockLogger.warn).not.toHaveBeenCalled(); // Ensure warning log isn't called
       expect(mockLogger.error).not.toHaveBeenCalled(); // Ensure no errors logged

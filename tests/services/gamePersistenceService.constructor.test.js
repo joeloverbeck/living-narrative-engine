@@ -6,7 +6,12 @@ import GamePersistenceService from '../../src/persistence/gamePersistenceService
  */
 function makeDeps() {
   return {
-    logger: { debug: jest.fn(), error: jest.fn() },
+    logger: {
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+      error: jest.fn(),
+    },
     saveLoadService: {},
     entityManager: {},
     playtimeTracker: {},

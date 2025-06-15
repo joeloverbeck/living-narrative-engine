@@ -7,7 +7,12 @@ import { webcrypto } from 'crypto';
  */
 function makeDeps() {
   return {
-    logger: { debug: jest.fn(), error: jest.fn() },
+    logger: {
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+      error: jest.fn(),
+    },
     storageProvider: {
       writeFileAtomically: jest.fn(),
       listFiles: jest.fn(),

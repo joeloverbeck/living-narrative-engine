@@ -1,5 +1,6 @@
 import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.js';
 import GameStateCaptureService from './gameStateCaptureService.js';
+import { setupService } from '../utils/serviceInitializer.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -53,25 +54,24 @@ class GamePersistenceService extends IGamePersistenceService {
     gameStateCaptureService,
   }) {
     super();
-    const missingDependencies = [];
-    if (!logger) missingDependencies.push('logger');
-    if (!saveLoadService) missingDependencies.push('saveLoadService');
-    if (!entityManager) missingDependencies.push('entityManager');
-    if (!playtimeTracker) missingDependencies.push('playtimeTracker');
-    if (!gameStateCaptureService)
-      missingDependencies.push('gameStateCaptureService');
-
-    if (missingDependencies.length > 0) {
-      const errorMessage = `GamePersistenceService: Fatal - Missing required dependencies: ${missingDependencies.join(', ')}.`;
-      if (logger && typeof logger.error === 'function') {
-        logger.error(errorMessage);
-      } else {
-        console.error(errorMessage);
-      }
-      throw new Error(errorMessage);
-    }
-
-    this.#logger = logger;
+    this.#logger = setupService('GamePersistenceService', logger, {
+      saveLoadService: {
+        value: saveLoadService,
+        requiredMethods: ['saveManualGame', 'loadGameData'],
+      },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['clearAll', 'reconstructEntity'],
+      },
+      playtimeTracker: {
+        value: playtimeTracker,
+        requiredMethods: ['getTotalPlaytime', 'setAccumulatedPlaytime'],
+      },
+      gameStateCaptureService: {
+        value: gameStateCaptureService,
+        requiredMethods: ['captureCurrentGameState'],
+      },
+    });
     this.#saveLoadService = saveLoadService;
     this.#entityManager = entityManager;
     this.#playtimeTracker = playtimeTracker;
