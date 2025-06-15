@@ -771,14 +771,20 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "$ref": "#/$defs/Operation"
+            "oneOf": [
+              { "$ref": "#/$defs/Operation" },
+              { "$ref": "#/$defs/MacroReference" }
+            ]
           }
         },
         "else_actions": {
           "type": "array",
           "default": [],
           "items": {
-            "$ref": "#/$defs/Operation"
+            "oneOf": [
+              { "$ref": "#/$defs/Operation" },
+              { "$ref": "#/$defs/MacroReference" }
+            ]
           }
         }
       },
@@ -799,13 +805,19 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "$ref": "#/$defs/Operation"
+            "oneOf": [
+              { "$ref": "#/$defs/Operation" },
+              { "$ref": "#/$defs/MacroReference" }
+            ]
           }
         },
         "else_actions": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Operation"
+            "oneOf": [
+              { "$ref": "#/$defs/Operation" },
+              { "$ref": "#/$defs/MacroReference" }
+            ]
           },
           "default": []
         }
@@ -858,7 +870,10 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "$ref": "#/$defs/Operation"
+            "oneOf": [
+              { "$ref": "#/$defs/Operation" },
+              { "$ref": "#/$defs/MacroReference" }
+            ]
           }
         }
       },
@@ -1238,6 +1253,16 @@
         }
       },
       "required": ["operator", "operands"]
+    },
+    "MacroReference": {
+      "type": "object",
+      "properties": {
+        "macro": {
+          "$ref": "./common.schema.json#/definitions/namespacedId"
+        }
+      },
+      "required": ["macro"],
+      "additionalProperties": false
     }
   }
 }
