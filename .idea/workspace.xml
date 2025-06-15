@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented focused handlers to deal with follower-related issues." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -187,15 +187,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="32373000" />
-    </task>
-    <task id="LOCAL-00086" summary="Implementing thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749937747400</created>
-      <option name="number" value="00086" />
-      <option name="presentableId" value="LOCAL-00086" />
-      <option name="project" value="LOCAL" />
-      <updated>1749937747400</updated>
+      <workItem from="1749963238113" duration="32877000" />
     </task>
     <task id="LOCAL-00087" summary="Implemented thoughts and notes tooltips.">
       <option name="closed" value="true" />
@@ -581,7 +573,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749999655383</updated>
     </task>
-    <option name="localTasksCounter" value="135" />
+    <task id="LOCAL-00135" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1749999733362</created>
+      <option name="number" value="00135" />
+      <option name="presentableId" value="LOCAL-00135" />
+      <option name="project" value="LOCAL" />
+      <updated>1749999733362</updated>
+    </task>
+    <option name="localTasksCounter" value="136" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -607,12 +607,12 @@
     <MESSAGE value="Fixed issue with the dismiss rule." />
     <MESSAGE value="Improved OperationInterpreter." />
     <MESSAGE value="Minor changes." />
-    <MESSAGE value="Formatting." />
     <MESSAGE value="Implementing base intimacy system." />
     <MESSAGE value="Made changes to the mod manifest schema." />
     <MESSAGE value="Returning the app to normal." />
     <MESSAGE value="Implemented base of intimacy system." />
     <MESSAGE value="Implemented focused handlers to deal with follower-related issues." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented focused handlers to deal with follower-related issues." />
+    <MESSAGE value="Formatting." />
+    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
   </component>
 </project>
