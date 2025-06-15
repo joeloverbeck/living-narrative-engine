@@ -77,91 +77,66 @@ export class TitleRenderer extends RendererBase {
     const ved = this.validatedEventDispatcher; // Alias for brevity
 
     // Direct title setting
-    this._addSubscription(
-      ved.subscribe('core:set_title', this.#handleSetTitle.bind(this))
-    );
+    this._subscribe('core:set_title', this.#handleSetTitle.bind(this));
 
     // Initialization Events
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:initialization_service:completed',
-        this.#handleInitializationCompleted.bind(this)
-      )
+    this._subscribe(
+      'initialization:initialization_service:completed',
+      this.#handleInitializationCompleted.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:initialization_service:failed',
-        this.#handleInitializationFailed.bind(this)
-      )
+    this._subscribe(
+      'initialization:initialization_service:failed',
+      this.#handleInitializationFailed.bind(this)
     );
 
     // Initialization Steps Started
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:world_loader:started',
-        this.#handleInitializationStepStarted.bind(this)
-      )
+    this._subscribe(
+      'initialization:world_loader:started',
+      this.#handleInitializationStepStarted.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:system_initializer:started',
-        this.#handleInitializationStepStarted.bind(this)
-      )
+    this._subscribe(
+      'initialization:system_initializer:started',
+      this.#handleInitializationStepStarted.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:game_state_initializer:started',
-        this.#handleInitializationStepStarted.bind(this)
-      )
+    this._subscribe(
+      'initialization:game_state_initializer:started',
+      this.#handleInitializationStepStarted.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:world_initializer:started',
-        this.#handleInitializationStepStarted.bind(this)
-      )
+    this._subscribe(
+      'initialization:world_initializer:started',
+      this.#handleInitializationStepStarted.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:input_setup_service:started',
-        this.#handleInitializationStepStarted.bind(this)
-      )
+    this._subscribe(
+      'initialization:input_setup_service:started',
+      this.#handleInitializationStepStarted.bind(this)
     );
 
     // Initialization Steps Failed
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:world_loader:failed',
-        this.#handleInitializationStepFailed.bind(this)
-      )
+    this._subscribe(
+      'initialization:world_loader:failed',
+      this.#handleInitializationStepFailed.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:system_initializer:failed',
-        this.#handleInitializationStepFailed.bind(this)
-      )
+    this._subscribe(
+      'initialization:system_initializer:failed',
+      this.#handleInitializationStepFailed.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:game_state_initializer:failed',
-        this.#handleInitializationStepFailed.bind(this)
-      )
+    this._subscribe(
+      'initialization:game_state_initializer:failed',
+      this.#handleInitializationStepFailed.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:world_initializer:failed',
-        this.#handleInitializationStepFailed.bind(this)
-      )
+    this._subscribe(
+      'initialization:world_initializer:failed',
+      this.#handleInitializationStepFailed.bind(this)
     );
-    this._addSubscription(
-      ved.subscribe(
-        'initialization:input_setup_service:failed',
-        this.#handleInitializationStepFailed.bind(this)
-      )
+    this._subscribe(
+      'initialization:input_setup_service:failed',
+      this.#handleInitializationStepFailed.bind(this)
     );
 
     // System Fatal Error (Could also trigger title change)
-    this._addSubscription(
-      ved.subscribe(SYSTEM_ERROR_OCCURRED_ID, this.#handleFatalError.bind(this))
+    this._subscribe(
+      SYSTEM_ERROR_OCCURRED_ID,
+      this.#handleFatalError.bind(this)
     );
 
     this.logger.debug(

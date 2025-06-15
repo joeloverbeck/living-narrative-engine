@@ -231,7 +231,7 @@ describe('ActionButtonsRenderer', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          "[ActionButtonsRenderer] Subscribed to VED event 'core:update_available_actions' via _addSubscription."
+          "[ActionButtonsRenderer] Subscribed to VED event 'core:update_available_actions' via _subscribe."
         )
       );
     });

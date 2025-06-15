@@ -123,18 +123,8 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     }
 
     // --- Event Subscriptions ---
-    this._addSubscription(
-      this.#safeEventDispatcher.subscribe(
-        'core:display_warning',
-        this.#handleWarning.bind(this)
-      )
-    );
-    this._addSubscription(
-      this.#safeEventDispatcher.subscribe(
-        'core:display_error',
-        this.#handleError.bind(this)
-      )
-    );
+    this._subscribe('core:display_warning', this.#handleWarning.bind(this));
+    this._subscribe('core:display_error', this.#handleError.bind(this));
 
     this.logger.debug(`${this._logPrefix} Initialized.`);
   }

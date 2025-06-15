@@ -183,14 +183,12 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
       );
     }
 
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
-        this._EVENT_TYPE_SUBSCRIBED,
-        this.#handleUpdateActions.bind(this)
-      )
+    this._subscribe(
+      this._EVENT_TYPE_SUBSCRIBED,
+      this.#handleUpdateActions.bind(this)
     );
     this.logger.debug(
-      `${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}' via _addSubscription.`
+      `${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}' via _subscribe.`
     );
   }
 

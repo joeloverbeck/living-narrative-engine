@@ -91,13 +91,8 @@ export class CurrentTurnActorRenderer extends BoundDomRendererBase {
     this.#resetPanel(); // Initialize to default state
 
     try {
-      // Use _addSubscription from RendererBase (via BoundDomRendererBase)
-      this._addSubscription(
-        this.validatedEventDispatcher.subscribe(
-          TURN_STARTED_ID,
-          this.handleTurnStarted.bind(this)
-        )
-      );
+      // Subscribe using helper method
+      this._subscribe(TURN_STARTED_ID, this.handleTurnStarted.bind(this));
       this.logger.debug(
         `${this._logPrefix} Initialized and subscribed to ${TURN_STARTED_ID}.`
       );

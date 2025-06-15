@@ -114,12 +114,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
     this.#currentActorId = null;
 
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
-        TURN_STARTED_ID,
-        this.#handleTurnStarted.bind(this)
-      )
-    );
+    this._subscribe(TURN_STARTED_ID, this.#handleTurnStarted.bind(this));
     this.logger.debug(
       `${this._logPrefix} Subscribed to VED event '${TURN_STARTED_ID}'.`
     );
