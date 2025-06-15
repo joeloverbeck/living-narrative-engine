@@ -11,6 +11,7 @@
 // <<< ADDED Import: jsonLogic directly >>>
 import jsonLogic from 'json-logic-js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
+import { setContextValue } from '../../utils/contextVariableUtils.js';
 
 /**
  * Parameters expected by the SetVariableHandler#execute method.
@@ -259,22 +260,20 @@ class SetVariableHandler {
       `SET_VARIABLE: Setting context variable "${trimmedVariableName}" in evaluationContext.context to value: ${finalValueStringForLog}`
     );
 
-    try {
-      // Assign the final determined value to the correct context (variableStore)
-      variableStore[trimmedVariableName] = finalValue;
-    } catch (assignmentError) {
+    const stored = setContextValue(
+      trimmedVariableName,
+      finalValue,
+      executionContext,
+      undefined,
+      logger
+    );
+    if (!stored) {
       logger.error(
         `SET_VARIABLE: Unexpected error during assignment for variable "${trimmedVariableName}" into evaluationContext.context.`,
         {
-          error:
-            assignmentError instanceof Error
-              ? assignmentError.message
-              : String(assignmentError),
           variableName: trimmedVariableName,
-          // Do not log finalValue again if it's complex and caused stringify issues above
         }
       );
-      // Depending on desired behavior, you might want to re-throw or simply return here
     }
   }
 }
