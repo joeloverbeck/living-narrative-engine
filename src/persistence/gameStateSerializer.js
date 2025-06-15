@@ -3,6 +3,10 @@
 import { encode, decode } from '@msgpack/msgpack';
 import pako from 'pako';
 import { deepClone } from '../utils/objectUtils.js';
+import {
+  PersistenceError,
+  PersistenceErrorCodes,
+} from './persistenceErrors.js';
 
 /**
  * @class GameStateSerializer
@@ -73,7 +77,10 @@ class GameStateSerializer {
         'Error generating checksum using Web Crypto API:',
         error
       );
-      throw new Error(`Checksum generation failed: ${error.message}`);
+      throw new PersistenceError(
+        PersistenceErrorCodes.CHECKSUM_GENERATION_FAILED,
+        `Checksum generation failed: ${error.message}`
+      );
     }
   }
 
@@ -100,7 +107,10 @@ class GameStateSerializer {
       finalSaveObject = deepClone(gameStateObject);
     } catch (e) {
       this.#logger.error('DeepClone failed:', e);
-      throw new Error('Failed to deep clone object for saving.');
+      throw new PersistenceError(
+        PersistenceErrorCodes.DEEP_CLONE_FAILED,
+        'Failed to deep clone object for saving.'
+      );
     }
 
     if (
@@ -110,7 +120,10 @@ class GameStateSerializer {
       this.#logger.error(
         'Invalid or missing gameState property in save object for checksum calculation.'
       );
-      throw new Error('Invalid gameState for checksum calculation.');
+      throw new PersistenceError(
+        PersistenceErrorCodes.INVALID_GAME_STATE,
+        'Invalid gameState for checksum calculation.'
+      );
     }
 
     const gameStateMessagePack = encode(finalSaveObject.gameState);
@@ -152,7 +165,10 @@ class GameStateSerializer {
       this.#logger.error('Gzip decompression failed:', error);
       return {
         success: false,
-        error: `Gzip decompression error: ${error.message}`,
+        error: new PersistenceError(
+          PersistenceErrorCodes.DECOMPRESSION_ERROR,
+          userMsg
+        ),
         userFriendlyError: userMsg,
       };
     }
@@ -175,7 +191,10 @@ class GameStateSerializer {
       this.#logger.error('MessagePack deserialization failed:', error);
       return {
         success: false,
-        error: `MessagePack deserialization error: ${error.message}`,
+        error: new PersistenceError(
+          PersistenceErrorCodes.DESERIALIZATION_ERROR,
+          userMsg
+        ),
         userFriendlyError: userMsg,
       };
     }

@@ -166,7 +166,7 @@ describe('GamePersistenceService additional coverage', () => {
       });
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
-      expect(res.error).toBe('no');
+      expect(res.error.message).toBe('no');
     });
 
     it('loads and restores on success', async () => {

@@ -60,21 +60,21 @@ describe('SaveLoadService private helper error propagation', () => {
     storageProvider.readFile.mockRejectedValue(new Error('read fail'));
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error).toMatch(/Could not access/);
+    expect(res.error.message).toMatch(/Could not access/);
   });
 
   it('propagates empty file error', async () => {
     storageProvider.readFile.mockResolvedValue(new Uint8Array());
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error).toMatch(/empty or cannot be read/);
+    expect(res.error.message).toMatch(/empty or cannot be read/);
   });
 
   it('propagates decompression errors', async () => {
     storageProvider.readFile.mockResolvedValue(new Uint8Array([1, 2, 3]));
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error).toMatch(/could not decompress/);
+    expect(res.error.message).toMatch(/could not decompress/);
   });
 
   it('propagates deserialization errors', async () => {
@@ -82,6 +82,6 @@ describe('SaveLoadService private helper error propagation', () => {
     storageProvider.readFile.mockResolvedValue(badGzip);
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error).toMatch(/could not understand/);
+    expect(res.error.message).toMatch(/could not understand/);
   });
 });

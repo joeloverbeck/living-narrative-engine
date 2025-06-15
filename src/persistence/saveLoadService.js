@@ -5,6 +5,10 @@ import { encode } from '@msgpack/msgpack';
 import { deepClone } from '../utils/objectUtils.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import {
+  PersistenceError,
+  PersistenceErrorCodes,
+} from './persistenceErrors.js';
+import {
   validateSaveName,
   validateSaveIdentifier,
 } from './saveInputValidators.js';
@@ -84,7 +88,10 @@ class SaveLoadService extends ISaveLoadService {
         );
         return {
           success: false,
-          error: 'File is empty or unreadable.',
+          error: new PersistenceError(
+            PersistenceErrorCodes.EMPTY_FILE,
+            userMsg
+          ),
           userFriendlyError: userMsg,
         };
       }
@@ -95,7 +102,10 @@ class SaveLoadService extends ISaveLoadService {
       this.#logger.error(`Error reading file ${filePath}:`, error);
       return {
         success: false,
-        error: `File read error: ${error.message}`,
+        error: new PersistenceError(
+          PersistenceErrorCodes.FILE_READ_ERROR,
+          userMsg
+        ),
         userFriendlyError: userMsg,
       };
     }
@@ -274,7 +284,14 @@ class SaveLoadService extends ISaveLoadService {
       const errorMsg = 'Invalid saveIdentifier provided for loading.';
       const userMsg = 'Cannot load game: No save file was specified.';
       this.#logger.error(errorMsg);
-      return { success: false, error: userMsg, data: null };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
+          userMsg
+        ),
+        data: null,
+      };
     }
 
     // saveIdentifier is expected to be the full path including "saves/manual_saves/"
@@ -288,8 +305,13 @@ class SaveLoadService extends ISaveLoadService {
       return {
         success: false,
         error:
-          deserializationResult.userFriendlyError ||
-          'Unknown deserialization error',
+          deserializationResult.error instanceof PersistenceError
+            ? deserializationResult.error
+            : new PersistenceError(
+                PersistenceErrorCodes.DESERIALIZATION_ERROR,
+                deserializationResult.userFriendlyError ||
+                  'Unknown deserialization error'
+              ),
         data: null,
       };
     }
@@ -314,7 +336,14 @@ class SaveLoadService extends ISaveLoadService {
         const userMsg =
           'The save file is incomplete or has an unknown format. It might be corrupted or from an incompatible game version.';
         this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-        return { success: false, error: userMsg, data: null };
+        return {
+          success: false,
+          error: new PersistenceError(
+            PersistenceErrorCodes.INVALID_GAME_STATE,
+            userMsg
+          ),
+          data: null,
+        };
       }
     }
     this.#logger.debug(
@@ -327,7 +356,14 @@ class SaveLoadService extends ISaveLoadService {
       const userMsg =
         'The save file is missing integrity information and cannot be safely loaded. It might be corrupted or from an incompatible older version.';
       this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-      return { success: false, error: userMsg, data: null };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_GAME_STATE,
+          userMsg
+        ),
+        data: null,
+      };
     }
 
     let recalculatedChecksum;
@@ -340,7 +376,14 @@ class SaveLoadService extends ISaveLoadService {
       const userMsg =
         'Could not verify the integrity of the save file due to an internal error. The file might be corrupted.';
       this.#logger.error(devMsg + ` User message: "${userMsg}"`, checksumError);
-      return { success: false, error: userMsg, data: null };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR,
+          userMsg
+        ),
+        data: null,
+      };
     }
 
     if (storedChecksum !== recalculatedChecksum) {
@@ -348,7 +391,14 @@ class SaveLoadService extends ISaveLoadService {
       const userMsg =
         'The save file appears to be corrupted (integrity check failed). Please try another save or a backup.';
       this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-      return { success: false, error: userMsg, data: null };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.CHECKSUM_MISMATCH,
+          userMsg
+        ),
+        data: null,
+      };
     }
     this.#logger.debug(`Checksum VERIFIED for ${saveIdentifier}.`);
 
@@ -367,7 +417,13 @@ class SaveLoadService extends ISaveLoadService {
     if (!validateSaveName(saveName)) {
       const userMsg = 'Invalid save name provided. Please enter a valid name.';
       this.#logger.error('Invalid saveName provided for manual save.');
-      return { success: false, error: userMsg };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_SAVE_NAME,
+          userMsg
+        ),
+      };
     }
 
     const fileName = `manual_save_${saveName.replace(/[^a-zA-Z0-9_-]/g, '_')}.sav`;
@@ -396,7 +452,10 @@ class SaveLoadService extends ISaveLoadService {
           );
           return {
             success: false,
-            error: `Failed to create save directory: ${dirError.message}`,
+            error: new PersistenceError(
+              PersistenceErrorCodes.DIRECTORY_CREATION_FAILED,
+              `Failed to create save directory: ${dirError.message}`
+            ),
           };
         }
       }
@@ -406,7 +465,10 @@ class SaveLoadService extends ISaveLoadService {
         mutableGameState = deepClone(gameStateObject);
       } catch (e) {
         this.#logger.error('DeepClone failed:', e);
-        throw new Error('Failed to deep clone object for saving.');
+        throw new PersistenceError(
+          PersistenceErrorCodes.DEEP_CLONE_FAILED,
+          'Failed to deep clone object for saving.'
+        );
       }
 
       if (!mutableGameState.metadata) mutableGameState.metadata = {};
@@ -443,7 +505,13 @@ class SaveLoadService extends ISaveLoadService {
         ) {
           userError = 'Failed to save game: Not enough disk space.';
         }
-        return { success: false, error: userError };
+        return {
+          success: false,
+          error: new PersistenceError(
+            PersistenceErrorCodes.WRITE_ERROR,
+            userError
+          ),
+        };
       }
     } catch (error) {
       this.#logger.error(
@@ -452,7 +520,13 @@ class SaveLoadService extends ISaveLoadService {
       );
       return {
         success: false,
-        error: `An unexpected error occurred while saving: ${error.message}`,
+        error:
+          error instanceof PersistenceError
+            ? error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                `An unexpected error occurred while saving: ${error.message}`
+              ),
       };
     }
   }
@@ -467,7 +541,13 @@ class SaveLoadService extends ISaveLoadService {
       const msg = 'Invalid saveIdentifier provided for deletion.';
       const userMsg = 'Cannot delete: No save file specified.';
       this.#logger.error(msg);
-      return { success: false, error: userMsg };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
+          userMsg
+        ),
+      };
     }
 
     // saveIdentifier is expected to be the full path, e.g., "saves/manual_saves/file.sav"
@@ -479,7 +559,13 @@ class SaveLoadService extends ISaveLoadService {
         const msg = `Save file "${filePath}" not found for deletion.`;
         const userMsg = 'Cannot delete: Save file not found.';
         this.#logger.warn(msg);
-        return { success: false, error: userMsg };
+        return {
+          success: false,
+          error: new PersistenceError(
+            PersistenceErrorCodes.DELETE_FILE_NOT_FOUND,
+            userMsg
+          ),
+        };
       }
 
       const deleteResult = await this.#storageProvider.deleteFile(filePath);
@@ -490,7 +576,15 @@ class SaveLoadService extends ISaveLoadService {
           `Failed to delete manual save "${filePath}": ${deleteResult.error}`
         );
       }
-      return deleteResult;
+      return deleteResult.success
+        ? deleteResult
+        : {
+            success: false,
+            error: new PersistenceError(
+              PersistenceErrorCodes.DELETE_FAILED,
+              deleteResult.error || 'Unknown delete error'
+            ),
+          };
     } catch (error) {
       this.#logger.error(
         `Error during manual save deletion process for "${filePath}":`,
@@ -498,7 +592,13 @@ class SaveLoadService extends ISaveLoadService {
       );
       return {
         success: false,
-        error: `An unexpected error occurred during deletion: ${error.message}`,
+        error:
+          error instanceof PersistenceError
+            ? error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                `An unexpected error occurred during deletion: ${error.message}`
+              ),
       };
     }
   }
