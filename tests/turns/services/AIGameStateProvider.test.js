@@ -14,6 +14,7 @@ import {
   POSITION_COMPONENT_ID,
   PERCEPTION_LOG_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 import {
   DEFAULT_FALLBACK_LOCATION_NAME,
   DEFAULT_FALLBACK_CHARACTER_NAME,
@@ -80,6 +81,7 @@ describe('AIGameStateProvider Integration Tests', () => {
   let locationSummaryProvider;
   let perceptionLogProvider;
   let entitySummaryProvider;
+  let safeEventDispatcher;
 
   // Mocks for provider dependencies
   let logger;
@@ -103,11 +105,14 @@ describe('AIGameStateProvider Integration Tests', () => {
       summaryProvider: entitySummaryProvider,
     });
 
+    safeEventDispatcher = { dispatch: jest.fn() };
+
     return new AIGameStateProvider({
       actorStateProvider,
       actorDataExtractor,
       locationSummaryProvider,
       perceptionLogProvider,
+      safeEventDispatcher,
     });
   };
 
@@ -294,9 +299,11 @@ describe('AIGameStateProvider Integration Tests', () => {
           logger
         );
         expect(perceptionLog).toEqual([]);
-        expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Test error'),
-          expect.any(Object)
+        expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+          DISPLAY_ERROR_ID,
+          expect.objectContaining({
+            message: expect.stringContaining('Test error'),
+          })
         );
       });
     });
@@ -319,7 +326,11 @@ describe('AIGameStateProvider Integration Tests', () => {
 
         expect(actorSpy).toHaveBeenCalledWith(mockActor, logger);
         expect(locationSpy).toHaveBeenCalledWith(mockActor, logger);
-        expect(perceptionSpy).toHaveBeenCalledWith(mockActor, logger);
+        expect(perceptionSpy).toHaveBeenCalledWith(
+          mockActor,
+          logger,
+          safeEventDispatcher
+        );
         expect(extractorSpy).toHaveBeenCalledWith(
           actorSpy.mock.results[0].value
         );

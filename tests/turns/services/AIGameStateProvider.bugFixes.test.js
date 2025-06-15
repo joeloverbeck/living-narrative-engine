@@ -109,12 +109,14 @@ describe('AIGameStateProvider', () => {
       entityManager,
       summaryProvider: entitySummaryProvider,
     });
+    const safeEventDispatcher = { dispatch: jest.fn() };
 
     provider = new AIGameStateProvider({
       actorStateProvider,
       actorDataExtractor,
       locationSummaryProvider,
       perceptionLogProvider,
+      safeEventDispatcher,
     });
 
     const minimalLocationEntity = new MockEntity('loc1', {

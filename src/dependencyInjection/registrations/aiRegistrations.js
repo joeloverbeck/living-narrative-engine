@@ -316,6 +316,7 @@ export function registerAI(container) {
       actorDataExtractor: c.resolve(tokens.IActorDataExtractor),
       locationSummaryProvider: c.resolve(tokens.ILocationSummaryProvider),
       perceptionLogProvider: c.resolve(tokens.IPerceptionLogProvider),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });
   });
   logger.debug(
