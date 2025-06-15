@@ -5,14 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/schemas/action-definition.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/action-definition.schema.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/commandParser.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/commandParser.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/operationRegistry.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationRegistry.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbMatching.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/commands/commandParser.parse.verbMatching.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/operationRegistry.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationRegistry.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.additional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.additional.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/actionLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/actionLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/componentLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/componentLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/entityLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/entityLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/eventLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/eventLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/repromptStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/repromptStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/idUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/idUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/eventLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/eventLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/actionLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/actionLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.internalError.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.internalError.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.schemaRegistrationFailure.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.schemaRegistrationFailure.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/repromptStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/repromptStrategy.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -188,15 +193,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="15820000" />
-    </task>
-    <task id="LOCAL-00059" summary="Fixed HumanTurnHandler's dependencies.">
-      <option name="closed" value="true" />
-      <created>1749915957065</created>
-      <option name="number" value="00059" />
-      <option name="presentableId" value="LOCAL-00059" />
-      <option name="project" value="LOCAL" />
-      <updated>1749915957065</updated>
+      <workItem from="1749963238113" duration="16667000" />
     </task>
     <task id="LOCAL-00060" summary="Refactoring HumanTurnHandler.">
       <option name="closed" value="true" />
@@ -582,7 +579,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749980136865</updated>
     </task>
-    <option name="localTasksCounter" value="108" />
+    <task id="LOCAL-00108" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1749981048267</created>
+      <option name="number" value="00108" />
+      <option name="presentableId" value="LOCAL-00108" />
+      <option name="project" value="LOCAL" />
+      <updated>1749981048267</updated>
+    </task>
+    <option name="localTasksCounter" value="109" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
