@@ -40,6 +40,9 @@ describe('registerWorldAndEntity', () => {
     // Pre-register required tokens
     container.register(tokens.ILogger, () => mockLogger);
     container.register(tokens.IEntityManager, () => mockEntityManager);
+    container.register(tokens.ISafeEventDispatcher, () => ({
+      dispatch: jest.fn().mockResolvedValue(true),
+    }));
   });
 
   afterEach(() => {

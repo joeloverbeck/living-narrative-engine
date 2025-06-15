@@ -33,12 +33,14 @@ import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 describe('WorldContext Edge Cases', () => {
   let worldContext;
   let logger;
   let loggerErrorSpy;
   let loggerWarnSpy;
+  let dispatcher;
   let originalNodeEnv; // Variable to store original NODE_ENV
 
   beforeEach(() => {
@@ -60,7 +62,8 @@ describe('WorldContext Edge Cases', () => {
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
 
     const entityManagerForTest = new EntityManager(); // This uses the mocked implementation
-    worldContext = new WorldContext(entityManagerForTest, logger);
+    dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    worldContext = new WorldContext(entityManagerForTest, logger, dispatcher);
   });
 
   afterEach(() => {
@@ -84,12 +87,14 @@ describe('WorldContext Edge Cases', () => {
       mockEntityManagerInstance.getEntitiesWithComponent
     ).toHaveBeenCalledWith(CURRENT_ACTOR_COMPONENT_ID);
     // #assertSingleCurrentActor logs the error in production mode
-    expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
-    // Check the specific error message logged (production path)
-    expect(loggerErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found 0. (Returning null in prod mode)`
-      )
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          `Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found 0.`
+        ),
+      })
     );
     // getCurrentLocation also logs a debug message when actor is null
     expect(logger.debug).toHaveBeenCalledWith(
@@ -116,12 +121,14 @@ describe('WorldContext Edge Cases', () => {
       mockEntityManagerInstance.getEntitiesWithComponent
     ).toHaveBeenCalledWith(CURRENT_ACTOR_COMPONENT_ID);
     // #assertSingleCurrentActor logs the error in production mode
-    expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
-    // Check the specific error message logged (production path)
-    expect(loggerErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found 2. (Returning null in prod mode)`
-      )
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          `Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found 2.`
+        ),
+      })
     );
     // getCurrentLocation also logs a debug message when actor is null
     expect(logger.debug).toHaveBeenCalledWith(
@@ -159,11 +166,14 @@ describe('WorldContext Edge Cases', () => {
       'player1',
       POSITION_COMPONENT_ID
     );
-    expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
-    expect(loggerErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Current actor 'player1' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId.`
-      )
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          `Current actor 'player1' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId.`
+        ),
+      })
     );
     expect(mockEntityManagerInstance.getEntityInstance).not.toHaveBeenCalled();
   });
@@ -197,11 +207,14 @@ describe('WorldContext Edge Cases', () => {
       'player1',
       POSITION_COMPONENT_ID
     );
-    expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
-    expect(loggerErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Current actor 'player1' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId.`
-      )
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          `Current actor 'player1' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId.`
+        ),
+      })
     );
     expect(mockEntityManagerInstance.getEntityInstance).not.toHaveBeenCalled();
   });
@@ -246,7 +259,7 @@ describe('WorldContext Edge Cases', () => {
     expect(mockEntityManagerInstance.getEntityInstance).toHaveBeenCalledWith(
       'loc1'
     );
-    expect(loggerErrorSpy).not.toHaveBeenCalled();
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(loggerWarnSpy).not.toHaveBeenCalled();
   });
 
@@ -288,7 +301,7 @@ describe('WorldContext Edge Cases', () => {
     expect(mockEntityManagerInstance.getEntityInstance).toHaveBeenCalledWith(
       'nonexistent_loc'
     );
-    expect(loggerErrorSpy).not.toHaveBeenCalled(); // No error expected here
+    expect(dispatcher.dispatch).not.toHaveBeenCalled(); // No error expected here
     expect(loggerWarnSpy).toHaveBeenCalledTimes(1); // Warning expected
     // VVVVVV UPDATED LOG MESSAGE CHECK VVVVVV
     expect(loggerWarnSpy).toHaveBeenCalledWith(
