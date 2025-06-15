@@ -4,21 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting.">
-      <change beforePath="$PROJECT_DIR$/src/loaders/actionLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/actionLoader.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/loaders/componentLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/componentLoader.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/loaders/entityLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/entityLoader.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/loaders/eventLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/eventLoader.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/turns/strategies/repromptStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/repromptStrategy.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/idUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/idUtils.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/eventLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/eventLoader.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/actionLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/actionLoader.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.internalError.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.internalError.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.schemaRegistrationFailure.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/componentDefinitionLoader.schemaRegistrationFailure.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/turns/strategies/repromptStrategy.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/strategies/repromptStrategy.test.js" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -193,15 +179,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="16667000" />
-    </task>
-    <task id="LOCAL-00060" summary="Refactoring HumanTurnHandler.">
-      <option name="closed" value="true" />
-      <created>1749917398892</created>
-      <option name="number" value="00060" />
-      <option name="presentableId" value="LOCAL-00060" />
-      <option name="project" value="LOCAL" />
-      <updated>1749917398892</updated>
+      <workItem from="1749963238113" duration="17551000" />
     </task>
     <task id="LOCAL-00061" summary="Refactoring HumanTurnHandler.">
       <option name="closed" value="true" />
@@ -587,7 +565,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749981048267</updated>
     </task>
-    <option name="localTasksCounter" value="109" />
+    <task id="LOCAL-00109" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1749983510167</created>
+      <option name="number" value="00109" />
+      <option name="presentableId" value="LOCAL-00109" />
+      <option name="project" value="LOCAL" />
+      <updated>1749983510167</updated>
+    </task>
+    <option name="localTasksCounter" value="110" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

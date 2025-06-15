@@ -330,7 +330,11 @@ describe('InitializationService', () => {
           if (token === tokens.ISchemaValidator) return mockSchemaValidator;
           if (token === tokens.IConfiguration) return mockConfiguration;
           if (token === tokens.ISafeEventDispatcher)
-            return { dispatch: jest.fn(), subscribe: jest.fn(), unsubscribe: jest.fn() };
+            return {
+              dispatch: jest.fn(),
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+            };
           if (token === tokens.SystemInitializer) throw error;
           return undefined;
         });
@@ -365,7 +369,11 @@ describe('InitializationService', () => {
           if (token === tokens.ISchemaValidator) return mockSchemaValidator;
           if (token === tokens.IConfiguration) return mockConfiguration;
           if (token === tokens.ISafeEventDispatcher)
-            return { dispatch: jest.fn(), subscribe: jest.fn(), unsubscribe: jest.fn() };
+            return {
+              dispatch: jest.fn(),
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+            };
           if (token === tokens.SystemInitializer) return mockSystemInitializer;
           if (token === tokens.WorldInitializer) throw error;
           return undefined;
