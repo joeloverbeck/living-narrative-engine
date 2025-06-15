@@ -136,17 +136,13 @@
       }
     },
     {
-      "type": "DISPATCH_EVENT",
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "comment": "Step 6: Dispatch UI and perception events.",
       "parameters": {
-        "eventType": "core:perceptible_event",
-        "payload": {
-          "locationId": "{context.actorPos.locationId}",
-          "descriptionText": "{context.actorName} steps back.",
-          "timestamp": "{context.now}",
-          "perceptionType": "state_change_observable",
-          "actorId": "{event.payload.actorId}"
-        }
+        "location_id": "{context.actorPos.locationId}",
+        "description_text": "{context.actorName} steps back.",
+        "perception_type": "state_change_observable",
+        "actor_id": "{event.payload.actorId}"
       }
     },
     {

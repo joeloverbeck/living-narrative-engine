@@ -100,20 +100,15 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "comment": "Human-visible log: “<Follower> has decided to follow <Leader>”.",
             "parameters": {
-              "eventType": "core:perceptible_event",
-              "payload": {
-                "eventName": "core:perceptible_event",
-                "locationId": "{context.actorPos.locationId}",
-                "descriptionText": "{context.followerName} has decided to follow {context.leaderName}.",
-                "timestamp": "{context.nowIso}",
-                "perceptionType": "action_target_general",
-                "actorId": "{event.payload.actorId}",
-                "targetId": "{event.payload.targetId}",
-                "involvedEntities": []
-              }
+              "location_id": "{context.actorPos.locationId}",
+              "description_text": "{context.followerName} has decided to follow {context.leaderName}.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}",
+              "involved_entities": []
             }
           },
           {

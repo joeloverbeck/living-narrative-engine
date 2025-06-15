@@ -20,6 +20,7 @@ import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyC
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import {
   NAME_COMPONENT_ID,
@@ -151,6 +152,11 @@ function init(entities) {
       safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
+    }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
   };

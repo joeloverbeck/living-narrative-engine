@@ -19,6 +19,7 @@ import EstablishFollowRelationHandler from '../../../src/logic/operationHandlers
 import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import {
@@ -132,6 +133,11 @@ describe('core_handle_follow rule integration', () => {
         logger,
         rebuildLeaderListCacheHandler: makeStubRebuild(entityManager),
         safeEventDispatcher: safeDispatcher,
+      }),
+      DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+        dispatcher: eventBus,
+        logger,
+        addPerceptionLogEntryHandler: { execute: jest.fn() },
       }),
       DISPATCH_EVENT: new DispatchEventHandler({
         dispatcher: eventBus,

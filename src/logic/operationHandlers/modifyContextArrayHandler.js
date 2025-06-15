@@ -9,11 +9,31 @@
 
 import { resolvePath } from '../../utils/objectUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
+import { cloneDeep } from 'lodash';
+
+/**
+ * Safely sets a value on a nested object using a dot-notation path.
+ * @param {object} obj The object to modify.
+ * @param {string} path The dot-notation path (e.g., 'a.b.c').
+ * @param {*} value The value to set at the path.
+ */
+function setPath(obj, path, value) {
+  const pathParts = path.split('.');
+  let current = obj;
+  for (let i = 0; i < pathParts.length - 1; i++) {
+    const part = pathParts[i];
+    if (current[part] === undefined || typeof current[part] !== 'object') {
+      current[part] = {};
+    }
+    current = current[part];
+  }
+  current[pathParts[pathParts.length - 1]] = value;
+}
 
 /**
  * @class ModifyContextArrayHandler
  * @description Handles the 'MODIFY_CONTEXT_ARRAY' operation. It provides direct,
- * in-place modification of an array stored as a context variable.
+ * safe modification of an array stored as a context variable by operating on a clone.
  */
 class ModifyContextArrayHandler {
   /** @type {ILogger} */
@@ -71,14 +91,16 @@ class ModifyContextArrayHandler {
       return;
     }
 
-    const targetArray = resolvePath(contextObject, variable_path);
-    if (!Array.isArray(targetArray)) {
+    const originalArray = resolvePath(contextObject, variable_path);
+    if (!Array.isArray(originalArray)) {
       log.warn(
         `MODIFY_CONTEXT_ARRAY: Context variable path '${variable_path}' does not resolve to an array.`
       );
       return;
     }
 
+    // --- FIX: Operate on a clone to prevent mutating the original rule definition ---
+    const clonedArray = cloneDeep(originalArray);
     let operationResult = null;
     log.debug(
       `MODIFY_CONTEXT_ARRAY: Performing '${mode}' on context variable '${variable_path}'.`
@@ -90,8 +112,8 @@ class ModifyContextArrayHandler {
           log.warn(`'push' mode requires a 'value' parameter.`);
           return;
         }
-        targetArray.push(value);
-        operationResult = targetArray;
+        clonedArray.push(value);
+        operationResult = clonedArray;
         break;
 
       case 'push_unique':
@@ -101,22 +123,22 @@ class ModifyContextArrayHandler {
         }
         let exists = false;
         if (typeof value !== 'object' || value === null) {
-          exists = targetArray.includes(value);
+          exists = clonedArray.includes(value);
         } else {
           const valueAsJson = JSON.stringify(value);
-          exists = targetArray.some(
+          exists = clonedArray.some(
             (item) => JSON.stringify(item) === valueAsJson
           );
         }
         if (!exists) {
-          targetArray.push(value);
+          clonedArray.push(value);
         }
-        operationResult = targetArray;
+        operationResult = clonedArray;
         break;
 
       case 'pop':
-        if (targetArray.length > 0) {
-          operationResult = targetArray.pop();
+        if (clonedArray.length > 0) {
+          operationResult = clonedArray.pop();
         } else {
           operationResult = undefined;
         }
@@ -129,17 +151,17 @@ class ModifyContextArrayHandler {
         }
         let index;
         if (typeof value !== 'object' || value === null) {
-          index = targetArray.indexOf(value);
+          index = clonedArray.indexOf(value);
         } else {
           const valueAsJson = JSON.stringify(value);
-          index = targetArray.findIndex(
+          index = clonedArray.findIndex(
             (item) => JSON.stringify(item) === valueAsJson
           );
         }
         if (index > -1) {
-          targetArray.splice(index, 1);
+          clonedArray.splice(index, 1);
         }
-        operationResult = targetArray;
+        operationResult = clonedArray;
         break;
 
       default:
@@ -147,10 +169,19 @@ class ModifyContextArrayHandler {
         return;
     }
 
+    // --- FIX: Set the modified clone back into the context ---
+    const finalArray = ['pop', 'remove_by_value'].includes(mode)
+      ? operationResult
+      : clonedArray;
+    setPath(contextObject, variable_path, finalArray);
+
+    // The result variable should get the popped item or the final state of the array
+    const resultForStorage = mode === 'pop' ? operationResult : finalArray;
+
     if (result_variable) {
       storeResult(
         result_variable,
-        operationResult,
+        resultForStorage,
         executionContext,
         this.#dispatcher,
         log

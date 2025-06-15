@@ -81,21 +81,17 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "comment": "Step 4: Dispatch the condensed perceptible event to the onlooker's log.",
             "parameters": {
-              "eventType": "core:perceptible_event",
-              "payload": {
-                "locationId": "{event.payload.currentLocationId}",
-                "descriptionText": "{context.onlookerName} walks in on {context.kisserAName} and {context.kisserBName} kissing.",
-                "timestamp": "{context.now}",
-                "perceptionType": "character_enter",
-                "actorId": "{event.payload.entityId}",
-                "involvedEntities": [
-                  "{context.kissingEntities[0]}",
-                  "{context.kissingEntities[1]}"
-                ]
-              }
+              "location_id": "{event.payload.currentLocationId}",
+              "description_text": "{context.onlookerName} walks in on {context.kisserAName} and {context.kisserBName} kissing.",
+              "perception_type": "character_enter",
+              "actor_id": "{event.payload.entityId}",
+              "involved_entities": [
+                "{context.kissingEntities[0]}",
+                "{context.kissingEntities[1]}"
+              ]
             }
           }
         ]

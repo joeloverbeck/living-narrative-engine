@@ -13,16 +13,16 @@ import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import * as contextAssembler from '../../../src/logic/contextAssembler.js';
 import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
-import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import ModifyContextArrayHandler from '../../../src/logic/operationHandlers/modifyContextArrayHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import {
   NAME_COMPONENT_ID,
@@ -31,10 +31,10 @@ import {
 import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 
+// This entity manager is now simpler, as it no longer needs the context-aware hack.
 class SimpleEntityManager {
   constructor(entities) {
     this.entities = new Map();
-    this.contextRef = {};
     for (const e of entities) {
       this.entities.set(e.id, {
         id: e.id,
@@ -47,18 +47,6 @@ class SimpleEntityManager {
         },
       });
     }
-    this.entities.set('context_variable_holder', {
-      id: 'context_variable_holder',
-      components: { context_variables: this.contextRef },
-      getComponentData: () => this.contextRef,
-      hasComponent: (t) => t === 'context_variables',
-    });
-  }
-
-  setContextRef(ctx) {
-    this.contextRef = ctx;
-    const ent = this.entities.get('context_variable_holder');
-    if (ent) ent.components.context_variables = this.contextRef;
   }
 
   getEntityInstance(id) {
@@ -66,9 +54,6 @@ class SimpleEntityManager {
   }
 
   getComponentData(id, type) {
-    if (id === 'context_variable_holder' && type === 'context_variables') {
-      return this.contextRef;
-    }
     return this.entities.get(id)?.components[type] ?? null;
   }
 
@@ -82,13 +67,7 @@ class SimpleEntityManager {
   addComponent(id, type, data) {
     const ent = this.entities.get(id);
     if (ent) {
-      if (id === 'context_variable_holder' && type === 'context_variables') {
-        Object.keys(this.contextRef).forEach((k) => delete this.contextRef[k]);
-        Object.assign(this.contextRef, data);
-        ent.components[type] = this.contextRef;
-      } else {
-        ent.components[type] = JSON.parse(JSON.stringify(data));
-      }
+      ent.components[type] = JSON.parse(JSON.stringify(data));
     }
   }
 
@@ -96,9 +75,6 @@ class SimpleEntityManager {
     const ent = this.entities.get(id);
     if (ent) {
       delete ent.components[type];
-      if (id === 'context_variable_holder' && type === 'context_variables') {
-        this.contextRef = {};
-      }
     }
   }
 }
@@ -113,6 +89,7 @@ function init(entities) {
 
   const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
+  // Register all necessary handlers for the rule to run
   const handlers = {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
@@ -120,8 +97,8 @@ function init(entities) {
       safeEventDispatcher: safeDispatcher,
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
-    MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
-      entityManager,
+    // ADD THE NEW HANDLER
+    MODIFY_CONTEXT_ARRAY: new ModifyContextArrayHandler({
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
@@ -134,6 +111,11 @@ function init(entities) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+    }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
     GET_NAME: new GetNameHandler({
       entityManager,
@@ -211,15 +193,7 @@ describe('intimacy_handle_get_close rule integration', () => {
       getAllSystemRules: jest.fn().mockReturnValue([getCloseRule]),
     };
 
-    const originalCreate = contextAssembler.createJsonLogicContext;
-    jest
-      .spyOn(contextAssembler, 'createJsonLogicContext')
-      .mockImplementation((event, actorId, targetId, em, log) => {
-        const ctx = originalCreate(event, actorId, targetId, em, log);
-        entityManager.setContextRef(ctx.context);
-        return ctx;
-      });
-
+    // The context-aware mocks are no longer needed, so they are removed.
     init([]);
   });
 

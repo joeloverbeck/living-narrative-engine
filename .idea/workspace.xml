@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Returning the app to normal.">
-      <change afterPath="$PROJECT_DIR$/src/logic/operationHandlers/modifyContextArrayHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -190,31 +189,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="28668000" />
-    </task>
-    <task id="LOCAL-00079" summary="The Return of the King.">
-      <option name="closed" value="true" />
-      <created>1749932287746</created>
-      <option name="number" value="00079" />
-      <option name="presentableId" value="LOCAL-00079" />
-      <option name="project" value="LOCAL" />
-      <updated>1749932287746</updated>
-    </task>
-    <task id="LOCAL-00080" summary="Implementing thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749934040162</created>
-      <option name="number" value="00080" />
-      <option name="presentableId" value="LOCAL-00080" />
-      <option name="project" value="LOCAL" />
-      <updated>1749934040162</updated>
-    </task>
-    <task id="LOCAL-00081" summary="Implementing thoughts and notes tooltips.">
-      <option name="closed" value="true" />
-      <created>1749934451627</created>
-      <option name="number" value="00081" />
-      <option name="presentableId" value="LOCAL-00081" />
-      <option name="project" value="LOCAL" />
-      <updated>1749934451627</updated>
+      <workItem from="1749963238113" duration="30644000" />
     </task>
     <task id="LOCAL-00082" summary="Implementing thoughts and notes tooltips.">
       <option name="closed" value="true" />
@@ -584,7 +559,31 @@
       <option name="project" value="LOCAL" />
       <updated>1749995539850</updated>
     </task>
-    <option name="localTasksCounter" value="128" />
+    <task id="LOCAL-00128" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749996079759</created>
+      <option name="number" value="00128" />
+      <option name="presentableId" value="LOCAL-00128" />
+      <option name="project" value="LOCAL" />
+      <updated>1749996079759</updated>
+    </task>
+    <task id="LOCAL-00129" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749997161187</created>
+      <option name="number" value="00129" />
+      <option name="presentableId" value="LOCAL-00129" />
+      <option name="project" value="LOCAL" />
+      <updated>1749997161187</updated>
+    </task>
+    <task id="LOCAL-00130" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749997627083</created>
+      <option name="number" value="00130" />
+      <option name="presentableId" value="LOCAL-00130" />
+      <option name="project" value="LOCAL" />
+      <updated>1749997627083</updated>
+    </task>
+    <option name="localTasksCounter" value="131" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
