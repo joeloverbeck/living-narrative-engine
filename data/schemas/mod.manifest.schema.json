@@ -79,9 +79,6 @@
         "locations": {
           "$ref": "#/definitions/contentFileList"
         },
-        "operations": {
-          "$ref": "#/definitions/contentFileList"
-        },
         "rules": {
           "$ref": "#/definitions/contentFileList"
         }
