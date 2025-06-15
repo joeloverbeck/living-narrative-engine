@@ -17,6 +17,11 @@ export const PersistenceErrorCodes = {
   UNEXPECTED_ERROR: 'UNEXPECTED_ERROR',
 };
 
+// Freeze to prevent accidental modification of error codes
+Object.freeze(PersistenceErrorCodes);
+
+export default PersistenceErrorCodes;
+
 /**
  * Custom error class for persistence-related operations.
  *
