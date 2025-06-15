@@ -100,12 +100,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       this.effectiveSpeechContainer = null;
     }
 
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
-        DISPLAY_SPEECH_ID,
-        this.#onDisplaySpeech.bind(this)
-      )
-    );
+    this._subscribe(DISPLAY_SPEECH_ID, this.#onDisplaySpeech.bind(this));
     this.logger.debug(
       `${this._logPrefix} Initialized and subscribed to ${DISPLAY_SPEECH_ID}.`
     );

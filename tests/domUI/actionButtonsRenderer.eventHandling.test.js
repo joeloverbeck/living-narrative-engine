@@ -387,7 +387,7 @@ describe('ActionButtonsRenderer', () => {
     expect(capturedEventHandler).toBeInstanceOf(Function);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `${CLASS_PREFIX} Subscribed to VED event 'core:update_available_actions' via _addSubscription.`
+        `${CLASS_PREFIX} Subscribed to VED event 'core:update_available_actions' via _subscribe.`
       )
     );
   });

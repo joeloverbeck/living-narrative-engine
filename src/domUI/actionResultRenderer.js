@@ -111,18 +111,14 @@ export class ActionResultRenderer extends BoundDomRendererBase {
    * @private
    */
   #subscribeToEvents() {
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
-        'core:display_successful_action_result',
-        this.#handleSuccess.bind(this)
-      )
+    this._subscribe(
+      'core:display_successful_action_result',
+      this.#handleSuccess.bind(this)
     );
 
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
-        'core:display_failed_action_result',
-        this.#handleFailure.bind(this)
-      )
+    this._subscribe(
+      'core:display_failed_action_result',
+      this.#handleFailure.bind(this)
     );
 
     this.logger.debug(

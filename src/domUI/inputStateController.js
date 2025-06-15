@@ -91,14 +91,10 @@ export class InputStateController extends RendererBase {
   #subscribeToEvents() {
     const ved = this.validatedEventDispatcher; // Alias for brevity
 
-    // Use _addSubscription from RendererBase
-    this._addSubscription(
-      ved.subscribe('core:disable_input', this.#handleDisableInput.bind(this))
-    );
+    // Subscribe to events using helper
+    this._subscribe('core:disable_input', this.#handleDisableInput.bind(this));
 
-    this._addSubscription(
-      ved.subscribe('core:enable_input', this.#handleEnableInput.bind(this))
-    );
+    this._subscribe('core:enable_input', this.#handleEnableInput.bind(this));
 
     this.logger.debug(
       `${this._logPrefix} Subscribed to VED events 'core:disable_input' and 'core:enable_input'.`

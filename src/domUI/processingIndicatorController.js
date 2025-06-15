@@ -186,20 +186,14 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
    */
   #subscribeToEvents() {
     // AI Processing Indicator
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(AI_TURN_PROCESSING_STARTED, () =>
-        this.#showIndicator('ai')
-      )
+    this._subscribe(AI_TURN_PROCESSING_STARTED, () =>
+      this.#showIndicator('ai')
     );
     this.logger.debug(
       `${this._logPrefix} Subscribed to ${AI_TURN_PROCESSING_STARTED}.`
     );
 
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(AI_TURN_PROCESSING_ENDED, () =>
-        this.#hideIndicator('ai')
-      )
-    );
+    this._subscribe(AI_TURN_PROCESSING_ENDED, () => this.#hideIndicator('ai'));
     this.logger.debug(
       `${this._logPrefix} Subscribed to ${AI_TURN_PROCESSING_ENDED}.`
     );
@@ -219,11 +213,9 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
       );
     }
 
-    this._addSubscription(
-      this.validatedEventDispatcher.subscribe(
-        PLAYER_TURN_SUBMITTED_ID,
-        () => this.#hideIndicator('player_input') // Hide player input indicator on submit
-      )
+    this._subscribe(
+      PLAYER_TURN_SUBMITTED_ID,
+      () => this.#hideIndicator('player_input') // Hide player input indicator on submit
     );
     this.logger.debug(
       `${this._logPrefix} Subscribed to ${PLAYER_TURN_SUBMITTED_ID} for hiding player indicator.`

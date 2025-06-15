@@ -179,11 +179,9 @@ export class LocationRenderer extends BoundDomRendererBase {
       // Depending on strictness, you might throw an error or allow graceful degradation.
     }
 
-    this._addSubscription(
-      this.safeEventDispatcher.subscribe(
-        this._EVENT_TYPE_SUBSCRIBED,
-        this.#handleTurnStarted.bind(this)
-      )
+    this._subscribe(
+      this._EVENT_TYPE_SUBSCRIBED,
+      this.#handleTurnStarted.bind(this)
     );
     this.logger.debug(
       `${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}'.`

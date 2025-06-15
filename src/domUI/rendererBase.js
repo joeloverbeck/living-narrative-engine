@@ -130,6 +130,22 @@ export class RendererBase {
   }
 
   /**
+   * Subscribes to an event via {@link IValidatedEventDispatcher#subscribe} and
+   * automatically tracks the unsubscribe function for disposal.
+   *
+   * @protected
+   * @param {string} eventName - The event name to subscribe to.
+   * @param {Function} handler - The event handler to invoke.
+   * @returns {(() => void) | { unsubscribe: Function } | undefined} The value
+   *  returned by `subscribe`, typically an unsubscribe function or object.
+   */
+  _subscribe(eventName, handler) {
+    const unsub = this.validatedEventDispatcher.subscribe(eventName, handler);
+    this._addSubscription(unsub);
+    return unsub;
+  }
+
+  /**
    * Adds a DOM event listener and stores its details for automatic removal on dispose.
    * The component should provide a pre-bound handler if its `this` context is needed.
    *
