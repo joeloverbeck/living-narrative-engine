@@ -414,6 +414,10 @@ export function registerInterpreters(container) {
       bind(tokens.MergeClosenessCircleHandler)
     );
     registry.register('MATH', bind(tokens.MathHandler));
+    registry.register(
+      'REMOVE_FROM_CLOSENESS_CIRCLE',
+      bind(tokens.RemoveFromClosenessCircleHandler)
+    );
 
     return registry;
   });

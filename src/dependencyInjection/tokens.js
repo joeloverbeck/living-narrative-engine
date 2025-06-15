@@ -325,6 +325,7 @@ export const tokens = freeze({
   ModifyContextArrayHandler: 'ModifyContextArrayHandler',
   IfCoLocatedHandler: 'IfCoLocatedHandler',
   MathHandler: 'MathHandler',
+  RemoveFromClosenessCircleHandler: 'RemoveFromClosenessCircleHandler',
   AutoMoveFollowersHandler: 'AutoMoveFollowersHandler',
   MergeClosenessCircleHandler: 'MergeClosenessCircleHandler',
 
