@@ -9,6 +9,7 @@ import SchemaLoader from '../src/loaders/schemaLoader.js';
 import ModManifestLoader from '../src/modding/modManifestLoader.js';
 import ModDependencyValidator from '../src/modding/modDependencyValidator.js';
 import validateModEngineVersions from '../src/modding/modVersionValidator.js';
+import { SafeEventDispatcher } from '../src/events/safeEventDispatcher.js';
 import InMemoryDataRegistry from '../src/data/inMemoryDataRegistry.js';
 
 /** Simple IDataFetcher implementation using Node's fs module. */
@@ -43,6 +44,16 @@ const manifestLoader = new ModManifestLoader(
   registry,
   logger
 );
+
+const dummyVed = {
+  dispatch: async () => true,
+  subscribe: () => () => {},
+  unsubscribe: () => {},
+};
+const safeDispatcher = new SafeEventDispatcher({
+  validatedEventDispatcher: dummyVed,
+  logger,
+});
 
 /**
  * Validate content files for a specific mod manifest against their schemas.
@@ -124,7 +135,7 @@ async function run() {
 
     try {
       ModDependencyValidator.validate(manifestMap, logger);
-      validateModEngineVersions(manifestMap, logger);
+      validateModEngineVersions(manifestMap, logger, safeDispatcher);
     } catch (e) {
       console.error(e.message);
       process.exitCode = 1;
