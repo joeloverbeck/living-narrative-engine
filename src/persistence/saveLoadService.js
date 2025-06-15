@@ -74,7 +74,7 @@ class SaveLoadService extends ISaveLoadService {
    * Reads the save file from storage provider.
    *
    * @param {string} filePath - Path to the save file.
-   * @returns {Promise<{success: boolean, data?: Uint8Array, error?: string, userFriendlyError?: string}>} Outcome of the read.
+   * @returns {Promise<{success: boolean, data?: Uint8Array, error?: PersistenceError, userFriendlyError?: string}>} Outcome of the read.
    * @private
    */
   async #readSaveFile(filePath) {
@@ -116,7 +116,7 @@ class SaveLoadService extends ISaveLoadService {
    * Implements basic failure handling as per SL-T2.4.
    *
    * @param {string} filePath - The path to the save file.
-   * @returns {Promise<{success: boolean, data?: object, error?: string, userFriendlyError?: string}>} Resulting object or error info.
+   * @returns {Promise<{success: boolean, data?: object, error?: PersistenceError, userFriendlyError?: string}>} Resulting object or error info.
    * @private
    */
   async #deserializeAndDecompress(filePath) {
