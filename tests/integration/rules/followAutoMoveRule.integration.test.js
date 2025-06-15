@@ -15,11 +15,7 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
-import QueryEntitiesHandler from '../../../src/logic/operationHandlers/queryEntitiesHandler.js';
-import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
+import AutoMoveFollowersHandler from '../../../src/logic/operationHandlers/autoMoveFollowersHandler.js';
 import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
 import {
   FOLLOWING_COMPONENT_ID,
@@ -166,28 +162,15 @@ function init(entities) {
       entityManager,
       safeEventDispatcher: eventBus,
     }),
-    QUERY_ENTITIES: new QueryEntitiesHandler({
+    AUTO_MOVE_FOLLOWERS: new AutoMoveFollowersHandler({
+      logger,
       entityManager,
-      logger,
-      jsonLogicEvaluationService: jsonLogic,
+      systemMoveEntityHandler: new SystemMoveEntityHandler({
+        entityManager,
+        safeEventDispatcher: eventBus,
+        logger,
+      }),
       safeEventDispatcher: eventBus,
-    }),
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: eventBus,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    SYSTEM_MOVE_ENTITY: new SystemMoveEntityHandler({
-      entityManager,
-      safeEventDispatcher: eventBus,
-      logger,
     }),
   };
 

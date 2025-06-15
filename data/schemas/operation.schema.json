@@ -115,6 +115,9 @@
         },
         {
           "$ref": "./operations/modifyContextArray.schema.json"
+        },
+        {
+          "$ref": "./operations/autoMoveFollowers.schema.json"
         }
       ]
     }

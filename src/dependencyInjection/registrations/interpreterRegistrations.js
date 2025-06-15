@@ -41,6 +41,7 @@ import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFi
 import MathHandler from '../../logic/operationHandlers/mathHandler.js';
 import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler.js';
 import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyContextArrayHandler.js';
+import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFollowersHandler.js';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -307,6 +308,17 @@ export function registerInterpreters(container) {
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
+    [
+      tokens.AutoMoveFollowersHandler,
+      AutoMoveFollowersHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          systemMoveEntityHandler: c.resolve(tokens.SystemMoveEntityHandler),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
   ];
 
   for (const [token, ctor, factory] of handlerFactories) {
@@ -382,6 +394,10 @@ export function registerInterpreters(container) {
       bind(tokens.ModifyContextArrayHandler)
     );
     registry.register('IF_CO_LOCATED', bind(tokens.IfCoLocatedHandler));
+    registry.register(
+      'AUTO_MOVE_FOLLOWERS',
+      bind(tokens.AutoMoveFollowersHandler)
+    );
     registry.register('MATH', bind(tokens.MathHandler));
 
     return registry;
