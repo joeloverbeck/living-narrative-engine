@@ -15,6 +15,7 @@ import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 const createMockEntityManager = () => ({
   getEntitiesWithComponent: jest.fn(),
@@ -36,6 +37,8 @@ describe('WorldContext (Stateless)', () => {
   let mockLogger;
   let worldContext;
 
+  let mockDispatcher;
+
   const PLAYER_ID = 'player-1';
   const NPC_ACTOR_ID = 'npc-actor-1';
   const LOCATION_1_ID = 'location-start-instance'; // Using more instance-like IDs
@@ -53,11 +56,16 @@ describe('WorldContext (Stateless)', () => {
   beforeEach(() => {
     mockEntityManager = createMockEntityManager();
     mockLogger = createMockLogger();
+    mockDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
     originalNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'test';
 
-    worldContext = new WorldContext(mockEntityManager, mockLogger);
+    worldContext = new WorldContext(
+      mockEntityManager,
+      mockLogger,
+      mockDispatcher
+    );
 
     playerEntity = new Entity(PLAYER_ID, 'player-def');
     npcActorEntity = new Entity(NPC_ACTOR_ID, 'npc-def');
@@ -81,7 +89,7 @@ describe('WorldContext (Stateless)', () => {
 
   describe('Constructor', () => {
     it('should throw if EntityManager is invalid or missing key methods', () => {
-      expect(() => new WorldContext(null, mockLogger)).toThrow(
+      expect(() => new WorldContext(null, mockLogger, mockDispatcher)).toThrow(
         'WorldContext requires a valid EntityManager instance'
       );
       const incompleteEntityManager = {
@@ -89,26 +97,35 @@ describe('WorldContext (Stateless)', () => {
         getEntityInstance: jest.fn(),
       };
       expect(
-        () => new WorldContext(incompleteEntityManager, mockLogger)
+        () =>
+          new WorldContext(incompleteEntityManager, mockLogger, mockDispatcher)
       ).toThrow('getPrimaryInstanceByDefinitionId methods.');
       const anotherIncompleteEntityManager = {};
       expect(
-        () => new WorldContext(anotherIncompleteEntityManager, mockLogger)
+        () =>
+          new WorldContext(
+            anotherIncompleteEntityManager,
+            mockLogger,
+            mockDispatcher
+          )
       ).toThrow('WorldContext requires a valid EntityManager instance');
     });
 
     it('should throw if Logger is invalid or missing', () => {
-      expect(() => new WorldContext(mockEntityManager, null)).toThrow(
-        'WorldContext requires a valid ILogger instance'
-      );
-      expect(() => new WorldContext(mockEntityManager, {})).toThrow(
-        'WorldContext requires a valid ILogger instance'
-      );
+      expect(
+        () => new WorldContext(mockEntityManager, null, mockDispatcher)
+      ).toThrow('WorldContext requires a valid ILogger instance');
+      expect(
+        () => new WorldContext(mockEntityManager, {}, mockDispatcher)
+      ).toThrow('WorldContext requires a valid ILogger instance');
+      expect(
+        () => new WorldContext(mockEntityManager, mockLogger, null)
+      ).toThrow('WorldContext requires a valid ISafeEventDispatcher instance');
     });
 
     it('should successfully initialize with valid dependencies', () => {
       expect(
-        () => new WorldContext(mockEntityManager, mockLogger)
+        () => new WorldContext(mockEntityManager, mockLogger, mockDispatcher)
       ).not.toThrow();
     });
   });
@@ -126,13 +143,19 @@ describe('WorldContext (Stateless)', () => {
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
       process.env.NODE_ENV = 'test';
       expect(() => worldContext.getCurrentActor()).toThrow(`but found 0`);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`found 0. (Throwing in dev mode)`)
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('found 0'),
+        })
       );
       process.env.NODE_ENV = 'production';
       expect(worldContext.getCurrentActor()).toBeNull();
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`found 0. (Returning null in prod mode)`)
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('found 0'),
+        })
       );
     });
 
@@ -143,13 +166,19 @@ describe('WorldContext (Stateless)', () => {
       ]);
       process.env.NODE_ENV = 'test';
       expect(() => worldContext.getCurrentActor()).toThrow(`but found 2`);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`found 2. (Throwing in dev mode)`)
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('found 2'),
+        })
       );
       process.env.NODE_ENV = 'production';
       expect(worldContext.getCurrentActor()).toBeNull();
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`found 2. (Returning null in prod mode)`)
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('found 2'),
+        })
       );
     });
   });
@@ -196,10 +225,13 @@ describe('WorldContext (Stateless)', () => {
       mockEntityManager.getComponentData.mockReturnValue(undefined); // No position for player
       const location = worldContext.getCurrentLocation();
       expect(location).toBeNull();
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Current actor '${PLAYER_ID}' is missing a valid '${POSITION_COMPONENT_ID}' component`
-        )
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Current actor '${PLAYER_ID}' is missing a valid '${POSITION_COMPONENT_ID}' component`
+          ),
+        })
       );
     });
 
@@ -209,10 +241,13 @@ describe('WorldContext (Stateless)', () => {
       }); // Position invalid
       const location = worldContext.getCurrentLocation();
       expect(location).toBeNull();
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Current actor '${PLAYER_ID}' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId`
-        )
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Current actor '${PLAYER_ID}' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId`
+          ),
+        })
       );
     });
 
