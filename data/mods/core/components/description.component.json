@@ -1,4 +1,5 @@
 {
+  "$schema": "http://example.com/schemas/component-definition.schema.json",
   "id": "core:description",
   "description": "A textual description for an entity, which can be used for display or informational purposes.",
   "dataSchema": {

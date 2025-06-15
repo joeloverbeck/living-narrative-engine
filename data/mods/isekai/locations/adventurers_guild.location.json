@@ -1,4 +1,5 @@
 {
+  "$schema": "http://example.com/schemas/entity.schema.json",
   "id": "isekai:adventurers_guild",
   "components": {
     "core:name": {
