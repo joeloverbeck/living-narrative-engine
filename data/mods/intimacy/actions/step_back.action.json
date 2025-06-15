@@ -5,7 +5,7 @@
   "name": "Step Back",
   "description": "Step back from a moment of closeness, allowing free movement again.",
   "target_domain": "none",
-  "template": "stepback",
+  "template": "step back",
   "prerequisites": [
     {
       "logic": {

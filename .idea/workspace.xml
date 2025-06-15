@@ -5,9 +5,38 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Returning the app to normal.">
-      <change afterPath="$PROJECT_DIR$/tests/dependencyInjection/containerConfig.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/schemas/entity.schema.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/containerConfig.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/game.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/game.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/actions/step_back.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/step_back.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/hero.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/hero.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/ninja.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/ninja.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/receptionist.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/receptionist.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/sidekick.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/characters/sidekick.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/entity.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/entity.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchSpeechHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchSpeechHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gameStateSerializer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gameStateSerializer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/persistenceErrors.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/persistenceErrors.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/saveLoadService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveLoadService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/LLMResponseProcessor.e2e.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/rules/entitySpeechRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/entitySpeechRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/operationHandlers/dispatchSpeechHandler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationHandlers/dispatchSpeechHandler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/gamePersistenceService.additional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.additional.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/gamePersistenceService.edgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.edgeCases.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/gamePersistenceService.errorPaths.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.errorPaths.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.errorPaths.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.errorPaths.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.privateHelpers.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.privateHelpers.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.goals.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.goals.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.notesGuards.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.notesGuards.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/services/LLMResponseProcessor.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +89,7 @@
     "Jest.closenessCircleService.test.js.executor": "Run",
     "Jest.containerConfig.test.js.executor": "Run",
     "Jest.decisionResult.test.js.executor": "Run",
+    "Jest.entity.schema.test.js.executor": "Run",
     "Jest.entityMoved.schema.test.js.executor": "Run",
     "Jest.genericTurnHandler.passingThis.test.js.executor": "Run",
     "Jest.genericTurnHandler.test.js.executor": "Run",
@@ -86,6 +116,7 @@
     "Jest.promptSession.indexOnly.test.js.executor": "Run",
     "Jest.promptSession.test.js.executor": "Run",
     "Jest.scope.integration.test.js.executor": "Run",
+    "Jest.stopFollowingRule.integration.test.js.executor": "Run",
     "Jest.turnActionChoicePipeline.test.js.executor": "Run",
     "Jest.turnIdleState.test.js.executor": "Run",
     "Jest.updateAvailableActions.schema.test.js.executor": "Run",
@@ -115,25 +146,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.containerConfig.test.js">
-    <configuration name="closenessCircleService.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/logic/services/closenessCircleService.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="closeness.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/closeness.schema.test.js" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Jest.stopFollowingRule.integration.test.js">
     <configuration name="containerConfig.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -141,6 +154,15 @@
       <envs />
       <scope-kind value="TEST_FILE" />
       <test-file value="$PROJECT_DIR$/tests/dependencyInjection/containerConfig.test.js" />
+      <method v="2" />
+    </configuration>
+    <configuration name="entity.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/schemas/entity.schema.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="getCloseRule.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -161,13 +183,22 @@
       <test-file value="$PROJECT_DIR$/tests/modding/modManifestLoader.validation.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="stopFollowingRule.integration.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/integration/rules/stopFollowingRule.integration.test.js" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.stopFollowingRule.integration.test.js" />
+        <item itemvalue="Jest.entity.schema.test.js" />
         <item itemvalue="Jest.containerConfig.test.js" />
         <item itemvalue="Jest.getCloseRule.integration.test.js" />
         <item itemvalue="Jest.modManifestLoader.validation.test.js" />
-        <item itemvalue="Jest.closenessCircleService.test.js" />
-        <item itemvalue="Jest.closeness.schema.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -189,15 +220,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="26169000" />
-    </task>
-    <task id="LOCAL-00075" summary="Unified human and AI paths regarding decision-making.">
-      <option name="closed" value="true" />
-      <created>1749926776463</created>
-      <option name="number" value="00075" />
-      <option name="presentableId" value="LOCAL-00075" />
-      <option name="project" value="LOCAL" />
-      <updated>1749926776463</updated>
+      <workItem from="1749963238113" duration="27589000" />
     </task>
     <task id="LOCAL-00076" summary="Unified human and AI paths regarding decision-making.">
       <option name="closed" value="true" />
@@ -583,7 +606,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749992632111</updated>
     </task>
-    <option name="localTasksCounter" value="124" />
+    <task id="LOCAL-00124" summary="Returning the app to normal.">
+      <option name="closed" value="true" />
+      <created>1749993596075</created>
+      <option name="number" value="00124" />
+      <option name="presentableId" value="LOCAL-00124" />
+      <option name="project" value="LOCAL" />
+      <updated>1749993596075</updated>
+    </task>
+    <option name="localTasksCounter" value="125" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

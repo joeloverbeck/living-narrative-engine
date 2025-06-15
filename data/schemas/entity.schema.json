@@ -5,6 +5,11 @@
   "description": "Schema for a game entity (player, NPC, item, location, etc.) composed of modular components. Each entity is defined by a unique id and a collection of components determining its attributes and behavior.",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional JSON schema reference to enable editor validation and autocompletion."
+    },
     "id": {
       "$ref": "./common.schema.json#/definitions/namespacedId",
       "description": "Unique identifier for this entity. Typically includes a module prefix and specific name (e.g., 'core:player', 'demo:item_key', 'demo:room_hall')."

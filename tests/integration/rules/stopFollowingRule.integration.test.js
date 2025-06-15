@@ -1,5 +1,6 @@
 /**
  * @file Integration tests for the stop_following rule.
+ * @see tests/integration/rules/stopFollowingRule.integration.test.js
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
@@ -273,7 +274,19 @@ describe('core_handle_stop_following rule integration', () => {
     });
     const types = events.map((e) => e.eventType);
     expect(types).toEqual(
-      expect.arrayContaining(['core:perceptible_event', 'core:turn_ended'])
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+
+    const successEvent = events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+    expect(successEvent).toBeDefined();
+    expect(successEvent.payload.message).toBe(
+      'Follower stops following Leader.'
     );
   });
 
@@ -314,8 +327,21 @@ describe('core_handle_stop_following rule integration', () => {
       followers: [],
     });
     const types = events.map((e) => e.eventType);
-    expect(types).toEqual(expect.arrayContaining(['core:turn_ended']));
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
     expect(types).not.toContain('core:perceptible_event');
+
+    const successEvent = events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+    expect(successEvent).toBeDefined();
+    expect(successEvent.payload.message).toBe(
+      'Follower stops following Leader.'
+    );
   });
 
   it('handles not-following branch with error event', () => {
