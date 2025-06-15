@@ -331,7 +331,7 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     // --- Verify: Error Logs ---
     expect(mockLogger.error).toHaveBeenCalledTimes(2); // Specific + Wrapper
     // 1. Inner Log (_processFetchedItem addSchema catch block)
-    const expectedInnerLogMessageAdd = `ComponentLoader [${modId}]: Error during addSchema for component '${componentIdFromFile}' from file '${filename}'.`;
+    const expectedInnerLogMessageAdd = `ComponentLoader [${modId}]: Error registering data schema for component '${componentIdFromFile}' from file '${filename}'.`;
     expect(mockLogger.error).toHaveBeenNthCalledWith(
       1,
       expectedInnerLogMessageAdd,
@@ -443,7 +443,7 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     // --- Verify: Error Logs ---
     expect(mockLogger.error).toHaveBeenCalledTimes(2); // Specific + Wrapper
     // 1. Inner Log (_processFetchedItem removeSchema catch block - NOW re-throws)
-    const expectedInnerLogMessageRemove = `ComponentLoader [${modId}]: Error during removeSchema for component '${componentIdFromFile}' from file '${filename}'.`;
+    const expectedInnerLogMessageRemove = `ComponentLoader [${modId}]: Error registering data schema for component '${componentIdFromFile}' from file '${filename}'.`;
     expect(mockLogger.error).toHaveBeenNthCalledWith(
       1,
       expectedInnerLogMessageRemove,
