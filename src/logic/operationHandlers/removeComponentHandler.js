@@ -15,7 +15,13 @@
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import {
+  initHandlerLogger,
+  validateDeps,
+  getExecLogger,
+} from './handlerUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils.js';
+
 
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.
@@ -43,30 +49,18 @@ class RemoveComponentHandler {
    * @throws {Error} If entityManager or logger are missing or invalid.
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    // Validate logger FIRST
-    if (
-      !logger ||
-      ['info', 'warn', 'error', 'debug'].some(
-        (m) => typeof logger[m] !== 'function'
-      )
-    ) {
-      throw new Error(
-        'RemoveComponentHandler requires a valid ILogger instance.'
-      );
-    }
-    // Validate EntityManager dependency - needs removeComponent
-    if (!entityManager || typeof entityManager.removeComponent !== 'function') {
-      throw new Error(
-        'RemoveComponentHandler requires a valid EntityManager instance with a removeComponent method.'
-      );
-    }
-    if (!safeEventDispatcher?.dispatch) {
-      throw new Error(
-        'RemoveComponentHandler requires a valid ISafeEventDispatcher instance.'
-      );
-    }
+    this.#logger = initHandlerLogger('RemoveComponentHandler', logger);
+    validateDeps('RemoveComponentHandler', this.#logger, {
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['removeComponent'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#dispatcher = safeEventDispatcher;
-    this.#logger = logger;
     this.#entityManager = entityManager;
   }
 
@@ -90,7 +84,7 @@ class RemoveComponentHandler {
    * @implements {OperationHandler}
    */
   execute(params, executionContext) {
-    const log = executionContext?.logger ?? this.#logger;
+    const log = getExecLogger(this.#logger, executionContext);
 
     // 1. Validate Parameters
     if (!assertParamsObject(params, log, 'REMOVE_COMPONENT')) {
