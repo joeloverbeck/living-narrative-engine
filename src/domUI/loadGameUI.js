@@ -3,6 +3,7 @@
 import { BaseModalRenderer } from './baseModalRenderer.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatPlaytime } from '../utils/textUtils.js';
+import { setupRadioListNavigation } from '../utils/listNavigation.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -479,75 +480,31 @@ class LoadGameUI extends BaseModalRenderer {
    * @private
    */
   _handleSlotNavigation(event) {
-    // Check if operation in progress from BaseModalRenderer's state if needed,
-    // but usually _setOperationInProgress disables the whole modal or relevant parts.
     if (!this.elements.listContainerElement) return;
-    const target = /** @type {HTMLElement} */ (event.target);
 
-    if (
-      !target.classList.contains('save-slot') ||
-      target.closest('.disabled-interaction')
-    ) {
-      return;
-    }
-
-    const slots = Array.from(
-      this.elements.listContainerElement.querySelectorAll(
-        '.save-slot[role="radio"]'
-      )
-    );
-    if (slots.length === 0) return;
-
-    let currentIndex = slots.findIndex((slot) => slot === target);
-    let nextIndex = -1;
-
-    switch (event.key) {
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        event.preventDefault();
-        nextIndex = currentIndex > 0 ? currentIndex - 1 : slots.length - 1;
-        break;
-      case 'ArrowDown':
-      case 'ArrowRight':
-        event.preventDefault();
-        nextIndex = currentIndex < slots.length - 1 ? currentIndex + 1 : 0;
-        break;
-      case 'Home':
-        event.preventDefault();
-        nextIndex = 0;
-        break;
-      case 'End':
-        event.preventDefault();
-        nextIndex = slots.length - 1;
-        break;
-      case 'Enter':
-      case ' ': {
-        event.preventDefault();
-        const slotIdentifier = target.dataset.slotIdentifier;
+    const arrowHandler = setupRadioListNavigation(
+      this.elements.listContainerElement,
+      '.save-slot[role="radio"]',
+      'slotIdentifier',
+      (el, value) => {
         const currentSlotData = this.currentSlotsDisplayData.find(
-          (s) => s.identifier === slotIdentifier
+          (s) => s.identifier === value
         );
-        if (currentSlotData) {
-          this._handleSlotSelection(target, currentSlotData);
-        }
-        return;
+        if (currentSlotData) this._handleSlotSelection(el, currentSlotData);
       }
-      default:
-        return;
-    }
+    );
 
-    if (nextIndex !== -1 && nextIndex !== currentIndex) {
-      const nextSlot = /** @type {HTMLElement | undefined} */ (
-        slots[nextIndex]
+    arrowHandler(event);
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const target = /** @type {HTMLElement} */ (event.target);
+      const slotIdentifier = target.dataset.slotIdentifier;
+      const currentSlotData = this.currentSlotsDisplayData.find(
+        (s) => s.identifier === slotIdentifier
       );
-      if (nextSlot) {
-        // Tabindex is managed by _handleSlotSelection
-        nextSlot.focus(); // Focus should trigger click, which calls _handleSlotSelection
-        const nextSlotIdentifier = nextSlot.dataset.slotIdentifier;
-        const nextSlotData = this.currentSlotsDisplayData.find(
-          (s) => s.identifier === nextSlotIdentifier
-        );
-        if (nextSlotData) this._handleSlotSelection(nextSlot, nextSlotData);
+      if (currentSlotData) {
+        this._handleSlotSelection(target, currentSlotData);
       }
     }
   }
