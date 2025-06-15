@@ -370,6 +370,9 @@ Overview of the payload structure emitted when dispatching `core:display_error` 
 **Namespaced IDs & resolveFields ➜ docs/mods/namespaced_ids_and_resolveFields.md**
 Explains how identifiers are namespaced and how reference resolution works across mods.
 
+**Action Macros ➜ docs/mods/macros.md**
+Define reusable action sequences and reference them within rules.
+
 ### License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.  

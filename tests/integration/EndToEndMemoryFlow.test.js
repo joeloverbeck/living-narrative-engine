@@ -114,7 +114,12 @@ describe('End-to-End Short-Term Memory Flow', () => {
     });
 
     schemaValidator = new AjvSchemaValidator(logger);
-    responseProcessor = new LLMResponseProcessor({ schemaValidator, logger });
+    const safeEventDispatcher = { dispatch: jest.fn() };
+    responseProcessor = new LLMResponseProcessor({
+      schemaValidator,
+      logger,
+      safeEventDispatcher,
+    });
   });
 
   test('thought persists and appears in next prompt', async () => {

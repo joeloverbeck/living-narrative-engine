@@ -19,6 +19,7 @@ import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modify
 import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
@@ -148,12 +149,21 @@ function init(entities) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
+    }),
     HAS_COMPONENT: new HasComponentHandler({
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
-    QUERY_COMPONENT: new QueryComponentHandler({ entityManager, logger }),
+    QUERY_COMPONENT: new QueryComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: eventBus,
+    }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),

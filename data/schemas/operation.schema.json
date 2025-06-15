@@ -20,6 +20,7 @@
             "ADD_COMPONENT",
             "REMOVE_COMPONENT",
             "DISPATCH_EVENT",
+            "DISPATCH_PERCEPTIBLE_EVENT",
             "DISPATCH_SPEECH",
             "END_TURN",
             "IF",
@@ -32,12 +33,15 @@
             "SYSTEM_MOVE_ENTITY",
             "REBUILD_LEADER_LIST_CACHE",
             "CHECK_FOLLOW_CYCLE",
+            "ESTABLISH_FOLLOW_RELATION",
+            "BREAK_FOLLOW_RELATION",
             "ADD_PERCEPTION_LOG_ENTRY",
             "HAS_COMPONENT",
             "QUERY_ENTITIES",
             "MODIFY_ARRAY_FIELD",
             "IF_CO_LOCATED",
-            "MATH"
+            "MATH",
+            "MODIFY_CONTEXT_ARRAY"
           ]
         },
         "comment": {
@@ -60,10 +64,25 @@
           "if": {
             "properties": {
               "type": {
+                "const": "MODIFY_CONTEXT_ARRAY"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/ModifyContextArrayParameters"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "QUERY_COMPONENT"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -80,8 +99,7 @@
               "type": {
                 "const": "QUERY_COMPONENT_OPTIONAL"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -98,8 +116,7 @@
               "type": {
                 "const": "MODIFY_COMPONENT"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -116,8 +133,7 @@
               "type": {
                 "const": "ADD_COMPONENT"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -134,8 +150,7 @@
               "type": {
                 "const": "REMOVE_COMPONENT"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -152,8 +167,7 @@
               "type": {
                 "const": "DISPATCH_EVENT"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -168,10 +182,27 @@
           "if": {
             "properties": {
               "type": {
-                "const": "DISPATCH_SPEECH"
+                "const": "DISPATCH_PERCEPTIBLE_EVENT"
               }
             },
             "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/DispatchPerceptibleEventParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DISPATCH_SPEECH"
+              }
+            }
           },
           "then": {
             "properties": {
@@ -188,8 +219,7 @@
               "type": {
                 "const": "END_TURN"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -206,8 +236,7 @@
               "type": {
                 "const": "IF"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -224,8 +253,7 @@
               "type": {
                 "const": "LOG"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -242,8 +270,7 @@
               "type": {
                 "const": "SET_VARIABLE"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -260,8 +287,7 @@
               "type": {
                 "const": "FOR_EACH"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -278,8 +304,7 @@
               "type": {
                 "const": "SYSTEM_MOVE_ENTITY"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -347,8 +372,7 @@
               "type": {
                 "const": "REBUILD_LEADER_LIST_CACHE"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -365,8 +389,7 @@
               "type": {
                 "const": "CHECK_FOLLOW_CYCLE"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -379,12 +402,37 @@
         },
         {
           "if": {
+            "properties": { "type": { "const": "ESTABLISH_FOLLOW_RELATION" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": {
+                "$ref": "#/$defs/EstablishFollowRelationParameters"
+              }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "BREAK_FOLLOW_RELATION" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "parameters": { "$ref": "#/$defs/BreakFollowRelationParameters" }
+            },
+            "required": ["parameters"]
+          }
+        },
+        {
+          "if": {
             "properties": {
               "type": {
                 "const": "ADD_PERCEPTION_LOG_ENTRY"
               }
-            },
-            "required": ["type"]
+            }
           },
           "then": {
             "properties": {
@@ -474,6 +522,70 @@
                 "$ref": "#/$defs/MathParameters"
               }
             }
+          }
+        }
+      ]
+    },
+    "ModifyContextArrayParameters": {
+      "type": "object",
+      "description": "Parameters for MODIFY_CONTEXT_ARRAY. Modifies an array stored in a context variable.",
+      "properties": {
+        "variable_path": {
+          "type": "string",
+          "description": "Required. Dot-separated path to the array within the context.",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "description": "The operation to perform: 'push', 'push_unique', 'remove_by_value', 'pop'.",
+          "enum": ["push", "push_unique", "remove_by_value", "pop"]
+        },
+        "value": {
+          "description": "The value to add or remove. Required for 'push', 'push_unique' and 'remove_by_value'."
+        },
+        "result_variable": {
+          "type": "string",
+          "description": "Optional. For 'pop', stores the removed item. For others, can store the modified array.",
+          "minLength": 1
+        }
+      },
+      "required": ["variable_path", "mode"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "push"
+              }
+            }
+          },
+          "then": {
+            "required": ["value"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "push_unique"
+              }
+            }
+          },
+          "then": {
+            "required": ["value"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "remove_by_value"
+              }
+            }
+          },
+          "then": {
+            "required": ["value"]
           }
         }
       ]
@@ -837,6 +949,25 @@
       "required": ["follower_id", "leader_id", "result_variable"],
       "additionalProperties": false
     },
+    "EstablishFollowRelationParameters": {
+      "type": "object",
+      "description": "Parameters for the ESTABLISH_FOLLOW_RELATION operation.",
+      "properties": {
+        "follower_id": { "type": "string", "minLength": 1 },
+        "leader_id": { "type": "string", "minLength": 1 }
+      },
+      "required": ["follower_id", "leader_id"],
+      "additionalProperties": false
+    },
+    "BreakFollowRelationParameters": {
+      "type": "object",
+      "description": "Parameters for the BREAK_FOLLOW_RELATION operation.",
+      "properties": {
+        "follower_id": { "type": "string", "minLength": 1 }
+      },
+      "required": ["follower_id"],
+      "additionalProperties": false
+    },
     "AddPerceptionLogEntryParameters": {
       "type": "object",
       "properties": {
@@ -853,6 +984,63 @@
         }
       },
       "required": ["location_id", "entry"],
+      "additionalProperties": false
+    },
+    "DispatchPerceptibleEventParameters": {
+      "type": "object",
+      "description": "Parameters for the DISPATCH_PERCEPTIBLE_EVENT operation. Builds and dispatches core:perceptible_event.",
+      "properties": {
+        "location_id": {
+          "type": "string"
+        },
+        "description_text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "perception_type": {
+          "type": "string",
+          "enum": [
+            "character_enter",
+            "character_exit",
+            "item_pickup",
+            "item_drop",
+            "item_use",
+            "speech_local",
+            "action_self_general",
+            "action_target_general",
+            "combat_attack",
+            "combat_effect",
+            "state_change_observable"
+          ]
+        },
+        "actor_id": {
+          "type": "string"
+        },
+        "target_id": {
+          "type": ["string", "null"]
+        },
+        "involved_entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "contextual_data": {
+          "type": "object",
+          "default": {}
+        },
+        "log_entry": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "location_id",
+        "description_text",
+        "perception_type",
+        "actor_id"
+      ],
       "additionalProperties": false
     },
     "QueryEntitiesParameters": {

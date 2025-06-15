@@ -11,8 +11,9 @@
  * @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult
  */
 
-import { validateLoaderDeps } from '../utils/validationUtils.js';
+import AbstractLoader from './abstractLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
+import { validateAgainstSchema } from '../utils/schemaValidation.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
@@ -31,7 +32,7 @@ import { parseAndValidateId } from '../utils/idUtils.js';
  * @abstract
  * @class BaseManifestItemLoader
  */
-export class BaseManifestItemLoader {
+export class BaseManifestItemLoader extends AbstractLoader {
   /**
    * Protected reference to the configuration service.
    *
@@ -67,13 +68,6 @@ export class BaseManifestItemLoader {
    * @type {IDataRegistry}
    */
   _dataRegistry;
-  /**
-   * Protected reference to the logger service.
-   *
-   * @protected
-   * @type {ILogger}
-   */
-  _logger;
 
   /**
    * The primary schema ID used for validation by this loader instance.
@@ -106,16 +100,7 @@ export class BaseManifestItemLoader {
     dataRegistry,
     logger
   ) {
-    // --- Dependency Validation ---
-    if (typeof contentType !== 'string' || contentType.trim() === '') {
-      const errorMsg = `BaseManifestItemLoader requires a non-empty string for 'contentType'. Received: ${contentType}`;
-      if (logger && typeof logger.error === 'function') {
-        logger.error(errorMsg);
-      }
-      throw new TypeError(errorMsg);
-    }
-    const trimmedContentType = contentType.trim();
-    validateLoaderDeps(logger, [
+    super(logger, [
       {
         dependency: config,
         name: 'IConfiguration',
@@ -142,7 +127,13 @@ export class BaseManifestItemLoader {
         methods: ['store', 'get'],
       },
     ]);
-    this._logger = logger;
+
+    if (typeof contentType !== 'string' || contentType.trim() === '') {
+      const errorMsg = `BaseManifestItemLoader requires a non-empty string for 'contentType'. Received: ${contentType}`;
+      this._logger.error(errorMsg);
+      throw new TypeError(errorMsg);
+    }
+    const trimmedContentType = contentType.trim();
 
     // --- Store Dependencies ---
     this._config = config;
@@ -164,9 +155,6 @@ export class BaseManifestItemLoader {
       );
       this._primarySchemaId = null;
     }
-    this._logger.debug(
-      `${this.constructor.name}: Initialized successfully for content type '${trimmedContentType}'.`
-    );
   }
 
   /**
@@ -194,41 +182,21 @@ export class BaseManifestItemLoader {
       return { isValid: true, errors: null };
     }
 
-    if (!this._schemaValidator.isSchemaLoaded(schemaId)) {
-      // Log a WARNING, not an error, and allow processing to continue
-      const warningMsg = `${loaderName} [${modId}]: Rule schema '${schemaId}' is configured but not loaded. Skipping validation for ${filename}.`;
-      this._logger.warn(warningMsg); // Changed from error to warn
-      // Return as if valid to skip validation but continue processing
-      return { isValid: true, errors: null }; // Changed from throwing error
-    }
-
-    this._logger.debug(
-      `${loaderName} [${modId}]: Validating '${filename}' against primary schema '${schemaId}'.`
+    return validateAgainstSchema(
+      this._schemaValidator,
+      schemaId,
+      data,
+      this._logger,
+      {
+        validationDebugMessage: `${loaderName} [${modId}]: Validating '${filename}' against primary schema '${schemaId}'.`,
+        notLoadedMessage: `${loaderName} [${modId}]: Rule schema '${schemaId}' is configured but not loaded. Skipping validation for ${filename}.`,
+        notLoadedLogLevel: 'warn',
+        skipIfSchemaNotLoaded: true,
+        failureMessage: `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`,
+        failureContext: { modId, filename, resolvedPath },
+        failureThrowMessage: `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`,
+      }
     );
-    const validationResult = this._schemaValidator.validate(schemaId, data);
-
-    if (!validationResult.isValid) {
-      const errorMsg = `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`;
-      this._logger.error(errorMsg, {
-        modId,
-        filename,
-        resolvedPath,
-        schemaId,
-        validationErrors: validationResult.errors,
-      });
-      const errorDetails = validationResult.errors
-        ?.map(
-          (e) =>
-            `  - Path: ${e.instancePath || '/'} | Message: ${e.message} | Params: ${JSON.stringify(e.params)}`
-        )
-        .join('\n');
-      throw new Error(
-        `${errorMsg}\nDetails:\n${errorDetails || 'No specific error details provided.'}`
-      );
-    }
-
-    // Validation successful
-    return validationResult;
   }
 
   /**
@@ -499,7 +467,7 @@ export class BaseManifestItemLoader {
    * @param {string} baseItemId - The item's **un-prefixed** base ID (extracted from the item data or filename).
    * @param {object} dataToStore - The original data object fetched and validated for the item.
    * @param {string} sourceFilename - The original filename from which the data was loaded (for logging).
-   * @returns {boolean} Returns `true` if an existing item was overwritten, `false` otherwise.
+   * @returns {{qualifiedId: string, didOverride: boolean}} Object containing the fully qualified ID and override flag.
    * @throws {Error} Re-throws any error encountered during interaction with the data registry (`get` or `store`).
    */
   _storeItemInRegistry(
@@ -509,9 +477,8 @@ export class BaseManifestItemLoader {
     dataToStore,
     sourceFilename
   ) {
-    // <<< MODIFIED RETURN TYPE
     const finalRegistryKey = `${modId}:${baseItemId}`;
-    let didOverwrite = false; // <<< ADDED flag
+    let didOverwrite = false;
     try {
       const existingDefinition = this._dataRegistry.get(
         category,
@@ -534,7 +501,7 @@ export class BaseManifestItemLoader {
       this._logger.debug(
         `${this.constructor.name} [${modId}]: Successfully stored ${category} item '${finalRegistryKey}' from file '${sourceFilename}'.`
       );
-      return didOverwrite; // <<< RETURN the flag
+      return { qualifiedId: finalRegistryKey, didOverride: didOverwrite };
     } catch (error) {
       this._logger.error(
         `${this.constructor.name} [${modId}]: Failed to store ${category} item with key '${finalRegistryKey}' from file '${sourceFilename}' in data registry.`,
@@ -574,14 +541,14 @@ export class BaseManifestItemLoader {
       this._logger,
       options
     );
-    const didOverride = this._storeItemInRegistry(
+    const { qualifiedId, didOverride } = this._storeItemInRegistry(
       category,
       modId,
       baseId,
       data,
       filename
     );
-    return { qualifiedId: `${modId}:${baseId}`, didOverride };
+    return { qualifiedId, didOverride };
   }
 
   /**

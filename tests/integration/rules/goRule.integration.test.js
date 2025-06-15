@@ -19,6 +19,7 @@ import SetVariableHandler from '../../../src/logic/operationHandlers/setVariable
 import ResolveDirectionHandler from '../../../src/logic/operationHandlers/resolveDirectionHandler.js';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import {
@@ -27,6 +28,8 @@ import {
   EXITS_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
+import goAction from '../../../data/mods/core/actions/go.action.json';
+import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 
 /**
  * Minimal in-memory entity manager used for integration tests.
@@ -162,6 +165,7 @@ function init(entities) {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
       logger,
+      safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
@@ -173,6 +177,11 @@ function init(entities) {
       entityManager,
       logger,
       safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
+    }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
@@ -386,5 +395,77 @@ describe('core_handle_go rule integration', () => {
       ])
     );
     expect(types).not.toContain('core:entity_moved');
+  });
+
+  it('movement succeeds when locked flag is false', () => {
+    interpreter.shutdown();
+    init([
+      {
+        id: 'actor1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Hero' },
+          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          'core:movement': { locked: false },
+        },
+      },
+      { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
+      { id: 'locB', components: { [NAME_COMPONENT_ID]: { text: 'Loc B' } } },
+    ]);
+    entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
+      { direction: 'north', target: 'locB' },
+    ]);
+
+    listener({
+      type: ATTEMPT_ACTION_ID,
+      payload: {
+        actorId: 'actor1',
+        actionId: 'core:go',
+        direction: 'north',
+        targetId: 'locB',
+        originalInput: 'go north',
+      },
+    });
+
+    expect(
+      entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
+    ).toEqual({ locationId: 'locB' });
+    const types = events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:entity_moved',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+  });
+
+  it('prerequisite check fails when movement locked', () => {
+    const prereq = goAction.prerequisites[0].logic;
+    const ctx = createJsonLogicContext(
+      {
+        type: ATTEMPT_ACTION_ID,
+        payload: { actorId: 'actor1', actionId: 'core:go' },
+      },
+      'actor1',
+      null,
+      {
+        getComponentData(id, type) {
+          if (type === 'core:movement') return { locked: true };
+          if (type === 'core:name') return { text: 'Hero' };
+          if (type === 'core:position') return { locationId: 'locA' };
+          return null;
+        },
+        getEntityInstance(id) {
+          return { id };
+        },
+        hasComponent() {
+          return true;
+        },
+      },
+      logger
+    );
+    const result = jsonLogic.evaluate(prereq, ctx.context);
+    expect(result).toBe(false);
   });
 });

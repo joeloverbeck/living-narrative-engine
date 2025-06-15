@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 import {
   NOTES_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -27,6 +28,9 @@ describe('GamePersistenceService edge cases', () => {
   let entityManager;
   let dataRegistry;
   let playtimeTracker;
+  let componentCleaningService;
+  let metadataBuilder;
+  let safeEventDispatcher;
   let service;
 
   beforeEach(() => {
@@ -42,12 +46,29 @@ describe('GamePersistenceService edge cases', () => {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
     };
+    safeEventDispatcher = { dispatch: jest.fn() };
+    componentCleaningService = new ComponentCleaningService({
+      logger,
+      safeEventDispatcher,
+    });
+    metadataBuilder = {
+      build: jest.fn((n, p) => ({
+        saveFormatVersion: '1',
+        engineVersion: 'x',
+        gameTitle: n || 'Unknown Game',
+        timestamp: 't',
+        playtimeSeconds: p,
+        saveName: '',
+      })),
+    };
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       dataRegistry,
       playtimeTracker,
+      componentCleaningService,
+      metadataBuilder,
     });
   });
 
@@ -86,7 +107,7 @@ describe('GamePersistenceService edge cases', () => {
 
       const res = await service.saveGame('Save1', true, 'World');
       expect(res.success).toBe(false);
-      expect(res.error).toMatch('boom');
+      expect(res.error.message).toMatch('boom');
       expect(logger.error).toHaveBeenCalled();
     });
 
@@ -110,6 +131,8 @@ describe('GamePersistenceService edge cases', () => {
       const res = await service.restoreGameState({});
       expect(res.success).toBe(false);
       expect(logger.error).toHaveBeenCalled();
+      expect(entityManager.clearAll).not.toHaveBeenCalled();
+      expect(playtimeTracker.setAccumulatedPlaytime).not.toHaveBeenCalled();
     });
 
     it('handles reconstructEntity throwing and null return', async () => {
@@ -140,7 +163,7 @@ describe('GamePersistenceService edge cases', () => {
       });
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
-      expect(res.error).toBe('no');
+      expect(res.error.message).toBe('no');
     });
 
     it('returns failure when restoreGameState fails', async () => {
@@ -151,7 +174,7 @@ describe('GamePersistenceService edge cases', () => {
         .mockResolvedValue({ success: false, error: 'bad' });
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
-      expect(res.error).toBe('bad');
+      expect(res.error.message).toBe('bad');
     });
   });
 });

@@ -6,6 +6,7 @@
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { LLMProcessingError } from '../../../src/turns/services/LLMResponseProcessor.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 // --- Mocks & Helpers ---
 
@@ -28,13 +29,16 @@ describe('LLMResponseProcessor - notes data extraction', () => {
   let schemaValidatorMock;
   let loggerMock;
   let processor;
+  let safeEventDispatcher;
 
   beforeEach(() => {
     loggerMock = mockLogger();
     schemaValidatorMock = mockSchemaValidator();
+    safeEventDispatcher = { dispatch: jest.fn() };
     processor = new LLMResponseProcessor({
       schemaValidator: schemaValidatorMock,
       logger: loggerMock,
+      safeEventDispatcher,
     });
   });
 
@@ -65,7 +69,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     expect(result.extractedData.notes).toEqual(notesFromLlm);
 
     // No errors should be logged for a valid response
-    expect(loggerMock.error).not.toHaveBeenCalled();
+    expect(safeEventDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   test('When "notes" key is absent, extractedData.notes is undefined', async () => {
@@ -82,7 +86,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
 
     expect(result.success).toBe(true);
     expect(result.extractedData.notes).toBeUndefined();
-    expect(loggerMock.error).not.toHaveBeenCalled();
+    expect(safeEventDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   test('When "notes" is not an array, it fails schema validation by throwing an error', async () => {
@@ -117,11 +121,14 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     // The processor should log the schema validation failure before throwing.
     // We need to run it again because the `expect().rejects` consumes the error.
     await processor.processResponse(jsonString, actorId).catch(() => {});
-    expect(loggerMock.error).toHaveBeenCalledWith(
-      `LLMResponseProcessor: schema invalid for actor ${actorId}`,
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
       {
-        errors: mockValidationErrors,
-        parsed: invalidNotesJson,
+        message: `LLMResponseProcessor: schema invalid for actor ${actorId}`,
+        details: {
+          errors: mockValidationErrors,
+          parsed: invalidNotesJson,
+        },
       }
     );
   });

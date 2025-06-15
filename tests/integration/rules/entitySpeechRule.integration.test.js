@@ -16,6 +16,7 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
 import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../../src/logic/operationHandlers/dispatchSpeechHandler.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import {
@@ -71,6 +72,11 @@ function init(entities) {
   jsonLogic = new JsonLogicEvaluationService({ logger });
 
   const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+  const safeSpeechDispatcher = {
+    dispatch: jest.fn((eventType, payload) =>
+      eventBus.dispatch(eventType, payload)
+    ),
+  };
 
   operationInterpreter = new OperationInterpreter({
     logger,
@@ -81,11 +87,17 @@ function init(entities) {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
       logger,
+      safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
+    }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     DISPATCH_SPEECH: new DispatchSpeechHandler({
-      dispatcher: eventBus,
+      dispatcher: safeSpeechDispatcher,
       logger,
     }),
     IF: new IfHandler({

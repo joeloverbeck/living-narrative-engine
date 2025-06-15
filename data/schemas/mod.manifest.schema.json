@@ -6,6 +6,11 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "$schema": {
+      "description": "Reference to the JSON Schema file that defines the structure of this document.",
+      "type": "string",
+      "format": "uri"
+    },
     "id": {
       "description": "Unique identifier for the mod (must match its folder name under mods/). Case-insensitive for lookups, but preserved casing stored.",
       "type": "string",
@@ -80,6 +85,9 @@
           "$ref": "#/definitions/contentFileList"
         },
         "rules": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "macros": {
           "$ref": "#/definitions/contentFileList"
         }
       },

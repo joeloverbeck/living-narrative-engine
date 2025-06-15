@@ -99,23 +99,18 @@
                   }
                 },
                 {
-                  "type": "DISPATCH_EVENT",
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
                   "comment": "Send a perceptible event to the new location.",
                   "parameters": {
-                    "eventType": "core:perceptible_event",
-                    "payload": {
-                      "eventName": "core:perceptible_event",
-                      "locationId": "{event.payload.currentLocationId}",
-                      "descriptionText": "{context.followerName.text} follows {context.leaderName.text} to {context.newLocationName.text}.",
-                      "timestamp": "{context.nowIso}",
-                      "perceptionType": "character_enter",
-                      "actorId": "{context.followerId}",
-                      "targetId": "{event.payload.entityId}",
-                      "involvedEntities": [],
-                      "contextualData": {
-                        "leaderId": "{event.payload.entityId}",
-                        "originLocationId": "{event.payload.previousLocationId}"
-                      }
+                    "location_id": "{event.payload.currentLocationId}",
+                    "description_text": "{context.followerName.text} follows {context.leaderName.text} to {context.newLocationName.text}.",
+                    "perception_type": "character_enter",
+                    "actor_id": "{context.followerId}",
+                    "target_id": "{event.payload.entityId}",
+                    "involved_entities": [],
+                    "contextual_data": {
+                      "leaderId": "{event.payload.entityId}",
+                      "originLocationId": "{event.payload.previousLocationId}"
                     }
                   }
                 },

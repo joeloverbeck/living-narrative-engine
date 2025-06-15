@@ -168,6 +168,41 @@ describe('SaveGameUI', () => {
     await awaitTick();
   }
 
+  describe('populateSlotsList integration', () => {
+    it('should populate the save slots container with slot items', async () => {
+      mockSaveLoadService.listManualSaveSlots.mockResolvedValueOnce([
+        {
+          identifier: 'id1',
+          saveName: 'Slot One',
+          timestamp: '2023-01-01T00:00:00Z',
+          playtimeSeconds: 5,
+          isEmpty: false,
+          isCorrupted: false,
+        },
+        {
+          identifier: 'id2',
+          saveName: 'Slot Two',
+          timestamp: '2023-01-02T00:00:00Z',
+          playtimeSeconds: 10,
+          isEmpty: false,
+          isCorrupted: false,
+        },
+      ]);
+
+      await saveGameUI._populateSaveSlotsList();
+      await awaitMockCall(mockSaveLoadService.listManualSaveSlots, 0);
+
+      const slots = listContainerElement.querySelectorAll('.save-slot');
+      expect(slots.length).toBe(10);
+      expect(slots[0].textContent).toContain('Slot One');
+      const tsText = slots[0].querySelector('.slot-timestamp')?.textContent;
+      expect(tsText).toBe(
+        `Saved: ${new Date('2023-01-01T00:00:00Z').toLocaleString()}`
+      );
+      expect(slots[1].dataset.slotId).toBe('1');
+    });
+  });
+
   describe('Save Operation and Slot Re-selection', () => {
     it('should correctly re-select the slot after a successful save to an empty slot', async () => {
       const saveName = 'My Awesome Game';

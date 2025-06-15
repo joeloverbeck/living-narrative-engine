@@ -2,6 +2,8 @@
 
 // Import BaseManifestItemLoader
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { expandMacros } from '../utils/macroUtils.js';
+import { deriveBaseRuleIdFromFilename } from '../utils/ruleIdUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -24,12 +26,6 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
  */
 class RuleLoader extends BaseManifestItemLoader {
   /**
-   * @private
-   * @type {object | null | undefined} - Cached 'path' module. undefined means not yet attempted, null means failed to load.
-   */
-  #pathModule = undefined;
-
-  /**
    * Constructs a RuleLoader instance.
    * Calls the parent constructor, specifying the content type 'rules' and passing dependencies.
    *
@@ -47,31 +43,6 @@ class RuleLoader extends BaseManifestItemLoader {
     // Log initialization (Base class constructor handles logging)
     // this._logger.debug(`RuleLoader: Initialized.`); // Optional: Add specific RuleLoader init log if needed after super()
     // Don't import 'path' here yet.
-  }
-
-  /**
-   * @private
-   * Attempts to dynamically load the 'path' module and caches it.
-   * @returns {Promise<object | null>} The loaded path module or null if unavailable/failed.
-   */
-  async #getPathModule() {
-    if (this.#pathModule === undefined) {
-      // Only attempt loading once
-      try {
-        // Dynamically import the 'path' module
-        // Note: Ensure the environment supports dynamic import()
-        this.#pathModule = await import('path');
-        this._logger.debug(
-          "RuleLoader: Successfully loaded Node.js 'path' module dynamically."
-        );
-      } catch (e) {
-        this.#pathModule = null; // Mark as failed
-        this._logger.warn(
-          "RuleLoader: Node.js 'path' module is not available in this environment. Filename parsing fallback will be used."
-        );
-      }
-    }
-    return this.#pathModule;
   }
 
   /**
@@ -116,28 +87,8 @@ class RuleLoader extends BaseManifestItemLoader {
         baseRuleId = baseRuleId.substring(modId.length + 1);
       }
     } else {
-      // Fallback to filename
-      const pathModule = await this.#getPathModule();
-      let namePart;
-      if (pathModule) {
-        namePart = pathModule.parse(filename).name;
-      } else {
-        const baseFilename = filename.includes('/')
-          ? filename.substring(filename.lastIndexOf('/') + 1)
-          : filename;
-        namePart = baseFilename.includes('.')
-          ? baseFilename.substring(0, baseFilename.lastIndexOf('.'))
-          : baseFilename;
-      }
-      // Remove common suffixes
-      const ruleSuffixes = ['.rule', '.rule.json', '.rule.yml', '.rule.yaml'];
-      for (const suffix of ruleSuffixes) {
-        if (namePart.endsWith(suffix)) {
-          namePart = namePart.substring(0, namePart.length - suffix.length);
-          break;
-        }
-      }
-      baseRuleId = namePart;
+      // Fallback to filename using utility helper
+      baseRuleId = deriveBaseRuleIdFromFilename(filename);
       this._logger.debug(
         `RuleLoader [${modId}]: No valid 'rule_id' found. Derived baseRuleId '${baseRuleId}' from filename.`
       );
@@ -148,33 +99,45 @@ class RuleLoader extends BaseManifestItemLoader {
     );
     // --- End Rule ID Determination ---
 
+    // --- Macro Expansion ---
+    if (Array.isArray(data.actions)) {
+      data.actions = expandMacros(
+        data.actions,
+        this._dataRegistry,
+        this._logger
+      );
+    }
+
     // --- Storage ---
     this._logger.debug(
       `RuleLoader [${modId}]: Delegating storage for rule (base ID: '${baseRuleId}') from ${filename} to base helper.`
     );
-    let didOverride = false; // <<< Initialize override flag
+
+    let qualifiedId;
+    let didOverride = false;
     try {
-      // Capture the boolean return value from the helper
-      didOverride = this._storeItemInRegistry(
+      const result = this._storeItemInRegistry(
         'rules',
         modId,
         baseRuleId,
         data,
         filename
-      ); // <<< CAPTURE result
+      );
+      qualifiedId = result.qualifiedId;
+      didOverride = result.didOverride;
     } catch (storageError) {
       // Error logging happens in helper, re-throw
       throw storageError;
     }
+
     // --- End Storage ---
 
     // --- Return Value ---
-    const finalRegistryKey = `${modId}:${baseRuleId}`; // Construct the prefixed ID used for storage
+    const finalRegistryKey = qualifiedId ?? `${modId}:${baseRuleId}`;
     this._logger.debug(
       `RuleLoader [${modId}]: Successfully processed rule from ${filename}. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
     );
-    // Return the object as required by the base class contract
-    return { qualifiedId: finalRegistryKey, didOverride: didOverride }; // <<< MODIFIED Return Value
+    return { qualifiedId: finalRegistryKey, didOverride };
   }
 
   /**

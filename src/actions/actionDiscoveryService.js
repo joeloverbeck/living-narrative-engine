@@ -14,10 +14,7 @@
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
-import {
-  initLogger,
-  validateServiceDeps,
-} from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializer.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchError.js';
@@ -52,8 +49,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     safeEventDispatcher,
   }) {
     super();
-    this.#logger = initLogger('ActionDiscoveryService', logger);
-    validateServiceDeps('ActionDiscoveryService', this.#logger, {
+    this.#logger = setupService('ActionDiscoveryService', logger, {
       gameDataRepository: {
         value: gameDataRepository,
         requiredMethods: ['getAllActionDefinitions'],
@@ -234,14 +230,10 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           }
         }
       } catch (err) {
-        this.#logger.error(
-          `Error processing action ${actionDef.id} for actor ${actorEntity.id}:`,
-          err
-        );
         safeDispatchError(
           this.#safeEventDispatcher,
           `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
-          { error: err.message }
+          { error: err.message, stack: err.stack }
         );
       }
     }

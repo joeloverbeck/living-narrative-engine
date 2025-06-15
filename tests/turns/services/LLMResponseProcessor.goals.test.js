@@ -6,11 +6,13 @@
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { LLMProcessingError } from '../../../src/turns/services/LLMResponseProcessor.js';
+import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
 
 describe('LLMResponseProcessor – Handling of disallowed properties', () => {
   let mockLogger;
   let mockSchemaValidator;
   let processor;
+  let safeEventDispatcher;
 
   beforeEach(() => {
     mockLogger = {
@@ -34,9 +36,11 @@ describe('LLMResponseProcessor – Handling of disallowed properties', () => {
       isSchemaLoaded: jest.fn(() => true),
     };
 
+    safeEventDispatcher = { dispatch: jest.fn() };
     processor = new LLMResponseProcessor({
       schemaValidator: mockSchemaValidator,
       logger: mockLogger,
+      safeEventDispatcher,
     });
   });
 
@@ -61,11 +65,14 @@ describe('LLMResponseProcessor – Handling of disallowed properties', () => {
     // 3. Assert: An ERROR for the schema failure should be logged.
     // We must run the method again to inspect the logger, as `rejects` consumes the error.
     await processor.processResponse(jsonPayload, actorId).catch(() => {});
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      `LLMResponseProcessor: schema invalid for actor ${actorId}`,
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
       {
-        errors: [{ message: "Disallowed extra property: 'goals'" }],
-        parsed: payloadWithGoals,
+        message: `LLMResponseProcessor: schema invalid for actor ${actorId}`,
+        details: {
+          errors: [{ message: "Disallowed extra property: 'goals'" }],
+          parsed: payloadWithGoals,
+        },
       }
     );
 

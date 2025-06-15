@@ -1,9 +1,8 @@
 // src/domUI/saveGameUI.js
 
-import { BaseModalRenderer } from './baseModalRenderer.js';
+import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
-import { formatPlaytime } from '../utils/textUtils.js';
-import { setupRadioListNavigation } from '../utils/listNavigation.js';
+import { formatPlaytime, formatTimestamp } from '../utils/textUtils.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -50,14 +49,10 @@ const SAVE_GAME_UI_ELEMENTS_CONFIG = {
  * @augments BaseModalRenderer
  * @description Manages the modal dialog for saving the game.
  */
-export class SaveGameUI extends BaseModalRenderer {
+export class SaveGameUI extends SlotModalBase {
   saveLoadService;
   gameEngine = null;
   domElementFactory; // Keep for direct use in _renderSaveSlotItem
-
-  selectedSlotData = null;
-  currentSlotsDisplayData = [];
-
   // isSavingInProgress is managed by BaseModalRenderer's _setOperationInProgress
 
   /**
@@ -91,6 +86,8 @@ export class SaveGameUI extends BaseModalRenderer {
       validatedEventDispatcher,
       elementsConfig: SAVE_GAME_UI_ELEMENTS_CONFIG,
       domElementFactory,
+      datasetKey: 'slotId',
+      confirmButtonKey: 'confirmSaveButtonEl',
     });
 
     if (
@@ -109,7 +106,7 @@ export class SaveGameUI extends BaseModalRenderer {
 
     this._initModalEventListeners();
     this.logger.debug(
-      `${this._logPrefix} Instance created and extends BaseModalRenderer.`
+      `${this._logPrefix} Instance created and extends SlotModalBase.`
     );
   }
 
@@ -335,14 +332,13 @@ export class SaveGameUI extends BaseModalRenderer {
       slotData.timestamp &&
       slotData.timestamp !== 'N/A'
     ) {
-      try {
-        timestampText = `Saved: ${new Date(slotData.timestamp).toLocaleString()}`;
-      } catch (e) {
+      const formatted = formatTimestamp(slotData.timestamp);
+      if (formatted === 'Invalid Date') {
         this.logger.warn(
           `${this._logPrefix} Invalid timestamp for slot ${slotData.slotId}: ${slotData.timestamp}`
         );
-        timestampText = 'Saved: Invalid Date';
       }
+      timestampText = `Saved: ${formatted}`;
     } else if (slotData.isCorrupted) {
       timestampText = 'Timestamp: N/A';
     }
@@ -397,8 +393,7 @@ export class SaveGameUI extends BaseModalRenderer {
    */
   async _populateSaveSlotsList() {
     this.logger.debug(`${this._logPrefix} Populating save slots list...`);
-    const listContainer = this.elements.listContainerElement;
-    if (!listContainer) {
+    if (!this.elements.listContainerElement) {
       this.logger.error(`${this._logPrefix} List container element not found.`);
       this._displayStatusMessage(
         'Error: UI component for slots missing.',
@@ -407,38 +402,12 @@ export class SaveGameUI extends BaseModalRenderer {
       return;
     }
 
-    this._setOperationInProgress(true); // Disable interactions while loading list
-    this._displayStatusMessage('Loading save slots...', 'info');
-
-    DomUtils.clearElement(listContainer); // Clear previous items
-
-    const slotsData = await this._getSaveSlotsData();
-
-    if (slotsData.length === 0) {
-      const emptyMessage = this._getEmptySaveSlotsMessage();
-      if (typeof emptyMessage === 'string') {
-        if (this.domElementFactory) {
-          listContainer.appendChild(
-            this.domElementFactory.p(undefined, emptyMessage) ||
-              this.documentContext.document.createTextNode(emptyMessage)
-          );
-        } else {
-          listContainer.textContent = emptyMessage;
-        }
-      } else {
-        listContainer.appendChild(emptyMessage);
-      }
-    } else {
-      slotsData.forEach((slotData, index) => {
-        const listItemElement = this._renderSaveSlotItem(slotData, index);
-        if (listItemElement) {
-          listContainer.appendChild(listItemElement);
-        }
-      });
-    }
-
-    this._clearStatusMessage(); // Clear "Loading save slots..."
-    this._setOperationInProgress(false); // Re-enable interactions
+    await this.populateSlotsList(
+      () => this._getSaveSlotsData(),
+      (slotData, index) => this._renderSaveSlotItem(slotData, index),
+      () => this._getEmptySaveSlotsMessage(),
+      'Loading save slots...'
+    );
 
     // Ensure buttons are correctly disabled if no selection or no valid input
     this._handleSaveNameInput();
@@ -471,33 +440,9 @@ export class SaveGameUI extends BaseModalRenderer {
       `${this._logPrefix} Slot selected: ID ${slotData.slotId}`,
       slotData
     );
-    this.selectedSlotData = slotData;
+    super._handleSlotSelection(selectedSlotElement, slotData);
+
     this._clearStatusMessage();
-
-    this.elements.listContainerElement
-      ?.querySelectorAll('.save-slot')
-      .forEach((slotEl) => {
-        const isSelected = slotEl === selectedSlotElement;
-        slotEl.classList.toggle('selected', isSelected);
-        slotEl.setAttribute('aria-checked', String(isSelected));
-        // Manage tabindex for keyboard navigation: only selected is 0, others -1
-        // If no slot is selected after this, the first one should become 0.
-        slotEl.setAttribute('tabindex', isSelected ? '0' : '-1');
-      });
-
-    if (
-      selectedSlotElement &&
-      !(selectedSlotElement === this.documentContext.document?.activeElement)
-    ) {
-      selectedSlotElement.focus();
-    } else if (!selectedSlotElement) {
-      // If selection is cleared
-      const firstSlot =
-        this.elements.listContainerElement?.querySelector('.save-slot');
-      if (firstSlot) {
-        firstSlot.setAttribute('tabindex', '0');
-      }
-    }
 
     if (this.elements.saveNameInputEl) {
       if (slotData.isCorrupted) {
@@ -520,39 +465,6 @@ export class SaveGameUI extends BaseModalRenderer {
       }
     }
     this._handleSaveNameInput(); // Update save button state
-  }
-
-  /**
-   * @param event
-   * @private
-   */
-  _handleSlotNavigation(event) {
-    if (!this.elements.listContainerElement) return;
-
-    const arrowHandler = setupRadioListNavigation(
-      this.elements.listContainerElement,
-      '.save-slot[role="radio"]',
-      'slotId',
-      (el, value) => {
-        const slotId = parseInt(value || '-1', 10);
-        const slotData = this.currentSlotsDisplayData.find(
-          (s) => s.slotId === slotId
-        );
-        if (slotData) this._handleSlotSelection(el, slotData);
-      }
-    );
-
-    arrowHandler(event);
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      const target = /** @type {HTMLElement} */ (event.target);
-      const slotId = parseInt(target.dataset.slotId || '-1', 10);
-      const slotData = this.currentSlotsDisplayData.find(
-        (s) => s.slotId === slotId
-      );
-      if (slotData) this._handleSlotSelection(target, slotData);
-    }
   }
 
   /**

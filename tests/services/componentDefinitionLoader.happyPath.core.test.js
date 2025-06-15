@@ -367,8 +367,8 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
           modId: modId,
           _sourceFile: filename,
         };
-        mockRegistry.store(category, finalId, storedData); // Use the actual mock registry's store
-        // console.log(`Mock _storeItemInRegistry called with: ${finalId}`) // Optional debug log
+        mockRegistry.store(category, finalId, storedData);
+        return { qualifiedId: finalId, didOverride: false };
       });
 
     // Spy on the base validation method. We *expect* this to be called by the base wrapper.

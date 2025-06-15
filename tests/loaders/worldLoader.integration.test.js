@@ -351,7 +351,8 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(mockedValidateModEngineVersions).toHaveBeenCalledTimes(1);
     expect(mockedValidateModEngineVersions).toHaveBeenCalledWith(
       expectedValidationMap,
-      mockLogger
+      mockLogger,
+      mockValidatedEventDispatcher
     );
 
     // 9. Verify resolveOrder was called.

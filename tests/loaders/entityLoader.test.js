@@ -245,9 +245,11 @@ beforeEach(() => {
   //     entityLoader['_validateEntityComponents'] = EntityLoader.prototype['_validateEntityComponents'].bind(entityLoader);
   // }
 
-  // --- TEST CORRECTION: Ensure the spy on _storeItemInRegistry returns the expected boolean ---
-  // The base class method `_storeItemInRegistry` now returns a boolean. Mock it to return `false` by default.
-  entityLoader._storeItemInRegistry.mockReturnValue(false);
+  // Ensure calls to _storeItemInRegistry invoke the real implementation so the
+  // returned object includes the calculated qualifiedId.
+  entityLoader._storeItemInRegistry.mockImplementation((...args) =>
+    EntityLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
+  );
 });
 
 // --- Test Suite ---
@@ -324,12 +326,11 @@ describe('EntityLoader', () => {
       );
       // --- [LOADER-REFACTOR-04 Test Change END] ---
 
-      // Debug logs should still happen (base class init + entityloader init)
-      // EntityLoader init log:
+      // Debug log from AbstractLoader should still happen
       expect(warnLogger.debug).toHaveBeenCalledWith(
         'EntityLoader: Initialized.'
       );
-      expect(warnLogger.debug).toHaveBeenCalledTimes(2); // Only 2 debug logs when schema isn't found
+      expect(warnLogger.debug).toHaveBeenCalledTimes(1); // Only AbstractLoader logs initialization now
     });
   });
 
@@ -466,8 +467,9 @@ describe('EntityLoader', () => {
 
       // --- [LOADER-REFACTOR-04 Test Change]: Mock base class methods called within/around _processFetchedItem ---
       entityLoader._storeItemInRegistry.mockClear(); // Clear spy calls from beforeEach
-      // --- TEST CORRECTION: Ensure the spy on _storeItemInRegistry returns the expected boolean ---
-      entityLoader._storeItemInRegistry.mockReturnValue(false); // Default to no overwrite
+      entityLoader._storeItemInRegistry.mockImplementation((...args) =>
+        EntityLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
+      );
     });
 
     // --- Adjusted success paths ---

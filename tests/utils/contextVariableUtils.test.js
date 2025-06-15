@@ -30,8 +30,16 @@ describe('storeResult', () => {
     );
   });
 
-  test('logs error when dispatcher not provided', () => {
-    const ctx = {};
+  test('dispatches using context dispatcher when dispatcher not provided', async () => {
+    const validated = {
+      dispatch: jest.fn().mockResolvedValue(true),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+    };
+    const ctx = {
+      evaluationContext: null,
+      validatedEventDispatcher: validated,
+    };
     const logger = {
       error: jest.fn(),
       warn: jest.fn(),
@@ -39,7 +47,13 @@ describe('storeResult', () => {
       debug: jest.fn(),
     };
     const success = storeResult('baz', 7, ctx, undefined, logger);
+    await Promise.resolve();
     expect(success).toBe(false);
-    expect(logger.error).toHaveBeenCalled();
+    expect(validated.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({ message: expect.any(String) }),
+      expect.any(Object)
+    );
+    expect(logger.error).not.toHaveBeenCalled();
   });
 });

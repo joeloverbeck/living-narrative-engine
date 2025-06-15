@@ -35,7 +35,11 @@ function makeDeps() {
 describe('SaveLoadService without ensureDirectoryExists', () => {
   it('saves successfully when directory helper is absent', async () => {
     const { logger, storageProvider } = makeDeps();
-    const service = new SaveLoadService({ logger, storageProvider });
+    const service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
 
     storageProvider.writeFileAtomically.mockResolvedValue({ success: true });
 

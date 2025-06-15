@@ -1,0 +1,166 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "intimacy_handle_step_back",
+  "comment": "Handles the 'intimacy:step_back' action. Implements algorithm §5.2 from the spec. It removes the actor from their circle, cleans up their components, and unlocks any partners who are now alone.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "intimacy:step_back"
+    ]
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Step 1: Get the actor's partners. Prerequisite ensures this component exists.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "intimacy:closeness",
+        "result_variable": "myCloseness"
+      }
+    },
+    {
+      "type": "FOR_EACH",
+      "comment": "Step 2: Iterate through each partner to remove the actor from their list.",
+      "parameters": {
+        "collection": "context.myCloseness.partners",
+        "item_variable": "partnerId",
+        "actions": [
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "comment": "Remove the actor's ID from the partner's list.",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.partnerId}"
+              },
+              "component_type": "intimacy:closeness",
+              "field": "partners",
+              "mode": "remove_by_value",
+              "value": "{event.payload.actorId}"
+            }
+          },
+          {
+            "type": "QUERY_COMPONENT",
+            "comment": "Re-query the partner's component to check their list size now.",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.partnerId}"
+              },
+              "component_type": "intimacy:closeness",
+              "result_variable": "partnerClosenessAfterUpdate"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "If the partner's list is now empty, they are no longer close with anyone. Clean up their state.",
+            "parameters": {
+              "condition": {
+                "==": [
+                  {
+                    "var": "context.partnerClosenessAfterUpdate.partners.length"
+                  },
+                  0
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "REMOVE_COMPONENT",
+                  "comment": "Delete their closeness component entirely.",
+                  "parameters": {
+                    "entity_ref": {
+                      "entityId": "{context.partnerId}"
+                    },
+                    "component_type": "intimacy:closeness"
+                  }
+                },
+                {
+                  "type": "MODIFY_COMPONENT",
+                  "comment": "Unlock their movement.",
+                  "parameters": {
+                    "entity_ref": {
+                      "entityId": "{context.partnerId}"
+                    },
+                    "component_type": "core:movement",
+                    "field": "locked",
+                    "mode": "set",
+                    "value": false
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Step 3: Delete the actor's own closeness component.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "intimacy:closeness"
+      }
+    },
+    {
+      "type": "MODIFY_COMPONENT",
+      "comment": "Step 4: Unlock the actor's movement.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:movement",
+        "field": "locked",
+        "mode": "set",
+        "value": false
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Step 5: Get names for UI event.",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPos"
+      }
+    },
+    {
+      "type": "GET_TIMESTAMP",
+      "parameters": {
+        "result_variable": "now"
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Step 6: Dispatch UI and perception events.",
+      "parameters": {
+        "location_id": "{context.actorPos.locationId}",
+        "description_text": "{context.actorName} steps back.",
+        "perception_type": "state_change_observable",
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actorName} steps back, the moment of closeness ending."
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "Step 7: End the actor's turn.",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

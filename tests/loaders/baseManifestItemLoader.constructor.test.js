@@ -189,7 +189,7 @@ describe('BaseManifestItemLoader Constructor', () => {
       `BaseManifestItemLoader: Primary schema ID for content type '${mockContentType}' found: '${schemaId}'`
     ); // <<< ADDED: Check schema ID log
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `BaseManifestItemLoader: Initialized successfully for content type '${mockContentType}'.` // <<< MODIFIED: Updated init log message
+      `BaseManifestItemLoader: Initialized.`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
   });
@@ -218,7 +218,7 @@ describe('BaseManifestItemLoader Constructor', () => {
       `BaseManifestItemLoader: Primary schema ID for content type '${mockContentType}' not found in configuration. Primary validation might be skipped.`
     ); // <<< ADDED: Check warning log
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `BaseManifestItemLoader: Initialized successfully for content type '${mockContentType}'.`
+      `BaseManifestItemLoader: Initialized.`
     );
   });
 
@@ -246,7 +246,7 @@ describe('BaseManifestItemLoader Constructor', () => {
       `BaseManifestItemLoader: Primary schema ID for content type '${mockContentType}' not found in configuration. Primary validation might be skipped.`
     ); // <<< ADDED: Check warning log
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `BaseManifestItemLoader: Initialized successfully for content type '${mockContentType}'.`
+      `BaseManifestItemLoader: Initialized.`
     );
   });
 

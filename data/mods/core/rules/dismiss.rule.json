@@ -69,20 +69,15 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "comment": "This event is for other characters to observe.",
             "parameters": {
-              "eventType": "core:perceptible_event",
-              "payload": {
-                "eventName": "core:perceptible_event",
-                "locationId": "{context.actorPosition.locationId}",
-                "descriptionText": "{context.actorName} has dismissed {context.targetName} from their service.",
-                "timestamp": "{context.nowIso}",
-                "perceptionType": "state_change_observable",
-                "actorId": "{event.payload.actorId}",
-                "targetId": "{event.payload.targetId}",
-                "involvedEntities": []
-              }
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} has dismissed {context.targetName} from their service.",
+              "perception_type": "state_change_observable",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}",
+              "involved_entities": []
             }
           }
         ]

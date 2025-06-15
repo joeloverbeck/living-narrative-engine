@@ -1,0 +1,235 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "intimacy_handle_get_close",
+  "comment": "Handles the 'intimacy:get_close' action. Implements algorithm §5.1 from the spec. It merges actor, target, and their existing partners into a new, single, fully-connected closeness circle, then locks movement for all members.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "intimacy:get_close"
+    ]
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT_OPTIONAL",
+      "comment": "Step 1: Get actor's current closeness component, if any.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "intimacy:closeness",
+        "result_variable": "actorCloseness"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT_OPTIONAL",
+      "comment": "Step 2: Get target's current closeness component, if any.",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "intimacy:closeness",
+        "result_variable": "targetCloseness"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Step 3: Begin building the master list of all involved entities, starting with the actor and target.",
+      "parameters": {
+        "variable_name": "allInvolved",
+        "value": ["{event.payload.actorId}", "{event.payload.targetId}"]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Step 4: If the actor was already in a circle, add their partners to the master list.",
+      "parameters": {
+        "condition": {
+          "var": "context.actorCloseness"
+        },
+        "then_actions": [
+          {
+            "type": "FOR_EACH",
+            "parameters": {
+              "collection": "context.actorCloseness.partners",
+              "item_variable": "partnerId",
+              "actions": [
+                {
+                  "type": "MODIFY_CONTEXT_ARRAY",
+                  "comment": "Use push_unique to add partners without creating duplicates.",
+                  "parameters": {
+                    "variable_path": "allInvolved",
+                    "mode": "push_unique",
+                    "value": "{context.partnerId}"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Step 5: If the target was already in a circle, add their partners to the master list.",
+      "parameters": {
+        "condition": {
+          "var": "context.targetCloseness"
+        },
+        "then_actions": [
+          {
+            "type": "FOR_EACH",
+            "parameters": {
+              "collection": "context.targetCloseness.partners",
+              "item_variable": "partnerId",
+              "actions": [
+                {
+                  "type": "MODIFY_CONTEXT_ARRAY",
+                  "parameters": {
+                    "variable_path": "allInvolved",
+                    "mode": "push_unique",
+                    "value": "{context.partnerId}"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "FOR_EACH",
+      "comment": "Step 6: Now that we have the complete list of members, update every member's component.",
+      "parameters": {
+        "collection": "context.allInvolved",
+        "item_variable": "memberId",
+        "actions": [
+          {
+            "type": "SET_VARIABLE",
+            "comment": "Create a new partner list for this member containing everyone EXCEPT themselves.",
+            "parameters": {
+              "variable_name": "newPartnerList",
+              "value": []
+            }
+          },
+          {
+            "type": "FOR_EACH",
+            "parameters": {
+              "collection": "context.allInvolved",
+              "item_variable": "otherMemberId",
+              "actions": [
+                {
+                  "type": "IF",
+                  "parameters": {
+                    "condition": {
+                      "!=": [
+                        {
+                          "var": "context.memberId"
+                        },
+                        {
+                          "var": "context.otherMemberId"
+                        }
+                      ]
+                    },
+                    "then_actions": [
+                      {
+                        "type": "MODIFY_CONTEXT_ARRAY",
+                        "parameters": {
+                          "variable_path": "newPartnerList",
+                          "mode": "push",
+                          "value": "{context.otherMemberId}"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "ADD_COMPONENT",
+            "comment": "Atomically add/replace the closeness component with the new symmetrical partner list.",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.memberId}"
+              },
+              "component_type": "intimacy:closeness",
+              "value": {
+                "partners": "{context.newPartnerList}"
+              }
+            }
+          },
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Lock the member's movement.",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.memberId}"
+              },
+              "component_type": "core:movement",
+              "field": "locked",
+              "mode": "set",
+              "value": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Step 7: Get names for the UI message.",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get location for perceptible event.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPos"
+      }
+    },
+    {
+      "type": "GET_TIMESTAMP",
+      "parameters": {
+        "result_variable": "now"
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Step 8: Dispatch events for perception and UI.",
+      "parameters": {
+        "location_id": "{context.actorPos.locationId}",
+        "description_text": "{context.actorName} draws close to {context.targetName}.",
+        "perception_type": "state_change_observable",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actorName} and {context.targetName} are now close."
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "Step 9: End the actor's turn.",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

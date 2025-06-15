@@ -25,27 +25,14 @@
       "type": "IF",
       "comment": "Step 2: Proceed only if the actor has the 'core:following' component.",
       "parameters": {
-        "condition": { "var": "context.oldFollowingData" },
+        "condition": {
+          "var": "context.oldFollowingData"
+        },
         "then_actions": [
           {
-            "type": "REMOVE_COMPONENT",
-            "comment": "Authoritatively remove the following relationship from the actor.",
+            "type": "BREAK_FOLLOW_RELATION",
             "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:following"
-            }
-          },
-          {
-            "type": "MODIFY_ARRAY_FIELD",
-            "comment": "Remove the actor from the old leader's 'core:leading' component followers list.",
-            "parameters": {
-              "entity_ref": {
-                "entityId": "{context.oldFollowingData.leaderId}"
-              },
-              "component_type": "core:leading",
-              "field": "followers",
-              "mode": "remove_by_value",
-              "value": "{event.payload.actorId}"
+              "follower_id": "{event.payload.actorId}"
             }
           },
           {
@@ -94,23 +81,28 @@
               },
               "then_actions": [
                 {
-                  "type": "DISPATCH_EVENT",
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
                   "comment": "This event is for other characters to observe.",
                   "parameters": {
-                    "eventType": "core:perceptible_event",
-                    "payload": {
-                      "eventName": "core:perceptible_event",
-                      "timestamp": "{context.currentTimestamp}",
-                      "locationId": "{context.actorPosition.locationId}",
-                      "descriptionText": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
-                      "perceptionType": "state_change_observable",
-                      "actorId": "{event.payload.actorId}",
-                      "targetId": "{context.oldFollowingData.leaderId}",
-                      "involvedEntities": []
-                    }
+                    "location_id": "{context.actorPosition.locationId}",
+                    "description_text": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
+                    "perception_type": "state_change_observable",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": "{context.oldFollowingData.leaderId}",
+                    "involved_entities": []
                   }
                 }
               ]
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Dispatch a UI event indicating the successful unfollow action.",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{context.actorName.text} stops following {context.oldLeaderName.text}."
+              }
             }
           },
           {

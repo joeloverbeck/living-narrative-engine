@@ -10,6 +10,7 @@ import {
 import {
   initLogger,
   validateServiceDeps,
+  setupService,
 } from '../../src/utils/serviceInitializer.js';
 import {
   createPrefixedLogger,
@@ -91,6 +92,23 @@ describe('serviceInitializer utilities', () => {
         baseLogger,
         { requiredMethods: ['x'], isFunction: undefined }
       );
+    });
+  });
+
+  describe('setupService', () => {
+    it('initializes logger then validates deps', () => {
+      const deps = {
+        depA: { value: {}, requiredMethods: ['a'] },
+      };
+      const logger = setupService('Svc', baseLogger, deps);
+      expect(baseInitLogger).toHaveBeenCalledWith('Svc', baseLogger);
+      expect(validateDependency).toHaveBeenCalledWith(
+        deps.depA.value,
+        'Svc: depA',
+        expect.any(Object),
+        { requiredMethods: ['a'], isFunction: undefined }
+      );
+      expect(logger).toEqual({ prefix: 'Svc: ', logger: baseLogger });
     });
   });
 });

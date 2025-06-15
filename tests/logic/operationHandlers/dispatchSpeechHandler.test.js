@@ -3,7 +3,10 @@
  */
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import DispatchSpeechHandler from '../../../src/logic/operationHandlers/dispatchSpeechHandler.js';
-import { DISPLAY_SPEECH_ID } from '../../../src/constants/eventIds.js';
+import {
+  DISPLAY_SPEECH_ID,
+  DISPLAY_ERROR_ID,
+} from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -12,23 +15,25 @@ const makeLogger = () => ({
   error: jest.fn(),
 });
 
-const makeDispatcher = () => ({ dispatch: jest.fn() });
+const makeSafeDispatcher = () => ({ dispatch: jest.fn() });
 
 describe('DispatchSpeechHandler', () => {
   let logger;
-  let dispatcher;
+  let safeDispatcher;
   let handler;
 
   beforeEach(() => {
     logger = makeLogger();
-    dispatcher = makeDispatcher();
-    handler = new DispatchSpeechHandler({ dispatcher, logger });
+    safeDispatcher = makeSafeDispatcher();
+    handler = new DispatchSpeechHandler({ dispatcher: safeDispatcher, logger });
     jest.clearAllMocks();
   });
 
   test('constructor throws with invalid deps', () => {
     expect(() => new DispatchSpeechHandler({ logger })).toThrow();
-    expect(() => new DispatchSpeechHandler({ dispatcher })).toThrow();
+    expect(
+      () => new DispatchSpeechHandler({ dispatcher: safeDispatcher })
+    ).toThrow();
   });
 
   const base = { entity_id: 'e1', speech_content: 'hi' };
@@ -68,9 +73,33 @@ describe('DispatchSpeechHandler', () => {
       ...expectedExtras,
     };
     handler.execute(params, {});
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       DISPLAY_SPEECH_ID,
       expected
+    );
+  });
+
+  test('dispatches error event on invalid parameters', () => {
+    handler.execute(null, {});
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: 'DISPATCH_SPEECH: invalid parameters.',
+      })
+    );
+  });
+
+  test('dispatches error event if underlying dispatch throws', () => {
+    safeDispatcher.dispatch.mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    const params = { entity_id: 'e1', speech_content: 'oops' };
+    handler.execute(params, {});
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: 'DISPATCH_SPEECH: Error dispatching display_speech.',
+      })
     );
   });
 });

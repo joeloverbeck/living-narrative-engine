@@ -7,6 +7,7 @@
 
 // --- Base Class Import ---
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
@@ -75,8 +76,6 @@ class EntityLoader extends BaseManifestItemLoader {
     //     this._logger.warn(`EntityLoader: Schema ID for 'entities' is missing. Entity validation will be skipped or may fail.`);
     // }
     // --- [LOADER-REFACTOR-04 Change END] ---
-
-    this._logger.debug(`EntityLoader: Initialized.`);
   }
 
   /**
@@ -217,14 +216,14 @@ class EntityLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `EntityLoader [${modId}]: Delegating storage for original type '${typeName}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entities' category.`
     );
-    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
-      'id',
-      'entities',
+      idProp: 'id',
+      category: 'entities',
       modId,
       filename,
-      { allowFallback: true }
-    );
+      parseOptions: { allowFallback: true },
+    });
 
     const finalRegistryKey = qualifiedId;
 

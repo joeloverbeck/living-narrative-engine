@@ -17,6 +17,7 @@ import CommandOutcomeInterpreter from '../../commands/interpreters/commandOutcom
 
 // operation handlers
 import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../logic/operationHandlers/dispatchSpeechHandler.js';
 import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
@@ -32,6 +33,8 @@ import GetNameHandler from '../../logic/operationHandlers/getNameHandler.js';
 import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
 import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler';
+import EstablishFollowRelationHandler from '../../logic/operationHandlers/establishFollowRelationHandler.js';
+import BreakFollowRelationHandler from '../../logic/operationHandlers/breakFollowRelationHandler.js';
 import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler';
 import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
 import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler';
@@ -39,6 +42,7 @@ import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFi
 import MathHandler from '../../logic/operationHandlers/mathHandler.js';
 import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler.js';
 import IfHandler from '../../logic/operationHandlers/ifHandler.js';
+import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyContextArrayHandler.js';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -71,6 +75,18 @@ export function registerInterpreters(container) {
         new Handler({
           logger: c.resolve(tokens.ILogger),
           dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DispatchPerceptibleEventHandler,
+      DispatchPerceptibleEventHandler,
+      (c, Handler) =>
+        new Handler({
+          dispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          logger: c.resolve(tokens.ILogger),
+          addPerceptionLogEntryHandler: c.resolve(
+            tokens.AddPerceptionLogEntryHandler
+          ),
         }),
     ],
     [
@@ -124,6 +140,7 @@ export function registerInterpreters(container) {
         new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [
@@ -133,6 +150,7 @@ export function registerInterpreters(container) {
         new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [
@@ -204,6 +222,32 @@ export function registerInterpreters(container) {
         }),
     ],
     [
+      tokens.EstablishFollowRelationHandler,
+      EstablishFollowRelationHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          rebuildLeaderListCacheHandler: c.resolve(
+            tokens.RebuildLeaderListCacheHandler
+          ),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.BreakFollowRelationHandler,
+      BreakFollowRelationHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          rebuildLeaderListCacheHandler: c.resolve(
+            tokens.RebuildLeaderListCacheHandler
+          ),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
       tokens.AddPerceptionLogEntryHandler,
       AddPerceptionLogEntryHandler,
       (c, H) =>
@@ -243,10 +287,16 @@ export function registerInterpreters(container) {
         new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
-          // --- FIX START ---
-          // The handler's constructor requires an ISafeEventDispatcher, which was missing.
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-          // --- FIX END ---
+        }),
+    ],
+    [
+      tokens.ModifyContextArrayHandler,
+      ModifyContextArrayHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [
@@ -303,6 +353,10 @@ export function registerInterpreters(container) {
         c.resolve(tkn).execute(...args);
 
     registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
+    registry.register(
+      'DISPATCH_PERCEPTIBLE_EVENT',
+      bind(tokens.DispatchPerceptibleEventHandler)
+    );
     registry.register('DISPATCH_SPEECH', bind(tokens.DispatchSpeechHandler));
     registry.register('LOG', bind(tokens.LogHandler));
     registry.register('MODIFY_COMPONENT', bind(tokens.ModifyComponentHandler));
@@ -335,6 +389,14 @@ export function registerInterpreters(container) {
       bind(tokens.CheckFollowCycleHandler)
     );
     registry.register(
+      'ESTABLISH_FOLLOW_RELATION',
+      bind(tokens.EstablishFollowRelationHandler)
+    );
+    registry.register(
+      'BREAK_FOLLOW_RELATION',
+      bind(tokens.BreakFollowRelationHandler)
+    );
+    registry.register(
       'ADD_PERCEPTION_LOG_ENTRY',
       bind(tokens.AddPerceptionLogEntryHandler)
     );
@@ -343,7 +405,14 @@ export function registerInterpreters(container) {
       'MODIFY_ARRAY_FIELD',
       bind(tokens.ModifyArrayFieldHandler)
     );
+    
     registry.register('IF', bind(tokens.IfHandler));
+
+    registry.register(
+      'MODIFY_CONTEXT_ARRAY',
+      bind(tokens.ModifyContextArrayHandler)
+    );
+
     registry.register('IF_CO_LOCATED', bind(tokens.IfCoLocatedHandler));
     registry.register('MATH', bind(tokens.MathHandler));
 

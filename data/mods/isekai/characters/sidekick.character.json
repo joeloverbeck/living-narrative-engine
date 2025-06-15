@@ -75,6 +75,9 @@
           "timestamp": "2025-06-05T20:24:49Z"
         }
       ]
+    },
+    "core:movement": {
+      "locked": false
     }
   }
 }

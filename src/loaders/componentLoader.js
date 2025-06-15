@@ -1,10 +1,9 @@
 // src/loaders/componentLoader.js
 
-import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { BaseInlineSchemaLoader } from './baseInlineSchemaLoader.js';
 
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
-import { extractBaseId } from '../utils/idUtils.js';
-import { registerInlineSchema } from '../utils/schemaUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -25,9 +24,9 @@ import { registerInlineSchema } from '../utils/schemaUtils.js';
  * and implements the component-definition-specific processing logic in `_processFetchedItem`.
  *
  * @class ComponentLoader
- * @augments BaseManifestItemLoader
+ * @augments BaseInlineSchemaLoader
  */
-class ComponentLoader extends BaseManifestItemLoader {
+class ComponentLoader extends BaseInlineSchemaLoader {
   /**
    * Initializes the ComponentLoader by calling the parent constructor with the specific type name 'components'.
    *
@@ -55,7 +54,6 @@ class ComponentLoader extends BaseManifestItemLoader {
       dataRegistry,
       logger
     );
-    this._logger.debug(`ComponentLoader: Initialized.`);
   }
 
   /**
@@ -106,53 +104,34 @@ class ComponentLoader extends BaseManifestItemLoader {
       );
       throw error;
     }
-    this._logger.debug(
-      `ComponentLoader [${modId}]: Extracted full ID '${trimmedComponentIdFromFile}' and base ID '${baseComponentId}' from ${filename}.`
-    );
-
-    // --- 3. Schema Registration with Override Check ---
-    this._logger.debug(
-      `ComponentLoader [${modId}]: Attempting to register/manage data schema using FULL ID '${trimmedComponentIdFromFile}'.`
-    );
-    await registerInlineSchema(
-      this._schemaValidator,
-      dataSchema,
-      trimmedComponentIdFromFile,
-      this._logger,
-      {
-        warnMessage: `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${trimmedComponentIdFromFile}'.`,
-        successDebugMessage: `ComponentLoader [${modId}]: Registered dataSchema for component ID '${trimmedComponentIdFromFile}' from file '${filename}'.`,
-        errorLogMessage: `ComponentLoader [${modId}]: Error registering data schema for component '${trimmedComponentIdFromFile}' from file '${filename}'.`,
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
+      data,
+      idProp: 'id',
+      category: 'components',
+      modId,
+      filename,
+      schemaProp: 'dataSchema',
+      schemaMessages: (fullId) => ({
+        warnMessage: `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${fullId}'.`,
+        successDebugMessage: `ComponentLoader [${modId}]: Registered dataSchema for component ID '${fullId}' from file '${filename}'.`,
+        errorLogMessage: `ComponentLoader [${modId}]: Error registering data schema for component '${fullId}' from file '${filename}'.`,
         errorContext: (err) => ({
           modId,
           filename,
-          componentId: trimmedComponentIdFromFile,
+          componentId: fullId,
           error: err,
         }),
-      }
-    );
+      }),
+    });
 
-    // --- 4. Construct Final Item ID ---
-    const finalRegistryKey = `${modId}:${baseComponentId}`; // e.g., "core:health"
     this._logger.debug(
-      `ComponentLoader [${modId}]: Constructed final registry key: '${finalRegistryKey}'.`
+      `ComponentLoader [${modId}]: Extracted full ID '${trimmedComponentIdFromFile}' and base ID '${baseComponentId}' from ${filename}.`
     );
-
-    // --- 5. Store Component Definition Metadata (Using Helper) ---
     this._logger.debug(
-      `ComponentLoader [${modId}]: Delegating storage of component definition metadata using BASE ID '${baseComponentId}' to base class helper.`
+      `ComponentLoader [${modId}]: Constructed final registry key: '${qualifiedId}'.`
     );
-    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
-      data,
-      'id',
-      'components',
-      modId,
-      filename
-    );
-
-    // --- 6. Return Result Object ---
     this._logger.debug(
-      `ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
+      `ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
     );
     return { qualifiedId, didOverride };
   }

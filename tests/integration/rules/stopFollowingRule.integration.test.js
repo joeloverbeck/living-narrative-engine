@@ -1,5 +1,6 @@
 /**
  * @file Integration tests for the stop_following rule.
+ * @see tests/integration/rules/stopFollowingRule.integration.test.js
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
@@ -13,11 +14,13 @@ import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
-import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
+import BreakFollowRelationHandler from '../../../src/logic/operationHandlers/breakFollowRelationHandler.js';
+import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
+import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
@@ -114,6 +117,24 @@ class SimpleEntityManager {
   }
 }
 
+function makeStubRebuild(em) {
+  return {
+    execute({ leaderIds }) {
+      for (const lid of leaderIds) {
+        const followers = [];
+        for (const [id, ent] of em.entities) {
+          const f = ent.components[FOLLOWING_COMPONENT_ID];
+          if (f?.leaderId === lid) followers.push(id);
+        }
+        const leader = em.entities.get(lid);
+        if (leader) {
+          leader.components[LEADING_COMPONENT_ID] = { followers };
+        }
+      }
+    },
+  };
+}
+
 /**
  * Helper to (re)initialize the interpreter with a fresh entity manager.
  *
@@ -131,12 +152,18 @@ function init(entities) {
   jsonLogic = new JsonLogicEvaluationService({ logger });
 
   const handlers = {
-    REMOVE_COMPONENT: new RemoveComponentHandler({
+    BREAK_FOLLOW_RELATION: new BreakFollowRelationHandler({
       entityManager,
       logger,
+      rebuildLeaderListCacheHandler: makeStubRebuild(entityManager),
       safeEventDispatcher: safeDispatcher,
     }),
-    MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
+    }),
+    QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
@@ -144,6 +171,7 @@ function init(entities) {
     QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
       entityManager,
       logger,
+      safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
@@ -278,7 +306,19 @@ describe('core_handle_stop_following rule integration', () => {
     });
     const types = events.map((e) => e.eventType);
     expect(types).toEqual(
-      expect.arrayContaining(['core:perceptible_event', 'core:turn_ended'])
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
+
+    const successEvent = events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+    expect(successEvent).toBeDefined();
+    expect(successEvent.payload.message).toBe(
+      'Follower stops following Leader.'
     );
   });
 
@@ -319,8 +359,21 @@ describe('core_handle_stop_following rule integration', () => {
       followers: [],
     });
     const types = events.map((e) => e.eventType);
-    expect(types).toEqual(expect.arrayContaining(['core:turn_ended']));
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
     expect(types).not.toContain('core:perceptible_event');
+
+    const successEvent = events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+    expect(successEvent).toBeDefined();
+    expect(successEvent.payload.message).toBe(
+      'Follower stops following Leader.'
+    );
   });
 
   it('handles not-following branch with error event', () => {

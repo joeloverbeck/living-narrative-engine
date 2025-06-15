@@ -61,100 +61,10 @@
         },
         "then_actions": [
           {
-            "type": "HAS_COMPONENT",
-            "comment": "Check if the actor was previously following someone.",
+            "type": "ESTABLISH_FOLLOW_RELATION",
             "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:following",
-              "result_variable": "wasFollowing"
-            }
-          },
-          {
-            "type": "IF",
-            "comment": "IF an old leader existed, remove actor from their list.",
-            "parameters": {
-              "condition": {
-                "var": "context.wasFollowing"
-              },
-              "then_actions": [
-                {
-                  "type": "QUERY_COMPONENT",
-                  "comment": "Now that we know the component exists, get its data.",
-                  "parameters": {
-                    "entity_ref": "actor",
-                    "component_type": "core:following",
-                    "result_variable": "oldFollowComp"
-                  }
-                },
-                {
-                  "type": "MODIFY_ARRAY_FIELD",
-                  "comment": "Remove this actor from the old leader's 'core:leading' component.",
-                  "parameters": {
-                    "entity_ref": {
-                      "entityId": "{context.oldFollowComp.leaderId}"
-                    },
-                    "component_type": "core:leading",
-                    "field": "followers",
-                    "mode": "remove_by_value",
-                    "value": "{event.payload.actorId}"
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "type": "ADD_COMPONENT",
-            "comment": "Authoritative mutation – the follower now points at the new leader.",
-            "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:following",
-              "value": {
-                "leaderId": "{event.payload.targetId}"
-              }
-            }
-          },
-          {
-            "type": "HAS_COMPONENT",
-            "comment": "Check if the new leader already has a 'leading' component.",
-            "parameters": {
-              "entity_ref": "target",
-              "component_type": "core:leading",
-              "result_variable": "leaderHasLeadingComponent"
-            }
-          },
-          {
-            "type": "IF",
-            "comment": "Conditionally add or modify the leader's component.",
-            "parameters": {
-              "condition": {
-                "var": "context.leaderHasLeadingComponent"
-              },
-              "then_actions": [
-                {
-                  "type": "MODIFY_ARRAY_FIELD",
-                  "comment": "This now only runs if the component already exists.",
-                  "parameters": {
-                    "entity_ref": "target",
-                    "component_type": "core:leading",
-                    "field": "followers",
-                    "mode": "push",
-                    "value": "{event.payload.actorId}"
-                  }
-                }
-              ],
-              "else_actions": [
-                {
-                  "type": "ADD_COMPONENT",
-                  "comment": "If component doesn't exist, create it with the first follower.",
-                  "parameters": {
-                    "entity_ref": "target",
-                    "component_type": "core:leading",
-                    "value": {
-                      "followers": ["{event.payload.actorId}"]
-                    }
-                  }
-                }
-              ]
+              "follower_id": "{event.payload.actorId}",
+              "leader_id": "{event.payload.targetId}"
             }
           },
           {
@@ -190,20 +100,15 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "comment": "Human-visible log: “<Follower> has decided to follow <Leader>”.",
             "parameters": {
-              "eventType": "core:perceptible_event",
-              "payload": {
-                "eventName": "core:perceptible_event",
-                "locationId": "{context.actorPos.locationId}",
-                "descriptionText": "{context.followerName} has decided to follow {context.leaderName}.",
-                "timestamp": "{context.nowIso}",
-                "perceptionType": "action_target_general",
-                "actorId": "{event.payload.actorId}",
-                "targetId": "{event.payload.targetId}",
-                "involvedEntities": []
-              }
+              "location_id": "{context.actorPos.locationId}",
+              "description_text": "{context.followerName} has decided to follow {context.leaderName}.",
+              "perception_type": "action_target_general",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}",
+              "involved_entities": []
             }
           },
           {

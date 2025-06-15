@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
+import { safeDispatchError } from '../utils/safeDispatchError.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
@@ -32,13 +33,21 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
   #logger;
 
   /**
+   * @private
+   * @type {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher}
+   */
+  #dispatcher;
+
+  /**
    * Creates an instance of ClientApiKeyProvider.
    *
    * @param {object} params - The parameters for the ClientApiKeyProvider.
    * @param {ILogger} params.logger - An instance conforming to ILogger for internal logging.
-   * @throws {Error} If logger is invalid.
+   * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} params.safeEventDispatcher
+   *        - Dispatcher used for error reporting.
+   * @throws {Error} If logger or dispatcher is invalid.
    */
-  constructor({ logger }) {
+  constructor({ logger, safeEventDispatcher }) {
     super();
 
     if (
@@ -50,12 +59,20 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
       const errorMsg =
         'ClientApiKeyProvider: Constructor requires a valid logger instance.';
       // Use console.error as a last resort if logger is completely unusable
-      (logger && typeof logger.error === 'function' ? logger : console).error(
-        errorMsg
-      );
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.dispatch !== 'function'
+    ) {
+      const errorMsg =
+        'ClientApiKeyProvider: Constructor requires a valid ISafeEventDispatcher.';
+      console.error(errorMsg);
       throw new Error(errorMsg);
     }
     this.#logger = logger;
+    this.#dispatcher = safeEventDispatcher;
     this.#logger.debug('ClientApiKeyProvider: Instance created.');
   }
 
@@ -80,8 +97,10 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
       !environmentContext ||
       typeof environmentContext.isClient !== 'function'
     ) {
-      this.#logger.error(
-        `ClientApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`
+      safeDispatchError(
+        this.#dispatcher,
+        `ClientApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`,
+        { providedValue: environmentContext }
       );
       return null;
     }
@@ -94,8 +113,10 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
     }
 
     if (!llmConfig) {
-      this.#logger.error(
-        `ClientApiKeyProvider.getKey (${llmId}): llmConfig is null or undefined.`
+      safeDispatchError(
+        this.#dispatcher,
+        `ClientApiKeyProvider.getKey (${llmId}): llmConfig is null or undefined.`,
+        { providedValue: llmConfig }
       );
       return null;
     }
@@ -117,8 +138,10 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
         llmConfig.apiKeyFileName.trim() !== '';
 
       if (!hasApiKeyEnvVar && !hasApiKeyFileName) {
-        this.#logger.error(
-          `ClientApiKeyProvider.getKey (${llmId}): Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`
+        safeDispatchError(
+          this.#dispatcher,
+          `ClientApiKeyProvider.getKey (${llmId}): Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`,
+          { apiType }
         );
       } else {
         this.#logger.debug(

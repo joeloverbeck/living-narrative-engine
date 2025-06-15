@@ -17,7 +17,7 @@
 
 // --- Base Class Import ---
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js'; // Correct path assumed based on sibling loaders
-import { parseAndValidateId } from '../utils/idUtils.js';
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 
 /**
  * Loads action definitions from mods.
@@ -59,7 +59,6 @@ class ActionLoader extends BaseManifestItemLoader {
       dataRegistry,
       logger
     );
-    this._logger.debug(`ActionLoader: Initialized.`);
   }
 
   /**
@@ -92,13 +91,13 @@ class ActionLoader extends BaseManifestItemLoader {
     // No need to call this._validatePrimarySchema(data, filename, modId, resolvedPath); here
 
     // --- Step 2 & 3: ID Handling and Storage via Helper ---
-    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
-      'id',
-      'actions',
+      idProp: 'id',
+      category: 'actions',
       modId,
-      filename
-    );
+      filename,
+    });
 
     // --- Step 4: Return Value ---
     this._logger.debug(

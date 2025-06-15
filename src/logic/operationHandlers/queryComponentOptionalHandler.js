@@ -23,12 +23,16 @@ import { resolveEntityId } from '../../utils/entityRefUtils.js';
  */
 
 import storeResult from '../../utils/contextVariableUtils.js';
+import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 class QueryComponentOptionalHandler {
   #entityManager;
   #logger;
+  /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #dispatcher;
 
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     if (
       !entityManager ||
       typeof entityManager.getComponentData !== 'function'
@@ -49,6 +53,12 @@ class QueryComponentOptionalHandler {
     }
     this.#entityManager = entityManager;
     this.#logger = logger;
+    if (!safeEventDispatcher?.dispatch) {
+      throw new Error(
+        'QueryComponentOptionalHandler requires an ISafeEventDispatcher.'
+      );
+    }
+    this.#dispatcher = safeEventDispatcher;
   }
 
   /**
@@ -61,7 +71,8 @@ class QueryComponentOptionalHandler {
     const logger = executionContext?.logger ?? this.#logger;
 
     if (!params || typeof params !== 'object') {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentOptionalHandler: Missing or invalid parameters object.',
         { params }
       );
@@ -72,7 +83,8 @@ class QueryComponentOptionalHandler {
       !executionContext?.evaluationContext?.context ||
       typeof executionContext.evaluationContext.context !== 'object'
     ) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentOptionalHandler: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
         { executionContext }
       );
@@ -82,14 +94,16 @@ class QueryComponentOptionalHandler {
     const { entity_ref, component_type, result_variable } = params;
 
     if (!entity_ref) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentOptionalHandler: Missing required "entity_ref" parameter.',
         { params }
       );
       return;
     }
     if (typeof component_type !== 'string' || !component_type.trim()) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentOptionalHandler: Missing or invalid required "component_type" parameter (must be non-empty string).',
         { params }
       );
@@ -98,7 +112,8 @@ class QueryComponentOptionalHandler {
     const trimmedComponentType = component_type.trim();
 
     if (typeof result_variable !== 'string' || !result_variable.trim()) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentOptionalHandler: Missing or invalid required "result_variable" parameter (must be non-empty string).',
         { params }
       );
@@ -108,7 +123,8 @@ class QueryComponentOptionalHandler {
 
     const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
-      logger.error(
+      safeDispatchError(
+        this.#dispatcher,
         'QueryComponentOptionalHandler: Could not resolve entity id from entity_ref.',
         { entityRef: entity_ref }
       );
@@ -160,15 +176,15 @@ class QueryComponentOptionalHandler {
         );
       }
     } catch (error) {
-      logger.error(
-        `QueryComponentOptionalHandler: Error during EntityManager.getComponentData for component "${trimmedComponentType}" on entity "${entityId}".`,
-        {
+      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `QueryComponentOptionalHandler: Error during EntityManager.getComponentData for component "${trimmedComponentType}" on entity "${entityId}".`,
+        details: {
           error: error.message,
           stack: error.stack,
           params,
           resolvedEntityId: entityId,
-        }
-      );
+        },
+      });
       const stored = storeResult(
         trimmedResultVar,
         null,

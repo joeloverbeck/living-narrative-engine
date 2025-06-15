@@ -117,20 +117,15 @@
                   }
                 },
                 {
-                  "type": "DISPATCH_EVENT",
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
                   "comment": "Dispatch perceptible event for actor leaving current location.",
                   "parameters": {
-                    "eventType": "core:perceptible_event",
-                    "payload": {
-                      "eventName": "core:perceptible_event",
-                      "locationId": "{context.actorPositionComponentPreMove.locationId}",
-                      "descriptionText": "{context.actorNameComponent.text} leaves to go to {context.targetLocationNameComponent.text}.",
-                      "timestamp": "{context.currentTimestamp}",
-                      "perceptionType": "character_exit",
-                      "actorId": "{event.payload.actorId}",
-                      "targetId": null,
-                      "involvedEntities": []
-                    }
+                    "location_id": "{context.actorPositionComponentPreMove.locationId}",
+                    "description_text": "{context.actorNameComponent.text} leaves to go to {context.targetLocationNameComponent.text}.",
+                    "perception_type": "character_exit",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
                   }
                 },
                 {
@@ -160,20 +155,15 @@
                   }
                 },
                 {
-                  "type": "DISPATCH_EVENT",
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
                   "comment": "Dispatch perceptible event for actor entering new location.",
                   "parameters": {
-                    "eventType": "core:perceptible_event",
-                    "payload": {
-                      "eventName": "core:perceptible_event",
-                      "locationId": "{context.resolvedTargetLocationId}",
-                      "descriptionText": "{context.actorNameComponent.text} arrives from {context.currentLocationNameComponentPreMove.text}.",
-                      "timestamp": "{context.currentTimestamp}",
-                      "perceptionType": "character_enter",
-                      "actorId": "{event.payload.actorId}",
-                      "targetId": null,
-                      "involvedEntities": []
-                    }
+                    "location_id": "{context.resolvedTargetLocationId}",
+                    "description_text": "{context.actorNameComponent.text} arrives from {context.currentLocationNameComponentPreMove.text}.",
+                    "perception_type": "character_enter",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
                   }
                 },
                 {

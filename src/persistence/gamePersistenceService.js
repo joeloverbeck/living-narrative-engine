@@ -1,4 +1,5 @@
 import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.js';
+import SaveMetadataBuilder from './saveMetadataBuilder.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -9,6 +10,7 @@ import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.j
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../engine/playtimeTracker.js').default} PlaytimeTracker */
+/** @typedef {import('../interfaces/IComponentCleaningService.js').IComponentCleaningService} IComponentCleaningService */
 /** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../loaders/worldLoader.js').default} WorldLoader */
@@ -16,31 +18,50 @@ import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.j
 
 // --- Import Tokens ---
 // tokens import removed as not used after refactor
-import { deepClone } from '../utils/objectUtils.js';
+
 // --- MODIFICATION START: Import component IDs for cleaning logic ---
-import {
-  CURRENT_ACTOR_COMPONENT_ID,
-  NOTES_COMPONENT_ID,
-  PERCEPTION_LOG_COMPONENT_ID,
-  SHORT_TERM_MEMORY_COMPONENT_ID,
-} from '../constants/componentIds.js';
+import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CORE_MOD_ID } from '../constants/core';
+import {
+  PersistenceError,
+  PersistenceErrorCodes,
+} from './persistenceErrors.js';
 // --- MODIFICATION END ---
 
+/**
+ * @class GamePersistenceService
+ * @description Handles capturing, saving, and restoring game state.
+ * @implements {IGamePersistenceService}
+ */
 class GamePersistenceService extends IGamePersistenceService {
   #logger;
   #saveLoadService;
   #entityManager;
   #dataRegistry;
   #playtimeTracker;
-  #componentCleaners;
+  #componentCleaningService;
+  #metadataBuilder;
 
+  /**
+   * Creates a new GamePersistenceService instance.
+   *
+   * @param {object} dependencies - Service dependencies.
+   * @param {ILogger} dependencies.logger - Logging service.
+   * @param {ISaveLoadService} dependencies.saveLoadService - Save/load service.
+   * @param {EntityManager} dependencies.entityManager - Entity manager.
+   * @param {IDataRegistry} dependencies.dataRegistry - Data registry.
+   * @param {PlaytimeTracker} dependencies.playtimeTracker - Playtime tracker.
+   * @param {IComponentCleaningService} dependencies.componentCleaningService - Component cleaning service.
+   * @param {SaveMetadataBuilder} dependencies.metadataBuilder - Builder for save metadata.
+   */
   constructor({
     logger,
     saveLoadService,
     entityManager,
     dataRegistry,
     playtimeTracker,
+    componentCleaningService,
+    metadataBuilder,
   }) {
     super();
     const missingDependencies = [];
@@ -49,6 +70,9 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!entityManager) missingDependencies.push('entityManager');
     if (!dataRegistry) missingDependencies.push('dataRegistry');
     if (!playtimeTracker) missingDependencies.push('playtimeTracker');
+    if (!componentCleaningService)
+      missingDependencies.push('componentCleaningService');
+    if (!metadataBuilder) missingDependencies.push('metadataBuilder');
 
     if (missingDependencies.length > 0) {
       const errorMessage = `GamePersistenceService: Fatal - Missing required dependencies: ${missingDependencies.join(', ')}.`;
@@ -65,109 +89,211 @@ class GamePersistenceService extends IGamePersistenceService {
     this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#playtimeTracker = playtimeTracker;
-    this.#componentCleaners = new Map([
-      [NOTES_COMPONENT_ID, this.#cleanNotesComponent.bind(this)],
-      [
-        SHORT_TERM_MEMORY_COMPONENT_ID,
-        this.#cleanShortTermMemoryComponent.bind(this),
-      ],
-      [
-        PERCEPTION_LOG_COMPONENT_ID,
-        this.#cleanPerceptionLogComponent.bind(this),
-      ],
-    ]);
+    this.#componentCleaningService = componentCleaningService;
+    this.#metadataBuilder = metadataBuilder;
     this.#logger.debug('GamePersistenceService: Instance created.');
   }
 
   /**
-   * Deep clones and cleans component data based on configured cleaners.
-   *
-   * @param {string} componentId - The component identifier.
-   * @param {any} componentData - The raw component data.
-   * @returns {any} The cleaned clone of the component data.
+   * @description Serializes a single entity for saving.
+   * @param {Entity} entity - The entity instance to serialize.
+   * @returns {{instanceId: string, definitionId: string, components: Record<string, any>}}
+   *   Clean serialized representation of the entity.
    * @private
    */
-  #cleanComponentData(componentId, componentData) {
-    let dataToSave;
-    try {
-      dataToSave = deepClone(componentData);
-    } catch (e) {
-      this.#logger.error(
-        'GamePersistenceService.#cleanComponentData deepClone failed:',
-        e,
+  #serializeEntity(entity) {
+    const components = this.#applyComponentCleaners(
+      entity.componentEntries,
+      entity.id
+    );
+    return {
+      instanceId: entity.id,
+      definitionId: entity.definitionId,
+      components,
+    };
+  }
+
+  /**
+   * @description Cleans and prepares component data for serialization.
+   * @param {Map<string, any>} componentEntries - Raw component map from the entity.
+   * @param {string} entityId - Identifier of the owning entity (for logging).
+   * @returns {Record<string, any>} Object containing cleaned components.
+   * @private
+   */
+  #applyComponentCleaners(componentEntries, entityId) {
+    const components = {};
+    for (const [componentTypeId, componentData] of componentEntries) {
+      if (componentTypeId === CURRENT_ACTOR_COMPONENT_ID) {
+        this.#logger.debug(
+          `GamePersistenceService.captureCurrentGameState: Skipping component '${CURRENT_ACTOR_COMPONENT_ID}' for entity '${entityId}' during save.`
+        );
+        continue;
+      }
+
+      const dataToSave = this.#componentCleaningService.clean(
+        componentTypeId,
         componentData
       );
-      throw new Error('Failed to deep clone object data.');
-    }
 
-    const cleaner = this.#componentCleaners.get(componentId);
-    if (cleaner) {
-      dataToSave = cleaner(dataToSave);
+      if (dataToSave !== null && typeof dataToSave !== 'object') {
+        components[componentTypeId] = dataToSave;
+      } else if (Object.keys(dataToSave).length > 0) {
+        components[componentTypeId] = dataToSave;
+      } else {
+        this.#logger.debug(
+          `Skipping component '${componentTypeId}' for entity '${entityId}' as it is empty after cleaning.`
+        );
+      }
     }
-    return dataToSave;
+    return components;
   }
 
   /**
-   * Removes empty `notes` arrays from notes components.
-   *
-   * @param {any} data - Component data to clean.
-   * @returns {any} Cleaned component data.
+   * @description Restores a single serialized entity via the EntityManager.
+   * @param {{instanceId: string, definitionId: string, components: Record<string, any>}} savedEntityData
+   *   - Serialized entity data from the save file.
+   * @returns {void}
    * @private
    */
-  #cleanNotesComponent(data) {
-    if (data.notes && Array.isArray(data.notes) && data.notes.length === 0) {
-      this.#logger.debug(
-        `Omitting empty 'notes' array from component '${NOTES_COMPONENT_ID}'.`
+  #restoreEntity(savedEntityData) {
+    try {
+      const restoredEntity =
+        this.#entityManager.reconstructEntity(savedEntityData);
+      if (!restoredEntity) {
+        this.#logger.warn(
+          `GamePersistenceService.restoreGameState: Failed to restore entity with instanceId: ${savedEntityData.instanceId} (Def: ${savedEntityData.definitionId}). reconstructEntity indicated failure.`
+        );
+      }
+    } catch (entityError) {
+      this.#logger.warn(
+        `GamePersistenceService.restoreGameState: Error during reconstructEntity for instanceId: ${savedEntityData.instanceId}. Error: ${entityError.message}. Skipping.`,
+        entityError
       );
-      delete data.notes;
     }
-    return data;
   }
 
   /**
-   * Removes blank `thoughts` strings from short-term memory components.
-   *
-   * @param {any} data - Component data to clean.
-   * @returns {any} Cleaned component data.
+   * @description Validates restore data and required dependencies.
+   * @param {SaveGameStructure | any} data - Parsed save data object.
+   * @returns {{success: false, error: PersistenceError} | null} Failure object or null if validation passes.
    * @private
    */
-  #cleanShortTermMemoryComponent(data) {
-    if (
-      data.thoughts &&
-      typeof data.thoughts === 'string' &&
-      !data.thoughts.trim()
-    ) {
-      this.#logger.debug(
-        `Omitting blank 'thoughts' from component '${SHORT_TERM_MEMORY_COMPONENT_ID}'.`
+  #validateRestoreData(data) {
+    if (!data?.gameState) {
+      const errorMsg =
+        'Invalid save data structure provided (missing gameState).';
+      this.#logger.error(
+        `GamePersistenceService.restoreGameState: ${errorMsg}`
       );
-      delete data.thoughts;
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_GAME_STATE,
+          errorMsg
+        ),
+      };
     }
-    return data;
+    if (!this.#entityManager)
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          'EntityManager not available.'
+        ),
+      };
+    if (!this.#playtimeTracker)
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          'PlaytimeTracker not available.'
+        ),
+      };
+    return null;
   }
 
   /**
-   * Cleans perception log entries of empty speech fields.
-   *
-   * @param {any} data - Component data to clean.
-   * @returns {any} Cleaned component data.
+   * @description Clears existing entities before restoration.
+   * @returns {{success: false, error: PersistenceError} | null} Failure object or null on success.
    * @private
    */
-  #cleanPerceptionLogComponent(data) {
-    if (data.log && Array.isArray(data.log)) {
-      data.log.forEach((entry) => {
-        if (
-          entry?.action?.speech &&
-          typeof entry.action.speech === 'string' &&
-          !entry.action.speech.trim()
-        ) {
-          this.#logger.debug(
-            "Omitting blank 'speech' from a perception log entry."
-          );
-          delete entry.action.speech;
-        }
-      });
+  #clearExistingEntities() {
+    try {
+      this.#entityManager.clearAll();
+      this.#logger.debug(
+        'GamePersistenceService.restoreGameState: Existing entity state cleared.'
+      );
+      return null;
+    } catch (error) {
+      const errorMsg = `Failed to clear existing entity state: ${error.message}`;
+      this.#logger.error(
+        `GamePersistenceService.restoreGameState: ${errorMsg}`,
+        error
+      );
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          `Critical error during state clearing: ${errorMsg}`
+        ),
+      };
     }
-    return data;
+  }
+
+  /**
+   * @description Restores all serialized entities from save data.
+   * @param {any[]} entitiesArray - Array of serialized entity records.
+   * @returns {void}
+   * @private
+   */
+  #restoreEntities(entitiesArray) {
+    const entitiesToRestore = entitiesArray;
+    if (!Array.isArray(entitiesToRestore)) {
+      this.#logger.warn(
+        'GamePersistenceService.restoreGameState: entitiesToRestore is not an array. No entities will be restored.'
+      );
+      return;
+    }
+    for (const savedEntityData of entitiesToRestore) {
+      if (!savedEntityData?.instanceId || !savedEntityData?.definitionId) {
+        this.#logger.warn(
+          `GamePersistenceService.restoreGameState: Invalid entity data in save (missing instanceId or definitionId). Skipping. Data: ${JSON.stringify(savedEntityData)}`
+        );
+        continue;
+      }
+      this.#restoreEntity(savedEntityData);
+    }
+    this.#logger.debug(
+      'GamePersistenceService.restoreGameState: Entity restoration complete.'
+    );
+  }
+
+  /**
+   * @description Restores accumulated playtime via PlaytimeTracker.
+   * @param {number | undefined} playtimeSeconds - Total playtime from metadata.
+   * @returns {void}
+   * @private
+   */
+  #restorePlaytime(playtimeSeconds) {
+    if (typeof playtimeSeconds === 'number') {
+      try {
+        this.#playtimeTracker.setAccumulatedPlaytime(playtimeSeconds);
+        this.#logger.debug(
+          `GamePersistenceService.restoreGameState: Restored accumulated playtime: ${playtimeSeconds}s.`
+        );
+      } catch (playtimeError) {
+        this.#logger.error(
+          `GamePersistenceService.restoreGameState: Error setting accumulated playtime: ${playtimeError.message}. Resetting.`,
+          playtimeError
+        );
+        this.#playtimeTracker.setAccumulatedPlaytime(0);
+      }
+    } else {
+      this.#logger.warn(
+        'GamePersistenceService.restoreGameState: Playtime data not found/invalid. Resetting playtime.'
+      );
+      this.#playtimeTracker.setAccumulatedPlaytime(0);
+    }
   }
 
   /**
@@ -212,31 +338,6 @@ class GamePersistenceService extends IGamePersistenceService {
   }
 
   /**
-   * Creates the metadata block for the save data.
-   *
-   * @param {string | null | undefined} activeWorldName - Name of the active world.
-   * @param {number} playtimeSeconds - Current total playtime.
-   * @returns {object} Metadata object for the save file.
-   * @private
-   */
-  #createMetadata(activeWorldName, playtimeSeconds) {
-    const currentWorldNameForMeta = activeWorldName || 'Unknown Game';
-    if (!activeWorldName) {
-      this.#logger.warn(
-        `GamePersistenceService.captureCurrentGameState: No activeWorldName was provided by the caller. Defaulting gameTitle to 'Unknown Game'.`
-      );
-    }
-    return {
-      saveFormatVersion: '1.0.0',
-      engineVersion: '0.1.0-stub',
-      gameTitle: currentWorldNameForMeta,
-      timestamp: new Date().toISOString(),
-      playtimeSeconds,
-      saveName: '',
-    };
-  }
-
-  /**
    * Captures the current game state.
    *
    * @param {string | null | undefined} activeWorldName - The name of the currently active world, passed from GameEngine.
@@ -258,35 +359,7 @@ class GamePersistenceService extends IGamePersistenceService {
 
     const entitiesData = [];
     for (const entity of this.#entityManager.activeEntities.values()) {
-      const components = {};
-      for (const [componentTypeId, componentData] of entity.componentEntries) {
-        if (componentTypeId === CURRENT_ACTOR_COMPONENT_ID) {
-          this.#logger.debug(
-            `GamePersistenceService.captureCurrentGameState: Skipping component '${CURRENT_ACTOR_COMPONENT_ID}' for entity '${entity.id}' during save.`
-          );
-          continue;
-        }
-
-        const dataToSave = this.#cleanComponentData(
-          componentTypeId,
-          componentData
-        );
-
-        if (dataToSave !== null && typeof dataToSave !== 'object') {
-          components[componentTypeId] = dataToSave;
-        } else if (Object.keys(dataToSave).length > 0) {
-          components[componentTypeId] = dataToSave;
-        } else {
-          this.#logger.debug(
-            `Skipping component '${componentTypeId}' for entity '${entity.id}' as it is empty after cleaning.`
-          );
-        }
-      }
-      entitiesData.push({
-        instanceId: entity.id,
-        definitionId: entity.definitionId,
-        components: components,
-      });
+      entitiesData.push(this.#serializeEntity(entity));
     }
     this.#logger.debug(
       `GamePersistenceService: Captured ${entitiesData.length} entities.`
@@ -299,7 +372,7 @@ class GamePersistenceService extends IGamePersistenceService {
       `GamePersistenceService: Fetched total playtime: ${currentTotalPlaytime}s.`
     );
 
-    const metadata = this.#createMetadata(
+    const metadata = this.#metadataBuilder.build(
       activeWorldName,
       currentTotalPlaytime
     );
@@ -347,7 +420,13 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!this.#saveLoadService) {
       const errorMsg = 'SaveLoadService is not available. Cannot save game.';
       this.#logger.error(`GamePersistenceService.saveGame: ${errorMsg}`);
-      return { success: false, error: errorMsg };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          errorMsg
+        ),
+      };
     }
 
     if (!this.isSavingAllowed(isEngineInitialized)) {
@@ -355,7 +434,13 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.warn(
         `GamePersistenceService.saveGame: Saving is not currently allowed.`
       );
-      return { success: false, error: errorMsg };
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          errorMsg
+        ),
+      };
     }
 
     try {
@@ -396,7 +481,13 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: `Unexpected error during save: ${errorMessage}`,
+        error:
+          error instanceof PersistenceError
+            ? error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                `Unexpected error during save: ${errorMessage}`
+              ),
       };
     }
   }
@@ -406,99 +497,18 @@ class GamePersistenceService extends IGamePersistenceService {
       'GamePersistenceService.restoreGameState: Starting game state restoration...'
     );
 
-    if (!deserializedSaveData?.gameState) {
-      const errorMsg =
-        'Invalid save data structure provided (missing gameState).';
-      this.#logger.error(
-        `GamePersistenceService.restoreGameState: ${errorMsg}`
-      );
-      return { success: false, error: errorMsg };
-    }
-    if (!this.#entityManager)
-      return { success: false, error: 'EntityManager not available.' };
-    if (!this.#playtimeTracker)
-      return { success: false, error: 'PlaytimeTracker not available.' };
+    const validationError = this.#validateRestoreData(deserializedSaveData);
+    if (validationError) return validationError;
 
-    try {
-      this.#entityManager.clearAll();
-      this.#logger.debug(
-        'GamePersistenceService.restoreGameState: Existing entity state cleared.'
-      );
-    } catch (error) {
-      const errorMsg = `Failed to clear existing entity state: ${error.message}`;
-      this.#logger.error(
-        `GamePersistenceService.restoreGameState: ${errorMsg}`,
-        error
-      );
-      return {
-        success: false,
-        error: `Critical error during state clearing: ${errorMsg}`,
-      };
-    }
+    const clearingResult = this.#clearExistingEntities();
+    if (clearingResult) return clearingResult;
 
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Restoring entities...'
     );
-    const entitiesToRestore = deserializedSaveData.gameState.entities;
 
-    if (!Array.isArray(entitiesToRestore)) {
-      this.#logger.warn(
-        'GamePersistenceService.restoreGameState: entitiesToRestore is not an array. No entities will be restored.'
-      );
-    } else {
-      for (const savedEntityData of entitiesToRestore) {
-        if (!savedEntityData?.instanceId || !savedEntityData?.definitionId) {
-          this.#logger.warn(
-            `GamePersistenceService.restoreGameState: Invalid entity data in save (missing instanceId or definitionId). Skipping. Data: ${JSON.stringify(savedEntityData)}`
-          );
-          continue;
-        }
-        try {
-          // When restoring, we explicitly tolerate missing keys (like 'thoughts' or 'notes')
-          // because reconstructEntity should not fail if a property is missing from the data.
-          const restoredEntity =
-            this.#entityManager.reconstructEntity(savedEntityData);
-          if (!restoredEntity) {
-            this.#logger.warn(
-              `GamePersistenceService.restoreGameState: Failed to restore entity with instanceId: ${savedEntityData.instanceId} (Def: ${savedEntityData.definitionId}). reconstructEntity indicated failure.`
-            );
-          }
-        } catch (entityError) {
-          this.#logger.warn(
-            `GamePersistenceService.restoreGameState: Error during reconstructEntity for instanceId: ${savedEntityData.instanceId}. Error: ${entityError.message}. Skipping.`,
-            entityError
-          );
-        }
-      }
-    }
-    this.#logger.debug(
-      'GamePersistenceService.restoreGameState: Entity restoration complete.'
-    );
-
-    if (
-      deserializedSaveData.metadata &&
-      typeof deserializedSaveData.metadata.playtimeSeconds === 'number'
-    ) {
-      try {
-        this.#playtimeTracker.setAccumulatedPlaytime(
-          deserializedSaveData.metadata.playtimeSeconds
-        );
-        this.#logger.debug(
-          `GamePersistenceService.restoreGameState: Restored accumulated playtime: ${deserializedSaveData.metadata.playtimeSeconds}s.`
-        );
-      } catch (playtimeError) {
-        this.#logger.error(
-          `GamePersistenceService.restoreGameState: Error setting accumulated playtime: ${playtimeError.message}. Resetting.`,
-          playtimeError
-        );
-        this.#playtimeTracker.setAccumulatedPlaytime(0);
-      }
-    } else {
-      this.#logger.warn(
-        'GamePersistenceService.restoreGameState: Playtime data not found/invalid. Resetting playtime.'
-      );
-      this.#playtimeTracker.setAccumulatedPlaytime(0);
-    }
+    this.#restoreEntities(deserializedSaveData.gameState.entities);
+    this.#restorePlaytime(deserializedSaveData.metadata?.playtimeSeconds);
 
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.'
@@ -520,7 +530,10 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!this.#saveLoadService) {
       return {
         success: false,
-        error: 'SaveLoadService is not available.',
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          'SaveLoadService is not available.'
+        ),
         data: null,
       };
     }
@@ -536,7 +549,10 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: `Unexpected error during data loading: ${serviceError.message}`,
+        error: new PersistenceError(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          `Unexpected error during data loading: ${serviceError.message}`
+        ),
         data: null,
       };
     }
@@ -548,7 +564,13 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: loadResult?.error || 'Failed to load raw game data.',
+        error:
+          loadResult?.error instanceof PersistenceError
+            ? loadResult.error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                loadResult?.error || 'Failed to load raw game data.'
+              ),
         data: null,
       };
     }
@@ -572,7 +594,13 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       return {
         success: false,
-        error: restoreResult.error || 'Failed to restore game state.',
+        error:
+          restoreResult.error instanceof PersistenceError
+            ? restoreResult.error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                restoreResult.error || 'Failed to restore game state.'
+              ),
         data: null,
       };
     }

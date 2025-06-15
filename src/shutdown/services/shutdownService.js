@@ -113,21 +113,10 @@ class ShutdownService {
     );
 
     const startPayload = {};
-    try {
-      await this.#validatedEventDispatcher.dispatch(
-        'shutdown:shutdown_service:started',
-        startPayload,
-        { allowSchemaNotFound: true }
-      );
-      this.#logger.debug(
-        "Dispatched 'shutdown:shutdown_service:started' event."
-      );
-    } catch (e) {
-      this.#logger.error(
-        "Failed to dispatch 'shutdown:shutdown_service:started' event",
-        e
-      );
-    }
+    await this.#dispatchWithLogging(
+      'shutdown:shutdown_service:started',
+      startPayload
+    );
 
     try {
       await this.#validatedEventDispatcher.dispatch(
@@ -138,7 +127,7 @@ class ShutdownService {
         },
         { allowSchemaNotFound: true }
       );
-      this.#logger.debug('ShutdownService: Dispatched ui:show_message event.');
+      this.#logger.debug("Dispatched 'ui:show_message' event.");
     } catch (eventError) {
       this.#logger.error(
         'ShutdownService: Failed to dispatch shutdown start UI event.',
@@ -249,21 +238,10 @@ class ShutdownService {
       // --- Final Success ---
       this.#logger.debug('ShutdownService: Shutdown sequence finished.');
       const completedPayload = {};
-      try {
-        await this.#validatedEventDispatcher.dispatch(
-          'shutdown:shutdown_service:completed',
-          completedPayload,
-          { allowSchemaNotFound: true }
-        );
-        this.#logger.debug(
-          "Dispatched 'shutdown:shutdown_service:completed' event."
-        );
-      } catch (e) {
-        this.#logger.error(
-          "Failed to dispatch 'shutdown:shutdown_service:completed' event",
-          e
-        );
-      }
+      await this.#dispatchWithLogging(
+        'shutdown:shutdown_service:completed',
+        completedPayload
+      );
     } catch (error) {
       // Catch critical errors *before* singleton disposal (though TurnManager stop is now handled gracefully)
       this.#logger.error(
@@ -274,23 +252,30 @@ class ShutdownService {
         error: error?.message || 'Unknown error',
         stack: error?.stack,
       };
-      try {
-        await this.#validatedEventDispatcher.dispatch(
-          'shutdown:shutdown_service:failed',
-          failedPayload,
-          { allowSchemaNotFound: true }
-        );
-        this.#logger.debug(
-          "Dispatched 'shutdown:shutdown_service:failed' event.",
-          failedPayload
-        );
-      } catch (e) {
-        this.#logger.error(
-          "Failed to dispatch 'shutdown:shutdown_service:failed' event",
-          e
-        );
-      }
+      await this.#dispatchWithLogging(
+        'shutdown:shutdown_service:failed',
+        failedPayload
+      );
       // Optionally re-throw if needed, but usually shutdown should continue
+    }
+  }
+
+  /**
+   * Helper for dispatching shutdown related events with consistent logging.
+   *
+   * @param {string} eventId - The event identifier.
+   * @param {object} payload - The payload to dispatch with the event.
+   * @returns {Promise<void>} Resolves when dispatch attempt completes.
+   * @private
+   */
+  async #dispatchWithLogging(eventId, payload) {
+    try {
+      await this.#validatedEventDispatcher.dispatch(eventId, payload, {
+        allowSchemaNotFound: true,
+      });
+      this.#logger.debug(`Dispatched '${eventId}' event.`, payload);
+    } catch (e) {
+      this.#logger.error(`Failed to dispatch '${eventId}' event`, e);
     }
   }
 }
