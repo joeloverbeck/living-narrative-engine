@@ -9,13 +9,13 @@ import { ActionValidationContextBuilder } from '../../src/actions/validation/act
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { getExitByDirection } from '../../src/utils/locationUtils.js';
-import { createComponentAccessor } from '../../src/logic/contextAssembler.js';
+import { createComponentAccessor } from '../../src/logic/componentAccessor.js';
 
 jest.mock('../../src/utils/locationUtils.js', () => ({
   getExitByDirection: jest.fn(),
 }));
 
-jest.mock('../../src/logic/contextAssembler.js', () => ({
+jest.mock('../../src/logic/componentAccessor.js', () => ({
   createComponentAccessor: jest.fn((entityId, entityManager) => {
     // Return a simple mock proxy for testing purposes
     return new Proxy(
