@@ -94,7 +94,10 @@ class CommandParser extends ICommandParser {
     if (inputVerb !== null) {
       for (const actionDefinition of allActionDefinitions) {
         // Compare input verb with the canonical commandVerb from the definition
-        if (actionDefinition.commandVerb === inputVerb) {
+        if (
+          typeof actionDefinition.commandVerb === 'string' &&
+          actionDefinition.commandVerb.toLowerCase() === inputVerb
+        ) {
           matchedActionId = actionDefinition.id;
           matchedVerbLength = inputVerb.length; // Store length of the matched verb
           break; // Found the unique match based on commandVerb

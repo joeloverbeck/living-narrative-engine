@@ -12,9 +12,9 @@
     },
     "commandVerb": {
       "type": "string",
-      "description": "Required. The single, canonical, lowercase command verb associated with this action (e.g., 'go', 'take', 'look', 'use'). Used for UI generation and potentially mapping. Should not contain spaces.",
+      "description": "Required. The single, canonical command verb associated with this action (e.g., 'go', 'take', 'look', 'use'). Used for UI generation and potentially mapping. Hyphenated and camelCase verbs are allowed, but spaces are not.",
       "minLength": 1,
-      "pattern": "^[a-z]+$",
+      "pattern": "^[A-Za-z-]+$",
       "examples": ["go", "take", "look", "inventory", "wait", "attack"]
     },
     "name": {

@@ -128,6 +128,64 @@ describe('CommandParser.parse() - Verb Matching & Case Sensitivity Tests', () =>
     // AC3 confirmed by successful match despite case difference
   });
 
+  // New Test Case: CPARSE-P-012A
+  it('[CPARSE-P-012A] should parse hyphenated command verb "get-close" correctly', () => {
+    const hyphenAction = {
+      id: 'core:get-close',
+      commandVerb: 'get-close',
+      name: 'Get Close',
+    };
+    mockGetAllActionDefinitions.mockReturnValueOnce([
+      ...MOCK_ACTIONS,
+      hyphenAction,
+    ]);
+
+    const input = 'get-close enemy';
+    /** @type {ParsedCommand} */
+    const expectedOutput = {
+      actionId: 'core:get-close',
+      directObjectPhrase: 'enemy',
+      preposition: null,
+      indirectObjectPhrase: null,
+      originalInput: input,
+      error: null,
+    };
+
+    const result = commandParser.parse(input);
+
+    expect(result).toEqual(expectedOutput);
+    expect(mockGetAllActionDefinitions).toHaveBeenCalledTimes(1);
+  });
+
+  // New Test Case: CPARSE-P-012B
+  it('[CPARSE-P-012B] should parse camelCase command verb "getClose" case-insensitively', () => {
+    const camelAction = {
+      id: 'core:getClose',
+      commandVerb: 'getClose',
+      name: 'GetClose',
+    };
+    mockGetAllActionDefinitions.mockReturnValueOnce([
+      ...MOCK_ACTIONS,
+      camelAction,
+    ]);
+
+    const input = 'GETCLOSE';
+    /** @type {ParsedCommand} */
+    const expectedOutput = {
+      actionId: 'core:getClose',
+      directObjectPhrase: null,
+      preposition: null,
+      indirectObjectPhrase: null,
+      originalInput: input,
+      error: null,
+    };
+
+    const result = commandParser.parse(input);
+
+    expect(result).toEqual(expectedOutput);
+    expect(mockGetAllActionDefinitions).toHaveBeenCalledTimes(1);
+  });
+
   // Test Case: CPARSE-P-013
   it('[CPARSE-P-013] should return null actionId and error for unknown verb "fly" (AC1, AC2, AC4)', () => {
     const input = 'fly';
