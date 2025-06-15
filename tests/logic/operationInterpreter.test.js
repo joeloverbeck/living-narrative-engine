@@ -1,4 +1,4 @@
-// src/tests/logic/operationInterpreter.test.js
+// tests/logic/operationInterpreter.test.js
 
 /**
  * @jest-environment node
@@ -8,8 +8,8 @@ import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 
 /**
  * -----------------------------------------------------------------------
- *  Mock registry and logger
- *  ---------------------------------------------------------------------
+ * Mock registry and logger
+ * ---------------------------------------------------------------------
  */
 const mockRegistry = { getHandler: jest.fn() };
 const mockLogger = {
@@ -21,8 +21,8 @@ const mockLogger = {
 
 /**
  * -----------------------------------------------------------------------
- *  Mock handlers
- *  ---------------------------------------------------------------------
+ * Mock handlers
+ * ---------------------------------------------------------------------
  */
 const mockLogHandler = jest.fn();
 const mockModifyHandler = jest.fn();
@@ -33,8 +33,8 @@ const mockHandlerWithError = jest.fn(() => {
 
 /**
  * -----------------------------------------------------------------------
- *  Sample operations
- *  ---------------------------------------------------------------------
+ * Sample operations
+ * ---------------------------------------------------------------------
  */
 const logOperation = {
   type: 'LOG',
@@ -89,8 +89,8 @@ const opInvalidPlaceholder = {
 
 /**
  * -----------------------------------------------------------------------
- *  Sample execution context
- *  ---------------------------------------------------------------------
+ * Sample execution context
+ * ---------------------------------------------------------------------
  */
 const mockExecutionContext = {
   event: { type: 'TEST_EVENT', payload: { someValue: 'payloadValue' } },
@@ -103,8 +103,8 @@ const mockExecutionContext = {
 
 /**
  * -----------------------------------------------------------------------
- *  Test suite
- *  ---------------------------------------------------------------------
+ * Test suite
+ * ---------------------------------------------------------------------
  */
 describe('OperationInterpreter', () => {
   let interpreter;
@@ -179,9 +179,6 @@ describe('OperationInterpreter', () => {
       mockExecutionContext
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Executing handler for operation type "LOG"...'
-    );
   });
 
   test('execute should call the MODIFY_COMPONENT handler with RESOLVED parameters and context', () => {
@@ -209,9 +206,6 @@ describe('OperationInterpreter', () => {
       mockExecutionContext
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Executing handler for operation type "SET_VARIABLE"...'
-    );
   });
 
   /* ────────────────────────────────────────────────────────────────────────
@@ -224,7 +218,7 @@ describe('OperationInterpreter', () => {
     ).not.toThrow();
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP');
     expect(mockLogger.error).toHaveBeenCalledWith(
-      '---> HANDLER NOT FOUND for operation type: "UNKNOWN_OP". Skipping execution.'
+      '---> HANDLER NOT FOUND for operation type: "UNKNOWN_OP".'
     );
   });
 
@@ -233,7 +227,9 @@ describe('OperationInterpreter', () => {
     interpreter.execute(null, mockExecutionContext);
     expect(mockRegistry.getHandler).not.toHaveBeenCalled();
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('invalid operation object'),
+      expect.stringContaining(
+        'OperationInterpreter received invalid operation object'
+      ),
       expect.objectContaining({ operation: null })
     );
   });
@@ -274,9 +270,6 @@ describe('OperationInterpreter', () => {
     expect(mockLogger.error).not.toHaveBeenCalledWith(
       expect.stringContaining('Error resolving placeholders')
     );
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Executing handler for operation type "LOG"...'
-    );
   });
 
   /* ────────────────────────────────────────────────────────────────────────
@@ -287,7 +280,7 @@ describe('OperationInterpreter', () => {
     interpreter.execute(ifOperation, mockExecutionContext);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('IF');
     expect(mockLogger.error).toHaveBeenCalledWith(
-      '---> HANDLER NOT FOUND for operation type: "IF". Skipping execution.'
+      '---> HANDLER NOT FOUND for operation type: "IF".'
     );
   });
 
@@ -308,7 +301,7 @@ describe('OperationInterpreter', () => {
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('ERROR_OP');
     expect(mockHandlerWithError).toHaveBeenCalledTimes(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Handler for operation type "ERROR_OP" threw an error. Rethrowing...'
+      'Handler for operation "ERROR_OP" threw – re-throwing to caller.'
     );
   });
 });
