@@ -88,8 +88,8 @@
             "parameters": {
               "entity_id": "{event.payload.entityId}",
               "speech_content": "{event.payload.speechContent}",
-              "thoughts": "{event.payload.thoughts}",
-              "notes": "{event.payload.notes}",
+              "thoughts": "{event.payload.thoughts?}",
+              "notes": "{event.payload.notes?}",
               "allow_html": false
             }
           }

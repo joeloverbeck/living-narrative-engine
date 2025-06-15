@@ -193,6 +193,13 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       const input = '{  context.varA  }';
       expect(resolvePlaceholders(input, context, mockLogger)).toBe('valueA');
     });
+
+    test('1.16 should allow optional placeholder with trailing ? without warning', () => {
+      const context = createMockExecutionContext();
+      const input = '{context.nonExistentVar?}';
+      expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
   });
 
   describe('2. Embedded Placeholder Resolution ("String with {...} in it")', () => {
@@ -290,6 +297,15 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         expect.stringContaining('Replaced embedded placeholder')
       );
+    });
+
+    test('2.9 should allow optional embedded placeholder with trailing ?', () => {
+      const context = createMockExecutionContext();
+      const input = 'Thoughts: {context.nonExistent?}';
+      expect(resolvePlaceholders(input, context, mockLogger)).toBe(
+        'Thoughts: {context.nonExistent?}'
+      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
   });
 

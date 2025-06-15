@@ -75,8 +75,12 @@ export function resolvePlaceholders(
     const fullMatch = input.match(FULL_STRING_PLACEHOLDER_REGEX);
 
     if (fullMatch) {
-      const placeholderPath = fullMatch[1]; // Path like "context.someVar" or "event.type"
-      const placeholderSyntax = `{${placeholderPath}}`;
+      let placeholderPath = fullMatch[1]; // Path like "context.someVar" or "event.type"
+      const isOptional = placeholderPath.endsWith('?');
+      if (isOptional) {
+        placeholderPath = placeholderPath.slice(0, -1);
+      }
+      const placeholderSyntax = `{${placeholderPath}${isOptional ? '?' : ''}}`;
       const fullLogPath = currentPath
         ? `${currentPath} -> ${placeholderSyntax}`
         : placeholderSyntax;
@@ -133,9 +137,11 @@ export function resolvePlaceholders(
         // --- END FIX ---
 
         if (resolvedValue === undefined) {
-          logger?.warn(
-            `Placeholder path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
-          );
+          if (!isOptional) {
+            logger?.warn(
+              `Placeholder path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
+            );
+          }
           return undefined; // callers now see “no value”
         }
         logger?.debug(
@@ -154,6 +160,10 @@ export function resolvePlaceholders(
         PLACEHOLDER_FIND_REGEX,
         (match, placeholderPath) => {
           const placeholderSyntax = match;
+          const isOptional = placeholderPath.endsWith('?');
+          if (isOptional) {
+            placeholderPath = placeholderPath.slice(0, -1);
+          }
           const fullLogPath = currentPath
             ? `${currentPath} -> ${placeholderSyntax} (within string)`
             : `${placeholderSyntax} (within string)`;
@@ -213,9 +223,11 @@ export function resolvePlaceholders(
             // --- END FIX ---
 
             if (resolvedValue === undefined) {
-              logger?.warn(
-                `Embedded placeholder path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
-              );
+              if (!isOptional) {
+                logger?.warn(
+                  `Embedded placeholder path "${placeholderPath}" (interpreted as "${pathForResolvePath}") from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
+                );
+              }
               return match;
             }
             replaced = true;
