@@ -71,11 +71,29 @@ describe('GamePersistenceService additional coverage', () => {
       ]);
     });
 
+    it('captures core mod version when present', () => {
+      dataRegistry.getAll.mockReturnValue([{ id: 'core', version: '1.2.3' }]);
+      const result = service.captureCurrentGameState('World');
+      expect(result.modManifest.activeMods).toEqual([
+        { modId: 'core', version: '1.2.3' },
+      ]);
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
     it('warns and defaults title when world name missing', () => {
       dataRegistry.getAll.mockReturnValue([]);
       const result = service.captureCurrentGameState();
       expect(logger.warn).toHaveBeenCalled();
       expect(result.metadata.gameTitle).toBe('Unknown Game');
+    });
+
+    it('falls back to unknown version when manifest undefined', () => {
+      dataRegistry.getAll.mockReturnValue(undefined);
+      const result = service.captureCurrentGameState('World');
+      expect(result.modManifest.activeMods).toEqual([
+        { modId: 'core', version: 'unknown_fallback' },
+      ]);
+      expect(logger.warn).toHaveBeenCalled();
     });
   });
 
