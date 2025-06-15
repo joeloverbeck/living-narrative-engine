@@ -113,7 +113,7 @@ export function registerUI(
       new TitleRenderer({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         titleElement: c.resolve(tokens.titleElement),
       })
   );

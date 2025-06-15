@@ -1,6 +1,7 @@
 // tests/domUI/titleRenderer.test.js
 import { beforeEach, describe, expect, it, jest } from '@jest/globals'; // Use if needed for mocking
 import { TitleRenderer } from '../../src/domUI/index.js'; // Adjust path as necessary
+import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
 
 // Mock dependencies
 const mockLogger = {
@@ -19,7 +20,7 @@ const mockDocumentContext = {
   },
 };
 
-const mockValidatedEventDispatcher = {
+const mockSafeEventDispatcher = {
   subscribe: jest.fn(() => jest.fn()), // Ensure subscribe returns a mock unsubscribe function
   dispatch: jest.fn(),
 };
@@ -42,7 +43,7 @@ describe('TitleRenderer', () => {
     mockH1Element.textContent = 'Initial Title'; // Give it an initial value
 
     // Reset VED mock to return a new unsubscribe mock for each subscription
-    mockValidatedEventDispatcher.subscribe.mockImplementation(() => jest.fn());
+    mockSafeEventDispatcher.subscribe.mockImplementation(() => jest.fn());
   });
 
   // --- Constructor Tests ---
@@ -51,7 +52,7 @@ describe('TitleRenderer', () => {
     const renderer = new TitleRenderer({
       logger: mockLogger,
       documentContext: mockDocumentContext,
-      validatedEventDispatcher: mockValidatedEventDispatcher,
+      safeEventDispatcher: mockSafeEventDispatcher,
       titleElement: mockH1Element,
     });
     expect(renderer).toBeInstanceOf(TitleRenderer);
@@ -61,7 +62,10 @@ describe('TitleRenderer', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('[TitleRenderer] Attached to H1 element.')
     );
-    expect(mockLogger.error).not.toHaveBeenCalled(); // Ensure no errors logged
+    expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.any(Object)
+    );
   });
 
   it('should throw if titleElement is missing', () => {
@@ -69,14 +73,17 @@ describe('TitleRenderer', () => {
       new TitleRenderer({
         logger: mockLogger,
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: null, // Missing element
       });
     }).toThrow(
       "'titleElement' dependency is missing or not a valid DOM element."
     );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('missing or not a valid DOM element')
+    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('missing or not a valid DOM element'),
+      })
     );
   });
 
@@ -86,14 +93,17 @@ describe('TitleRenderer', () => {
       new TitleRenderer({
         logger: mockLogger,
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: notAnElement,
       });
     }).toThrow(
       "'titleElement' dependency is missing or not a valid DOM element."
     );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('missing or not a valid DOM element')
+    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('missing or not a valid DOM element'),
+      })
     );
   });
 
@@ -103,13 +113,15 @@ describe('TitleRenderer', () => {
       new TitleRenderer({
         logger: mockLogger,
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: divElement,
       });
     }).toThrow("'titleElement' must be an H1 element, but received 'DIV'.");
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('must be an H1 element'),
-      expect.any(Object)
+    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      DISPLAY_ERROR_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('must be an H1 element'),
+      })
     );
   });
 
@@ -119,7 +131,7 @@ describe('TitleRenderer', () => {
       new TitleRenderer({
         logger: null, // Invalid logger
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: mockH1Element,
       });
     }).toThrow('TitleRenderer: Logger dependency is missing or invalid.');
@@ -130,7 +142,7 @@ describe('TitleRenderer', () => {
       new TitleRenderer({
         logger: mockLogger,
         documentContext: null, // Invalid context
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: mockH1Element,
       });
     }).toThrow(
@@ -138,12 +150,12 @@ describe('TitleRenderer', () => {
     );
   });
 
-  it('should throw if validatedEventDispatcher is missing', () => {
+  it('should throw if safeEventDispatcher is missing', () => {
     expect(() => {
       new TitleRenderer({
         logger: mockLogger,
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: null, // Invalid dispatcher
+        safeEventDispatcher: null, // Invalid dispatcher
         titleElement: mockH1Element,
       });
     }).toThrow(
@@ -157,7 +169,7 @@ describe('TitleRenderer', () => {
     const renderer = new TitleRenderer({
       logger: mockLogger,
       documentContext: mockDocumentContext,
-      validatedEventDispatcher: mockValidatedEventDispatcher,
+      safeEventDispatcher: mockSafeEventDispatcher,
       titleElement: mockH1Element,
     });
     const newTitle = 'New Game Title';
@@ -174,7 +186,7 @@ describe('TitleRenderer', () => {
     const renderer = new TitleRenderer({
       logger: mockLogger,
       documentContext: mockDocumentContext,
-      validatedEventDispatcher: mockValidatedEventDispatcher,
+      safeEventDispatcher: mockSafeEventDispatcher,
       titleElement: mockH1Element,
     });
     renderer.set('');
@@ -190,7 +202,7 @@ describe('TitleRenderer', () => {
     const renderer = new TitleRenderer({
       logger: mockLogger,
       documentContext: mockDocumentContext,
-      validatedEventDispatcher: mockValidatedEventDispatcher,
+      safeEventDispatcher: mockSafeEventDispatcher,
       titleElement: mockH1Element,
     });
 
@@ -212,7 +224,7 @@ describe('TitleRenderer', () => {
     const renderer = new TitleRenderer({
       logger: mockLogger,
       documentContext: mockDocumentContext,
-      validatedEventDispatcher: mockValidatedEventDispatcher,
+      safeEventDispatcher: mockSafeEventDispatcher,
       titleElement: mockH1Element,
     });
     renderer.set(123); // Pass a number
@@ -242,7 +254,7 @@ describe('TitleRenderer', () => {
     const renderer = new TitleRenderer({
       logger: mockLogger,
       documentContext: mockDocumentContext,
-      validatedEventDispatcher: mockValidatedEventDispatcher,
+      safeEventDispatcher: mockSafeEventDispatcher,
       titleElement: mockH1Element,
     });
     renderer.dispose();

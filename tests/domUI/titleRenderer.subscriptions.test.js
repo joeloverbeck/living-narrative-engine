@@ -2,7 +2,10 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { TitleRenderer } from '../../src/domUI/index.js'; // Corrected import path if needed
 import { RendererBase } from '../../src/domUI/index.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js'; // Needed for checking super.dispose
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  DISPLAY_ERROR_ID,
+} from '../../src/constants/eventIds.js'; // Needed for checking super.dispose
 
 // --- Mock Dependencies ---
 
@@ -24,7 +27,7 @@ const mockDocumentContext = {
 // Mock IValidatedEventDispatcher and capture subscriptions
 let capturedSubscriptions = {}; // To store { eventType: callback }
 let unsubscribeSpies = []; // To store mock unsubscribe functions
-const mockValidatedEventDispatcher = {
+const mockSafeEventDispatcher = {
   subscribe: jest.fn((eventType, callback) => {
     capturedSubscriptions[eventType] = callback;
     const mockUnsubscribe = jest.fn(() => {
@@ -71,7 +74,7 @@ describe('TitleRenderer', () => {
     mockH1Element.textContent = 'Initial Title';
 
     // Ensure mock subscribe returns the correct structure for RendererBase
-    mockValidatedEventDispatcher.subscribe.mockImplementation(
+    mockSafeEventDispatcher.subscribe.mockImplementation(
       (eventType, callback) => {
         capturedSubscriptions[eventType] = callback;
         const mockUnsubscribe = jest.fn(() => {
@@ -95,7 +98,7 @@ describe('TitleRenderer', () => {
       renderer = new TitleRenderer({
         logger: mockLogger,
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: mockH1Element,
       });
       expect(renderer).toBeInstanceOf(TitleRenderer);
@@ -109,8 +112,11 @@ describe('TitleRenderer', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Subscribed to VED events')
       );
-      expect(mockValidatedEventDispatcher.subscribe).toHaveBeenCalledTimes(14);
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledTimes(14);
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.any(Object)
+      );
     });
 
     it('should throw if titleElement is missing or null', () => {
@@ -118,14 +124,19 @@ describe('TitleRenderer', () => {
         new TitleRenderer({
           logger: mockLogger,
           documentContext: mockDocumentContext,
-          validatedEventDispatcher: mockValidatedEventDispatcher,
+          safeEventDispatcher: mockSafeEventDispatcher,
           titleElement: null,
         });
       }).toThrow(
         "[TitleRenderer] 'titleElement' dependency is missing or not a valid DOM element."
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('missing or not a valid DOM element')
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'missing or not a valid DOM element'
+          ),
+        })
       );
     });
 
@@ -135,14 +146,19 @@ describe('TitleRenderer', () => {
         new TitleRenderer({
           logger: mockLogger,
           documentContext: mockDocumentContext,
-          validatedEventDispatcher: mockValidatedEventDispatcher,
+          safeEventDispatcher: mockSafeEventDispatcher,
           titleElement: notAnElement,
         });
       }).toThrow(
         "[TitleRenderer] 'titleElement' dependency is missing or not a valid DOM element."
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('missing or not a valid DOM element')
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'missing or not a valid DOM element'
+          ),
+        })
       );
     });
 
@@ -152,15 +168,17 @@ describe('TitleRenderer', () => {
         new TitleRenderer({
           logger: mockLogger,
           documentContext: mockDocumentContext,
-          validatedEventDispatcher: mockValidatedEventDispatcher,
+          safeEventDispatcher: mockSafeEventDispatcher,
           titleElement: divElement,
         });
       }).toThrow(
         "[TitleRenderer] 'titleElement' must be an H1 element, but received 'DIV'."
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('must be an H1 element'),
-        { element: divElement }
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('must be an H1 element'),
+        })
       );
     });
 
@@ -169,7 +187,7 @@ describe('TitleRenderer', () => {
         new TitleRenderer({
           logger: null,
           documentContext: mockDocumentContext,
-          validatedEventDispatcher: mockValidatedEventDispatcher,
+          safeEventDispatcher: mockSafeEventDispatcher,
           titleElement: mockH1Element,
         });
       }).toThrow('TitleRenderer: Logger dependency is missing or invalid.');
@@ -180,7 +198,7 @@ describe('TitleRenderer', () => {
         new TitleRenderer({
           logger: mockLogger,
           documentContext: null,
-          validatedEventDispatcher: mockValidatedEventDispatcher,
+          safeEventDispatcher: mockSafeEventDispatcher,
           titleElement: mockH1Element,
         });
       }).toThrow(
@@ -188,12 +206,12 @@ describe('TitleRenderer', () => {
       );
     });
 
-    it('should throw if validatedEventDispatcher is missing', () => {
+    it('should throw if safeEventDispatcher is missing', () => {
       expect(() => {
         new TitleRenderer({
           logger: mockLogger,
           documentContext: mockDocumentContext,
-          validatedEventDispatcher: null,
+          safeEventDispatcher: null,
           titleElement: mockH1Element,
         });
       }).toThrow(
@@ -210,7 +228,7 @@ describe('TitleRenderer', () => {
       renderer = new TitleRenderer({
         logger: mockLogger,
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: mockH1Element,
       });
       mockLogger.debug.mockClear();
@@ -224,7 +242,10 @@ describe('TitleRenderer', () => {
         `[TitleRenderer] Title set to: "${newTitle}"`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.any(Object)
+      );
     });
 
     it('should handle setting an empty string', () => {
@@ -307,7 +328,7 @@ describe('TitleRenderer', () => {
       renderer = new TitleRenderer({
         logger: mockLogger,
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: mockH1Element,
       });
       jest.spyOn(renderer, 'set');
@@ -345,9 +366,11 @@ describe('TitleRenderer', () => {
       expect(renderer.set).toHaveBeenCalledWith(
         'Initialization Failed (World: BrokenWorld)'
       );
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Overall initialization failed'),
-        expect.objectContaining(payload)
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('Overall initialization failed'),
+        })
       );
     });
 
@@ -380,9 +403,13 @@ describe('TitleRenderer', () => {
       const payload = { error: 'File not found' };
       simulateEvent('initialization:world_loader:failed', payload);
       expect(renderer.set).toHaveBeenCalledWith('world loader Failed');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('world loader Failed. Error: File not found'),
-        payload
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'world loader Failed. Error: File not found'
+          ),
+        })
       );
     });
 
@@ -390,11 +417,13 @@ describe('TitleRenderer', () => {
       const payload = { error: 'Keybindings conflict' };
       simulateEvent('initialization:input_setup_service:failed', payload);
       expect(renderer.set).toHaveBeenCalledWith('input setup service Failed');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'input setup service Failed. Error: Keybindings conflict'
-        ),
-        payload
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        DISPLAY_ERROR_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'input setup service Failed. Error: Keybindings conflict'
+          ),
+        })
       );
     });
 
@@ -415,7 +444,7 @@ describe('TitleRenderer', () => {
       renderer = new TitleRenderer({
         logger: mockLogger,
         documentContext: mockDocumentContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
+        safeEventDispatcher: mockSafeEventDispatcher,
         titleElement: mockH1Element,
       });
       jest.spyOn(RendererBase.prototype, 'dispose');

@@ -1,11 +1,14 @@
 // src/dom-ui/titleRenderer.js
 import { RendererBase } from './rendererBase.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import {
+  DISPLAY_ERROR_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
+} from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
- * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
+ * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
 /**
@@ -29,28 +32,32 @@ export class TitleRenderer extends RendererBase {
    * @param {object} deps - Dependencies object.
    * @param {ILogger} deps.logger - The logger instance.
    * @param {IDocumentContext} deps.documentContext - The document context.
-   * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - The event dispatcher.
+   * @param {ISafeEventDispatcher} deps.safeEventDispatcher - The event dispatcher.
    * @param {HTMLElement | null} deps.titleElement - The root H1 element to manage. Must be an H1.
    * @throws {Error} If dependencies are invalid or titleElement is not a valid H1.
    */
-  constructor({
-    logger,
-    documentContext,
-    validatedEventDispatcher,
-    titleElement,
-  }) {
+  constructor({ logger, documentContext, safeEventDispatcher, titleElement }) {
     // Pass base dependencies to RendererBase constructor
-    super({ logger, documentContext, validatedEventDispatcher });
+    super({
+      logger,
+      documentContext,
+      validatedEventDispatcher: safeEventDispatcher,
+    });
 
     // --- Validate specific titleElement dependency ---
     if (!titleElement || titleElement.nodeType !== 1) {
       const errMsg = `${this._logPrefix} 'titleElement' dependency is missing or not a valid DOM element.`;
-      this.logger.error(errMsg);
+      this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: errMsg,
+      });
       throw new Error(errMsg);
     }
     if (titleElement.tagName !== 'H1') {
       const errMsg = `${this._logPrefix} 'titleElement' must be an H1 element, but received '${titleElement.tagName}'.`;
-      this.logger.error(errMsg, { element: titleElement });
+      this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: errMsg,
+        details: { element: titleElement },
+      });
       throw new Error(errMsg);
     }
 
@@ -238,11 +245,11 @@ export class TitleRenderer extends RendererBase {
   #handleInitializationFailed(payload) {
     const title = `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`;
     this.set(title);
-    // Optionally log the error details here too, though the main error handler might do it
-    this.logger.error(
-      `${this._logPrefix} Overall initialization failed. Error: ${payload?.error}`,
-      payload
-    );
+    // Dispatch error event for UI display
+    this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      message: `${this._logPrefix} Overall initialization failed. Error: ${payload?.error}`,
+      details: payload,
+    });
   }
 
   /**
@@ -262,10 +269,10 @@ export class TitleRenderer extends RendererBase {
     }
     const title = `${stepName} Failed`;
     this.set(title);
-    this.logger.error(
-      `${this._logPrefix} ${title}. Error: ${payload?.error}`,
-      payload
-    );
+    this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      message: `${this._logPrefix} ${title}. Error: ${payload?.error}`,
+      details: payload,
+    });
   }
 
   /**
@@ -308,9 +315,9 @@ export class TitleRenderer extends RendererBase {
       }
     } else {
       // Should not happen if constructor validation passed
-      this.logger.error(
-        `${this._logPrefix} Cannot set title, internal #titleElement reference is lost.`
-      );
+      this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        message: `${this._logPrefix} Cannot set title, internal #titleElement reference is lost.`,
+      });
     }
   }
 
