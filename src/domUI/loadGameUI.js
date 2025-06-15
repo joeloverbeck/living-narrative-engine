@@ -1,9 +1,8 @@
 // src/domUI/loadGameUI.js
 
-import { BaseModalRenderer } from './baseModalRenderer.js';
+import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatPlaytime } from '../utils/textUtils.js';
-import { setupRadioListNavigation } from '../utils/listNavigation.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -47,13 +46,10 @@ const LOAD_GAME_UI_ELEMENTS_CONFIG = {
  * @augments BaseModalRenderer
  * @description Manages the modal dialog for loading saved games.
  */
-class LoadGameUI extends BaseModalRenderer {
+class LoadGameUI extends SlotModalBase {
   saveLoadService;
   gameEngine = null;
   domElementFactory; // Kept for direct use in _renderLoadSlotItem
-
-  selectedSlotData = null;
-  currentSlotsDisplayData = [];
 
   // isOperationInProgress is managed by BaseModalRenderer's _setOperationInProgress
 
@@ -79,7 +75,10 @@ class LoadGameUI extends BaseModalRenderer {
       documentContext,
       validatedEventDispatcher,
       elementsConfig: LOAD_GAME_UI_ELEMENTS_CONFIG,
-      domElementFactory, // Pass to BaseModalRenderer if it needs it, or store locally
+      domElementFactory,
+      datasetKey: 'slotIdentifier',
+      confirmButtonKey: 'confirmLoadButtonEl',
+      deleteButtonKey: 'deleteSaveButtonEl',
     });
 
     if (!domElementFactory || typeof domElementFactory.create !== 'function') {
@@ -103,7 +102,7 @@ class LoadGameUI extends BaseModalRenderer {
     // _bindUiElements is handled by BoundDomRendererBase (via BaseModalRenderer)
 
     this.logger.debug(
-      `${this._logPrefix} Instance created and extends BaseModalRenderer.`
+      `${this._logPrefix} Instance created and extends SlotModalBase.`
     );
   }
 
@@ -430,32 +429,10 @@ class LoadGameUI extends BaseModalRenderer {
    * @private
    */
   _handleSlotSelection(selectedSlotElement, slotData) {
-    this.selectedSlotData = slotData;
-    // _clearStatusMessage() // Called by _onShow usually, or when an operation message is shown
-
-    this.elements.listContainerElement
-      ?.querySelectorAll('.save-slot')
-      .forEach((slotEl) => {
-        const isSelected = slotEl === selectedSlotElement;
-        slotEl.classList.toggle('selected', isSelected);
-        slotEl.setAttribute('aria-checked', String(isSelected));
-        slotEl.setAttribute('tabindex', isSelected ? '0' : '-1');
-      });
-
-    if (
-      selectedSlotElement &&
-      !(selectedSlotElement === this.documentContext.document?.activeElement)
-    ) {
-      selectedSlotElement.focus();
-    } else if (!selectedSlotElement && this.elements.listContainerElement) {
-      // If selection cleared, ensure first is focusable
-      const firstSlot =
-        this.elements.listContainerElement.querySelector('.save-slot');
-      if (firstSlot) firstSlot.setAttribute('tabindex', '0');
-    }
+    super._handleSlotSelection(selectedSlotElement, slotData);
 
     const canLoad = !!(slotData && !slotData.isCorrupted);
-    const canDelete = !!slotData; // Allow deleting corrupted saves
+    const canDelete = !!slotData;
 
     if (this.elements.confirmLoadButtonEl)
       this.elements.confirmLoadButtonEl.disabled = !canLoad;
@@ -470,7 +447,6 @@ class LoadGameUI extends BaseModalRenderer {
     } else {
       this.logger.debug(`${this._logPrefix} Slot selection cleared.`);
     }
-    // BaseModalRenderer._setOperationInProgress handles disabling during operations
   }
 
   /**
@@ -480,33 +456,7 @@ class LoadGameUI extends BaseModalRenderer {
    * @private
    */
   _handleSlotNavigation(event) {
-    if (!this.elements.listContainerElement) return;
-
-    const arrowHandler = setupRadioListNavigation(
-      this.elements.listContainerElement,
-      '.save-slot[role="radio"]',
-      'slotIdentifier',
-      (el, value) => {
-        const currentSlotData = this.currentSlotsDisplayData.find(
-          (s) => s.identifier === value
-        );
-        if (currentSlotData) this._handleSlotSelection(el, currentSlotData);
-      }
-    );
-
-    arrowHandler(event);
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      const target = /** @type {HTMLElement} */ (event.target);
-      const slotIdentifier = target.dataset.slotIdentifier;
-      const currentSlotData = this.currentSlotsDisplayData.find(
-        (s) => s.identifier === slotIdentifier
-      );
-      if (currentSlotData) {
-        this._handleSlotSelection(target, currentSlotData);
-      }
-    }
+    super._handleSlotNavigation(event);
   }
 
   /**

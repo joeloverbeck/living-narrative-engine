@@ -7,6 +7,7 @@ export { BoundDomRendererBase } from './boundDomRendererBase.js'; // Added Bound
 export * from './chatAlertRenderer.js';
 export { BaseListDisplayComponent } from './baseListDisplayComponent.js'; // Added BaseListDisplayComponent
 export { BaseModalRenderer } from './baseModalRenderer.js'; // Added BaseModalRenderer
+export { SlotModalBase } from './slotModalBase.js';
 
 // Export concrete classes and utilities
 export { default as DocumentContext } from './documentContext.js';
