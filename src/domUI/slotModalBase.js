@@ -6,6 +6,7 @@
 
 import { BaseModalRenderer } from './baseModalRenderer.js';
 import { setupRadioListNavigation } from '../utils/listNavigation.js';
+import { DomUtils } from '../utils/domUtils.js';
 
 /**
  * @class SlotModalBase
@@ -187,6 +188,61 @@ export class SlotModalBase extends BaseModalRenderer {
       }
       if (slotData) this._handleSlotSelection(target, slotData);
     }
+  }
+
+  /**
+   * Generic helper to populate the slots list.
+   *
+   * @protected
+   * @async
+   * @param {Function} fetchDataFn - Async function returning slot data array.
+   * @param {Function} renderItemFn - Function to render a slot item element.
+   * @param {Function} getEmptyMessageFn - Function returning message for empty list.
+   * @param {string} loadingMessage - Message shown while loading.
+   * @returns {Promise<void>} Resolves when list population is complete.
+   */
+  async populateSlotsList(
+    fetchDataFn,
+    renderItemFn,
+    getEmptyMessageFn,
+    loadingMessage
+  ) {
+    this._setOperationInProgress(true);
+    this._displayStatusMessage(loadingMessage, 'info');
+
+    DomUtils.clearElement(this.elements.listContainerElement);
+
+    const slotsData = await fetchDataFn();
+    this.currentSlotsDisplayData = Array.isArray(slotsData) ? slotsData : [];
+
+    if (this.currentSlotsDisplayData.length === 0) {
+      const emptyMessage = getEmptyMessageFn();
+      if (typeof emptyMessage === 'string') {
+        if (this.domElementFactory) {
+          const p =
+            this.domElementFactory.p(undefined, emptyMessage) ||
+            this.documentContext.document.createTextNode(emptyMessage);
+          this.elements.listContainerElement?.appendChild(p);
+        } else if (this.elements.listContainerElement) {
+          this.elements.listContainerElement.textContent = emptyMessage;
+        }
+      } else if (
+        emptyMessage instanceof
+        this.documentContext.document.defaultView.HTMLElement
+      ) {
+        this.elements.listContainerElement?.appendChild(emptyMessage);
+      }
+    } else {
+      this.currentSlotsDisplayData.forEach((slotData, index) => {
+        const el = renderItemFn(slotData, index);
+        if (el && this.elements.listContainerElement) {
+          this.elements.listContainerElement.appendChild(el);
+        }
+      });
+    }
+
+    this._clearStatusMessage();
+    this._setOperationInProgress(false);
   }
 }
 
