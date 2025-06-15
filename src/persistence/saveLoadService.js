@@ -135,6 +135,17 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
+   * Builds the full path for a manual save file.
+   *
+   * @param {string} fileName - File name inside the manual saves directory.
+   * @returns {string} The fully-qualified path for the file.
+   * @private
+   */
+  #manualSavePath(fileName) {
+    return `${FULL_MANUAL_SAVE_DIRECTORY_PATH}/${fileName}`;
+  }
+
+  /**
    * Attempts to parse a manual save file and extract its metadata.
    *
    * @param {string} fileName - The file name within the manual saves directory.
@@ -143,7 +154,7 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   async #parseManualSaveFile(fileName) {
-    const filePath = `${FULL_MANUAL_SAVE_DIRECTORY_PATH}/${fileName}`;
+    const filePath = this.#manualSavePath(fileName);
     this.#logger.debug(`Processing file: ${filePath}`);
 
     const deserializationResult =
@@ -476,7 +487,7 @@ class SaveLoadService extends ISaveLoadService {
     // Some IStorageProvider implementations might handle this in writeFileAtomically,
     // others might need an explicit ensureDirectoryExists call.
     // Example: await this.#storageProvider.ensureDirectoryExists(FULL_MANUAL_SAVE_DIRECTORY_PATH);
-    const filePath = `${FULL_MANUAL_SAVE_DIRECTORY_PATH}/${fileName}`;
+    const filePath = this.#manualSavePath(fileName);
 
     try {
       // Potentially create the directory if it doesn't exist.
