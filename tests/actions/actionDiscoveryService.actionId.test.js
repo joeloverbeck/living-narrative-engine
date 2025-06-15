@@ -24,7 +24,12 @@ describe('ActionDiscoveryService params exposure', () => {
     };
     const formatActionCommandFn = () => 'attack rat123';
     const getEntityIdsForScopesFn = () => new Set(['rat123']);
-    const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+    };
     const safeEventDispatcher = { dispatch: jest.fn() };
 
     service = new ActionDiscoveryService({

@@ -578,7 +578,7 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
           mockEntityManager,
           { warn: jest.fn() }
         )
-      ).toThrow("Invalid or missing method 'debug' on dependency 'logger'.");
+      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
     });
   });
 });

@@ -12,8 +12,9 @@ import {
   validateServiceDeps,
 } from '../../src/utils/serviceInitializer.js';
 import {
-  ensureValidLogger,
   createPrefixedLogger,
+  initLogger as baseInitLogger,
+  ensureValidLogger,
 } from '../../src/utils/loggerUtils.js';
 import { validateDependency } from '../../src/utils/validationUtils.js';
 
@@ -24,6 +25,7 @@ jest.mock('../../src/utils/validationUtils.js', () => ({
 jest.mock('../../src/utils/loggerUtils.js', () => ({
   createPrefixedLogger: jest.fn(),
   ensureValidLogger: jest.fn(),
+  initLogger: jest.fn(),
 }));
 
 describe('serviceInitializer utilities', () => {
@@ -41,6 +43,7 @@ describe('serviceInitializer utilities', () => {
       logger,
     }));
     ensureValidLogger.mockImplementation((l) => l);
+    baseInitLogger.mockImplementation((service, l) => l);
   });
 
   afterEach(() => {
@@ -50,7 +53,7 @@ describe('serviceInitializer utilities', () => {
   describe('initLogger', () => {
     it('validates and returns a prefixed logger', () => {
       const logger = initLogger('MyService', baseLogger);
-      expect(ensureValidLogger).toHaveBeenCalledWith(baseLogger, 'MyService');
+      expect(baseInitLogger).toHaveBeenCalledWith('MyService', baseLogger);
       expect(createPrefixedLogger).toHaveBeenCalledWith(
         baseLogger,
         'MyService: '
@@ -59,7 +62,7 @@ describe('serviceInitializer utilities', () => {
     });
 
     it('throws when validation fails', () => {
-      ensureValidLogger.mockImplementation(() => {
+      baseInitLogger.mockImplementation(() => {
         throw new Error('bad');
       });
       expect(() => initLogger('FailService', null)).toThrow('bad');

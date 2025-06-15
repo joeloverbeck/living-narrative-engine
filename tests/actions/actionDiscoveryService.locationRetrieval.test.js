@@ -7,7 +7,12 @@ import { jest } from '@jest/globals';
 import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
 
 describe('ActionDiscoveryService – directional discovery', () => {
-  const logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
   /** Simple “go” + “wait” defs – enough for the test */
   const gameDataRepository = {

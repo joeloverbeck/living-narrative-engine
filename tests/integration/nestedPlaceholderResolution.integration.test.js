@@ -24,6 +24,10 @@ class SimpleEventBus {
     this.listeners.push(fn);
   }
 
+  unsubscribe() {
+    /* no-op for tests */
+  }
+
   dispatch(type, payload) {
     this.listeners.forEach((l) => l({ type, payload }));
     return Promise.resolve();

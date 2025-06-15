@@ -113,6 +113,7 @@ describe('SystemLogicInterpreter - Integration Tests - Scenario 4: Invalid Condi
           capturedEventListener = listener;
         }
       }),
+      unsubscribe: jest.fn(),
       dispatch: jest.fn(),
       listenerCount: jest.fn().mockReturnValue(1),
     };
