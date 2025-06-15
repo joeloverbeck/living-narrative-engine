@@ -88,6 +88,8 @@ export class ActionResultRenderer extends BoundDomRendererBase {
       documentContext,
       validatedEventDispatcher: safeEventDispatcher,
       elementsConfig,
+      scrollContainerKey: 'scrollContainer',
+      contentContainerKey: 'listContainerElement',
     });
 
     /** @private */ this.#domElementFactory = domElementFactory;
@@ -198,15 +200,6 @@ export class ActionResultRenderer extends BoundDomRendererBase {
 
     li.textContent = message;
     listEl.appendChild(li);
-    this.#scrollToBottom();
-  }
-
-  /**
-   * Scrolls the message list so the newest bubble is visible.
-   *
-   * @private
-   */
-  #scrollToBottom() {
-    this.scrollToBottom('scrollContainer', 'listContainerElement');
+    this.scrollToBottom();
   }
 }
